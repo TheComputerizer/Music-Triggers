@@ -13,12 +13,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @Mod.EventBusSubscriber(modid= MusicTriggers.MODID)
 public class CommonEvents {
 
-    //@SideOnly(Side.CLIENT)
-    //@SubscribeEvent
-    //public static void worldLoad(WorldEvent.Load event) {
-        //MusicPicker.world = event.getWorld();
-    //}
-
     @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public static void playerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {

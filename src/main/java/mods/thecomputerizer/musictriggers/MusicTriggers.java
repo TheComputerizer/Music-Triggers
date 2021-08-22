@@ -1,10 +1,9 @@
 package mods.thecomputerizer.musictriggers;
 
-
-import mods.thecomputerizer.musictriggers.client.MusicPicker;
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.common.CommonEvents;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
+import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.json;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.FolderResourcePack;
@@ -15,7 +14,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -54,6 +52,26 @@ public class MusicTriggers
                 sj.delete();
             }
             List<String> writeThis = json.create();
+            if(writeThis!=null) {
+                try {
+                    sj.createNewFile();
+                    FileWriter writer = new FileWriter(sj);
+                    for(String str: writeThis) {
+                        writer.write(str + System.lineSeparator());
+                    }
+                    writer.close();
+                }
+                catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            sj = new File(Minecraft.getMinecraft().gameDir.getPath()+"/config/MusicTriggers/songs/assets/musictriggers/lang/en_us.lang");
+            if(sj.exists()) {
+                sj.delete();
+            }
+            assert writeThis != null;
+            writeThis.clear();
+            writeThis = json.lang();
             if(writeThis!=null) {
                 try {
                     sj.createNewFile();
@@ -137,12 +155,25 @@ public class MusicTriggers
                 ex.printStackTrace();
             }
         }
+        File langDir = new File(musictriggersDir.getPath(), "lang");
+        if(!langDir.exists()) {
+            langDir.mkdir();
+        }
+        File lang = new File(langDir.getPath()+"/en_us.lang");
+        if(!lang.exists()) {
+            try {
+                lang.createNewFile();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
 
         songs = musictriggersDir;
 
         MinecraftForge.EVENT_BUS.register(SoundHandler.class);
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
         MinecraftForge.EVENT_BUS.register(CommonEvents.class);
+        MinecraftForge.EVENT_BUS.register(RegistryHandler.class);
     }
 
     @EventHandler

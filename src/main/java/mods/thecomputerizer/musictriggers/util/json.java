@@ -36,6 +36,18 @@ public class json {
         }
         return js;
     }
+    public static List<String> lang() {
+        allSongs = collector();
+        if (allSongs != null) {
+            System.out.print(allSongs.size());
+            js.add("{");
+            for (String allSong : allSongs) {
+                js.add("item.musictriggers." + allSong + ".name=" + allSong);
+                js.add("item.record." + allSong + ".desc=Can you believe this was generated automatically?");
+            }
+        }
+        return js;
+    }
     public static List<String> collector() {
         File folder = new File(Minecraft.getMinecraft().gameDir.getPath()+"/config/MusicTriggers/songs/assets/musictriggers/sounds/music/");
         File[] listOfFiles = folder.listFiles((dir, name) -> name.endsWith(".ogg"));
@@ -48,6 +60,7 @@ public class json {
             for (String checker : allSongs) {
                 if (checker.matches(curfile)) {
                     matchCheck = true;
+                    break;
                 }
             }
             if(!matchCheck) {
