@@ -349,6 +349,36 @@ public class config {
         }
     }
 
+    @Comment("Structure")
+    public static Structure structure = new Structure(3333,new String[] {});
+
+    public static class Structure {
+        @Comment("General Priority [min: -99, max: 2147483647 default: 3333]\nNote: Priorities specified for individual structures will override this")
+        public int structurePriority;
+        @Comment("Songs Per Structure [Format: \"StructureName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ]\"]\nNote: You only have to set the priority per structure name for 1 song\nExample: Fortress,(songname),11111")
+        public String[] structureSongs;
+
+        public Structure(final int structurePriority, final String[] structureSongs) {
+            this.structurePriority = structurePriority;
+            this.structureSongs = structureSongs;
+        }
+    }
+
+    @Comment("Mob (This works for both bosses and hordes!)")
+    public static Mob mob = new Mob(3500,new String[] {});
+
+    public static class Mob {
+        @Comment("General Priority [min: -99, max: 2147483647 default: 3500]\nNote: Priorities specified for individual mobs will override this")
+        public int mobPriority;
+        @Comment("Songs Per Mob [Format: \"MobName,number of mobs,SongName,(Optional)Priority:[min: -99, max: 2147483647 ]\"]\nNote: You only have to set the priority per mob name for 1 song\nExample: Zombie,8,(songname),11111\nSpecial case - If you put \"MOB\" as the mob ID, it will default to any hostile mob")
+        public String[] mobSongs;
+
+        public Mob(final int mobPriority, final String[] mobSongs) {
+            this.mobPriority = mobPriority;
+            this.mobSongs = mobSongs;
+        }
+    }
+
     @Mod.EventBusSubscriber(modid = MusicTriggers.MODID)
     private static class EventHandler {
 

@@ -7,6 +7,7 @@ import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 
 import java.util.*;
 
@@ -101,8 +102,10 @@ public class MusicPicker {
         return trueHighest;
     }
 
+    @SuppressWarnings("rawtypes")
     public static List<String> playableEvents() {
         List<String> events = new ArrayList<>();
+        world = player.getEntityWorld();
         if(!world.isRemote) {
             if (world.isDaytime()) {
                 events.add("day");
@@ -198,13 +201,47 @@ public class MusicPicker {
                 dynamicSongs.put("dimension"+player.dimension, SoundHandler.dimensionSongsString.get(player.dimension).toArray(dimSongsArray));
                 dynamicPriorities.put("dimension"+player.dimension, SoundHandler.dimensionPriorities.get(player.dimension));
             }
-            if(SoundHandler.biomeSongs.get(Objects.requireNonNull(player.world.getBiome(player.getPosition()).getRegistryName()).toString())!=null && !world.isRemote) {
-                String biomeName = Objects.requireNonNull(player.world.getBiome(player.getPosition()).getRegistryName()).toString();
+            if(SoundHandler.biomeSongs.get(Objects.requireNonNull(world.getBiome(player.getPosition()).getRegistryName()).toString())!=null && !world.isRemote) {
+                String biomeName = Objects.requireNonNull(world.getBiome(player.getPosition()).getRegistryName()).toString();
                 events.add(biomeName);
                 String[] biomeSongsArray = new String[SoundHandler.biomeSongsString.get(biomeName).size()];
                 dynamicSongs.put(biomeName, SoundHandler.biomeSongsString.get(biomeName).toArray(biomeSongsArray));
                 dynamicPriorities.put(biomeName, SoundHandler.biomePriorities.get(biomeName));
             }
+            WorldServer server = (WorldServer)world;
+            for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.structureSongsString.entrySet()) {
+                String structName = ((Map.Entry) stringListEntry).getKey().toString();
+                if (server.getChunkProvider().isInsideStructure(world, structName, player.getPosition())) {
+                    events.add("structure:" + structName);
+                    String[] structureSongsArray = new String[SoundHandler.structureSongsString.get(structName).size()];
+                    dynamicSongs.put("structure:" + structName, SoundHandler.structureSongsString.get(structName).toArray(structureSongsArray));
+                    dynamicPriorities.put("structure:" + structName, SoundHandler.structurePriorities.get(structName));
+                }
+            }
+            List<EntityMob> mobList = world.getEntitiesWithinAABB(EntityMob.class, new AxisAlignedBB(player.posX - 16, player.posY - 8, player.posZ - 16, player.posX + 16, player.posY + 8, player.posZ + 16));
+                for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.mobSongsString.entrySet()) {
+                    String mobName = ((Map.Entry) stringListEntry).getKey().toString();
+                    if (mobName.matches("MOB")) {
+                        if (mobList.size()>=SoundHandler.mobNumber.get(mobName)) {
+                            events.add(mobName);
+                            String[] dimSongsArray = new String[SoundHandler.mobSongsString.get(mobName).size()];
+                            dynamicSongs.put(mobName, SoundHandler.mobSongsString.get(mobName).toArray(dimSongsArray));
+                            dynamicPriorities.put(mobName, SoundHandler.mobPriorities.get(mobName));
+                        }
+                    }
+                    else {
+                        int mobCounter=0;
+                        for(EntityMob e: mobList) {
+                            if(e.getName().matches(mobName)) {mobCounter++;}
+                        }
+                        if (mobCounter>=SoundHandler.mobNumber.get(mobName)) {
+                            events.add(mobName);
+                            String[] dimSongsArray = new String[SoundHandler.mobSongsString.get(mobName).size()];
+                            dynamicSongs.put(mobName, SoundHandler.mobSongsString.get(mobName).toArray(dimSongsArray));
+                            dynamicPriorities.put(mobName, SoundHandler.mobPriorities.get(mobName));
+                        }
+                    }
+                }
         }
         playableList = events;
         System.out.print("Initial Events: ");

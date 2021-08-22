@@ -20,6 +20,8 @@ public class SoundHandler {
 
     public static HashMap<String, PositionedSoundRecord> songsRecords = new HashMap<>();
 
+    public static List<String> allSongs = new ArrayList<>();
+
     public static List<SoundEvent> menu = new ArrayList<>();
     public static List<SoundEvent> generic = new ArrayList<>();
     public static List<SoundEvent> day = new ArrayList<>();
@@ -49,6 +51,15 @@ public class SoundHandler {
     public static HashMap<String, List<String>> biomeSongsString = new HashMap<>();
     public static HashMap<String, Integer> biomePriorities = new HashMap<>();
 
+    public static HashMap<String, List<SoundEvent>> structureSongs = new HashMap<>();
+    public static HashMap<String, List<String>> structureSongsString = new HashMap<>();
+    public static HashMap<String, Integer> structurePriorities = new HashMap<>();
+
+    public static HashMap<String, List<SoundEvent>> mobSongs = new HashMap<>();
+    public static HashMap<String, List<String>> mobSongsString = new HashMap<>();
+    public static HashMap<String, Integer> mobPriorities = new HashMap<>();
+    public static HashMap<String, Integer> mobNumber = new HashMap<>();
+
     @SubscribeEvent
     public static void registerSounds(RegistryEvent.Register<SoundEvent> evt) {
         IForgeRegistry<SoundEvent> r = evt.getRegistry();
@@ -63,9 +74,12 @@ public class SoundHandler {
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 menu.add(sound);
-                EnumHelperClient.addMusicType(songName, sound, 0, 0);
-                songsRecords.put(songName,PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
-                r.register(menu.get(i));
+                if(!allSongs.contains(songName)) {
+                    allSongs.add(songName);
+                    EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
+                    r.register(sound);
+                }
             }
         }
         if (config.generic.genericSongs!=null) {
@@ -377,7 +391,7 @@ public class SoundHandler {
                 String[] broken = stringBreaker(config.dimension.dimensionSongs[i]);
                 int extractedID = Integer.parseInt(broken[0]);
                 dimensionPriorities.computeIfAbsent(extractedID, k -> config.dimension.dimensionPriority);
-                if(broken[2]!=null) {
+                if(broken.length==3) {
                     int extractedPriority = Integer.parseInt(broken[2]);
                     dimensionPriorities.put(extractedID,extractedPriority);
                 }
@@ -403,7 +417,7 @@ public class SoundHandler {
                 String[] broken = stringBreaker(config.biome.biomeSongs[i]);
                 String extractedBiome = broken[0];
                 biomePriorities.computeIfAbsent(extractedBiome, k -> config.biome.biomePriority);
-                if(broken[2]!=null) {
+                if(broken.length==3) {
                     int extractedPriority = Integer.parseInt(broken[2]);
                     biomePriorities.put(extractedBiome,extractedPriority);
                 }
@@ -422,6 +436,64 @@ public class SoundHandler {
                 EnumHelperClient.addMusicType(songName, sound, 0, 0);
                 songsRecords.put(songName,PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                 r.register(sound);
+            }
+        }
+        if (config.structure.structureSongs!=null) {
+            for (int i = 0; i < config.structure.structureSongs.length; i++) {
+                String[] broken = stringBreaker(config.structure.structureSongs[i]);
+                String extractedStructName = broken[0];
+                structurePriorities.computeIfAbsent(extractedStructName, k -> config.structure.structurePriority);
+                if(broken.length==3) {
+                    int extractedPriority = Integer.parseInt(broken[2]);
+                    structurePriorities.put(extractedStructName,extractedPriority);
+                }
+                String songName = broken[1];
+                if(songName.startsWith("+") || songName.startsWith("-")) {
+                    songName = songName.substring(1);
+                    if(songName.startsWith("+") || songName.startsWith("-")) {
+                        songName = songName.substring(1);
+                    }
+                }
+                structureSongs.computeIfAbsent(extractedStructName, k -> new ArrayList<>());
+                structureSongsString.computeIfAbsent(extractedStructName, k -> new ArrayList<>());
+                structureSongsString.get(extractedStructName).add(songName);
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                structureSongs.get(extractedStructName).add(sound);
+                EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                songsRecords.put(songName,PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
+                r.register(sound);
+            }
+        }
+        if (config.mob.mobSongs!=null) {
+            for (int i = 0; i < config.mob.mobSongs.length; i++) {
+                String[] broken = stringBreaker(config.mob.mobSongs[i]);
+                String extractedMobName = broken[0];
+                mobPriorities.computeIfAbsent(extractedMobName, k -> config.mob.mobPriority);
+                if(broken.length==4) {
+                    int extractedPriority = Integer.parseInt(broken[3]);
+                    mobPriorities.put(extractedMobName,extractedPriority);
+                }
+                mobNumber.put(extractedMobName,Integer.parseInt(broken[1]));
+                String songName = broken[2];
+                if(songName.startsWith("+") || songName.startsWith("-")) {
+                    songName = songName.substring(1);
+                    if(songName.startsWith("+") || songName.startsWith("-")) {
+                        songName = songName.substring(1);
+                    }
+                }
+                mobSongs.computeIfAbsent(extractedMobName, k -> new ArrayList<>());
+                mobSongsString.computeIfAbsent(extractedMobName, k -> new ArrayList<>());
+                mobSongsString.get(extractedMobName).add(songName);
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                mobSongs.get(extractedMobName).add(sound);
+                EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                songsRecords.put(songName,PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
+                if(!allSongs.contains(songName)) {
+                    allSongs.add(songName);
+                    EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
+                    r.register(sound);
+                }
             }
         }
     }
