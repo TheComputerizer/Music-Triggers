@@ -1,0 +1,16 @@
+[
+{
+  "modid": "musictriggers",
+  "name": "Music Triggers",
+  "description": "Sets the music based on in game triggers",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["The_Computerizer"],
+  "credits": "The_Computerizer",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
