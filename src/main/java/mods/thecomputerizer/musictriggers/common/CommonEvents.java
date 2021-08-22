@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.common;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.MusicPicker;
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.common.Mod;
 
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;

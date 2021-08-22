@@ -26,70 +26,84 @@ public class MusicPicker {
             return config.menu.menuSongs;
         }
         List<String> res = comboChecker(priorityHandler(playableEvents()));
-        if (res!=null) {
-            List<String> finalList = new ArrayList<>();
-            for(String r: res) {
-                Collections.addAll(finalList, dynamicSongs.get(r));
-            }
+        if (res!=null && !res.isEmpty()) {
             dynamicSongs.clear();
             dynamicPriorities.clear();
-            return finalList.toArray(new String[0]);
+            return res.toArray(new String[0]);
         }
-        dynamicSongs.clear();
-        dynamicPriorities.clear();
+        dynamicSongs = new HashMap<>();
+        dynamicPriorities = new HashMap<>();
+        System.out.print("It has defaulted to generic songs!\n");
         return config.generic.genericSongs;
     }
 
+    @SuppressWarnings("rawtypes")
     public static List<String> comboChecker(String st) {
         if(st==null) {
+            System.out.print("combo was null!\n");
             return null;
         }
-        List<String> playableEvents = new ArrayList<>();
-        playableEvents.add(st);
-        for(String these: dynamicSongs.get(st)) {
-            if (these.startsWith("-")) {
-                these = these.substring(1);
+        List<String> playableSongs = new ArrayList<>();
+        List<String> unplayableSongs = new ArrayList<>();
+        for(String s: dynamicSongs.get(st)) {
+            if(s.startsWith("+")) {
+                s = s.substring(1);
             }
-            if (these.startsWith("+")) {
-                these = these.substring(1);
-                for (String songEvents : playableList) {
-                    if (!songEvents.matches(st)) {
-                        for (String song : dynamicSongs.get(songEvents)) {
-                            if (song.contains(these)) {
-                                playableEvents.add(songEvents);
-                            }
-                        }
+            for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.songCombos.entrySet()) {
+                String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
+                if(s.matches(checkThis)) {
+                    if(playableList.containsAll(SoundHandler.songCombos.get(s)) && SoundHandler.songCombos.get(s).size()!=1) {
+                        playableSongs.add(s);
+                        System.out.print("playable\n");
+                    }
+                    if(SoundHandler.songCombos.get(s).size()>1) {
+                        unplayableSongs.add(s);
+                        System.out.print("unplayable\n");
                     }
                 }
             }
         }
-        return playableEvents;
+        if(playableSongs.isEmpty()) {
+            for(String s: dynamicSongs.get(st)) {
+                if (s.startsWith("+")) {
+                    s = s.substring(1);
+                }
+                if(!unplayableSongs.contains(s)) {
+                    playableSongs.add(s);
+                }
+            }
+        }
+        for(String f: playableSongs) {
+            System.out.print(f+"\n");
+        }
+        if(playableSongs.isEmpty()) {
+            List<String> tryAgain = playableEvents();
+            tryAgain.remove(st);
+            if(tryAgain.isEmpty()) {
+                return null;
+            }
+            playableSongs = comboChecker(priorityHandler(tryAgain));
+        }
+        return playableSongs;
     }
 
     public static String priorityHandler(List<String> sta) {
         if(sta==null) {
+            System.out.print("priority was null!\n");
             return null;
         }
         int highest=-100;
         String trueHighest="";
         for(String list: sta) {
-            if(dynamicPriorities.get(list)>highest) {
+            if(dynamicPriorities.get(list)>highest && !Arrays.asList(dynamicSongs.get(list)).isEmpty()) {
                 highest = dynamicPriorities.get(list);
                 trueHighest = list;
             }
         }
-        if(trueHighest.startsWith("+")) {
-            String temp = trueHighest.substring(1);
-            if(temp.startsWith("-")) {
-                dynamicSongs.put(trueHighest, null);
-            }
-        }
-        if(trueHighest.startsWith("-")) {
-            dynamicSongs.put(trueHighest, null);
-        }
         while(dynamicSongs.get(trueHighest)==null) {
             sta.remove(trueHighest);
             if(sta.isEmpty()) {
+                System.out.print("priority was null!2\n");
                 return null;
             }
             for(String list: sta) {
@@ -99,6 +113,7 @@ public class MusicPicker {
                 }
             }
         }
+        System.out.print(trueHighest+"\n");
         return trueHighest;
     }
 
@@ -141,6 +156,11 @@ public class MusicPicker {
                 events.add("underground");
                 dynamicSongs.put("underground", config.underground.undergroundSongs);
                 dynamicPriorities.put("underground", config.underground.undergroundPriority);
+            }
+            if(player.posY<0) {
+                events.add("inVoid");
+                dynamicSongs.put("inVoid", config.inVoid.inVoidSongs);
+                dynamicPriorities.put("inVoid", config.inVoid.inVoidPriority);
             }
             if(player.posY>=config.high.highLevel) {
                 events.add("high");
@@ -224,8 +244,8 @@ public class MusicPicker {
                     if (mobName.matches("MOB")) {
                         if (mobList.size()>=SoundHandler.mobNumber.get(mobName)) {
                             events.add(mobName);
-                            String[] dimSongsArray = new String[SoundHandler.mobSongsString.get(mobName).size()];
-                            dynamicSongs.put(mobName, SoundHandler.mobSongsString.get(mobName).toArray(dimSongsArray));
+                            String[] mobSongsArray = new String[SoundHandler.mobSongsString.get(mobName).size()];
+                            dynamicSongs.put(mobName, SoundHandler.mobSongsString.get(mobName).toArray(mobSongsArray));
                             dynamicPriorities.put(mobName, SoundHandler.mobPriorities.get(mobName));
                         }
                     }
@@ -236,8 +256,8 @@ public class MusicPicker {
                         }
                         if (mobCounter>=SoundHandler.mobNumber.get(mobName)) {
                             events.add(mobName);
-                            String[] dimSongsArray = new String[SoundHandler.mobSongsString.get(mobName).size()];
-                            dynamicSongs.put(mobName, SoundHandler.mobSongsString.get(mobName).toArray(dimSongsArray));
+                            String[] mobSongsArray = new String[SoundHandler.mobSongsString.get(mobName).size()];
+                            dynamicSongs.put(mobName, SoundHandler.mobSongsString.get(mobName).toArray(mobSongsArray));
                             dynamicPriorities.put(mobName, SoundHandler.mobPriorities.get(mobName));
                         }
                     }
