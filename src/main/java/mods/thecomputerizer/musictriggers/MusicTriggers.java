@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers;
 
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
-import mods.thecomputerizer.musictriggers.common.CommonEvents;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.json;
@@ -172,7 +171,6 @@ public class MusicTriggers
 
         MinecraftForge.EVENT_BUS.register(SoundHandler.class);
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
-        MinecraftForge.EVENT_BUS.register(CommonEvents.class);
         MinecraftForge.EVENT_BUS.register(RegistryHandler.class);
     }
 

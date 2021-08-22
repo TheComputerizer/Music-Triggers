@@ -43,7 +43,6 @@ public class MusicPlayer {
                 }
             }
             if (!Arrays.asList(curTrackList).containsAll(Arrays.asList(holder)) && !Arrays.asList(holder).containsAll(Arrays.asList(curTrackList))) {
-                System.out.print("Dif Checker test\n");
                 curTrackList = null;
                 mc.getSoundHandler().stopSound(curMusic);
             } else if (curMusic == null && mc.gameSettings.getSoundLevel(SoundCategory.MASTER) > 0 && mc.gameSettings.getSoundLevel(SoundCategory.MUSIC) > 0) {
