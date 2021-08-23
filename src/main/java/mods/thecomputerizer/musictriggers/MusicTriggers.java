@@ -45,7 +45,6 @@ public class MusicTriggers
     @SuppressWarnings("JavaReflectionMemberAccess")
     public MusicTriggers() {
         readFrom = new File("."+"/config/MusicTriggers/songs/");
-        System.out.println(readFrom.getPath());
         if(readFrom.exists()) {
             File sj = new File("."+"/config/MusicTriggers/songs/assets/musictriggers/sounds.json");
             if(sj.exists()) {
@@ -101,7 +100,6 @@ public class MusicTriggers
                 }
 
                 FolderResourcePack test = new FolderResourcePack(pack);
-                System.out.print(test.getResourceDomains());
             }
 
         }

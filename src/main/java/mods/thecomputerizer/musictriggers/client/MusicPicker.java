@@ -5,16 +5,14 @@ import mods.thecomputerizer.musictriggers.config;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 
 import java.util.*;
 
 public class MusicPicker {
-    public static MinecraftServer server;
+    public static Minecraft mc;
     public static EntityPlayer player;
     public static World world;
 
@@ -24,10 +22,10 @@ public class MusicPicker {
     public static List<String> playableList = new ArrayList<>();
 
     public static String[] playThese() {
-        server = FMLCommonHandler.instance().getMinecraftServerInstance();
-        player = Minecraft.getMinecraft().player;
-        if(player!=null && server!=null) {
-            world = server.getWorld(player.dimension);
+        mc = Minecraft.getMinecraft();
+        player = mc.player;
+        if(player !=null) {
+            world = player.getEntityWorld();
         }
         if(player == null || world == null) {
             return config.menu.menuSongs;
@@ -107,7 +105,11 @@ public class MusicPicker {
     @SuppressWarnings("rawtypes")
     public static List<String> playableEvents() {
         List<String> events = new ArrayList<>();
-        if (world.isDaytime()) {
+        double time = (double)world.getWorldTime()/24000.0;
+        if(time>1) {
+            time = time-(long)time;
+        }
+        if (time<0.54166666666) {
             events.add("day");
             dynamicSongs.put("day", config.day.daySongs);
             dynamicPriorities.put("day", config.day.dayPriority);
@@ -116,11 +118,11 @@ public class MusicPicker {
             dynamicSongs.put("night", config.night.nightSongs);
             dynamicPriorities.put("night", config.night.nightPriority);
         }
-        if (world.getWorldTime() < 13000 && world.getWorldTime() >= 12000) {
+        if (time<0.54166666666 && time>=0.5) {
             events.add("sunset");
             dynamicSongs.put("sunset", config.sunset.sunsetSongs);
             dynamicPriorities.put("sunset", config.sunset.sunsetPriority);
-        } else if (world.getWorldTime() >= 23000 && world.getWorldTime() < 24000) {
+        } else if (time>=0.95833333333 && time<1) {
             events.add("sunrise");
             dynamicSongs.put("sunrise", config.sunrise.sunriseSongs);
             dynamicPriorities.put("sunrise", config.sunrise.sunrisePriority);
@@ -211,14 +213,16 @@ public class MusicPicker {
             dynamicSongs.put(biomeName, SoundHandler.biomeSongsString.get(biomeName).toArray(biomeSongsArray));
             dynamicPriorities.put(biomeName, SoundHandler.biomePriorities.get(biomeName));
         }
-        WorldServer serv = server.getWorld(player.dimension);
-        for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.structureSongsString.entrySet()) {
-            String structName = ((Map.Entry) stringListEntry).getKey().toString();
-            if (serv.getChunkProvider().isInsideStructure(world, structName, player.getPosition())) {
-                events.add("structure:" + structName);
-                String[] structureSongsArray = new String[SoundHandler.structureSongsString.get(structName).size()];
-                dynamicSongs.put("structure:" + structName, SoundHandler.structureSongsString.get(structName).toArray(structureSongsArray));
-                dynamicPriorities.put("structure:" + structName, SoundHandler.structurePriorities.get(structName));
+        if(mc.isSingleplayer()) {
+            WorldServer nworld = Objects.requireNonNull(mc.getIntegratedServer()).getWorld(player.dimension);
+            for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.structureSongsString.entrySet()) {
+                String structName = ((Map.Entry) stringListEntry).getKey().toString();
+                if (nworld.getChunkProvider().isInsideStructure(world, structName, player.getPosition())) {
+                    events.add("structure:" + structName);
+                    String[] structureSongsArray = new String[SoundHandler.structureSongsString.get(structName).size()];
+                    dynamicSongs.put("structure:" + structName, SoundHandler.structureSongsString.get(structName).toArray(structureSongsArray));
+                    dynamicPriorities.put("structure:" + structName, SoundHandler.structurePriorities.get(structName));
+                }
             }
         }
         List<EntityMob> mobList = world.getEntitiesWithinAABB(EntityMob.class, new AxisAlignedBB(player.posX - 16, player.posY - 8, player.posZ - 16, player.posX + 16, player.posY + 8, player.posZ + 16));
@@ -248,11 +252,11 @@ public class MusicPicker {
         }
         playableList = events;
         /* This is for debugging
-        System.out.print("Initial Events: ");
-        for(String ev: events) {
-            System.out.print(ev+" ");
+        if(events.size()>=1) {
+            for (String ev : events) {
+                player.sendMessage(new TextComponentString(ev+" "+time));
+            }
         }
-        System.out.print("\n");
          */
         return events;
     }
