@@ -13,6 +13,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.thread.SidedThreadGroups;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -40,13 +41,13 @@ public class MusicTriggers
     public static File pack;
     public static List<ResourcePackRepository.Entry> oldpacks = new ArrayList<>();
     public static List<ResourcePackRepository.Entry> newpacks = new ArrayList<>();
-
+    
     @SuppressWarnings("JavaReflectionMemberAccess")
     public MusicTriggers() {
-        readFrom = new File(Minecraft.getMinecraft().gameDir.getPath()+"/config/MusicTriggers/songs/");
+        readFrom = new File("."+"/config/MusicTriggers/songs/");
         System.out.println(readFrom.getPath());
         if(readFrom.exists()) {
-            File sj = new File(Minecraft.getMinecraft().gameDir.getPath()+"/config/MusicTriggers/songs/assets/musictriggers/sounds.json");
+            File sj = new File("."+"/config/MusicTriggers/songs/assets/musictriggers/sounds.json");
             if(sj.exists()) {
                 sj.delete();
             }
@@ -64,7 +65,7 @@ public class MusicTriggers
                     ex.printStackTrace();
                 }
             }
-            sj = new File(Minecraft.getMinecraft().gameDir.getPath()+"/config/MusicTriggers/songs/assets/musictriggers/lang/en_us.lang");
+            sj = new File("."+"/config/MusicTriggers/songs/assets/musictriggers/lang/en_us.lang");
             if(sj.exists()) {
                 sj.delete();
             }
@@ -84,21 +85,24 @@ public class MusicTriggers
                     ex.printStackTrace();
                 }
             }
-            pack = new File(Minecraft.getMinecraft().gameDir.getPath()+"/config/MusicTriggers/songs/");
-            if(pack.exists()) {
-                try {
-                    oldpacks = Minecraft.getMinecraft().getResourcePackRepository().getRepositoryEntriesAll();
-                    newpacks.addAll(oldpacks);
-                    Constructor<ResourcePackRepository.Entry> cn = ResourcePackRepository.Entry.class.getDeclaredConstructor(ResourcePackRepository.class, IResourcePack.class);
-                    cn.setAccessible(true);
-                    newpacks.add(cn.newInstance(Minecraft.getMinecraft().getResourcePackRepository(), new FolderResourcePack(pack)));
-                    Minecraft.getMinecraft().getResourcePackRepository().setRepositories(newpacks);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
+            pack = new File("."+"/config/MusicTriggers/songs/");
+            if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
+                if (pack.exists()) {
+                    try {
+                        oldpacks = Minecraft.getMinecraft().getResourcePackRepository().getRepositoryEntriesAll();
+                        newpacks.addAll(oldpacks);
+                        Constructor<ResourcePackRepository.Entry> cn = ResourcePackRepository.Entry.class.getDeclaredConstructor(ResourcePackRepository.class, IResourcePack.class);
+                        cn.setAccessible(true);
+                        newpacks.add(cn.newInstance(Minecraft.getMinecraft().getResourcePackRepository(), new FolderResourcePack(pack)));
+                        Minecraft.getMinecraft().getResourcePackRepository().setRepositories(newpacks);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
                 }
+
+                FolderResourcePack test = new FolderResourcePack(pack);
+                System.out.print(test.getResourceDomains());
             }
-            FolderResourcePack test = new FolderResourcePack(pack);
-            System.out.print(test.getResourceDomains());
 
         }
     }

@@ -33,10 +33,12 @@ public class MusicPlayer {
             if (curTrackList == null) {
                 curTrackList = holder;
             }
+            /* This is for debugging
             for (String print : curTrackList) {
                 System.out.print(print);
             }
             System.out.print("\n");
+             */
             if (curMusic != null) {
                 if (!mc.getSoundHandler().isSoundPlaying(curMusic)) {
                     curMusic = null;

@@ -13,7 +13,7 @@ public class json {
 
     public static List<String> create() {
         allSongs = collector();
-        if (allSongs != null) {
+        if (allSongs != null && !allSongs.isEmpty()) {
             System.out.print(allSongs.size());
             js.add("{");
             for (int i = 0; i < allSongs.size() - 1; i++) {
@@ -49,7 +49,7 @@ public class json {
         return js;
     }
     public static List<String> collector() {
-        File folder = new File(Minecraft.getMinecraft().gameDir.getPath()+"/config/MusicTriggers/songs/assets/musictriggers/sounds/music/");
+        File folder = new File("."+"/config/MusicTriggers/songs/assets/musictriggers/sounds/music/");
         File[] listOfFiles = folder.listFiles((dir, name) -> name.endsWith(".ogg"));
 
         boolean matchCheck = false;

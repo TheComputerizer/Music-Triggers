@@ -5,14 +5,16 @@ import mods.thecomputerizer.musictriggers.config;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
 import java.util.*;
 
 public class MusicPicker {
-    public static Minecraft mc;
+    public static MinecraftServer server;
     public static EntityPlayer player;
     public static World world;
 
@@ -22,14 +24,14 @@ public class MusicPicker {
     public static List<String> playableList = new ArrayList<>();
 
     public static String[] playThese() {
-        mc = Minecraft.getMinecraft();
-        player = mc.player;
-        world = mc.world;
+        server = FMLCommonHandler.instance().getMinecraftServerInstance();
+        player = Minecraft.getMinecraft().player;
+        if(player!=null && server!=null) {
+            world = server.getWorld(player.dimension);
+        }
         if(player == null || world == null) {
             return config.menu.menuSongs;
         }
-        System.out.print(player.getName()+"\n");
-        System.out.print(world.getProviderName()+"\n");
         List<String> res = comboChecker(priorityHandler(playableEvents()));
         if (res!=null && !res.isEmpty()) {
             dynamicSongs.clear();
@@ -47,29 +49,19 @@ public class MusicPicker {
             return null;
         }
         List<String> playableSongs = new ArrayList<>();
-        List<String> unplayableSongs = new ArrayList<>();
         for(String s: dynamicSongs.get(st)) {
-            if(s.startsWith("+")) {
-                s = s.substring(1);
-            }
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.songCombos.entrySet()) {
                 String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
                 if(s.matches(checkThis)) {
                     if(playableList.containsAll(SoundHandler.songCombos.get(s)) && SoundHandler.songCombos.get(s).size()!=1) {
-                        playableSongs.add(s);
-                    }
-                    if(SoundHandler.songCombos.get(s).size()>1) {
-                        unplayableSongs.add(s);
+                        playableSongs.add(s.substring(1));
                     }
                 }
             }
         }
         if(playableSongs.isEmpty()) {
             for(String s: dynamicSongs.get(st)) {
-                if (s.startsWith("+")) {
-                    s = s.substring(1);
-                }
-                if(!unplayableSongs.contains(s)) {
+                if(!s.startsWith("@")) {
                     playableSongs.add(s);
                 }
             }
@@ -115,7 +107,6 @@ public class MusicPicker {
     @SuppressWarnings("rawtypes")
     public static List<String> playableEvents() {
         List<String> events = new ArrayList<>();
-        world = player.getEntityWorld();
         if (world.isDaytime()) {
             events.add("day");
             dynamicSongs.put("day", config.day.daySongs);
@@ -220,10 +211,10 @@ public class MusicPicker {
             dynamicSongs.put(biomeName, SoundHandler.biomeSongsString.get(biomeName).toArray(biomeSongsArray));
             dynamicPriorities.put(biomeName, SoundHandler.biomePriorities.get(biomeName));
         }
-        WorldServer server = Objects.requireNonNull(mc.getIntegratedServer()).getWorld(player.dimension);
+        WorldServer serv = server.getWorld(player.dimension);
         for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.structureSongsString.entrySet()) {
             String structName = ((Map.Entry) stringListEntry).getKey().toString();
-            if (server.getChunkProvider().isInsideStructure(world, structName, player.getPosition())) {
+            if (serv.getChunkProvider().isInsideStructure(world, structName, player.getPosition())) {
                 events.add("structure:" + structName);
                 String[] structureSongsArray = new String[SoundHandler.structureSongsString.get(structName).size()];
                 dynamicSongs.put("structure:" + structName, SoundHandler.structureSongsString.get(structName).toArray(structureSongsArray));
@@ -256,11 +247,13 @@ public class MusicPicker {
             }
         }
         playableList = events;
+        /* This is for debugging
         System.out.print("Initial Events: ");
         for(String ev: events) {
             System.out.print(ev+" ");
         }
         System.out.print("\n");
+         */
         return events;
     }
 }
