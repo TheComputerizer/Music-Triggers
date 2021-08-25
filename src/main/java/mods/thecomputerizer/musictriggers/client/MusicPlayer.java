@@ -30,34 +30,42 @@ public class MusicPlayer {
     public static void onTick(TickEvent.ClientTickEvent event) {
         if(tickCounter%10==0) {
             holder = MusicPicker.playThese();
-            if (curTrackList == null) {
-                curTrackList = holder;
-            }
-            /* This is for debugging
-            for (String print : curTrackList) {
-                System.out.print(print);
-            }
-            System.out.print("\n");
-             */
-            if (curMusic != null) {
-                if (!mc.getSoundHandler().isSoundPlaying(curMusic)) {
-                    curMusic = null;
+            if (holder!=null && !Arrays.asList(holder).isEmpty()) {
+                if (curTrackList == null) {
+                    curTrackList = holder;
+                }
+                /* For debug purposes
+                for (String print : curTrackList) {
+                    System.out.print(print);
+                }
+                System.out.print("\n");
+                 */
+                if (curMusic != null) {
+                    if (!mc.getSoundHandler().isSoundPlaying(curMusic)) {
+                        curMusic = null;
+                    }
+                }
+                if (!Arrays.asList(curTrackList).containsAll(Arrays.asList(holder)) && !Arrays.asList(holder).containsAll(Arrays.asList(curTrackList))) {
+                    curTrackList = null;
+                    mc.getSoundHandler().stopSound(curMusic);
+                } else if (curMusic == null && mc.gameSettings.getSoundLevel(SoundCategory.MASTER) > 0 && mc.gameSettings.getSoundLevel(SoundCategory.MUSIC) > 0) {
+                    if (curTrackList.length >= 1) {
+                        int i = rand.nextInt(curTrackList.length);
+                        if (curTrackList.length > 1 && curTrack != null) {
+                            while (curTrack.equals(curTrackList[i])) {
+                                i = rand.nextInt(curTrackList.length);
+                            }
+                        }
+                        curTrack = curTrackList[i];
+                        curMusic = SoundHandler.songsRecords.get(curTrack);
+                        mc.getSoundHandler().playSound(curMusic);
+                    }
                 }
             }
-            if (!Arrays.asList(curTrackList).containsAll(Arrays.asList(holder)) && !Arrays.asList(holder).containsAll(Arrays.asList(curTrackList))) {
-                curTrackList = null;
-                mc.getSoundHandler().stopSound(curMusic);
-            } else if (curMusic == null && mc.gameSettings.getSoundLevel(SoundCategory.MASTER) > 0 && mc.gameSettings.getSoundLevel(SoundCategory.MUSIC) > 0) {
-                if (curTrackList.length >= 1) {
-                    int i = rand.nextInt(curTrackList.length);
-                    if (curTrackList.length > 1 && curTrack != null) {
-                        while (curTrack.equals(curTrackList[i])) {
-                            i = rand.nextInt(curTrackList.length);
-                        }
-                    }
-                    curTrack = curTrackList[i];
-                    curMusic = SoundHandler.songsRecords.get(curTrack);
-                    mc.getSoundHandler().playSound(curMusic);
+            else {
+                if(curMusic!=null) {
+                    mc.getSoundHandler().stopSound(curMusic);
+                    curMusic=null;
                 }
             }
         }

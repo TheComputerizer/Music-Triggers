@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
@@ -65,12 +66,13 @@ public class MusicPicker {
             }
         }
         if(playableSongs.isEmpty()) {
-            List<String> tryAgain = playableEvents();
+            List<String> tryAgain = playableList;
             tryAgain.remove(st);
-            if(tryAgain.isEmpty()) {
+            playableList = tryAgain;
+            if(playableList.isEmpty()) {
                 return null;
             }
-            playableSongs = comboChecker(priorityHandler(tryAgain));
+            playableSongs = comboChecker(priorityHandler(playableList));
         }
         return playableSongs;
     }
@@ -251,7 +253,7 @@ public class MusicPicker {
             }
         }
         playableList = events;
-        /* This is for debugging
+        /* For debug purposes
         if(events.size()>=1) {
             for (String ev : events) {
                 player.sendMessage(new TextComponentString(ev+" "+time));
