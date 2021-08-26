@@ -6,22 +6,16 @@ import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraftforge.client.EnumHelperClient;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.thread.SidedThreadGroups;
-import net.minecraftforge.registries.IForgeRegistry;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
-@Mod.EventBusSubscriber(modid=MusicTriggers.MODID)
 public class SoundHandler {
 
     public static HashMap<String, PositionedSoundRecord> songsRecords = new HashMap<>();
 
     public static List<String> allSongs = new ArrayList<>();
+    public static final List<SoundEvent> allSoundEvents = new ArrayList<>();
 
     public static List<SoundEvent> menu = new ArrayList<>();
     public static List<SoundEvent> generic = new ArrayList<>();
@@ -71,452 +65,432 @@ public class SoundHandler {
 
     public static HashMap<String, List<String>> songCombos = new HashMap<>();
 
-    @SubscribeEvent
-    public static void registerSounds(RegistryEvent.Register<SoundEvent> evt) {
-        IForgeRegistry<SoundEvent> r = evt.getRegistry();
-        if (config.menu.menuSongs!=null) {
+
+    public static void registerSounds() {
+
+        if (config.menu.menuSongs != null) {
             for (int i = 0; i < config.menu.menuSongs.length; i++) {
                 String songName = config.menu.menuSongs[i];
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("menu");
                     songName = songName.substring(1);
                 }
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 menu.add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         EnumHelperClient.addMusicType(songName, sound, 0, 0);
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.generic.genericSongs!=null) {
+        if (config.generic.genericSongs != null) {
             for (int i = 0; i < config.generic.genericSongs.length; i++) {
                 String songName = config.generic.genericSongs[i];
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("generic");
                     songName = songName.substring(1);
                 }
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 generic.add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.day.daySongs!=null) {
+        if (config.day.daySongs != null) {
             for (int i = 0; i < config.day.daySongs.length; i++) {
                 String songName = config.day.daySongs[i];
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("day");
                     songName = songName.substring(1);
                 }
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 day.add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.night.nightSongs!=null) {
+        if (config.night.nightSongs != null) {
             for (int i = 0; i < config.night.nightSongs.length; i++) {
                 String songName = config.night.nightSongs[i];
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("night");
                     songName = songName.substring(1);
                 }
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 night.add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.sunrise.sunriseSongs!=null) {
+        if (config.sunrise.sunriseSongs != null) {
             for (int i = 0; i < config.sunrise.sunriseSongs.length; i++) {
                 String songName = config.sunrise.sunriseSongs[i];
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("sunrise");
                     songName = songName.substring(1);
                 }
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 sunrise.add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.sunset.sunsetSongs!=null) {
+        if (config.sunset.sunsetSongs != null) {
             for (int i = 0; i < config.sunset.sunsetSongs.length; i++) {
                 String songName = config.sunset.sunsetSongs[i];
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("sunset");
                     songName = songName.substring(1);
                 }
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 sunset.add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.light.lightSongs!=null) {
+        if (config.light.lightSongs != null) {
             for (int i = 0; i < config.light.lightSongs.length; i++) {
                 String songName = config.light.lightSongs[i];
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("light");
                     songName = songName.substring(1);
                 }
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 light.add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.underground.undergroundSongs!=null) {
+        if (config.underground.undergroundSongs != null) {
             for (int i = 0; i < config.underground.undergroundSongs.length; i++) {
                 String songName = config.underground.undergroundSongs[i];
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("underground");
                     songName = songName.substring(1);
                 }
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 underground.add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.deepUnder.deepUnderSongs!=null) {
+        if (config.deepUnder.deepUnderSongs != null) {
             for (int i = 0; i < config.deepUnder.deepUnderSongs.length; i++) {
                 String songName = config.deepUnder.deepUnderSongs[i];
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("deepUnder");
                     songName = songName.substring(1);
                 }
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 deepUnder.add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.raining.rainingSongs!=null) {
+        if (config.raining.rainingSongs != null) {
             for (int i = 0; i < config.raining.rainingSongs.length; i++) {
                 String songName = config.raining.rainingSongs[i];
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("raining");
                     songName = songName.substring(1);
                 }
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 raining.add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.storming.stormingSongs!=null) {
+        if (config.storming.stormingSongs != null) {
             for (int i = 0; i < config.storming.stormingSongs.length; i++) {
                 String songName = config.storming.stormingSongs[i];
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("storming");
                     songName = songName.substring(1);
                 }
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 storming.add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.snowing.snowingSongs!=null) {
+        if (config.snowing.snowingSongs != null) {
             for (int i = 0; i < config.snowing.snowingSongs.length; i++) {
                 String songName = config.snowing.snowingSongs[i];
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("snowing");
                     songName = songName.substring(1);
                 }
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 snowing.add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.lowHP.lowHPSongs!=null) {
+        if (config.lowHP.lowHPSongs != null) {
             for (int i = 0; i < config.lowHP.lowHPSongs.length; i++) {
                 String songName = config.lowHP.lowHPSongs[i];
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("lowHP");
                     songName = songName.substring(1);
                 }
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 lowHP.add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.dead.deadSongs!=null) {
+        if (config.dead.deadSongs != null) {
             for (int i = 0; i < config.dead.deadSongs.length; i++) {
                 String songName = config.dead.deadSongs[i];
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("dead");
                     songName = songName.substring(1);
                 }
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 dead.add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.inVoid.inVoidSongs!=null) {
+        if (config.inVoid.inVoidSongs != null) {
             for (int i = 0; i < config.inVoid.inVoidSongs.length; i++) {
                 String songName = config.inVoid.inVoidSongs[i];
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("inVoid");
                     songName = songName.substring(1);
                 }
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 inVoid.add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.spectator.spectatorSongs!=null) {
+        if (config.spectator.spectatorSongs != null) {
             for (int i = 0; i < config.spectator.spectatorSongs.length; i++) {
                 String songName = config.spectator.spectatorSongs[i];
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("spectator");
                     songName = songName.substring(1);
                 }
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 spectator.add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.creative.creativeSongs!=null) {
+        if (config.creative.creativeSongs != null) {
             for (int i = 0; i < config.creative.creativeSongs.length; i++) {
                 String songName = config.creative.creativeSongs[i];
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("creative");
                     songName = songName.substring(1);
                 }
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 creative.add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.riding.ridingSongs!=null) {
+        if (config.riding.ridingSongs != null) {
             for (int i = 0; i < config.riding.ridingSongs.length; i++) {
                 String songName = config.riding.ridingSongs[i];
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("riding");
                     songName = songName.substring(1);
                 }
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 riding.add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.pet.petSongs!=null) {
+        if (config.pet.petSongs != null) {
             for (int i = 0; i < config.pet.petSongs.length; i++) {
                 String songName = config.pet.petSongs[i];
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("pet");
                     songName = songName.substring(1);
                 }
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 pet.add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.high.highSongs!=null) {
+        if (config.high.highSongs != null) {
             for (int i = 0; i < config.high.highSongs.length; i++) {
                 String songName = config.high.highSongs[i];
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("high");
                     songName = songName.substring(1);
                 }
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 high.add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.dimension.dimensionSongs!=null) {
+        if (config.dimension.dimensionSongs != null) {
             for (int i = 0; i < config.dimension.dimensionSongs.length; i++) {
                 String[] broken = stringBreaker(config.dimension.dimensionSongs[i]);
                 int extractedID = Integer.parseInt(broken[0]);
                 dimensionPriorities.computeIfAbsent(extractedID, k -> config.dimension.dimensionPriority);
-                if(broken.length==3) {
+                if (broken.length == 3) {
                     int extractedPriority = Integer.parseInt(broken[2]);
-                    dimensionPriorities.put(extractedID,extractedPriority);
+                    dimensionPriorities.put(extractedID, extractedPriority);
                 }
                 String songName = broken[1];
                 String songNamePlus = songName;
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
-                    songCombos.get(songName).add("dimension"+extractedID);
+                    songCombos.get(songName).add("dimension" + extractedID);
                     songName = songName.substring(1);
                 }
                 dimensionSongs.computeIfAbsent(extractedID, k -> new ArrayList<>());
                 dimensionSongsString.computeIfAbsent(extractedID, k -> new ArrayList<>());
                 dimensionSongsString.get(extractedID).add(songNamePlus);
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 dimensionSongs.get(extractedID).add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.biome.biomeSongs!=null) {
+        if (config.biome.biomeSongs != null) {
             for (int i = 0; i < config.biome.biomeSongs.length; i++) {
                 String[] broken = stringBreaker(config.biome.biomeSongs[i]);
                 String extractedBiome = broken[0];
                 biomePriorities.computeIfAbsent(extractedBiome, k -> config.biome.biomePriority);
-                if(broken.length==3) {
+                if (broken.length == 3) {
                     int extractedPriority = Integer.parseInt(broken[2]);
-                    biomePriorities.put(extractedBiome,extractedPriority);
+                    biomePriorities.put(extractedBiome, extractedPriority);
                 }
                 String songName = broken[1];
                 String songNamePlus = songName;
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add(extractedBiome);
                     songName = songName.substring(1);
@@ -524,66 +498,64 @@ public class SoundHandler {
                 biomeSongs.computeIfAbsent(extractedBiome, k -> new ArrayList<>());
                 biomeSongsString.computeIfAbsent(extractedBiome, k -> new ArrayList<>());
                 biomeSongsString.get(extractedBiome).add(songNamePlus);
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 biomeSongs.get(extractedBiome).add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.structure.structureSongs!=null) {
+        if (config.structure.structureSongs != null) {
             for (int i = 0; i < config.structure.structureSongs.length; i++) {
                 String[] broken = stringBreaker(config.structure.structureSongs[i]);
                 String extractedStructName = broken[0];
                 structurePriorities.computeIfAbsent(extractedStructName, k -> config.structure.structurePriority);
-                if(broken.length==3) {
+                if (broken.length == 3) {
                     int extractedPriority = Integer.parseInt(broken[2]);
-                    structurePriorities.put(extractedStructName,extractedPriority);
+                    structurePriorities.put(extractedStructName, extractedPriority);
                 }
                 String songName = broken[1];
                 String songNamePlus = songName;
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
-                    songCombos.get(songName).add("structure:"+extractedStructName);
+                    songCombos.get(songName).add("structure:" + extractedStructName);
                     songName = songName.substring(1);
                 }
                 structureSongs.computeIfAbsent(extractedStructName, k -> new ArrayList<>());
                 structureSongsString.computeIfAbsent(extractedStructName, k -> new ArrayList<>());
                 structureSongsString.get(extractedStructName).add(songNamePlus);
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 structureSongs.get(extractedStructName).add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.mob.mobSongs!=null) {
+        if (config.mob.mobSongs != null) {
             for (int i = 0; i < config.mob.mobSongs.length; i++) {
                 String[] broken = stringBreaker(config.mob.mobSongs[i]);
                 String extractedMobName = broken[0];
                 mobPriorities.computeIfAbsent(extractedMobName, k -> config.mob.mobPriority);
-                if(broken.length>=4) {
+                if (broken.length >= 4) {
                     int extractedRange = Integer.parseInt(broken[3]);
-                    mobRange.put(extractedMobName,extractedRange);
+                    mobRange.put(extractedMobName, extractedRange);
                 }
-                if(broken.length==5) {
+                if (broken.length == 5) {
                     int extractedPriority = Integer.parseInt(broken[4]);
-                    mobPriorities.put(extractedMobName,extractedPriority);
+                    mobPriorities.put(extractedMobName, extractedPriority);
                 }
-                mobNumber.put(extractedMobName,Integer.parseInt(broken[1]));
+                mobNumber.put(extractedMobName, Integer.parseInt(broken[1]));
                 String songName = broken[2];
                 String songNamePlus = songName;
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add(extractedMobName);
                     songName = songName.substring(1);
@@ -591,62 +563,59 @@ public class SoundHandler {
                 mobSongs.computeIfAbsent(extractedMobName, k -> new ArrayList<>());
                 mobSongsString.computeIfAbsent(extractedMobName, k -> new ArrayList<>());
                 mobSongsString.get(extractedMobName).add(songNamePlus);
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 mobSongs.get(extractedMobName).add(sound);
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
-        if (config.gamestage.gamestageSongs!=null) {
+        if (config.gamestage.gamestageSongs != null) {
             for (int i = 0; i < config.gamestage.gamestageSongs.length; i++) {
                 String[] broken = stringBreaker(config.gamestage.gamestageSongs[i]);
                 String extractedStageName = broken[0];
                 boolean checkWhitelist = Boolean.parseBoolean(broken[1]);
                 String songName = broken[2];
                 String songNamePlus = songName;
-                if(songName.startsWith("@")) {
+                if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
-                    songCombos.get(songName).add(extractedStageName+checkWhitelist);
+                    songCombos.get(songName).add(extractedStageName + checkWhitelist);
                     songName = songName.substring(1);
                 }
                 SoundEvent sound;
-                if(checkWhitelist) {
+                if (checkWhitelist) {
                     gamestagePrioritiesWhitelist.computeIfAbsent(extractedStageName, k -> config.gamestage.gamestagePriority);
-                    if(broken.length==4) {
+                    if (broken.length == 4) {
                         int extractedPriority = Integer.parseInt(broken[3]);
-                        gamestagePrioritiesWhitelist.put(extractedStageName,extractedPriority);
+                        gamestagePrioritiesWhitelist.put(extractedStageName, extractedPriority);
                     }
                     gamestageSongsWhitelist.computeIfAbsent(extractedStageName, k -> new ArrayList<>());
                     gamestageSongsStringWhitelist.computeIfAbsent(extractedStageName, k -> new ArrayList<>());
                     gamestageSongsStringWhitelist.get(extractedStageName).add(songNamePlus);
-                    sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                    sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                     gamestageSongsWhitelist.get(extractedStageName).add(sound);
-                }
-                else {
+                } else {
                     gamestagePrioritiesBlacklist.computeIfAbsent(extractedStageName, k -> config.gamestage.gamestagePriority);
-                    if(broken.length==4) {
+                    if (broken.length == 4) {
                         int extractedPriority = Integer.parseInt(broken[3]);
-                        gamestagePrioritiesBlacklist.put(extractedStageName,extractedPriority);
+                        gamestagePrioritiesBlacklist.put(extractedStageName, extractedPriority);
                     }
                     gamestageSongsBlacklist.computeIfAbsent(extractedStageName, k -> new ArrayList<>());
                     gamestageSongsStringBlacklist.computeIfAbsent(extractedStageName, k -> new ArrayList<>());
                     gamestageSongsStringBlacklist.get(extractedStageName).add(songNamePlus);
-                    sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                    sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                     gamestageSongsBlacklist.get(extractedStageName).add(sound);
                 }
-                if(!allSongs.contains(songName)) {
+                allSoundEvents.add(sound);
+                if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                         songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
                     }
-                    r.register(sound);
                 }
             }
         }
