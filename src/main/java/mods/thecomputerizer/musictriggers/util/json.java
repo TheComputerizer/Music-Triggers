@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.util;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import net.minecraft.client.Minecraft;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
@@ -43,7 +42,7 @@ public class json {
             js.add("{");
             for (String allSong : allSongs) {
                 js.add("item.musictriggers." + allSong + ".name=" + allSong);
-                js.add("item.record." + allSong + ".desc=Can you believe this was generated automatically?");
+                js.add("item.musictriggers." + allSong + ".desc="+"This song was read in from the config!");
             }
         }
         return js;

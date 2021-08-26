@@ -1,23 +1,16 @@
 package mods.thecomputerizer.musictriggers;
 
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
-import mods.thecomputerizer.musictriggers.common.MusicTriggersItems;
-import mods.thecomputerizer.musictriggers.common.SoundHandler;
-import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.json;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.FolderResourcePack;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.ResourcePackRepository;
-import net.minecraft.item.Item;
-import net.minecraft.util.SoundEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.thread.SidedThreadGroups;
 
 import java.io.File;
@@ -48,9 +41,9 @@ public class MusicTriggers {
 
     @SuppressWarnings("JavaReflectionMemberAccess")
     public MusicTriggers() {
-        readFrom = new File("." + "/config/MusicTriggers/songs/");
+        readFrom = new File("config/MusicTriggers/songs/");
         if (readFrom.exists() && Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-            File sj = new File("." + "/config/MusicTriggers/songs/assets/musictriggers/sounds.json");
+            File sj = new File("config/MusicTriggers/songs/assets/musictriggers/sounds.json");
             if (sj.exists()) {
                 sj.delete();
             }
@@ -67,7 +60,7 @@ public class MusicTriggers {
                     ex.printStackTrace();
                 }
             }
-            sj = new File("." + "/config/MusicTriggers/songs/assets/musictriggers/lang/en_us.lang");
+            sj = new File("config/MusicTriggers/songs/assets/musictriggers/lang/en_us.lang");
             if (sj.exists()) {
                 sj.delete();
             }
@@ -86,7 +79,7 @@ public class MusicTriggers {
                     ex.printStackTrace();
                 }
             }
-            pack = new File("." + "/config/MusicTriggers/songs/");
+            pack = new File("config/MusicTriggers/songs/");
             if (pack.exists()) {
                 try {
                     oldpacks = Minecraft.getMinecraft().getResourcePackRepository().getRepositoryEntriesAll();
@@ -147,6 +140,7 @@ public class MusicTriggers {
                     ex.printStackTrace();
                 }
             }
+            /*
             File json = new File(musictriggersDir.getPath() + "/sounds.json");
             if (!json.exists()) {
                 try {
@@ -167,13 +161,12 @@ public class MusicTriggers {
                     ex.printStackTrace();
                 }
             }
+             */
 
             songs = musictriggersDir;
         }
 
-        MinecraftForge.EVENT_BUS.register(SoundHandler.class);
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
-        MinecraftForge.EVENT_BUS.register(RegistryHandler.class);
     }
 
     @EventHandler

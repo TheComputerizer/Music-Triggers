@@ -275,11 +275,14 @@ public class MusicPicker {
 
         playableList = events;
 
+        /*
         if(events.size()>=1) {
             for (String ev : events) {
                 player.sendMessage(new TextComponentString(ev+" "+time));
             }
         }
+
+         */
         return events;
     }
     @SuppressWarnings("rawtypes")
@@ -313,7 +316,6 @@ public class MusicPicker {
                 temp = temp.substring(1);
             }
             if(!GameStageHelper.clientHasStage(player,temp)) {
-                System.out.print("UwU\n");
                 events.add(stageName+"false");
                 String[] gamestageSongsArray = new String[SoundHandler.gamestageSongsStringBlacklist.get(stageName).size()];
                 dynamicSongs.put(stageName+"false", SoundHandler.gamestageSongsStringBlacklist.get(stageName).toArray(gamestageSongsArray));

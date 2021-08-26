@@ -78,7 +78,15 @@ public class SoundHandler {
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 menu.add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -98,7 +106,15 @@ public class SoundHandler {
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 generic.add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -117,7 +133,15 @@ public class SoundHandler {
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 day.add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -136,7 +160,15 @@ public class SoundHandler {
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 night.add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -155,7 +187,15 @@ public class SoundHandler {
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 sunrise.add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -174,7 +214,15 @@ public class SoundHandler {
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 sunset.add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -193,7 +241,15 @@ public class SoundHandler {
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 light.add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -212,7 +268,15 @@ public class SoundHandler {
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 underground.add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -231,7 +295,15 @@ public class SoundHandler {
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 deepUnder.add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -250,7 +322,15 @@ public class SoundHandler {
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 raining.add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -269,7 +349,15 @@ public class SoundHandler {
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 storming.add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -288,7 +376,15 @@ public class SoundHandler {
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 snowing.add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -307,7 +403,15 @@ public class SoundHandler {
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 lowHP.add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -326,7 +430,15 @@ public class SoundHandler {
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 dead.add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -345,7 +457,15 @@ public class SoundHandler {
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 inVoid.add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -364,7 +484,15 @@ public class SoundHandler {
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 spectator.add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -383,7 +511,15 @@ public class SoundHandler {
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 creative.add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -402,7 +538,15 @@ public class SoundHandler {
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 riding.add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -421,7 +565,15 @@ public class SoundHandler {
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 pet.add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -440,7 +592,15 @@ public class SoundHandler {
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 high.add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -470,7 +630,15 @@ public class SoundHandler {
                 dimensionSongsString.get(extractedID).add(songNamePlus);
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 dimensionSongs.get(extractedID).add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -500,7 +668,15 @@ public class SoundHandler {
                 biomeSongsString.get(extractedBiome).add(songNamePlus);
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 biomeSongs.get(extractedBiome).add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -530,7 +706,15 @@ public class SoundHandler {
                 structureSongsString.get(extractedStructName).add(songNamePlus);
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 structureSongs.get(extractedStructName).add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -565,7 +749,15 @@ public class SoundHandler {
                 mobSongsString.get(extractedMobName).add(songNamePlus);
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 mobSongs.get(extractedMobName).add(sound);
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -610,7 +802,15 @@ public class SoundHandler {
                     sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                     gamestageSongsBlacklist.get(extractedStageName).add(sound);
                 }
-                allSoundEvents.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
