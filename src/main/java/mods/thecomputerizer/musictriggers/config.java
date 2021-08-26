@@ -370,12 +370,27 @@ public class config {
     public static class Mob {
         @Comment("General Priority [min: -99, max: 2147483647 default: 3500]\nNote: Priorities specified for individual mobs will override this")
         public int mobPriority;
-        @Comment("Songs Per Mob [Format: \"MobName,number of mobs,SongName,(Optional)Priority:[min: -99, max: 2147483647 ]\"]\nNote: You only have to set the priority per mob name for 1 song\nExample: Zombie,8,(songname),11111\nSpecial case - If you put \"MOB\" as the mob ID, it will default to any hostile mob")
+        @Comment("Songs Per Mob [Format: \"MobName,number of mobs,SongName,(Optional)detection range[min: 1, max: 1000, default: 16],(Optional)Priority:[min: -99, max: 2147483647]\"]\nNote: You only have to set the priority per mob name for 1 song\nAdditional Note: Putting high numbers for the mob range will cause lag! The higher it is, the more noticable that will be. Only use higher numbers for a boss that could be far away, like the Ender Dragon\nExample: Zombie,8,(songname),16,11111\nSpecial case - If you put \"MOB\" as the mob ID, it will default to any hostile mob")
         public String[] mobSongs;
 
         public Mob(final int mobPriority, final String[] mobSongs) {
             this.mobPriority = mobPriority;
             this.mobSongs = mobSongs;
+        }
+    }
+
+    @Comment("Gamestages (This works for both bosses and hordes!)")
+    public static Gamestage gamestage = new Gamestage(500,new String[] {});
+
+    public static class Gamestage {
+        @Comment("General Priority [min: -99, max: 2147483647 default: 500]\nNote: Priorities specified for individual gamestages will override this")
+        public int gamestagePriority;
+        @Comment("Songs Per Gamestage [Format: \"StageName,whitelist,SongName,(Optional)Priority:[min: -99, max: 2147483647 ]\"]\nNote: You only have to set the priority per gamestage name for 1 song\nExample: StageOne,true,(songname),11111 - This will play when the player has the stage. If it were false it would play whenever the player does not have it.")
+        public String[] gamestageSongs;
+
+        public Gamestage(final int gamestagePriority, final String[] gamestageSongs) {
+            this.gamestagePriority = gamestagePriority;
+            this.gamestageSongs = gamestageSongs;
         }
     }
 

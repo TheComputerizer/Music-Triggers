@@ -29,11 +29,10 @@ import java.util.List;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
 @Mod(modid = MusicTriggers.MODID, name = MusicTriggers.NAME, version = MusicTriggers.VERSION)
-public class MusicTriggers
-{
+public class MusicTriggers {
     public static final String MODID = "musictriggers";
     public static final String NAME = "Music Triggers";
-    public static final String VERSION = "1.0";
+    public static final String VERSION = "1.1";
 
     public static File songsDir;
     public static File songs;
@@ -41,66 +40,62 @@ public class MusicTriggers
     public static File pack;
     public static List<ResourcePackRepository.Entry> oldpacks = new ArrayList<>();
     public static List<ResourcePackRepository.Entry> newpacks = new ArrayList<>();
-    
+
     @SuppressWarnings("JavaReflectionMemberAccess")
     public MusicTriggers() {
-        readFrom = new File("."+"/config/MusicTriggers/songs/");
-        if(readFrom.exists()) {
-            File sj = new File("."+"/config/MusicTriggers/songs/assets/musictriggers/sounds.json");
-            if(sj.exists()) {
+        readFrom = new File("." + "/config/MusicTriggers/songs/");
+        if (readFrom.exists() && Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
+            File sj = new File("." + "/config/MusicTriggers/songs/assets/musictriggers/sounds.json");
+            if (sj.exists()) {
                 sj.delete();
             }
             List<String> writeThis = json.create();
-            if(writeThis!=null) {
+            if (writeThis != null) {
                 try {
                     sj.createNewFile();
                     FileWriter writer = new FileWriter(sj);
-                    for(String str: writeThis) {
+                    for (String str : writeThis) {
                         writer.write(str + System.lineSeparator());
                     }
                     writer.close();
-                }
-                catch (IOException ex) {
+                } catch (IOException ex) {
                     ex.printStackTrace();
                 }
             }
-            sj = new File("."+"/config/MusicTriggers/songs/assets/musictriggers/lang/en_us.lang");
-            if(sj.exists()) {
+            sj = new File("." + "/config/MusicTriggers/songs/assets/musictriggers/lang/en_us.lang");
+            if (sj.exists()) {
                 sj.delete();
             }
             assert writeThis != null;
             writeThis.clear();
             writeThis = json.lang();
-            if(writeThis!=null) {
+            if (writeThis != null) {
                 try {
                     sj.createNewFile();
                     FileWriter writer = new FileWriter(sj);
-                    for(String str: writeThis) {
+                    for (String str : writeThis) {
                         writer.write(str + System.lineSeparator());
                     }
                     writer.close();
-                }
-                catch (IOException ex) {
+                } catch (IOException ex) {
                     ex.printStackTrace();
                 }
             }
-            pack = new File("."+"/config/MusicTriggers/songs/");
-            if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                if (pack.exists()) {
-                    try {
-                        oldpacks = Minecraft.getMinecraft().getResourcePackRepository().getRepositoryEntriesAll();
-                        newpacks.addAll(oldpacks);
-                        Constructor<ResourcePackRepository.Entry> cn = ResourcePackRepository.Entry.class.getDeclaredConstructor(ResourcePackRepository.class, IResourcePack.class);
-                        cn.setAccessible(true);
-                        newpacks.add(cn.newInstance(Minecraft.getMinecraft().getResourcePackRepository(), new FolderResourcePack(pack)));
-                        Minecraft.getMinecraft().getResourcePackRepository().setRepositories(newpacks);
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
+            pack = new File("." + "/config/MusicTriggers/songs/");
+            if (pack.exists()) {
+                try {
+                    oldpacks = Minecraft.getMinecraft().getResourcePackRepository().getRepositoryEntriesAll();
+                    newpacks.addAll(oldpacks);
+                    Constructor<ResourcePackRepository.Entry> cn = ResourcePackRepository.Entry.class.getDeclaredConstructor(ResourcePackRepository.class, IResourcePack.class);
+                    cn.setAccessible(true);
+                    newpacks.add(cn.newInstance(Minecraft.getMinecraft().getResourcePackRepository(), new FolderResourcePack(pack)));
+                    Minecraft.getMinecraft().getResourcePackRepository().setRepositories(newpacks);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
-
-                FolderResourcePack test = new FolderResourcePack(pack);
             }
+
+            FolderResourcePack test = new FolderResourcePack(pack);
 
         }
     }
@@ -108,68 +103,68 @@ public class MusicTriggers
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         File configDir = new File(event.getSuggestedConfigurationFile().getParentFile().getPath(), "MusicTriggers");
-        if(!configDir.exists()) {
+        if (!configDir.exists()) {
             configDir.mkdir();
         }
-        songsDir = new File(configDir.getPath(), "songs");
-        if(!songsDir.exists()) {
-            songsDir.mkdir();
-        }
-        File assetsDir = new File(songsDir.getPath(), "assets");
-        if(!assetsDir.exists()) {
-            assetsDir.mkdir();
-        }
-        File musictriggersDir = new File(assetsDir.getPath(), "musictriggers");
-        if(!musictriggersDir.exists()) {
-            musictriggersDir.mkdir();
-        }
-        File soundsDir = new File(musictriggersDir.getPath(), "sounds");
-        if(!soundsDir.exists()) {
-            soundsDir.mkdir();
-        }
-        File musicDir = new File(soundsDir.getPath(), "music");
-        if(!musicDir.exists()) {
-            musicDir.mkdir();
-        }
-        File mcmeta = new File(songsDir.getPath()+"/pack.mcmeta");
-        if(!mcmeta.exists()) {
-            try {
-                mcmeta.createNewFile();
+        if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
+            songsDir = new File(configDir.getPath(), "songs");
+            if (!songsDir.exists()) {
+                songsDir.mkdir();
             }
-            catch (IOException ex) {
-                ex.printStackTrace();
+            File assetsDir = new File(songsDir.getPath(), "assets");
+            if (!assetsDir.exists()) {
+                assetsDir.mkdir();
             }
-            List<String> lines = Arrays.asList("{","\t\"pack\": {","\t\t\"pack_format\": 3,","\t\t\"description\": \"Can you believe this was generated automatically?\"","\t}","}");
-            Path file = Paths.get(mcmeta.getPath());
-            try {
-                Files.write(file, lines, StandardCharsets.UTF_8);
+            File musictriggersDir = new File(assetsDir.getPath(), "musictriggers");
+            if (!musictriggersDir.exists()) {
+                musictriggersDir.mkdir();
             }
-            catch (IOException ex) {
-                ex.printStackTrace();
+            File soundsDir = new File(musictriggersDir.getPath(), "sounds");
+            if (!soundsDir.exists()) {
+                soundsDir.mkdir();
             }
-        }
-        File json = new File(musictriggersDir.getPath()+"/sounds.json");
-        if(!json.exists()) {
-            try {
-                json.createNewFile();
-            } catch (IOException ex) {
-                ex.printStackTrace();
+            File musicDir = new File(soundsDir.getPath(), "music");
+            if (!musicDir.exists()) {
+                musicDir.mkdir();
             }
-        }
-        File langDir = new File(musictriggersDir.getPath(), "lang");
-        if(!langDir.exists()) {
-            langDir.mkdir();
-        }
-        File lang = new File(langDir.getPath()+"/en_us.lang");
-        if(!lang.exists()) {
-            try {
-                lang.createNewFile();
-            } catch (IOException ex) {
-                ex.printStackTrace();
+            File mcmeta = new File(songsDir.getPath() + "/pack.mcmeta");
+            if (!mcmeta.exists()) {
+                try {
+                    mcmeta.createNewFile();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+                List<String> lines = Arrays.asList("{", "\t\"pack\": {", "\t\t\"pack_format\": 3,", "\t\t\"description\": \"Can you believe this was generated automatically?\"", "\t}", "}");
+                Path file = Paths.get(mcmeta.getPath());
+                try {
+                    Files.write(file, lines, StandardCharsets.UTF_8);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
             }
-        }
+            File json = new File(musictriggersDir.getPath() + "/sounds.json");
+            if (!json.exists()) {
+                try {
+                    json.createNewFile();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            File langDir = new File(musictriggersDir.getPath(), "lang");
+            if (!langDir.exists()) {
+                langDir.mkdir();
+            }
+            File lang = new File(langDir.getPath() + "/en_us.lang");
+            if (!lang.exists()) {
+                try {
+                    lang.createNewFile();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
 
-        songs = musictriggersDir;
+            songs = musictriggersDir;
+        }
 
         MinecraftForge.EVENT_BUS.register(SoundHandler.class);
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
@@ -177,8 +172,7 @@ public class MusicTriggers
     }
 
     @EventHandler
-    public void init(FMLInitializationEvent event)
-    {
+    public void init(FMLInitializationEvent event) {
         // some example code
     }
 

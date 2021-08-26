@@ -10,7 +10,6 @@ import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.thread.SidedThreadGroups;
-import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.registries.IForgeRegistry;
 
 import java.util.ArrayList;
@@ -61,6 +60,14 @@ public class SoundHandler {
     public static HashMap<String, List<String>> mobSongsString = new HashMap<>();
     public static HashMap<String, Integer> mobPriorities = new HashMap<>();
     public static HashMap<String, Integer> mobNumber = new HashMap<>();
+    public static HashMap<String, Integer> mobRange = new HashMap<>();
+
+    public static HashMap<String, List<SoundEvent>> gamestageSongsWhitelist = new HashMap<>();
+    public static HashMap<String, List<String>> gamestageSongsStringWhitelist = new HashMap<>();
+    public static HashMap<String, Integer> gamestagePrioritiesWhitelist = new HashMap<>();
+    public static HashMap<String, List<SoundEvent>> gamestageSongsBlacklist = new HashMap<>();
+    public static HashMap<String, List<String>> gamestageSongsStringBlacklist = new HashMap<>();
+    public static HashMap<String, Integer> gamestagePrioritiesBlacklist = new HashMap<>();
 
     public static HashMap<String, List<String>> songCombos = new HashMap<>();
 
@@ -565,8 +572,12 @@ public class SoundHandler {
                 String[] broken = stringBreaker(config.mob.mobSongs[i]);
                 String extractedMobName = broken[0];
                 mobPriorities.computeIfAbsent(extractedMobName, k -> config.mob.mobPriority);
-                if(broken.length==4) {
-                    int extractedPriority = Integer.parseInt(broken[3]);
+                if(broken.length>=4) {
+                    int extractedRange = Integer.parseInt(broken[3]);
+                    mobRange.put(extractedMobName,extractedRange);
+                }
+                if(broken.length==5) {
+                    int extractedPriority = Integer.parseInt(broken[4]);
                     mobPriorities.put(extractedMobName,extractedPriority);
                 }
                 mobNumber.put(extractedMobName,Integer.parseInt(broken[1]));
@@ -582,6 +593,53 @@ public class SoundHandler {
                 mobSongsString.get(extractedMobName).add(songNamePlus);
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                 mobSongs.get(extractedMobName).add(sound);
+                if(!allSongs.contains(songName)) {
+                    allSongs.add(songName);
+                    if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
+                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
+                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName))));
+                    }
+                    r.register(sound);
+                }
+            }
+        }
+        if (config.gamestage.gamestageSongs!=null) {
+            for (int i = 0; i < config.gamestage.gamestageSongs.length; i++) {
+                String[] broken = stringBreaker(config.gamestage.gamestageSongs[i]);
+                String extractedStageName = broken[0];
+                boolean checkWhitelist = Boolean.parseBoolean(broken[1]);
+                String songName = broken[2];
+                String songNamePlus = songName;
+                if(songName.startsWith("@")) {
+                    songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
+                    songCombos.get(songName).add(extractedStageName+checkWhitelist);
+                    songName = songName.substring(1);
+                }
+                SoundEvent sound;
+                if(checkWhitelist) {
+                    gamestagePrioritiesWhitelist.computeIfAbsent(extractedStageName, k -> config.gamestage.gamestagePriority);
+                    if(broken.length==4) {
+                        int extractedPriority = Integer.parseInt(broken[3]);
+                        gamestagePrioritiesWhitelist.put(extractedStageName,extractedPriority);
+                    }
+                    gamestageSongsWhitelist.computeIfAbsent(extractedStageName, k -> new ArrayList<>());
+                    gamestageSongsStringWhitelist.computeIfAbsent(extractedStageName, k -> new ArrayList<>());
+                    gamestageSongsStringWhitelist.get(extractedStageName).add(songNamePlus);
+                    sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                    gamestageSongsWhitelist.get(extractedStageName).add(sound);
+                }
+                else {
+                    gamestagePrioritiesBlacklist.computeIfAbsent(extractedStageName, k -> config.gamestage.gamestagePriority);
+                    if(broken.length==4) {
+                        int extractedPriority = Integer.parseInt(broken[3]);
+                        gamestagePrioritiesBlacklist.put(extractedStageName,extractedPriority);
+                    }
+                    gamestageSongsBlacklist.computeIfAbsent(extractedStageName, k -> new ArrayList<>());
+                    gamestageSongsStringBlacklist.computeIfAbsent(extractedStageName, k -> new ArrayList<>());
+                    gamestageSongsStringBlacklist.get(extractedStageName).add(songNamePlus);
+                    sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music."+songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
+                    gamestageSongsBlacklist.get(extractedStageName).add(sound);
+                }
                 if(!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {

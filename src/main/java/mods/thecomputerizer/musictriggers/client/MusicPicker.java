@@ -2,13 +2,18 @@ package mods.thecomputerizer.musictriggers.client;
 
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.config;
+import net.darkhax.gamestages.GameStageHelper;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.boss.EntityDragon;
+import net.minecraft.entity.boss.EntityWither;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.fml.common.Optional;
 
 import java.util.*;
 
@@ -227,9 +232,16 @@ public class MusicPicker {
                 }
             }
         }
-        List<EntityMob> mobList = world.getEntitiesWithinAABB(EntityMob.class, new AxisAlignedBB(player.posX - 16, player.posY - 8, player.posZ - 16, player.posX + 16, player.posY + 8, player.posZ + 16));
         for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.mobSongsString.entrySet()) {
             String mobName = ((Map.Entry) stringListEntry).getKey().toString();
+            double range = SoundHandler.mobRange.get(mobName);
+            List<EntityLiving> mobTempList = world.getEntitiesWithinAABB(EntityLiving.class, new AxisAlignedBB(player.posX - range, player.posY - (range/2), player.posZ - range, player.posX + range, player.posY + (range/2), player.posZ + range));
+            List<EntityLiving> mobList = new ArrayList<>();
+            for(EntityLiving e:mobTempList) {
+                if(e instanceof EntityMob || e instanceof EntityDragon) {
+                    mobList.add(e);
+                }
+            }
             if (mobName.matches("MOB")) {
                 if (mobList.size() >= SoundHandler.mobNumber.get(mobName)) {
                     events.add(mobName);
@@ -239,7 +251,7 @@ public class MusicPicker {
                 }
             } else {
                 int mobCounter = 0;
-                for (EntityMob e : mobList) {
+                for (EntityLiving e : mobList) {
                     if (e.getName().matches(mobName)) {
                         mobCounter++;
                     }
@@ -252,14 +264,62 @@ public class MusicPicker {
                 }
             }
         }
+        List<String> whitelist = stageWhitelistChecker();
+        List<String> blacklist = stageBlacklistChecker();
+        if (whitelist!=null && !whitelist.isEmpty()) {
+            events.addAll(whitelist);
+        }
+        if (blacklist!=null && !blacklist.isEmpty()) {
+            events.addAll(blacklist);
+        }
+
         playableList = events;
-        /* For debug purposes
+
         if(events.size()>=1) {
             for (String ev : events) {
                 player.sendMessage(new TextComponentString(ev+" "+time));
             }
         }
-         */
+        return events;
+    }
+    @SuppressWarnings("rawtypes")
+    @Optional.Method(modid="gamestages")
+    private static List<String> stageWhitelistChecker() {
+        List<String> events = new ArrayList<>();
+        for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.gamestageSongsStringWhitelist.entrySet()) {
+            String stageName = ((Map.Entry) stringListEntry).getKey().toString();
+            String temp = stageName;
+            if(temp.startsWith("@")) {
+                temp = temp.substring(1);
+            }
+            if(GameStageHelper.clientHasStage(player,temp)) {
+                events.add(stageName+"true");
+                String[] gamestageSongsArray = new String[SoundHandler.gamestageSongsStringWhitelist.get(stageName).size()];
+                dynamicSongs.put(stageName+"true", SoundHandler.gamestageSongsStringWhitelist.get(stageName).toArray(gamestageSongsArray));
+                dynamicPriorities.put(stageName+"true", SoundHandler.gamestagePrioritiesWhitelist.get(stageName));
+            }
+        }
+        return events;
+    }
+
+    @SuppressWarnings("rawtypes")
+    @Optional.Method(modid="gamestages")
+    private static List<String> stageBlacklistChecker() {
+        List<String> events = new ArrayList<>();
+        for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.gamestageSongsStringBlacklist.entrySet()) {
+            String stageName = ((Map.Entry) stringListEntry).getKey().toString();
+            String temp = stageName;
+            if(temp.startsWith("@")) {
+                temp = temp.substring(1);
+            }
+            if(!GameStageHelper.clientHasStage(player,temp)) {
+                System.out.print("UwU\n");
+                events.add(stageName+"false");
+                String[] gamestageSongsArray = new String[SoundHandler.gamestageSongsStringBlacklist.get(stageName).size()];
+                dynamicSongs.put(stageName+"false", SoundHandler.gamestageSongsStringBlacklist.get(stageName).toArray(gamestageSongsArray));
+                dynamicPriorities.put(stageName+"false", SoundHandler.gamestagePrioritiesBlacklist.get(stageName));
+            }
+        }
         return events;
     }
 }

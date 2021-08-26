@@ -9,7 +9,6 @@ import java.time.Instant
 
 plugins {
     java
-    eclipse
     idea
     `maven-publish`
     id("net.minecraftforge.gradle") version "4.1.10"
@@ -47,17 +46,17 @@ repositories {
         name = "ModMaven"
         url = uri("https://modmaven.k-4u.nl")
     }
+    maven {
+        url = uri("https://maven.mcmoddev.com")
+    }
 }
 
 dependencies {
     minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-14.23.5.2855")
 
     implementation(fg.deobf(curse(mod = "codechicken-lib", projectId = 242818L, fileId = 2779848L)))
-
-    //compileOnly(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = "4.16.1.302", classifier = "api"))
+    implementation(fg.deobf(group = "net.darkhax.gamestages", name = "GameStages-1.12.2", version = "2.0.98"))
     runtimeOnly(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = "4.16.1.302"))
-
-    //json(group = com.googlecode.json-simple, astifactId = json-simple, version = 1.1.1)
 }
 
 sourceSets.main {
