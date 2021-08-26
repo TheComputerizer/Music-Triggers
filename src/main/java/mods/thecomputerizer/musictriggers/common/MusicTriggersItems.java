@@ -27,7 +27,6 @@ public final class MusicTriggersItems {
         SoundHandler.registerSounds();
         allItems = Lists.newArrayList();
         for (SoundEvent s : SoundHandler.allSoundEvents) {
-            System.out.print("FUCK "+s.getRegistryName().toString());
             sound = new SoundEvent(Objects.requireNonNull(s.getRegistryName()));
             allItems.add(new MusicTriggersRecord(Objects.requireNonNull(s.getRegistryName()).toString().replace("musictriggers:", ""), sound));
         }
