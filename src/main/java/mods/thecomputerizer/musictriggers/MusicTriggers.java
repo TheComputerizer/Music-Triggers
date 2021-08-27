@@ -30,7 +30,7 @@ import java.util.List;
 public class MusicTriggers {
     public static final String MODID = "musictriggers";
     public static final String NAME = "Music Triggers";
-    public static final String VERSION = "1.1";
+    public static final String VERSION = "1.2";
 
     public static File songsDir;
     public static File songs;
@@ -140,7 +140,6 @@ public class MusicTriggers {
                     ex.printStackTrace();
                 }
             }
-            /*
             File json = new File(musictriggersDir.getPath() + "/sounds.json");
             if (!json.exists()) {
                 try {
@@ -161,7 +160,6 @@ public class MusicTriggers {
                     ex.printStackTrace();
                 }
             }
-             */
 
             songs = musictriggersDir;
         }

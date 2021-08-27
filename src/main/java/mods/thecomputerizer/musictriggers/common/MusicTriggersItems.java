@@ -12,8 +12,6 @@ public class MusicTriggersItems {
     public static List<Item> allItems;
     public static final MusicTriggersItems INSTANCE = new MusicTriggersItems();
 
-    public static SoundEvent sound;
-
     public void init() {
         SoundHandler.registerSounds();
         allItems = Lists.newArrayList();

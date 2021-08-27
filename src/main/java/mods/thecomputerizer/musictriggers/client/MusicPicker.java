@@ -6,13 +6,14 @@ import net.darkhax.gamestages.GameStageHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.boss.EntityDragon;
-import net.minecraft.entity.boss.EntityWither;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Optional;
 
 import java.util.*;
@@ -33,7 +34,7 @@ public class MusicPicker {
         if(player !=null) {
             world = player.getEntityWorld();
         }
-        if(player == null || world == null) {
+        if(player == null) {
             return config.menu.menuSongs;
         }
         List<String> res = comboChecker(priorityHandler(playableEvents()));
@@ -232,6 +233,23 @@ public class MusicPicker {
                 }
             }
         }
+        else {
+            MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+            if(server!=null) {
+                System.out.print(server.getName() + "\n");
+                UUID uuid = player.getUniqueID();
+                WorldServer nworld = server.getWorld(server.getPlayerList().getPlayerByUUID(uuid).dimension);
+                for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.structureSongsString.entrySet()) {
+                    String structName = ((Map.Entry) stringListEntry).getKey().toString();
+                    if (nworld.getChunkProvider().isInsideStructure(world, structName, player.getPosition())) {
+                        events.add("structure:" + structName);
+                        String[] structureSongsArray = new String[SoundHandler.structureSongsString.get(structName).size()];
+                        dynamicSongs.put("structure:" + structName, SoundHandler.structureSongsString.get(structName).toArray(structureSongsArray));
+                        dynamicPriorities.put("structure:" + structName, SoundHandler.structurePriorities.get(structName));
+                    }
+                }
+            }
+        }
         for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.mobSongsString.entrySet()) {
             String mobName = ((Map.Entry) stringListEntry).getKey().toString();
             double range = SoundHandler.mobRange.get(mobName);
@@ -264,14 +282,17 @@ public class MusicPicker {
                 }
             }
         }
-        List<String> whitelist = stageWhitelistChecker();
-        List<String> blacklist = stageBlacklistChecker();
-        if (whitelist!=null && !whitelist.isEmpty()) {
-            events.addAll(whitelist);
+        try {
+            List<String> whitelist = stageWhitelistChecker();
+            List<String> blacklist = stageBlacklistChecker();
+            if (!whitelist.isEmpty()) {
+                events.addAll(whitelist);
+            }
+            if (!blacklist.isEmpty()) {
+                events.addAll(blacklist);
+            }
         }
-        if (blacklist!=null && !blacklist.isEmpty()) {
-            events.addAll(blacklist);
-        }
+        catch(NoSuchMethodError ignored) {}
 
         playableList = events;
 

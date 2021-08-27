@@ -379,7 +379,7 @@ public class config {
         }
     }
 
-    @Comment("Gamestages (This works for both bosses and hordes!)")
+    @Comment("Gamestages (Only fires if the mod Game Stages is active)")
     public static Gamestage gamestage = new Gamestage(500,new String[] {});
 
     public static class Gamestage {

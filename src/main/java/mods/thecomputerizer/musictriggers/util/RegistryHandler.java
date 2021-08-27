@@ -22,23 +22,15 @@ public final class RegistryHandler {
     @SubscribeEvent
     public static void onRegisterItems(RegistryEvent.Register<Item> e)
     {
-        System.out.print("When do items happen?\n");
         MusicTriggersItems.INSTANCE.init();
         e.getRegistry().registerAll(MusicTriggersItems.INSTANCE.getItems().toArray(new Item[0]));
-        for(Item i: MusicTriggersItems.INSTANCE.getItems()) {
-            System.out.print(i.getRegistryName()+"\n");
-        }
     }
 
     @SubscribeEvent
     public static void onRegisterSoundEvents(RegistryEvent.Register<SoundEvent> e)
     {
-        System.out.print("When does this happen?\n");
         ModSounds.INSTANCE.init();
         e.getRegistry().registerAll(ModSounds.INSTANCE.getSounds().toArray(new SoundEvent[0]));
-        for(SoundEvent s: ModSounds.INSTANCE.getSounds()) {
-            System.out.print(s.getRegistryName()+"\n");
-        }
     }
 
     @SideOnly(Side.CLIENT)

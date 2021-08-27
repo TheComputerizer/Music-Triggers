@@ -42,7 +42,7 @@ public class json {
             js.add("{");
             for (String allSong : allSongs) {
                 js.add("item.musictriggers." + allSong + ".name=" + allSong);
-                js.add("item.musictriggers." + allSong + ".desc="+"This song was read in from the config!");
+                js.add("item.record." + allSong + ".desc="+"This song was read in from the config!");
             }
         }
         return js;
