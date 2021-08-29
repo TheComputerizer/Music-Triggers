@@ -393,4 +393,13 @@ public class config {
             this.gamestageSongs = gamestageSongs;
         }
     }
+    @Mod.EventBusSubscriber(modid = MusicTriggers.MODID)
+    private static class EventHandler {
+        @SubscribeEvent
+        public static void onConfigChanged(final ConfigChangedEvent.OnConfigChangedEvent event) {
+            if (event.getModID().equals(MusicTriggers.MODID)) {
+                ConfigManager.sync(MusicTriggers.MODID, Config.Type.INSTANCE);
+            }
+        }
+    }
 }

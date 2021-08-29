@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.client;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
+import mods.thecomputerizer.musictriggers.common.server;
 import mods.thecomputerizer.musictriggers.configDebug;
 import net.minecraft.block.BlockJukebox;
 import net.minecraft.client.Minecraft;
@@ -88,6 +89,11 @@ public class MusicPlayer {
                 if(curMusic!=null) {
                     mc.getSoundHandler().stopSound(curMusic);
                     curMusic=null;
+                }
+            }
+            if(server.vanilla!=null) {
+                if(mc.getSoundHandler().isSoundPlaying(server.vanilla)) {
+                    mc.getSoundHandler().stopSound(server.vanilla);
                 }
             }
         }

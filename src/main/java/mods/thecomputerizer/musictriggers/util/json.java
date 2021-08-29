@@ -41,8 +41,8 @@ public class json {
             System.out.print(allSongs.size());
             js.add("{");
             for (String allSong : allSongs) {
-                js.add("item.musictriggers." + allSong + ".name=" + allSong);
-                js.add("item.record." + allSong + ".desc="+"This song was read in from the config!");
+                js.add("item.musictriggers:" + allSong + ".name=Music Disc");
+                js.add("item.record." + allSong + ".desc=Music Triggers - "+allSong);
             }
         }
         return js;
