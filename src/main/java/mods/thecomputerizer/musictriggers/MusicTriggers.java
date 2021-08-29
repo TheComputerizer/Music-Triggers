@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers;
 
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
+import mods.thecomputerizer.musictriggers.common.server;
 import mods.thecomputerizer.musictriggers.util.json;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.FolderResourcePack;
@@ -30,7 +31,7 @@ import java.util.List;
 public class MusicTriggers {
     public static final String MODID = "musictriggers";
     public static final String NAME = "Music Triggers";
-    public static final String VERSION = "1.2";
+    public static final String VERSION = "1.3";
 
     public static File songsDir;
     public static File songs;
@@ -165,6 +166,7 @@ public class MusicTriggers {
         }
 
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
+        MinecraftForge.EVENT_BUS.register(server.class);
     }
 
     @EventHandler

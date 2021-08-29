@@ -393,20 +393,4 @@ public class config {
             this.gamestageSongs = gamestageSongs;
         }
     }
-
-    @Mod.EventBusSubscriber(modid = MusicTriggers.MODID)
-    private static class EventHandler {
-
-        /**
-         * Inject the new values and save to the config file when the config has been changed from the GUI.
-         *
-         * @param event The event
-         */
-        @SubscribeEvent
-        public static void onConfigChanged(final ConfigChangedEvent.OnConfigChangedEvent event) {
-            if (event.getModID().equals(MusicTriggers.MODID)) {
-                ConfigManager.sync(MusicTriggers.MODID, Config.Type.INSTANCE);
-            }
-        }
-    }
 }

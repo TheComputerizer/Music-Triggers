@@ -2,23 +2,24 @@ package mods.thecomputerizer.musictriggers.client;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
+import mods.thecomputerizer.musictriggers.configDebug;
 import net.minecraft.block.BlockJukebox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.*;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Random;
 
-@Mod.EventBusSubscriber(modid=MusicTriggers.MODID)
+@Mod.EventBusSubscriber(modid=MusicTriggers.MODID, value = Side.CLIENT)
 public class MusicPlayer {
 
     public static String[] curTrackList;
@@ -29,7 +30,6 @@ public class MusicPlayer {
     public static Minecraft mc = Minecraft.getMinecraft();
     public static int tickCounter = 0;
 
-    @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent event) {
         if(tickCounter%10==0) {
@@ -55,10 +55,11 @@ public class MusicPlayer {
                 if (curTrackList == null) {
                     curTrackList = holder;
                 }
-                for (String print : curTrackList) {
-                    System.out.print(print);
+                if(configDebug.FinalSongs) {
+                    for (String print : curTrackList) {
+                        MusicPicker.player.sendMessage(new TextComponentString(print));
+                    }
                 }
-                System.out.print("\n");
                 if (curMusic != null) {
                     if (!mc.getSoundHandler().isSoundPlaying(curMusic)) {
                         curMusic = null;
@@ -77,7 +78,9 @@ public class MusicPlayer {
                         }
                         curTrack = curTrackList[i];
                         curMusic = SoundHandler.songsRecords.get(curTrack);
-                        mc.getSoundHandler().playSound(curMusic);
+                        if(!mc.getSoundHandler().isSoundPlaying(curMusic)) {
+                            mc.getSoundHandler().playSound(curMusic);
+                        }
                     }
                 }
             }

@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.client;
 
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.config;
+import mods.thecomputerizer.musictriggers.configDebug;
 import net.darkhax.gamestages.GameStageHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLiving;
@@ -208,13 +209,19 @@ public class MusicPicker {
                 break;
             }
         }
+        if(configDebug.DimensionChecker) {
+            player.sendMessage(new TextComponentString(player.dimension+""));
+        }
         if (SoundHandler.dimensionSongs.get(player.dimension) != null) {
             events.add("dimension" + player.dimension);
             String[] dimSongsArray = new String[SoundHandler.dimensionSongsString.get(player.dimension).size()];
             dynamicSongs.put("dimension" + player.dimension, SoundHandler.dimensionSongsString.get(player.dimension).toArray(dimSongsArray));
             dynamicPriorities.put("dimension" + player.dimension, SoundHandler.dimensionPriorities.get(player.dimension));
         }
-        if (SoundHandler.biomeSongs.get(Objects.requireNonNull(world.getBiome(player.getPosition()).getRegistryName()).toString()) != null && !world.isRemote) {
+        if(configDebug.BiomeChecker) {
+            player.sendMessage(new TextComponentString(world.getBiome(player.getPosition()).getRegistryName().toString()));
+        }
+        if (SoundHandler.biomeSongs.get(Objects.requireNonNull(world.getBiome(player.getPosition()).getRegistryName()).toString()) != null) {
             String biomeName = Objects.requireNonNull(world.getBiome(player.getPosition()).getRegistryName()).toString();
             events.add(biomeName);
             String[] biomeSongsArray = new String[SoundHandler.biomeSongsString.get(biomeName).size()];
@@ -269,7 +276,7 @@ public class MusicPicker {
                 }
             } else {
                 int mobCounter = 0;
-                for (EntityLiving e : mobList) {
+                for (EntityLiving e : mobTempList) {
                     if (e.getName().matches(mobName)) {
                         mobCounter++;
                     }
@@ -296,14 +303,11 @@ public class MusicPicker {
 
         playableList = events;
 
-        /*
-        if(events.size()>=1) {
+        if(events.size()>=1 && configDebug.PlayableEvents) {
             for (String ev : events) {
-                player.sendMessage(new TextComponentString(ev+" "+time));
+                player.sendMessage(new TextComponentString(ev));
             }
         }
-
-         */
         return events;
     }
     @SuppressWarnings("rawtypes")
