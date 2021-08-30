@@ -41,6 +41,7 @@ public class MusicPicker {
             world = player.getEntityWorld();
         }
         if(player == null) {
+            MusicTriggers.mcs=null;
             return config.menu.menuSongs;
         }
         List<String> res = comboChecker(priorityHandler(playableEvents()));

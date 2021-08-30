@@ -10,7 +10,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public class configTitleCards {
 
     @Config.Comment("Title Cards\nFormat: Title,subtitle,event1,event2,event3,etc...\n" +
-            "Example 1: The Undergound,The only light is your own,underground\n" +
+            "Example 1: The Underground,The only light is your own,underground\n" +
             "Example 2: Twilit Rain,A more ominous rain than usual,raining,dimension7\n" +
             "List of event names: menu, generic, day, night, sunrise, sunset, light, \n" +
             "underground, deepUnder, raining, storming, snowing, lowHP, dead, inVoid, \n" +
@@ -20,7 +20,7 @@ public class configTitleCards {
             "stageName(true/false) - Ex: stageOnetrue")
     public static String[] TitleCards = {};
 
-    @Config.Comment("Image Cards")
+    @Config.Comment("Image Cards\nNote: This is currently unimplemented and will not do anything")
     public static String[] ImageCards = {};
 
     @Mod.EventBusSubscriber(modid = MusicTriggers.MODID)
