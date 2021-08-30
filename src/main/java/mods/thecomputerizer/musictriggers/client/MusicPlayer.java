@@ -30,10 +30,25 @@ public class MusicPlayer {
     public static Random rand = new Random();
     public static Minecraft mc = Minecraft.getMinecraft();
     public static int tickCounter = 0;
+    public static boolean fading = false;
+    private static int tempFade = 0;
+    private static float saveVol = 1;
 
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent event) {
-        if(tickCounter%10==0) {
+        if(fading) {
+            if(tempFade==0) {
+                fading=false;
+                mc.getSoundHandler().stopSound(curMusic);
+                mc.getSoundHandler().setSoundLevel(SoundCategory.MASTER,saveVol);
+            }
+            else {
+                mc.getSoundHandler().setSoundLevel(SoundCategory.MASTER,saveVol*(float)(((double)tempFade)/((double)MusicPicker.curFade)));
+                System.out.print("Fade: "+MusicPicker.curFade+" Fade left: "+tempFade+" Volume: "+(float)(((double)tempFade)/((double)MusicPicker.curFade))+"\n");
+                tempFade-=1;
+            }
+        }
+        if(tickCounter%10==0 && !fading) {
             boolean playing = false;
             if(MusicPicker.player!=null) {
                 for (int x = MusicPicker.player.chunkCoordX - 3; x <= MusicPicker.player.chunkCoordX + 3; x++) {
@@ -68,7 +83,14 @@ public class MusicPlayer {
                 }
                 if (!Arrays.asList(curTrackList).containsAll(Arrays.asList(holder)) && !Arrays.asList(holder).containsAll(Arrays.asList(curTrackList))) {
                     curTrackList = null;
-                    mc.getSoundHandler().stopSound(curMusic);
+                    if(MusicPicker.curFade==0) {
+                        mc.getSoundHandler().stopSound(curMusic);
+                    }
+                    else {
+                        fading=true;
+                        tempFade = MusicPicker.curFade;
+                        saveVol = mc.gameSettings.getSoundLevel(SoundCategory.MASTER);
+                    }
                 } else if (curMusic == null && mc.gameSettings.getSoundLevel(SoundCategory.MASTER) > 0 && mc.gameSettings.getSoundLevel(SoundCategory.MUSIC) > 0) {
                     if (curTrackList.length >= 1) {
                         int i = rand.nextInt(curTrackList.length);

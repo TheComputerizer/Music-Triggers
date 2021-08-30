@@ -26,8 +26,11 @@ public class MusicPicker {
 
     public static HashMap<String, String[]> dynamicSongs = new HashMap<>();
     public static HashMap<String, Integer> dynamicPriorities = new HashMap<>();
+    public static HashMap<String, Integer> dynamicFade = new HashMap<>();
 
     public static List<String> playableList = new ArrayList<>();
+
+    public static int curFade = 0;
 
     public static String[] playThese() {
         mc = Minecraft.getMinecraft();
@@ -42,6 +45,7 @@ public class MusicPicker {
         if (res!=null && !res.isEmpty()) {
             dynamicSongs.clear();
             dynamicPriorities.clear();
+            dynamicFade.clear();
             return res.toArray(new String[0]);
         }
         dynamicSongs = new HashMap<>();
@@ -108,6 +112,14 @@ public class MusicPicker {
                 }
             }
         }
+        if(dynamicFade!=null && !dynamicFade.isEmpty()) {
+            if(dynamicFade.get(trueHighest)!=null) {
+                curFade = dynamicFade.get(trueHighest);
+            }
+            else {
+                curFade = 0;
+            }
+        }
         return trueHighest;
     }
 
@@ -122,90 +134,108 @@ public class MusicPicker {
             events.add("day");
             dynamicSongs.put("day", config.day.daySongs);
             dynamicPriorities.put("day", config.day.dayPriority);
+            dynamicFade.put("day",config.day.dayFade);
         } else {
             events.add("night");
             dynamicSongs.put("night", config.night.nightSongs);
             dynamicPriorities.put("night", config.night.nightPriority);
+            dynamicFade.put("night",config.night.nightFade);
         }
         if (time<0.54166666666 && time>=0.5) {
             events.add("sunset");
             dynamicSongs.put("sunset", config.sunset.sunsetSongs);
             dynamicPriorities.put("sunset", config.sunset.sunsetPriority);
+            dynamicFade.put("sunset",config.sunset.sunsetFade);
         } else if (time>=0.95833333333 && time<1) {
             events.add("sunrise");
             dynamicSongs.put("sunrise", config.sunrise.sunriseSongs);
             dynamicPriorities.put("sunrise", config.sunrise.sunrisePriority);
+            dynamicFade.put("sunrise",config.sunrise.sunriseFade);
         }
         if (world.getLight(player.getPosition()) <= config.light.lightLevel) {
             events.add("light");
             dynamicSongs.put("light", config.light.lightSongs);
             dynamicPriorities.put("light", config.light.lightPriority);
+            dynamicFade.put("light",config.light.lightFade);
         }
         if (player.posY < 20 && !world.canSeeSky(player.getPosition())) {
             events.add("deepUnder");
             dynamicSongs.put("deepUnder", config.deepUnder.deepUnderSongs);
             dynamicPriorities.put("deepUnder", config.deepUnder.deepUnderPriority);
+            dynamicFade.put("deepUnder",config.deepUnder.deepUnderFade);
         }
         if (player.posY < 55 && !world.canSeeSky(player.getPosition())) {
             events.add("underground");
             dynamicSongs.put("underground", config.underground.undergroundSongs);
             dynamicPriorities.put("underground", config.underground.undergroundPriority);
+            dynamicFade.put("underground",config.underground.undergroundFade);
         }
         if (player.posY < 0) {
             events.add("inVoid");
             dynamicSongs.put("inVoid", config.inVoid.inVoidSongs);
             dynamicPriorities.put("inVoid", config.inVoid.inVoidPriority);
+            dynamicFade.put("inVoid",config.inVoid.inVoidFade);
         }
         if (player.posY >= config.high.highLevel) {
             events.add("high");
             dynamicSongs.put("high", config.high.highSongs);
             dynamicPriorities.put("high", config.high.highPriority);
+            dynamicFade.put("high",config.high.highFade);
         }
         if (world.isRaining()) {
             events.add("raining");
             dynamicSongs.put("raining", config.raining.rainingSongs);
             dynamicPriorities.put("raining", config.raining.rainingPriority);
+            dynamicFade.put("raining",config.raining.rainingFade);
             if (world.canSnowAt(player.getPosition(), true)) {
                 events.add("snowing");
                 dynamicSongs.put("snowing", config.snowing.snowingSongs);
                 dynamicPriorities.put("snowing", config.snowing.snowingPriority);
+                dynamicFade.put("snowing",config.snowing.snowingFade);
             }
         }
         if (world.isThundering()) {
             events.add("storming");
             dynamicSongs.put("storming", config.storming.stormingSongs);
             dynamicPriorities.put("storming", config.storming.stormingPriority);
+            dynamicFade.put("storming",config.storming.stormingFade);
         }
         if (player.getHealth() < player.getMaxHealth() * (config.lowHP.lowHPLevel)) {
             events.add("lowHP");
             dynamicSongs.put("lowHP", config.lowHP.lowHPSongs);
             dynamicPriorities.put("lowHP", config.lowHP.lowHPPriority);
+            dynamicFade.put("lowHP",config.lowHP.lowHPFade);
         }
         if (player.isDead) {
             events.add("dead");
             dynamicSongs.put("dead", config.dead.deadSongs);
             dynamicPriorities.put("dead", config.dead.deadPriority);
+            dynamicFade.put("dead",config.dead.deadFade);
         }
         if (player.isSpectator()) {
             events.add("spectator");
             dynamicSongs.put("spectator", config.spectator.spectatorSongs);
             dynamicPriorities.put("spectator", config.spectator.spectatorPriority);
+            dynamicFade.put("spectator",config.spectator.spectatorFade);
         }
         if (player.isCreative()) {
             events.add("creative");
             dynamicSongs.put("creative", config.creative.creativeSongs);
             dynamicPriorities.put("creative", config.creative.creativePriority);
+            dynamicFade.put("creative",config.creative.creativeFade);
         }
         if (player.isRiding()) {
             events.add("riding");
             dynamicSongs.put("riding", config.riding.ridingSongs);
             dynamicPriorities.put("riding", config.riding.ridingPriority);
+            dynamicFade.put("riding",config.riding.ridingFade);
         }
         for (EntityMob ent : world.getEntitiesWithinAABB(EntityMob.class, new AxisAlignedBB(player.posX - 16, player.posY - 8, player.posZ - 16, player.posX + 16, player.posY + 8, player.posZ + 16))) {
             if (ent.serializeNBT().getString("Owner").matches(player.getName())) {
                 events.add("pet");
                 dynamicSongs.put("pet", config.pet.petSongs);
                 dynamicPriorities.put("pet", config.pet.petPriority);
+                dynamicFade.put("pet",config.pet.petFade);
                 break;
             }
         }
@@ -217,9 +247,10 @@ public class MusicPicker {
             String[] dimSongsArray = new String[SoundHandler.dimensionSongsString.get(player.dimension).size()];
             dynamicSongs.put("dimension" + player.dimension, SoundHandler.dimensionSongsString.get(player.dimension).toArray(dimSongsArray));
             dynamicPriorities.put("dimension" + player.dimension, SoundHandler.dimensionPriorities.get(player.dimension));
+            dynamicFade.put("dimension" + player.dimension, SoundHandler.dimensionFade.get(player.dimension));
         }
         if(configDebug.BiomeChecker) {
-            player.sendMessage(new TextComponentString(world.getBiome(player.getPosition()).getRegistryName().toString()));
+            player.sendMessage(new TextComponentString(Objects.requireNonNull(world.getBiome(player.getPosition()).getRegistryName()).toString()));
         }
         if (SoundHandler.biomeSongs.get(Objects.requireNonNull(world.getBiome(player.getPosition()).getRegistryName()).toString()) != null) {
             String biomeName = Objects.requireNonNull(world.getBiome(player.getPosition()).getRegistryName()).toString();
@@ -227,6 +258,7 @@ public class MusicPicker {
             String[] biomeSongsArray = new String[SoundHandler.biomeSongsString.get(biomeName).size()];
             dynamicSongs.put(biomeName, SoundHandler.biomeSongsString.get(biomeName).toArray(biomeSongsArray));
             dynamicPriorities.put(biomeName, SoundHandler.biomePriorities.get(biomeName));
+            dynamicFade.put(biomeName, SoundHandler.biomeFade.get(biomeName));
         }
         if(mc.isSingleplayer()) {
             WorldServer nworld = Objects.requireNonNull(mc.getIntegratedServer()).getWorld(player.dimension);
@@ -237,13 +269,13 @@ public class MusicPicker {
                     String[] structureSongsArray = new String[SoundHandler.structureSongsString.get(structName).size()];
                     dynamicSongs.put("structure:" + structName, SoundHandler.structureSongsString.get(structName).toArray(structureSongsArray));
                     dynamicPriorities.put("structure:" + structName, SoundHandler.structurePriorities.get(structName));
+                    dynamicFade.put("structure:" + structName, SoundHandler.structureFade.get(structName));
                 }
             }
         }
         else {
             MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
             if(server!=null) {
-                System.out.print(server.getName() + "\n");
                 UUID uuid = player.getUniqueID();
                 WorldServer nworld = server.getWorld(server.getPlayerList().getPlayerByUUID(uuid).dimension);
                 for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.structureSongsString.entrySet()) {
@@ -253,6 +285,7 @@ public class MusicPicker {
                         String[] structureSongsArray = new String[SoundHandler.structureSongsString.get(structName).size()];
                         dynamicSongs.put("structure:" + structName, SoundHandler.structureSongsString.get(structName).toArray(structureSongsArray));
                         dynamicPriorities.put("structure:" + structName, SoundHandler.structurePriorities.get(structName));
+                        dynamicFade.put("structure:" + structName, SoundHandler.structureFade.get(structName));
                     }
                 }
             }
@@ -273,6 +306,7 @@ public class MusicPicker {
                     String[] mobSongsArray = new String[SoundHandler.mobSongsString.get(mobName).size()];
                     dynamicSongs.put(mobName, SoundHandler.mobSongsString.get(mobName).toArray(mobSongsArray));
                     dynamicPriorities.put(mobName, SoundHandler.mobPriorities.get(mobName));
+                    dynamicFade.put(mobName, SoundHandler.mobFade.get(mobName));
                 }
             } else {
                 int mobCounter = 0;
@@ -286,6 +320,7 @@ public class MusicPicker {
                     String[] mobSongsArray = new String[SoundHandler.mobSongsString.get(mobName).size()];
                     dynamicSongs.put(mobName, SoundHandler.mobSongsString.get(mobName).toArray(mobSongsArray));
                     dynamicPriorities.put(mobName, SoundHandler.mobPriorities.get(mobName));
+                    dynamicFade.put(mobName, SoundHandler.mobFade.get(mobName));
                 }
             }
         }
@@ -325,6 +360,7 @@ public class MusicPicker {
                 String[] gamestageSongsArray = new String[SoundHandler.gamestageSongsStringWhitelist.get(stageName).size()];
                 dynamicSongs.put(stageName+"true", SoundHandler.gamestageSongsStringWhitelist.get(stageName).toArray(gamestageSongsArray));
                 dynamicPriorities.put(stageName+"true", SoundHandler.gamestagePrioritiesWhitelist.get(stageName));
+                dynamicFade.put(stageName+"true", SoundHandler.gamestageFadeWhitelist.get(stageName));
             }
         }
         return events;
@@ -345,6 +381,7 @@ public class MusicPicker {
                 String[] gamestageSongsArray = new String[SoundHandler.gamestageSongsStringBlacklist.get(stageName).size()];
                 dynamicSongs.put(stageName+"false", SoundHandler.gamestageSongsStringBlacklist.get(stageName).toArray(gamestageSongsArray));
                 dynamicPriorities.put(stageName+"false", SoundHandler.gamestagePrioritiesBlacklist.get(stageName));
+                dynamicFade.put(stageName+"true", SoundHandler.gamestageFadeBlacklist.get(stageName));
             }
         }
         return events;

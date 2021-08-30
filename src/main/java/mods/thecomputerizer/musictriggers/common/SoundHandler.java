@@ -41,27 +41,33 @@ public class SoundHandler {
     public static HashMap<Integer, List<SoundEvent>> dimensionSongs = new HashMap<>();
     public static HashMap<Integer, List<String>> dimensionSongsString = new HashMap<>();
     public static HashMap<Integer, Integer> dimensionPriorities = new HashMap<>();
+    public static HashMap<Integer, Integer> dimensionFade = new HashMap<>();
 
     public static HashMap<String, List<SoundEvent>> biomeSongs = new HashMap<>();
     public static HashMap<String, List<String>> biomeSongsString = new HashMap<>();
     public static HashMap<String, Integer> biomePriorities = new HashMap<>();
+    public static HashMap<String, Integer> biomeFade = new HashMap<>();
 
     public static HashMap<String, List<SoundEvent>> structureSongs = new HashMap<>();
     public static HashMap<String, List<String>> structureSongsString = new HashMap<>();
     public static HashMap<String, Integer> structurePriorities = new HashMap<>();
+    public static HashMap<String, Integer> structureFade = new HashMap<>();
 
     public static HashMap<String, List<SoundEvent>> mobSongs = new HashMap<>();
     public static HashMap<String, List<String>> mobSongsString = new HashMap<>();
     public static HashMap<String, Integer> mobPriorities = new HashMap<>();
     public static HashMap<String, Integer> mobNumber = new HashMap<>();
     public static HashMap<String, Integer> mobRange = new HashMap<>();
+    public static HashMap<String, Integer> mobFade = new HashMap<>();
 
     public static HashMap<String, List<SoundEvent>> gamestageSongsWhitelist = new HashMap<>();
     public static HashMap<String, List<String>> gamestageSongsStringWhitelist = new HashMap<>();
     public static HashMap<String, Integer> gamestagePrioritiesWhitelist = new HashMap<>();
+    public static HashMap<String, Integer> gamestageFadeWhitelist = new HashMap<>();
     public static HashMap<String, List<SoundEvent>> gamestageSongsBlacklist = new HashMap<>();
     public static HashMap<String, List<String>> gamestageSongsStringBlacklist = new HashMap<>();
     public static HashMap<String, Integer> gamestagePrioritiesBlacklist = new HashMap<>();
+    public static HashMap<String, Integer> gamestageFadeBlacklist = new HashMap<>();
 
     public static HashMap<String, List<String>> songCombos = new HashMap<>();
 
@@ -614,9 +620,14 @@ public class SoundHandler {
                 String[] broken = stringBreaker(config.dimension.dimensionSongs[i]);
                 int extractedID = Integer.parseInt(broken[0]);
                 dimensionPriorities.computeIfAbsent(extractedID, k -> config.dimension.dimensionPriority);
-                if (broken.length == 3) {
+                if (broken.length >= 3) {
                     int extractedPriority = Integer.parseInt(broken[2]);
                     dimensionPriorities.put(extractedID, extractedPriority);
+                }
+                dimensionFade.putIfAbsent(extractedID, 0);
+                if(broken.length==4) {
+                    int extractedFade = Integer.parseInt(broken[3]);
+                    dimensionFade.put(extractedID, extractedFade);
                 }
                 String songName = broken[1];
                 String songNamePlus = songName;
@@ -652,9 +663,14 @@ public class SoundHandler {
                 String[] broken = stringBreaker(config.biome.biomeSongs[i]);
                 String extractedBiome = broken[0];
                 biomePriorities.computeIfAbsent(extractedBiome, k -> config.biome.biomePriority);
-                if (broken.length == 3) {
+                if (broken.length >= 3) {
                     int extractedPriority = Integer.parseInt(broken[2]);
                     biomePriorities.put(extractedBiome, extractedPriority);
+                }
+                biomeFade.putIfAbsent(extractedBiome, 0);
+                if(broken.length==4) {
+                    int extractedFade = Integer.parseInt(broken[3]);
+                    biomeFade.put(extractedBiome, extractedFade);
                 }
                 String songName = broken[1];
                 String songNamePlus = songName;
@@ -690,9 +706,14 @@ public class SoundHandler {
                 String[] broken = stringBreaker(config.structure.structureSongs[i]);
                 String extractedStructName = broken[0];
                 structurePriorities.computeIfAbsent(extractedStructName, k -> config.structure.structurePriority);
-                if (broken.length == 3) {
+                if (broken.length >= 3) {
                     int extractedPriority = Integer.parseInt(broken[2]);
                     structurePriorities.put(extractedStructName, extractedPriority);
+                }
+                structureFade.putIfAbsent(extractedStructName, 0);
+                if(broken.length==4) {
+                    int extractedFade = Integer.parseInt(broken[3]);
+                    structureFade.put(extractedStructName, extractedFade);
                 }
                 String songName = broken[1];
                 String songNamePlus = songName;
@@ -732,9 +753,14 @@ public class SoundHandler {
                     int extractedRange = Integer.parseInt(broken[3]);
                     mobRange.put(extractedMobName, extractedRange);
                 }
-                if (broken.length == 5) {
+                if (broken.length >= 5) {
                     int extractedPriority = Integer.parseInt(broken[4]);
                     mobPriorities.put(extractedMobName, extractedPriority);
+                }
+                mobFade.putIfAbsent(extractedMobName, 0);
+                if(broken.length==6) {
+                    int extractedFade = Integer.parseInt(broken[5]);
+                    mobFade.put(extractedMobName, extractedFade);
                 }
                 mobNumber.put(extractedMobName, Integer.parseInt(broken[1]));
                 String songName = broken[2];
@@ -781,9 +807,14 @@ public class SoundHandler {
                 SoundEvent sound;
                 if (checkWhitelist) {
                     gamestagePrioritiesWhitelist.computeIfAbsent(extractedStageName, k -> config.gamestage.gamestagePriority);
-                    if (broken.length == 4) {
+                    if (broken.length >= 4) {
                         int extractedPriority = Integer.parseInt(broken[3]);
                         gamestagePrioritiesWhitelist.put(extractedStageName, extractedPriority);
+                    }
+                    gamestageFadeWhitelist.putIfAbsent(extractedStageName, 0);
+                    if(broken.length==5) {
+                        int extractedFade = Integer.parseInt(broken[4]);
+                        gamestageFadeWhitelist.put(extractedStageName, extractedFade);
                     }
                     gamestageSongsWhitelist.computeIfAbsent(extractedStageName, k -> new ArrayList<>());
                     gamestageSongsStringWhitelist.computeIfAbsent(extractedStageName, k -> new ArrayList<>());
@@ -792,9 +823,14 @@ public class SoundHandler {
                     gamestageSongsWhitelist.get(extractedStageName).add(sound);
                 } else {
                     gamestagePrioritiesBlacklist.computeIfAbsent(extractedStageName, k -> config.gamestage.gamestagePriority);
-                    if (broken.length == 4) {
+                    if (broken.length >= 4) {
                         int extractedPriority = Integer.parseInt(broken[3]);
                         gamestagePrioritiesBlacklist.put(extractedStageName, extractedPriority);
+                    }
+                    gamestageFadeBlacklist.putIfAbsent(extractedStageName, 0);
+                    if(broken.length==5) {
+                        int extractedFade = Integer.parseInt(broken[4]);
+                        gamestageFadeBlacklist.put(extractedStageName, extractedFade);
                     }
                     gamestageSongsBlacklist.computeIfAbsent(extractedStageName, k -> new ArrayList<>());
                     gamestageSongsStringBlacklist.computeIfAbsent(extractedStageName, k -> new ArrayList<>());
