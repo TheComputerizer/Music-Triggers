@@ -7,7 +7,7 @@ import mods.thecomputerizer.musictriggers.configDebug;
 import mods.thecomputerizer.musictriggers.configTitleCards;
 import net.minecraft.block.BlockJukebox;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.*;
+import net.minecraft.client.audio.ISound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
@@ -17,7 +17,10 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Random;
 
 @Mod.EventBusSubscriber(modid=MusicTriggers.MODID, value = Side.CLIENT)
 public class MusicPlayer {
@@ -47,7 +50,7 @@ public class MusicPlayer {
                 tempFade-=1;
             }
         }
-        if(tickCounter%10==0 && !fading) {
+        if(tickCounter%10==0 && !fading && server.isWorldRendered) {
             boolean playing = false;
             if(MusicPicker.player!=null) {
                 for (int x = MusicPicker.player.chunkCoordX - 3; x <= MusicPicker.player.chunkCoordX + 3; x++) {
@@ -86,9 +89,16 @@ public class MusicPlayer {
                         String[] line = t.split(",");
                         String[] temp = Arrays.copyOfRange(line,2,line.length);
                         if (MusicPicker.titleCardEvents.containsAll(Arrays.asList(temp)) && MusicTriggers.mcs!=null && mc.player!=null) {
+                            boolean commandFeedback = mc.player.world.getGameRules().getBoolean("sendCommandFeedback");
+                            if(commandFeedback) {
+                                mc.player.world.getGameRules().setOrCreateGameRule("sendCommandFeedback","false");
+                            }
+                            MusicTriggers.mcs.getCommandManager().executeCommand(MusicTriggers.mcs,"gamerule sendCommandFeedback false");
                             MusicTriggers.mcs.getCommandManager().executeCommand(MusicTriggers.mcs,"title "+mc.player.getName()+" title {\"text\":\""+line[0]+"\", \"bold\":true, \"italic\":false, \"color\":\"red\"}");
                             MusicTriggers.mcs.getCommandManager().executeCommand(MusicTriggers.mcs,"title "+mc.player.getName()+" subtitle {\"text\":\""+line[1]+"\", \"italic\":true, \"color\":\"white\"}");
+                            mc.player.world.getGameRules().setOrCreateGameRule("sendCommandFeedback",Boolean.toString(commandFeedback));
                         }
+                        MusicPicker.titleCardEvents = new ArrayList<>();
                     }
                     if(MusicPicker.curFade==0) {
                         mc.getSoundHandler().stopSound(curMusic);

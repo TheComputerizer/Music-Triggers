@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.client;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
+import mods.thecomputerizer.musictriggers.common.server;
 import mods.thecomputerizer.musictriggers.config;
 import mods.thecomputerizer.musictriggers.configDebug;
 import net.darkhax.gamestages.GameStageHelper;
@@ -42,6 +43,7 @@ public class MusicPicker {
         }
         if(player == null) {
             MusicTriggers.mcs=null;
+            server.isWorldRendered=false;
             return config.menu.menuSongs;
         }
         List<String> res = comboChecker(priorityHandler(playableEvents()));
