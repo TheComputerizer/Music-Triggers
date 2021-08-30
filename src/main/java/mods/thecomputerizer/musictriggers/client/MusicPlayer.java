@@ -4,6 +4,7 @@ import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.common.server;
 import mods.thecomputerizer.musictriggers.configDebug;
+import mods.thecomputerizer.musictriggers.configTitleCards;
 import net.minecraft.block.BlockJukebox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.*;
@@ -16,9 +17,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 @Mod.EventBusSubscriber(modid=MusicTriggers.MODID, value = Side.CLIENT)
 public class MusicPlayer {
@@ -83,6 +82,14 @@ public class MusicPlayer {
                 }
                 if (!Arrays.asList(curTrackList).containsAll(Arrays.asList(holder)) && !Arrays.asList(holder).containsAll(Arrays.asList(curTrackList))) {
                     curTrackList = null;
+                    for(String t: configTitleCards.TitleCards) {
+                        String[] line = t.split(",");
+                        String[] temp = Arrays.copyOfRange(line,2,line.length);
+                        if (MusicPicker.titleCardEvents.containsAll(Arrays.asList(temp)) && MusicTriggers.mcs!=null && mc.player!=null) {
+                            MusicTriggers.mcs.getCommandManager().executeCommand(MusicTriggers.mcs,"title "+mc.player.getName()+" title {\"text\":\""+line[0]+"\", \"bold\":true, \"italic\":false, \"color\":\"red\"}");
+                            MusicTriggers.mcs.getCommandManager().executeCommand(MusicTriggers.mcs,"title "+mc.player.getName()+" subtitle {\"text\":\""+line[1]+"\", \"italic\":true, \"color\":\"white\"}");
+                        }
+                    }
                     if(MusicPicker.curFade==0) {
                         mc.getSoundHandler().stopSound(curMusic);
                     }

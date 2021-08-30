@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.client;
 
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.config;
 import mods.thecomputerizer.musictriggers.configDebug;
@@ -29,6 +30,7 @@ public class MusicPicker {
     public static HashMap<String, Integer> dynamicFade = new HashMap<>();
 
     public static List<String> playableList = new ArrayList<>();
+    public static List<String> titleCardEvents = new ArrayList<>();
 
     public static int curFade = 0;
 
@@ -65,6 +67,9 @@ public class MusicPicker {
                 if(s.matches(checkThis)) {
                     if(playableList.containsAll(SoundHandler.songCombos.get(s)) && SoundHandler.songCombos.get(s).size()!=1) {
                         playableSongs.add(s.substring(1));
+                        if(!titleCardEvents.contains(st)) {
+                            titleCardEvents.addAll(SoundHandler.songCombos.get(s));
+                        }
                     }
                 }
             }
@@ -73,6 +78,9 @@ public class MusicPicker {
             for(String s: dynamicSongs.get(st)) {
                 if(!s.startsWith("@")) {
                     playableSongs.add(s);
+                    if(!titleCardEvents.contains(st)) {
+                        titleCardEvents.add(st);
+                    }
                 }
             }
         }
@@ -274,10 +282,9 @@ public class MusicPicker {
             }
         }
         else {
-            MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-            if(server!=null) {
+            if(MusicTriggers.mcs!=null) {
                 UUID uuid = player.getUniqueID();
-                WorldServer nworld = server.getWorld(server.getPlayerList().getPlayerByUUID(uuid).dimension);
+                WorldServer nworld = MusicTriggers.mcs.getWorld(MusicTriggers.mcs.getPlayerList().getPlayerByUUID(uuid).dimension);
                 for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.structureSongsString.entrySet()) {
                     String structName = ((Map.Entry) stringListEntry).getKey().toString();
                     if (nworld.getChunkProvider().isInsideStructure(world, structName, player.getPosition())) {

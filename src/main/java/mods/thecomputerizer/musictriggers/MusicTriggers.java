@@ -7,11 +7,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.FolderResourcePack;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.ResourcePackRepository;
+import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.thread.SidedThreadGroups;
 
 import java.io.File;
@@ -39,6 +41,8 @@ public class MusicTriggers {
     public static File pack;
     public static List<ResourcePackRepository.Entry> oldpacks = new ArrayList<>();
     public static List<ResourcePackRepository.Entry> newpacks = new ArrayList<>();
+
+    public static MinecraftServer mcs;
 
     @SuppressWarnings("JavaReflectionMemberAccess")
     public MusicTriggers() {
@@ -172,6 +176,11 @@ public class MusicTriggers {
     @EventHandler
     public void init(FMLInitializationEvent event) {
         // some example code
+    }
+
+    @Mod.EventHandler
+    public void start(FMLServerStartingEvent event){
+        mcs = event.getServer();
     }
 
 }
