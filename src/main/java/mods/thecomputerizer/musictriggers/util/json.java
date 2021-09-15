@@ -24,7 +24,7 @@ public class json {
                 js.add("\t\t}]");
                 js.add("\t},");
             }
-            js.add("  \"music." + allSongs.get(allSongs.size() - 1) + "\": {");
+            js.add("  \"music." + allSongs.get(allSongs.size() - 1).toLowerCase() + "\": {");
             js.add("\t\t\"category\": \"music\",");
             js.add("\t\t\"sounds\": [{");
             js.add("\t\t\t\"name\": \"" + MusicTriggers.MODID + ":music/" + allSongs.get(allSongs.size() - 1) + "\",");
@@ -41,8 +41,8 @@ public class json {
             System.out.print(allSongs.size());
             js.add("{");
             for (String allSong : allSongs) {
-                js.add("item.musictriggers:" + allSong + ".name=Music Disc");
-                js.add("item.record." + allSong + ".desc=Music Triggers - "+allSong);
+                js.add("item.musictriggers:" + allSong.toLowerCase() + ".name=Music Disc");
+                js.add("item.record." + allSong.toLowerCase() + ".desc=Music Triggers - "+allSong);
             }
         }
         return js;
@@ -50,10 +50,13 @@ public class json {
     public static List<String> collector() {
         File folder = new File("."+"/config/MusicTriggers/songs/assets/musictriggers/sounds/music/");
         File[] listOfFiles = folder.listFiles((dir, name) -> name.endsWith(".ogg"));
-
+        assert listOfFiles != null;
+        for(File f: listOfFiles) {
+            //noinspection ResultOfMethodCallIgnored
+            f.renameTo(new File(folder.getPath(),f.getName().toLowerCase()));
+        }
         boolean matchCheck = false;
         String curfile;
-        assert listOfFiles != null;
         for (File listOfFile : listOfFiles) {
             curfile = FilenameUtils.getBaseName(listOfFile.getName());
             for (String checker : allSongs) {

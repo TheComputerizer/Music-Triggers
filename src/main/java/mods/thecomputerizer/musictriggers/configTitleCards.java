@@ -20,7 +20,10 @@ public class configTitleCards {
             "stageName(true/false) - Ex: stageOnetrue")
     public static String[] TitleCards = {};
 
-    @Config.Comment("Image Cards\nNote: This is currently unimplemented and will not do anything")
+    @Config.Comment("Image Cards\nFormat: Image Title,event1,event2,event3,etc...\n"+
+    "Note: The Image must be located in [config/MusicTriggers/songs/assets/musictriggers/textures] and be a png\n"+
+    "Look above to the title cards to see the list of events\n"+"Example: nightimg,night\n"+
+    "Example 2: imgtitle,dimension-50,deepUnder,light")
     public static String[] ImageCards = {};
 
     @Mod.EventBusSubscriber(modid = MusicTriggers.MODID)

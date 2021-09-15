@@ -1,19 +1,17 @@
 package mods.thecomputerizer.musictriggers;
 
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
-import mods.thecomputerizer.musictriggers.common.server;
+import mods.thecomputerizer.musictriggers.common.eventsCommon;
 import mods.thecomputerizer.musictriggers.util.json;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.FolderResourcePack;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.ResourcePackRepository;
-import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.thread.SidedThreadGroups;
 
 import java.io.File;
@@ -33,16 +31,15 @@ import java.util.List;
 public class MusicTriggers {
     public static final String MODID = "musictriggers";
     public static final String NAME = "Music Triggers";
-    public static final String VERSION = "1.4";
+    public static final String VERSION = "1.5";
 
     public static File songsDir;
+    public static File texturesDir;
     public static File songs;
     public static File readFrom;
     public static File pack;
     public static List<ResourcePackRepository.Entry> oldpacks = new ArrayList<>();
     public static List<ResourcePackRepository.Entry> newpacks = new ArrayList<>();
-
-    public static MinecraftServer mcs;
 
     @SuppressWarnings("JavaReflectionMemberAccess")
     public MusicTriggers() {
@@ -97,9 +94,6 @@ public class MusicTriggers {
                     ex.printStackTrace();
                 }
             }
-
-            //FolderResourcePack test = new FolderResourcePack(pack);
-
         }
     }
 
@@ -129,6 +123,10 @@ public class MusicTriggers {
             File musicDir = new File(soundsDir.getPath(), "music");
             if (!musicDir.exists()) {
                 musicDir.mkdir();
+            }
+            texturesDir = new File(soundsDir.getPath(), "textures");
+            if (!texturesDir.exists()) {
+                texturesDir.mkdir();
             }
             File mcmeta = new File(songsDir.getPath() + "/pack.mcmeta");
             if (!mcmeta.exists()) {
@@ -170,17 +168,12 @@ public class MusicTriggers {
         }
 
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
-        MinecraftForge.EVENT_BUS.register(server.class);
+        MinecraftForge.EVENT_BUS.register(eventsCommon.class);
     }
 
     @EventHandler
     public void init(FMLInitializationEvent event) {
         // some example code
-    }
-
-    @Mod.EventHandler
-    public void start(FMLServerStartingEvent event){
-        mcs = event.getServer();
     }
 
 }

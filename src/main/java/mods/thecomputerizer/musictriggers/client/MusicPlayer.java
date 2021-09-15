@@ -2,13 +2,14 @@ package mods.thecomputerizer.musictriggers.client;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
-import mods.thecomputerizer.musictriggers.common.server;
+import mods.thecomputerizer.musictriggers.common.eventsCommon;
 import mods.thecomputerizer.musictriggers.configDebug;
 import mods.thecomputerizer.musictriggers.configTitleCards;
 import net.minecraft.block.BlockJukebox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
@@ -17,12 +18,9 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
-@Mod.EventBusSubscriber(modid=MusicTriggers.MODID, value = Side.CLIENT)
+@Mod.EventBusSubscriber(modid = MusicTriggers.MODID, value = Side.CLIENT)
 public class MusicPlayer {
 
     public static String[] curTrackList;
@@ -35,31 +33,31 @@ public class MusicPlayer {
     public static boolean fading = false;
     private static int tempFade = 0;
     private static float saveVol = 1;
+    public static List<String> tempTitleCards = new ArrayList<>();
 
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent event) {
-        if(fading) {
-            if(tempFade==0) {
-                fading=false;
+        if (fading) {
+            if (tempFade == 0) {
+                fading = false;
                 mc.getSoundHandler().stopSound(curMusic);
-                mc.getSoundHandler().setSoundLevel(SoundCategory.MASTER,saveVol);
-            }
-            else {
-                mc.getSoundHandler().setSoundLevel(SoundCategory.MASTER,saveVol*(float)(((double)tempFade)/((double)MusicPicker.curFade)));
-                System.out.print("Fade: "+MusicPicker.curFade+" Fade left: "+tempFade+" Volume: "+(float)(((double)tempFade)/((double)MusicPicker.curFade))+"\n");
-                tempFade-=1;
+                mc.getSoundHandler().setSoundLevel(SoundCategory.MASTER, saveVol);
+                renderCards();
+            } else {
+                mc.getSoundHandler().setSoundLevel(SoundCategory.MASTER, saveVol * (float) (((double) tempFade) / ((double) MusicPicker.curFade)));
+                tempFade -= 1;
             }
         }
-        if(tickCounter%10==0 && !fading && server.isWorldRendered) {
+        if (tickCounter % 10 == 0 && !fading) {
             boolean playing = false;
-            if(MusicPicker.player!=null) {
+            if (MusicPicker.player != null) {
                 for (int x = MusicPicker.player.chunkCoordX - 3; x <= MusicPicker.player.chunkCoordX + 3; x++) {
                     for (int z = MusicPicker.player.chunkCoordZ - 3; z <= MusicPicker.player.chunkCoordZ + 3; z++) {
                         Map<BlockPos, TileEntity> currentChunkTE = MusicPicker.world.getChunk(x, z).getTileEntityMap();
                         for (TileEntity te : currentChunkTE.values()) {
                             if (te != null) {
                                 if (te instanceof BlockJukebox.TileEntityJukebox) {
-                                    if (te.getBlockMetadata()!=0) {
+                                    if (te.getBlockMetadata() != 0) {
                                         playing = true;
                                     }
                                 }
@@ -69,42 +67,30 @@ public class MusicPlayer {
                 }
             }
             holder = MusicPicker.playThese();
-            if (holder!=null && !Arrays.asList(holder).isEmpty() && !playing) {
+            if (holder != null && !Arrays.asList(holder).isEmpty() && !playing) {
                 if (curTrackList == null) {
                     curTrackList = holder;
                 }
-                if(configDebug.FinalSongs) {
+                if (configDebug.FinalSongs && eventsCommon.isWorldRendered) {
                     for (String print : curTrackList) {
                         MusicPicker.player.sendMessage(new TextComponentString(print));
                     }
                 }
                 if (curMusic != null) {
                     if (!mc.getSoundHandler().isSoundPlaying(curMusic)) {
+                        mc.getSoundHandler().stopSounds();
                         curMusic = null;
                     }
                 }
                 if (!Arrays.asList(curTrackList).containsAll(Arrays.asList(holder)) && !Arrays.asList(holder).containsAll(Arrays.asList(curTrackList))) {
+                    eventsCommon.IMAGE_CARD = null;
                     curTrackList = null;
-                    for(String t: configTitleCards.TitleCards) {
-                        String[] line = t.split(",");
-                        String[] temp = Arrays.copyOfRange(line,2,line.length);
-                        if (MusicPicker.titleCardEvents.containsAll(Arrays.asList(temp)) && MusicTriggers.mcs!=null && mc.player!=null) {
-                            boolean commandFeedback = mc.player.world.getGameRules().getBoolean("sendCommandFeedback");
-                            if(commandFeedback) {
-                                mc.player.world.getGameRules().setOrCreateGameRule("sendCommandFeedback","false");
-                            }
-                            MusicTriggers.mcs.getCommandManager().executeCommand(MusicTriggers.mcs,"gamerule sendCommandFeedback false");
-                            MusicTriggers.mcs.getCommandManager().executeCommand(MusicTriggers.mcs,"title "+mc.player.getName()+" title {\"text\":\""+line[0]+"\", \"bold\":true, \"italic\":false, \"color\":\"red\"}");
-                            MusicTriggers.mcs.getCommandManager().executeCommand(MusicTriggers.mcs,"title "+mc.player.getName()+" subtitle {\"text\":\""+line[1]+"\", \"italic\":true, \"color\":\"white\"}");
-                            mc.player.world.getGameRules().setOrCreateGameRule("sendCommandFeedback",Boolean.toString(commandFeedback));
-                        }
-                        MusicPicker.titleCardEvents = new ArrayList<>();
-                    }
-                    if(MusicPicker.curFade==0) {
+                    tempTitleCards = MusicPicker.titleCardEvents;
+                    if (MusicPicker.curFade == 0) {
                         mc.getSoundHandler().stopSound(curMusic);
-                    }
-                    else {
-                        fading=true;
+                        renderCards();
+                    } else {
+                        fading = true;
                         tempFade = MusicPicker.curFade;
                         saveVol = mc.gameSettings.getSoundLevel(SoundCategory.MASTER);
                     }
@@ -118,24 +104,42 @@ public class MusicPlayer {
                         }
                         curTrack = curTrackList[i];
                         curMusic = SoundHandler.songsRecords.get(curTrack);
-                        if(!mc.getSoundHandler().isSoundPlaying(curMusic)) {
-                            mc.getSoundHandler().playSound(curMusic);
-                        }
+                        mc.getSoundHandler().stopSounds();
+                        mc.getSoundHandler().playSound(curMusic);
                     }
                 }
-            }
-            else {
-                if(curMusic!=null) {
+            } else {
+                if (curMusic != null) {
                     mc.getSoundHandler().stopSound(curMusic);
-                    curMusic=null;
+                    curMusic = null;
                 }
             }
-            if(server.vanilla!=null) {
-                if(mc.getSoundHandler().isSoundPlaying(server.vanilla)) {
-                    mc.getSoundHandler().stopSound(server.vanilla);
+            if (eventsCommon.vanilla != null) {
+                if (mc.getSoundHandler().isSoundPlaying(eventsCommon.vanilla)) {
+                    mc.getSoundHandler().stopSound(eventsCommon.vanilla);
                 }
             }
         }
         tickCounter++;
+    }
+
+    public static void renderCards() {
+        for (String t : configTitleCards.TitleCards) {
+            String[] line = t.split(",");
+            String[] temp = Arrays.copyOfRange(line, 2, line.length);
+            if (tempTitleCards.containsAll(Arrays.asList(temp)) && mc.player != null) {
+                mc.ingameGUI.displayTitle("\u00A74" + line[0], line[1], 5, 20, 20);
+                //noinspection ConstantConditions
+                mc.ingameGUI.displayTitle(null, line[1], 5, 20, 20);
+            }
+        }
+        for (String t : configTitleCards.ImageCards) {
+            String[] line = t.split(",");
+            String[] temp = Arrays.copyOfRange(line, 1, line.length);
+            if (tempTitleCards.containsAll(Arrays.asList(temp)) && mc.player != null) {
+                eventsCommon.IMAGE_CARD = new ResourceLocation(MusicTriggers.MODID, "textures/" + line[0] + ".png");
+                eventsCommon.activated = true;
+            }
+        }
     }
 }

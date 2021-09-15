@@ -21,6 +21,9 @@ public class configDebug {
     @Config.Comment("Spam the player with the current list of songs that are playing in chat")
     public static boolean FinalSongs = false;
 
+    @Config.Comment("List of mod ids to remove the music from so there is not any overlap")
+    public static boolean blockedmods = false;
+
     @Mod.EventBusSubscriber(modid = MusicTriggers.MODID)
     private static class EventHandler {
         @SubscribeEvent

@@ -1,8 +1,7 @@
 package mods.thecomputerizer.musictriggers.client;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
-import mods.thecomputerizer.musictriggers.common.server;
+import mods.thecomputerizer.musictriggers.common.eventsCommon;
 import mods.thecomputerizer.musictriggers.config;
 import mods.thecomputerizer.musictriggers.configDebug;
 import net.darkhax.gamestages.GameStageHelper;
@@ -11,12 +10,10 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.boss.EntityDragon;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Optional;
 
 import java.util.*;
@@ -36,14 +33,15 @@ public class MusicPicker {
     public static int curFade = 0;
 
     public static String[] playThese() {
+        if(!MusicPlayer.fading) {
+            titleCardEvents = new ArrayList<>();
+        }
         mc = Minecraft.getMinecraft();
         player = mc.player;
         if(player !=null) {
             world = player.getEntityWorld();
         }
         if(player == null) {
-            MusicTriggers.mcs=null;
-            server.isWorldRendered=false;
             return config.menu.menuSongs;
         }
         List<String> res = comboChecker(priorityHandler(playableEvents()));
@@ -55,6 +53,7 @@ public class MusicPicker {
         }
         dynamicSongs = new HashMap<>();
         dynamicPriorities = new HashMap<>();
+        dynamicFade = new HashMap<>();
         return config.generic.genericSongs;
     }
 
@@ -250,7 +249,7 @@ public class MusicPicker {
                 break;
             }
         }
-        if(configDebug.DimensionChecker) {
+        if(configDebug.DimensionChecker && eventsCommon.isWorldRendered) {
             player.sendMessage(new TextComponentString(player.dimension+""));
         }
         if (SoundHandler.dimensionSongs.get(player.dimension) != null) {
@@ -260,7 +259,7 @@ public class MusicPicker {
             dynamicPriorities.put("dimension" + player.dimension, SoundHandler.dimensionPriorities.get(player.dimension));
             dynamicFade.put("dimension" + player.dimension, SoundHandler.dimensionFade.get(player.dimension));
         }
-        if(configDebug.BiomeChecker) {
+        if(configDebug.BiomeChecker && eventsCommon.isWorldRendered) {
             player.sendMessage(new TextComponentString(Objects.requireNonNull(world.getBiome(player.getPosition()).getRegistryName()).toString()));
         }
         if (SoundHandler.biomeSongs.get(Objects.requireNonNull(world.getBiome(player.getPosition()).getRegistryName()).toString()) != null) {
@@ -281,22 +280,6 @@ public class MusicPicker {
                     dynamicSongs.put("structure:" + structName, SoundHandler.structureSongsString.get(structName).toArray(structureSongsArray));
                     dynamicPriorities.put("structure:" + structName, SoundHandler.structurePriorities.get(structName));
                     dynamicFade.put("structure:" + structName, SoundHandler.structureFade.get(structName));
-                }
-            }
-        }
-        else {
-            if(MusicTriggers.mcs!=null) {
-                UUID uuid = player.getUniqueID();
-                WorldServer nworld = MusicTriggers.mcs.getWorld(MusicTriggers.mcs.getPlayerList().getPlayerByUUID(uuid).dimension);
-                for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.structureSongsString.entrySet()) {
-                    String structName = ((Map.Entry) stringListEntry).getKey().toString();
-                    if (nworld.getChunkProvider().isInsideStructure(world, structName, player.getPosition())) {
-                        events.add("structure:" + structName);
-                        String[] structureSongsArray = new String[SoundHandler.structureSongsString.get(structName).size()];
-                        dynamicSongs.put("structure:" + structName, SoundHandler.structureSongsString.get(structName).toArray(structureSongsArray));
-                        dynamicPriorities.put("structure:" + structName, SoundHandler.structurePriorities.get(structName));
-                        dynamicFade.put("structure:" + structName, SoundHandler.structureFade.get(structName));
-                    }
                 }
             }
         }
@@ -348,7 +331,7 @@ public class MusicPicker {
 
         playableList = events;
 
-        if(events.size()>=1 && configDebug.PlayableEvents) {
+        if(events.size()>=1 && configDebug.PlayableEvents && eventsCommon.isWorldRendered) {
             for (String ev : events) {
                 player.sendMessage(new TextComponentString(ev));
             }
