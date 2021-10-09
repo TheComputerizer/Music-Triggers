@@ -4,6 +4,8 @@ import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.common.eventsCommon;
 import mods.thecomputerizer.musictriggers.config;
 import mods.thecomputerizer.musictriggers.configDebug;
+import mods.thecomputerizer.musictriggers.util.RegistryHandler;
+import mods.thecomputerizer.musictriggers.util.packet;
 import net.darkhax.gamestages.GameStageHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLiving;
@@ -275,6 +277,19 @@ public class MusicPicker {
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.structureSongsString.entrySet()) {
                 String structName = ((Map.Entry) stringListEntry).getKey().toString();
                 if (nworld.getChunkProvider().isInsideStructure(world, structName, player.getPosition())) {
+                    events.add("structure:" + structName);
+                    String[] structureSongsArray = new String[SoundHandler.structureSongsString.get(structName).size()];
+                    dynamicSongs.put("structure:" + structName, SoundHandler.structureSongsString.get(structName).toArray(structureSongsArray));
+                    dynamicPriorities.put("structure:" + structName, SoundHandler.structurePriorities.get(structName));
+                    dynamicFade.put("structure:" + structName, SoundHandler.structureFade.get(structName));
+                }
+            }
+        }
+        else {
+            for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.structureSongsString.entrySet()) {
+                String structName = ((Map.Entry) stringListEntry).getKey().toString();
+                RegistryHandler.network.sendToServer(new packet.packetMessage(structName,player.getPosition(),player.dimension,player.getUniqueID()));
+                if(fromServer.inStructure) {
                     events.add("structure:" + structName);
                     String[] structureSongsArray = new String[SoundHandler.structureSongsString.get(structName).size()];
                     dynamicSongs.put("structure:" + structName, SoundHandler.structureSongsString.get(structName).toArray(structureSongsArray));

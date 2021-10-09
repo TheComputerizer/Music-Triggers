@@ -749,6 +749,7 @@ public class SoundHandler {
                 String[] broken = stringBreaker(config.mob.mobSongs[i]);
                 String extractedMobName = broken[0];
                 mobPriorities.computeIfAbsent(extractedMobName, k -> config.mob.mobPriority);
+                mobRange.putIfAbsent(extractedMobName, 16);
                 if (broken.length >= 4) {
                     int extractedRange = Integer.parseInt(broken[3]);
                     mobRange.put(extractedMobName, extractedRange);

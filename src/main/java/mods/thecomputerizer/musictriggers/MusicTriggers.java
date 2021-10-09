@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers;
 
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.common.eventsCommon;
+import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.json;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.FolderResourcePack;
@@ -166,7 +167,7 @@ public class MusicTriggers {
 
             songs = musictriggersDir;
         }
-
+        RegistryHandler.init();
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
         MinecraftForge.EVENT_BUS.register(eventsCommon.class);
     }

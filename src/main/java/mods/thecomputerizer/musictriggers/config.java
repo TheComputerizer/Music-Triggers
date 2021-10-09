@@ -11,36 +11,30 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public class config {
 
     @Comment("Main Menu")
-    public static Menu menu = new Menu(0,0,new String[] {});
+    public static Menu menu = new Menu(0,new String[] {});
 
     public static class Menu {
-        @Comment("Priority [min: -99, max: 2147483647 default: 0]")
-        public int menuPriority;
         @Comment("Fade Time [in ticks, default: 0]")
         public int menuFade;
         @Comment("songs")
         public String[] menuSongs;
 
-        public Menu(final int menuPriority, final int menuFade, final String[] menuSongs) {
-            this.menuPriority = menuPriority;
+        public Menu(final int menuFade, final String[] menuSongs) {
             this.menuFade = menuFade;
             this.menuSongs = menuSongs;
         }
     }
 
     @Comment("Generic")
-    public static Generic generic = new Generic(0,0,new String[] {});
+    public static Generic generic = new Generic(0,new String[] {});
 
     public static class Generic {
-        @Comment("Priority [min: -99, max: 2147483647 default: 0]")
-        public int genericPriority;
         @Comment("Fade Time [in ticks, default: 0]")
         public int genericFade;
         @Comment("songs")
         public String[] genericSongs;
 
-        public Generic(final int genericPriority, final int genericFade, final String[] genericSongs) {
-            this.genericPriority = genericPriority;
+        public Generic(final int genericFade, final String[] genericSongs) {
             this.genericFade = genericFade;
             this.genericSongs = genericSongs;
         }

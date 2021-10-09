@@ -11,6 +11,8 @@ import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -18,6 +20,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @GameRegistry.ObjectHolder(MusicTriggers.MODID)
 @Mod.EventBusSubscriber(modid = MusicTriggers.MODID)
 public final class RegistryHandler {
+    public static SimpleNetworkWrapper network;
 
     @SubscribeEvent
     public static void onRegisterItems(RegistryEvent.Register<Item> e)
@@ -39,5 +42,15 @@ public final class RegistryHandler {
         for(Item i: MusicTriggersItems.INSTANCE.getItems()) {
             ModelLoader.setCustomModelResourceLocation(i, 0, new ModelResourceLocation("musictriggers:record", "inventory"));
         }
+    }
+
+    public static void init() {
+        network = NetworkRegistry.INSTANCE.newSimpleChannel(MusicTriggers.MODID);
+        registerPackets();
+    }
+
+    private static void registerPackets() {
+        network.registerMessage(packet.class, packet.packetMessage.class, 0, Side.CLIENT);
+        network.registerMessage(packet.class, packet.packetMessage.class, 1, Side.SERVER);
     }
 }
