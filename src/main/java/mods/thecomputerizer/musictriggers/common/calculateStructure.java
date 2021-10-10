@@ -1,7 +1,8 @@
 package mods.thecomputerizer.musictriggers.common;
 
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
-import mods.thecomputerizer.musictriggers.util.packet;
+import mods.thecomputerizer.musictriggers.util.packetToClient;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
@@ -12,13 +13,14 @@ import java.util.UUID;
 public class calculateStructure {
 
     public static void calculateAndSend(String struct, BlockPos pos, Integer dimID, UUID uuid) {
+        MusicTriggers.logger.info("Beginning of computation: "+dimID+"\n");
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
         WorldServer world = server.getWorld(dimID);
         if(world!=null) {
             if (world.getChunkProvider().isInsideStructure(world, struct, pos)) {
-                RegistryHandler.network.sendTo(new packet.packetMessage(Boolean.toString(true)), server.getPlayerList().getPlayerByUUID(uuid));
+                RegistryHandler.network.sendTo(new packetToClient.packetToClientMessage(Boolean.toString(true)), server.getPlayerList().getPlayerByUUID(uuid));
             } else {
-                RegistryHandler.network.sendTo(new packet.packetMessage(Boolean.toString(false)), server.getPlayerList().getPlayerByUUID(uuid));
+                RegistryHandler.network.sendTo(new packetToClient.packetToClientMessage(Boolean.toString(false)), server.getPlayerList().getPlayerByUUID(uuid));
             }
         }
     }

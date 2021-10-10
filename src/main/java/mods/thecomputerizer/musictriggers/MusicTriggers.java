@@ -14,6 +14,7 @@ import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.thread.SidedThreadGroups;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -41,6 +42,8 @@ public class MusicTriggers {
     public static File pack;
     public static List<ResourcePackRepository.Entry> oldpacks = new ArrayList<>();
     public static List<ResourcePackRepository.Entry> newpacks = new ArrayList<>();
+
+    public static Logger logger;
 
     @SuppressWarnings("JavaReflectionMemberAccess")
     public MusicTriggers() {
@@ -100,6 +103,7 @@ public class MusicTriggers {
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
+        logger = event.getModLog();
         File configDir = new File(event.getSuggestedConfigurationFile().getParentFile().getPath(), "MusicTriggers");
         if (!configDir.exists()) {
             configDir.mkdir();

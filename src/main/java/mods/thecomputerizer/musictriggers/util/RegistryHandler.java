@@ -50,7 +50,7 @@ public final class RegistryHandler {
     }
 
     private static void registerPackets() {
-        network.registerMessage(packet.class, packet.packetMessage.class, 0, Side.CLIENT);
+        network.registerMessage(packetToClient.class, packetToClient.packetToClientMessage.class, 0, Side.CLIENT);
         network.registerMessage(packet.class, packet.packetMessage.class, 1, Side.SERVER);
     }
 }
