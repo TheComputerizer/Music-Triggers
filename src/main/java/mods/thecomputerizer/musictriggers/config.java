@@ -64,14 +64,19 @@ public class config {
     public static class Night {
         @Comment("Priority [min: -99, max: 2147483647 default: 900]")
         public int nightPriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int nightFade;
-        @Comment("songs")
+        @Comment("songs - There is a new format now!\n" +
+                "[song name,moon phase,(Optional)fade time [in ticks, default: 0]]\n" +
+                "Moon Phases: 1 - Full Moon, 2 - Waning Gibbous, 3 - Third Quarter, 4 - Waning Crescent\n" +
+                "5 - New Moon, 6 - Waxing Crescent, 7 - First Quarter, 8 - Waxing Gibbous\n" +
+                "You can put 0 to ignore moon phase, or put multiple numbers for a song to be active during multiple phases\n" +
+                "Example 1: [nighttime,1] - This will only play during a full moon\n" +
+                "Example 2: [nighttime,2,3,4,6,7,8] - This will play every night except for full moons and new moons\n" +
+                "Example 3: [nighttime,0] - This will play whenever it is nighttime, just like the old version of this trigger\n" +
+                "Note - If the fade is not the last number it will not work properly")
         public String[] nightSongs;
 
         public Night(final int nightPriority, final int nightFade, final String[] nightSongs) {
             this.nightPriority = nightPriority;
-            this.nightFade = nightFade;
             this.nightSongs = nightSongs;
         }
     }
@@ -133,38 +138,44 @@ public class config {
         }
     }
 
-    @Comment("Underground - below Y 55 with no sky visible")
-    public static Underground underground = new Underground(1500,0,new String[] {});
+    @Comment("Underground - underground with no sky visible")
+    public static Underground underground = new Underground(1500,0,55,new String[] {});
 
     public static class Underground {
         @Comment("Priority [min: -99, max: 2147483647 default: 1500]")
         public int undergroundPriority;
         @Comment("Fade Time [in ticks, default: 0]")
         public int undergroundFade;
+        @Comment("The Y level that is considered underground [default: 55]")
+        public int undergroundLevel;
         @Comment("songs")
         public String[] undergroundSongs;
 
-        public Underground(final int undergroundPriority, final int undergroundFade, final String[] undergroundSongs) {
+        public Underground(final int undergroundPriority, final int undergroundFade, final int undergroundLevel, final String[] undergroundSongs) {
             this.undergroundPriority = undergroundPriority;
             this.undergroundFade = undergroundFade;
+            this.undergroundLevel = undergroundLevel;
             this.undergroundSongs = undergroundSongs;
         }
     }
 
-    @Comment("Deep Under - below Y 20 with no sky visible")
-    public static DeepUnder deepUnder = new DeepUnder(2000,0,new String[] {});
+    @Comment("Deep Under - deep below the surface with no sky visible")
+    public static DeepUnder deepUnder = new DeepUnder(2000,0,20,new String[] {});
 
     public static class DeepUnder {
         @Comment("Priority [min: -99, max: 2147483647 default: 2000]")
         public int deepUnderPriority;
         @Comment("Fade Time [in ticks, default: 0]")
         public int deepUnderFade;
+        @Comment("The Y level that is considered deep underground [default: 20]")
+        public int deepUnderLevel;
         @Comment("songs")
         public String[] deepUnderSongs;
 
-        public DeepUnder(final int deepUnderPriority, final int deepUnderFade, final String[] deepUnderSongs) {
+        public DeepUnder(final int deepUnderPriority, final int deepUnderFade, final int deepUnderLevel, final String[] deepUnderSongs) {
             this.deepUnderPriority = deepUnderPriority;
             this.deepUnderFade = deepUnderFade;
+            this.deepUnderLevel = deepUnderLevel;
             this.deepUnderSongs = deepUnderSongs;
         }
     }
@@ -263,19 +274,22 @@ public class config {
     }
 
     @Comment("Void")
-    public static InVoid inVoid = new InVoid(7777,0,new String[] {});
+    public static InVoid inVoid = new InVoid(7777,0,0,new String[] {});
 
     public static class InVoid {
         @Comment("Priority [min: -99, max: 2147483647 default: 7777]")
         public int inVoidPriority;
         @Comment("Fade Time [in ticks, default: 0]")
         public int inVoidFade;
+        @Comment("Below what y level would consider to be actually in the void? [default: 0]")
+        public int inVoidLevel;
         @Comment("songs")
         public String[] inVoidSongs;
 
-        public InVoid(final int inVoidPriority, final int inVoidFade, final String[] inVoidSongs) {
+        public InVoid(final int inVoidPriority, final int inVoidFade, final int inVoidLevel, final String[] inVoidSongs) {
             this.inVoidPriority = inVoidPriority;
             this.inVoidFade = inVoidFade;
+            this.inVoidLevel = inVoidLevel;
             this.inVoidSongs = inVoidSongs;
         }
     }
@@ -447,6 +461,25 @@ public class config {
             this.gamestageSongs = gamestageSongs;
         }
     }
+
+    @Comment("Blood Moon (Only fires if the mod Blood Moon is active)")
+    public static BloodMoon bloodmoon = new BloodMoon(1200,0,new String[] {});
+
+    public static class BloodMoon {
+        @Comment("Priority [min: -99, max: 2147483647 default: 1200]")
+        public int bloodmoonPriority;
+        @Comment("Fade Time [in ticks, default: 0]")
+        public int bloodmoonFade;
+        @Comment("songs")
+        public String[] bloodmoonSongs;
+
+        public BloodMoon(final int bloodmoonPriority, final int bloodmoonFade, final String[] bloodmoonSongs) {
+            this.bloodmoonPriority = bloodmoonPriority;
+            this.bloodmoonFade = bloodmoonFade;
+            this.bloodmoonSongs = bloodmoonSongs;
+        }
+    }
+
     @Mod.EventBusSubscriber(modid = MusicTriggers.MODID)
     private static class EventHandler {
         @SubscribeEvent

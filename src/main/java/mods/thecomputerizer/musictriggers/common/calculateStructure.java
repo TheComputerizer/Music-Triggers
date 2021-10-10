@@ -1,6 +1,5 @@
 package mods.thecomputerizer.musictriggers.common;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.packetToClient;
 import net.minecraft.server.MinecraftServer;
@@ -13,7 +12,6 @@ import java.util.UUID;
 public class calculateStructure {
 
     public static void calculateAndSend(String struct, BlockPos pos, Integer dimID, UUID uuid) {
-        MusicTriggers.logger.info("Beginning of computation: "+dimID+"\n");
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
         WorldServer world = server.getWorld(dimID);
         if(world!=null) {

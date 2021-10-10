@@ -26,6 +26,24 @@ public class configTitleCards {
     "Example 2: imgtitle,dimension-50,deepUnder,light")
     public static String[] ImageCards = {};
 
+    @Config.Comment("Image Card Size\n" +
+            "This act as a percentage for how big the image cards are.\n" +
+            "1.00 = 100%\n" +
+            "This value must be a float")
+    public static float ImageSize = 1.0F;
+
+    @Config.Comment("Image Card Horizontal\n" +
+            "Negative numbers will move the image cards to the left while positive numbers will move them to the right\n" +
+            "A value of 0 means the image will be centered\n" +
+            "This value must be an integer")
+    public static int ImageH = 0;
+
+    @Config.Comment("Image Card Vertical\n" +
+            "Negative numbers will move the image cards upwards while positive numbers will move them downwards\n" +
+            "A value of 0 means the image will be right above where the title cards show up, given the image size is still set to 1.0\n" +
+            "This value must be an integer")
+    public static int ImageV = 0;
+
     @Mod.EventBusSubscriber(modid = MusicTriggers.MODID)
     private static class EventHandler {
         @SubscribeEvent

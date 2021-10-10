@@ -1,5 +1,7 @@
 package mods.thecomputerizer.musictriggers.client;
 
+import lumien.bloodmoon.Bloodmoon;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.common.eventsCommon;
 import mods.thecomputerizer.musictriggers.config;
@@ -29,10 +31,13 @@ public class MusicPicker {
     public static HashMap<String, Integer> dynamicPriorities = new HashMap<>();
     public static HashMap<String, Integer> dynamicFade = new HashMap<>();
 
+    public static HashMap<String, String[]> previousSongs = new HashMap<>();
+
     public static List<String> playableList = new ArrayList<>();
     public static List<String> titleCardEvents = new ArrayList<>();
 
     public static int curFade = 0;
+    public static boolean shouldChange = false;
 
     public static String[] playThese() {
         if (!MusicPlayer.fading) {
@@ -47,12 +52,30 @@ public class MusicPicker {
             return config.menu.menuSongs;
         }
         List<String> res = comboChecker(priorityHandler(playableEvents()));
+        dynamicSongs.entrySet().removeIf(curr -> curr.getValue() == null);
+        dynamicSongs.entrySet().removeIf(curr -> curr.getValue().length == 0);
         if (res != null && !res.isEmpty()) {
-            dynamicSongs.clear();
-            dynamicPriorities.clear();
-            dynamicFade.clear();
+            if(previousSongs.size() != (dynamicSongs).size()) {
+                shouldChange=true;
+            }
+            else if (!previousSongs.entrySet().stream().allMatch(e -> Arrays.equals(e.getValue(), dynamicSongs.get(e.getKey())))) {
+                shouldChange=true;
+            }
+            previousSongs.clear();
+            previousSongs.putAll(dynamicSongs);
+            dynamicSongs = new HashMap<>();
+            dynamicPriorities = new HashMap<>();
+            dynamicFade = new HashMap<>();
             return res.toArray(new String[0]);
         }
+        if(previousSongs.size() != (dynamicSongs).size()) {
+            shouldChange=true;
+        }
+        else if (!previousSongs.entrySet().stream().allMatch(e -> Arrays.equals(e.getValue(), dynamicSongs.get(e.getKey())))) {
+            shouldChange=true;
+        }
+        previousSongs.clear();
+        previousSongs.putAll(dynamicSongs);
         dynamicSongs = new HashMap<>();
         dynamicPriorities = new HashMap<>();
         dynamicFade = new HashMap<>();
@@ -147,10 +170,37 @@ public class MusicPicker {
             dynamicPriorities.put("day", config.day.dayPriority);
             dynamicFade.put("day", config.day.dayFade);
         } else {
-            events.add("night");
-            dynamicSongs.put("night", config.night.nightSongs);
-            dynamicPriorities.put("night", config.night.nightPriority);
-            dynamicFade.put("night", config.night.nightFade);
+            MusicTriggers.logger.info("Current Moon Phase: "+(world.getMoonPhase()+1));
+            if (SoundHandler.nightSongs.get(0)!=null) {
+                events.add("night" + 0);
+                String[] dimSongsArray;
+                if(SoundHandler.nightSongsString.get((world.getMoonPhase()+1))!=null && !SoundHandler.nightSongsString.get((world.getMoonPhase()+1)).isEmpty()) {
+                    dimSongsArray = new String[(SoundHandler.nightSongsString.get(0).size()) + (SoundHandler.nightSongsString.get((world.getMoonPhase()+1)).size())];
+                }
+                else {
+                    dimSongsArray = new String[(SoundHandler.nightSongsString.get(0).size())];
+                }
+                List<String> tempNight = new ArrayList<>();
+                if(SoundHandler.nightSongsString.get((world.getMoonPhase()+1))!=null && !SoundHandler.nightSongsString.get((world.getMoonPhase()+1)).isEmpty()) {
+                    tempNight.addAll(SoundHandler.nightSongsString.get((world.getMoonPhase()+1)));
+                }
+                tempNight.addAll(SoundHandler.nightSongsString.get(0));
+                for(String ghgh : tempNight) {
+                    MusicTriggers.logger.info(ghgh);
+                }
+                dynamicSongs.put("night" + 0, tempNight.toArray(dimSongsArray));
+                dynamicPriorities.put("night" + 0, config.night.nightPriority);
+                dynamicFade.put("night" + 0, SoundHandler.nightFade.get(0));
+            }
+            else {
+                if (SoundHandler.nightSongs.get((world.getMoonPhase()+1))!=null) {
+                    events.add("night" + (world.getMoonPhase()+1));
+                    String[] dimSongsArray = new String[SoundHandler.nightSongsString.get((world.getMoonPhase()+1)).size()];
+                    dynamicSongs.put("night" + (world.getMoonPhase()+1), SoundHandler.nightSongsString.get((world.getMoonPhase()+1)).toArray(dimSongsArray));
+                    dynamicPriorities.put("night"+ (world.getMoonPhase()+1), config.night.nightPriority);
+                    dynamicFade.put("night" + (world.getMoonPhase()+1), SoundHandler.nightFade.get((world.getMoonPhase()+1)));
+                }
+            }
         }
         if (time < 0.54166666666 && time >= 0.5) {
             events.add("sunset");
@@ -169,19 +219,19 @@ public class MusicPicker {
             dynamicPriorities.put("light", config.light.lightPriority);
             dynamicFade.put("light", config.light.lightFade);
         }
-        if (player.posY < 20 && !world.canSeeSky(player.getPosition())) {
+        if (player.posY < config.deepUnder.deepUnderLevel && !world.canSeeSky(player.getPosition())) {
             events.add("deepUnder");
             dynamicSongs.put("deepUnder", config.deepUnder.deepUnderSongs);
             dynamicPriorities.put("deepUnder", config.deepUnder.deepUnderPriority);
             dynamicFade.put("deepUnder", config.deepUnder.deepUnderFade);
         }
-        if (player.posY < 55 && !world.canSeeSky(player.getPosition())) {
+        if (player.posY < config.underground.undergroundLevel && !world.canSeeSky(player.getPosition())) {
             events.add("underground");
             dynamicSongs.put("underground", config.underground.undergroundSongs);
             dynamicPriorities.put("underground", config.underground.undergroundPriority);
             dynamicFade.put("underground", config.underground.undergroundFade);
         }
-        if (player.posY < 0) {
+        if (player.posY < config.inVoid.inVoidLevel) {
             events.add("inVoid");
             dynamicSongs.put("inVoid", config.inVoid.inVoidSongs);
             dynamicPriorities.put("inVoid", config.inVoid.inVoidPriority);
@@ -287,12 +337,14 @@ public class MusicPicker {
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.structureSongsString.entrySet()) {
                 String structName = ((Map.Entry) stringListEntry).getKey().toString();
                 RegistryHandler.network.sendToServer(new packet.packetMessage(structName, player.getPosition(), player.dimension, player.getUniqueID()));
-                if (fromServer.inStructure.get(structName)) {
-                    events.add("structure:" + structName);
-                    String[] structureSongsArray = new String[SoundHandler.structureSongsString.get(structName).size()];
-                    dynamicSongs.put("structure:" + structName, SoundHandler.structureSongsString.get(structName).toArray(structureSongsArray));
-                    dynamicPriorities.put("structure:" + structName, SoundHandler.structurePriorities.get(structName));
-                    dynamicFade.put("structure:" + structName, SoundHandler.structureFade.get(structName));
+                if (fromServer.inStructure.containsKey(structName)) {
+                    if (fromServer.inStructure.get(structName)) {
+                        events.add("structure:" + structName);
+                        String[] structureSongsArray = new String[SoundHandler.structureSongsString.get(structName).size()];
+                        dynamicSongs.put("structure:" + structName, SoundHandler.structureSongsString.get(structName).toArray(structureSongsArray));
+                        dynamicPriorities.put("structure:" + structName, SoundHandler.structurePriorities.get(structName));
+                        dynamicFade.put("structure:" + structName, SoundHandler.structureFade.get(structName));
+                    }
                 }
             }
         }
@@ -338,6 +390,13 @@ public class MusicPicker {
             }
             if (!blacklist.isEmpty()) {
                 events.addAll(blacklist);
+            }
+        } catch (NoSuchMethodError ignored) {
+        }
+        try {
+            boolean bloodmoon = bloodmoon();
+            if (bloodmoon) {
+                events.add("bloodmoon");
             }
         } catch (NoSuchMethodError ignored) {
         }
@@ -392,5 +451,16 @@ public class MusicPicker {
             }
         }
         return events;
+    }
+
+    @Optional.Method(modid = "bloodmoon")
+    private static boolean bloodmoon() {
+        if (Bloodmoon.proxy.isBloodmoon()) {
+            dynamicSongs.put("bloodmoon", config.bloodmoon.bloodmoonSongs);
+            dynamicPriorities.put("bloodmoon", config.bloodmoon.bloodmoonPriority);
+            dynamicFade.put("bloodmoon", config.bloodmoon.bloodmoonFade);
+            return true;
+        }
+        return false;
     }
 }

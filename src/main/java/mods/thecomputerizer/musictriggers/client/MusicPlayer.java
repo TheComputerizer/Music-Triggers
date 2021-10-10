@@ -82,7 +82,7 @@ public class MusicPlayer {
                         curMusic = null;
                     }
                 }
-                if (!Arrays.asList(curTrackList).containsAll(Arrays.asList(holder)) && !Arrays.asList(holder).containsAll(Arrays.asList(curTrackList))) {
+                if (MusicPicker.shouldChange || !Arrays.equals(curTrackList,holder)) {
                     eventsCommon.IMAGE_CARD = null;
                     curTrackList = null;
                     tempTitleCards = MusicPicker.titleCardEvents;
@@ -94,6 +94,7 @@ public class MusicPlayer {
                         tempFade = MusicPicker.curFade;
                         saveVol = mc.gameSettings.getSoundLevel(SoundCategory.MASTER);
                     }
+                    MusicPicker.shouldChange = false;
                 } else if (curMusic == null && mc.gameSettings.getSoundLevel(SoundCategory.MASTER) > 0 && mc.gameSettings.getSoundLevel(SoundCategory.MUSIC) > 0) {
                     if (curTrackList.length >= 1) {
                         int i = rand.nextInt(curTrackList.length);

@@ -2,7 +2,7 @@ package mods.thecomputerizer.musictriggers.common;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.MusicPicker;
-import mods.thecomputerizer.musictriggers.client.MusicPlayer;
+import mods.thecomputerizer.musictriggers.configTitleCards;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.gui.GuiScreen;
@@ -94,11 +94,10 @@ public class eventsCommon {
                     GlStateManager.enableBlend();
                     GlStateManager.pushMatrix();
                     GlStateManager.translate(0, 0, 0);
-                    GlStateManager.scale(0.140625,0.25,1);
+                    GlStateManager.scale(0.140625*configTitleCards.ImageSize,0.25*configTitleCards.ImageSize,1);
                     GlStateManager.color(color.getX(), color.getY(), color.getZ(), Math.max(0, Math.min(0.95f, opacity)));
-                    System.out.print("Resource Location: "+IMAGE_CARD+"\n");
                     mc.getTextureManager().bindTexture(IMAGE_CARD);
-                    GuiScreen.drawModalRectWithCustomSizedTexture((3*x),y/4,x,y,x,y,x,y);
+                    GuiScreen.drawModalRectWithCustomSizedTexture((3*(x+configTitleCards.ImageH)),(y+configTitleCards.ImageV)/4,x,y,x,y,x,y);
                     GlStateManager.color(1F, 1F, 1F, 1);
                     GlStateManager.popMatrix();
                 }

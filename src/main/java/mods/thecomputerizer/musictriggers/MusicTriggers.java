@@ -33,7 +33,7 @@ import java.util.List;
 public class MusicTriggers {
     public static final String MODID = "musictriggers";
     public static final String NAME = "Music Triggers";
-    public static final String VERSION = "1.5";
+    public static final String VERSION = "2.0";
 
     public static File songsDir;
     public static File texturesDir;
@@ -129,7 +129,7 @@ public class MusicTriggers {
             if (!musicDir.exists()) {
                 musicDir.mkdir();
             }
-            texturesDir = new File(soundsDir.getPath(), "textures");
+            texturesDir = new File(musictriggersDir.getPath(), "textures");
             if (!texturesDir.exists()) {
                 texturesDir.mkdir();
             }
@@ -178,7 +178,6 @@ public class MusicTriggers {
 
     @EventHandler
     public void init(FMLInitializationEvent event) {
-        // some example code
     }
 
 }
