@@ -287,7 +287,7 @@ public class MusicPicker {
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.structureSongsString.entrySet()) {
                 String structName = ((Map.Entry) stringListEntry).getKey().toString();
                 RegistryHandler.network.sendToServer(new packet.packetMessage(structName, player.getPosition(), player.dimension, player.getUniqueID()));
-                if (fromServer.inStructure) {
+                if (fromServer.inStructure.get(structName)) {
                     events.add("structure:" + structName);
                     String[] structureSongsArray = new String[SoundHandler.structureSongsString.get(structName).size()];
                     dynamicSongs.put("structure:" + structName, SoundHandler.structureSongsString.get(structName).toArray(structureSongsArray));

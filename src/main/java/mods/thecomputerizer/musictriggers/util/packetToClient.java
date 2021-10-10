@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.util;
 
 import io.netty.buffer.ByteBuf;
-import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.fromServer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -14,7 +13,7 @@ public class packetToClient implements IMessageHandler<packetToClient.packetToCl
     @Override
     public IMessage onMessage(packetToClient.packetToClientMessage message, MessageContext ctx)
     {
-        fromServer.clientSync(message.getDataBoolean());
+        fromServer.clientSync(message.getDataBoolean(),message.getDataString());
         return null;
     }
 
@@ -26,14 +25,12 @@ public class packetToClient implements IMessageHandler<packetToClient.packetToCl
         public packetToClientMessage(String s)
         {
             this.s = s;
-            MusicTriggers.logger.info("Boolean achieved: "+s+"\n");
         }
 
         @Override
         public void fromBytes(ByteBuf buf)
         {
             this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
-            MusicTriggers.logger.info("From Bytes (To Client): "+s+"\n");
         }
 
         @Override
@@ -44,7 +41,13 @@ public class packetToClient implements IMessageHandler<packetToClient.packetToCl
             }
         }
         public boolean getDataBoolean() {
-            return s.matches("true");
+            return stringBreaker(s)[0].matches("true");
+        }
+        public String getDataString() {
+            return stringBreaker(s)[1];
+        }
+        public static String[] stringBreaker(String s) {
+            return s.split(",");
         }
     }
 }

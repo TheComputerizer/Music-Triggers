@@ -18,9 +18,9 @@ public class calculateStructure {
         WorldServer world = server.getWorld(dimID);
         if(world!=null) {
             if (world.getChunkProvider().isInsideStructure(world, struct, pos)) {
-                RegistryHandler.network.sendTo(new packetToClient.packetToClientMessage(Boolean.toString(true)), server.getPlayerList().getPlayerByUUID(uuid));
+                RegistryHandler.network.sendTo(new packetToClient.packetToClientMessage(true +","+struct), server.getPlayerList().getPlayerByUUID(uuid));
             } else {
-                RegistryHandler.network.sendTo(new packetToClient.packetToClientMessage(Boolean.toString(false)), server.getPlayerList().getPlayerByUUID(uuid));
+                RegistryHandler.network.sendTo(new packetToClient.packetToClientMessage(false +","+struct), server.getPlayerList().getPlayerByUUID(uuid));
             }
         }
     }

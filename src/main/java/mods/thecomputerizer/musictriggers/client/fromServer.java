@@ -1,9 +1,11 @@
 package mods.thecomputerizer.musictriggers.client;
 
-public class fromServer {
-    public static boolean inStructure;
+import java.util.HashMap;
 
-    public static void clientSync(boolean b) {
-        inStructure = b;
+public class fromServer {
+    public static HashMap<String, Boolean> inStructure = new HashMap<>();
+
+    public static void clientSync(boolean b,String s) {
+        inStructure.put(s,b);
     }
 }
