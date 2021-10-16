@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.client;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.common.eventsCommon;
+import mods.thecomputerizer.musictriggers.config;
 import mods.thecomputerizer.musictriggers.configDebug;
 import mods.thecomputerizer.musictriggers.configTitleCards;
 import net.minecraft.block.BlockJukebox;
@@ -34,6 +35,8 @@ public class MusicPlayer {
     private static int tempFade = 0;
     private static float saveVol = 1;
     public static List<String> tempTitleCards = new ArrayList<>();
+    public static boolean delay = false;
+    public static int delayTime = 0;
 
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent event) {
@@ -48,7 +51,13 @@ public class MusicPlayer {
                 tempFade -= 1;
             }
         }
-        if (tickCounter % 10 == 0 && !fading) {
+        if(delay) {
+            delayTime-=1;
+            if(delayTime<=0) {
+                delay = false;
+            }
+        }
+        if (tickCounter % 10 == 0 && !fading && !delay) {
             boolean playing = false;
             if (MusicPicker.player != null) {
                 for (int x = MusicPicker.player.chunkCoordX - 3; x <= MusicPicker.player.chunkCoordX + 3; x++) {
@@ -80,6 +89,8 @@ public class MusicPlayer {
                     if (!mc.getSoundHandler().isSoundPlaying(curMusic)) {
                         mc.getSoundHandler().stopSounds();
                         curMusic = null;
+                        delay = true;
+                        delayTime = config.universalDelay;
                     }
                 }
                 if (MusicPicker.shouldChange || !Arrays.equals(curTrackList,holder)) {

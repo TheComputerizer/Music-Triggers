@@ -1,5 +1,9 @@
 package mods.thecomputerizer.musictriggers.client;
 
+import de.ellpeck.nyx.capabilities.NyxWorld;
+import de.ellpeck.nyx.lunarevents.BloodMoon;
+import de.ellpeck.nyx.lunarevents.HarvestMoon;
+import de.ellpeck.nyx.lunarevents.StarShower;
 import lumien.bloodmoon.Bloodmoon;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
@@ -15,6 +19,7 @@ import net.minecraft.entity.boss.EntityDragon;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -30,8 +35,6 @@ public class MusicPicker {
     public static HashMap<String, String[]> dynamicSongs = new HashMap<>();
     public static HashMap<String, Integer> dynamicPriorities = new HashMap<>();
     public static HashMap<String, Integer> dynamicFade = new HashMap<>();
-
-    public static HashMap<String, String[]> previousSongs = new HashMap<>();
 
     public static List<String> playableList = new ArrayList<>();
     public static List<String> titleCardEvents = new ArrayList<>();
@@ -52,33 +55,16 @@ public class MusicPicker {
             return config.menu.menuSongs;
         }
         List<String> res = comboChecker(priorityHandler(playableEvents()));
-        dynamicSongs.entrySet().removeIf(curr -> curr.getValue() == null);
-        dynamicSongs.entrySet().removeIf(curr -> curr.getValue().length == 0);
         if (res != null && !res.isEmpty()) {
-            if(previousSongs.size() != (dynamicSongs).size()) {
-                shouldChange=true;
-            }
-            else if (!previousSongs.entrySet().stream().allMatch(e -> Arrays.equals(e.getValue(), dynamicSongs.get(e.getKey())))) {
-                shouldChange=true;
-            }
-            previousSongs.clear();
-            previousSongs.putAll(dynamicSongs);
             dynamicSongs = new HashMap<>();
             dynamicPriorities = new HashMap<>();
             dynamicFade = new HashMap<>();
             return res.toArray(new String[0]);
         }
-        if(previousSongs.size() != (dynamicSongs).size()) {
-            shouldChange=true;
-        }
-        else if (!previousSongs.entrySet().stream().allMatch(e -> Arrays.equals(e.getValue(), dynamicSongs.get(e.getKey())))) {
-            shouldChange=true;
-        }
-        previousSongs.clear();
-        previousSongs.putAll(dynamicSongs);
         dynamicSongs = new HashMap<>();
         dynamicPriorities = new HashMap<>();
         dynamicFade = new HashMap<>();
+        curFade = config.generic.genericFade;
         return config.generic.genericSongs;
     }
 
@@ -382,6 +368,26 @@ public class MusicPicker {
                 }
             }
         }
+        if(!SoundHandler.zonesSongs.isEmpty()) {
+            for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.zonesSongsString.entrySet()) {
+                String zoneRange = ((Map.Entry) stringListEntry).getKey().toString();
+                String[] broken = SoundHandler.stringBreaker(zoneRange);
+                BlockPos bp = player.getPosition();
+                int x1 = Integer.parseInt(broken[0]);
+                int y1 = Integer.parseInt(broken[1]);
+                int z1 = Integer.parseInt(broken[2]);
+                int x2 = Integer.parseInt(broken[3]);
+                int y2 = Integer.parseInt(broken[4]);
+                int z2 = Integer.parseInt(broken[5]);
+                if(bp.getX()>x1 && bp.getX()<x2 && bp.getY()>y1 && bp.getY()<y2 && bp.getZ()>z1 && bp.getZ()<z2) {
+                    events.add(zoneRange);
+                    String[] zonesSongsArray = new String[SoundHandler.zonesSongsString.get(zoneRange).size()];
+                    dynamicSongs.put(zoneRange, SoundHandler.zonesSongsString.get(zoneRange).toArray(zonesSongsArray));
+                    dynamicPriorities.put(zoneRange, SoundHandler.zonesPriorities.get(zoneRange));
+                    dynamicFade.put(zoneRange, SoundHandler.zonesFade.get(zoneRange));
+                }
+            }
+        }
         try {
             List<String> whitelist = stageWhitelistChecker();
             List<String> blacklist = stageBlacklistChecker();
@@ -397,6 +403,27 @@ public class MusicPicker {
             boolean bloodmoon = bloodmoon();
             if (bloodmoon) {
                 events.add("bloodmoon");
+            }
+        } catch (NoSuchMethodError ignored) {
+        }
+        try {
+            boolean nyxbloodmoon = nyxbloodmoon();
+            if (nyxbloodmoon) {
+                events.add("bloodmoon");
+            }
+        } catch (NoSuchMethodError ignored) {
+        }
+        try {
+            boolean nyxharvestmoon = nyxharvestmoon();
+            if (nyxharvestmoon) {
+                events.add("harvestmoon");
+            }
+        } catch (NoSuchMethodError ignored) {
+        }
+        try {
+            boolean nyxfallingstars = nyxfallingstars();
+            if (nyxfallingstars) {
+                events.add("fallingstars");
             }
         } catch (NoSuchMethodError ignored) {
         }
@@ -459,6 +486,39 @@ public class MusicPicker {
             dynamicSongs.put("bloodmoon", config.bloodmoon.bloodmoonSongs);
             dynamicPriorities.put("bloodmoon", config.bloodmoon.bloodmoonPriority);
             dynamicFade.put("bloodmoon", config.bloodmoon.bloodmoonFade);
+            return true;
+        }
+        return false;
+    }
+
+    @Optional.Method(modid = "nyx")
+    private static boolean nyxbloodmoon() {
+        if (NyxWorld.get(player.getEntityWorld()).currentEvent instanceof BloodMoon) {
+            dynamicSongs.put("bloodmoon", config.bloodmoon.bloodmoonSongs);
+            dynamicPriorities.put("bloodmoon", config.bloodmoon.bloodmoonPriority);
+            dynamicFade.put("bloodmoon", config.bloodmoon.bloodmoonFade);
+            return true;
+        }
+        return false;
+    }
+
+    @Optional.Method(modid = "nyx")
+    private static boolean nyxharvestmoon() {
+        if (NyxWorld.get(player.getEntityWorld()).currentEvent instanceof HarvestMoon) {
+            dynamicSongs.put("harvestmoon", config.harvestmoon.harvestmoonSongs);
+            dynamicPriorities.put("harvestmoon", config.harvestmoon.harvestmoonPriority);
+            dynamicFade.put("harvestmoon", config.harvestmoon.harvestmoonFade);
+            return true;
+        }
+        return false;
+    }
+
+    @Optional.Method(modid = "nyx")
+    private static boolean nyxfallingstars() {
+        if (NyxWorld.get(player.getEntityWorld()).currentEvent instanceof StarShower) {
+            dynamicSongs.put("fallingstars", config.fallingstars.fallingstarsSongs);
+            dynamicPriorities.put("fallingstars", config.fallingstars.fallingstarsPriority);
+            dynamicFade.put("fallingstars", config.fallingstars.fallingstarsFade);
             return true;
         }
         return false;

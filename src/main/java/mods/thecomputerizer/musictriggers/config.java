@@ -10,17 +10,17 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 @Config(modid = MusicTriggers.MODID, name = "MusicTriggers/"+MusicTriggers.MODID)
 public class config {
 
+    @Comment("Universal Delay - Amount of time (in ticks) between songs after a song ends")
+    public static int universalDelay = 0;
+
     @Comment("Main Menu")
-    public static Menu menu = new Menu(0,new String[] {});
+    public static Menu menu = new Menu(new String[] {});
 
     public static class Menu {
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int menuFade;
         @Comment("songs")
         public String[] menuSongs;
 
-        public Menu(final int menuFade, final String[] menuSongs) {
-            this.menuFade = menuFade;
+        public Menu(final String[] menuSongs) {
             this.menuSongs = menuSongs;
         }
     }
@@ -37,6 +37,25 @@ public class config {
         public Generic(final int genericFade, final String[] genericSongs) {
             this.genericFade = genericFade;
             this.genericSongs = genericSongs;
+        }
+    }
+
+    @Comment("Zones")
+    public static Zones zones = new Zones(10000,0,new String[] {});
+
+    public static class Zones {
+        @Comment("Default Priority [min: -99, max: 2147483647 default: 10000]")
+        public int zonesPriority;
+        @Comment("Default Fade Time [in ticks, default: 0]")
+        public int zonesFade;
+        @Comment("Songs per zone\nFormat[min x,min y,min z,max x, max y,max z,songname,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]]\n" +
+                "Example: 0,0,0,100,100,100,home3,33981,200")
+        public String[] zonesSongs;
+
+        public Zones(final int zonesPriority, final int zonesFade, final String[] zonesSongs) {
+            this.zonesPriority = zonesPriority;
+            this.zonesFade = zonesFade;
+            this.zonesSongs = zonesSongs;
         }
     }
 
@@ -59,7 +78,7 @@ public class config {
     }
 
     @Comment("Night")
-    public static Night night = new Night(900,0,new String[] {});
+    public static Night night = new Night(900,new String[] {});
 
     public static class Night {
         @Comment("Priority [min: -99, max: 2147483647 default: 900]")
@@ -75,7 +94,7 @@ public class config {
                 "Note - If the fade is not the last number it will not work properly")
         public String[] nightSongs;
 
-        public Night(final int nightPriority, final int nightFade, final String[] nightSongs) {
+        public Night(final int nightPriority, final String[] nightSongs) {
             this.nightPriority = nightPriority;
             this.nightSongs = nightSongs;
         }
@@ -462,7 +481,7 @@ public class config {
         }
     }
 
-    @Comment("Blood Moon (Only fires if the mod Blood Moon is active)")
+    @Comment("Blood Moon (Only fires if the mod Blood Moon or nyx is active)")
     public static BloodMoon bloodmoon = new BloodMoon(1200,0,new String[] {});
 
     public static class BloodMoon {
@@ -477,6 +496,42 @@ public class config {
             this.bloodmoonPriority = bloodmoonPriority;
             this.bloodmoonFade = bloodmoonFade;
             this.bloodmoonSongs = bloodmoonSongs;
+        }
+    }
+
+    @Comment("Harvest Moon (Only fires if the mod nyx is active)")
+    public static HarvestMoon harvestmoon = new HarvestMoon(1400,0,new String[] {});
+
+    public static class HarvestMoon {
+        @Comment("Priority [min: -99, max: 2147483647 default: 1400]")
+        public int harvestmoonPriority;
+        @Comment("Fade Time [in ticks, default: 0]")
+        public int harvestmoonFade;
+        @Comment("songs")
+        public String[] harvestmoonSongs;
+
+        public HarvestMoon(final int harvestmoonPriority, final int harvestmoonFade, final String[] harvestmoonSongs) {
+            this.harvestmoonPriority = harvestmoonPriority;
+            this.harvestmoonFade = harvestmoonFade;
+            this.harvestmoonSongs = harvestmoonSongs;
+        }
+    }
+
+    @Comment("Falling Stars (Only fires if the mod nyx is active)")
+    public static FallingStars fallingstars = new FallingStars(1400,0,new String[] {});
+
+    public static class FallingStars {
+        @Comment("Priority [min: -99, max: 2147483647 default: 1400]")
+        public int fallingstarsPriority;
+        @Comment("Fade Time [in ticks, default: 0]")
+        public int fallingstarsFade;
+        @Comment("songs")
+        public String[] fallingstarsSongs;
+
+        public FallingStars(final int fallingstarsPriority, final int fallingstarsFade, final String[] fallingstarsSongs) {
+            this.fallingstarsPriority = fallingstarsPriority;
+            this.fallingstarsFade = fallingstarsFade;
+            this.fallingstarsSongs = fallingstarsSongs;
         }
     }
 
