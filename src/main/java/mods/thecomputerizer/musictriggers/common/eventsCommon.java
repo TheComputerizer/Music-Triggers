@@ -2,26 +2,17 @@ package mods.thecomputerizer.musictriggers.common;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.MusicPicker;
-import mods.thecomputerizer.musictriggers.configTitleCards;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.network.FMLNetworkEvent;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
-import javax.vecmath.Vector4f;
-
-@Mod.EventBusSubscriber(modid= MusicTriggers.MODID)
+@Mod.EventBusSubscriber(modid= MusicTriggers.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class eventsCommon {
     public static ResourceLocation IMAGE_CARD = null;
     public static ISound vanilla;
@@ -31,30 +22,29 @@ public class eventsCommon {
     public static Boolean activated = false;
     public static int timer=0;
 
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
-        if(e.getSound().getSoundLocation().toString().contains("minecraft:music")) {
+        if(e.getSound().getLocation().toString().contains("minecraft:music")) {
             vanilla = e.getSound();
         }
     }
 
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void worldRender(RenderWorldLastEvent e) {
         isWorldRendered=true;
     }
 
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
-    public static void clientDisconnected(FMLNetworkEvent.ClientDisconnectionFromServerEvent e) {
-        MusicPicker.mc.getSoundHandler().stopSounds();
+    public static void clientDisconnected(PlayerEvent.PlayerLoggedOutEvent e) {
+        MusicPicker.mc.getSoundManager().stop();
         isWorldRendered=false;
         MusicPicker.player=null;
     }
 
-    @SideOnly(Side.CLIENT)
-    @SubscribeEvent
+    /*
     public static void imageCards(RenderGameOverlayEvent.Post e) {
         Minecraft mc = Minecraft.getMinecraft();
         EntityPlayer player = mc.player;
@@ -104,4 +94,5 @@ public class eventsCommon {
             }
         }
     }
+     */
 }

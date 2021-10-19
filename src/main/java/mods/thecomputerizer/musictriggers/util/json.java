@@ -50,26 +50,28 @@ public class json {
     public static List<String> collector() {
         File folder = new File("."+"/config/MusicTriggers/songs/assets/musictriggers/sounds/music/");
         File[] listOfFiles = folder.listFiles((dir, name) -> name.endsWith(".ogg"));
-        assert listOfFiles != null;
-        for(File f: listOfFiles) {
-            //noinspection ResultOfMethodCallIgnored
-            f.renameTo(new File(folder.getPath(),f.getName().toLowerCase()));
-        }
-        boolean matchCheck = false;
-        String curfile;
-        for (File listOfFile : listOfFiles) {
-            curfile = FilenameUtils.getBaseName(listOfFile.getName());
-            for (String checker : allSongs) {
-                if (checker.matches(curfile)) {
-                    matchCheck = true;
-                    break;
+        if(listOfFiles!=null) {
+            for (File f : listOfFiles) {
+                //noinspection ResultOfMethodCallIgnored
+                f.renameTo(new File(folder.getPath(), f.getName().toLowerCase()));
+            }
+            boolean matchCheck = false;
+            String curfile;
+            for (File listOfFile : listOfFiles) {
+                curfile = FilenameUtils.getBaseName(listOfFile.getName());
+                for (String checker : allSongs) {
+                    if (checker.matches(curfile)) {
+                        matchCheck = true;
+                        break;
+                    }
                 }
+                if (!matchCheck) {
+                    allSongs.add(curfile);
+                }
+                matchCheck = false;
             }
-            if(!matchCheck) {
-                allSongs.add(curfile);
-            }
-            matchCheck=false;
+            return allSongs;
         }
-        return allSongs;
+        else return null;
     }
 }
