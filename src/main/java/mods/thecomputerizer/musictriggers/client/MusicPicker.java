@@ -21,6 +21,7 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.fml.ModList;
 
 import java.util.*;
 
@@ -153,24 +154,23 @@ public class MusicPicker {
             dynamicPriorities.put("day", config.dayPriority);
             dynamicFade.put("day", config.dayFade);
         } else {
-            MusicTriggers.logger.info("Current Moon Phase: "+(world.getMoonPhase()+1));
-            if (SoundHandler.nightSongs.get(0)!=null) {
+            MusicTriggers.logger.info("Current Moon Phase: " + (world.getMoonPhase() + 1));
+            if (SoundHandler.nightSongs.get(0) != null) {
                 events.add("night" + 0);
                 List<String> tempNight = new ArrayList<>();
-                if(SoundHandler.nightSongsString.get((world.getMoonPhase()+1))!=null && !SoundHandler.nightSongsString.get((world.getMoonPhase()+1)).isEmpty()) {
-                    tempNight.addAll(SoundHandler.nightSongsString.get((world.getMoonPhase()+1)));
+                if (SoundHandler.nightSongsString.get((world.getMoonPhase() + 1)) != null && !SoundHandler.nightSongsString.get((world.getMoonPhase() + 1)).isEmpty()) {
+                    tempNight.addAll(SoundHandler.nightSongsString.get((world.getMoonPhase() + 1)));
                 }
                 tempNight.addAll(SoundHandler.nightSongsString.get(0));
                 dynamicSongs.put("night" + 0, tempNight);
                 dynamicPriorities.put("night" + 0, config.nightPriority);
                 dynamicFade.put("night" + 0, SoundHandler.nightFade.get(0));
-            }
-            else {
-                if (SoundHandler.nightSongs.get((world.getMoonPhase()+1))!=null) {
-                    events.add("night" + (world.getMoonPhase()+1));
-                    dynamicSongs.put("night" + (world.getMoonPhase()+1), SoundHandler.nightSongsString.get((world.getMoonPhase()+1)));
-                    dynamicPriorities.put("night"+ (world.getMoonPhase()+1), config.nightPriority);
-                    dynamicFade.put("night" + (world.getMoonPhase()+1), SoundHandler.nightFade.get((world.getMoonPhase()+1)));
+            } else {
+                if (SoundHandler.nightSongs.get((world.getMoonPhase() + 1)) != null) {
+                    events.add("night" + (world.getMoonPhase() + 1));
+                    dynamicSongs.put("night" + (world.getMoonPhase() + 1), SoundHandler.nightSongsString.get((world.getMoonPhase() + 1)));
+                    dynamicPriorities.put("night" + (world.getMoonPhase() + 1), config.nightPriority);
+                    dynamicFade.put("night" + (world.getMoonPhase() + 1), SoundHandler.nightFade.get((world.getMoonPhase() + 1)));
                 }
             }
         }
@@ -185,7 +185,7 @@ public class MusicPicker {
             dynamicPriorities.put("sunrise", config.sunrisePriority);
             dynamicFade.put("sunrise", config.sunriseFade);
         }
-        if (world.getRawBrightness(player.blockPosition().below(),0) <= config.lightLevel) {
+        if (world.getRawBrightness(player.blockPosition().below(), 0) <= config.lightLevel) {
             events.add("light");
             dynamicSongs.put("light", config.lightSongs);
             dynamicPriorities.put("light", config.lightPriority);
@@ -233,7 +233,7 @@ public class MusicPicker {
             dynamicPriorities.put("storming", config.stormingPriority);
             dynamicFade.put("storming", config.stormingFade);
         }
-        if (player.getHealth() < player.getMaxHealth() * ((float)config.lowHPLevel/100F)) {
+        if (player.getHealth() < player.getMaxHealth() * ((float) config.lowHPLevel / 100F)) {
             events.add("lowHP");
             dynamicSongs.put("lowHP", config.lowHPSongs);
             dynamicPriorities.put("lowHP", config.lowHPPriority);
@@ -263,7 +263,7 @@ public class MusicPicker {
             dynamicPriorities.put("riding", config.ridingPriority);
             dynamicFade.put("riding", config.ridingFade);
         }
-        for (LivingEntity ent : world.getEntitiesOfClass(LivingEntity.class, new AxisAlignedBB(player.getX()- 16, player.getY() - 8, player.getZ() - 16, player.getX() + 16, player.getY() + 8, player.getZ() + 16))) {
+        for (LivingEntity ent : world.getEntitiesOfClass(LivingEntity.class, new AxisAlignedBB(player.getX() - 16, player.getY() - 8, player.getZ() - 16, player.getX() + 16, player.getY() + 8, player.getZ() + 16))) {
             if (ent.serializeNBT().getString("Owner").matches(player.getStringUUID())) {
                 events.add("pet");
                 dynamicSongs.put("pet", config.petSongs);
@@ -273,7 +273,7 @@ public class MusicPicker {
             }
         }
         if (configDebug.DimensionChecker.get() && eventsCommon.isWorldRendered) {
-            player.sendMessage(new TranslationTextComponent(player.level.dimension().location().toString()),MusicPicker.player.getUUID());
+            player.sendMessage(new TranslationTextComponent(player.level.dimension().location().toString()), MusicPicker.player.getUUID());
         }
         if (SoundHandler.dimensionSongs.get(player.level.dimension().location().toString()) != null) {
             events.add("dimension" + player.level.dimension().location());
@@ -283,7 +283,7 @@ public class MusicPicker {
             dynamicFade.put("dimension" + player.level.dimension().location(), SoundHandler.dimensionFade.get(player.level.dimension().location().toString()));
         }
         if (configDebug.BiomeChecker.get() && eventsCommon.isWorldRendered) {
-            player.sendMessage(new TranslationTextComponent(Objects.requireNonNull(player.getCommandSenderWorld().getBiome(player.blockPosition()).getRegistryName()).toString()),MusicPicker.player.getUUID());
+            player.sendMessage(new TranslationTextComponent(Objects.requireNonNull(player.getCommandSenderWorld().getBiome(player.blockPosition()).getRegistryName()).toString()), MusicPicker.player.getUUID());
         }
         if (SoundHandler.biomeSongs.get(Objects.requireNonNull(world.getBiome(player.blockPosition()).getRegistryName()).toString()) != null) {
             String biomeName = Objects.requireNonNull(world.getBiome(player.blockPosition()).getRegistryName()).toString();
@@ -364,7 +364,7 @@ public class MusicPicker {
                 }
             }
         }
-        if(!SoundHandler.zonesSongs.isEmpty()) {
+        if (!SoundHandler.zonesSongs.isEmpty()) {
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.zonesSongsString.entrySet()) {
                 String zoneRange = ((Map.Entry) stringListEntry).getKey().toString();
                 String[] broken = SoundHandler.stringBreaker(zoneRange);
@@ -375,7 +375,7 @@ public class MusicPicker {
                 int x2 = Integer.parseInt(broken[3]);
                 int y2 = Integer.parseInt(broken[4]);
                 int z2 = Integer.parseInt(broken[5]);
-                if(bp.getX()>x1 && bp.getX()<x2 && bp.getY()>y1 && bp.getY()<y2 && bp.getZ()>z1 && bp.getZ()<z2) {
+                if (bp.getX() > x1 && bp.getX() < x2 && bp.getY() > y1 && bp.getY() < y2 && bp.getZ() > z1 && bp.getZ() < z2) {
                     events.add(zoneRange);
                     String[] zonesSongsArray = new String[SoundHandler.zonesSongsString.get(zoneRange).size()];
                     dynamicSongs.put(zoneRange, Arrays.asList(SoundHandler.zonesSongsString.get(zoneRange).toArray(zonesSongsArray)));
@@ -384,44 +384,32 @@ public class MusicPicker {
                 }
             }
         }
-        try {
-            List<String> whitelist = stageWhitelistChecker();
-            List<String> blacklist = stageBlacklistChecker();
-            if (!whitelist.isEmpty()) {
-                events.addAll(whitelist);
-            }
-            if (!blacklist.isEmpty()) {
-                events.addAll(blacklist);
-            }
-        } catch (NoSuchMethodError ignored) {
+        List<String> whitelist = stageWhitelistChecker();
+        List<String> blacklist = stageBlacklistChecker();
+        if (whitelist != null && !whitelist.isEmpty()) {
+            events.addAll(whitelist);
         }
-        try {
-            boolean bloodmoon = bloodmoon();
-            if (bloodmoon) {
-                events.add("bloodmoon");
-            }
-        } catch (NoSuchMethodError ignored) {
+        if (blacklist!=null && !blacklist.isEmpty()) {
+            events.addAll(blacklist);
         }
-        try {
-            boolean harvestmoon = harvestmoon();
-            if (harvestmoon) {
-                events.add("harvestmoon");
-            }
-        } catch (NoSuchMethodError ignored) {
+        boolean bloodmoon = bloodmoon();
+        if (bloodmoon) {
+            events.add("bloodmoon");
         }
-        try {
-            boolean bluemoon = bluemoon();
-            if (bluemoon) {
-                events.add("harvestmoon");
-            }
-        } catch (NoSuchMethodError ignored) {
+        boolean harvestmoon = harvestmoon();
+        if (harvestmoon) {
+            events.add("harvestmoon");
+        }
+        boolean bluemoon = bluemoon();
+        if (bluemoon) {
+            events.add("harvestmoon");
         }
 
         playableList = events;
 
         if (events.size() >= 1 && configDebug.PlayableEvents.get() && eventsCommon.isWorldRendered) {
             for (String ev : events) {
-                player.sendMessage(new TranslationTextComponent(ev),MusicPicker.player.getUUID());
+                player.sendMessage(new TranslationTextComponent(ev), MusicPicker.player.getUUID());
             }
         }
         return events;
@@ -429,73 +417,87 @@ public class MusicPicker {
 
     @SuppressWarnings("rawtypes")
     private static List<String> stageWhitelistChecker() {
-        List<String> events = new ArrayList<>();
-        for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.gamestageSongsStringWhitelist.entrySet()) {
-            String stageName = ((Map.Entry) stringListEntry).getKey().toString();
-            String temp = stageName;
-            if (temp.startsWith("@")) {
-                temp = temp.substring(1);
+        if (ModList.get().isLoaded("gamestages")) {
+            List<String> events = new ArrayList<>();
+            for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.gamestageSongsStringWhitelist.entrySet()) {
+                String stageName = ((Map.Entry) stringListEntry).getKey().toString();
+                String temp = stageName;
+                if (temp.startsWith("@")) {
+                    temp = temp.substring(1);
+                }
+                if (GameStageHelper.hasStage(player, temp)) {
+                    events.add(stageName + "true");
+                    String[] gamestageSongsArray = new String[SoundHandler.gamestageSongsStringWhitelist.get(stageName).size()];
+                    dynamicSongs.put(stageName + "true", Arrays.asList(SoundHandler.gamestageSongsStringWhitelist.get(stageName).toArray(gamestageSongsArray)));
+                    dynamicPriorities.put(stageName + "true", SoundHandler.gamestagePrioritiesWhitelist.get(stageName));
+                    dynamicFade.put(stageName + "true", SoundHandler.gamestageFadeWhitelist.get(stageName));
+                }
             }
-            if (GameStageHelper.hasStage(player, temp)) {
-                events.add(stageName + "true");
-                String[] gamestageSongsArray = new String[SoundHandler.gamestageSongsStringWhitelist.get(stageName).size()];
-                dynamicSongs.put(stageName + "true", Arrays.asList(SoundHandler.gamestageSongsStringWhitelist.get(stageName).toArray(gamestageSongsArray)));
-                dynamicPriorities.put(stageName + "true", SoundHandler.gamestagePrioritiesWhitelist.get(stageName));
-                dynamicFade.put(stageName + "true", SoundHandler.gamestageFadeWhitelist.get(stageName));
-            }
+            return events;
+        } else {
+            return null;
         }
-        return events;
     }
 
     @SuppressWarnings("rawtypes")
     private static List<String> stageBlacklistChecker() {
-        List<String> events = new ArrayList<>();
-        for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.gamestageSongsStringBlacklist.entrySet()) {
-            String stageName = ((Map.Entry) stringListEntry).getKey().toString();
-            String temp = stageName;
-            if (temp.startsWith("@")) {
-                temp = temp.substring(1);
+        if (ModList.get().isLoaded("gamestages")) {
+            List<String> events = new ArrayList<>();
+            for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.gamestageSongsStringBlacklist.entrySet()) {
+                String stageName = ((Map.Entry) stringListEntry).getKey().toString();
+                String temp = stageName;
+                if (temp.startsWith("@")) {
+                    temp = temp.substring(1);
+                }
+                if (!GameStageHelper.hasStage(player, temp)) {
+                    events.add(stageName + "false");
+                    String[] gamestageSongsArray = new String[SoundHandler.gamestageSongsStringBlacklist.get(stageName).size()];
+                    dynamicSongs.put(stageName + "false", Arrays.asList(SoundHandler.gamestageSongsStringBlacklist.get(stageName).toArray(gamestageSongsArray)));
+                    dynamicPriorities.put(stageName + "false", SoundHandler.gamestagePrioritiesBlacklist.get(stageName));
+                    dynamicFade.put(stageName + "true", SoundHandler.gamestageFadeBlacklist.get(stageName));
+                }
             }
-            if (!GameStageHelper.hasStage(player, temp)) {
-                events.add(stageName + "false");
-                String[] gamestageSongsArray = new String[SoundHandler.gamestageSongsStringBlacklist.get(stageName).size()];
-                dynamicSongs.put(stageName + "false", Arrays.asList(SoundHandler.gamestageSongsStringBlacklist.get(stageName).toArray(gamestageSongsArray)));
-                dynamicPriorities.put(stageName + "false", SoundHandler.gamestagePrioritiesBlacklist.get(stageName));
-                dynamicFade.put(stageName + "true", SoundHandler.gamestageFadeBlacklist.get(stageName));
-            }
+            return events;
+        } else {
+            return null;
         }
-        return events;
     }
 
     private static boolean bloodmoon() {
-        LunarContext lunarContext = ((EnhancedCelestialsWorldData) world).getLunarContext();
-        if (lunarContext!=null && lunarContext.getCurrentEvent() instanceof BloodMoon) {
-            dynamicSongs.put("bloodmoon", config.bloodmoonSongs);
-            dynamicPriorities.put("bloodmoon", config.bloodmoonPriority);
-            dynamicFade.put("bloodmoon", config.bloodmoonFade);
-            return true;
+        if (ModList.get().isLoaded("enhancedcelestials")) {
+            LunarContext lunarContext = ((EnhancedCelestialsWorldData) world).getLunarContext();
+            if (lunarContext != null && lunarContext.getCurrentEvent() instanceof BloodMoon) {
+                dynamicSongs.put("bloodmoon", config.bloodmoonSongs);
+                dynamicPriorities.put("bloodmoon", config.bloodmoonPriority);
+                dynamicFade.put("bloodmoon", config.bloodmoonFade);
+                return true;
+            }
         }
         return false;
     }
 
     private static boolean harvestmoon() {
-        LunarContext lunarContext = ((EnhancedCelestialsWorldData) world).getLunarContext();
-        if (lunarContext!=null && lunarContext.getCurrentEvent() instanceof HarvestMoon) {
-            dynamicSongs.put("bloodmoon", config.harvestmoonSongs);
-            dynamicPriorities.put("bloodmoon", config.harvestmoonPriority);
-            dynamicFade.put("bloodmoon", config.harvestmoonFade);
-            return true;
+        if (ModList.get().isLoaded("enhancedcelestials")) {
+            LunarContext lunarContext = ((EnhancedCelestialsWorldData) world).getLunarContext();
+            if (lunarContext != null && lunarContext.getCurrentEvent() instanceof HarvestMoon) {
+                dynamicSongs.put("bloodmoon", config.harvestmoonSongs);
+                dynamicPriorities.put("bloodmoon", config.harvestmoonPriority);
+                dynamicFade.put("bloodmoon", config.harvestmoonFade);
+                return true;
+            }
         }
         return false;
     }
 
     private static boolean bluemoon() {
-        LunarContext lunarContext = ((EnhancedCelestialsWorldData) world).getLunarContext();
-        if (lunarContext!=null && lunarContext.getCurrentEvent() instanceof BlueMoon) {
-            dynamicSongs.put("harvestmoon", config.bluemoonSongs);
-            dynamicPriorities.put("harvestmoon", config.bluemoonPriority);
-            dynamicFade.put("harvestmoon", config.bluemoonFade);
-            return true;
+        if (ModList.get().isLoaded("enhancedcelestials")) {
+            LunarContext lunarContext = ((EnhancedCelestialsWorldData) world).getLunarContext();
+            if (lunarContext != null && lunarContext.getCurrentEvent() instanceof BlueMoon) {
+                dynamicSongs.put("harvestmoon", config.bluemoonSongs);
+                dynamicPriorities.put("harvestmoon", config.bluemoonPriority);
+                dynamicFade.put("harvestmoon", config.bluemoonFade);
+                return true;
+            }
         }
         return false;
     }
