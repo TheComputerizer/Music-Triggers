@@ -21,7 +21,9 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 
 import java.util.*;
 
@@ -285,50 +287,32 @@ public class MusicPicker {
         if (configDebug.BiomeChecker.get() && eventsCommon.isWorldRendered) {
             player.sendMessage(new TranslationTextComponent(Objects.requireNonNull(player.getCommandSenderWorld().getBiome(player.blockPosition()).getRegistryName()).toString()), MusicPicker.player.getUUID());
         }
-        if (SoundHandler.biomeSongs.get(Objects.requireNonNull(world.getBiome(player.blockPosition()).getRegistryName()).toString()) != null) {
-            String biomeName = Objects.requireNonNull(world.getBiome(player.blockPosition()).getRegistryName()).toString();
-            events.add(biomeName);
-            String[] biomeSongsArray = new String[SoundHandler.biomeSongsString.get(biomeName).size()];
-            dynamicSongs.put(biomeName, Arrays.asList(SoundHandler.biomeSongsString.get(biomeName).toArray(biomeSongsArray)));
-            dynamicPriorities.put(biomeName, SoundHandler.biomePriorities.get(biomeName));
-            dynamicFade.put(biomeName, SoundHandler.biomeFade.get(biomeName));
+        if(FMLEnvironment.dist == Dist.CLIENT) {
+            if (SoundHandler.biomeSongs.get(Objects.requireNonNull(world.getBiome(player.blockPosition()).getRegistryName()).toString()) != null) {
+                String biomeName = Objects.requireNonNull(world.getBiome(player.blockPosition()).getRegistryName()).toString();
+                events.add(biomeName);
+                String[] biomeSongsArray = new String[SoundHandler.biomeSongsString.get(biomeName).size()];
+                dynamicSongs.put(biomeName, Arrays.asList(SoundHandler.biomeSongsString.get(biomeName).toArray(biomeSongsArray)));
+                dynamicPriorities.put(biomeName, SoundHandler.biomePriorities.get(biomeName));
+                dynamicFade.put(biomeName, SoundHandler.biomeFade.get(biomeName));
+            }
         }
-        //if (FMLEnvironment.dist == Dist.CLIENT) {
-/*
-            ServerWorld nWorld = Objects.requireNonNull(player.getServer()).getLevel(player.level.dimension());
-            for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.structureSongsString.entrySet()) {
-                String structName = ((Map.Entry) stringListEntry).getKey().toString();
-                for (Structure<?> structureFeature : net.minecraftforge.registries.ForgeRegistries.STRUCTURE_FEATURES) {
-                    if (structName.matches(structureFeature.getFeatureName())) {
-                        assert nWorld != null;
-                        if (nWorld.structureFeatureManager().getStructureAt(player.blockPosition(),true,structureFeature)!=null) {
-                            events.add("structure:" + structName);
-                            String[] structureSongsArray = new String[SoundHandler.structureSongsString.get(structName).size()];
-                            dynamicSongs.put("structure:" + structName, Arrays.asList(SoundHandler.structureSongsString.get(structName).toArray(structureSongsArray)));
-                            dynamicPriorities.put("structure:" + structName, SoundHandler.structurePriorities.get(structName));
-                            dynamicFade.put("structure:" + structName, SoundHandler.structureFade.get(structName));
-                        }
+        /*
+        for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.structureSongsString.entrySet()) {
+            String structName = ((Map.Entry) stringListEntry).getKey().toString();
+            RegistryHandler.network.sendToServer(new packet.packetMessage(structName, player.getPosition(), player.level.dimension().location().toString()), player.getUniqueID()));
+            if (fromServer.inStructure.containsKey(structName)) {
+                if (fromServer.inStructure.get(structName)) {
+                    events.add("structure:" + structName);
+                    String[] structureSongsArray = new String[SoundHandler.structureSongsString.get(structName).size()];
+                    dynamicSongs.put("structure:" + structName, SoundHandler.structureSongsString.get(structName).toArray(structureSongsArray));
+                    dynamicPriorities.put("structure:" + structName, SoundHandler.structurePriorities.get(structName));
+                    dynamicFade.put("structure:" + structName, SoundHandler.structureFade.get(structName));
+                }
+            }
+        }
 
-                    }
-                }
-            }
-        //}
-        else {
-            for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.structureSongsString.entrySet()) {
-                String structName = ((Map.Entry) stringListEntry).getKey().toString();
-                RegistryHandler.network.sendToServer(new packet.packetMessage(structName, player.getPosition(), player.level.dimension().location().toString()), player.getUniqueID()));
-                if (fromServer.inStructure.containsKey(structName)) {
-                    if (fromServer.inStructure.get(structName)) {
-                        events.add("structure:" + structName);
-                        String[] structureSongsArray = new String[SoundHandler.structureSongsString.get(structName).size()];
-                        dynamicSongs.put("structure:" + structName, SoundHandler.structureSongsString.get(structName).toArray(structureSongsArray));
-                        dynamicPriorities.put("structure:" + structName, SoundHandler.structurePriorities.get(structName));
-                        dynamicFade.put("structure:" + structName, SoundHandler.structureFade.get(structName));
-                    }
-                }
-            }
-        }
-*/
+         */
 
         for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.mobSongsString.entrySet()) {
             String mobName = ((Map.Entry) stringListEntry).getKey().toString();

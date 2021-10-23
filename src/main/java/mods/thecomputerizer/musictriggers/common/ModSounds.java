@@ -5,6 +5,8 @@ import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.SimpleSound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -25,8 +27,10 @@ public class ModSounds {
             String songName = Objects.requireNonNull(s.getRegistryName()).toString().replaceAll("musictriggers:","");
             SOUNDS.register(songName, () -> new SoundEvent(new ResourceLocation(MusicTriggers.MODID+":music." + songName)));
             MusicTriggers.logger.info(songName+" is being initialized at resource location "+new ResourceLocation(MusicTriggers.MODID+":music." + songName));
-            ISound i = SimpleSound.forMusic(new SoundEvent(new ResourceLocation(MusicTriggers.MODID+":music." + songName)));
-            playableSounds.put("music."+songName,i);
+            if(FMLEnvironment.dist == Dist.CLIENT) {
+                ISound i = SimpleSound.forMusic(new SoundEvent(new ResourceLocation(MusicTriggers.MODID + ":music." + songName)));
+                playableSounds.put("music." + songName, i);
+            }
         }
     }
 }

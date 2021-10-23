@@ -171,7 +171,9 @@ public final class config {
                 fb.add("\t\tSongs per zone");
                 fb.add("\t\tFormat[min x,min y,min z,max x, max y,max z,songname,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]]");
                 fb.add("\t\tExample: 0,0,0,100,100,100,home3,33981,200");
-                fb.add("\t\tSongs=<\n\t\t>");
+                if(!fb.contains("\t\tSongs=<\n\t\t>")) {
+                    fb.add("\t\tSongs=<\n\t\t>");
+                }
             }
             if(Categories[i].matches("Night")) {
                 fb.add("\t\tSongs- Format: [song name,moon phase,(Optional)fade time [in ticks, default: 0]]");
@@ -196,7 +198,7 @@ public final class config {
                 fb.add("\t\tSongs per biome [Format: \"biomeresourcename,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
                 fb.add("\t\tNote: You only have to set the priority per biome name for 1 song");
                 fb.add("\t\tExample: minecraft:swampland,(songname),11111");
-                fb.add("\t\tSongs=<\n>");
+                fb.add("\t\tSongs=<\n\t\t>");
                 fb.add("");
             }
             else if(Categories[i].matches("Structure")) {
