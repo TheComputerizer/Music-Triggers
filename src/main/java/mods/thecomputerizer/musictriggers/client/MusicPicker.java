@@ -284,10 +284,10 @@ public class MusicPicker {
             dynamicPriorities.put("dimension" + player.level.dimension().location(), SoundHandler.dimensionPriorities.get(player.level.dimension().location().toString()));
             dynamicFade.put("dimension" + player.level.dimension().location(), SoundHandler.dimensionFade.get(player.level.dimension().location().toString()));
         }
-        if (configDebug.BiomeChecker.get() && eventsCommon.isWorldRendered) {
+        if (configDebug.BiomeChecker.get() && eventsCommon.isWorldRendered && world.getBiome(player.blockPosition()).getRegistryName()!=null) {
             player.sendMessage(new TranslationTextComponent(Objects.requireNonNull(player.getCommandSenderWorld().getBiome(player.blockPosition()).getRegistryName()).toString()), MusicPicker.player.getUUID());
         }
-        if(world.getBiome(player.blockPosition())!=null) {
+        if(world.getBiome(player.blockPosition()).getRegistryName()!=null) {
             if (SoundHandler.biomeSongs.get(Objects.requireNonNull(world.getBiome(player.blockPosition()).getRegistryName()).toString()) != null) {
                 String biomeName = Objects.requireNonNull(world.getBiome(player.blockPosition()).getRegistryName()).toString();
                 events.add(biomeName);
