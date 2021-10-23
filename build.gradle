@@ -113,6 +113,7 @@ dependencies {
     implementation fg.deobf("curse.maven:game-stages-268655:3480161")
     implementation fg.deobf("curse.maven:bookshelf-228525:3474499")
     implementation fg.deobf("curse.maven:enhanced-celestials-438447:3453410")
+    implementation fg.deobf("curse.maven:configured-457570:3434071")
 
     implementation fg.deobf("curse.maven:jei-238222:3488178")
 }

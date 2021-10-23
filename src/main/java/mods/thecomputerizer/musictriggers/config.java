@@ -1,328 +1,427 @@
 package mods.thecomputerizer.musictriggers;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public final class config {
-    public static String[] empty = new String[0];
-    public static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
-    public static final ForgeConfigSpec SPEC;
+    public static List<String> fb = new ArrayList<>();
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> universalDelay;
+    public static String[] Categories = {"Main Menu","Generic","Zones","Day","Night","Sunrise","Sunset","Light Level","Underground - underground with no sky visible","Deep Under - deep below the surface with no sky visible","Raining","Storming","Snowing","Low HP","Dead","Void","Spectator","Creative","Riding","Pet","High","Dimension","Biome","Structure","Mob (This works for both bosses and hordes!)","Gamestages (Only fires if the mod Game Stages is active)","Blood Moon (Only fires if the mod Enhanced Celestials is active)","Harvest Moon (Only fires if the mod Enhanced Celestials is active)","Blue Moon (Only fires if the mod Enhanced Celestials is active)"};
+    public static Integer[] withPriority = {-1111,-1111,10000,1000,900,1111,1111,500,1500,2000,1300,1350,1333,3000,10000,7777,5000,5000,2222,1200,1200,1150,1160,3333,3500,500,1200,1400,1400};
+    public static Integer[] withFade = {-1,0,0,0,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1,-1,-1,-1,-1,0,0,0};
+    public static Integer[] withLevel = {9999,9999,9999,9999,9999,9999,9999,7,55,20,9999,9999,9999,30,9999,0,9999,9999,9999,9999,9999,9999,9999,9999,9999,9999,9999,9999,9999};
 
-    public static final ForgeConfigSpec.ConfigValue<String[]> menuSongs;
+    public static HashMap<Integer, TriggerData> readTriggers = new HashMap<>();
+    public static int triggerCounter = 0;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> genericFade;
-    public static final ForgeConfigSpec.ConfigValue<String[]> genericSongs;
+    public static int universalDelay;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> zonesPriority;
-    public static final ForgeConfigSpec.ConfigValue<Integer> zonesFade;
-    public static final ForgeConfigSpec.ConfigValue<String[]> zonesSongs;
+    public static List<String> menuSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> dayPriority;
-    public static final ForgeConfigSpec.ConfigValue<Integer> dayFade;
-    public static final ForgeConfigSpec.ConfigValue<String[]> daySongs;
+    public static int genericFade;
+    public static List<String> genericSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> nightPriority;
-    public static final ForgeConfigSpec.ConfigValue<String[]> nightSongs;
+    public static int zonesPriority;
+    public static int zonesFade;
+    public static List<String> zonesSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> sunrisePriority;
-    public static final ForgeConfigSpec.ConfigValue<Integer> sunriseFade;
-    public static final ForgeConfigSpec.ConfigValue<String[]> sunriseSongs;
+    public static int dayPriority;
+    public static int dayFade;
+    public static List<String> daySongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> sunsetPriority;
-    public static final ForgeConfigSpec.ConfigValue<Integer> sunsetFade;
-    public static final ForgeConfigSpec.ConfigValue<String[]> sunsetSongs;
+    public static int nightPriority;
+    public static List<String> nightSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> lightPriority;
-    public static final ForgeConfigSpec.ConfigValue<Integer> lightFade;
-    public static final ForgeConfigSpec.ConfigValue<Integer> lightLevel;
-    public static final ForgeConfigSpec.ConfigValue<String[]> lightSongs;
+    public static int sunrisePriority;
+    public static int sunriseFade;
+    public static List<String> sunriseSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> undergroundPriority;
-    public static final ForgeConfigSpec.ConfigValue<Integer> undergroundFade;
-    public static final ForgeConfigSpec.ConfigValue<Integer> undergroundLevel;
-    public static final ForgeConfigSpec.ConfigValue<String[]> undergroundSongs;
+    public static int sunsetPriority;
+    public static int sunsetFade;
+    public static List<String> sunsetSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> deepUnderPriority;
-    public static final ForgeConfigSpec.ConfigValue<Integer> deepUnderFade;
-    public static final ForgeConfigSpec.ConfigValue<Integer> deepUnderLevel;
-    public static final ForgeConfigSpec.ConfigValue<String[]> deepUnderSongs;
+    public static int lightPriority;
+    public static int lightFade;
+    public static int lightLevel;
+    public static List<String> lightSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> rainingPriority;
-    public static final ForgeConfigSpec.ConfigValue<Integer> rainingFade;
-    public static final ForgeConfigSpec.ConfigValue<String[]> rainingSongs;
+    public static int undergroundPriority;
+    public static int undergroundFade;
+    public static int undergroundLevel;
+    public static List<String> undergroundSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> stormingPriority;
-    public static final ForgeConfigSpec.ConfigValue<Integer> stormingFade;
-    public static final ForgeConfigSpec.ConfigValue<String[]> stormingSongs;
+    public static int deepUnderPriority;
+    public static int deepUnderFade;
+    public static int deepUnderLevel;
+    public static List<String> deepUnderSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> snowingPriority;
-    public static final ForgeConfigSpec.ConfigValue<Integer> snowingFade;
-    public static final ForgeConfigSpec.ConfigValue<String[]> snowingSongs;
+    public static int rainingPriority;
+    public static int rainingFade;
+    public static List<String> rainingSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> lowHPPriority;
-    public static final ForgeConfigSpec.ConfigValue<Integer> lowHPFade;
-    public static final ForgeConfigSpec.ConfigValue<Float> lowHPLevel;
-    public static final ForgeConfigSpec.ConfigValue<String[]> lowHPSongs;
+    public static int stormingPriority;
+    public static int stormingFade;
+    public static List<String> stormingSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> deadPriority;
-    public static final ForgeConfigSpec.ConfigValue<Integer> deadFade;
-    public static final ForgeConfigSpec.ConfigValue<String[]> deadSongs;
+    public static int snowingPriority;
+    public static int snowingFade;
+    public static List<String> snowingSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> inVoidPriority;
-    public static final ForgeConfigSpec.ConfigValue<Integer> inVoidFade;
-    public static final ForgeConfigSpec.ConfigValue<Integer> inVoidLevel;
-    public static final ForgeConfigSpec.ConfigValue<String[]> inVoidSongs;
+    public static int lowHPPriority;
+    public static int lowHPFade;
+    public static int lowHPLevel;
+    public static List<String> lowHPSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> spectatorPriority;
-    public static final ForgeConfigSpec.ConfigValue<Integer> spectatorFade;
-    public static final ForgeConfigSpec.ConfigValue<String[]> spectatorSongs;
+    public static int deadPriority;
+    public static int deadFade;
+    public static List<String> deadSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> creativePriority;
-    public static final ForgeConfigSpec.ConfigValue<Integer> creativeFade;
-    public static final ForgeConfigSpec.ConfigValue<String[]> creativeSongs;
+    public static int inVoidPriority;
+    public static int inVoidFade;
+    public static int inVoidLevel;
+    public static List<String> inVoidSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> ridingPriority;
-    public static final ForgeConfigSpec.ConfigValue<Integer> ridingFade;
-    public static final ForgeConfigSpec.ConfigValue<String[]> ridingSongs;
+    public static int spectatorPriority;
+    public static int spectatorFade;
+    public static List<String> spectatorSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> petPriority;
-    public static final ForgeConfigSpec.ConfigValue<Integer> petFade;
-    public static final ForgeConfigSpec.ConfigValue<String[]> petSongs;
+    public static int creativePriority;
+    public static int creativeFade;
+    public static List<String> creativeSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> highPriority;
-    public static final ForgeConfigSpec.ConfigValue<Integer> highFade;
-    public static final ForgeConfigSpec.ConfigValue<Integer> highLevel;
-    public static final ForgeConfigSpec.ConfigValue<String[]> highSongs;
+    public static int ridingPriority;
+    public static int ridingFade;
+    public static List<String> ridingSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> dimensionPriority;
-    public static final ForgeConfigSpec.ConfigValue<String[]> dimensionSongs;
+    public static int petPriority;
+    public static int petFade;
+    public static List<String> petSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> biomePriority;
-    public static final ForgeConfigSpec.ConfigValue<String[]> biomeSongs;
+    public static int highPriority;
+    public static int highFade;
+    public static int highLevel;
+    public static List<String> highSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> structurePriority;
-    public static final ForgeConfigSpec.ConfigValue<String[]> structureSongs;
+    public static int dimensionPriority;
+    public static List<String> dimensionSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> mobPriority;
-    public static final ForgeConfigSpec.ConfigValue<String[]> mobSongs;
+    public static int biomePriority;
+    public static List<String> biomeSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> gamestagePriority;
-    public static final ForgeConfigSpec.ConfigValue<String[]> gamestageSongs;
+    public static int structurePriority;
+    public static List<String> structureSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> bloodmoonPriority;
-    public static final ForgeConfigSpec.ConfigValue<Integer> bloodmoonFade;
-    public static final ForgeConfigSpec.ConfigValue<String[]> bloodmoonSongs;
+    public static int mobPriority;
+    public static List<String> mobSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> harvestmoonPriority;
-    public static final ForgeConfigSpec.ConfigValue<Integer> harvestmoonFade;
-    public static final ForgeConfigSpec.ConfigValue<String[]> harvestmoonSongs;
+    public static int gamestagePriority;
+    public static List<String> gamestageSongs;
 
-    public static final ForgeConfigSpec.ConfigValue<Integer> bluemoonPriority;
-    public static final ForgeConfigSpec.ConfigValue<Integer> bluemoonFade;
-    public static final ForgeConfigSpec.ConfigValue<String[]> bluemoonSongs;
+    public static int bloodmoonPriority;
+    public static int bloodmoonFade;
+    public static List<String> bloodmoonSongs;
 
-    static {
-        BUILDER.push("All Event Triggers");
+    public static int harvestmoonPriority;
+    public static int harvestmoonFade;
+    public static List<String> harvestmoonSongs;
 
-        universalDelay = BUILDER.comment("songs").define("universalDelay",0);
+    public static int bluemoonPriority;
+    public static int bluemoonFade;
+    public static List<String> bluemoonSongs;
 
-        BUILDER.push("Main Menu");
-        menuSongs = BUILDER.comment("songs").define("menuSongs",empty);
-        BUILDER.pop();
 
-        BUILDER.push("Generic");
-        genericFade = BUILDER.comment("Fade Time [in ticks, default: 0]").define("genericFade",0);
-        genericSongs = BUILDER.comment("songs").define("genericSongs",empty);
-        BUILDER.pop();
+    public static void build(File f) {
+        fb.add("All event Triggers");
+        fb.add("");
+        fb.add("\tUniversal Delay=0");
+        fb.add("");
+        for(int i=0;i< Categories.length;i++) {
+            fb.add("\t"+Categories[i]);
+            if(withPriority[i]!=-1111) {
+                fb.add("\t\tPriority [min: -99, max: 2147483647 default: "+withPriority[i]+"]");
+                fb.add("\t\tPriority Value="+withPriority[i]);
+                fb.add("");
+            }
+            if(withFade[i]!=-1) {
+                fb.add("\t\tFade Time [in ticks, default: "+withFade[i]+"]");
+                fb.add("\t\tFade Value="+withFade[i]);
+                fb.add("");
+            }
+            if(withLevel[i]!=9999) {
+                if(!Categories[i].matches("Low HP")) {
+                    fb.add("\t\tConfigurable Level [Y level to activate, default: " + withLevel[i] + "]");
+                    fb.add("\t\tLevel Value=" + withLevel[i]);
+                    fb.add("");
+                }
+                else {
+                    fb.add("\t\tPercentage of maximum health [Out of 100, default: " + withLevel[i] + "]");
+                    fb.add("\t\tLevel Value=" + withLevel[i]);
+                    fb.add("");
+                }
+            }
+            if(Categories[i].matches("Night")) {
+                fb.add("\t\tSongs- Format: [song name,moon phase,(Optional)fade time [in ticks, default: 0]]");
+                fb.add("\t\tMoon Phases: 1 - Full Moon, 2 - Waning Gibbous, 3 - Third Quarter, 4 - Waning Crescent");
+                fb.add("\t\t5 - New Moon, 6 - Waxing Crescent, 7 - First Quarter, 8 - Waxing Gibbous");
+                fb.add("\t\tYou can put 0 to ignore moon phase, or put multiple numbers for a song to be active during multiple phases");
+                fb.add("\t\tExample 1: [nighttime,1] - This will only play during a full moon");
+                fb.add("\t\tExample 2: [nighttime,2,3,4,6,7,8] - This will play every night except for full moons and new moons");
+                fb.add("\t\tExample 3: [nighttime,0] - This will play whenever it is nighttime, just like the old version of this trigger");
+                fb.add("\t\tNote - If the fade is not the last number it will not work properly");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            }
+            else if(Categories[i].matches("Dimension")) {
+                fb.add("\t\tSongs per dimension [Format: dimensionID,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]");
+                fb.add("\t\tNote: You only have to set the priority per dimension ID for 1 song");
+                fb.add("\t\tExample: -1,(songname),11111");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            }
+            else if(Categories[i].matches("Biome")) {
+                fb.add("\t\tSongs per biome [Format: \"biomeresourcename,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tNote: You only have to set the priority per biome name for 1 song");
+                fb.add("\t\tExample: minecraft:swampland,(songname),11111");
+                fb.add("\t\tSongs=<\n>");
+                fb.add("");
+            }
+            else if(Categories[i].matches("Structure")) {
+                fb.add("\t\tSongs per structure [Format: \"structurename,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tNote: You only have to set the priority per structure name for 1 song");
+                fb.add("\t\tExample: Fortress,(songname),11111");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            }
+            else if(Categories[i].matches("Mob (This works for both bosses and hordes!)")) {
+                fb.add("\t\tSongs Per mob [Format: \"MobName,number of mobs,SongName,(Optional)detection range[min: 1, max: 1000, default: 16],(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tNote: You only have to set the priority per mob name for 1 song");
+                fb.add("\t\tAdditional Note: Putting high numbers for the mob range will cause lag! The higher it is, the more noticable that will be. Only use higher numbers for a boss that could be far away, like the Ender Dragon");
+                fb.add("\t\tExample: Zombie,8,(songname),16,11111");
+                fb.add("\t\tSpecial case - If you put \"MOB\" as the mob ID, it will default to any hostile mob");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            }
+            else if(Categories[i].matches("Gamestages (Only fires if the mod Game Stages is active)")) {
+                fb.add("\t\tSongs Per Gamestage [Format: \"StageName,whitelist,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tNote: You only have to set the priority per gamestage name for 1 song");
+                fb.add("\t\tExample: StageOne,true,(songname),11111 - This will play when the player has the stage. If it were false it would play whenever the player does not have it.");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            }
+            else {
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            }
+        }
+        try {
+            Files.write(Paths.get(f.getPath()),fb, StandardCharsets.UTF_8);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
 
-        BUILDER.push("Zones");
-        zonesPriority = BUILDER.comment("Priority [min: -99, max: 2147483647 default: 10000]").define("zonesPriority",10000);
-        zonesFade = BUILDER.comment("Fade Time [in ticks, default: 0]").define("zonesFade",0);
-        zonesSongs = BUILDER.comment("songs").define("zonesSongs",empty);
-        BUILDER.pop();
+    public static void read(File f) {
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+            String line;
+            int p = 1000;
+            int fade = 0;
+            int l = 0;
+            List<String> songs = new ArrayList<>();
+            boolean songLines = false;
+            while ((line = br.readLine()) != null) {
+                for(int i=1;i<Categories.length;i++) {
+                    if(line.contains("Universal Delay=")) {
+                        universalDelay = Integer.parseInt(stringBreakerRegex(line.replaceAll(" ",""),"=")[1]);
+                    }
+                    if(line.contains(Categories[i])) {
+                        readTriggers.put(triggerCounter,new TriggerData(p,fade,l,songs));
+                        triggerCounter++;
+                        songs = new ArrayList<>();
+                        break;
+                    }
+                    if(line.contains("Priority Value=")) {
+                        p = Integer.parseInt(stringBreakerRegex(line,"=")[1]);
+                    }
+                    if(line.contains("Fade Value=")) {
+                        fade = Integer.parseInt(stringBreakerRegex(line,"=")[1]);
+                    }
+                    if(line.contains("Level Value=")) {
+                        l = Integer.parseInt(stringBreakerRegex(line,"=")[1]);
+                    }
+                    if(line.contains("Songs=<")) {
+                        songLines=true;
+                    }
+                    if(line.contains(">")) {
+                        songLines=false;
+                    }
+                    if(songLines && !line.contains("Songs=<")) {
+                        line = line.replaceAll(" ","");
+                        line = line.replaceAll("\t","");
+                        if(!songs.contains(line) && line.length()!=0) {
+                            MusicTriggers.logger.info("The song "+line+" is being added to the current trigger!");
+                            songs.add(line);
+                        }
+                    }
+                }
+            }
+            readTriggers.put(triggerCounter,new TriggerData(p,fade,l,songs));
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
 
-        BUILDER.push("Day");
-        dayPriority = BUILDER.comment("Priority [min: -99, max: 2147483647 default: 1000]").define("dayPriority",1000);
-        dayFade = BUILDER.comment("Fade Time [in ticks, default: 0]").define("dayFade",0);
-        daySongs = BUILDER.comment("songs").define("daySongs",empty);
-        BUILDER.pop();
+        menuSongs = readTriggers.get(0).getSongs();
 
-        BUILDER.push("Night");
-        nightPriority = BUILDER.comment("Priority [min: -99, max: 2147483647 default: 900]").define("nightPriority",900);
-        nightSongs = BUILDER.comment("songs - Format: [song name,moon phase,(Optional)fade time [in ticks, default: 0]]\n" +
-                "Moon Phases: 1 - Full Moon, 2 - Waning Gibbous, 3 - Third Quarter, 4 - Waning Crescent\n" +
-                "5 - New Moon, 6 - Waxing Crescent, 7 - First Quarter, 8 - Waxing Gibbous\n" +
-                "You can put 0 to ignore moon phase, or put multiple numbers for a song to be active during multiple phases\n" +
-                "Example 1: [nighttime,1] - This will only play during a full moon\n" +
-                "Example 2: [nighttime,2,3,4,6,7,8] - This will play every night except for full moons and new moons\n" +
-                "Example 3: [nighttime,0] - This will play whenever it is nighttime, just like the old version of this trigger\n" +
-                "Note - If the fade is not the last number it will not work properly").define("nightSongs",empty);
-        BUILDER.pop();
+        genericFade = readTriggers.get(1).getFade();
+        genericSongs = readTriggers.get(1).getSongs();
 
-        BUILDER.push("Sunrise");
-        sunrisePriority = BUILDER.comment("Priority [min: -99, max: 2147483647 default: 1111]").define("sunrisePriority",1111);
-        sunriseFade = BUILDER.comment("Fade Time [in ticks, default: 0]").define("sunriseFade",0);
-        sunriseSongs = BUILDER.comment("songs").define("sunriseSongs",empty);
-        BUILDER.pop();
+        zonesPriority = readTriggers.get(2).getPriority();
+        zonesFade = readTriggers.get(2).getFade();
+        zonesSongs = readTriggers.get(2).getSongs();
 
-        BUILDER.push("Sunset");
-        sunsetPriority = BUILDER.comment("Priority [min: -99, max: 2147483647 default: 1111]").define("sunsetPriority",1111);
-        sunsetFade = BUILDER.comment("Fade Time [in ticks, default: 0]").define("sunsetFade",0);
-        sunsetSongs = BUILDER.comment("songs").define("sunsetSongs",empty);
-        BUILDER.pop();
+        dayPriority = readTriggers.get(3).getPriority();
+        dayFade = readTriggers.get(3).getFade();
+        daySongs = readTriggers.get(3).getSongs();
 
-        BUILDER.push("Light level");
-        lightPriority = BUILDER.comment("Priority [min: -99, max: 2147483647 default: 500]").define("lightPriority",500);
-        lightFade = BUILDER.comment("Fade Time [in ticks, default: 0]").define("lightFade",0);
-        lightLevel = BUILDER.comment("light level - This indicates the maximum light level").define("lightLevel",7);
-        lightSongs = BUILDER.comment("songs").define("lightSongs",empty);
-        BUILDER.pop();
+        nightPriority = readTriggers.get(4).getPriority();
+        nightSongs = readTriggers.get(4).getSongs();
 
-        BUILDER.push("Underground - underground with no sky visible");
-        undergroundPriority = BUILDER.comment("Priority [min: -99, max: 2147483647 default: 1500]").define("undergroundPriority",1500);
-        undergroundFade = BUILDER.comment("Fade Time [in ticks, default: 0]").define("undergroundFade",0);
-        undergroundLevel = BUILDER.comment("The Y level that is considered underground [default: 55]").define("undergroundLevel",55);
-        undergroundSongs = BUILDER.comment("songs").define("undergroundSongs",empty);
-        BUILDER.pop();
+        sunrisePriority = readTriggers.get(5).getPriority();
+        sunriseFade = readTriggers.get(5).getFade();
+        sunriseSongs = readTriggers.get(5).getSongs();
 
-        BUILDER.push("Deep Under - deep below the surface with no sky visible");
-        deepUnderPriority = BUILDER.comment("Priority [min: -99, max: 2147483647 default: 2000]").define("deepUnderPriority",2000);
-        deepUnderFade = BUILDER.comment("Fade Time [in ticks, default: 0]").define("deepUnderFade",0);
-        deepUnderLevel = BUILDER.comment("The Y level that is considered deep underground [default: 20]").define("deepUnderLevel",20);
-        deepUnderSongs = BUILDER.comment("songs").define("deepUnderSongs",empty);
-        BUILDER.pop();
+        sunsetPriority = readTriggers.get(6).getPriority();
+        sunsetFade = readTriggers.get(6).getFade();
+        sunsetSongs = readTriggers.get(6).getSongs();
 
-        BUILDER.push("Raining");
-        rainingPriority = BUILDER.comment("Priority [min: -99, max: 2147483647 default: 1300]").define("rainingPriority",1300);
-        rainingFade = BUILDER.comment("Fade Time [in ticks, default: 0]").define("rainingFade",0);
-        rainingSongs = BUILDER.comment("songs").define("rainingSongs",empty);
-        BUILDER.pop();
+        lightPriority = readTriggers.get(7).getPriority();
+        lightFade = readTriggers.get(7).getFade();
+        lightLevel = readTriggers.get(7).getLevel();
+        lightSongs = readTriggers.get(7).getSongs();
 
-        BUILDER.push("Storming");
-        stormingPriority = BUILDER.comment("Priority [min: -99, max: 2147483647 default: 1350]").define("stormingPriority",1350);
-        stormingFade = BUILDER.comment("Fade Time [in ticks, default: 0]").define("stormingFade",0);
-        stormingSongs = BUILDER.comment("songs").define("stormingSongs",empty);
-        BUILDER.pop();
+        undergroundPriority = readTriggers.get(8).getPriority();
+        undergroundFade = readTriggers.get(8).getFade();
+        undergroundLevel = readTriggers.get(8).getLevel();
+        undergroundSongs = readTriggers.get(8).getSongs();
 
-        BUILDER.push("Snowing");
-        snowingPriority = BUILDER.comment("Priority [min: -99, max: 2147483647 default: 1333]").define("snowingPriority",1333);
-        snowingFade = BUILDER.comment("Fade Time [in ticks, default: 0]").define("snowingFade",0);
-        snowingSongs = BUILDER.comment("songs").define("snowingSongs",empty);
-        BUILDER.pop();
+        deepUnderPriority = readTriggers.get(9).getPriority();
+        deepUnderFade = readTriggers.get(9).getFade();
+        deepUnderLevel = readTriggers.get(9).getLevel();
+        deepUnderSongs = readTriggers.get(9).getSongs();
 
-        BUILDER.push("Low HP");
-        lowHPPriority = BUILDER.comment("Priority [min: -99, max: 2147483647 default: 3000]").define("lowHPPriority",3000);
-        lowHPFade = BUILDER.comment("Fade Time [in ticks, default: 0]").define("lowHPFade",0);
-        lowHPLevel = BUILDER.comment("HP decimal percentage to activate [min: 0, max: 1, default:0.3]").define("lowHPLevel",0.3F);
-        lowHPSongs = BUILDER.comment("songs").define("lowHPSongs",empty);
-        BUILDER.pop();
+        rainingPriority = readTriggers.get(10).getPriority();
+        rainingFade = readTriggers.get(10).getFade();
+        rainingSongs = readTriggers.get(10).getSongs();
 
-        BUILDER.push("Dead");
-        deadPriority = BUILDER.comment("Priority [min: -99, max: 2147483647 default: 10000]").define("deadPriority",10000);
-        deadFade = BUILDER.comment("Fade Time [in ticks, default: 0]").define("deadFade",0);
-        deadSongs = BUILDER.comment("songs").define("deadSongs",empty);
-        BUILDER.pop();
+        stormingPriority = readTriggers.get(11).getPriority();
+        stormingFade = readTriggers.get(11).getFade();
+        stormingSongs = readTriggers.get(11).getSongs();
 
-        BUILDER.push("Void");
-        inVoidPriority = BUILDER.comment("Priority [min: -99, max: 2147483647 default: 7777]").define("inVoidPriority",7777);
-        inVoidFade = BUILDER.comment("Fade Time [in ticks, default: 0]").define("inVoidFade",0);
-        inVoidLevel = BUILDER.comment("Below what y level would consider to be actually in the void? [default: 0]").define("inVoidLevel",0);
-        inVoidSongs = BUILDER.comment("songs").define("inVoidSongs",empty);
-        BUILDER.pop();
+        snowingPriority = readTriggers.get(12).getPriority();
+        snowingFade = readTriggers.get(12).getFade();
+        snowingSongs = readTriggers.get(12).getSongs();
 
-        BUILDER.push("Spectator");
-        spectatorPriority = BUILDER.comment("Priority [min: -99, max: 2147483647 default: 5000]").define("spectatorPriority",5000);
-        spectatorFade = BUILDER.comment("Fade Time [in ticks, default: 0]").define("spectatorFade",0);
-        spectatorSongs = BUILDER.comment("songs").define("spectatorSongs",empty);
-        BUILDER.pop();
+        lowHPPriority = readTriggers.get(13).getPriority();
+        lowHPFade = readTriggers.get(13).getFade();
+        lowHPLevel = readTriggers.get(13).getLevel();
+        lowHPSongs = readTriggers.get(13).getSongs();
 
-        BUILDER.push("Creative");
-        creativePriority = BUILDER.comment("Priority [min: -99, max: 2147483647 default: 5000]").define("creativePriority",5000);
-        creativeFade = BUILDER.comment("Fade Time [in ticks, default: 0]").define("creativeFade",0);
-        creativeSongs = BUILDER.comment("songs").define("creativeSongs",empty);
-        BUILDER.pop();
+        deadPriority = readTriggers.get(14).getPriority();
+        deadFade = readTriggers.get(14).getFade();
+        deadSongs = readTriggers.get(14).getSongs();
 
-        BUILDER.push("Riding");
-        ridingPriority = BUILDER.comment("Priority [min: -99, max: 2147483647 default: 2222]").define("ridingPriority",2222);
-        ridingFade = BUILDER.comment("Fade Time [in ticks, default: 0]").define("ridingFade",0);
-        ridingSongs = BUILDER.comment("songs").define("ridingSongs",empty);
-        BUILDER.pop();
+        inVoidPriority = readTriggers.get(15).getPriority();
+        inVoidFade = readTriggers.get(15).getFade();
+        inVoidLevel = readTriggers.get(15).getLevel();
+        inVoidSongs = readTriggers.get(15).getSongs();
 
-        BUILDER.push("Pet");
-        petPriority = BUILDER.comment("Priority [min: -99, max: 2147483647 default: 1200]").define("petPriority",1200);
-        petFade = BUILDER.comment("Fade Time [in ticks, default: 0]").define("petFade",0);
-        petSongs = BUILDER.comment("songs").define("petSongs",empty);
-        BUILDER.pop();
+        spectatorPriority = readTriggers.get(16).getPriority();
+        spectatorFade = readTriggers.get(16).getFade();
+        spectatorSongs = readTriggers.get(16).getSongs();
 
-        BUILDER.push("High");
-        highPriority = BUILDER.comment("Priority [min: -99, max: 2147483647 default: 1200]").define("highPriority",1200);
-        highFade = BUILDER.comment("Fade Time [in ticks, default: 0]").define("highFade",0);
-        highLevel = BUILDER.comment("Minimum Y level to activate [default: 150]").define("highLevel",150);
-        highSongs = BUILDER.comment("songs").define("highSongs",empty);
-        BUILDER.pop();
+        creativePriority = readTriggers.get(17).getPriority();
+        creativeFade = readTriggers.get(17).getFade();
+        creativeSongs = readTriggers.get(17).getSongs();
 
-        BUILDER.push("Dimension");
-        dimensionPriority = BUILDER.comment("General Priority [min: -99, max: 2147483647 default: 1150]\n" +
-                "Note: Priorities specified for individual dimensions will override this").define("dimensionPriority",1150);
-        dimensionSongs = BUILDER.comment("Songs Per Dimension [Format: DimensionID,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\n" +
-                "Note: You only have to set the priority per dimension ID for 1 song\n" +
-                "Example: -1,(songname),11111").define("dimensionSongs",empty);
-        BUILDER.pop();
+        ridingPriority = readTriggers.get(18).getPriority();
+        ridingFade = readTriggers.get(18).getFade();
+        ridingSongs = readTriggers.get(18).getSongs();
 
-        BUILDER.push("Biome");
-        biomePriority = BUILDER.comment("GGeneral Priority [min: -99, max: 2147483647 default: 1160]\n" +
-                "Note: Priorities specified for individual biomes will override this").define("biomePriority",1160);
-        biomeSongs = BUILDER.comment("Songs Per Biome [Format: \"BiomeResourceName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\n" +
-                "Note: You only have to set the priority per biome name for 1 song\n" +
-                "Example: minecraft:swampland,(songname),11111").define("biomeSongs",empty);
-        BUILDER.pop();
+        petPriority = readTriggers.get(19).getPriority();
+        petFade = readTriggers.get(19).getFade();
+        petSongs = readTriggers.get(19).getSongs();
 
-        BUILDER.push("Structure");
-        structurePriority = BUILDER.comment("General Priority [min: -99, max: 2147483647 default: 3333]\n" +
-                "Note: Priorities specified for individual structures will override this").define("structurePriority",3333);
-        structureSongs = BUILDER.comment("Songs Per Structure [Format: \"StructureName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\n" +
-                "Note: You only have to set the priority per structure name for 1 song\n" +
-                "Example: Fortress,(songname),11111").define("structureSongs",empty);
-        BUILDER.pop();
+        highPriority = readTriggers.get(20).getPriority();
+        highFade = readTriggers.get(20).getFade();
+        highSongs = readTriggers.get(20).getSongs();
 
-        BUILDER.push("Mob (This works for both bosses and hordes!)");
-        mobPriority = BUILDER.comment("General Priority [min: -99, max: 2147483647 default: 3500]\n" +
-                "Note: Priorities specified for individual mobs will override this").define("mobPriority",3500);
-        mobSongs = BUILDER.comment("Songs Per Mob [Format: \"MobName,number of mobs,SongName,(Optional)detection range[min: 1, max: 1000, default: 16],(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0]\"]\n" +
-                "Note: You only have to set the priority per mob name for 1 song\n" +
-                "Additional Note: Putting high numbers for the mob range will cause lag! The higher it is, the more noticable that will be. Only use higher numbers for a boss that could be far away, like the Ender Dragon\n" +
-                "Example: Zombie,8,(songname),16,11111\n" +
-                "Special case - If you put \"MOB\" as the mob ID, it will default to any hostile mob").define("mobSongs",empty);
-        BUILDER.pop();
+        dimensionPriority = readTriggers.get(21).getPriority();
+        dimensionSongs = readTriggers.get(21).getSongs();
+        
+        biomePriority = readTriggers.get(22).getPriority();
+        biomeSongs = readTriggers.get(22).getSongs();
+        
+        structurePriority = readTriggers.get(23).getPriority();
+        structureSongs = readTriggers.get(23).getSongs();
 
-        BUILDER.push("Gamestages (Only fires if the mod Game Stages is active)");
-        gamestagePriority = BUILDER.comment("General Priority [min: -99, max: 2147483647 default: 500]\n" +
-                "Note: Priorities specified for individual gamestages will override this").define("gamestagePriority",0);
-        gamestageSongs = BUILDER.comment("Songs Per Gamestage [Format: \"StageName,whitelist,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\n" +
-                "Note: You only have to set the priority per gamestage name for 1 song\n" +
-                "Example: StageOne,true,(songname),11111 - This will play when the player has the stage. If it were false it would play whenever the player does not have it.").define("gamestageSongs",empty);
-        BUILDER.pop();
+        mobPriority = readTriggers.get(24).getPriority();
+        mobSongs = readTriggers.get(24).getSongs();
 
-        BUILDER.push("Blood Moon (Only fires if the mod Enhanced Celestials is active)");
-        bloodmoonPriority = BUILDER.comment("Priority [min: -99, max: 2147483647 default: 1200]").define("bloodmoonPriority",1200);
-        bloodmoonFade = BUILDER.comment("Fade Time [in ticks, default: 0]").define("bloodmoonFade",0);
-        bloodmoonSongs = BUILDER.comment("songs").define("bloodmoonSongs",empty);
-        BUILDER.pop();
+        gamestagePriority = readTriggers.get(25).getPriority();
+        gamestageSongs = readTriggers.get(25).getSongs();
 
-        BUILDER.push("Harvest Moon (Only fires if the mod Enhanced Celestials is active)");
-        harvestmoonPriority = BUILDER.comment("Priority [min: -99, max: 2147483647 default: 1400]").define("harvestmoonPriority",1400);
-        harvestmoonFade = BUILDER.comment("Fade Time [in ticks, default: 0]").define("harvestmoonFade",0);
-        harvestmoonSongs = BUILDER.comment("songs").define("harvestmoonSongs",empty);
-        BUILDER.pop();
+        bloodmoonPriority = readTriggers.get(26).getPriority();
+        bloodmoonFade = readTriggers.get(26).getFade();
+        bloodmoonSongs = readTriggers.get(26).getSongs();
 
-        BUILDER.push("Blue Moon (Only fires if the mod Enhanced Celestials is active)");
-        bluemoonPriority = BUILDER.comment("Priority [min: -99, max: 2147483647 default: 1500]").define("bluemoonPriority",1500);
-        bluemoonFade = BUILDER.comment("Fade Time [in ticks, default: 0]").define("bluemoonFade",0);
-        bluemoonSongs = BUILDER.comment("songs").define("bluemoonSongs",empty);
-        BUILDER.pop();
+        harvestmoonPriority = readTriggers.get(27).getPriority();
+        harvestmoonFade = readTriggers.get(27).getFade();
+        harvestmoonSongs = readTriggers.get(27).getSongs();
 
-        BUILDER.pop();
-        SPEC = BUILDER.build();
+        bluemoonPriority = readTriggers.get(28).getPriority();
+        bluemoonFade = readTriggers.get(28).getFade();
+        bluemoonSongs = readTriggers.get(28).getSongs();
+        
+    }
+
+    public static String[] stringBreakerRegex(String s,String regex) {
+        return s.split(regex);
+    }
+
+    private static class TriggerData {
+        public int priority;
+        public int fade;
+        public int level;
+        public List<String> songs;
+        TriggerData(int p, int f, int l, List<String> s) {
+            this.priority=p;
+            this.fade=f;
+            this.level=l;
+            this.songs=s;
+        }
+
+        private int getPriority() {
+            return this.priority;
+        }
+
+        private int getFade() {
+            return this.fade;
+        }
+
+        private int getLevel() {
+            return this.level;
+        }
+
+        private List<String> getSongs() {
+            return this.songs;
+        }
     }
 }

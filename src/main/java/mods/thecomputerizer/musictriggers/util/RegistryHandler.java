@@ -1,44 +1,46 @@
 package mods.thecomputerizer.musictriggers.util;
 
-import mezz.jei.startup.NetworkHandler;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.ModSounds;
 import mods.thecomputerizer.musictriggers.common.MusicTriggersItems;
 import net.minecraft.item.Item;
+import net.minecraft.item.MusicDiscItem;
 import net.minecraft.util.SoundEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
 
 
-@Mod.EventBusSubscriber(modid = MusicTriggers.MODID)
 public final class RegistryHandler {
     //public static NetworkHandler network;
+    private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MusicTriggers.MODID);
 
-    @SubscribeEvent
-    public static void onRegisterItems(RegistryEvent.Register<Item> e)
-    {
+    public static void registerItems(IEventBus eventBus) {
+        MusicTriggers.logger.info("Loading Items from Music Triggers");
         MusicTriggersItems.INSTANCE.init();
-        e.getRegistry().registerAll(MusicTriggersItems.INSTANCE.getItems().toArray(new Item[0]));
+        MusicTriggersItems.ITEMS.register(eventBus);
     }
 
-    @SubscribeEvent
-    public static void onRegisterSoundEvents(RegistryEvent.Register<SoundEvent> e)
+    public static void registerSoundEvents(IEventBus eventBus)
     {
+        MusicTriggers.logger.info("Loading Sounds from Music Triggers");
         ModSounds.INSTANCE.init();
-        e.getRegistry().registerAll(ModSounds.INSTANCE.getSounds().toArray(new SoundEvent[0]));
+        ModSounds.SOUNDS.register(eventBus);
     }
 
 
-    @SubscribeEvent
     public static void onModelRegister(ModelRegistryEvent event) {
-        for(Item i: MusicTriggersItems.INSTANCE.getItems()) {
+        //for(Item i: MusicTriggersItems.INSTANCE.getItems()) {
             //ModelLoader.setCustomModelResourceLocation(i, 0, new ModelResourceLocation("musictriggers:record", "inventory"));
-        }
+        //}
     }
 
-    public static void init() {
+    public static void init(IEventBus eventBus) {
+        registerItems(eventBus);
+        registerSoundEvents(eventBus);
         //network = NetworkHandler.INSTANCE.newSimpleChannel(MusicTriggers.MODID);
         registerPackets();
     }

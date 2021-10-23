@@ -2,13 +2,16 @@ package mods.thecomputerizer.musictriggers;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class configTitleCards {
-    public static String[] empty = new String[0];
+    public static List<String> empty = new ArrayList<>();
     public static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
     public static final ForgeConfigSpec SPEC;
 
-    public static final ForgeConfigSpec.ConfigValue<String[]> TitleCards;
-    public static final ForgeConfigSpec.ConfigValue<String[]> ImageCards;
+    public static final ForgeConfigSpec.ConfigValue<List<String>> TitleCards;
+    public static final ForgeConfigSpec.ConfigValue<List<String>> ImageCards;
     public static final ForgeConfigSpec.ConfigValue<Integer> ImageH;
     public static final ForgeConfigSpec.ConfigValue<Integer> ImageV;
     public static final ForgeConfigSpec.ConfigValue<Float> ImageSize;

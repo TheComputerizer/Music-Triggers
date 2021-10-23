@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.client;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.common.SoundHandler;
+import mods.thecomputerizer.musictriggers.common.ModSounds;
 import mods.thecomputerizer.musictriggers.common.eventsCommon;
 import mods.thecomputerizer.musictriggers.config;
 import mods.thecomputerizer.musictriggers.configDebug;
@@ -17,15 +17,13 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 
 import java.util.*;
 
-@Mod.EventBusSubscriber(modid = MusicTriggers.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class MusicPlayer {
 
-    public static String[] curTrackList;
-    public static String[] holder;
+    public static List<String> curTrackList;
+    public static List<String> holder;
     public static String curTrack;
     private static ISound curMusic;
     public static Random rand = new Random();
@@ -77,7 +75,7 @@ public class MusicPlayer {
                 }
             }
             holder = MusicPicker.playThese();
-            if (holder != null && !Arrays.asList(holder).isEmpty() && !playing) {
+            if (holder != null && !holder.isEmpty() && !playing) {
                 if (curTrackList == null) {
                     curTrackList = holder;
                 }
@@ -91,10 +89,10 @@ public class MusicPlayer {
                         mc.getSoundManager().stop();
                         curMusic = null;
                         delay = true;
-                        delayTime = config.universalDelay.get();
+                        delayTime = config.universalDelay;
                     }
                 }
-                if (MusicPicker.shouldChange || !Arrays.equals(curTrackList,holder)) {
+                if (MusicPicker.shouldChange || !Arrays.equals(curTrackList.toArray(new String[0]),holder.toArray(new String[0]))) {
                     eventsCommon.IMAGE_CARD = null;
                     curTrackList = null;
                     tempTitleCards = MusicPicker.titleCardEvents;
@@ -108,15 +106,16 @@ public class MusicPlayer {
                     }
                     MusicPicker.shouldChange = false;
                 } else if (curMusic == null && mc.options.getSoundSourceVolume(SoundCategory.MASTER) > 0 && mc.options.getSoundSourceVolume(SoundCategory.MUSIC) > 0) {
-                    if (curTrackList.length >= 1) {
-                        int i = rand.nextInt(curTrackList.length);
-                        if (curTrackList.length > 1 && curTrack != null) {
-                            while (curTrack.equals(curTrackList[i])) {
-                                i = rand.nextInt(curTrackList.length);
+                    if (curTrackList.size() >= 1) {
+                        int i = rand.nextInt(curTrackList.size());
+                        if (curTrackList.size() > 1 && curTrack != null) {
+                            while (curTrack.equals(curTrackList.get(i))) {
+                                i = rand.nextInt(curTrackList.size());
                             }
                         }
-                        curTrack = curTrackList[i];
-                        curMusic = SoundHandler.songsRecords.get(curTrack);
+                        curTrack = curTrackList.get(i);
+                        curMusic = ModSounds.playableSounds.get("music."+curTrack);
+                        MusicTriggers.logger.info("Current track: "+curTrack);
                         mc.getSoundManager().stop();
                         mc.getSoundManager().play(curMusic);
                     }

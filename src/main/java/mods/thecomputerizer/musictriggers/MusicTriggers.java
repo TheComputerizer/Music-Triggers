@@ -7,10 +7,10 @@ import mods.thecomputerizer.musictriggers.util.json;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.logging.log4j.LogManager;
@@ -39,13 +39,26 @@ public class MusicTriggers {
     public static final Logger logger = LogManager.getLogger();
 
     public MusicTriggers() {
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::preInit);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON,config.SPEC, "MusicTriggers/musictriggers.toml");
+        IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON,configDebug.SPEC, "MusicTriggers/debug.toml");
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON,configTitleCards.SPEC, "MusicTriggers/transitions.toml");
         MinecraftForge.EVENT_BUS.register(this);
         File configDir = new File("config", "MusicTriggers");
         if (!configDir.exists()) {
             configDir.mkdir();
         }
+        File baseConfig = new File(configDir,"musictriggers.txt");
+        if (!baseConfig.exists()) {
+            try {
+                Files.createFile(Paths.get(baseConfig.getPath()));
+                config.build(baseConfig);
+            }
+            catch(Exception e) {
+                e.printStackTrace();
+            }
+        }
+        config.read(baseConfig);
+        RegistryHandler.init(eventBus);
         if (FMLEnvironment.dist == Dist.CLIENT) {
             songsDir = new File(configDir.getPath(), "songs");
             if (!songsDir.exists()) {
@@ -144,7 +157,7 @@ public class MusicTriggers {
                     ex.printStackTrace();
                 }
             }
-            if(json.collector()==null) {
+            if(json.collector()!=null) {
                 File pack = new File("config/MusicTriggers/songs/");
                 if (pack.isDirectory() && new File(pack, "pack.mcmeta").isFile()) {
                     packFinder p = new packFinder(pack);
@@ -152,12 +165,7 @@ public class MusicTriggers {
                 }
             }
         }
-    }
-
-    public void preInit(final FMLCommonSetupEvent event) {
-        RegistryHandler.init();
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
         MinecraftForge.EVENT_BUS.register(eventsCommon.class);
     }
-
 }

@@ -13,7 +13,6 @@ public class json {
     public static List<String> create() {
         allSongs = collector();
         if (allSongs != null && !allSongs.isEmpty()) {
-            System.out.print(allSongs.size());
             js.add("{");
             for (int i = 0; i < allSongs.size() - 1; i++) {
                 js.add("  \"music." + allSongs.get(i) + "\": {");
