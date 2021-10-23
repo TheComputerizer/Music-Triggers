@@ -287,7 +287,7 @@ public class MusicPicker {
         if (configDebug.BiomeChecker.get() && eventsCommon.isWorldRendered) {
             player.sendMessage(new TranslationTextComponent(Objects.requireNonNull(player.getCommandSenderWorld().getBiome(player.blockPosition()).getRegistryName()).toString()), MusicPicker.player.getUUID());
         }
-        if(FMLEnvironment.dist == Dist.CLIENT) {
+        if(world.getBiome(player.blockPosition())!=null) {
             if (SoundHandler.biomeSongs.get(Objects.requireNonNull(world.getBiome(player.blockPosition()).getRegistryName()).toString()) != null) {
                 String biomeName = Objects.requireNonNull(world.getBiome(player.blockPosition()).getRegistryName()).toString();
                 events.add(biomeName);
