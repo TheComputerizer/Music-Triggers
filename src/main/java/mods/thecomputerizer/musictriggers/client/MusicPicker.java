@@ -19,6 +19,8 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
+import net.minecraft.world.gen.feature.structure.Structure;
+import net.minecraft.world.server.ServerWorld;
 
 import java.util.*;
 
@@ -274,11 +276,11 @@ public class MusicPicker {
             player.sendMessage(new TranslationTextComponent(player.level.dimension().location().toString()),MusicPicker.player.getUUID());
         }
         if (SoundHandler.dimensionSongs.get(player.level.dimension().location().toString()) != null) {
-            events.add("dimension" + player.getCommandSenderWorld().dimension().getRegistryName());
+            events.add("dimension" + player.level.dimension().location());
             String[] dimSongsArray = new String[SoundHandler.dimensionSongsString.get(player.level.dimension().location().toString()).size()];
-            dynamicSongs.put("dimension" + player.getCommandSenderWorld().dimension().getRegistryName(), Arrays.asList(SoundHandler.dimensionSongsString.get(player.level.dimension().location().toString()).toArray(dimSongsArray)));
-            dynamicPriorities.put("dimension" + player.getCommandSenderWorld().dimension().getRegistryName(), SoundHandler.dimensionPriorities.get(player.level.dimension().location().toString()));
-            dynamicFade.put("dimension" + player.getCommandSenderWorld().dimension().getRegistryName(), SoundHandler.dimensionFade.get(player.level.dimension().location().toString()));
+            dynamicSongs.put("dimension" + player.level.dimension().location(), Arrays.asList(SoundHandler.dimensionSongsString.get(player.level.dimension().location().toString()).toArray(dimSongsArray)));
+            dynamicPriorities.put("dimension" + player.level.dimension().location(), SoundHandler.dimensionPriorities.get(player.level.dimension().location().toString()));
+            dynamicFade.put("dimension" + player.level.dimension().location(), SoundHandler.dimensionFade.get(player.level.dimension().location().toString()));
         }
         if (configDebug.BiomeChecker.get() && eventsCommon.isWorldRendered) {
             player.sendMessage(new TranslationTextComponent(Objects.requireNonNull(player.getCommandSenderWorld().getBiome(player.blockPosition()).getRegistryName()).toString()),MusicPicker.player.getUUID());
@@ -292,8 +294,8 @@ public class MusicPicker {
             dynamicFade.put(biomeName, SoundHandler.biomeFade.get(biomeName));
         }
         //if (FMLEnvironment.dist == Dist.CLIENT) {
-        /*
-            ServerWorld nWorld = Objects.requireNonNull(player.getServer()).getLevel(player.getCommandSenderWorld().dimension());
+/*
+            ServerWorld nWorld = Objects.requireNonNull(player.getServer()).getLevel(player.level.dimension());
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.structureSongsString.entrySet()) {
                 String structName = ((Map.Entry) stringListEntry).getKey().toString();
                 for (Structure<?> structureFeature : net.minecraftforge.registries.ForgeRegistries.STRUCTURE_FEATURES) {
@@ -326,8 +328,8 @@ public class MusicPicker {
                 }
             }
         }
+*/
 
-         */
         for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.mobSongsString.entrySet()) {
             String mobName = ((Map.Entry) stringListEntry).getKey().toString();
             double range = SoundHandler.mobRange.get(mobName);
