@@ -13,7 +13,7 @@
 
     [[mods]]
       modId="musictriggers"
-      version="2.0"
+      version="1.16.5-2.0"
       displayName="Music Triggers"
       updateJSONURL=""
       displayURL="https://www.curseforge.com/minecraft/mc-mods/music-triggers"

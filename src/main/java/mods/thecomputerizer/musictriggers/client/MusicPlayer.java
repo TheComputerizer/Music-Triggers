@@ -2,7 +2,6 @@ package mods.thecomputerizer.musictriggers.client;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.ModSounds;
-import mods.thecomputerizer.musictriggers.common.eventsCommon;
 import mods.thecomputerizer.musictriggers.config;
 import mods.thecomputerizer.musictriggers.configDebug;
 import mods.thecomputerizer.musictriggers.configTitleCards;
@@ -10,6 +9,7 @@ import net.minecraft.block.JukeboxBlock;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.tileentity.JukeboxTileEntity;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.*;
@@ -79,7 +79,7 @@ public class MusicPlayer {
                 if (curTrackList == null) {
                     curTrackList = holder;
                 }
-                if (configDebug.FinalSongs.get() && eventsCommon.isWorldRendered) {
+                if (configDebug.FinalSongs.get() && eventsClient.isWorldRendered) {
                     for (String print : curTrackList) {
                         MusicPicker.player.sendMessage(new TranslationTextComponent(print),MusicPicker.player.getUUID());
                     }
@@ -93,7 +93,7 @@ public class MusicPlayer {
                     }
                 }
                 if (MusicPicker.shouldChange || !Arrays.equals(curTrackList.toArray(new String[0]),holder.toArray(new String[0]))) {
-                    eventsCommon.IMAGE_CARD = null;
+                    eventsClient.IMAGE_CARD = null;
                     curTrackList = null;
                     tempTitleCards = MusicPicker.titleCardEvents;
                     if (MusicPicker.curFade == 0) {
@@ -115,7 +115,6 @@ public class MusicPlayer {
                         }
                         curTrack = curTrackList.get(i);
                         curMusic = ModSounds.playableSounds.get("music."+curTrack);
-                        MusicTriggers.logger.info("Current track: "+curTrack);
                         mc.getSoundManager().stop();
                         mc.getSoundManager().play(curMusic);
                     }
@@ -126,9 +125,9 @@ public class MusicPlayer {
                     curMusic = null;
                 }
             }
-            if (eventsCommon.vanilla != null) {
-                if (mc.getSoundManager().isActive(eventsCommon.vanilla)) {
-                    mc.getSoundManager().stop(eventsCommon.vanilla);
+            if (eventsClient.vanilla != null) {
+                if (mc.getSoundManager().isActive(eventsClient.vanilla)) {
+                    mc.getSoundManager().stop(eventsClient.vanilla);
                 }
             }
         }
@@ -136,7 +135,7 @@ public class MusicPlayer {
     }
 
     public static void renderCards() {
-        for (String t : configTitleCards.TitleCards.get()) {
+        for (String t : configTitleCards.TitleCards) {
             String[] line = t.split(",");
             String[] temp = Arrays.copyOfRange(line, 2, line.length);
             if (tempTitleCards.containsAll(Arrays.asList(temp)) && mc.player != null) {
@@ -144,15 +143,13 @@ public class MusicPlayer {
                 mc.gui.setTitles(null, new TranslationTextComponent(line[1]), 5, 20, 20);
             }
         }
-        /*
         for (String t : configTitleCards.ImageCards) {
             String[] line = t.split(",");
             String[] temp = Arrays.copyOfRange(line, 1, line.length);
             if (tempTitleCards.containsAll(Arrays.asList(temp)) && mc.player != null) {
-                eventsCommon.IMAGE_CARD = new ResourceLocation(MusicTriggers.MODID, "textures/" + line[0] + ".png");
-                eventsCommon.activated = true;
+                eventsClient.IMAGE_CARD = new ResourceLocation(MusicTriggers.MODID, "textures/" + line[0] + ".png");
+                eventsClient.activated = true;
             }
         }
-         */
     }
 }

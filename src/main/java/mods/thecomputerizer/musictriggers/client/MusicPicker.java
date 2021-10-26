@@ -5,11 +5,12 @@ import corgitaco.enhancedcelestials.LunarContext;
 import corgitaco.enhancedcelestials.lunarevent.BloodMoon;
 import corgitaco.enhancedcelestials.lunarevent.BlueMoon;
 import corgitaco.enhancedcelestials.lunarevent.HarvestMoon;
-import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
-import mods.thecomputerizer.musictriggers.common.eventsCommon;
 import mods.thecomputerizer.musictriggers.config;
 import mods.thecomputerizer.musictriggers.configDebug;
+import mods.thecomputerizer.musictriggers.util.PacketHandler;
+import mods.thecomputerizer.musictriggers.util.packets.InfoForBiome;
+import mods.thecomputerizer.musictriggers.util.packets.InfoForStructure;
 import net.darkhax.gamestages.GameStageHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.LivingEntity;
@@ -19,11 +20,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
-import net.minecraft.world.gen.feature.structure.Structure;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.loading.FMLEnvironment;
 
 import java.util.*;
 
@@ -156,7 +153,6 @@ public class MusicPicker {
             dynamicPriorities.put("day", config.dayPriority);
             dynamicFade.put("day", config.dayFade);
         } else {
-            MusicTriggers.logger.info("Current Moon Phase: " + (world.getMoonPhase() + 1));
             if (SoundHandler.nightSongs.get(0) != null) {
                 events.add("night" + 0);
                 List<String> tempNight = new ArrayList<>();
@@ -274,45 +270,52 @@ public class MusicPicker {
                 break;
             }
         }
-        if (configDebug.DimensionChecker.get() && eventsCommon.isWorldRendered) {
+        if (configDebug.DimensionChecker.get() && eventsClient.isWorldRendered) {
             player.sendMessage(new TranslationTextComponent(player.level.dimension().location().toString()), MusicPicker.player.getUUID());
         }
         if (SoundHandler.dimensionSongs.get(player.level.dimension().location().toString()) != null) {
             events.add("dimension" + player.level.dimension().location());
-            String[] dimSongsArray = new String[SoundHandler.dimensionSongsString.get(player.level.dimension().location().toString()).size()];
-            dynamicSongs.put("dimension" + player.level.dimension().location(), Arrays.asList(SoundHandler.dimensionSongsString.get(player.level.dimension().location().toString()).toArray(dimSongsArray)));
+            dynamicSongs.put("dimension" + player.level.dimension().location(), SoundHandler.dimensionSongsString.get(player.level.dimension().location().toString()));
             dynamicPriorities.put("dimension" + player.level.dimension().location(), SoundHandler.dimensionPriorities.get(player.level.dimension().location().toString()));
             dynamicFade.put("dimension" + player.level.dimension().location(), SoundHandler.dimensionFade.get(player.level.dimension().location().toString()));
         }
-        if (configDebug.BiomeChecker.get() && eventsCommon.isWorldRendered && world.getBiome(player.blockPosition()).getRegistryName()!=null) {
+        if (configDebug.BiomeChecker.get() && eventsClient.isWorldRendered && world.getBiome(player.blockPosition()).getRegistryName()!=null) {
             player.sendMessage(new TranslationTextComponent(Objects.requireNonNull(player.getCommandSenderWorld().getBiome(player.blockPosition()).getRegistryName()).toString()), MusicPicker.player.getUUID());
         }
         if(world.getBiome(player.blockPosition()).getRegistryName()!=null) {
             if (SoundHandler.biomeSongs.get(Objects.requireNonNull(world.getBiome(player.blockPosition()).getRegistryName()).toString()) != null) {
                 String biomeName = Objects.requireNonNull(world.getBiome(player.blockPosition()).getRegistryName()).toString();
                 events.add(biomeName);
-                String[] biomeSongsArray = new String[SoundHandler.biomeSongsString.get(biomeName).size()];
-                dynamicSongs.put(biomeName, Arrays.asList(SoundHandler.biomeSongsString.get(biomeName).toArray(biomeSongsArray)));
+                dynamicSongs.put(biomeName, SoundHandler.biomeSongsString.get(biomeName));
                 dynamicPriorities.put(biomeName, SoundHandler.biomePriorities.get(biomeName));
                 dynamicFade.put(biomeName, SoundHandler.biomeFade.get(biomeName));
             }
         }
-        /*
+        else {
+            for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.biomeSongsString.entrySet()) {
+                String biomeName = ((Map.Entry) stringListEntry).getKey().toString();
+                PacketHandler.sendToServer(new InfoForBiome(biomeName,player.blockPosition(),player.getUUID()));
+                if (fromServer.inBiome.containsKey(biomeName)) {
+                    if(fromServer.inBiome.get(biomeName))
+                    events.add(biomeName);
+                    dynamicSongs.put(biomeName, SoundHandler.biomeSongsString.get(biomeName));
+                    dynamicPriorities.put(biomeName, SoundHandler.biomePriorities.get(biomeName));
+                    dynamicFade.put(biomeName, SoundHandler.biomeFade.get(biomeName));
+                }
+            }
+        }
         for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.structureSongsString.entrySet()) {
             String structName = ((Map.Entry) stringListEntry).getKey().toString();
-            RegistryHandler.network.sendToServer(new packet.packetMessage(structName, player.getPosition(), player.level.dimension().location().toString()), player.getUniqueID()));
+            PacketHandler.sendToServer(new InfoForStructure(structName,player.blockPosition(),player.getUUID()));
             if (fromServer.inStructure.containsKey(structName)) {
                 if (fromServer.inStructure.get(structName)) {
                     events.add("structure:" + structName);
-                    String[] structureSongsArray = new String[SoundHandler.structureSongsString.get(structName).size()];
-                    dynamicSongs.put("structure:" + structName, SoundHandler.structureSongsString.get(structName).toArray(structureSongsArray));
+                    dynamicSongs.put("structure:" + structName, SoundHandler.structureSongsString.get(structName));
                     dynamicPriorities.put("structure:" + structName, SoundHandler.structurePriorities.get(structName));
                     dynamicFade.put("structure:" + structName, SoundHandler.structureFade.get(structName));
                 }
             }
         }
-
-         */
 
         for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.mobSongsString.entrySet()) {
             String mobName = ((Map.Entry) stringListEntry).getKey().toString();
@@ -327,8 +330,7 @@ public class MusicPicker {
             if (mobName.matches("MOB")) {
                 if (mobList.size() >= SoundHandler.mobNumber.get(mobName)) {
                     events.add(mobName);
-                    String[] mobSongsArray = new String[SoundHandler.mobSongsString.get(mobName).size()];
-                    dynamicSongs.put(mobName, Arrays.asList(SoundHandler.mobSongsString.get(mobName).toArray(mobSongsArray)));
+                    dynamicSongs.put(mobName, SoundHandler.mobSongsString.get(mobName));
                     dynamicPriorities.put(mobName, SoundHandler.mobPriorities.get(mobName));
                     dynamicFade.put(mobName, SoundHandler.mobFade.get(mobName));
                 }
@@ -391,7 +393,7 @@ public class MusicPicker {
 
         playableList = events;
 
-        if (events.size() >= 1 && configDebug.PlayableEvents.get() && eventsCommon.isWorldRendered) {
+        if (events.size() >= 1 && configDebug.PlayableEvents.get() && eventsClient.isWorldRendered) {
             for (String ev : events) {
                 player.sendMessage(new TranslationTextComponent(ev), MusicPicker.player.getUUID());
             }

@@ -397,7 +397,138 @@ public final class config {
         bluemoonPriority = readTriggers.get(28).getPriority();
         bluemoonFade = readTriggers.get(28).getFade();
         bluemoonSongs = readTriggers.get(28).getSongs();
-        
+    }
+
+    public static void update(File f) {
+        read(f);
+        fb.add("All event Triggers");
+        fb.add("");
+        fb.add("\tUniversal Delay="+universalDelay);
+        fb.add("");
+        for(int i=0;i< Categories.length;i++) {
+            fb.add("\t"+Categories[i]);
+            if(withPriority[i]!=-1111) {
+                fb.add("\t\tPriority [min: -99, max: 2147483647 default: "+withPriority[i]+"]");
+                fb.add("\t\tPriority Value="+readTriggers.get(i).getPriority());
+                fb.add("");
+            }
+            if(withFade[i]!=-1) {
+                fb.add("\t\tFade Time [in ticks, default: "+withFade[i]+"]");
+                fb.add("\t\tFade Value="+readTriggers.get(i).getFade());
+                fb.add("");
+            }
+            if(withLevel[i]!=9999) {
+                if(!Categories[i].matches("Low HP")) {
+                    fb.add("\t\tConfigurable Level [Y level to activate, default: " + withLevel[i] + "]");
+                    fb.add("\t\tLevel Value=" + readTriggers.get(i).getLevel());
+                    fb.add("");
+                }
+                else {
+                    fb.add("\t\tPercentage of maximum health [Out of 100, default: " + withLevel[i] + "]");
+                    fb.add("\t\tLevel Value=" + readTriggers.get(i).getLevel());
+                    fb.add("");
+                }
+            }
+            if(Categories[i].matches("Zones")) {
+                fb.add("\t\tSongs per zone");
+                fb.add("\t\tFormat[min x,min y,min z,max x, max y,max z,songname,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]]");
+                fb.add("\t\tExample: 0,0,0,100,100,100,home3,33981,200");
+                if(!fb.contains("\t\tSongs=<")) {
+                    fb.add("\t\tSongs=<");
+                    for(String iter : readTriggers.get(i).getSongs()) {
+                        fb.add("\t\t"+iter);
+                    }
+                    fb.add("\t\t>");
+                }
+                fb.add("");
+            }
+            if(Categories[i].matches("Night")) {
+                fb.add("\t\tSongs- Format: [song name,moon phase,(Optional)fade time [in ticks, default: 0]]");
+                fb.add("\t\tMoon Phases: 1 - Full Moon, 2 - Waning Gibbous, 3 - Third Quarter, 4 - Waning Crescent");
+                fb.add("\t\t5 - New Moon, 6 - Waxing Crescent, 7 - First Quarter, 8 - Waxing Gibbous");
+                fb.add("\t\tYou can put 0 to ignore moon phase, or put multiple numbers for a song to be active during multiple phases");
+                fb.add("\t\tExample 1: [nighttime,1] - This will only play during a full moon");
+                fb.add("\t\tExample 2: [nighttime,2,3,4,6,7,8] - This will play every night except for full moons and new moons");
+                fb.add("\t\tExample 3: [nighttime,0] - This will play whenever it is nighttime, just like the old version of this trigger");
+                fb.add("\t\tNote - If the fade is not the last number it will not work properly");
+                fb.add("\t\tSongs=<");
+                for(String iter : readTriggers.get(i).getSongs()) {
+                    fb.add("\t\t"+iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            }
+            else if(Categories[i].matches("Dimension")) {
+                fb.add("\t\tSongs per dimension [Format: dimensionID,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]");
+                fb.add("\t\tNote: You only have to set the priority per dimension ID for 1 song");
+                fb.add("\t\tExample: -1,(songname),11111");
+                fb.add("\t\tSongs=<");
+                for(String iter : readTriggers.get(i).getSongs()) {
+                    fb.add("\t\t"+iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            }
+            else if(Categories[i].matches("Biome")) {
+                fb.add("\t\tSongs per biome [Format: \"biomeresourcename,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tNote: You only have to set the priority per biome name for 1 song");
+                fb.add("\t\tExample: minecraft:swampland,(songname),11111");
+                fb.add("\t\tSongs=<");
+                for(String iter : readTriggers.get(i).getSongs()) {
+                    fb.add("\t\t"+iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            }
+            else if(Categories[i].matches("Structure")) {
+                fb.add("\t\tSongs per structure [Format: \"structurename,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tNote: You only have to set the priority per structure name for 1 song");
+                fb.add("\t\tExample: Fortress,(songname),11111");
+                fb.add("\t\tSongs=<");
+                for(String iter : readTriggers.get(i).getSongs()) {
+                    fb.add("\t\t"+iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            }
+            else if(Categories[i].contains("This works for both bosses and hordes!")) {
+                fb.add("\t\tSongs Per mob [Format: \"MobName,number of mobs,SongName,(Optional)detection range[min: 1, max: 1000, default: 16],(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tNote: You only have to set the priority per mob name for 1 song");
+                fb.add("\t\tAdditional Note: Putting high numbers for the mob range will cause lag! The higher it is, the more noticable that will be. Only use higher numbers for a boss that could be far away, like the Ender Dragon");
+                fb.add("\t\tExample: Zombie,8,(songname),16,11111");
+                fb.add("\t\tSpecial case - If you put \"MOB\" as the mob ID, it will default to any hostile mob");
+                fb.add("\t\tSongs=<");
+                for(String iter : readTriggers.get(i).getSongs()) {
+                    fb.add("\t\t"+iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            }
+            else if(Categories[i].contains("Only fires if the mod Game Stages is active")) {
+                fb.add("\t\tSongs Per Gamestage [Format: \"StageName,whitelist,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tNote: You only have to set the priority per gamestage name for 1 song");
+                fb.add("\t\tExample: StageOne,true,(songname),11111 - This will play when the player has the stage. If it were false it would play whenever the player does not have it.");
+                fb.add("\t\tSongs=<");
+                for(String iter : readTriggers.get(i).getSongs()) {
+                    fb.add("\t\t"+iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            }
+            else {
+                fb.add("\t\tSongs=<");
+                for(String iter : readTriggers.get(i).getSongs()) {
+                    fb.add("\t\t"+iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            }
+        }
+        try {
+            Files.write(Paths.get(f.getPath()),fb, StandardCharsets.UTF_8);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
     public static String[] stringBreakerRegex(String s,String regex) {

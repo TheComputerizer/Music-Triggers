@@ -1,7 +1,8 @@
 package mods.thecomputerizer.musictriggers;
 
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
-import mods.thecomputerizer.musictriggers.common.eventsCommon;
+import mods.thecomputerizer.musictriggers.client.eventsClient;
+import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.json;
 import net.minecraft.client.Minecraft;
@@ -11,8 +12,10 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -39,25 +42,38 @@ public class MusicTriggers {
     public static final Logger logger = LogManager.getLogger();
 
     public MusicTriggers() {
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::commonsetup);
         IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON,configDebug.SPEC, "MusicTriggers/debug.toml");
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON,configTitleCards.SPEC, "MusicTriggers/transitions.toml");
         MinecraftForge.EVENT_BUS.register(this);
         File configDir = new File("config", "MusicTriggers");
         if (!configDir.exists()) {
             configDir.mkdir();
         }
-        File baseConfig = new File(configDir,"musictriggers.txt");
-        if (!baseConfig.exists()) {
-            try {
+        try {
+            File baseConfig = new File(configDir, "musictriggers.txt");
+            if(FMLEnvironment.dist==Dist.CLIENT) {
+                File replace = collect();
+                if(replace!=null) {
+                    FileUtils.copyFile(replace,baseConfig);
+                }
+            }
+            if (!baseConfig.exists()) {
                 Files.createFile(Paths.get(baseConfig.getPath()));
                 config.build(baseConfig);
+                config.read(baseConfig);
             }
-            catch(Exception e) {
-                e.printStackTrace();
+            else {
+                config.update(baseConfig);
             }
+            File Transitionconfig = new File(configDir,"transitions.txt");
+            if(!Transitionconfig.exists()) {
+                configTitleCards.build(Transitionconfig);
+            }
+            configTitleCards.read(Transitionconfig);
+        } catch(Exception e) {
+            e.printStackTrace();
         }
-        config.read(baseConfig);
         RegistryHandler.init(eventBus);
         if (FMLEnvironment.dist == Dist.CLIENT) {
             songsDir = new File(configDir.getPath(), "songs");
@@ -100,7 +116,7 @@ public class MusicTriggers {
                 }
             }
             File jjson = new File(musictriggersDir.getPath() + "/sounds.json");
-            if (!jjson.exists()) {
+            if (!jjson.exists() && json.collector()!=null) {
                 try {
                     jjson.createNewFile();
                 } catch (IOException ex) {
@@ -166,6 +182,24 @@ public class MusicTriggers {
             }
         }
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
-        MinecraftForge.EVENT_BUS.register(eventsCommon.class);
+        MinecraftForge.EVENT_BUS.register(eventsClient.class);
+    }
+
+    public void commonsetup(FMLCommonSetupEvent ev) {
+        PacketHandler.register();
+    }
+
+    public static File collect() {
+        File folder = new File(".","resourcepacks");
+        File[] files = folder.listFiles();
+        if(files!=null) {
+            for(File file : files) {
+                File override = new File(file,"assets/musictriggers/musictriggers.txt");
+                if(override.exists()) {
+                    return override;
+                }
+            }
+        }
+        return null;
     }
 }
