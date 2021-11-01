@@ -1,15 +1,15 @@
-package mods.thecomputerizer.musictriggers.common;
+package mods.thecomputerizer.musictriggers.client;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.MusicPicker;
+import mods.thecomputerizer.musictriggers.configDebug;
 import mods.thecomputerizer.musictriggers.configTitleCards;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.ISound;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundCategory;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
@@ -22,20 +22,25 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import javax.vecmath.Vector4f;
 
 @Mod.EventBusSubscriber(modid= MusicTriggers.MODID)
-public class eventsCommon {
+public class eventsClient {
     public static ResourceLocation IMAGE_CARD = null;
-    public static ISound vanilla;
     public static boolean isWorldRendered;
     public static float fadeCount = 1000;
     public static float startDelayCount = 0;
     public static Boolean activated = false;
     public static int timer=0;
 
-    @SideOnly(Side.CLIENT)
+    public static String curSongName;
+
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
-        if(e.getSound().getSoundLocation().toString().contains("minecraft:music")) {
-            vanilla = e.getSound();
+        for(String s : configDebug.blockedmods) {
+            if(e.getSound().getSoundLocation().toString().contains(s) && e.getSound().getCategory()==SoundCategory.MUSIC) {
+                e.setResultSound(null);
+            }
+        }
+        if(e.getSound().getSoundLocation().toString().contains("minecraft") && e.getSound().getCategory()==SoundCategory.MUSIC) {
+            e.setResultSound(null);
         }
     }
 

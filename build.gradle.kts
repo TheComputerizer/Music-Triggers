@@ -15,7 +15,7 @@ plugins {
     id("wtf.gofancy.fancygradle") version "1.0.0"
 }
 
-version = "2.1"
+version = "2.2"
 group = "mods.thecomputerizer.musictriggers"
 
 minecraft {
@@ -57,6 +57,8 @@ dependencies {
     implementation(fg.deobf(curse(mod = "codechicken-lib", projectId = 242818L, fileId = 2779848L)))
     implementation(fg.deobf(curse(mod = "bloodmoon", projectId = 226321L, fileId = 2537917L)))
     implementation(fg.deobf(curse(mod = "nyx", projectId = 349214L, fileId = 3161738L)))
+    implementation(fg.deobf(curse(mod = "dynamic-surroundings", projectId = 238891L, fileId = 3497269L)))
+    implementation(fg.deobf(curse(mod = "quark", projectId = 243121L, fileId = 2924091L)))
     implementation(fg.deobf(group = "net.darkhax.gamestages", name = "GameStages-1.12.2", version = "2.0.98"))
     runtimeOnly(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = "4.16.1.302"))
 }

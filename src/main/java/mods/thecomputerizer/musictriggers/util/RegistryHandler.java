@@ -2,9 +2,14 @@ package mods.thecomputerizer.musictriggers.util;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.ModSounds;
+import mods.thecomputerizer.musictriggers.common.MusicTriggersBlocks;
 import mods.thecomputerizer.musictriggers.common.MusicTriggersItems;
+import mods.thecomputerizer.musictriggers.common.objects.MusicRecorder;
+import mods.thecomputerizer.musictriggers.configRegistry;
+import net.minecraft.block.Block;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
@@ -17,6 +22,12 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import java.util.Objects;
+
+import static mods.thecomputerizer.musictriggers.common.MusicTriggersItems.BLANK_RECORD;
+import static mods.thecomputerizer.musictriggers.common.MusicTriggersItems.MUSIC_RECORDER;
+
+
 @GameRegistry.ObjectHolder(MusicTriggers.MODID)
 @Mod.EventBusSubscriber(modid = MusicTriggers.MODID)
 public final class RegistryHandler {
@@ -26,7 +37,19 @@ public final class RegistryHandler {
     public static void onRegisterItems(RegistryEvent.Register<Item> e)
     {
         MusicTriggersItems.INSTANCE.init();
-        e.getRegistry().registerAll(MusicTriggersItems.INSTANCE.getItems().toArray(new Item[0]));
+        if(configRegistry.registry.registerDiscs) {
+            e.getRegistry().registerAll(MusicTriggersItems.INSTANCE.getItems().toArray(new Item[0]));
+            e.getRegistry().register(BLANK_RECORD);
+            e.getRegistry().register(MUSIC_RECORDER);
+        }
+    }
+
+    @SubscribeEvent
+    public static void registerBlocks(RegistryEvent.Register<Block> e) {
+        if(configRegistry.registry.registerDiscs) {
+            e.getRegistry().register(MusicTriggersBlocks.MUSIC_RECORDER);
+            GameRegistry.registerTileEntity(MusicRecorder.TileEntityMusicRecorder.class, new ResourceLocation(MusicTriggers.MODID, "music_recorder_tile_entity"));
+        }
     }
 
     @SubscribeEvent
@@ -36,11 +59,16 @@ public final class RegistryHandler {
         e.getRegistry().registerAll(ModSounds.INSTANCE.getSounds().toArray(new SoundEvent[0]));
     }
 
+
     @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public static void onModelRegister(ModelRegistryEvent event) {
-        for(Item i: MusicTriggersItems.INSTANCE.getItems()) {
-            ModelLoader.setCustomModelResourceLocation(i, 0, new ModelResourceLocation("musictriggers:record", "inventory"));
+        if(configRegistry.registry.registerDiscs) {
+            for (Item i : MusicTriggersItems.INSTANCE.getItems()) {
+                ModelLoader.setCustomModelResourceLocation(i, 0, new ModelResourceLocation("musictriggers:record", "inventory"));
+            }
+            ModelLoader.setCustomModelResourceLocation(BLANK_RECORD, 0, new ModelResourceLocation(Objects.requireNonNull(BLANK_RECORD.getRegistryName()), "inventory"));
+            ModelLoader.setCustomModelResourceLocation(MUSIC_RECORDER, 0, new ModelResourceLocation(Objects.requireNonNull(MUSIC_RECORDER.getRegistryName()), "inventory"));
         }
     }
 

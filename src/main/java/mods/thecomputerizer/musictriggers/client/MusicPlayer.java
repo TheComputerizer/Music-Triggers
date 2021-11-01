@@ -2,7 +2,6 @@ package mods.thecomputerizer.musictriggers.client;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
-import mods.thecomputerizer.musictriggers.common.eventsCommon;
 import mods.thecomputerizer.musictriggers.config;
 import mods.thecomputerizer.musictriggers.configDebug;
 import mods.thecomputerizer.musictriggers.configTitleCards;
@@ -80,9 +79,9 @@ public class MusicPlayer {
                 if (curTrackList == null) {
                     curTrackList = holder;
                 }
-                if (configDebug.FinalSongs && eventsCommon.isWorldRendered) {
-                    for (String print : curTrackList) {
-                        MusicPicker.player.sendMessage(new TextComponentString(print));
+                if (configDebug.FinalSongs && eventsClient.isWorldRendered) {
+                    for (int i=0;i<curTrackList.length;i++) {
+                        MusicPicker.player.sendMessage(new TextComponentString("Song to play ["+i+"]: "+curTrackList[i]));
                     }
                 }
                 if (curMusic != null) {
@@ -94,7 +93,7 @@ public class MusicPlayer {
                     }
                 }
                 if (MusicPicker.shouldChange || !Arrays.equals(curTrackList,holder)) {
-                    eventsCommon.IMAGE_CARD = null;
+                    eventsClient.IMAGE_CARD = null;
                     curTrackList = null;
                     tempTitleCards = MusicPicker.titleCardEvents;
                     if (MusicPicker.curFade == 0) {
@@ -126,11 +125,6 @@ public class MusicPlayer {
                     curMusic = null;
                 }
             }
-            if (eventsCommon.vanilla != null) {
-                if (mc.getSoundHandler().isSoundPlaying(eventsCommon.vanilla)) {
-                    mc.getSoundHandler().stopSound(eventsCommon.vanilla);
-                }
-            }
         }
         tickCounter++;
     }
@@ -149,8 +143,8 @@ public class MusicPlayer {
             String[] line = t.split(",");
             String[] temp = Arrays.copyOfRange(line, 1, line.length);
             if (tempTitleCards.containsAll(Arrays.asList(temp)) && mc.player != null) {
-                eventsCommon.IMAGE_CARD = new ResourceLocation(MusicTriggers.MODID, "textures/" + line[0] + ".png");
-                eventsCommon.activated = true;
+                eventsClient.IMAGE_CARD = new ResourceLocation(MusicTriggers.MODID, "textures/" + line[0] + ".png");
+                eventsClient.activated = true;
             }
         }
     }

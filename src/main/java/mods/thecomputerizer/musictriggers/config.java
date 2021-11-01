@@ -406,6 +406,24 @@ public class config {
         }
     }
 
+    @Comment("Underwater")
+    public static Underwater underwater = new Underwater(1999,0,new String[] {});
+
+    public static class Underwater {
+        @Comment("Priority [min: -99, max: 2147483647 default: 1999]")
+        public int underwaterPriority;
+        @Comment("Fade Time [in ticks, default: 0]")
+        public int underwaterFade;
+        @Comment("songs")
+        public String[] underwaterSongs;
+
+        public Underwater(final int underwaterPriority, final int underwaterFade, final String[] underwaterSongs) {
+            this.underwaterPriority = underwaterPriority;
+            this.underwaterFade = underwaterFade;
+            this.underwaterSongs = underwaterSongs;
+        }
+    }
+
     @Comment("Dimension")
     public static Dimension dimension = new Dimension(1150,new String[] {});
 
@@ -427,7 +445,10 @@ public class config {
     public static class Biome {
         @Comment("General Priority [min: -99, max: 2147483647 default: 1160]\nNote: Priorities specified for individual biomes will override this")
         public int biomePriority;
-        @Comment("Songs Per Biome [Format: \"BiomeResourceName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\nNote: You only have to set the priority per biome name for 1 song\nExample: minecraft:swampland,(songname),11111")
+        @Comment("Songs Per Biome [Format: \"BiomeResourceName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\nNote: You only have to set the priority per biome name for 1 song\nExample: minecraft:swampland,(songname),11111\n" +
+                "You can now also specify multiple biomes at once through regexing! You can use this feature for both mod ids and biome names\n" +
+                "Example 2: minecraft,(songname),11111 (all minecraft biomes will have (songname))\n" +
+                "Example 3: forest,(songname),11111 (all biomes with \"forest\" in the name will have (songname))")
         public String[] biomeSongs;
 
         public Biome(final int biomePriority, final String[] biomeSongs) {
@@ -463,6 +484,21 @@ public class config {
         public Mob(final int mobPriority, final String[] mobSongs) {
             this.mobPriority = mobPriority;
             this.mobSongs = mobSongs;
+        }
+    }
+
+    @Comment("Effect (Trigger based on potion effects)")
+    public static Effect effect = new Effect(500,new String[] {});
+
+    public static class Effect {
+        @Comment("Priority [min: -99, max: 2147483647 default: 500]")
+        public int effectPriority;
+        @Comment("Songs Per Effect [Format: \"EffectName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\nNote: You only have to set the priority per effect name for 1 song\nExample: Fortress,(songname),11111")
+        public String[] effectSongs;
+
+        public Effect(final int effectPriority, final String[] effectSongs) {
+            this.effectPriority = effectPriority;
+            this.effectSongs = effectSongs;
         }
     }
 
@@ -532,6 +568,26 @@ public class config {
             this.fallingstarsPriority = fallingstarsPriority;
             this.fallingstarsFade = fallingstarsFade;
             this.fallingstarsSongs = fallingstarsSongs;
+        }
+    }
+
+    @Comment("Rain Intensity (Only fires if the mod dynamic surroundings is active)")
+    public static RainIntensity rainintensity = new RainIntensity(1349,0,new String[] {});
+
+    public static class RainIntensity {
+        @Comment("Priority [min: -99, max: 2147483647 default: 1349]")
+        public int rainintensityPriority;
+        @Comment("Fade Time [in ticks, default: 0]")
+        public int rainintensityFade;
+        @Comment("Songs [Format: songname,Intensity Level (min: 0, max: 100)\n" +
+                "Note - This trigger will play when the rain has a higher intensity than you put in\n" +
+                "Example: intenserain,70")
+        public String[] rainintensitySongs;
+
+        public RainIntensity(final int rainintensityPriority, final int rainintensityFade, final String[] rainintensitySongs) {
+            this.rainintensityPriority = rainintensityPriority;
+            this.rainintensityFade = rainintensityFade;
+            this.rainintensitySongs = rainintensitySongs;
         }
     }
 

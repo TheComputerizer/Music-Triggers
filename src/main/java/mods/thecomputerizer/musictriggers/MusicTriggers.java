@@ -1,19 +1,21 @@
 package mods.thecomputerizer.musictriggers;
 
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
-import mods.thecomputerizer.musictriggers.common.eventsCommon;
+import mods.thecomputerizer.musictriggers.client.eventsClient;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.json;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.FolderResourcePack;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.ResourcePackRepository;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.thread.SidedThreadGroups;
+import net.minecraftforge.fml.relauncher.Side;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
@@ -171,13 +173,17 @@ public class MusicTriggers {
 
             songs = musictriggersDir;
         }
+        if (event.getSide() == Side.CLIENT) {
+            try {
+                FileUtils.copyInputStreamToFile(
+                        Minecraft.getMinecraft().getResourceManager().getResource(new ResourceLocation(MODID, MODID+".cfg")).getInputStream(),
+                        new File("config/MusicTriggers/musictriggers.cfg"));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         RegistryHandler.init();
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
-        MinecraftForge.EVENT_BUS.register(eventsCommon.class);
+        MinecraftForge.EVENT_BUS.register(eventsClient.class);
     }
-
-    @EventHandler
-    public void init(FMLInitializationEvent event) {
-    }
-
 }

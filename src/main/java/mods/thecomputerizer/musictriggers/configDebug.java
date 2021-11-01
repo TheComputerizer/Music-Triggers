@@ -21,8 +21,15 @@ public class configDebug {
     @Config.Comment("Spam the player with the current list of songs that are playing in chat")
     public static boolean FinalSongs = false;
 
+    @Config.Comment("Spam the player with the current light level in chat")
+    public static boolean LightLevel = false;
+
+    @Config.Comment("Spam the player with their current list of potion effects in chat\n" +
+            "Note - This will only play when the entry list for effect songs is not empty")
+    public static boolean EffectList = false;
+
     @Config.Comment("List of mod ids to remove the music from so there is not any overlap")
-    public static boolean blockedmods = false;
+    public static String[] blockedmods = {};
 
     @Mod.EventBusSubscriber(modid = MusicTriggers.MODID)
     private static class EventHandler {
