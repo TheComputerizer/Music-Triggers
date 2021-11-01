@@ -30,8 +30,6 @@ public class MusicRecorder extends BlockContainer {
 
     public boolean has_record = false;
 
-    public TileEntityMusicRecorder temr;
-
     public MusicRecorder() {
         super(Material.WOOD, MapColor.DIRT);
         setHardness(1F);
@@ -39,11 +37,14 @@ public class MusicRecorder extends BlockContainer {
         setResistance(1F);
     }
 
+    @Override
     public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
     {
         if (this.has_record)
         {
-            MusicTriggers.logger.info(temr.getPos().getX()+" "+temr.getPos().getY()+" "+temr.getPos().getZ());
+            TileEntityMusicRecorder te = (TileEntityMusicRecorder)worldIn.getTileEntity(pos);
+            assert te != null;
+            MusicTriggers.logger.info(te.getPos().getX()+" "+te.getPos().getY()+" "+te.getPos().getZ());
             this.dropRecord(worldIn, pos);
             this.has_record = false;
             playerIn.sendMessage(new TextComponentString("ejecting disc"));
@@ -55,9 +56,11 @@ public class MusicRecorder extends BlockContainer {
         }
     }
 
-    public void insertRecord(ItemStack recordStack)
+    public void insertRecord(World worldIn, BlockPos pos, ItemStack recordStack)
     {
-        this.temr.setRecord(recordStack);
+        TileEntityMusicRecorder te = (TileEntityMusicRecorder)worldIn.getTileEntity(pos);
+        assert te != null;
+        te.setRecord(recordStack);
         this.has_record = true;
         MusicTriggers.logger.info("disc inserted");
     }
@@ -65,10 +68,12 @@ public class MusicRecorder extends BlockContainer {
     private void dropRecord(World worldIn, BlockPos pos)
     {
         if (!worldIn.isRemote) {
-            ItemStack itemstack = this.temr.getRecord();
+            TileEntityMusicRecorder te = (TileEntityMusicRecorder)worldIn.getTileEntity(pos);
+            assert te != null;
+            ItemStack itemstack = te.getRecord();
             if (!itemstack.isEmpty()) {
                 MusicTriggers.logger.info("is this activating?");
-                this.temr.setRecord(ItemStack.EMPTY);
+                te.setRecord(ItemStack.EMPTY);
                 double d0 = (double) (worldIn.rand.nextFloat() * 0.7F) + 0.15000000596046448D;
                 double d1 = (double) (worldIn.rand.nextFloat() * 0.7F) + 0.06000000238418579D + 0.6D;
                 double d2 = (double) (worldIn.rand.nextFloat() * 0.7F) + 0.15000000596046448D;
@@ -79,12 +84,14 @@ public class MusicRecorder extends BlockContainer {
         }
     }
 
+    @Override
     public void breakBlock(World worldIn, BlockPos pos, IBlockState state)
     {
         this.dropRecord(worldIn, pos);
         super.breakBlock(worldIn, pos, state);
     }
 
+    @Override
     public void dropBlockAsItemWithChance(World worldIn, BlockPos pos, IBlockState state, float chance, int fortune)
     {
         if (!worldIn.isRemote)
@@ -93,12 +100,13 @@ public class MusicRecorder extends BlockContainer {
         }
     }
 
+    @Override
     public TileEntity createNewTileEntity(World worldIn, int meta)
     {
-        this.temr = new MusicRecorder.TileEntityMusicRecorder();
-        return this.temr;
+        return new MusicRecorder.TileEntityMusicRecorder();
     }
 
+    @Override
     public EnumBlockRenderType getRenderType(IBlockState state)
     {
         return EnumBlockRenderType.MODEL;
@@ -135,11 +143,13 @@ public class MusicRecorder extends BlockContainer {
             }
         }
 
+        @Override
         public void readFromNBT(NBTTagCompound compound)
         {
             super.readFromNBT(compound);
         }
 
+        @Override
         public NBTTagCompound writeToNBT(NBTTagCompound compound)
         {
             super.writeToNBT(compound);
