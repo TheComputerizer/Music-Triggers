@@ -6,7 +6,7 @@ import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-@Config(modid = MusicTriggers.MODID, name = "MusicTriggers/"+MusicTriggers.MODID)
+@Config(modid = MusicTriggers.MODID, name = "MusicTriggers/registry")
 public class configRegistry {
     @Config.Comment("Registry")
     public static Registry registry = new Registry(true);

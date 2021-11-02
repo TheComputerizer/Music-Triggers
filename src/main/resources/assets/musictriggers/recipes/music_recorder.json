@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "AC",
+    "CB"
+  ],
+  "key": {
+    "A": [
+      {
+        "item": "minecraft:jukebox"
+      }
+    ],
+    "B": [
+      {
+        "item": "minecraft:nether_star"
+      }
+    ],
+    "C": [
+      {
+        "item": "minecraft:paper"
+      }
+    ]
+  },
+  "result": {
+    "item": "musictriggers:music_recorder",
+    "count": 1
+  }
+}

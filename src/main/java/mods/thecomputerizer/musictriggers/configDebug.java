@@ -9,24 +9,11 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 @Config(modid = MusicTriggers.MODID, name = "MusicTriggers/debugoptions")
 public class configDebug {
 
-    @Config.Comment("Spam the player with currently playable events in chat")
-    public static boolean PlayableEvents = false;
+    @Config.Comment("Show the debug info in the F3 menu")
+    public static boolean ShowDebugInfo = true;
 
-    @Config.Comment("Spam the player with the current biome in chat")
-    public static boolean BiomeChecker = false;
-
-    @Config.Comment("Spam the player with the current dimension id in chat")
-    public static boolean DimensionChecker = false;
-
-    @Config.Comment("Spam the player with the current list of songs that are playing in chat")
-    public static boolean FinalSongs = false;
-
-    @Config.Comment("Spam the player with the current light level in chat")
-    public static boolean LightLevel = false;
-
-    @Config.Comment("Spam the player with their current list of potion effects in chat\n" +
-            "Note - This will only play when the entry list for effect songs is not empty")
-    public static boolean EffectList = false;
+    @Config.Comment("If ShowDebugInfo is set to true, but you only want to see the song name")
+    public static boolean ShowJustCurSong = false;
 
     @Config.Comment("List of mod ids to remove the music from so there is not any overlap")
     public static String[] blockedmods = {};

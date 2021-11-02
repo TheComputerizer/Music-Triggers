@@ -80,5 +80,6 @@ public final class RegistryHandler {
     private static void registerPackets() {
         network.registerMessage(packetToClient.class, packetToClient.packetToClientMessage.class, 0, Side.CLIENT);
         network.registerMessage(packet.class, packet.packetMessage.class, 1, Side.SERVER);
+        network.registerMessage(packetCurSong.class, packetCurSong.packetCurSongMessage.class, 2, Side.SERVER);
     }
 }

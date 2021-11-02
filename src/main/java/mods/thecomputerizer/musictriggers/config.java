@@ -137,22 +137,20 @@ public class config {
     }
 
     @Comment("Light Level")
-    public static Light light = new Light(500,0,7,new String[] {});
+    public static Light light = new Light(500,new String[] {});
 
     public static class Light {
         @Comment("Priority [min: -99, max: 2147483647 default: 500]")
         public int lightPriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int lightFade;
-        @Comment("light level - This indicates the maximum light level")
-        public int lightLevel;
-        @Comment("songs")
+        @Comment("Songs - [Format: \"SongName,Identifier(string name to tie a group of songs to a pool),Light Level(maximum light level),(Optional)Sky Light[default: true],(Optional)Light Time[default: 20],(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\n" +
+                "Note: Sky light will let you choose whether or not to take that into account\n" +
+                "Additional Note: The light time is how long it will take before the trigger is deactivated after the conditions are no longer met" +
+                "Example: spookydark,5,3,false,20,9945,50\n" +
+                "Tip - Setting sky light to false would work best when combining it with the night trigger")
         public String[] lightSongs;
 
-        public Light(final int lightPriority, final int lightFade, final int lightLevel, final String[] lightSongs) {
+        public Light(final int lightPriority,final String[] lightSongs) {
             this.lightPriority = lightPriority;
-            this.lightFade = lightFade;
-            this.lightLevel = lightLevel;
             this.lightSongs = lightSongs;
         }
     }
@@ -445,10 +443,14 @@ public class config {
     public static class Biome {
         @Comment("General Priority [min: -99, max: 2147483647 default: 1160]\nNote: Priorities specified for individual biomes will override this")
         public int biomePriority;
-        @Comment("Songs Per Biome [Format: \"BiomeResourceName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\nNote: You only have to set the priority per biome name for 1 song\nExample: minecraft:swampland,(songname),11111\n" +
-                "You can now also specify multiple biomes at once through regexing! You can use this feature for both mod ids and biome names\n" +
+        @Comment("Songs Per Biome [Format: \"BiomeResourceName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0],(Optional)Biome Time[default: 20]\"]\n" +
+                "Note: You only have to set the priority per biome name for 1 song\n" +
+                "Example: minecraft:swampland,(songname),11111\n" +
+                "Additional Note: You can also specify multiple biomes at once through regexing! You can use this feature for both mod ids and biome names\n" +
                 "Example 2: minecraft,(songname),11111 (all minecraft biomes will have (songname))\n" +
-                "Example 3: forest,(songname),11111 (all biomes with \"forest\" in the name will have (songname))")
+                "Example 3: forest,(songname),11111 (all biomes with \"forest\" in the name will have (songname))\n" +
+                "Final Note: The biome time will allow the trigger to persist after leaving the specified biome for that amount of time\n" +
+                "Full Scale Example: swamp,(songname),11111,50,30")
         public String[] biomeSongs;
 
         public Biome(final int biomePriority, final String[] biomeSongs) {
@@ -478,7 +480,17 @@ public class config {
     public static class Mob {
         @Comment("General Priority [min: -99, max: 2147483647 default: 3500]\nNote: Priorities specified for individual mobs will override this")
         public int mobPriority;
-        @Comment("Songs Per Mob [Format: \"MobName,number of mobs,SongName,(Optional)detection range[min: 1, max: 1000, default: 16],(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0]\"]\nNote: You only have to set the priority per mob name for 1 song\nAdditional Note: Putting high numbers for the mob range will cause lag! The higher it is, the more noticable that will be. Only use higher numbers for a boss that could be far away, like the Ender Dragon\nExample: Zombie,8,(songname),16,11111\nSpecial case - If you put \"MOB\" as the mob ID, it will default to any hostile mob")
+        @Comment("Songs Per Mob [Format: \"MobName,number of mobs,SongName,(Optional)detection range[min: 1, max: 1000, default: 16],(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0],(Optional)Targetting[default: false],(Optional)Horde Targetting percentage[default: 100], (Optional)Health[default: 100],(Optional)Horde Health Percentage[default: 100],(Optional)Battle Time[in ticks, default: 0],(Optional)Trigger Victory[default: false],(Optional)Victory ID[min:0, max:2147483647, default: 0](Optional)Infernal[only works with the mod infernal mobs active]\"]\n" +
+                "Note: You only have to set the priority per mob name for 1 song\n" +
+                "Additional Note: Putting high numbers (over 200) for the mob range may cause lag! The higher it is, the more noticable that lag will be. Only use higher numbers for a boss that could be far away, like the Ender Dragon\n" +
+                "Additional Note: Targetting requires the mob(s) to be looking at you while horde targetting percentage is the total percentage of the number of mobs you set that have to be looking at you\n"+
+                "Additional Note: Health requires the mob(s) to be below the set percentage threshold of health while horde health percentage is the total percentage of the number of mobs you set that have to be below the set percentage threshold of health\n"+
+                "Additional Note: Battle time is how long the trigger will persist after the conditions are no longer met. Due to possible conflicts it may to better to leave this at 0\n"+
+                "Additional Note: The victory trigger is special in that it can only activated after escaping the set trigger. The ID exists so there can multiple different victory scenarios\n"+
+                "Final Note: The infernal trigger goes of of the mod name, which can be obtained via the debug info set by the debug config. Number of mobs will not affect this\n"+
+                "Example: Zombie,8,(songname),16,11111\n" +
+                "Full-Scale example: Skeleton,4,123486,50,true,50,80,25,0,Withering\n"+
+                "Special case - If you put \"MOB\" as the mob ID, it will default to any hostile mob")
         public String[] mobSongs;
 
         public Mob(final int mobPriority, final String[] mobSongs) {
@@ -493,12 +505,60 @@ public class config {
     public static class Effect {
         @Comment("Priority [min: -99, max: 2147483647 default: 500]")
         public int effectPriority;
-        @Comment("Songs Per Effect [Format: \"EffectName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\nNote: You only have to set the priority per effect name for 1 song\nExample: Fortress,(songname),11111")
+        @Comment("Songs Per Effect [Format: \"EffectName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\nNote: You only have to set the priority per effect name for 1 song\nExample: effect.regeneration,(songname),11111")
         public String[] effectSongs;
 
         public Effect(final int effectPriority, final String[] effectSongs) {
             this.effectPriority = effectPriority;
             this.effectSongs = effectSongs;
+        }
+    }
+
+    @Comment("PVP")
+    public static PVP pvp = new PVP(20000,0,16,200,false,0,new String[] {});
+
+    public static class PVP {
+        @Comment("Priority [min: -99, max: 2147483647 default: 500]")
+        public int pvpPriority;
+        @Comment("Fade Time:[in ticks, default: 0]")
+        public int pvpFade;
+        @Comment("Detection Range[default: 16]")
+        public int pvpRange;
+        @Comment("Battle Time[in ticks, default: 200]")
+        public int pvpTime;
+        @Comment("Victory - whether to activate the victory trigger [default: false]")
+        public boolean pvpVictory;
+        @Comment("Victory ID - ID of the victory to activate [default: 0]")
+        public int pvpVictoryID;
+        @Comment("songs")
+        public String[] pvpSongs;
+
+        public PVP(final int pvpPriority, final int pvpFade, final int pvpRange, final int pvpTime, final boolean pvpVictory, final int pvpVictoryID, final String[] pvpSongs) {
+            this.pvpPriority = pvpPriority;
+            this.pvpFade = pvpFade;
+            this.pvpRange = pvpRange;
+            this.pvpTime = pvpTime;
+            this.pvpSongs = pvpSongs;
+            this.pvpVictory = pvpVictory;
+            this.pvpVictoryID = pvpVictoryID;
+        }
+    }
+
+    @Comment("Victory - This can only be called after the pvp or mob trigger")
+    public static Victory victory = new Victory(20000,0,16,200,new String[] {});
+
+    public static class Victory {
+        @Comment("Priority [min: -99, max: 2147483647 default: 500]")
+        public int victoryPriority;
+        @Comment("Songs - [Format: \"SongName,Victory ID,(Optional)Victory Time[default: 200],(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\n" +
+                "Note - The victory time is how long the victory trigger will last for\n" +
+                "Additional Note: Dying will cut the trigger short\n" +
+                "Example: enderdragonwin,11,300,9999999,20")
+        public String[] victorySongs;
+
+        public Victory(final int victoryPriority, final int victoryFade, final int victoryRange, final int victoryTime, final String[] victorySongs) {
+            this.victoryPriority = victoryPriority;
+            this.victorySongs = victorySongs;
         }
     }
 
@@ -588,6 +648,67 @@ public class config {
             this.rainintensityPriority = rainintensityPriority;
             this.rainintensityFade = rainintensityFade;
             this.rainintensitySongs = rainintensitySongs;
+        }
+    }
+
+    @Comment("Tornado (Only fires if the mod weather2 is active)")
+    public static Tornado tornado = new Tornado(9999,200,new String[] {});
+
+    public static class Tornado {
+        @Comment("Priority [min: -99, max: 2147483647 default: 9999]")
+        public int tornadoPriority;
+        @Comment("Detection Radius [default: 200]")
+        public int tornadoRange;
+        @Comment("Songs [Format: songname,Intensity Level (min: 1, max: 5),(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\n" +
+                "Example: tornado3,3")
+        public String[] tornadoSongs;
+
+        public Tornado(final int tornadoPriority, final int tornadoRange, final String[] tornadoSongs) {
+            this.tornadoPriority = tornadoPriority;
+            this.tornadoRange = tornadoRange;
+            this.tornadoSongs = tornadoSongs;
+        }
+    }
+
+    @Comment("Hurricane (Only fires if the mod weather2 is active)")
+    public static Hurricane hurricane = new Hurricane(9999,0,200,new String[] {});
+
+    public static class Hurricane {
+        @Comment("Priority [min: -99, max: 2147483647 default: 9999]")
+        public int hurricanePriority;
+        @Comment("Fade Time [in ticks, default: 0]")
+        public int hurricaneFade;
+        @Comment("Detection Radius [default: 200]")
+        public int hurricaneRange;
+        @Comment("songs")
+        public String[] hurricaneSongs;
+
+        public Hurricane(final int hurricanePriority, final int hurricaneFade, final int hurricaneRange, final String[] hurricaneSongs) {
+            this.hurricanePriority = hurricanePriority;
+            this.hurricaneFade = hurricaneFade;
+            this.hurricaneRange = hurricaneRange;
+            this.hurricaneSongs = hurricaneSongs;
+        }
+    }
+
+    @Comment("Sandstorm (Only fires if the mod weather2 is active)")
+    public static Sandstorm sandstorm = new Sandstorm(9999,0,200,new String[] {});
+
+    public static class Sandstorm {
+        @Comment("Priority [min: -99, max: 2147483647 default: 9999]")
+        public int sandstormPriority;
+        @Comment("Fade Time [in ticks, default: 0]")
+        public int sandstormFade;
+        @Comment("Detection Radius [default: 200]")
+        public int sandstormRange;
+        @Comment("songs")
+        public String[] sandstormSongs;
+
+        public Sandstorm(final int sandstormPriority, final int sandstormFade, final int sandstormRange, final String[] sandstormSongs) {
+            this.sandstormPriority = sandstormPriority;
+            this.sandstormFade = sandstormFade;
+            this.sandstormRange = sandstormRange;
+            this.sandstormSongs = sandstormSongs;
         }
     }
 

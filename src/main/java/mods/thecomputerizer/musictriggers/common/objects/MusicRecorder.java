@@ -1,28 +1,27 @@
 package mods.thecomputerizer.musictriggers.common.objects;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.common.MusicTriggersItems;
+import mods.thecomputerizer.musictriggers.util.packetCurSong;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.effect.EntityLightningBolt;
 import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 @SuppressWarnings("NullableProblems")
@@ -42,12 +41,8 @@ public class MusicRecorder extends BlockContainer {
     {
         if (this.has_record)
         {
-            TileEntityMusicRecorder te = (TileEntityMusicRecorder)worldIn.getTileEntity(pos);
-            assert te != null;
-            MusicTriggers.logger.info(te.getPos().getX()+" "+te.getPos().getY()+" "+te.getPos().getZ());
             this.dropRecord(worldIn, pos);
             this.has_record = false;
-            playerIn.sendMessage(new TextComponentString("ejecting disc"));
             return true;
         }
         else
@@ -56,13 +51,13 @@ public class MusicRecorder extends BlockContainer {
         }
     }
 
-    public void insertRecord(World worldIn, BlockPos pos, ItemStack recordStack)
+    public void insertRecord(World worldIn, BlockPos pos, ItemStack recordStack, UUID uuid)
     {
         TileEntityMusicRecorder te = (TileEntityMusicRecorder)worldIn.getTileEntity(pos);
         assert te != null;
         te.setRecord(recordStack);
+        te.setUUID(uuid);
         this.has_record = true;
-        MusicTriggers.logger.info("disc inserted");
     }
 
     private void dropRecord(World worldIn, BlockPos pos)
@@ -72,7 +67,6 @@ public class MusicRecorder extends BlockContainer {
             assert te != null;
             ItemStack itemstack = te.getRecord();
             if (!itemstack.isEmpty()) {
-                MusicTriggers.logger.info("is this activating?");
                 te.setRecord(ItemStack.EMPTY);
                 double d0 = (double) (worldIn.rand.nextFloat() * 0.7F) + 0.15000000596046448D;
                 double d1 = (double) (worldIn.rand.nextFloat() * 0.7F) + 0.06000000238418579D + 0.6D;
@@ -114,24 +108,24 @@ public class MusicRecorder extends BlockContainer {
 
     public static class TileEntityMusicRecorder extends TileEntity implements ITickable {
 
-        public ItemStack record = ItemStack.EMPTY;
+        private ItemStack record = ItemStack.EMPTY;
         private int tickCounter = 0;
+        private UUID playeruuid;
 
         @Override
         public void update() {
             if(!world.isRemote) {
-                if(!getRecord().isEmpty()) {
-                    MusicTriggers.logger.info("empty tester");
+                if(!this.getRecord().isEmpty()) {
                     this.tickCounter++;
                     int randomNum = ThreadLocalRandom.current().nextInt(0, 5600);
                     if(randomNum+tickCounter>=6000) {
-                        EntityPig pig = new EntityPig(this.world);
-                        pig.setPosition(this.getPos().getX(),this.getPos().getY()+1,this.getPos().getZ());
-                        this.world.spawnEntity(pig);
+                        //this.world.playSound(null, pos, Objects.requireNonNull(SoundEvent.REGISTRY.getObject(new ResourceLocation("minecraft", "block.enderchest.open"))), SoundCategory.MASTER, 1F, 1F);
+                        EntityLightningBolt lightning = new EntityLightningBolt(this.world,this.pos.getX(),this.pos.getY(),this.pos.getZ(),true);
+                        this.world.spawnEntity(lightning);
                         this.tickCounter=0;
                         for (Item i : MusicTriggersItems.allItems) {
                             String itemName = Objects.requireNonNull(i.getRegistryName()).toString().replaceAll("musictriggers:","");
-                            if(itemName.matches(MusicPlayer.curTrack)) {
+                            if(itemName.matches(packetCurSong.curSong.get(getUUID()))) {
                                 this.setRecord(i.getDefaultInstance());
                             }
                         }
@@ -143,19 +137,6 @@ public class MusicRecorder extends BlockContainer {
             }
         }
 
-        @Override
-        public void readFromNBT(NBTTagCompound compound)
-        {
-            super.readFromNBT(compound);
-        }
-
-        @Override
-        public NBTTagCompound writeToNBT(NBTTagCompound compound)
-        {
-            super.writeToNBT(compound);
-            return compound;
-        }
-
         public ItemStack getRecord()
         {
             return this.record;
@@ -164,7 +145,14 @@ public class MusicRecorder extends BlockContainer {
         public void setRecord(ItemStack recordStack)
         {
             this.record = recordStack;
-            this.markDirty();
+        }
+
+        public UUID getUUID() {
+            return this.playeruuid;
+        }
+
+        public void setUUID(UUID uuid) {
+            this.playeruuid = uuid;
         }
     }
 }

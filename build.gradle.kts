@@ -59,6 +59,9 @@ dependencies {
     implementation(fg.deobf(curse(mod = "nyx", projectId = 349214L, fileId = 3161738L)))
     implementation(fg.deobf(curse(mod = "dynamic-surroundings", projectId = 238891L, fileId = 3497269L)))
     implementation(fg.deobf(curse(mod = "quark", projectId = 243121L, fileId = 2924091L)))
+    implementation(fg.deobf(curse(mod = "weather-storms-tornadoes", projectId = 237746L, fileId = 2596867L)))
+    implementation(fg.deobf(curse(mod = "coroutil", projectId = 237749L, fileId = 2902920L)))
+    implementation(fg.deobf(curse(mod = "atomicstrykers-infernal-mobs", projectId = 227875L, fileId = 3431758L)))
     implementation(fg.deobf(group = "net.darkhax.gamestages", name = "GameStages-1.12.2", version = "2.0.98"))
     runtimeOnly(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = "4.16.1.302"))
 }
