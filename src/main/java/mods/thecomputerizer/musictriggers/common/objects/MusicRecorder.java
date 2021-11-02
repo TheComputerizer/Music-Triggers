@@ -4,14 +4,19 @@ import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.MusicTriggersItems;
 import mods.thecomputerizer.musictriggers.util.packetCurSong;
 import net.minecraft.block.BlockContainer;
+import net.minecraft.block.BlockJukebox;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.PropertyBool;
+import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.effect.EntityLightningBolt;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
@@ -27,11 +32,12 @@ import java.util.concurrent.ThreadLocalRandom;
 @SuppressWarnings("NullableProblems")
 public class MusicRecorder extends BlockContainer {
 
-    public boolean has_record = false;
+    public static final PropertyBool HAS_RECORD = PropertyBool.create("has_record");
 
     public MusicRecorder() {
         super(Material.WOOD, MapColor.DIRT);
         setHardness(1F);
+        this.setDefaultState(this.blockState.getBaseState().withProperty(HAS_RECORD,false));
         setHarvestLevel("axe",3);
         setResistance(1F);
     }
@@ -39,10 +45,11 @@ public class MusicRecorder extends BlockContainer {
     @Override
     public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
     {
-        if (this.has_record)
+        if (state.getValue(HAS_RECORD))
         {
             this.dropRecord(worldIn, pos);
-            this.has_record = false;
+            state = state.withProperty(HAS_RECORD,false);
+            worldIn.setBlockState(pos, state, 2);
             return true;
         }
         else
@@ -51,29 +58,33 @@ public class MusicRecorder extends BlockContainer {
         }
     }
 
-    public void insertRecord(World worldIn, BlockPos pos, ItemStack recordStack, UUID uuid)
+    public void insertRecord(World worldIn, BlockPos pos, IBlockState state, ItemStack recordStack, UUID uuid)
     {
-        TileEntityMusicRecorder te = (TileEntityMusicRecorder)worldIn.getTileEntity(pos);
-        assert te != null;
-        te.setRecord(recordStack);
-        te.setUUID(uuid);
-        this.has_record = true;
+        TileEntity te = worldIn.getTileEntity(pos);
+        if(te instanceof MusicRecorder.TileEntityMusicRecorder) {
+            ((MusicRecorder.TileEntityMusicRecorder)te).setRecord(recordStack.copy());
+            ((MusicRecorder.TileEntityMusicRecorder)te).setUUID(uuid);
+            worldIn.setBlockState(pos, state.withProperty(HAS_RECORD, Boolean.TRUE), 2);
+        }
     }
 
     private void dropRecord(World worldIn, BlockPos pos)
     {
         if (!worldIn.isRemote) {
-            TileEntityMusicRecorder te = (TileEntityMusicRecorder)worldIn.getTileEntity(pos);
-            assert te != null;
-            ItemStack itemstack = te.getRecord();
-            if (!itemstack.isEmpty()) {
-                te.setRecord(ItemStack.EMPTY);
-                double d0 = (double) (worldIn.rand.nextFloat() * 0.7F) + 0.15000000596046448D;
-                double d1 = (double) (worldIn.rand.nextFloat() * 0.7F) + 0.06000000238418579D + 0.6D;
-                double d2 = (double) (worldIn.rand.nextFloat() * 0.7F) + 0.15000000596046448D;
-                EntityItem entityitem = new EntityItem(worldIn, (double) pos.getX() + d0, (double) pos.getY() + d1, (double) pos.getZ() + d2, itemstack);
-                entityitem.setDefaultPickupDelay();
-                worldIn.spawnEntity(entityitem);
+            TileEntity te = worldIn.getTileEntity(pos);
+            if(te instanceof MusicRecorder.TileEntityMusicRecorder) {
+                MusicRecorder.TileEntityMusicRecorder temr = (MusicRecorder.TileEntityMusicRecorder)te;
+                ItemStack itemstack = temr.getRecord();
+                if (!itemstack.isEmpty()) {
+                    temr.setRecord(ItemStack.EMPTY);
+                    double d0 = (double) (worldIn.rand.nextFloat() * 0.7F) + 0.15000000596046448D;
+                    double d1 = (double) (worldIn.rand.nextFloat() * 0.7F) + 0.06000000238418579D + 0.6D;
+                    double d2 = (double) (worldIn.rand.nextFloat() * 0.7F) + 0.15000000596046448D;
+                    ItemStack itemstack1 = itemstack.copy();
+                    EntityItem entityitem = new EntityItem(worldIn, (double) pos.getX() + d0, (double) pos.getY() + d1, (double) pos.getZ() + d2, itemstack1);
+                    entityitem.setDefaultPickupDelay();
+                    worldIn.spawnEntity(entityitem);
+                }
             }
         }
     }
@@ -100,10 +111,54 @@ public class MusicRecorder extends BlockContainer {
         return new MusicRecorder.TileEntityMusicRecorder();
     }
 
+    @SuppressWarnings("deprecation")
+    @Override
+    public boolean hasComparatorInputOverride(IBlockState state)
+    {
+        return true;
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public int getComparatorInputOverride(IBlockState blockState, World worldIn, BlockPos pos)
+    {
+        TileEntity tileentity = worldIn.getTileEntity(pos);
+
+        if (tileentity instanceof MusicRecorder.TileEntityMusicRecorder)
+        {
+            ItemStack itemstack = ((MusicRecorder.TileEntityMusicRecorder)tileentity).getRecord();
+
+            if (!itemstack.isEmpty())
+            {
+                return 15;
+            }
+        }
+        return 0;
+    }
+
     @Override
     public EnumBlockRenderType getRenderType(IBlockState state)
     {
         return EnumBlockRenderType.MODEL;
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public IBlockState getStateFromMeta(int meta)
+    {
+        return this.getDefaultState().withProperty(HAS_RECORD, meta > 0);
+    }
+
+    @Override
+    public int getMetaFromState(IBlockState state)
+    {
+        return state.getValue(HAS_RECORD) ? 1 : 0;
+    }
+
+    @Override
+    protected BlockStateContainer createBlockState()
+    {
+        return new BlockStateContainer(this, HAS_RECORD);
     }
 
     public static class TileEntityMusicRecorder extends TileEntity implements ITickable {
@@ -115,6 +170,7 @@ public class MusicRecorder extends BlockContainer {
         @Override
         public void update() {
             if(!world.isRemote) {
+                MusicTriggers.logger.info(this.getRecord().getDisplayName());
                 if(!this.getRecord().isEmpty()) {
                     this.tickCounter++;
                     int randomNum = ThreadLocalRandom.current().nextInt(0, 5600);
@@ -137,6 +193,27 @@ public class MusicRecorder extends BlockContainer {
             }
         }
 
+        @Override
+        public void readFromNBT(NBTTagCompound compound)
+        {
+            super.readFromNBT(compound);
+            if (compound.hasKey("BlankRecord"))
+            {
+                this.setRecord(new ItemStack(compound.getCompoundTag("BlankRecord")));
+            }
+        }
+
+        @Override
+        public NBTTagCompound writeToNBT(NBTTagCompound compound)
+        {
+            super.writeToNBT(compound);
+            if (!this.getRecord().isEmpty())
+            {
+                compound.setTag("BlankRecord", this.getRecord().writeToNBT(new NBTTagCompound()));
+            }
+            return compound;
+        }
+
         public ItemStack getRecord()
         {
             return this.record;
@@ -145,6 +222,7 @@ public class MusicRecorder extends BlockContainer {
         public void setRecord(ItemStack recordStack)
         {
             this.record = recordStack;
+            this.markDirty();
         }
 
         public UUID getUUID() {

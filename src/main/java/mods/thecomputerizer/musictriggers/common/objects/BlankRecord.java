@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.common.objects;
 
+import net.minecraft.block.BlockJukebox;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumRarity;
@@ -16,6 +17,7 @@ public class BlankRecord extends Item {
     public BlankRecord() {}
 
     @SuppressWarnings("NullableProblems")
+    @Override
     public EnumActionResult onItemUse( EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
     {
         IBlockState iblockstate = worldIn.getBlockState(pos);
@@ -23,9 +25,9 @@ public class BlankRecord extends Item {
         if (iblockstate.getBlock() instanceof MusicRecorder)
         {
             MusicRecorder mr = (MusicRecorder) iblockstate.getBlock();
-            if(!worldIn.isRemote && !mr.has_record) {
+            if(!worldIn.isRemote && !iblockstate.getValue(BlockJukebox.HAS_RECORD)) {
                 ItemStack itemstack = player.getHeldItem(hand);
-                mr.insertRecord(worldIn,pos,itemstack,player.getUniqueID());
+                mr.insertRecord(worldIn,pos,iblockstate,itemstack,player.getUniqueID());
                 itemstack.shrink(1);
             }
             return EnumActionResult.SUCCESS;
