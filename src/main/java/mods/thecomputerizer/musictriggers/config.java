@@ -14,10 +14,10 @@ import java.util.List;
 public final class config {
     public static List<String> fb = new ArrayList<>();
 
-    public static String[] Categories = {"Main Menu","Generic","Zones","Day","Night","Sunrise","Sunset","Light Level","Underground - underground with no sky visible","Deep Under - deep below the surface with no sky visible","Raining","Storming","Snowing","Low HP","Dead","Void","Spectator","Creative","Riding","Pet","High","Dimension","Biome","Structure","Mob (This works for both bosses and hordes!)","Gamestages (Only fires if the mod Game Stages is active)","Blood Moon (Only fires if the mod Enhanced Celestials is active)","Harvest Moon (Only fires if the mod Enhanced Celestials is active)","Blue Moon (Only fires if the mod Enhanced Celestials is active)"};
-    public static Integer[] withPriority = {-1111,-1111,10000,1000,900,1111,1111,500,1500,2000,1300,1350,1333,3000,10000,7777,5000,5000,2222,1200,1200,1150,1160,3333,3500,500,1200,1400,1400};
-    public static Integer[] withFade = {-1,0,0,0,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1,-1,-1,-1,-1,0,0,0};
-    public static Integer[] withLevel = {9999,9999,9999,9999,9999,9999,9999,7,55,20,9999,9999,9999,30,9999,0,9999,9999,9999,9999,9999,9999,9999,9999,9999,9999,9999,9999,9999};
+    public static String[] Categories = {"Main Menu", "Generic", "Zones", "Day", "Night", "Sunrise", "Sunset", "Light Level", "Underground - underground with no sky visible", "Deep Under - deep below the surface with no sky visible", "Raining", "Storming", "Snowing", "Low HP", "Dead", "Void", "Spectator", "Creative", "Riding", "Pet", "High", "Underwater", "PVP", "Dimension", "Biome", "Structure", "Mob (This works for both bosses and hordes!)", "Effect (Trigger based on potion effects)", "Victory - This can only be called after the pvp or mob trigger", "Gamestages (Only fires if the mod Game Stages is active)", "Blood Moon (Only fires if the mod Enhanced Celestials is active)", "Harvest Moon (Only fires if the mod Enhanced Celestials is active)", "Blue Moon (Only fires if the mod Enhanced Celestials is active)", "Rain Intensity (Only fires if the mod dynamic surroundings is active)", "Acid Rain (Only fires if the mod better weather is active)", "Blizzard (Only fires if the mod better weather is active)", "Cloudy (Only fires if the mod better weather is active)", "Light Rain (Only fires if the mod better weather is active)"};
+    public static Integer[] withPriority = {-1111, -1111, 10000, 1000, 900, 1111, 1111, 500, 1500, 2000, 1300, 1350, 1333, 3000, 10000, 7777, 5000, 5000, 2222, 1200, 1200, 1999, 20000, 1150, 1160, 3333, 3500, 500, 20000, 500, 1200, 1400, 1400, 1349, 9999, 9999, 9999, 9999};
+    public static Integer[] withFade = {-1, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0};
+    public static Integer[] withLevel = {9999, 9999, 9999, 9999, 9999, 9999, 9999, 7, 55, 20, 9999, 9999, 9999, 30, 9999, 0, 9999, 9999, 9999, 9999, 150, 9999, 16, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999};
 
     public static HashMap<Integer, TriggerData> readTriggers = new HashMap<>();
     public static int triggerCounter = 0;
@@ -110,6 +110,18 @@ public final class config {
     public static int highLevel;
     public static List<String> highSongs;
 
+    public static int underwaterPriority;
+    public static int underwaterFade;
+    public static List<String> underwaterSongs;
+
+    public static int pvpPriority;
+    public static int pvpFade;
+    public static int pvpRange;
+    public static int pvpTime;
+    public static boolean pvpVictory;
+    public static int pvpVictoryID;
+    public static List<String> pvpSongs;
+
     public static int dimensionPriority;
     public static List<String> dimensionSongs;
 
@@ -121,6 +133,12 @@ public final class config {
 
     public static int mobPriority;
     public static List<String> mobSongs;
+
+    public static int effectPriority;
+    public static List<String> effectSongs;
+
+    public static int victoryPriority;
+    public static List<String> victorySongs;
 
     public static int gamestagePriority;
     public static List<String> gamestageSongs;
@@ -137,45 +155,83 @@ public final class config {
     public static int bluemoonFade;
     public static List<String> bluemoonSongs;
 
+    public static int rainintensityPriority;
+    public static int rainintensityFade;
+    public static List<String> rainintensitySongs;
+
+    public static int acidrainPriority;
+    public static int acidrainFade;
+    public static List<String> acidrainSongs;
+
+    public static int blizzardPriority;
+    public static int blizzardFade;
+    public static List<String> blizzardSongs;
+
+    public static int cloudyPriority;
+    public static int cloudyFade;
+    public static List<String> cloudySongs;
+
+    public static int lightrainPriority;
+    public static int lightrainFade;
+    public static List<String> lightrainSongs;
+
 
     public static void build(File f) {
         fb.add("All event Triggers");
         fb.add("");
         fb.add("\tUniversal Delay=0");
         fb.add("");
-        for(int i=0;i< Categories.length;i++) {
-            fb.add("\t"+Categories[i]);
-            if(withPriority[i]!=-1111) {
-                fb.add("\t\tPriority [min: -99, max: 2147483647 default: "+withPriority[i]+"]");
-                fb.add("\t\tPriority Value="+withPriority[i]);
+        for (int i = 0; i < Categories.length; i++) {
+            fb.add("\t" + Categories[i]);
+            if (withPriority[i] != -1111) {
+                fb.add("\t\tPriority [min: -99, max: 2147483647 default: " + withPriority[i] + "]");
+                fb.add("\t\tPriority Value=" + withPriority[i]);
                 fb.add("");
             }
-            if(withFade[i]!=-1) {
-                fb.add("\t\tFade Time [in ticks, default: "+withFade[i]+"]");
-                fb.add("\t\tFade Value="+withFade[i]);
+            if (withFade[i] != -1) {
+                fb.add("\t\tFade Time [in ticks, default: " + withFade[i] + "]");
+                fb.add("\t\tFade Value=" + withFade[i]);
                 fb.add("");
             }
-            if(withLevel[i]!=9999) {
-                if(!Categories[i].matches("Low HP")) {
+            if (withLevel[i] != 9999) {
+                if (!Categories[i].matches("Low HP")) {
                     fb.add("\t\tConfigurable Level [Y level to activate, default: " + withLevel[i] + "]");
                     fb.add("\t\tLevel Value=" + withLevel[i]);
                     fb.add("");
-                }
-                else {
+                } else if (Categories[i].matches("PVP")) {
+                    fb.add("\t\tConfigurable Range [default: " + withLevel[i] + "]");
+                    fb.add("\t\tLevel Value=" + withLevel[i]);
+                    fb.add("");
+                } else {
                     fb.add("\t\tPercentage of maximum health [Out of 100, default: " + withLevel[i] + "]");
                     fb.add("\t\tLevel Value=" + withLevel[i]);
                     fb.add("");
                 }
             }
-            if(Categories[i].matches("Zones")) {
+            if (Categories[i].matches("PVP")) {
+                fb.add("\t\tBattle Time [in ticks, default: 200]");
+                fb.add("\t\tPersistence=200");
+                fb.add("");
+            }
+            if (Categories[i].matches("PVP")) {
+                fb.add("\t\tVictory - whether to activate the victory trigger [default: false]");
+                fb.add("\t\tVictory=false");
+                fb.add("");
+            }
+            if (Categories[i].matches("PVP")) {
+                fb.add("\t\tVictory ID - ID of the victory to activate [default: 0]");
+                fb.add("\t\tVictoryID=0");
+                fb.add("");
+            }
+            if (Categories[i].matches("Zones")) {
                 fb.add("\t\tSongs per zone");
                 fb.add("\t\tFormat[min x,min y,min z,max x, max y,max z,songname,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]]");
                 fb.add("\t\tExample: 0,0,0,100,100,100,home3,33981,200");
-                if(!fb.contains("\t\tSongs=<\n\t\t>")) {
+                if (!fb.contains("\t\tSongs=<\n\t\t>")) {
                     fb.add("\t\tSongs=<\n\t\t>");
                 }
             }
-            if(Categories[i].matches("Night")) {
+            if (Categories[i].matches("Night")) {
                 fb.add("\t\tSongs- Format: [song name,moon phase,(Optional)fade time [in ticks, default: 0]]");
                 fb.add("\t\tMoon Phases: 1 - Full Moon, 2 - Waning Gibbous, 3 - Third Quarter, 4 - Waning Crescent");
                 fb.add("\t\t5 - New Moon, 6 - Waxing Crescent, 7 - First Quarter, 8 - Waxing Gibbous");
@@ -186,51 +242,75 @@ public final class config {
                 fb.add("\t\tNote - If the fade is not the last number it will not work properly");
                 fb.add("\t\tSongs=<\n\t\t>");
                 fb.add("");
-            }
-            else if(Categories[i].matches("Dimension")) {
+            } else if (Categories[i].matches("Dimension")) {
                 fb.add("\t\tSongs per dimension [Format: dimensionID,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]");
                 fb.add("\t\tNote: You only have to set the priority per dimension ID for 1 song");
                 fb.add("\t\tExample: -1,(songname),11111");
                 fb.add("\t\tSongs=<\n\t\t>");
                 fb.add("");
-            }
-            else if(Categories[i].matches("Biome")) {
-                fb.add("\t\tSongs per biome [Format: \"biomeresourcename,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
+            } else if (Categories[i].matches("Biome")) {
+                fb.add("\t\tSongs Per Biome [Format: \"BiomeResourceName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0],(Optional)Biome Time[default: 20]\"]");
                 fb.add("\t\tNote: You only have to set the priority per biome name for 1 song");
                 fb.add("\t\tExample: minecraft:swampland,(songname),11111");
+                fb.add("\t\tAdditional Note: You can also specify multiple biomes at once through regexing! You can use this feature for both mod ids and biome names");
+                fb.add("\t\tExample 2: minecraft,(songname),11111 (all minecraft biomes will have (songname))");
+                fb.add("\t\tExample 3: forest,(songname),11111 (all biomes with \"forest\" in the name will have (songname))");
+                fb.add("\t\tFinal Note: The biome time will allow the trigger to persist after leaving the specified biome for that amount of time");
+                fb.add("\t\tFull Scale Example: swamp,(songname),11111,50,30");
                 fb.add("\t\tSongs=<\n\t\t>");
                 fb.add("");
-            }
-            else if(Categories[i].matches("Structure")) {
+            } else if (Categories[i].matches("Structure")) {
                 fb.add("\t\tSongs per structure [Format: \"structurename,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
                 fb.add("\t\tNote: You only have to set the priority per structure name for 1 song");
                 fb.add("\t\tExample: Fortress,(songname),11111");
                 fb.add("\t\tSongs=<\n\t\t>");
                 fb.add("");
-            }
-            else if(Categories[i].contains("This works for both bosses and hordes!")) {
-                fb.add("\t\tSongs Per mob [Format: \"MobName,number of mobs,SongName,(Optional)detection range[min: 1, max: 1000, default: 16],(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0]\"]");
+            } else if (Categories[i].contains("This works for both bosses and hordes!")) {
+                fb.add("\t\tSongs Per Mob [Format: \"MobName,number of mobs,SongName,(Optional)detection range[min: 1, max: 1000, default: 16],(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0],(Optional)Targetting[default: false],(Optional)Horde Targetting percentage[default: 100], (Optional)Health[default: 100],(Optional)Horde Health Percentage[default: 100],(Optional)Battle Time[in ticks, default: 0],(Optional)Trigger Victory[default: false],(Optional)Victory ID[min:0, max:2147483647, default: 0](Optional)Infernal[only works with the mod infernal mobs active]\"]");
                 fb.add("\t\tNote: You only have to set the priority per mob name for 1 song");
-                fb.add("\t\tAdditional Note: Putting high numbers for the mob range will cause lag! The higher it is, the more noticable that will be. Only use higher numbers for a boss that could be far away, like the Ender Dragon");
+                fb.add("\t\tAdditional Note: Putting high numbers (over 100) for the mob range may cause lag! The higher it is, the more noticable that lag will be. Only use higher numbers for a boss that could be far away, like the Ender Dragon");
+                fb.add("\t\tAdditional Note: Targetting requires the mob(s) to be looking at you while horde targetting percentage is the total percentage of the number of mobs you set that have to be looking at you");
+                fb.add("\t\tAdditional Note: Health requires the mob(s) to be below the set percentage threshold of health while horde health percentage is the total percentage of the number of mobs you set that have to be below the set percentage threshold of health");
+                fb.add("\t\tAdditional Note: Battle time is how long the trigger will persist after the conditions are no longer met. Due to possible conflicts it may to better to leave this at 0");
+                fb.add("\t\tAdditional Note: The victory trigger is special in that it can only activated after escaping the set trigger. The ID exists so there can multiple different victory scenarios");
+                fb.add("\t\tFinal Note: The infernal trigger goes of of the mod name, which can be obtained via the debug info set by the debug config. Number of mobs will not affect this");
                 fb.add("\t\tExample: Zombie,8,(songname),16,11111");
+                fb.add("\t\tFull-Scale example: Skeleton,4,123486,50,true,50,80,25,0,Withering");
                 fb.add("\t\tSpecial case - If you put \"MOB\" as the mob ID, it will default to any hostile mob");
                 fb.add("\t\tSongs=<\n\t\t>");
                 fb.add("");
-            }
-            else if(Categories[i].contains("Only fires if the mod Game Stages is active")) {
+            } else if (Categories[i].contains("Trigger based on potion effects")) {
+                fb.add("\t\tSongs Per Effect [Format: \"EffectName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tNote: You only have to set the priority per effect name for 1 song");
+                fb.add("\t\tExample: effect.regeneration,(songname),11111");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            } else if (Categories[i].contains("Victory - This can only be called after the pvp or mob trigger")) {
+                fb.add("\t\tSongs - [Format: \"SongName,Victory ID,(Optional)Victory Time[default: 200],(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tNote - The victory time is how long the victory trigger will last for");
+                fb.add("\t\tAdditional Note: Dying will cut the trigger short");
+                fb.add("\t\tExample: enderdragonwin,11,300,9999999,20");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            } else if (Categories[i].contains("Only fires if the mod Game Stages is active")) {
                 fb.add("\t\tSongs Per Gamestage [Format: \"StageName,whitelist,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
                 fb.add("\t\tNote: You only have to set the priority per gamestage name for 1 song");
                 fb.add("\t\tExample: StageOne,true,(songname),11111 - This will play when the player has the stage. If it were false it would play whenever the player does not have it.");
                 fb.add("\t\tSongs=<\n\t\t>");
                 fb.add("");
-            }
-            else {
+            } else if (Categories[i].contains("Only fires if the mod dynamic surroundings is active")) {
+                fb.add("\t\tSongs [Format: \"songname,Intensity Level (min: 0, max: 100)\"]");
+                fb.add("\t\tNote - This trigger will play when the rain has a higher intensity than you put in");
+                fb.add("\t\tExample: intenserain,70");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            } else {
                 fb.add("\t\tSongs=<\n\t\t>");
                 fb.add("");
             }
         }
         try {
-            Files.write(Paths.get(f.getPath()),fb, StandardCharsets.UTF_8);
+            Files.write(Paths.get(f.getPath()), fb, StandardCharsets.UTF_8);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -245,204 +325,266 @@ public final class config {
             List<String> songs = new ArrayList<>();
             boolean songLines = false;
             while ((line = br.readLine()) != null) {
-                for(int i=1;i<Categories.length;i++) {
-                    if(line.contains("Universal Delay=")) {
-                        universalDelay = Integer.parseInt(stringBreakerRegex(line.replaceAll(" ",""),"=")[1]);
-                    }
+                if (line.contains("Universal Delay=")) {
+                    universalDelay = Integer.parseInt(stringBreakerRegex(line.replaceAll(" ", ""), "=")[1]);
+                }
+                for(int i=0;i<Categories.length;i++) {
                     if(line.contains(Categories[i])) {
-                        readTriggers.put(triggerCounter,new TriggerData(p,fade,l,songs));
-                        triggerCounter++;
-                        songs = new ArrayList<>();
-                        break;
+                        triggerCounter=i;
                     }
-                    if(line.contains("Priority Value=")) {
-                        p = Integer.parseInt(stringBreakerRegex(line,"=")[1]);
-                    }
-                    if(line.contains("Fade Value=")) {
-                        fade = Integer.parseInt(stringBreakerRegex(line,"=")[1]);
-                    }
-                    if(line.contains("Level Value=")) {
-                        l = Integer.parseInt(stringBreakerRegex(line,"=")[1]);
-                    }
-                    if(line.contains("Songs=<")) {
-                        songLines=true;
-                    }
-                    if(line.contains(">")) {
-                        songLines=false;
-                    }
-                    if(songLines && !line.contains("Songs=<")) {
-                        line = line.replaceAll(" ","");
-                        line = line.replaceAll("\t","");
-                        if(!songs.contains(line) && line.length()!=0) {
-                            MusicTriggers.logger.info("The song "+line+" is being added to the current trigger category "+Categories[triggerCounter]+"!");
-                            songs.add(line);
-                        }
+                }
+                if (line.contains("Priority Value=")) {
+                    p = Integer.parseInt(stringBreakerRegex(line, "=")[1]);
+                }
+                if (line.contains("Fade Value=")) {
+                    fade = Integer.parseInt(stringBreakerRegex(line, "=")[1]);
+                }
+                if (line.contains("Level Value=")) {
+                    l = Integer.parseInt(stringBreakerRegex(line, "=")[1]);
+                }
+                if (line.contains("Persistence=")) {
+                    pvpTime = Integer.parseInt(stringBreakerRegex(line, "=")[1]);
+                }
+                if (line.contains("Victory=")) {
+                    pvpVictory = Boolean.parseBoolean(stringBreakerRegex(line, "=")[1]);
+                }
+                if (line.contains("VictoryID=")) {
+                    pvpVictoryID = Integer.parseInt(stringBreakerRegex(line, "=")[1]);
+                }
+                if (line.contains("Songs=<")) {
+                    songLines = true;
+                }
+                if (line.contains(">")) {
+                    readTriggers.put(triggerCounter, new TriggerData(p, fade, l, songs));
+                    songs = new ArrayList<>();
+                    songLines = false;
+                }
+                if (songLines && !line.contains("Songs=<")) {
+                    line = line.replaceAll("\t", "");
+                    if (!songs.contains(line) && line.length() != 0) {
+                        MusicTriggers.logger.info("The song " + line + " is being added to the current trigger category " + Categories[triggerCounter] + "!");
+                        songs.add(line);
                     }
                 }
             }
-            readTriggers.put(triggerCounter,new TriggerData(p,fade,l,songs));
-        }
-        catch (Exception e) {
+            readTriggers.put(triggerCounter, new TriggerData(p, fade, l, songs));
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
-        menuSongs = readTriggers.get(0).getSongs();
+        menuSongs = accountForNullSongTriggerData(0);
 
-        genericFade = readTriggers.get(1).getFade();
-        genericSongs = readTriggers.get(1).getSongs();
+        genericFade = accountForNullNumericalTriggerData(1,2);
+        genericSongs = accountForNullSongTriggerData(1);
 
-        zonesPriority = readTriggers.get(2).getPriority();
-        zonesFade = readTriggers.get(2).getFade();
-        zonesSongs = readTriggers.get(2).getSongs();
+        zonesPriority = accountForNullNumericalTriggerData(2,1);
+        zonesFade = accountForNullNumericalTriggerData(2,2);
+        zonesSongs = accountForNullSongTriggerData(2);
 
-        dayPriority = readTriggers.get(3).getPriority();
-        dayFade = readTriggers.get(3).getFade();
-        daySongs = readTriggers.get(3).getSongs();
+        dayPriority = accountForNullNumericalTriggerData(3,1);
+        dayFade = accountForNullNumericalTriggerData(3,2);
+        daySongs = accountForNullSongTriggerData(3);
 
-        nightPriority = readTriggers.get(4).getPriority();
-        nightSongs = readTriggers.get(4).getSongs();
+        nightPriority = accountForNullNumericalTriggerData(4,1);
+        nightSongs = accountForNullSongTriggerData(4);
 
-        sunrisePriority = readTriggers.get(5).getPriority();
-        sunriseFade = readTriggers.get(5).getFade();
-        sunriseSongs = readTriggers.get(5).getSongs();
+        sunrisePriority = accountForNullNumericalTriggerData(5,1);
+        sunriseFade = accountForNullNumericalTriggerData(5,2);
+        sunriseSongs = accountForNullSongTriggerData(5);
 
-        sunsetPriority = readTriggers.get(6).getPriority();
-        sunsetFade = readTriggers.get(6).getFade();
-        sunsetSongs = readTriggers.get(6).getSongs();
+        sunsetPriority = accountForNullNumericalTriggerData(6,1);
+        sunsetFade = accountForNullNumericalTriggerData(6,2);
+        sunsetSongs = accountForNullSongTriggerData(6);
 
-        lightPriority = readTriggers.get(7).getPriority();
-        lightFade = readTriggers.get(7).getFade();
-        lightLevel = readTriggers.get(7).getLevel();
-        lightSongs = readTriggers.get(7).getSongs();
+        lightPriority = accountForNullNumericalTriggerData(7,1);
+        lightFade = accountForNullNumericalTriggerData(7,2);
+        lightLevel = accountForNullNumericalTriggerData(7,3);
+        lightSongs = accountForNullSongTriggerData(7);
 
-        undergroundPriority = readTriggers.get(8).getPriority();
-        undergroundFade = readTriggers.get(8).getFade();
-        undergroundLevel = readTriggers.get(8).getLevel();
-        undergroundSongs = readTriggers.get(8).getSongs();
+        undergroundPriority = accountForNullNumericalTriggerData(8,1);
+        undergroundFade = accountForNullNumericalTriggerData(8,2);
+        undergroundLevel = accountForNullNumericalTriggerData(8,3);
+        undergroundSongs = accountForNullSongTriggerData(8);
 
-        deepUnderPriority = readTriggers.get(9).getPriority();
-        deepUnderFade = readTriggers.get(9).getFade();
-        deepUnderLevel = readTriggers.get(9).getLevel();
-        deepUnderSongs = readTriggers.get(9).getSongs();
+        deepUnderPriority = accountForNullNumericalTriggerData(9,1);
+        deepUnderFade = accountForNullNumericalTriggerData(9,2);
+        deepUnderLevel = accountForNullNumericalTriggerData(9,3);
+        deepUnderSongs = accountForNullSongTriggerData(9);
 
-        rainingPriority = readTriggers.get(10).getPriority();
-        rainingFade = readTriggers.get(10).getFade();
-        rainingSongs = readTriggers.get(10).getSongs();
+        rainingPriority = accountForNullNumericalTriggerData(10,1);
+        rainingFade = accountForNullNumericalTriggerData(10,2);
+        rainingSongs = accountForNullSongTriggerData(10);
 
-        stormingPriority = readTriggers.get(11).getPriority();
-        stormingFade = readTriggers.get(11).getFade();
-        stormingSongs = readTriggers.get(11).getSongs();
+        stormingPriority = accountForNullNumericalTriggerData(11,1);
+        stormingFade = accountForNullNumericalTriggerData(11,2);
+        stormingSongs = accountForNullSongTriggerData(11);
 
-        snowingPriority = readTriggers.get(12).getPriority();
-        snowingFade = readTriggers.get(12).getFade();
-        snowingSongs = readTriggers.get(12).getSongs();
+        snowingPriority = accountForNullNumericalTriggerData(12,1);
+        snowingFade = accountForNullNumericalTriggerData(12,2);
+        snowingSongs = accountForNullSongTriggerData(12);
 
-        lowHPPriority = readTriggers.get(13).getPriority();
-        lowHPFade = readTriggers.get(13).getFade();
-        lowHPLevel = readTriggers.get(13).getLevel();
-        lowHPSongs = readTriggers.get(13).getSongs();
+        lowHPPriority = accountForNullNumericalTriggerData(13,1);
+        lowHPFade = accountForNullNumericalTriggerData(13,2);
+        lowHPLevel = accountForNullNumericalTriggerData(13,3);
+        lowHPSongs = accountForNullSongTriggerData(13);
 
-        deadPriority = readTriggers.get(14).getPriority();
-        deadFade = readTriggers.get(14).getFade();
-        deadSongs = readTriggers.get(14).getSongs();
+        deadPriority = accountForNullNumericalTriggerData(14,1);
+        deadFade = accountForNullNumericalTriggerData(14,2);
+        deadSongs = accountForNullSongTriggerData(14);
 
-        inVoidPriority = readTriggers.get(15).getPriority();
-        inVoidFade = readTriggers.get(15).getFade();
-        inVoidLevel = readTriggers.get(15).getLevel();
-        inVoidSongs = readTriggers.get(15).getSongs();
+        inVoidPriority = accountForNullNumericalTriggerData(15,1);
+        inVoidFade = accountForNullNumericalTriggerData(15,2);
+        inVoidLevel = accountForNullNumericalTriggerData(15,3);
+        inVoidSongs = accountForNullSongTriggerData(15);
 
-        spectatorPriority = readTriggers.get(16).getPriority();
-        spectatorFade = readTriggers.get(16).getFade();
-        spectatorSongs = readTriggers.get(16).getSongs();
+        spectatorPriority = accountForNullNumericalTriggerData(16,1);
+        spectatorFade = accountForNullNumericalTriggerData(16,2);
+        spectatorSongs = accountForNullSongTriggerData(16);
 
-        creativePriority = readTriggers.get(17).getPriority();
-        creativeFade = readTriggers.get(17).getFade();
-        creativeSongs = readTriggers.get(17).getSongs();
+        creativePriority = accountForNullNumericalTriggerData(17,1);
+        creativeFade = accountForNullNumericalTriggerData(17,2);
+        creativeSongs = accountForNullSongTriggerData(17);
 
-        ridingPriority = readTriggers.get(18).getPriority();
-        ridingFade = readTriggers.get(18).getFade();
-        ridingSongs = readTriggers.get(18).getSongs();
+        ridingPriority = accountForNullNumericalTriggerData(18,1);
+        ridingFade = accountForNullNumericalTriggerData(18,2);
+        ridingSongs = accountForNullSongTriggerData(18);
 
-        petPriority = readTriggers.get(19).getPriority();
-        petFade = readTriggers.get(19).getFade();
-        petSongs = readTriggers.get(19).getSongs();
+        petPriority = accountForNullNumericalTriggerData(19,1);
+        petFade = accountForNullNumericalTriggerData(19,2);
+        petSongs = accountForNullSongTriggerData(19);
 
-        highPriority = readTriggers.get(20).getPriority();
-        highFade = readTriggers.get(20).getFade();
-        highSongs = readTriggers.get(20).getSongs();
+        highPriority = accountForNullNumericalTriggerData(20,1);
+        highFade = accountForNullNumericalTriggerData(20,2);
+        highLevel = accountForNullNumericalTriggerData(20,3);
+        highSongs = accountForNullSongTriggerData(20);
 
-        dimensionPriority = readTriggers.get(21).getPriority();
-        dimensionSongs = readTriggers.get(21).getSongs();
-        
-        biomePriority = readTriggers.get(22).getPriority();
-        biomeSongs = readTriggers.get(22).getSongs();
-        
-        structurePriority = readTriggers.get(23).getPriority();
-        structureSongs = readTriggers.get(23).getSongs();
+        underwaterPriority = accountForNullNumericalTriggerData(21,1);
+        underwaterFade = accountForNullNumericalTriggerData(21,2);
+        underwaterSongs = accountForNullSongTriggerData(21);
 
-        mobPriority = readTriggers.get(24).getPriority();
-        mobSongs = readTriggers.get(24).getSongs();
+        pvpPriority = accountForNullNumericalTriggerData(22,1);
+        pvpFade = accountForNullNumericalTriggerData(22,2);
+        pvpRange = accountForNullNumericalTriggerData(22,3);
+        pvpSongs = accountForNullSongTriggerData(22);
 
-        gamestagePriority = readTriggers.get(25).getPriority();
-        gamestageSongs = readTriggers.get(25).getSongs();
+        dimensionPriority = accountForNullNumericalTriggerData(23,1);
+        dimensionSongs = accountForNullSongTriggerData(23);
 
-        bloodmoonPriority = readTriggers.get(26).getPriority();
-        bloodmoonFade = readTriggers.get(26).getFade();
-        bloodmoonSongs = readTriggers.get(26).getSongs();
+        biomePriority = accountForNullNumericalTriggerData(24,1);
+        biomeSongs = accountForNullSongTriggerData(24);
 
-        harvestmoonPriority = readTriggers.get(27).getPriority();
-        harvestmoonFade = readTriggers.get(27).getFade();
-        harvestmoonSongs = readTriggers.get(27).getSongs();
+        structurePriority = accountForNullNumericalTriggerData(25,1);
+        structureSongs = accountForNullSongTriggerData(25);
 
-        bluemoonPriority = readTriggers.get(28).getPriority();
-        bluemoonFade = readTriggers.get(28).getFade();
-        bluemoonSongs = readTriggers.get(28).getSongs();
+        mobPriority = accountForNullNumericalTriggerData(26,1);
+        mobSongs = accountForNullSongTriggerData(26);
+
+        effectPriority = accountForNullNumericalTriggerData(27,1);
+        effectSongs = accountForNullSongTriggerData(27);
+
+        victoryPriority = accountForNullNumericalTriggerData(28,1);
+        victorySongs = accountForNullSongTriggerData(28);
+
+        gamestagePriority = accountForNullNumericalTriggerData(29,1);
+        gamestageSongs = accountForNullSongTriggerData(29);
+
+        bloodmoonPriority = accountForNullNumericalTriggerData(30,1);
+        bloodmoonFade = accountForNullNumericalTriggerData(30,2);
+        bloodmoonSongs = accountForNullSongTriggerData(30);
+
+        harvestmoonPriority = accountForNullNumericalTriggerData(31,1);
+        harvestmoonFade = accountForNullNumericalTriggerData(31,2);
+        harvestmoonSongs = accountForNullSongTriggerData(31);
+
+        bluemoonPriority = accountForNullNumericalTriggerData(32,1);
+        bluemoonFade = accountForNullNumericalTriggerData(32,2);
+        bluemoonSongs = accountForNullSongTriggerData(32);
+
+        rainintensityPriority = accountForNullNumericalTriggerData(33,1);
+        rainintensityFade = accountForNullNumericalTriggerData(33,2);
+        rainintensitySongs = accountForNullSongTriggerData(33);
+
+        acidrainPriority = accountForNullNumericalTriggerData(34,1);
+        acidrainFade = accountForNullNumericalTriggerData(34,2);
+        acidrainSongs = accountForNullSongTriggerData(34);
+
+        blizzardPriority = accountForNullNumericalTriggerData(35,1);
+        blizzardFade = accountForNullNumericalTriggerData(35,2);
+        blizzardSongs = accountForNullSongTriggerData(35);
+
+        cloudyPriority = accountForNullNumericalTriggerData(36,1);
+        cloudyFade = accountForNullNumericalTriggerData(36,2);
+        cloudySongs = accountForNullSongTriggerData(36);
+
+        lightrainPriority = accountForNullNumericalTriggerData(37,1);
+        lightrainFade = accountForNullNumericalTriggerData(37,2);
+        lightrainSongs = accountForNullSongTriggerData(37);
     }
 
     public static void update(File f) {
         read(f);
         fb.add("All event Triggers");
         fb.add("");
-        fb.add("\tUniversal Delay="+universalDelay);
+        fb.add("\tUniversal Delay=" + universalDelay);
         fb.add("");
-        for(int i=0;i< Categories.length;i++) {
-            fb.add("\t"+Categories[i]);
-            if(withPriority[i]!=-1111) {
-                fb.add("\t\tPriority [min: -99, max: 2147483647 default: "+withPriority[i]+"]");
-                fb.add("\t\tPriority Value="+readTriggers.get(i).getPriority());
+        for (int i = 0; i < Categories.length; i++) {
+            MusicTriggers.logger.info("Current category trying to update is "+Categories[i]);
+            fb.add("\t" + Categories[i]);
+            if (withPriority[i] != -1111) {
+                fb.add("\t\tPriority [min: -99, max: 2147483647 default: " + withPriority[i] + "]");
+                fb.add("\t\tPriority Value=" + accountForNullNumericalTriggerData(i,1));
                 fb.add("");
             }
-            if(withFade[i]!=-1) {
-                fb.add("\t\tFade Time [in ticks, default: "+withFade[i]+"]");
-                fb.add("\t\tFade Value="+readTriggers.get(i).getFade());
+            if (withFade[i] != -1) {
+                fb.add("\t\tFade Time [in ticks, default: " + withFade[i] + "]");
+                fb.add("\t\tFade Value=" + accountForNullNumericalTriggerData(i,2));
                 fb.add("");
             }
-            if(withLevel[i]!=9999) {
-                if(!Categories[i].matches("Low HP")) {
+            if (withLevel[i] != 9999) {
+                if (!Categories[i].matches("Low HP")) {
                     fb.add("\t\tConfigurable Level [Y level to activate, default: " + withLevel[i] + "]");
-                    fb.add("\t\tLevel Value=" + readTriggers.get(i).getLevel());
+                    fb.add("\t\tLevel Value=" + accountForNullNumericalTriggerData(i,3));
                     fb.add("");
-                }
-                else {
+                } else if (Categories[i].matches("PVP")) {
+                    fb.add("\t\tConfigurable Range [default: " + withLevel[i] + "]");
+                    fb.add("\t\tLevel Value=" + accountForNullNumericalTriggerData(i,3));
+                    fb.add("");
+                } else {
                     fb.add("\t\tPercentage of maximum health [Out of 100, default: " + withLevel[i] + "]");
-                    fb.add("\t\tLevel Value=" + readTriggers.get(i).getLevel());
+                    fb.add("\t\tLevel Value=" + accountForNullNumericalTriggerData(i,3));
                     fb.add("");
                 }
             }
-            if(Categories[i].matches("Zones")) {
+            if (Categories[i].matches("PVP")) {
+                fb.add("\t\tBattle Time [in ticks, default: 200]");
+                fb.add("\t\tPersistence=" + pvpTime);
+                fb.add("");
+            }
+            if (Categories[i].matches("PVP")) {
+                fb.add("\t\tVictory - whether to activate the victory trigger [default: false]");
+                fb.add("\t\tVictory=" + pvpVictory);
+                fb.add("");
+            }
+            if (Categories[i].matches("PVP")) {
+                fb.add("\t\tVictory ID - ID of the victory to activate [default: 0]");
+                fb.add("\t\tVictoryID=" + pvpVictoryID);
+                fb.add("");
+            }
+            if (Categories[i].matches("Zones")) {
                 fb.add("\t\tSongs per zone");
                 fb.add("\t\tFormat[min x,min y,min z,max x, max y,max z,songname,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]]");
                 fb.add("\t\tExample: 0,0,0,100,100,100,home3,33981,200");
-                if(!fb.contains("\t\tSongs=<")) {
+                if (!fb.contains("\t\tSongs=<")) {
                     fb.add("\t\tSongs=<");
-                    for(String iter : readTriggers.get(i).getSongs()) {
-                        fb.add("\t\t"+iter);
+                    List<String> songList = accountForNullSongTriggerData(i);
+                    for (String iter : songList) {
+                        fb.add("\t\t" + iter);
                     }
                     fb.add("\t\t>");
                 }
                 fb.add("");
             }
-            if(Categories[i].matches("Night")) {
+            if (Categories[i].matches("Night")) {
                 fb.add("\t\tSongs- Format: [song name,moon phase,(Optional)fade time [in ticks, default: 0]]");
                 fb.add("\t\tMoon Phases: 1 - Full Moon, 2 - Waning Gibbous, 3 - Third Quarter, 4 - Waning Crescent");
                 fb.add("\t\t5 - New Moon, 6 - Waxing Crescent, 7 - First Quarter, 8 - Waxing Gibbous");
@@ -452,87 +594,152 @@ public final class config {
                 fb.add("\t\tExample 3: [nighttime,0] - This will play whenever it is nighttime, just like the old version of this trigger");
                 fb.add("\t\tNote - If the fade is not the last number it will not work properly");
                 fb.add("\t\tSongs=<");
-                for(String iter : readTriggers.get(i).getSongs()) {
-                    fb.add("\t\t"+iter);
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
                 }
                 fb.add("\t\t>");
                 fb.add("");
-            }
-            else if(Categories[i].matches("Dimension")) {
+            } else if (Categories[i].matches("Dimension")) {
                 fb.add("\t\tSongs per dimension [Format: dimensionID,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]");
                 fb.add("\t\tNote: You only have to set the priority per dimension ID for 1 song");
                 fb.add("\t\tExample: -1,(songname),11111");
                 fb.add("\t\tSongs=<");
-                for(String iter : readTriggers.get(i).getSongs()) {
-                    fb.add("\t\t"+iter);
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
                 }
                 fb.add("\t\t>");
                 fb.add("");
-            }
-            else if(Categories[i].matches("Biome")) {
-                fb.add("\t\tSongs per biome [Format: \"biomeresourcename,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
+            } else if (Categories[i].matches("Biome")) {
+                fb.add("\t\tSongs Per Biome [Format: \"BiomeResourceName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0],(Optional)Biome Time[default: 20]\"]");
                 fb.add("\t\tNote: You only have to set the priority per biome name for 1 song");
                 fb.add("\t\tExample: minecraft:swampland,(songname),11111");
+                fb.add("\t\tAdditional Note: You can also specify multiple biomes at once through regexing! You can use this feature for both mod ids and biome names");
+                fb.add("\t\tExample 2: minecraft,(songname),11111 (all minecraft biomes will have (songname))");
+                fb.add("\t\tExample 3: forest,(songname),11111 (all biomes with \"forest\" in the name will have (songname))");
+                fb.add("\t\tFinal Note: The biome time will allow the trigger to persist after leaving the specified biome for that amount of time");
+                fb.add("\t\tFull Scale Example: swamp,(songname),11111,50,30");
                 fb.add("\t\tSongs=<");
-                for(String iter : readTriggers.get(i).getSongs()) {
-                    fb.add("\t\t"+iter);
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
                 }
                 fb.add("\t\t>");
                 fb.add("");
-            }
-            else if(Categories[i].matches("Structure")) {
+            } else if (Categories[i].matches("Structure")) {
                 fb.add("\t\tSongs per structure [Format: \"structurename,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
                 fb.add("\t\tNote: You only have to set the priority per structure name for 1 song");
                 fb.add("\t\tExample: Fortress,(songname),11111");
                 fb.add("\t\tSongs=<");
-                for(String iter : readTriggers.get(i).getSongs()) {
-                    fb.add("\t\t"+iter);
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
                 }
                 fb.add("\t\t>");
                 fb.add("");
-            }
-            else if(Categories[i].contains("This works for both bosses and hordes!")) {
-                fb.add("\t\tSongs Per mob [Format: \"MobName,number of mobs,SongName,(Optional)detection range[min: 1, max: 1000, default: 16],(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0]\"]");
+            } else if (Categories[i].contains("This works for both bosses and hordes!")) {
+                fb.add("\t\tSongs Per Mob [Format: \"MobName,number of mobs,SongName,(Optional)detection range[min: 1, max: 1000, default: 16],(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0],(Optional)Targetting[default: false],(Optional)Horde Targetting percentage[default: 100], (Optional)Health[default: 100],(Optional)Horde Health Percentage[default: 100],(Optional)Battle Time[in ticks, default: 0],(Optional)Trigger Victory[default: false],(Optional)Victory ID[min:0, max:2147483647, default: 0](Optional)Infernal[only works with the mod infernal mobs active]\"]");
                 fb.add("\t\tNote: You only have to set the priority per mob name for 1 song");
-                fb.add("\t\tAdditional Note: Putting high numbers for the mob range will cause lag! The higher it is, the more noticable that will be. Only use higher numbers for a boss that could be far away, like the Ender Dragon");
+                fb.add("\t\tAdditional Note: Putting high numbers (over 100) for the mob range may cause lag! The higher it is, the more noticable that lag will be. Only use higher numbers for a boss that could be far away, like the Ender Dragon");
+                fb.add("\t\tAdditional Note: Targetting requires the mob(s) to be looking at you while horde targetting percentage is the total percentage of the number of mobs you set that have to be looking at you");
+                fb.add("\t\tAdditional Note: Health requires the mob(s) to be below the set percentage threshold of health while horde health percentage is the total percentage of the number of mobs you set that have to be below the set percentage threshold of health");
+                fb.add("\t\tAdditional Note: Battle time is how long the trigger will persist after the conditions are no longer met. Due to possible conflicts it may to better to leave this at 0");
+                fb.add("\t\tAdditional Note: The victory trigger is special in that it can only activated after escaping the set trigger. The ID exists so there can multiple different victory scenarios");
+                fb.add("\t\tFinal Note: The infernal trigger goes of of the mod name, which can be obtained via the debug info set by the debug config. Number of mobs will not affect this");
                 fb.add("\t\tExample: Zombie,8,(songname),16,11111");
+                fb.add("\t\tFull-Scale example: Skeleton,4,123486,50,true,50,80,25,0,Withering");
                 fb.add("\t\tSpecial case - If you put \"MOB\" as the mob ID, it will default to any hostile mob");
                 fb.add("\t\tSongs=<");
-                for(String iter : readTriggers.get(i).getSongs()) {
-                    fb.add("\t\t"+iter);
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
                 }
                 fb.add("\t\t>");
                 fb.add("");
-            }
-            else if(Categories[i].contains("Only fires if the mod Game Stages is active")) {
+            } else if (Categories[i].contains("Trigger based on potion effects")) {
+                fb.add("\t\tSongs Per Effect [Format: \"EffectName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tNote: You only have to set the priority per effect name for 1 song");
+                fb.add("\t\tExample: effect.regeneration,(songname),11111");
+                fb.add("\t\tSongs=<");
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            } else if (Categories[i].contains("Victory - This can only be called after the pvp or mob trigger")) {
+                fb.add("\t\tSongs - [Format: \"SongName,Victory ID,(Optional)Victory Time[default: 200],(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tNote - The victory time is how long the victory trigger will last for");
+                fb.add("\t\tAdditional Note: Dying will cut the trigger short");
+                fb.add("\t\tExample: enderdragonwin,11,300,9999999,20");
+                fb.add("\t\tSongs=<");
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            } else if (Categories[i].contains("Only fires if the mod Game Stages is active")) {
                 fb.add("\t\tSongs Per Gamestage [Format: \"StageName,whitelist,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
                 fb.add("\t\tNote: You only have to set the priority per gamestage name for 1 song");
                 fb.add("\t\tExample: StageOne,true,(songname),11111 - This will play when the player has the stage. If it were false it would play whenever the player does not have it.");
                 fb.add("\t\tSongs=<");
-                for(String iter : readTriggers.get(i).getSongs()) {
-                    fb.add("\t\t"+iter);
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
                 }
                 fb.add("\t\t>");
                 fb.add("");
-            }
-            else {
+            } else if (Categories[i].contains("Only fires if the mod dynamic surroundings is active")) {
+                fb.add("\t\tSongs [Format: \"songname,Intensity Level (min: 0, max: 100)\"]");
+                fb.add("\t\tNote - This trigger will play when the rain has a higher intensity than you put in");
+                fb.add("\t\tExample: intenserain,70");
                 fb.add("\t\tSongs=<");
-                for(String iter : readTriggers.get(i).getSongs()) {
-                    fb.add("\t\t"+iter);
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            } else {
+                fb.add("\t\tSongs=<");
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
                 }
                 fb.add("\t\t>");
                 fb.add("");
             }
         }
         try {
-            Files.write(Paths.get(f.getPath()),fb, StandardCharsets.UTF_8);
+            Files.delete(Paths.get(f.getPath()));
+            Files.write(Paths.get(f.getPath()), fb, StandardCharsets.UTF_8);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
     }
 
-    public static String[] stringBreakerRegex(String s,String regex) {
+    public static String[] stringBreakerRegex(String s, String regex) {
         return s.split(regex);
+    }
+
+    private static int accountForNullNumericalTriggerData(int index, int selector) {
+        if(readTriggers.get(index)!=null) {
+            if(selector==1) {return readTriggers.get(index).getPriority();}
+            else if(selector==2) {return readTriggers.get(index).getFade();}
+            else {return readTriggers.get(index).getLevel();}
+        }
+        else {
+            if(selector==1) {return withPriority[index];}
+            else if(selector==2) {return 0;}
+            else {return withLevel[index];}
+        }
+    }
+
+    private static List<String> accountForNullSongTriggerData(int index) {
+        if(readTriggers.get(index)!=null) {return readTriggers.get(index).getSongs();}
+        return new ArrayList<>();
     }
 
     private static class TriggerData {
@@ -540,11 +747,12 @@ public final class config {
         public int fade;
         public int level;
         public List<String> songs;
+
         TriggerData(int p, int f, int l, List<String> s) {
-            this.priority=p;
-            this.fade=f;
-            this.level=l;
-            this.songs=s;
+            this.priority = p;
+            this.fade = f;
+            this.level = l;
+            this.songs = s;
         }
 
         private int getPriority() {

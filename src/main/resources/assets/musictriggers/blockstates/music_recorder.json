@@ -1,0 +1,10 @@
+{
+    "variants": {
+        "has_record=true": [
+                     { "model": "musictriggers:block/music_recorder_active" }
+        ],
+        "has_record=false": [
+                     { "model": "musictriggers:block/music_recorder" }
+        ]
+    }
+}

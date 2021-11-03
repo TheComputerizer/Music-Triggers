@@ -1,10 +1,7 @@
 package mods.thecomputerizer.musictriggers.util;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.util.packets.InfoForBiome;
-import mods.thecomputerizer.musictriggers.util.packets.InfoForStructure;
-import mods.thecomputerizer.musictriggers.util.packets.InfoFromBiome;
-import mods.thecomputerizer.musictriggers.util.packets.InfoFromStructure;
+import mods.thecomputerizer.musictriggers.util.packets.*;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -29,6 +26,7 @@ public class PacketHandler {
         HANDLER.registerMessage(disc++, InfoFromStructure.class, InfoFromStructure::encode, InfoFromStructure::new, InfoFromStructure::handle);
         HANDLER.registerMessage(disc++, InfoForBiome.class, InfoForBiome::encode, InfoForBiome::new, InfoForBiome::handle);
         HANDLER.registerMessage(disc++, InfoFromBiome.class, InfoFromBiome::encode, InfoFromBiome::new, InfoFromBiome::handle);
+        HANDLER.registerMessage(disc++, CurSong.class, CurSong::encode, CurSong::new, CurSong::handle);
     }
 
     public static void sendTo(Object message, ServerPlayerEntity player) {

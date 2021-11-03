@@ -2,10 +2,12 @@ package mods.thecomputerizer.musictriggers;
 
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.client.eventsClient;
+import mods.thecomputerizer.musictriggers.common.eventsCommon;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.json;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -53,9 +55,12 @@ public class MusicTriggers {
         try {
             File baseConfig = new File(configDir, "musictriggers.txt");
             if(FMLEnvironment.dist==Dist.CLIENT) {
-                File replace = collect();
-                if(replace!=null) {
-                    FileUtils.copyFile(replace,baseConfig);
+                try {
+                    FileUtils.copyInputStreamToFile(
+                            Minecraft.getInstance().getResourceManager().getResource(new ResourceLocation(MODID, MODID + ".txt")).getInputStream(),
+                            new File("config/MusicTriggers/musictriggers.txt"));
+                } catch(Exception e) {
+                    e.printStackTrace();
                 }
             }
             if (!baseConfig.exists()) {
@@ -71,6 +76,11 @@ public class MusicTriggers {
                 configTitleCards.build(Transitionconfig);
             }
             configTitleCards.read(Transitionconfig);
+            File Registrationconfig = new File(configDir,"registration.txt");
+            if(!Registrationconfig.exists()) {
+                configRegistry.build(Registrationconfig);
+            }
+            configRegistry.read(Registrationconfig);
         } catch(Exception e) {
             e.printStackTrace();
         }
@@ -127,7 +137,7 @@ public class MusicTriggers {
             if (!langDir.exists()) {
                 langDir.mkdir();
             }
-            File lang = new File(langDir.getPath() + "/en_us.lang");
+            File lang = new File(langDir.getPath() + "/en_us.json");
             if (!lang.exists()) {
                 try {
                     lang.createNewFile();
@@ -154,7 +164,7 @@ public class MusicTriggers {
                     ex.printStackTrace();
                 }
             }
-            sj = new File("config/MusicTriggers/songs/assets/musictriggers/lang/en_us.lang");
+            sj = new File("config/MusicTriggers/songs/assets/musictriggers/lang/en_us.json");
             if (sj.exists()) {
                 sj.delete();
             }
@@ -183,23 +193,10 @@ public class MusicTriggers {
         }
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
         MinecraftForge.EVENT_BUS.register(eventsClient.class);
+        MinecraftForge.EVENT_BUS.register(eventsCommon.class);
     }
 
     public void commonsetup(FMLCommonSetupEvent ev) {
         PacketHandler.register();
-    }
-
-    public static File collect() {
-        File folder = new File(".","resourcepacks");
-        File[] files = folder.listFiles();
-        if(files!=null) {
-            for(File file : files) {
-                File override = new File(file,"assets/musictriggers/musictriggers.txt");
-                if(override.exists()) {
-                    return override;
-                }
-            }
-        }
-        return null;
     }
 }

@@ -2,9 +2,11 @@ package mods.thecomputerizer.musictriggers.client;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.ModSounds;
+import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.config;
-import mods.thecomputerizer.musictriggers.configDebug;
 import mods.thecomputerizer.musictriggers.configTitleCards;
+import mods.thecomputerizer.musictriggers.util.PacketHandler;
+import mods.thecomputerizer.musictriggers.util.packets.CurSong;
 import net.minecraft.block.JukeboxBlock;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
@@ -12,7 +14,8 @@ import net.minecraft.tileentity.JukeboxTileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.*;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.event.TickEvent;
@@ -20,6 +23,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 import java.util.*;
 
+@SuppressWarnings("rawtypes")
 public class MusicPlayer {
 
     public static List<String> curTrackList;
@@ -39,6 +43,37 @@ public class MusicPlayer {
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent event) {
+        if(MusicPicker.persistentPVP>0) {
+            MusicPicker.persistentPVP -= 1;
+        }
+        for (Map.Entry<Integer, Integer> integerListEntry : MusicPicker.persistentVictory.entrySet()) {
+            int victoryID = integerListEntry.getKey();
+            MusicPicker.persistentVictory.putIfAbsent(victoryID,0);
+            if(MusicPicker.persistentVictory.get(victoryID)>0) {
+                MusicPicker.persistentVictory.put(victoryID,MusicPicker.persistentVictory.get(victoryID)-1);
+            }
+        }
+        for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.mobSongsString.entrySet()) {
+            String mobName = ((Map.Entry) stringListEntry).getKey().toString();
+            MusicPicker.persistentMob.putIfAbsent(mobName,0);
+            if(MusicPicker.persistentMob.get(mobName)>0) {
+                MusicPicker.persistentMob.put(mobName,MusicPicker.persistentMob.get(mobName)-1);
+            }
+        }
+        for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.biomeSongsString.entrySet()) {
+            String biomeRegex = ((Map.Entry) stringListEntry).getKey().toString();
+            MusicPicker.persistentBiome.putIfAbsent(biomeRegex,0);
+            if(MusicPicker.persistentBiome.get(biomeRegex)>0) {
+                MusicPicker.persistentBiome.put(biomeRegex,MusicPicker.lightPersistence.get(biomeRegex)-1);
+            }
+        }
+        for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.lightSongsString.entrySet()) {
+            String lightName = ((Map.Entry) stringListEntry).getKey().toString();
+            MusicPicker.lightPersistence.putIfAbsent(lightName,0);
+            if(MusicPicker.lightPersistence.get(lightName)>0) {
+                MusicPicker.lightPersistence.put(lightName,MusicPicker.lightPersistence.get(lightName)-1);
+            }
+        }
         if (fading) {
             if (tempFade == 0) {
                 fading = false;
@@ -79,11 +114,6 @@ public class MusicPlayer {
                 if (curTrackList == null) {
                     curTrackList = holder;
                 }
-                if (configDebug.FinalSongs.get() && eventsClient.isWorldRendered) {
-                    for (String print : curTrackList) {
-                        MusicPicker.player.sendMessage(new TranslationTextComponent(print),MusicPicker.player.getUUID());
-                    }
-                }
                 if (curMusic != null) {
                     if (!mc.getSoundManager().isActive(curMusic)) {
                         mc.getSoundManager().stop();
@@ -114,6 +144,9 @@ public class MusicPlayer {
                             }
                         }
                         curTrack = curTrackList.get(i);
+                        if(MusicPicker.player!=null) {
+                            PacketHandler.sendToServer(new CurSong(curTrack, MusicPicker.player.getUUID()));
+                        }
                         curMusic = ModSounds.playableSounds.get("music."+curTrack);
                         mc.getSoundManager().stop();
                         mc.getSoundManager().play(curMusic);
@@ -123,11 +156,6 @@ public class MusicPlayer {
                 if (curMusic != null) {
                     mc.getSoundManager().stop(curMusic);
                     curMusic = null;
-                }
-            }
-            if (eventsClient.vanilla != null) {
-                if (mc.getSoundManager().isActive(eventsClient.vanilla)) {
-                    mc.getSoundManager().stop(eventsClient.vanilla);
                 }
             }
         }

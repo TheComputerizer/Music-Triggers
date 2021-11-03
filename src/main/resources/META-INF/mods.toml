@@ -1,24 +1,16 @@
-  # The name of the mod loader type to load - for regular FML @Mod mods it should be javafml
     modLoader="javafml"
-    # A version range to match for said mod loader - for regular FML @Mod it will be the forge version
-    # Forge for 1.16.5 is version 36
     loaderVersion="[36,)"
-    # The license for your mod. This is mandatory and allows for easier comprehension of your redistributive properties.
-    # Review your options at https://choosealicense.com/. All rights reserved is the default copyright stance, and is thus the default here.
     license="All Rights Reserved"
-    # A URL to refer people to when problems occur with this mod
-    # issueTrackerURL="github.com/MinecraftForge/MinecraftForge/issues"
-    # If the mods defined in this file should show as separate resource packs
     showAsResourcePack=false
 
     [[mods]]
       modId="musictriggers"
-      version="1.16.5-2.0"
+      version="1.16.5-3.0"
       displayName="Music Triggers"
       updateJSONURL=""
       displayURL="https://www.curseforge.com/minecraft/mc-mods/music-triggers"
-      logoFile=""
-      credits=""
+      logoFile="musictriggers_logo"
+      credits="The_Computerizer"
       authors="The_Computerizer"
       description='''
       Lets you play music based on in game triggers
