@@ -33,7 +33,7 @@ public class eventsCommon {
             if(recordHolder.get(blockPos)!=null && !recordHolder.get(blockPos).isEmpty() && recordHolder.get(blockPos).getItem() instanceof BlankRecord) {
                 tickCounter.put(blockPos,tickCounter.get(blockPos)+1);
                 if(randomNum+tickCounter.get(blockPos)>=6000) {
-                    recordWorld.get(blockPos).playSound(recordWorld.get(blockPos).getPlayerByUUID(recordUUID.get(blockPos)),blockPos, new SoundEvent(new ResourceLocation("minecraft","item.trident.thunder")), SoundCategory.RECORDS,1F,1F);
+                    recordWorld.get(blockPos).playSound(null,blockPos, new SoundEvent(new ResourceLocation("minecraft","item.trident.thunder")), SoundCategory.MASTER,1F,1F);
                     tickCounter.put(blockPos,0);
                     for (SoundEvent s : SoundHandler.allSoundEvents) {
                         String songName = Objects.requireNonNull(s.getRegistryName()).toString().replaceAll("musictriggers:","");

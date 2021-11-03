@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.client;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.ModSounds;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
+import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
 import mods.thecomputerizer.musictriggers.config;
 import mods.thecomputerizer.musictriggers.configTitleCards;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
@@ -13,6 +14,7 @@ import net.minecraft.client.audio.ISound;
 import net.minecraft.tileentity.JukeboxTileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -29,7 +31,7 @@ public class MusicPlayer {
     public static List<String> curTrackList;
     public static List<String> holder;
     public static String curTrack;
-    private static ISound curMusic;
+    public static ISound curMusic;
     public static Random rand = new Random();
     public static Minecraft mc = Minecraft.getInstance();
     public static int tickCounter = 0;
@@ -39,6 +41,8 @@ public class MusicPlayer {
     public static List<String> tempTitleCards = new ArrayList<>();
     public static boolean delay = false;
     public static int delayTime = 0;
+    public static SoundEvent fromRecord = null;
+    public static boolean playing = false;
 
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
@@ -92,7 +96,13 @@ public class MusicPlayer {
             }
         }
         if (tickCounter % 10 == 0 && !fading && !delay) {
-            boolean playing = false;
+            if(MusicPicker.player!=null && (MusicPicker.player.getMainHandItem().getItem() instanceof MusicTriggersRecord)) {
+                fromRecord = ((MusicTriggersRecord)MusicPicker.player.getMainHandItem().getItem()).getSound();
+            }
+            else {
+                fromRecord = null;
+            }
+            playing = false;
             if (MusicPicker.player != null) {
                 for (int x = MusicPicker.player.xChunk- 3; x <= MusicPicker.player.xChunk + 3; x++) {
                     for (int z = MusicPicker.player.zChunk - 3; z <= MusicPicker.player.zChunk + 3; z++) {
@@ -115,7 +125,7 @@ public class MusicPlayer {
                     curTrackList = holder;
                 }
                 if (curMusic != null) {
-                    if (!mc.getSoundManager().isActive(curMusic)) {
+                    if (!mc.getSoundManager().isActive(curMusic) || mc.options.getSoundSourceVolume(SoundCategory.MUSIC)==0 || mc.options.getSoundSourceVolume(SoundCategory.MASTER)==0) {
                         mc.getSoundManager().stop();
                         curMusic = null;
                         delay = true;

@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.client;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
 import com.mojang.blaze3d.systems.RenderSystem;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.configDebug;
 import mods.thecomputerizer.musictriggers.configTitleCards;
 import net.minecraft.client.Minecraft;
@@ -39,6 +40,9 @@ public class eventsClient {
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
+        if(e.getResultSound().getLocation().getNamespace().matches(MusicTriggers.MODID) && ((e.getManager().isActive(MusicPlayer.curMusic) && e.getSound().getLocation()!=MusicPlayer.fromRecord.getLocation()) || MusicPlayer.playing)) {
+            e.setResultSound(null);
+        }
         for(String s : configDebug.blockedmods.get()) {
             if(e.getSound().getLocation().toString().contains(s) && e.getSound().getSource()== SoundCategory.MUSIC) {
                 e.setResultSound(null);

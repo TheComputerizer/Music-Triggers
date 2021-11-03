@@ -40,10 +40,10 @@ public class json {
             js.add("{");
             for (int i=0;i<allSongs.size()-1;i++) {
                 js.add("\t\"item.musictriggers." + allSongs.get(i).toLowerCase() + "\": \"Music Disc\",");
-                js.add("\t\"item.record." + allSongs.get(i).toLowerCase() + ".desc\": \"Music Triggers - "+allSongs.get(i)+"\",");
+                js.add("\t\"item.musictriggers." + allSongs.get(i).toLowerCase() + ".desc\": \"Music Triggers - "+allSongs.get(i)+"\",");
             }
             js.add("\t\"item.musictriggers." + allSongs.get(allSongs.size()-1).toLowerCase() + "\": \"Music Disc\",");
-            js.add("\t\"item.record." + allSongs.get(allSongs.size()-1).toLowerCase() + ".desc\": \"Music Triggers - "+allSongs.get(allSongs.size()-1)+"\"");
+            js.add("\t\"item.musictriggers." + allSongs.get(allSongs.size()-1).toLowerCase() + ".desc\": \"Music Triggers - "+allSongs.get(allSongs.size()-1)+"\"");
             js.add("}");
         }
         return js;

@@ -54,15 +54,6 @@ public class MusicTriggers {
         }
         try {
             File baseConfig = new File(configDir, "musictriggers.txt");
-            if(FMLEnvironment.dist==Dist.CLIENT) {
-                try {
-                    FileUtils.copyInputStreamToFile(
-                            Minecraft.getInstance().getResourceManager().getResource(new ResourceLocation(MODID, MODID + ".txt")).getInputStream(),
-                            new File("config/MusicTriggers/musictriggers.txt"));
-                } catch(Exception e) {
-                    e.printStackTrace();
-                }
-            }
             if (!baseConfig.exists()) {
                 Files.createFile(Paths.get(baseConfig.getPath()));
                 config.build(baseConfig);
