@@ -332,8 +332,8 @@ public class MusicPicker {
         if (SoundHandler.biomeSongs != null && !SoundHandler.biomeSongs.isEmpty()) {
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.biomeSongsString.entrySet()) {
                 String biomeRegex = ((Map.Entry) stringListEntry).getKey().toString();
-                if (Objects.requireNonNull(world.getBiome(player.getPosition()).getRegistryName()).toString().contains(biomeRegex)) {
-                    String biomeName = Objects.requireNonNull(world.getBiome(player.getPosition()).getRegistryName()).toString();
+                if (Objects.requireNonNull(world.getBiome(roundedPos(player)).getRegistryName()).toString().contains(biomeRegex)) {
+                    String biomeName = Objects.requireNonNull(world.getBiome(roundedPos(player)).getRegistryName()).toString();
                     events.add(biomeName);
                     String[] biomeSongsArray = new String[SoundHandler.biomeSongsString.get(biomeName).size()];
                     dynamicSongs.put(biomeName, SoundHandler.biomeSongsString.get(biomeName).toArray(biomeSongsArray));
@@ -341,7 +341,7 @@ public class MusicPicker {
                     dynamicFade.put(biomeName, SoundHandler.biomeFade.get(biomeName));
                     persistentBiome.put(biomeRegex, SoundHandler.biomePersistence.get(biomeName));
                 } else if (persistentBiome.get(biomeRegex) > 0) {
-                    String biomeName = Objects.requireNonNull(world.getBiome(player.getPosition()).getRegistryName()).toString();
+                    String biomeName = Objects.requireNonNull(world.getBiome(roundedPos(player)).getRegistryName()).toString();
                     events.add(biomeName);
                     String[] biomeSongsArray = new String[SoundHandler.biomeSongsString.get(biomeName).size()];
                     dynamicSongs.put(biomeName, SoundHandler.biomeSongsString.get(biomeName).toArray(biomeSongsArray));
@@ -362,7 +362,7 @@ public class MusicPicker {
                     dynamicFade.put("structure:" + structName, SoundHandler.structureFade.get(structName));
                 }
             }
-        } else if (configRegistry.registry.registerDiscs) {
+        } else {
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.structureSongsString.entrySet()) {
                 String structName = ((Map.Entry) stringListEntry).getKey().toString();
                 RegistryHandler.network.sendToServer(new packet.packetMessage(structName, player.getPosition(), player.dimension, player.getUniqueID()));
@@ -373,6 +373,10 @@ public class MusicPicker {
                         dynamicSongs.put("structure:" + structName, SoundHandler.structureSongsString.get(structName).toArray(structureSongsArray));
                         dynamicPriorities.put("structure:" + structName, SoundHandler.structurePriorities.get(structName));
                         dynamicFade.put("structure:" + structName, SoundHandler.structureFade.get(structName));
+                        eventsClient.curStruct = structName;
+                    }
+                    else {
+                        eventsClient.curStruct = null;
                     }
                 }
             }
@@ -544,6 +548,7 @@ public class MusicPicker {
             }
         }
         persistentVictory.putIfAbsent(victoryID, 0);
+        victory.putIfAbsent(victoryID,false);
         if(victory.get(victoryID)) {
             boolean victoryTempM = true;
             boolean victoryTempP = true;

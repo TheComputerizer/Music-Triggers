@@ -482,7 +482,7 @@ public class config {
         public int mobPriority;
         @Comment("Songs Per Mob [Format: \"MobName,number of mobs,SongName,(Optional)detection range[min: 1, max: 1000, default: 16],(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0],(Optional)Targetting[default: false],(Optional)Horde Targetting percentage[default: 100], (Optional)Health[default: 100],(Optional)Horde Health Percentage[default: 100],(Optional)Battle Time[in ticks, default: 0],(Optional)Trigger Victory[default: false],(Optional)Victory ID[min:0, max:2147483647, default: 0](Optional)Infernal[only works with the mod infernal mobs active]\"]\n" +
                 "Note: You only have to set the priority per mob name for 1 song\n" +
-                "Additional Note: Putting high numbers (over 200) for the mob range may cause lag! The higher it is, the more noticable that lag will be. Only use higher numbers for a boss that could be far away, like the Ender Dragon\n" +
+                "Additional Note: Putting high numbers (over 100) for the mob range may cause lag! The higher it is, the more noticable that lag will be. Only use higher numbers for a boss that could be far away, like the Ender Dragon\n" +
                 "Additional Note: Targetting requires the mob(s) to be looking at you while horde targetting percentage is the total percentage of the number of mobs you set that have to be looking at you\n"+
                 "Additional Note: Health requires the mob(s) to be below the set percentage threshold of health while horde health percentage is the total percentage of the number of mobs you set that have to be below the set percentage threshold of health\n"+
                 "Additional Note: Battle time is how long the trigger will persist after the conditions are no longer met. Due to possible conflicts it may to better to leave this at 0\n"+
@@ -505,7 +505,9 @@ public class config {
     public static class Effect {
         @Comment("Priority [min: -99, max: 2147483647 default: 500]")
         public int effectPriority;
-        @Comment("Songs Per Effect [Format: \"EffectName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\nNote: You only have to set the priority per effect name for 1 song\nExample: effect.regeneration,(songname),11111")
+        @Comment("Songs Per Effect [Format: \"EffectName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\n" +
+                "Note: You only have to set the priority per effect name for 1 song\n" +
+                "Example: effect.regeneration,(songname),11111")
         public String[] effectSongs;
 
         public Effect(final int effectPriority, final String[] effectSongs) {
@@ -518,7 +520,7 @@ public class config {
     public static PVP pvp = new PVP(20000,0,16,200,false,0,new String[] {});
 
     public static class PVP {
-        @Comment("Priority [min: -99, max: 2147483647 default: 500]")
+        @Comment("Priority [min: -99, max: 2147483647 default: 20000]")
         public int pvpPriority;
         @Comment("Fade Time:[in ticks, default: 0]")
         public int pvpFade;
@@ -548,7 +550,7 @@ public class config {
     public static Victory victory = new Victory(20000,0,16,200,new String[] {});
 
     public static class Victory {
-        @Comment("Priority [min: -99, max: 2147483647 default: 500]")
+        @Comment("Priority [min: -99, max: 2147483647 default: 20000]")
         public int victoryPriority;
         @Comment("Songs - [Format: \"SongName,Victory ID,(Optional)Victory Time[default: 200],(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\n" +
                 "Note - The victory time is how long the victory trigger will last for\n" +
@@ -639,7 +641,7 @@ public class config {
         public int rainintensityPriority;
         @Comment("Fade Time [in ticks, default: 0]")
         public int rainintensityFade;
-        @Comment("Songs [Format: songname,Intensity Level (min: 0, max: 100)\n" +
+        @Comment("Songs [Format: songname,Intensity Level (min: 0, max: 100)]\n" +
                 "Note - This trigger will play when the rain has a higher intensity than you put in\n" +
                 "Example: intenserain,70")
         public String[] rainintensitySongs;

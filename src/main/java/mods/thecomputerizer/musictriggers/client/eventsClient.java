@@ -13,6 +13,7 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.world.EnumSkyBlock;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
@@ -37,9 +38,13 @@ public class eventsClient {
     public static int timer=0;
     public static EntityPlayer playerHurt;
     public static EntityPlayer playerSource;
+    public static String curStruct;
 
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
+        if(e.getSound().getSoundLocation().getNamespace().matches(MusicTriggers.MODID) && ((e.getManager().isSoundPlaying(MusicPlayer.curMusic) && e.getSound().getSoundLocation()!=MusicPlayer.fromRecord.getRegistryName()) || MusicPlayer.playing)) {
+            e.setResultSound(null);
+        }
         for(String s : configDebug.blockedmods) {
             if(e.getSound().getSoundLocation().toString().contains(s) && e.getSound().getCategory()==SoundCategory.MUSIC) {
                 e.setResultSound(null);
@@ -146,9 +151,13 @@ public class eventsClient {
                 }
                 e.getLeft().add("Music Triggers Current Blocked Mods: " + sm);
                 if(MusicPicker.player!=null && MusicPicker.world!=null) {
+                    if(curStruct!=null) {
+                        e.getLeft().add("Music Triggers Current Structure: " +curStruct);
+                    }
                     e.getLeft().add("Music Triggers Current Biome: " + MusicPicker.world.getBiome(MusicPicker.player.getPosition()).getRegistryName());
                     e.getLeft().add("Music Triggers Current Dimension: " + MusicPicker.player.dimension);
-                    e.getLeft().add("Music Triggers Current Light Level: " + MusicPicker.world.getLight(MusicPicker.roundedPos(MusicPicker.player)));
+                    e.getLeft().add("Music Triggers Current Total Light: " + MusicPicker.world.getLight(MusicPicker.roundedPos(MusicPicker.player), true));
+                    e.getLeft().add("Music Triggers Current Block Light: " + MusicPicker.world.getLightFor(EnumSkyBlock.BLOCK, MusicPicker.roundedPos(MusicPicker.player)));
                 }
                 if(MusicPicker.effectList!=null && !MusicPicker.effectList.isEmpty()) {
                     StringBuilder se = new StringBuilder();

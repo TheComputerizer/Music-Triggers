@@ -15,7 +15,7 @@ plugins {
     id("wtf.gofancy.fancygradle") version "1.0.0"
 }
 
-version = "2.2"
+version = "3.0"
 group = "mods.thecomputerizer.musictriggers"
 
 minecraft {

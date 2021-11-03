@@ -764,9 +764,14 @@ public class SoundHandler {
                     biomePriorities.put(extractedBiome, extractedPriority);
                 }
                 biomeFade.putIfAbsent(extractedBiome, 0);
-                if(broken.length==4) {
+                if(broken.length>=4) {
                     int extractedFade = Integer.parseInt(broken[3]);
                     biomeFade.put(extractedBiome, extractedFade);
+                }
+                biomePersistence.putIfAbsent(extractedBiome, 0);
+                if(broken.length==5) {
+                    int extractedPersistence = Integer.parseInt(broken[4]);
+                    biomePersistence.put(extractedBiome, extractedPersistence);
                 }
                 String songName = broken[1].toLowerCase();
                 String songNamePlus = songName;

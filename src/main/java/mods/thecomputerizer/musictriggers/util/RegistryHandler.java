@@ -4,12 +4,10 @@ import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.ModSounds;
 import mods.thecomputerizer.musictriggers.common.MusicTriggersBlocks;
 import mods.thecomputerizer.musictriggers.common.MusicTriggersItems;
-import mods.thecomputerizer.musictriggers.common.objects.MusicRecorder;
 import mods.thecomputerizer.musictriggers.configRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
@@ -48,7 +46,6 @@ public final class RegistryHandler {
     public static void registerBlocks(RegistryEvent.Register<Block> e) {
         if(configRegistry.registry.registerDiscs) {
             e.getRegistry().register(MusicTriggersBlocks.MUSIC_RECORDER);
-            GameRegistry.registerTileEntity(MusicRecorder.TileEntityMusicRecorder.class, new ResourceLocation(MusicTriggers.MODID, "music_recorder_tile_entity"));
         }
     }
 

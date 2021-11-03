@@ -2,6 +2,12 @@
     "variants": {
         "normal": [
              { "model": "musictriggers:music_recorder" }
+        ],
+        "has_record=true": [
+                     { "model": "musictriggers:music_recorder_active" }
+        ],
+        "has_record=false": [
+                     { "model": "musictriggers:music_recorder" }
         ]
     }
 }

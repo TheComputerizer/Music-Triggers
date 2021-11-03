@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.client;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
+import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
 import mods.thecomputerizer.musictriggers.config;
 import mods.thecomputerizer.musictriggers.configRegistry;
 import mods.thecomputerizer.musictriggers.configTitleCards;
@@ -13,6 +14,7 @@ import net.minecraft.client.audio.ISound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -27,7 +29,7 @@ public class MusicPlayer {
     public static String[] curTrackList;
     public static String[] holder;
     public static String curTrack;
-    private static ISound curMusic;
+    public static ISound curMusic;
     public static Random rand = new Random();
     public static Minecraft mc = Minecraft.getMinecraft();
     public static int tickCounter = 0;
@@ -38,6 +40,8 @@ public class MusicPlayer {
     public static List<String> tempTitleCards = new ArrayList<>();
     public static boolean delay = false;
     public static int delayTime = 0;
+    public static boolean playing = false;
+    public static SoundEvent fromRecord = null;
 
     @SuppressWarnings("rawtypes")
     @SubscribeEvent
@@ -109,7 +113,13 @@ public class MusicPlayer {
             }
         }
         if (tickCounter % 10 == 0 && !fading && !delay) {
-            boolean playing = false;
+            if(MusicPicker.player!=null && (MusicPicker.player.getHeldItemMainhand().getItem() instanceof MusicTriggersRecord)) {
+                fromRecord = ((MusicTriggersRecord)MusicPicker.player.getHeldItemMainhand().getItem()).getSound();
+            }
+            else {
+                fromRecord = null;
+            }
+            playing = false;
             if (MusicPicker.player != null) {
                 for (int x = MusicPicker.player.chunkCoordX - 3; x <= MusicPicker.player.chunkCoordX + 3; x++) {
                     for (int z = MusicPicker.player.chunkCoordZ - 3; z <= MusicPicker.player.chunkCoordZ + 3; z++) {
@@ -132,7 +142,7 @@ public class MusicPlayer {
                     curTrackList = holder;
                 }
                 if (curMusic != null) {
-                    if (!mc.getSoundHandler().isSoundPlaying(curMusic)) {
+                    if (!mc.getSoundHandler().isSoundPlaying(curMusic) || mc.gameSettings.getSoundLevel(SoundCategory.MUSIC)==0 || mc.gameSettings.getSoundLevel(SoundCategory.MASTER)==0) {
                         mc.getSoundHandler().stopSounds();
                         curMusic = null;
                         delay = true;
