@@ -11,9 +11,11 @@ import corgitaco.enhancedcelestials.LunarContext;
 import corgitaco.enhancedcelestials.lunarevent.BloodMoon;
 import corgitaco.enhancedcelestials.lunarevent.BlueMoon;
 import corgitaco.enhancedcelestials.lunarevent.HarvestMoon;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.config;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
+import mods.thecomputerizer.musictriggers.util.packets.InfoForBiome;
 import mods.thecomputerizer.musictriggers.util.packets.InfoForStructure;
 import net.darkhax.gamestages.GameStageHelper;
 import net.minecraft.block.material.Material;
@@ -321,37 +323,36 @@ public class MusicPicker {
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.biomeSongsString.entrySet()) {
                 String biomeRegex = ((Map.Entry) stringListEntry).getKey().toString();
                 if (Objects.requireNonNull(world.getBiome(roundedPos(player)).getRegistryName()).toString().contains(biomeRegex)) {
-                    String biomeName = Objects.requireNonNull(world.getBiome(roundedPos(player)).getRegistryName()).toString();
-                    events.add(biomeName);
-                    dynamicSongs.put(biomeName, SoundHandler.biomeSongsString.get(biomeName));
-                    dynamicPriorities.put(biomeName, SoundHandler.biomePriorities.get(biomeName));
-                    dynamicFade.put(biomeName, SoundHandler.biomeFade.get(biomeName));
-                    persistentBiome.put(biomeRegex, SoundHandler.biomePersistence.get(biomeName));
+                    events.add(biomeRegex);
+                    dynamicSongs.put(biomeRegex, SoundHandler.biomeSongsString.get(biomeRegex));
+                    dynamicPriorities.put(biomeRegex, SoundHandler.biomePriorities.get(biomeRegex));
+                    dynamicFade.put(biomeRegex, SoundHandler.biomeFade.get(biomeRegex));
+                    persistentBiome.put(biomeRegex, SoundHandler.biomePersistence.get(biomeRegex));
                 } else if (persistentBiome.get(biomeRegex) > 0) {
-                    String biomeName = Objects.requireNonNull(world.getBiome(roundedPos(player)).getRegistryName()).toString();
-                    events.add(biomeName);
-                    dynamicSongs.put(biomeName, SoundHandler.biomeSongsString.get(biomeName));
-                    dynamicPriorities.put(biomeName, SoundHandler.biomePriorities.get(biomeName));
-                    dynamicFade.put(biomeName, SoundHandler.biomeFade.get(biomeName));
+                    events.add(biomeRegex);
+                    dynamicSongs.put(biomeRegex, SoundHandler.biomeSongsString.get(biomeRegex));
+                    dynamicPriorities.put(biomeRegex, SoundHandler.biomePriorities.get(biomeRegex));
+                    dynamicFade.put(biomeRegex, SoundHandler.biomeFade.get(biomeRegex));
                 }
             }
         }
         else {
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.biomeSongsString.entrySet()) {
                 String biomeRegex = ((Map.Entry) stringListEntry).getKey().toString();
-                if (Objects.requireNonNull(world.getBiome(roundedPos(player)).getRegistryName()).toString().contains(biomeRegex)) {
-                    String biomeName = Objects.requireNonNull(world.getBiome(roundedPos(player)).getRegistryName()).toString();
-                    events.add(biomeName);
-                    dynamicSongs.put(biomeName, SoundHandler.biomeSongsString.get(biomeName));
-                    dynamicPriorities.put(biomeName, SoundHandler.biomePriorities.get(biomeName));
-                    dynamicFade.put(biomeName, SoundHandler.biomeFade.get(biomeName));
-                    persistentBiome.put(biomeRegex, SoundHandler.biomePersistence.get(biomeName));
+                PacketHandler.sendToServer(new InfoForBiome(biomeRegex,roundedPos(player),player.getUUID()));
+                if (fromServer.inBiome.get(biomeRegex)) {
+                    events.add(biomeRegex);
+                    dynamicSongs.put(biomeRegex, SoundHandler.biomeSongsString.get(biomeRegex));
+                    dynamicPriorities.put(biomeRegex, SoundHandler.biomePriorities.get(biomeRegex));
+                    //MusicTriggers.logger.info(biomeRegex+" "+SoundHandler.biomePriorities.get(biomeRegex));
+                    dynamicFade.put(biomeRegex, SoundHandler.biomeFade.get(biomeRegex));
+                    persistentBiome.put(biomeRegex, SoundHandler.biomePersistence.get(biomeRegex));
                 } else if (persistentBiome.get(biomeRegex) > 0) {
-                    String biomeName = Objects.requireNonNull(world.getBiome(roundedPos(player)).getRegistryName()).toString();
-                    events.add(biomeName);
-                    dynamicSongs.put(biomeName, SoundHandler.biomeSongsString.get(biomeName));
-                    dynamicPriorities.put(biomeName, SoundHandler.biomePriorities.get(biomeName));
-                    dynamicFade.put(biomeName, SoundHandler.biomeFade.get(biomeName));
+                    events.add(biomeRegex);
+                    dynamicSongs.put(biomeRegex, SoundHandler.biomeSongsString.get(biomeRegex));
+                    dynamicPriorities.put(biomeRegex, SoundHandler.biomePriorities.get(biomeRegex));
+                    //MusicTriggers.logger.info(biomeRegex+" "+SoundHandler.biomePriorities.get(biomeRegex));
+                    dynamicFade.put(biomeRegex, SoundHandler.biomeFade.get(biomeRegex));
                 }
             }
         }

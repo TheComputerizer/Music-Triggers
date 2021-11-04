@@ -360,7 +360,7 @@ public final class config {
                     songLines = false;
                 }
                 if (songLines && !line.contains("Songs=<")) {
-                    line = line.replaceAll("\t", "");
+                    line = line.trim();
                     if (!songs.contains(line) && line.length() != 0) {
                         MusicTriggers.logger.info("The song " + line + " is being added to the current trigger category " + Categories[triggerCounter] + "!");
                         songs.add(line);

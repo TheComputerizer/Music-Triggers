@@ -68,7 +68,7 @@ public class MusicPlayer {
             String biomeRegex = ((Map.Entry) stringListEntry).getKey().toString();
             MusicPicker.persistentBiome.putIfAbsent(biomeRegex,0);
             if(MusicPicker.persistentBiome.get(biomeRegex)>0) {
-                MusicPicker.persistentBiome.put(biomeRegex,MusicPicker.lightPersistence.get(biomeRegex)-1);
+                MusicPicker.persistentBiome.put(biomeRegex,MusicPicker.persistentBiome.get(biomeRegex)-1);
             }
         }
         for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.lightSongsString.entrySet()) {

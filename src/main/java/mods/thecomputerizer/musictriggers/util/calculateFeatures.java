@@ -36,7 +36,7 @@ public class calculateFeatures {
         if(server.getPlayerList().getPlayer(uuid)!=null) {
             ServerWorld world = server.getLevel(Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)).level.dimension());
             if (world != null) {
-                if (Objects.requireNonNull(world.getBiome(pos).getRegistryName()).toString().matches(biome)) {
+                if (Objects.requireNonNull(world.getBiome(pos).getRegistryName()).toString().contains(biome)) {
                     PacketHandler.sendTo(new InfoFromBiome(true,biome), Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)));
                 } else {
                     PacketHandler.sendTo(new InfoFromBiome(false,biome), Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)));
