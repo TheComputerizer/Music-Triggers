@@ -8,47 +8,39 @@ import mods.thecomputerizer.musictriggers.util.json;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.FolderResourcePack;
 import net.minecraft.client.resources.IResourcePack;
-import net.minecraft.client.resources.ResourcePackRepository;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.thread.SidedThreadGroups;
-import net.minecraftforge.fml.relauncher.Side;
-import org.apache.commons.io.FileUtils;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@SuppressWarnings("ResultOfMethodCallIgnored")
+@SuppressWarnings({"ResultOfMethodCallIgnored", "deprecation"})
 @Mod(modid = MusicTriggers.MODID, name = MusicTriggers.NAME, version = MusicTriggers.VERSION)
 public class MusicTriggers {
     public static final String MODID = "musictriggers";
     public static final String NAME = "Music Triggers";
-    public static final String VERSION = "3.0";
+    public static final String VERSION = "3.1";
 
     public static File songsDir;
     public static File texturesDir;
     public static File songs;
     public static File readFrom;
     public static File pack;
-    public static List<ResourcePackRepository.Entry> oldpacks = new ArrayList<>();
-    public static List<ResourcePackRepository.Entry> newpacks = new ArrayList<>();
 
     public static Logger logger;
 
-    @SuppressWarnings("JavaReflectionMemberAccess")
     public MusicTriggers() {
         readFrom = new File("config/MusicTriggers/songs/");
         if (readFrom.exists() && Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -91,12 +83,8 @@ public class MusicTriggers {
             pack = new File("config/MusicTriggers/songs/");
             if (pack.exists()) {
                 try {
-                    oldpacks = Minecraft.getMinecraft().getResourcePackRepository().getRepositoryEntriesAll();
-                    newpacks.addAll(oldpacks);
-                    Constructor<ResourcePackRepository.Entry> cn = ResourcePackRepository.Entry.class.getDeclaredConstructor(ResourcePackRepository.class, IResourcePack.class);
-                    cn.setAccessible(true);
-                    newpacks.add(cn.newInstance(Minecraft.getMinecraft().getResourcePackRepository(), new FolderResourcePack(pack)));
-                    Minecraft.getMinecraft().getResourcePackRepository().setRepositories(newpacks);
+                    List<IResourcePack> defaultResourcePacks = ReflectionHelper.getPrivateValue(Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "field_110449_ao", "ap");
+                    defaultResourcePacks.add(new FolderResourcePack(pack));
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -171,17 +159,7 @@ public class MusicTriggers {
                     ex.printStackTrace();
                 }
             }
-
             songs = musictriggersDir;
-        }
-        if (event.getSide() == Side.CLIENT) {
-            try {
-                FileUtils.copyInputStreamToFile(
-                        Minecraft.getMinecraft().getResourceManager().getResource(new ResourceLocation(MODID, MODID+".cfg")).getInputStream(),
-                        new File("config/MusicTriggers/musictriggers.cfg"));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
         }
         RegistryHandler.init();
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);

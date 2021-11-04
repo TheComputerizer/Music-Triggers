@@ -10,7 +10,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public class configDebug {
 
     @Config.Comment("Show the debug info in the F3 menu")
-    public static boolean ShowDebugInfo = true;
+    public static boolean ShowDebugInfo = false;
 
     @Config.Comment("If ShowDebugInfo is set to true, but you only want to see the song name")
     public static boolean ShowJustCurSong = false;

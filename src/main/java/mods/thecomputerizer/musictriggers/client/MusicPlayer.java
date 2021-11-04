@@ -171,7 +171,7 @@ public class MusicPlayer {
                             }
                         }
                         curTrack = curTrackList[i];
-                        if(configRegistry.registry.registerDiscs) {
+                        if(configRegistry.registry.registerDiscs && MusicPicker.player!=null) {
                             RegistryHandler.network.sendToServer(new packetCurSong.packetCurSongMessage(curTrack, MusicPicker.player.getUniqueID()));
                         }
                         curMusic = SoundHandler.songsRecords.get(curTrack);
