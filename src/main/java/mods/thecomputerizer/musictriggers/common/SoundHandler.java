@@ -13,7 +13,7 @@ import java.util.Objects;
 public class SoundHandler {
 
     public static List<String> allSongs = new ArrayList<>();
-    public static final List<SoundEvent> allSoundEvents = new ArrayList<>();
+    public static List<SoundEvent> allSoundEvents = new ArrayList<>();
 
     public static List<SoundEvent> menu = new ArrayList<>();
     public static List<SoundEvent> generic = new ArrayList<>();
@@ -1294,5 +1294,113 @@ public class SoundHandler {
 
     public static String[] stringBreaker(String s) {
         return s.split(",");
+    }
+    
+    public static void emptyListsAndMaps() {
+        allSongs = new ArrayList<>();
+        allSoundEvents = new ArrayList<>();
+
+        menu = new ArrayList<>();
+        generic = new ArrayList<>();
+        day = new ArrayList<>();
+        sunrise = new ArrayList<>();
+        sunset = new ArrayList<>();
+        lightSongs = new HashMap<>();
+        lightSongsString = new HashMap<>();
+        lightLevel = new HashMap<>();
+        lightSky = new HashMap<>();
+        lightTime = new HashMap<>();
+        lightPriorities = new HashMap<>();
+        lightFade = new HashMap<>();
+        underground = new ArrayList<>();
+        deepUnder = new ArrayList<>();
+        raining = new ArrayList<>();
+        storming = new ArrayList<>();
+        snowing = new ArrayList<>();
+        lowHP = new ArrayList<>();
+        dead = new ArrayList<>();
+        inVoid = new ArrayList<>();
+        spectator = new ArrayList<>();
+        creative = new ArrayList<>();
+        riding = new ArrayList<>();
+        pet = new ArrayList<>();
+        high = new ArrayList<>();
+        underwater = new ArrayList<>();
+        pvp = new ArrayList<>();
+
+        nightSongs = new HashMap<>();
+        nightSongsString = new HashMap<>();
+        nightFade = new HashMap<>();
+
+        dimensionSongs = new HashMap<>();
+        dimensionSongsString = new HashMap<>();
+        dimensionPriorities = new HashMap<>();
+        dimensionFade = new HashMap<>();
+
+        biomeSongs = new HashMap<>();
+        biomeSongsString = new HashMap<>();
+        biomePriorities = new HashMap<>();
+        biomeFade = new HashMap<>();
+        biomePersistence = new HashMap<>();
+
+        structureSongs = new HashMap<>();
+        structureSongsString = new HashMap<>();
+        structurePriorities = new HashMap<>();
+        structureFade = new HashMap<>();
+
+        mobSongs = new HashMap<>();
+        mobSongsString = new HashMap<>();
+        mobPriorities = new HashMap<>();
+        mobNumber = new HashMap<>();
+        mobRange = new HashMap<>();
+        mobFade = new HashMap<>();
+        mobTargetting = new HashMap<>();
+        mobHordeTargetting = new HashMap<>();
+        mobHealth = new HashMap<>();
+        mobHordeHealth = new HashMap<>();
+        mobBattle = new HashMap<>();
+        mobVictory = new HashMap<>();
+        mobVictoryID = new HashMap<>();
+        mobInfernalMod = new HashMap<>();
+
+        zonesSongs = new HashMap<>();
+        zonesSongsString = new HashMap<>();
+        zonesPriorities = new HashMap<>();
+        zonesFade = new HashMap<>();
+
+        effectSongs = new HashMap<>();
+        effectSongsString = new HashMap<>();
+        effectPriorities = new HashMap<>();
+        effectFade = new HashMap<>();
+
+        victorySongs = new HashMap<>();
+        victorySongsString = new HashMap<>();
+        victoryID = new HashMap<>();
+        victoryTime = new HashMap<>();
+        victoryPriorities = new HashMap<>();
+        victoryFade = new HashMap<>();
+
+        gamestageSongsWhitelist = new HashMap<>();
+        gamestageSongsStringWhitelist = new HashMap<>();
+        gamestagePrioritiesWhitelist = new HashMap<>();
+        gamestageFadeWhitelist = new HashMap<>();
+        gamestageSongsBlacklist = new HashMap<>();
+        gamestageSongsStringBlacklist = new HashMap<>();
+        gamestagePrioritiesBlacklist = new HashMap<>();
+        gamestageFadeBlacklist = new HashMap<>();
+
+        bloodmoon = new ArrayList<>();
+        harvestmoon = new ArrayList<>();
+        bluemoon = new ArrayList<>();
+
+        rainintensitySongs = new HashMap<>();
+        rainintensitySongsString = new HashMap<>();
+
+        acidrain = new ArrayList<>();
+        blizzard = new ArrayList<>();
+        cloudy = new ArrayList<>();
+        lightrain = new ArrayList<>();
+
+        songCombos = new HashMap<>();
     }
 }

@@ -14,6 +14,7 @@ import corgitaco.enhancedcelestials.lunarevent.HarvestMoon;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.config;
+import mods.thecomputerizer.musictriggers.configRegistry;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.packets.InfoForBiome;
 import mods.thecomputerizer.musictriggers.util.packets.InfoForStructure;
@@ -22,6 +23,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.potion.Effect;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -320,6 +322,7 @@ public class MusicPicker {
             dynamicFade.put("dimension" + player.level.dimension().location(), SoundHandler.dimensionFade.get(player.level.dimension().location().toString()));
         }
         if(world.getBiome(roundedPos(player)).getRegistryName()!=null) {
+            fromServer.curBiome = world.getBiome(roundedPos(player)).getRegistryName().toString();
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.biomeSongsString.entrySet()) {
                 String biomeRegex = ((Map.Entry) stringListEntry).getKey().toString();
                 if (Objects.requireNonNull(world.getBiome(roundedPos(player)).getRegistryName()).toString().contains(biomeRegex)) {
@@ -336,7 +339,7 @@ public class MusicPicker {
                 }
             }
         }
-        else {
+        else if(!configRegistry.clientSideOnly) {
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.biomeSongsString.entrySet()) {
                 String biomeRegex = ((Map.Entry) stringListEntry).getKey().toString();
                 PacketHandler.sendToServer(new InfoForBiome(biomeRegex,roundedPos(player),player.getUUID()));
@@ -344,31 +347,27 @@ public class MusicPicker {
                     events.add(biomeRegex);
                     dynamicSongs.put(biomeRegex, SoundHandler.biomeSongsString.get(biomeRegex));
                     dynamicPriorities.put(biomeRegex, SoundHandler.biomePriorities.get(biomeRegex));
-                    //MusicTriggers.logger.info(biomeRegex+" "+SoundHandler.biomePriorities.get(biomeRegex));
                     dynamicFade.put(biomeRegex, SoundHandler.biomeFade.get(biomeRegex));
                     persistentBiome.put(biomeRegex, SoundHandler.biomePersistence.get(biomeRegex));
                 } else if (persistentBiome.get(biomeRegex) > 0) {
                     events.add(biomeRegex);
                     dynamicSongs.put(biomeRegex, SoundHandler.biomeSongsString.get(biomeRegex));
                     dynamicPriorities.put(biomeRegex, SoundHandler.biomePriorities.get(biomeRegex));
-                    //MusicTriggers.logger.info(biomeRegex+" "+SoundHandler.biomePriorities.get(biomeRegex));
                     dynamicFade.put(biomeRegex, SoundHandler.biomeFade.get(biomeRegex));
                 }
             }
         }
-        for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.structureSongsString.entrySet()) {
-            String structName = ((Map.Entry) stringListEntry).getKey().toString();
-            PacketHandler.sendToServer(new InfoForStructure(structName,player.blockPosition(),player.getUUID()));
-            if (fromServer.inStructure.containsKey(structName)) {
-                if (fromServer.inStructure.get(structName)) {
-                    events.add("structure:" + structName);
-                    dynamicSongs.put("structure:" + structName, SoundHandler.structureSongsString.get(structName));
-                    dynamicPriorities.put("structure:" + structName, SoundHandler.structurePriorities.get(structName));
-                    dynamicFade.put("structure:" + structName, SoundHandler.structureFade.get(structName));
-                    eventsClient.curStruct = structName;
-                }
-                else {
-                    eventsClient.curStruct = null;
+        if(!configRegistry.clientSideOnly) {
+            for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.structureSongsString.entrySet()) {
+                String structName = ((Map.Entry) stringListEntry).getKey().toString();
+                PacketHandler.sendToServer(new InfoForStructure(structName, player.blockPosition(), player.getUUID()));
+                if (fromServer.inStructure.containsKey(structName)) {
+                    if (fromServer.inStructure.get(structName)) {
+                        events.add("structure:" + structName);
+                        dynamicSongs.put("structure:" + structName, SoundHandler.structureSongsString.get(structName));
+                        dynamicPriorities.put("structure:" + structName, SoundHandler.structurePriorities.get(structName));
+                        dynamicFade.put("structure:" + structName, SoundHandler.structureFade.get(structName));
+                    }
                 }
             }
         }
@@ -389,21 +388,28 @@ public class MusicPicker {
             boolean infernalDone = false;
             if (mobName.matches("MOB")) {
                 for (MobEntity e : mobList) {
-                    if (e.getTarget() instanceof PlayerEntity && e.getTarget().getUUID() == player.getUUID()) {
-                        trackingCounter++;
+                    boolean isMonster = true;
+                    if(e instanceof AnimalEntity) {
+                        mobList.remove(e);
+                        isMonster = false;
                     }
-                    if (e.getHealth() / e.getMaxHealth() <= SoundHandler.mobHealth.get(mobName) / 100F) {
-                        healthCounter++;
-                    }
-                    infernalChecked = infernalChecker(e, SoundHandler.mobInfernalMod.get(mobName));
-                    if (!infernalLoaded || (infernalLoaded && infernalChecked)) {
-                        infernalDone = true;
-                    }
-                    if (SoundHandler.mobVictory.get(mobName)) {
-                        victoryID = SoundHandler.mobVictoryID.get(mobName);
-                        victoryMobs.computeIfAbsent(victoryID,k -> new ArrayList<>());
-                        if(!victoryMobs.get(victoryID).contains(e) && victoryMobs.get(victoryID).size()<SoundHandler.mobNumber.get(mobName)) {
-                            victoryMobs.get(victoryID).add(e);
+                    if(isMonster) {
+                        if (e.getTarget() instanceof PlayerEntity) {
+                            trackingCounter++;
+                        }
+                        if (e.getHealth() / e.getMaxHealth() <= SoundHandler.mobHealth.get(mobName) / 100F) {
+                            healthCounter++;
+                        }
+                        infernalChecked = infernalChecker(e, SoundHandler.mobInfernalMod.get(mobName));
+                        if (!infernalLoaded || (infernalLoaded && infernalChecked)) {
+                            infernalDone = true;
+                        }
+                        if (SoundHandler.mobVictory.get(mobName)) {
+                            victoryID = SoundHandler.mobVictoryID.get(mobName);
+                            victoryMobs.computeIfAbsent(victoryID, k -> new ArrayList<>());
+                            if (!victoryMobs.get(victoryID).contains(e) && victoryMobs.get(victoryID).size() < SoundHandler.mobNumber.get(mobName)) {
+                                victoryMobs.get(victoryID).add(e);
+                            }
                         }
                     }
                 }
@@ -419,13 +425,13 @@ public class MusicPicker {
                 int mobCounter = 0;
                 List<MobEntity> mobListSpecific = new ArrayList<>();
                 for (LivingEntity e : mobTempList) {
-                    if (e.getName().getString().matches(mobName)) {
+                    if (e.getDisplayName().getString().matches(mobName)) {
                         mobCounter++;
                         mobListSpecific.add((MobEntity)e);
                     }
                 }
                 for (MobEntity e : mobListSpecific) {
-                    if (e.getTarget() instanceof PlayerEntity && e.getTarget().getUUID() == player.getUUID()) {
+                    if (e.getTarget() instanceof PlayerEntity) {
                         trackingCounter++;
                     }
                     if (e.getHealth() / e.getMaxHealth() <= SoundHandler.mobHealth.get(mobName) / 100F) {
@@ -441,8 +447,8 @@ public class MusicPicker {
                     }
                     if (SoundHandler.mobVictory.get(mobName)) {
                         victoryID = SoundHandler.mobVictoryID.get(mobName);
-                        victoryMobs.computeIfAbsent(victoryID,k -> new ArrayList<>());
-                        if(!victoryMobs.get(victoryID).contains(e) && victoryMobs.get(victoryID).size()<SoundHandler.mobNumber.get(mobName)) {
+                        victoryMobs.computeIfAbsent(victoryID, k -> new ArrayList<>());
+                        if (!victoryMobs.get(victoryID).contains(e) && victoryMobs.get(victoryID).size() < SoundHandler.mobNumber.get(mobName)) {
                             victoryMobs.get(victoryID).add(e);
                         }
                     }

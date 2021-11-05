@@ -14,8 +14,8 @@ public class InfoFromBiome {
         this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
     }
 
-    public InfoFromBiome(boolean b,String s) {
-        this.s = b +","+s;
+    public InfoFromBiome(boolean b,String s,String d) {
+        this.s = b +","+s+","+d;
     }
 
     public static void encode(InfoFromBiome packet, PacketBuffer buf) {
@@ -27,9 +27,13 @@ public class InfoFromBiome {
         ctx.enqueueWork(() -> {
         });
 
-        fromServer.clientSyncBiome(packet.getDataBool(), packet.getDataStruct());
+        fromServer.clientSyncBiome(packet.getDataBool(), packet.getDataStruct(), packet.getDataCurStruct());
 
         ctx.setPacketHandled(true);
+    }
+
+    public String getDataCurStruct() {
+        return stringBreaker(s)[2];
     }
 
     public String getDataStruct() {

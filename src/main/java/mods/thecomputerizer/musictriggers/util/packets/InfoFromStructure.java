@@ -14,8 +14,8 @@ public class InfoFromStructure {
         this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
     }
 
-    public InfoFromStructure(boolean b,String s) {
-        this.s = b+","+s;
+    public InfoFromStructure(boolean b,String s,String d) {
+        this.s = b+","+s+","+d;
     }
 
     public static void encode(InfoFromStructure packet, PacketBuffer buf) {
@@ -27,11 +27,14 @@ public class InfoFromStructure {
         ctx.enqueueWork(() -> {
         });
 
-        fromServer.clientSyncStruct(packet.getDataBool(), packet.getDataStruct());
+        fromServer.clientSyncStruct(packet.getDataBool(), packet.getDataStruct(), packet.getDataCurStruct());
 
         ctx.setPacketHandled(true);
     }
 
+    public String getDataCurStruct() {
+        return stringBreaker(s)[2];
+    }
     public String getDataStruct() {
         return stringBreaker(s)[1];
     }

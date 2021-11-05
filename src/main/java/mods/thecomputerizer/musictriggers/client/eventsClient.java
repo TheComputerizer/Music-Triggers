@@ -12,9 +12,12 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.LightType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
@@ -35,20 +38,19 @@ public class eventsClient {
     public static int timer = 0;
     public static PlayerEntity playerHurt;
     public static PlayerEntity playerSource;
-    public static String curStruct;
 
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
-        if(e.getResultSound().getLocation().getNamespace().matches(MusicTriggers.MODID) && ((e.getManager().isActive(MusicPlayer.curMusic) && e.getSound().getLocation()!=MusicPlayer.fromRecord.getLocation()) || MusicPlayer.playing)) {
+        if (MusicPlayer.curMusic != null && MusicPlayer.fromRecord != null && e.getResultSound().getLocation().getNamespace().matches(MusicTriggers.MODID) && ((e.getManager().isActive(MusicPlayer.curMusic) && e.getSound().getLocation() != MusicPlayer.fromRecord.getLocation()) || MusicPlayer.playing)) {
             e.setResultSound(null);
         }
-        for(String s : configDebug.blockedmods.get()) {
-            if(e.getSound().getLocation().toString().contains(s) && e.getSound().getSource()== SoundCategory.MUSIC) {
+        for (String s : configDebug.blockedmods.get()) {
+            if (e.getSound().getLocation().toString().contains(s) && e.getSound().getSource() == SoundCategory.MUSIC) {
                 e.setResultSound(null);
             }
         }
-        if(e.getSound().getLocation().toString().contains("minecraft") && e.getSound().getSource()==SoundCategory.MUSIC) {
+        if (e.getSound().getLocation().toString().contains("minecraft") && e.getSound().getSource() == SoundCategory.MUSIC) {
             e.setResultSound(null);
         }
     }
@@ -114,11 +116,11 @@ public class eventsClient {
                     float opacity = (int) (17 - (fadeCount / 80));
                     opacity = (opacity * 1.15f) / 15;
 
-                    float sizeX = 64*configTitleCards.ImageSize;
-                    float sizeY = 64*configTitleCards.ImageSize;
+                    float sizeX = 64 * configTitleCards.ImageSize;
+                    float sizeY = 64 * configTitleCards.ImageSize;
 
-                    int posY = (y/64)+configTitleCards.ImageV;
-                    int posX = ((x/2)-(int)(sizeX/2))+ configTitleCards.ImageH;
+                    int posY = (y / 64) + configTitleCards.ImageV;
+                    int posX = ((x / 2) - (int) (sizeX / 2)) + configTitleCards.ImageH;
 
                     RenderSystem.pushTextureAttributes();
 
@@ -126,7 +128,7 @@ public class eventsClient {
                     RenderSystem.enableBlend();
                     RenderSystem.color4f(1F, 1F, 1F, Math.max(0, Math.min(0.95f, opacity)));
                     mc.getTextureManager().bind(IMAGE_CARD);
-                    AbstractGui.blit(e.getMatrixStack(),posX, posY, 10, 0F, 0F, (int)sizeX, (int)sizeY, (int)sizeX, (int)sizeY);
+                    AbstractGui.blit(e.getMatrixStack(), posX, posY, 10, 0F, 0F, (int) sizeX, (int) sizeY, (int) sizeX, (int) sizeY);
 
                     RenderSystem.popAttributes();
 
@@ -138,18 +140,33 @@ public class eventsClient {
 
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
+    public static void onKeyInput(InputEvent.KeyInputEvent e) {
+        if(MusicTriggers.RELOAD.isDown()) {
+            Minecraft.getInstance().getSoundManager().stop();
+            ITextComponent msg = new StringTextComponent("\u00A74\u00A7oReloading Music... This may take a while!");
+            MusicPicker.player.sendMessage(msg,MusicPicker.player.getUUID());
+            MusicPlayer.reloading = true;
+            reload.readAndReload();
+            msg = new StringTextComponent("\u00A7a\u00A7oFinished!");
+            MusicPicker.player.sendMessage(msg,MusicPicker.player.getUUID());
+            MusicPlayer.reloading = false;
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    @SubscribeEvent
     public static void debugInfo(RenderGameOverlayEvent.Text e) {
-        if(configDebug.ShowDebugInfo.get() && isWorldRendered) {
-            if(MusicPlayer.curTrack!=null) {
+        if (configDebug.ShowDebugInfo.get() && isWorldRendered) {
+            if (MusicPlayer.curTrack != null) {
                 e.getLeft().add("Music Triggers Current song: " + MusicPlayer.curTrack);
             }
-            if(!configDebug.ShowJustCurSong.get()) {
-                if(MusicPicker.playableList!=null && !MusicPicker.playableList.isEmpty()) {
+            if (!configDebug.ShowJustCurSong.get()) {
+                if (MusicPicker.playableList != null && !MusicPicker.playableList.isEmpty()) {
                     StringBuilder s = new StringBuilder();
                     for (String ev : MusicPicker.playableList) {
                         s.append(" ").append(ev);
                     }
-                    e.getLeft().add("Music Triggers Playable Events:" + s);
+                    e.getLeft().add("Music Triggers Playable Triggers:" + s);
                 }
                 StringBuilder sm = new StringBuilder();
                 sm.append("minecraft");
@@ -157,27 +174,31 @@ public class eventsClient {
                     sm.append(" ").append(ev);
                 }
                 e.getLeft().add("Music Triggers Current Blocked Mods: " + sm);
-                if(MusicPicker.player!=null && MusicPicker.world!=null) {
-                    if(curStruct!=null) {
-                        e.getLeft().add("Music Triggers Current Structure: " +curStruct);
+                if (MusicPicker.player != null && MusicPicker.world != null) {
+                    if (fromServer.curStruct != null) {
+                        e.getLeft().add("Music Triggers Current Structure: " + fromServer.curStruct);
                     }
-                    e.getLeft().add("Music Triggers Current Biome: " + MusicPicker.world.getBiome(MusicPicker.roundedPos(MusicPicker.player)).getRegistryName());
+                    e.getLeft().add("Music Triggers Current Biome: " + fromServer.curBiome);
                     e.getLeft().add("Music Triggers Current Dimension: " + MusicPicker.player.level.dimension().location());
                     e.getLeft().add("Music Triggers Current Total Light: " + MusicPicker.world.getRawBrightness(MusicPicker.roundedPos(MusicPicker.player), 0));
-                    e.getLeft().add("Music Triggers Current Block Light: " + MusicPicker.world.getBrightness(LightType.BLOCK,MusicPicker.roundedPos(MusicPicker.player)));
+                    e.getLeft().add("Music Triggers Current Block Light: " + MusicPicker.world.getBrightness(LightType.BLOCK, MusicPicker.roundedPos(MusicPicker.player)));
                 }
-                if(MusicPicker.effectList!=null && !MusicPicker.effectList.isEmpty()) {
+                if (MusicPicker.effectList != null && !MusicPicker.effectList.isEmpty()) {
                     StringBuilder se = new StringBuilder();
                     for (String ev : MusicPicker.effectList) {
                         se.append(" ").append(ev);
                     }
                     e.getLeft().add("Music Triggers Current Effect List:" + se);
                 }
+                if(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity) != null) {
+                    e.getLeft().add("Music Triggers Current Entity Name: "+getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity).getName().getString());
+                }
                 try {
-                    if(infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity))!=null) {
+                    if (infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)) != null) {
                         e.getLeft().add("Music Triggers Infernal Mob Mod Name: " + infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)));
                     }
-                } catch (NoSuchMethodError ignored) {}
+                } catch (NoSuchMethodError ignored) {
+                }
             }
         }
     }
@@ -193,9 +214,8 @@ public class eventsClient {
     }
 
     private static LivingEntity getLivingFromEntity(Entity e) {
-        if(e instanceof LivingEntity) {
+        if (e instanceof LivingEntity) {
             return (LivingEntity) e;
-        }
-        else return null;
+        } else return null;
     }
 }

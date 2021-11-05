@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.common;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.objects.BlankRecord;
 import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
+import mods.thecomputerizer.musictriggers.configRegistry;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.Rarity;
@@ -26,12 +27,14 @@ public class MusicTriggersItems {
 
     public void init() {
         SoundHandler.registerSounds();
-        for (SoundEvent s : SoundHandler.allSoundEvents) {
-            String name = Objects.requireNonNull(s.getRegistryName()).toString().replaceAll("musictriggers:", "");
-            ITEMS.register(name, () -> new MusicTriggersRecord(15, s, new Item.Properties().rarity(Rarity.EPIC).fireResistant()));
-            buildModel(name);
+        if(configRegistry.registerDiscs) {
+            for (SoundEvent s : SoundHandler.allSoundEvents) {
+                String name = Objects.requireNonNull(s.getRegistryName()).toString().replaceAll("musictriggers:", "");
+                ITEMS.register(name, () -> new MusicTriggersRecord(15, s, new Item.Properties().rarity(Rarity.EPIC).fireResistant()));
+                buildModel(name);
+            }
+            ITEMS.register("blank_record", () -> new BlankRecord(new Item.Properties().rarity(Rarity.EPIC).fireResistant().stacksTo(1).tab(ItemGroup.TAB_MISC)));
         }
-        ITEMS.register("blank_record", () -> new BlankRecord(new Item.Properties().rarity(Rarity.EPIC).fireResistant().stacksTo(1).tab(ItemGroup.TAB_MISC)));
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")

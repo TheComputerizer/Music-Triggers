@@ -118,4 +118,10 @@ public class configTitleCards {
     public static String[] stringBreakerRegex(String s, String regex) {
         return s.split(regex);
     }
+
+    public static void reload(File f) {
+        TitleCards = new ArrayList<>();
+        ImageCards = new ArrayList<>();
+        read(f);
+    }
 }

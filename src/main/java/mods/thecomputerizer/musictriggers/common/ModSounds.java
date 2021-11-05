@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.common;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.configRegistry;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.SimpleSound;
 import net.minecraft.util.ResourceLocation;
@@ -25,8 +26,21 @@ public class ModSounds {
         List<SoundEvent> sounds = SoundHandler.allSoundEvents;
         for(SoundEvent s: sounds) {
             String songName = Objects.requireNonNull(s.getRegistryName()).toString().replaceAll("musictriggers:","");
-            SOUNDS.register(songName, () -> new SoundEvent(new ResourceLocation(MusicTriggers.MODID+":music." + songName)));
-            MusicTriggers.logger.info(songName+" is being initialized at resource location "+new ResourceLocation(MusicTriggers.MODID+":music." + songName));
+            if(configRegistry.registerDiscs) {
+                SOUNDS.register(songName, () -> new SoundEvent(new ResourceLocation(MusicTriggers.MODID + ":music." + songName)));
+                MusicTriggers.logger.info(songName+" is being initialized at resource location "+new ResourceLocation(MusicTriggers.MODID+":music." + songName));
+            }
+            if(FMLEnvironment.dist == Dist.CLIENT) {
+                ISound i = SimpleSound.forMusic(new SoundEvent(new ResourceLocation(MusicTriggers.MODID + ":music." + songName)));
+                playableSounds.put("music." + songName, i);
+            }
+        }
+    }
+    public static void reload() {
+        playableSounds = new HashMap<>();
+        List<SoundEvent> sounds = SoundHandler.allSoundEvents;
+        for(SoundEvent s: sounds) {
+            String songName = Objects.requireNonNull(s.getRegistryName()).toString().replaceAll("musictriggers:", "");
             if(FMLEnvironment.dist == Dist.CLIENT) {
                 ISound i = SimpleSound.forMusic(new SoundEvent(new ResourceLocation(MusicTriggers.MODID + ":music." + songName)));
                 playableSounds.put("music." + songName, i);

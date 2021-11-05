@@ -11,18 +11,22 @@ import net.minecraftforge.eventbus.api.IEventBus;
 public final class RegistryHandler {
 
     public static void registerItems(IEventBus eventBus) {
-        MusicTriggers.logger.info("Loading Items from Music Triggers");
         MusicTriggersItems.INSTANCE.init();
-        MusicTriggersBlocks.INSTANCE.initItem();
-        MusicTriggersItems.ITEMS.register(eventBus);
-        MusicTriggersBlocks.BLOCK_ITEMS.register(eventBus);
+        if(configRegistry.registerDiscs) {
+            MusicTriggers.logger.info("Loading Items from Music Triggers");
+            MusicTriggersBlocks.INSTANCE.initItem();
+            MusicTriggersItems.ITEMS.register(eventBus);
+            MusicTriggersBlocks.BLOCK_ITEMS.register(eventBus);
+        }
     }
 
     public static void registerSoundEvents(IEventBus eventBus)
     {
         MusicTriggers.logger.info("Loading Sounds from Music Triggers");
         ModSounds.INSTANCE.init();
-        ModSounds.SOUNDS.register(eventBus);
+        if(configRegistry.registerDiscs) {
+            ModSounds.SOUNDS.register(eventBus);
+        }
     }
 
     public static void registerBlocks(IEventBus eventBus) {
@@ -33,9 +37,9 @@ public final class RegistryHandler {
 
     public static void init(IEventBus eventBus) {
         if(configRegistry.registerDiscs) {
-            registerItems(eventBus);
             registerBlocks(eventBus);
         }
+        registerItems(eventBus);
         registerSoundEvents(eventBus);
     }
 }

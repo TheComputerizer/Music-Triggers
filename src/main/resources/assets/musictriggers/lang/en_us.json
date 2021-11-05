@@ -1,4 +1,6 @@
 {
   "item.musictriggers.blank_record": "Blank Record",
-  "block.musictriggers.music_recorder": "Music Recorder"
+  "block.musictriggers.music_recorder": "Music Recorder",
+  "key.reload_musictriggers": "Reload Config",
+  "key.categories.musictriggers": "Music Triggers"
 }

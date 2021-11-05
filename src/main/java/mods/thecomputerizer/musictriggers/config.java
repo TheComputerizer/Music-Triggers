@@ -245,7 +245,7 @@ public final class config {
             } else if (Categories[i].matches("Dimension")) {
                 fb.add("\t\tSongs per dimension [Format: dimensionID,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]");
                 fb.add("\t\tNote: You only have to set the priority per dimension ID for 1 song");
-                fb.add("\t\tExample: -1,(songname),11111");
+                fb.add("\t\tExample: minecraft:the_nether,(songname),11111");
                 fb.add("\t\tSongs=<\n\t\t>");
                 fb.add("");
             } else if (Categories[i].matches("Biome")) {
@@ -603,7 +603,7 @@ public final class config {
             } else if (Categories[i].matches("Dimension")) {
                 fb.add("\t\tSongs per dimension [Format: dimensionID,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]");
                 fb.add("\t\tNote: You only have to set the priority per dimension ID for 1 song");
-                fb.add("\t\tExample: -1,(songname),11111");
+                fb.add("\t\tExample: minecraft:the_nether,(songname),11111");
                 fb.add("\t\tSongs=<");
                 List<String> songList = accountForNullSongTriggerData(i);
                 for (String iter : songList) {
