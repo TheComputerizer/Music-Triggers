@@ -16,7 +16,7 @@ public final class configDebug {
 
     static {
         BUILDER.push("Debug Config");
-        ShowDebugInfo = BUILDER.comment("Show the debug info in the F3 menu").define("ShowDebugInfo",false);
+        ShowDebugInfo = BUILDER.comment("Show the debug info").define("ShowDebugInfo",false);
         ShowJustCurSong = BUILDER.comment("If ShowDebugInfo is set to true, but you only want to see the song name").define("ShowJustCurSong",false);
         blockedmods = BUILDER.comment("List of mod ids to remove the music from so there is not any overlap").define("blockedmods", new ArrayList<>());
         BUILDER.pop();
