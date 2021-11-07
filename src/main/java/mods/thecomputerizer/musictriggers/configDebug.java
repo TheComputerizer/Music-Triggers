@@ -9,7 +9,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 @Config(modid = MusicTriggers.MODID, name = "MusicTriggers/debugoptions")
 public class configDebug {
 
-    @Config.Comment("Show the debug info in the F3 menu")
+    @Config.Comment("Show the debug info")
     public static boolean ShowDebugInfo = false;
 
     @Config.Comment("If ShowDebugInfo is set to true, but you only want to see the song name")

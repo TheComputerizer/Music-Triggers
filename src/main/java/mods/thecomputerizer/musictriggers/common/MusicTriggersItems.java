@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.objects.BlankRecord;
 import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
+import mods.thecomputerizer.musictriggers.configRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
@@ -23,11 +24,13 @@ public class MusicTriggersItems {
 
     public void init() {
         SoundHandler.registerSounds();
-        allItems = Lists.newArrayList();
-        for (SoundEvent s : SoundHandler.allSoundEvents) {
-            Item i = (new MusicTriggersRecord(Objects.requireNonNull(s.getRegistryName()).toString().replace("musictriggers:", ""), s));
-            if(!allItems.contains(i)) {
-                allItems.add(i);
+        if(configRegistry.registry.registerDiscs) {
+            allItems = Lists.newArrayList();
+            for (SoundEvent s : SoundHandler.allSoundEvents) {
+                Item i = (new MusicTriggersRecord(Objects.requireNonNull(s.getRegistryName()).toString().replace("musictriggers:", ""), s));
+                if (!allItems.contains(i)) {
+                    allItems.add(i);
+                }
             }
         }
     }

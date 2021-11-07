@@ -8,13 +8,17 @@ import mods.thecomputerizer.musictriggers.util.json;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.FolderResourcePack;
 import net.minecraft.client.resources.IResourcePack;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.thread.SidedThreadGroups;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import org.apache.logging.log4j.Logger;
+import org.lwjgl.input.Keyboard;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -31,7 +35,7 @@ import java.util.List;
 public class MusicTriggers {
     public static final String MODID = "musictriggers";
     public static final String NAME = "Music Triggers";
-    public static final String VERSION = "3.1";
+    public static final String VERSION = "3.3";
 
     public static File songsDir;
     public static File texturesDir;
@@ -40,6 +44,8 @@ public class MusicTriggers {
     public static File pack;
 
     public static Logger logger;
+
+    public static final KeyBinding RELOAD = new KeyBinding("key.reload_musictriggers", Keyboard.KEY_R, "key.categories.musictriggers");
 
     public MusicTriggers() {
         readFrom = new File("config/MusicTriggers/songs/");
@@ -161,9 +167,16 @@ public class MusicTriggers {
             }
             songs = musictriggersDir;
         }
-        RegistryHandler.init();
+        if(!configRegistry.registry.clientSideOnly) {
+            RegistryHandler.init();
+        }
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
         MinecraftForge.EVENT_BUS.register(eventsClient.class);
         MinecraftForge.EVENT_BUS.register(eventsCommon.class);
+    }
+
+    @EventHandler
+    public void init(FMLInitializationEvent e) {
+        ClientRegistry.registerKeyBinding(RELOAD);
     }
 }

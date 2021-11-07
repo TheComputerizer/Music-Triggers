@@ -13,6 +13,7 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
@@ -21,6 +22,7 @@ import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -38,7 +40,6 @@ public class eventsClient {
     public static int timer=0;
     public static EntityPlayer playerHurt;
     public static EntityPlayer playerSource;
-    public static String curStruct;
 
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
@@ -131,6 +132,19 @@ public class eventsClient {
 
     @SideOnly(Side.CLIENT)
     @SubscribeEvent
+    public static void onKeyInput(InputEvent.KeyInputEvent e) {
+        if(MusicTriggers.RELOAD.isKeyDown()) {
+            Minecraft.getMinecraft().getSoundHandler().stopSounds();
+            MusicPicker.player.sendMessage(new TextComponentString("\u00A74\u00A7oReloading Music... This may take a while!"));
+            MusicPlayer.reloading = true;
+            reload.readAndReload();
+            MusicPicker.player.sendMessage(new TextComponentString("\u00A7a\u00A7oFinished!"));
+            MusicPlayer.reloading = false;
+        }
+    }
+
+    @SideOnly(Side.CLIENT)
+    @SubscribeEvent
     public static void debugInfo(RenderGameOverlayEvent.Text e) {
         if(configDebug.ShowDebugInfo && isWorldRendered) {
             if(MusicPlayer.curTrack!=null) {
@@ -151,8 +165,8 @@ public class eventsClient {
                 }
                 e.getLeft().add("Music Triggers Current Blocked Mods: " + sm);
                 if(MusicPicker.player!=null && MusicPicker.world!=null) {
-                    if(curStruct!=null) {
-                        e.getLeft().add("Music Triggers Current Structure: " +curStruct);
+                    if(fromServer.curStruct!=null) {
+                        //e.getLeft().add("Music Triggers Current Structure: " + fromServer.curStruct);
                     }
                     e.getLeft().add("Music Triggers Current Biome: " + MusicPicker.world.getBiome(MusicPicker.player.getPosition()).getRegistryName());
                     e.getLeft().add("Music Triggers Current Dimension: " + MusicPicker.player.dimension);
@@ -165,6 +179,9 @@ public class eventsClient {
                         se.append(" ").append(ev);
                     }
                     e.getLeft().add("Music Triggers Current Effect List:" + se);
+                }
+                if(getLivingFromEntity(Minecraft.getMinecraft().objectMouseOver.entityHit) != null) {
+                    e.getLeft().add("Music Triggers Current Entity Name: "+getLivingFromEntity(Minecraft.getMinecraft().objectMouseOver.entityHit).getName());
                 }
                 try {
                     if(infernalChecker(getLivingFromEntity(Minecraft.getMinecraft().objectMouseOver.entityHit))!=null) {

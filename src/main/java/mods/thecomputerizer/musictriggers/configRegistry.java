@@ -9,14 +9,19 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 @Config(modid = MusicTriggers.MODID, name = "MusicTriggers/registry")
 public class configRegistry {
     @Config.Comment("Registry")
-    public static Registry registry = new Registry(true);
+    public static Registry registry = new Registry(true,false);
 
     public static class Registry {
         @Config.Comment("Music Discs")
         public boolean registerDiscs;
 
-        public Registry(final boolean registerDiscs) {
+        @Config.Comment("Client Side Only\n" +
+                "The following will not work: Structure trigger on servers, Mob Trigger targetting parameter")
+        public boolean clientSideOnly;
+
+        public Registry(final boolean registerDiscs, final boolean clientSideOnly) {
             this.registerDiscs = registerDiscs;
+            this.clientSideOnly = clientSideOnly;
         }
     }
 

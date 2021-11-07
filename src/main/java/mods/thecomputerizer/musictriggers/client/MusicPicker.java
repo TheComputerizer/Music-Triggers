@@ -362,7 +362,7 @@ public class MusicPicker {
                     dynamicFade.put("structure:" + structName, SoundHandler.structureFade.get(structName));
                 }
             }
-        } else {
+        } else if(!configRegistry.registry.clientSideOnly) {
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.structureSongsString.entrySet()) {
                 String structName = ((Map.Entry) stringListEntry).getKey().toString();
                 RegistryHandler.network.sendToServer(new packet.packetMessage(structName, player.getPosition(), player.dimension, player.getUniqueID()));
@@ -373,10 +373,10 @@ public class MusicPicker {
                         dynamicSongs.put("structure:" + structName, SoundHandler.structureSongsString.get(structName).toArray(structureSongsArray));
                         dynamicPriorities.put("structure:" + structName, SoundHandler.structurePriorities.get(structName));
                         dynamicFade.put("structure:" + structName, SoundHandler.structureFade.get(structName));
-                        eventsClient.curStruct = structName;
+                        fromServer.curStruct = structName;
                     }
                     else {
-                        eventsClient.curStruct = null;
+                        fromServer.curStruct = null;
                     }
                 }
             }
@@ -433,13 +433,13 @@ public class MusicPicker {
                 int mobCounter = 0;
                 List<EntityLiving> mobListSpecific = new ArrayList<>();
                 for (EntityLiving e : mobTempList) {
-                    if (e.getName().matches(mobName)) {
+                    if (e.getName().toString().matches(mobName)) {
                         mobCounter++;
                         mobListSpecific.add(e);
                     }
                 }
                 for (EntityLiving e : mobListSpecific) {
-                    if (e.getAttackTarget() instanceof EntityPlayer && e.getAttackTarget().getUniqueID() == player.getUniqueID()) {
+                    if (e.canEntityBeSeen(player)) {
                         trackingCounter++;
                     }
                     if (e.getHealth() / e.getMaxHealth() <= SoundHandler.mobHealth.get(mobName) / 100F) {

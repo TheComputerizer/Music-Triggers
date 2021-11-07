@@ -36,7 +36,6 @@ public class eventsCommon {
                 tickCounter.put(blockPos,tickCounter.get(blockPos)+1);
                 MusicTriggers.logger.info(tickCounter.get(blockPos)+" "+randomNum);
                 if(randomNum+tickCounter.get(blockPos)>=6000) {
-                    //this.world.playSound(null, pos, Objects.requireNonNull(SoundEvent.REGISTRY.getObject(new ResourceLocation("minecraft", "block.enderchest.open"))), SoundCategory.MASTER, 1F, 1F);
                     EntityLightningBolt lightning = new EntityLightningBolt(recordWorld.get(blockPos), blockPos.getX(),blockPos.getY(),blockPos.getZ(),true);
                     recordWorld.get(blockPos).spawnEntity(lightning);
                     tickCounter.put(blockPos,0);
