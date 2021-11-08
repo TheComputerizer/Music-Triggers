@@ -50,7 +50,7 @@ public class MusicPlayer {
     public static List<String> tempTitleCards = new ArrayList<>();
     public static boolean delay = false;
     public static int delayTime = 0;
-    public static SoundEvent fromRecord = null;
+    public static SoundEvent fromRecord = new SoundEvent(new ResourceLocation("nonsensicalresourcelocation"));
     public static boolean playing = false;
     public static boolean reloading = false;
 
@@ -109,7 +109,7 @@ public class MusicPlayer {
                 if (MusicPicker.player != null && (MusicPicker.player.getMainHandItem().getItem() instanceof MusicTriggersRecord)) {
                     fromRecord = ((MusicTriggersRecord) MusicPicker.player.getMainHandItem().getItem()).getSound();
                 } else {
-                    fromRecord = null;
+                    fromRecord = new SoundEvent(new ResourceLocation("nonsensicalresourcelocation"));
                 }
                 playing = false;
                 if (MusicPicker.player != null) {

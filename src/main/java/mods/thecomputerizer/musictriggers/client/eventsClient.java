@@ -42,7 +42,7 @@ public class eventsClient {
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
-        if (MusicPlayer.curMusic != null && MusicPlayer.fromRecord != null && e.getResultSound().getLocation().getNamespace().matches(MusicTriggers.MODID) && ((e.getManager().isActive(MusicPlayer.curMusic) && e.getSound().getLocation() != MusicPlayer.fromRecord.getLocation()) || MusicPlayer.playing)) {
+        if (MusicPlayer.curMusic != null && e.getResultSound().getLocation().getNamespace().matches(MusicTriggers.MODID) && ((e.getManager().isActive(MusicPlayer.curMusic) && e.getSound().getLocation() != MusicPlayer.fromRecord.getLocation()) || MusicPlayer.playing)) {
             e.setResultSound(null);
         }
         for (String s : configDebug.blockedmods.get()) {

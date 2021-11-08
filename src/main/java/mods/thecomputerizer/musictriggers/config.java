@@ -528,7 +528,6 @@ public final class config {
         fb.add("\tUniversal Delay=" + universalDelay);
         fb.add("");
         for (int i = 0; i < Categories.length; i++) {
-            MusicTriggers.logger.info("Current category trying to update is "+Categories[i]);
             fb.add("\t" + Categories[i]);
             if (withPriority[i] != -1111) {
                 fb.add("\t\tPriority [min: -99, max: 2147483647 default: " + withPriority[i] + "]");
