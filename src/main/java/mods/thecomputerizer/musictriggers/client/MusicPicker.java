@@ -433,7 +433,7 @@ public class MusicPicker {
                 int mobCounter = 0;
                 List<EntityLiving> mobListSpecific = new ArrayList<>();
                 for (EntityLiving e : mobTempList) {
-                    if (e.getName().toString().matches(mobName)) {
+                    if (e.getName().matches(mobName)) {
                         mobCounter++;
                         mobListSpecific.add(e);
                     }

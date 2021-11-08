@@ -17,6 +17,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.thread.SidedThreadGroups;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.input.Keyboard;
 
@@ -44,8 +45,6 @@ public class MusicTriggers {
     public static File pack;
 
     public static Logger logger;
-
-    public static final KeyBinding RELOAD = new KeyBinding("key.reload_musictriggers", Keyboard.KEY_R, "key.categories.musictriggers");
 
     public MusicTriggers() {
         readFrom = new File("config/MusicTriggers/songs/");
@@ -171,12 +170,16 @@ public class MusicTriggers {
             RegistryHandler.init();
         }
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
-        MinecraftForge.EVENT_BUS.register(eventsClient.class);
+        if(event.getSide()== Side.CLIENT) {
+            MinecraftForge.EVENT_BUS.register(eventsClient.class);
+        }
         MinecraftForge.EVENT_BUS.register(eventsCommon.class);
     }
 
     @EventHandler
     public void init(FMLInitializationEvent e) {
-        ClientRegistry.registerKeyBinding(RELOAD);
+        if(e.getSide()== Side.CLIENT) {
+            ClientRegistry.registerKeyBinding(MusicPlayer.RELOAD);
+        }
     }
 }

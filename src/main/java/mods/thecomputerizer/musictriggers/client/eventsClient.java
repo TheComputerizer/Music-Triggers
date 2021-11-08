@@ -30,7 +30,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import javax.annotation.Nullable;
 import javax.vecmath.Vector4f;
 
-@Mod.EventBusSubscriber(modid= MusicTriggers.MODID)
+@Mod.EventBusSubscriber(modid = MusicTriggers.MODID, value = Side.CLIENT)
 public class eventsClient {
     public static ResourceLocation IMAGE_CARD = null;
     public static boolean isWorldRendered;
@@ -64,13 +64,11 @@ public class eventsClient {
         }
     }
 
-    @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public static void worldRender(RenderWorldLastEvent e) {
         isWorldRendered=true;
     }
 
-    @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public static void clientDisconnected(FMLNetworkEvent.ClientDisconnectionFromServerEvent e) {
         MusicPicker.mc.getSoundHandler().stopSounds();
@@ -78,7 +76,6 @@ public class eventsClient {
         MusicPicker.player=null;
     }
 
-    @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public static void imageCards(RenderGameOverlayEvent.Post e) {
         Minecraft mc = Minecraft.getMinecraft();
@@ -130,10 +127,9 @@ public class eventsClient {
         }
     }
 
-    @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent e) {
-        if(MusicTriggers.RELOAD.isKeyDown()) {
+        if(MusicPlayer.RELOAD.isKeyDown()) {
             Minecraft.getMinecraft().getSoundHandler().stopSounds();
             MusicPicker.player.sendMessage(new TextComponentString("\u00A74\u00A7oReloading Music... This may take a while!"));
             MusicPlayer.reloading = true;
@@ -143,7 +139,6 @@ public class eventsClient {
         }
     }
 
-    @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public static void debugInfo(RenderGameOverlayEvent.Text e) {
         if(configDebug.ShowDebugInfo && isWorldRendered) {
