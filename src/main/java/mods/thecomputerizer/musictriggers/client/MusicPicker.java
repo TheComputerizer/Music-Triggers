@@ -333,20 +333,18 @@ public class MusicPicker {
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.biomeSongsString.entrySet()) {
                 String biomeRegex = ((Map.Entry) stringListEntry).getKey().toString();
                 if (Objects.requireNonNull(world.getBiome(roundedPos(player)).getRegistryName()).toString().contains(biomeRegex)) {
-                    String biomeName = Objects.requireNonNull(world.getBiome(roundedPos(player)).getRegistryName()).toString();
-                    events.add(biomeName);
-                    String[] biomeSongsArray = new String[SoundHandler.biomeSongsString.get(biomeName).size()];
-                    dynamicSongs.put(biomeName, SoundHandler.biomeSongsString.get(biomeName).toArray(biomeSongsArray));
-                    dynamicPriorities.put(biomeName, SoundHandler.biomePriorities.get(biomeName));
-                    dynamicFade.put(biomeName, SoundHandler.biomeFade.get(biomeName));
-                    persistentBiome.put(biomeRegex, SoundHandler.biomePersistence.get(biomeName));
+                    events.add(biomeRegex);
+                    String[] biomeSongsArray = new String[SoundHandler.biomeSongsString.get(biomeRegex).size()];
+                    dynamicSongs.put(biomeRegex, SoundHandler.biomeSongsString.get(biomeRegex).toArray(biomeSongsArray));
+                    dynamicPriorities.put(biomeRegex, SoundHandler.biomePriorities.get(biomeRegex));
+                    dynamicFade.put(biomeRegex, SoundHandler.biomeFade.get(biomeRegex));
+                    persistentBiome.put(biomeRegex, SoundHandler.biomePersistence.get(biomeRegex));
                 } else if (persistentBiome.get(biomeRegex) > 0) {
-                    String biomeName = Objects.requireNonNull(world.getBiome(roundedPos(player)).getRegistryName()).toString();
-                    events.add(biomeName);
-                    String[] biomeSongsArray = new String[SoundHandler.biomeSongsString.get(biomeName).size()];
-                    dynamicSongs.put(biomeName, SoundHandler.biomeSongsString.get(biomeName).toArray(biomeSongsArray));
-                    dynamicPriorities.put(biomeName, SoundHandler.biomePriorities.get(biomeName));
-                    dynamicFade.put(biomeName, SoundHandler.biomeFade.get(biomeName));
+                    events.add(biomeRegex);
+                    String[] biomeSongsArray = new String[SoundHandler.biomeSongsString.get(biomeRegex).size()];
+                    dynamicSongs.put(biomeRegex, SoundHandler.biomeSongsString.get(biomeRegex).toArray(biomeSongsArray));
+                    dynamicPriorities.put(biomeRegex, SoundHandler.biomePriorities.get(biomeRegex));
+                    dynamicFade.put(biomeRegex, SoundHandler.biomeFade.get(biomeRegex));
                 }
             }
         }
