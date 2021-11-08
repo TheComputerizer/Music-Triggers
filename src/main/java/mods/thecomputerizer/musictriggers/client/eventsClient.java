@@ -141,7 +141,7 @@ public class eventsClient {
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent e) {
-        if(MusicTriggers.RELOAD.isDown()) {
+        if(MusicPlayer.RELOAD.isDown()) {
             Minecraft.getInstance().getSoundManager().stop();
             ITextComponent msg = new StringTextComponent("\u00A74\u00A7oReloading Music... This may take a while!");
             MusicPicker.player.sendMessage(msg,MusicPicker.player.getUUID());

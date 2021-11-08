@@ -7,10 +7,7 @@ import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.json;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.client.util.InputMappings;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ExtensionPoint;
@@ -26,7 +23,6 @@ import net.minecraftforge.fml.network.FMLNetworkConstants;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -47,8 +43,6 @@ public class MusicTriggers {
     public static File texturesDir;
 
     public static final Logger logger = LogManager.getLogger();
-
-    public static final KeyBinding RELOAD = new KeyBinding("key.reload_musictriggers", KeyConflictContext.UNIVERSAL, InputMappings.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.categories.musictriggers");
 
     public MusicTriggers() {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
@@ -161,7 +155,7 @@ public class MusicTriggers {
     }
 
     private void clientSetup(final FMLClientSetupEvent ev) {
-        ClientRegistry.registerKeyBinding(RELOAD);
+        ClientRegistry.registerKeyBinding(MusicPlayer.RELOAD);
     }
 
     public void commonsetup(FMLCommonSetupEvent ev) {

@@ -12,6 +12,8 @@ import mods.thecomputerizer.musictriggers.util.packets.CurSong;
 import net.minecraft.block.JukeboxBlock;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
+import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.client.util.InputMappings;
 import net.minecraft.tileentity.JukeboxTileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
@@ -20,17 +22,20 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.fml.common.Mod;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
 
 import static mods.thecomputerizer.musictriggers.util.packets.CurSong.curSong;
 
 @SuppressWarnings("rawtypes")
+@Mod.EventBusSubscriber(modid = MusicTriggers.MODID, value = Dist.CLIENT)
 public class MusicPlayer {
+    public static final KeyBinding RELOAD = new KeyBinding("key.reload_musictriggers", KeyConflictContext.UNIVERSAL, InputMappings.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.categories.musictriggers");
 
     public static List<String> curTrackList;
     public static List<String> holder;
@@ -49,7 +54,6 @@ public class MusicPlayer {
     public static boolean playing = false;
     public static boolean reloading = false;
 
-    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent event) {
         if(!reloading) {

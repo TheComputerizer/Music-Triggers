@@ -343,17 +343,19 @@ public class MusicPicker {
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.biomeSongsString.entrySet()) {
                 String biomeRegex = ((Map.Entry) stringListEntry).getKey().toString();
                 PacketHandler.sendToServer(new InfoForBiome(biomeRegex,roundedPos(player),player.getUUID()));
-                if (fromServer.inBiome.get(biomeRegex)) {
-                    events.add(biomeRegex);
-                    dynamicSongs.put(biomeRegex, SoundHandler.biomeSongsString.get(biomeRegex));
-                    dynamicPriorities.put(biomeRegex, SoundHandler.biomePriorities.get(biomeRegex));
-                    dynamicFade.put(biomeRegex, SoundHandler.biomeFade.get(biomeRegex));
-                    persistentBiome.put(biomeRegex, SoundHandler.biomePersistence.get(biomeRegex));
-                } else if (persistentBiome.get(biomeRegex) > 0) {
-                    events.add(biomeRegex);
-                    dynamicSongs.put(biomeRegex, SoundHandler.biomeSongsString.get(biomeRegex));
-                    dynamicPriorities.put(biomeRegex, SoundHandler.biomePriorities.get(biomeRegex));
-                    dynamicFade.put(biomeRegex, SoundHandler.biomeFade.get(biomeRegex));
+                if(fromServer.inBiome.containsKey(biomeRegex)) {
+                    if (fromServer.inBiome.get(biomeRegex)) {
+                        events.add(biomeRegex);
+                        dynamicSongs.put(biomeRegex, SoundHandler.biomeSongsString.get(biomeRegex));
+                        dynamicPriorities.put(biomeRegex, SoundHandler.biomePriorities.get(biomeRegex));
+                        dynamicFade.put(biomeRegex, SoundHandler.biomeFade.get(biomeRegex));
+                        persistentBiome.put(biomeRegex, SoundHandler.biomePersistence.get(biomeRegex));
+                    } else if (persistentBiome.get(biomeRegex) > 0) {
+                        events.add(biomeRegex);
+                        dynamicSongs.put(biomeRegex, SoundHandler.biomeSongsString.get(biomeRegex));
+                        dynamicPriorities.put(biomeRegex, SoundHandler.biomePriorities.get(biomeRegex));
+                        dynamicFade.put(biomeRegex, SoundHandler.biomeFade.get(biomeRegex));
+                    }
                 }
             }
         }

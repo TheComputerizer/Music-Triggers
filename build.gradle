@@ -12,7 +12,7 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
-version = '1.16.5-3.2'
+version = '1.16.5-3.4'
 group = 'mods.thecomputerizer.musictriggers' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'musictriggers'
 
@@ -61,6 +61,9 @@ minecraft {
             // You can set various levels here.
             // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
             property 'forge.logging.console.level', 'debug'
+
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
 
             mods {
                 musictriggers {
