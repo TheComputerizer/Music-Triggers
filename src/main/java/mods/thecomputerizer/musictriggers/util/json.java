@@ -4,7 +4,8 @@ import mods.thecomputerizer.musictriggers.MusicTriggers;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class json {
     public static List<String> allSongs = new ArrayList<>();
@@ -35,6 +36,7 @@ public class json {
         }
         return js;
     }
+
     public static List<String> lang() {
         allSongs = collector();
         if (allSongs != null) {
@@ -42,18 +44,25 @@ public class json {
             js.add("{");
             for (String allSong : allSongs) {
                 js.add("item.musictriggers:" + allSong.toLowerCase() + ".name=Music Disc");
-                js.add("item.record." + allSong.toLowerCase() + ".desc=Music Triggers - "+allSong);
+                js.add("item.record." + allSong.toLowerCase() + ".desc=Music Triggers - " + allSong);
             }
         }
         return js;
     }
+
     public static List<String> collector() {
-        File folder = new File("."+"/config/MusicTriggers/songs/assets/musictriggers/sounds/music/");
+        File folder = new File("." + "/config/MusicTriggers/songs/assets/musictriggers/sounds/music/");
+        File[] listOfMP3 = folder.listFiles((dir, name) -> name.endsWith(".mp3"));
+        if (listOfMP3 != null) {
+            for (File mp3 : listOfMP3) {
+                //audioConverter.mp3ToOgg(folder, mp3, mp3.getName().replaceAll(".mp3",".ogg"));
+            }
+        }
         File[] listOfFiles = folder.listFiles((dir, name) -> name.endsWith(".ogg"));
         assert listOfFiles != null;
-        for(File f: listOfFiles) {
+        for (File f : listOfFiles) {
             //noinspection ResultOfMethodCallIgnored
-            f.renameTo(new File(folder.getPath(),f.getName().toLowerCase()));
+            f.renameTo(new File(folder.getPath(), f.getName().toLowerCase()));
         }
         boolean matchCheck = false;
         String curfile;
@@ -65,10 +74,10 @@ public class json {
                     break;
                 }
             }
-            if(!matchCheck) {
+            if (!matchCheck) {
                 allSongs.add(curfile);
             }
-            matchCheck=false;
+            matchCheck = false;
         }
         return allSongs;
     }

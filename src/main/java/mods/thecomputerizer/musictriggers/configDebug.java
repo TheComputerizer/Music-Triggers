@@ -15,8 +15,14 @@ public class configDebug {
     @Config.Comment("If ShowDebugInfo is set to true, but you only want to see the song name")
     public static boolean ShowJustCurSong = false;
 
+    @Config.Comment("Show an overlay for the name of the current GUI")
+    public static boolean ShowGUIName = false;
+
     @Config.Comment("List of mod ids to remove the music from so there is not any overlap")
     public static String[] blockedmods = {};
+
+    @Config.Comment("Only silence blocked music when there is music from Music Triggers already playing")
+    public static boolean SilenceIsBad = false;
 
     @Mod.EventBusSubscriber(modid = MusicTriggers.MODID)
     private static class EventHandler {

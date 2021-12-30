@@ -3,6 +3,7 @@ import wtf.gofancy.fancygradle.script.extensions.createDebugLoggingRunConfig
 import wtf.gofancy.fancygradle.script.extensions.curse
 import wtf.gofancy.fancygradle.script.extensions.curseForge
 import wtf.gofancy.fancygradle.script.extensions.deobf
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 import java.time.format.DateTimeFormatter
 import java.time.Instant
@@ -13,9 +14,10 @@ plugins {
     `maven-publish`
     id("net.minecraftforge.gradle") version "4.1.10"
     id("wtf.gofancy.fancygradle") version "1.0.0"
+    id("com.github.johnrengelman.shadow") version "6.1.0"
 }
 
-version = "3.5"
+version = "4.0-EX"
 group = "mods.thecomputerizer.musictriggers"
 
 minecraft {
@@ -25,6 +27,10 @@ minecraft {
         createDebugLoggingRunConfig("client")
         createDebugLoggingRunConfig("server") { args("nogui") }
     }
+}
+
+reobf {
+    create("shadowJar")
 }
 
 fancyGradle {
@@ -49,10 +55,21 @@ repositories {
     maven {
         url = uri("https://maven.mcmoddev.com")
     }
+    maven {
+        url = uri("https://mvnrepository.com/artifact/ws.schild/jave-all-deps")
+    }
+}
+
+val bundled: Configuration by configurations.creating
+
+configurations {
+    implementation.get().extendsFrom(bundled)
 }
 
 dependencies {
     minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-14.23.5.2855")
+
+    implementation(group = "ws.schild", name = "jave-all-deps", version = "3.2.0")
 
     implementation(fg.deobf(curse(mod = "codechicken-lib", projectId = 242818L, fileId = 2779848L)))
     implementation(fg.deobf(curse(mod = "bloodmoon", projectId = 226321L, fileId = 2537917L)))
@@ -63,6 +80,7 @@ dependencies {
     implementation(fg.deobf(curse(mod = "coroutil", projectId = 237749L, fileId = 2902920L)))
     implementation(fg.deobf(curse(mod = "atomicstrykers-infernal-mobs", projectId = 227875L, fileId = 3431758L)))
     implementation(fg.deobf(group = "net.darkhax.gamestages", name = "GameStages-1.12.2", version = "2.0.98"))
+
     runtimeOnly(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = "4.16.1.302"))
 }
 
@@ -86,6 +104,12 @@ tasks {
                     "Implementation-Timestamp" to DateTimeFormatter.ISO_INSTANT.format(Instant.now())
             )
         }
+    }
+
+    withType<ShadowJar> {
+        configurations = listOf(bundled)
+        archiveClassifier.set("bundled")
+        finalizedBy("reobfShadowJar")
     }
 
     withType<JavaCompile> {

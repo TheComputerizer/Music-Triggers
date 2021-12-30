@@ -15,11 +15,13 @@ import mods.thecomputerizer.musictriggers.util.packet;
 import net.darkhax.gamestages.GameStageHelper;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.boss.EntityDragon;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.potion.PotionEffect;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumSkyBlock;
@@ -63,6 +65,9 @@ public class MusicPicker {
     public static int curFade = 0;
     public static boolean shouldChange = false;
 
+    public static float musicVolSave;
+    public static float masterVolSave;
+
     public static String[] playThese() {
         if (!MusicPlayer.fading) {
             titleCardEvents = new ArrayList<>();
@@ -73,6 +78,8 @@ public class MusicPicker {
             world = player.getEntityWorld();
         }
         if (player == null) {
+            musicVolSave = mc.gameSettings.getSoundLevel(SoundCategory.MUSIC);
+            masterVolSave = mc.gameSettings.getSoundLevel(SoundCategory.MASTER);
             return config.menu.menuSongs;
         }
         List<String> res = comboChecker(priorityHandler(playableEvents()));
@@ -98,7 +105,7 @@ public class MusicPicker {
         for (String s : dynamicSongs.get(st)) {
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.songCombos.entrySet()) {
                 String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
-                if (s.matches(checkThis)) {
+                if (SoundHandler.stringBreaker(SoundHandler.stringBreaker(s,";")[0],"|")[0].matches(SoundHandler.stringBreaker(SoundHandler.stringBreaker(checkThis,";")[0],"|")[0])) {
                     if (playableList.containsAll(SoundHandler.songCombos.get(s)) && SoundHandler.songCombos.get(s).size() != 1) {
                         playableSongs.add(s.substring(1));
                         if (!titleCardEvents.contains(st)) {
@@ -286,7 +293,7 @@ public class MusicPicker {
             dynamicFade.put("dead", config.dead.deadFade);
             for (Map.Entry<Integer, Boolean> integerListEntry : victory.entrySet()) {
                 int key = integerListEntry.getKey();
-                victory.put(key,false);
+                victory.put(key, false);
             }
         }
         if (player.isSpectator()) {
@@ -360,7 +367,7 @@ public class MusicPicker {
                     dynamicFade.put("structure:" + structName, SoundHandler.structureFade.get(structName));
                 }
             }
-        } else if(!configRegistry.registry.clientSideOnly) {
+        } else if (!configRegistry.registry.clientSideOnly) {
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.structureSongsString.entrySet()) {
                 String structName = ((Map.Entry) stringListEntry).getKey().toString();
                 RegistryHandler.network.sendToServer(new packet.packetMessage(structName, player.getPosition(), player.dimension, player.getUniqueID()));
@@ -372,8 +379,7 @@ public class MusicPicker {
                         dynamicPriorities.put("structure:" + structName, SoundHandler.structurePriorities.get(structName));
                         dynamicFade.put("structure:" + structName, SoundHandler.structureFade.get(structName));
                         fromServer.curStruct = structName;
-                    }
-                    else {
+                    } else {
                         fromServer.curStruct = null;
                     }
                 }
@@ -412,8 +418,8 @@ public class MusicPicker {
                     }
                     if (SoundHandler.mobVictory.get(mobName)) {
                         victoryID = SoundHandler.mobVictoryID.get(mobName);
-                        victoryMobs.computeIfAbsent(victoryID,k -> new ArrayList<>());
-                        if(!victoryMobs.get(victoryID).contains(e) && victoryMobs.get(victoryID).size()<SoundHandler.mobNumber.get(mobName)) {
+                        victoryMobs.computeIfAbsent(victoryID, k -> new ArrayList<>());
+                        if (!victoryMobs.get(victoryID).contains(e) && victoryMobs.get(victoryID).size() < SoundHandler.mobNumber.get(mobName)) {
                             victoryMobs.get(victoryID).add(e);
                         }
                     }
@@ -425,13 +431,13 @@ public class MusicPicker {
                     dynamicPriorities.put(mobName, SoundHandler.mobPriorities.get(mobName));
                     dynamicFade.put(mobName, SoundHandler.mobFade.get(mobName));
                     persistentMob.put(mobName, SoundHandler.mobBattle.get(mobName));
-                    victory.put(victoryID,SoundHandler.mobVictory.get(mobName));
+                    victory.put(victoryID, SoundHandler.mobVictory.get(mobName));
                 }
             } else {
                 int mobCounter = 0;
                 List<EntityLiving> mobListSpecific = new ArrayList<>();
                 for (EntityLiving e : mobTempList) {
-                    if (e.getName().matches(mobName)) {
+                    if (e.getName().matches(mobName) || Objects.requireNonNull(EntityList.getKey(e)).toString().matches(mobName)) {
                         mobCounter++;
                         mobListSpecific.add(e);
                     }
@@ -453,8 +459,8 @@ public class MusicPicker {
                     }
                     if (SoundHandler.mobVictory.get(mobName)) {
                         victoryID = SoundHandler.mobVictoryID.get(mobName);
-                        victoryMobs.computeIfAbsent(victoryID,k -> new ArrayList<>());
-                        if(!victoryMobs.get(victoryID).contains(e) && victoryMobs.get(victoryID).size()<SoundHandler.mobNumber.get(mobName)) {
+                        victoryMobs.computeIfAbsent(victoryID, k -> new ArrayList<>());
+                        if (!victoryMobs.get(victoryID).contains(e) && victoryMobs.get(victoryID).size() < SoundHandler.mobNumber.get(mobName)) {
                             victoryMobs.get(victoryID).add(e);
                         }
                     }
@@ -466,7 +472,7 @@ public class MusicPicker {
                     dynamicPriorities.put(mobName, SoundHandler.mobPriorities.get(mobName));
                     dynamicFade.put(mobName, SoundHandler.mobFade.get(mobName));
                     persistentMob.put(mobName, SoundHandler.mobBattle.get(mobName));
-                    victory.put(victoryID,SoundHandler.mobVictory.get(mobName));
+                    victory.put(victoryID, SoundHandler.mobVictory.get(mobName));
                 }
             }
             if (persistentMob.get(mobName) > 0) {
@@ -477,15 +483,14 @@ public class MusicPicker {
                     dynamicPriorities.put(mobName, SoundHandler.mobPriorities.get(mobName));
                     dynamicFade.put(mobName, SoundHandler.mobFade.get(mobName));
                 }
-            }
-            else {
-                victory.put(victoryID,SoundHandler.mobVictory.get(mobName));
+            } else {
+                victory.put(victoryID, SoundHandler.mobVictory.get(mobName));
             }
         }
         if (!SoundHandler.zonesSongs.isEmpty()) {
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.zonesSongsString.entrySet()) {
                 String zoneRange = ((Map.Entry) stringListEntry).getKey().toString();
-                String[] broken = SoundHandler.stringBreaker(zoneRange);
+                String[] broken = SoundHandler.stringBreaker(zoneRange,",");
                 BlockPos bp = player.getPosition();
                 int x1 = Integer.parseInt(broken[0]);
                 int y1 = Integer.parseInt(broken[1]);
@@ -531,8 +536,8 @@ public class MusicPicker {
                 persistentPVP = config.pvp.pvpTime;
                 victoryID = config.pvp.pvpVictoryID;
                 if (config.pvp.pvpVictory) {
-                    victoryPlayer.put(victoryID,otherPVP);
-                    victory.put(victoryID,config.pvp.pvpVictory);
+                    victoryPlayer.put(victoryID, otherPVP);
+                    victory.put(victoryID, config.pvp.pvpVictory);
                 }
             } else if (persistentPVP > 0) {
                 events.add("PVP");
@@ -546,22 +551,21 @@ public class MusicPicker {
             }
         }
         persistentVictory.putIfAbsent(victoryID, 0);
-        victory.putIfAbsent(victoryID,false);
-        if(victory.get(victoryID)) {
+        victory.putIfAbsent(victoryID, false);
+        if (victory.get(victoryID)) {
             boolean victoryTempM = true;
             boolean victoryTempP = true;
-            if(victoryMobs.get(victoryID) != null && !victoryMobs.get(victoryID).isEmpty()) {
+            if (victoryMobs.get(victoryID) != null && !victoryMobs.get(victoryID).isEmpty()) {
                 for (EntityLiving e : victoryMobs.get(victoryID)) {
                     if (!e.isDead) {
                         victoryTempM = false;
                         break;
                     }
                 }
-            }
-            else {
+            } else {
                 victoryTempM = false;
             }
-            if((victoryPlayer.get(victoryID) != null && !victoryPlayer.get(victoryID).isDead) || victoryPlayer.get(victoryID) == null) {
+            if ((victoryPlayer.get(victoryID) != null && !victoryPlayer.get(victoryID).isDead) || victoryPlayer.get(victoryID) == null) {
                 victoryTempP = false;
             }
             if (victoryTempM || victoryTempP) {
@@ -571,15 +575,31 @@ public class MusicPicker {
         if (!SoundHandler.victorySongsString.isEmpty() && SoundHandler.victorySongsString.get("Victory" + victoryID) != null && persistentVictory.get(victoryID) > 0) {
             for (Map.Entry<Integer, Boolean> integerListEntry : victory.entrySet()) {
                 int key = integerListEntry.getKey();
-                victory.put(key,false);
-                victoryMobs.put(key,new ArrayList<>());
-                victoryPlayer.put(key,null);
+                victory.put(key, false);
+                victoryMobs.put(key, new ArrayList<>());
+                victoryPlayer.put(key, null);
             }
             events.add("Victory" + victoryID);
             String[] victorySongsArray = new String[SoundHandler.victorySongsString.get("Victory" + victoryID).size()];
             dynamicSongs.put("Victory" + victoryID, SoundHandler.victorySongsString.get("Victory" + victoryID).toArray(victorySongsArray));
             dynamicPriorities.put("Victory" + victoryID, SoundHandler.victoryPriorities.get("Victory" + victoryID));
             dynamicFade.put("Victory" + victoryID, SoundHandler.victoryFade.get("Victory" + victoryID));
+        }
+        if(!mc.inGameHasFocus) {
+            for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.guiSongsString.entrySet()) {
+                String guiName = ((Map.Entry) stringListEntry).getKey().toString();
+                if(eventsClient.GUIName.contains(guiName)) {
+                    events.add("Gui-"+guiName);
+                    String[] guiSongsArray = new String[SoundHandler.guiSongsString.get(guiName).size()];
+                    dynamicSongs.put("Gui-"+guiName, SoundHandler.guiSongsString.get(guiName).toArray(guiSongsArray));
+                    dynamicPriorities.put("Gui-"+guiName, SoundHandler.guiPriorities.get(guiName));
+                    dynamicFade.put("Gui-"+guiName, SoundHandler.guiFade.get(guiName));
+                }
+            }
+        }
+        else {
+            musicVolSave = mc.gameSettings.getSoundLevel(SoundCategory.MUSIC);
+            masterVolSave = mc.gameSettings.getSoundLevel(SoundCategory.MASTER);
         }
         try {
             List<String> whitelist = stageWhitelistChecker();
@@ -751,7 +771,7 @@ public class MusicPicker {
         List<String> tempList = new ArrayList<>();
         for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.tornadoSongsString.entrySet()) {
             String entry = stringListEntry.getKey();
-            if (WeatherDataHelper.getWeatherManagerForClient()!=null && WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition()), config.tornado.tornadoRange) != null) {
+            if (WeatherDataHelper.getWeatherManagerForClient() != null && WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition()), config.tornado.tornadoRange) != null) {
                 StormObject storm = WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition()), config.tornado.tornadoRange);
                 if (storm.levelCurIntensityStage >= SoundHandler.tornadoIntensity.get(entry)) {
                     String[] tornadoSongsArray = new String[SoundHandler.tornadoSongsString.get(entry).size()];
@@ -767,7 +787,7 @@ public class MusicPicker {
 
     @Optional.Method(modid = "weather2")
     private static boolean weatherHurricane() {
-        if (WeatherDataHelper.getWeatherManagerForClient()!=null && WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition()), config.hurricane.hurricaneRange) != null) {
+        if (WeatherDataHelper.getWeatherManagerForClient() != null && WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition()), config.hurricane.hurricaneRange) != null) {
             StormObject storm = WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition()), config.hurricane.hurricaneRange);
             if (storm.isHurricane()) {
                 dynamicSongs.put("hurricane", config.hurricane.hurricaneSongs);
@@ -781,7 +801,7 @@ public class MusicPicker {
 
     @Optional.Method(modid = "weather2")
     private static boolean weatherSandstorm() {
-        if (WeatherDataHelper.getWeatherManagerForClient()!=null && WeatherDataHelper.getWeatherManagerForClient().getClosestSandstorm(new Vec3(player.getPosition()), config.sandstorm.sandstormRange) != null) {
+        if (WeatherDataHelper.getWeatherManagerForClient() != null && WeatherDataHelper.getWeatherManagerForClient().getClosestSandstorm(new Vec3(player.getPosition()), config.sandstorm.sandstormRange) != null) {
             WeatherObjectSandstorm storm = WeatherDataHelper.getWeatherManagerForClient().getClosestSandstorm(new Vec3(player.getPosition()), config.sandstorm.sandstormRange);
             if (storm.age > 20) {
                 dynamicSongs.put("sandstorm", config.hurricane.hurricaneSongs);

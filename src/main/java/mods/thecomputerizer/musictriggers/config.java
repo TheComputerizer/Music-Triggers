@@ -547,7 +547,7 @@ public class config {
     }
 
     @Comment("Victory - This can only be called after the pvp or mob trigger")
-    public static Victory victory = new Victory(20000,0,16,200,new String[] {});
+    public static Victory victory = new Victory(20000,new String[] {});
 
     public static class Victory {
         @Comment("Priority [min: -99, max: 2147483647 default: 20000]")
@@ -558,9 +558,27 @@ public class config {
                 "Example: enderdragonwin,11,300,9999999,20")
         public String[] victorySongs;
 
-        public Victory(final int victoryPriority, final int victoryFade, final int victoryRange, final int victoryTime, final String[] victorySongs) {
+        public Victory(final int victoryPriority, final String[] victorySongs) {
             this.victoryPriority = victoryPriority;
             this.victorySongs = victorySongs;
+        }
+    }
+
+    @Comment("Gui")
+    public static Gui gui = new Gui(13333,new String[] {});
+
+    public static class Gui {
+        @Comment("Priority [min: -99, max: 2147483647 default: 13333]")
+        public int guiPriority;
+        @Comment("Songs - [Format: \"Gui Name,SongName,(Optional)Priority:[min: -99, max: 2147483647 ]\"]\n" +
+                "Example: net.minecraft.client.gui.inentory.GuiInventory@67d49176,inventory,67000\n" +
+                "Note: This can also be a regex\n"+
+                "Example 2: GuiInventory@67d49176,inventory,67000")
+        public String[] guiSongs;
+
+        public Gui(final int guiPriority, final String[] guiSongs) {
+            this.guiPriority = guiPriority;
+            this.guiSongs = guiSongs;
         }
     }
 

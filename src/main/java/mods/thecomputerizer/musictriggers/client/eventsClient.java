@@ -5,6 +5,9 @@ import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.configDebug;
 import mods.thecomputerizer.musictriggers.configTitleCards;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.ISound;
+import net.minecraft.client.audio.PositionedSoundRecord;
+import net.minecraft.client.gui.GuiIngameMenu;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
@@ -15,6 +18,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.EnumSkyBlock;
+import net.minecraftforge.client.event.GuiOpenEvent;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
@@ -25,7 +30,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 import javax.annotation.Nullable;
 import javax.vecmath.Vector4f;
@@ -40,19 +44,27 @@ public class eventsClient {
     public static int timer=0;
     public static EntityPlayer playerHurt;
     public static EntityPlayer playerSource;
+    public static String GUIName;
+    public static int GuiCounter = 0;
 
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
+
+        PositionedSoundRecord silenced = new PositionedSoundRecord(e.getSound().getSoundLocation(), SoundCategory.MUSIC, 0F, 1F, false, 1, ISound.AttenuationType.LINEAR, 0F, 0F, 0F);
         if(e.getSound().getSoundLocation().getNamespace().matches(MusicTriggers.MODID) && ((e.getManager().isSoundPlaying(MusicPlayer.curMusic) && MusicPlayer.fromRecord==null) || MusicPlayer.playing)) {
-            e.setResultSound(null);
+            e.setResultSound(silenced);
         }
         for(String s : configDebug.blockedmods) {
             if(e.getSound().getSoundLocation().toString().contains(s) && e.getSound().getCategory()==SoundCategory.MUSIC) {
-                e.setResultSound(null);
+                if(!(MusicPlayer.curMusic==null && configDebug.SilenceIsBad)) {
+                    e.setResultSound(silenced);
+                }
             }
         }
         if(e.getSound().getSoundLocation().toString().contains("minecraft") && e.getSound().getCategory()==SoundCategory.MUSIC) {
-            e.setResultSound(null);
+            if(!(MusicPlayer.curMusic==null && configDebug.SilenceIsBad)) {
+                e.setResultSound(silenced);
+            }
         }
     }
 
@@ -61,6 +73,35 @@ public class eventsClient {
         if (e.getEntity() instanceof EntityPlayer && e.getSource().getTrueSource() instanceof EntityPlayer) {
             playerHurt = (EntityPlayer) e.getEntity();
             playerSource = (EntityPlayer) e.getSource().getTrueSource();
+        }
+    }
+
+    @SubscribeEvent
+    public static void guiOpen(GuiOpenEvent e) {
+        if(e.getGui() instanceof GuiIngameMenu) {
+            for(String ev : MusicPicker.playableList) {
+                if(ev.contains("Gui") && ev.contains("Menu")) {
+                    MusicPicker.mc.getSoundHandler().stopSounds();
+                }
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void guiScreen(GuiScreenEvent e) {
+        GUIName = e.getGui().toString();
+        if(configDebug.ShowGUIName) {
+            e.getGui().drawHoveringText(e.getGui().toString(), 0, 0);
+        }
+        if(e.getGui() instanceof GuiIngameMenu) {
+            for(String ev : MusicPicker.playableList) {
+                if(ev.contains("Gui") && ev.contains("Menu") && GuiCounter==1) {
+                    MusicPicker.mc.getSoundHandler().resumeSounds();
+                    MusicPicker.mc.getSoundHandler().setSoundLevel(SoundCategory.MUSIC,MusicPicker.musicVolSave);
+                    MusicPicker.mc.getSoundHandler().setSoundLevel(SoundCategory.MASTER,MusicPicker.masterVolSave);
+                    GuiCounter-=1;
+                }
+            }
         }
     }
 
@@ -167,6 +208,10 @@ public class eventsClient {
                     e.getLeft().add("Music Triggers Current Dimension: " + MusicPicker.player.dimension);
                     e.getLeft().add("Music Triggers Current Total Light: " + MusicPicker.world.getLight(MusicPicker.roundedPos(MusicPicker.player), true));
                     e.getLeft().add("Music Triggers Current Block Light: " + MusicPicker.world.getLightFor(EnumSkyBlock.BLOCK, MusicPicker.roundedPos(MusicPicker.player)));
+                }
+                e.getLeft().add("Music Triggers Is game in focus? " + Minecraft.getMinecraft().inGameHasFocus);
+                if(MusicPlayer.curMusic!=null) {
+                    e.getLeft().add("Music Triggers Volume of current song " + MusicPlayer.curMusic.getVolume());
                 }
                 if(MusicPicker.effectList!=null && !MusicPicker.effectList.isEmpty()) {
                     StringBuilder se = new StringBuilder();

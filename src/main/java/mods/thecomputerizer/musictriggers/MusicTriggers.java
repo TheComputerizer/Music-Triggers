@@ -8,7 +8,6 @@ import mods.thecomputerizer.musictriggers.util.json;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.FolderResourcePack;
 import net.minecraft.client.resources.IResourcePack;
-import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
@@ -19,7 +18,6 @@ import net.minecraftforge.fml.common.thread.SidedThreadGroups;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.Logger;
-import org.lwjgl.input.Keyboard;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -36,7 +34,7 @@ import java.util.List;
 public class MusicTriggers {
     public static final String MODID = "musictriggers";
     public static final String NAME = "Music Triggers";
-    public static final String VERSION = "3.3";
+    public static final String VERSION = "4.0-EX";
 
     public static File songsDir;
     public static File texturesDir;
@@ -57,7 +55,7 @@ public class MusicTriggers {
             if (writeThis != null) {
                 try {
                     sj.createNewFile();
-                    FileWriter writer = new FileWriter(sj);
+                    FileWriter writer = new FileWriter(sj);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
                     for (String str : writeThis) {
                         writer.write(str + System.lineSeparator());
                     }
