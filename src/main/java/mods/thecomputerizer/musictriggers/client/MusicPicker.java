@@ -24,6 +24,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.passive.AnimalEntity;
+import net.minecraft.entity.passive.TameableEntity;
+import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.potion.Effect;
 import net.minecraft.util.SoundCategory;
@@ -96,6 +98,9 @@ public class MusicPicker {
         dynamicPriorities = new HashMap<>();
         dynamicFade = new HashMap<>();
         curFade = config.genericFade;
+        if(!config.genericSongs.isEmpty()) {
+            playableList.add("generic");
+        }
         return config.genericSongs;
     }
 
@@ -308,14 +313,14 @@ public class MusicPicker {
             dynamicPriorities.put("riding", config.ridingPriority);
             dynamicFade.put("riding", config.ridingFade);
         }
-        if (world.getBlockState(roundedPos(player)).getMaterial() == Material.WATER && world.getBlockState(roundedPos(player).above()).getMaterial() == Material.WATER) {
+        if ((world.getBlockState(roundedPos(player)).getMaterial() == Material.WATER || world.getBlockState(roundedPos(player)).getMaterial() == Material.WATER_PLANT || world.getBlockState(roundedPos(player)).getMaterial() == Material.REPLACEABLE_WATER_PLANT) && (world.getBlockState(roundedPos(player).above()).getMaterial() == Material.WATER || world.getBlockState(roundedPos(player).above()).getMaterial() == Material.WATER_PLANT || world.getBlockState(roundedPos(player).above()).getMaterial() == Material.REPLACEABLE_WATER_PLANT)) {
             events.add("underwater");
             dynamicSongs.put("underwater", config.underwaterSongs);
             dynamicPriorities.put("underwater", config.underwaterPriority);
             dynamicFade.put("underwater", config.underwaterFade);
         }
         for (LivingEntity ent : world.getEntitiesOfClass(LivingEntity.class, new AxisAlignedBB(player.getX() - 16, player.getY() - 8, player.getZ() - 16, player.getX() + 16, player.getY() + 8, player.getZ() + 16))) {
-            if (ent.serializeNBT()!=null && ent.serializeNBT().getString("Owner").matches(player.getStringUUID())) {
+            if (ent instanceof TameableEntity && ent.serializeNBT()!=null && ent.serializeNBT().getString("Owner").matches(player.getStringUUID())) {
                 events.add("pet");
                 dynamicSongs.put("pet", config.petSongs);
                 dynamicPriorities.put("pet", config.petPriority);

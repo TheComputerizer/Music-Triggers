@@ -250,6 +250,13 @@ public final class config {
                 fb.add("\t\tNote - If the fade is not the last number it will not work properly");
                 fb.add("\t\tSongs=<\n\t\t>");
                 fb.add("");
+            } else if (Categories[i].matches("Difficulty")) {
+                fb.add("\t\tSongs per difficulty");
+                fb.add("\t\tFormat[songname,difficulty [int],(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]]");
+                fb.add("\t\tNote - peaceful=0 easy=1 normal=2 hard=3 hardcore=4");
+                fb.add("\t\tExample normal,2,111");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
             } else if (Categories[i].matches("Dimension")) {
                 fb.add("\t\tSongs per dimension [Format: dimensionID,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]");
                 fb.add("\t\tNote: You only have to set the priority per dimension ID for 1 song");
@@ -623,6 +630,18 @@ public final class config {
                 fb.add("\t\tExample 2: [nighttime,2,3,4,6,7,8] - This will play every night except for full moons and new moons");
                 fb.add("\t\tExample 3: [nighttime,0] - This will play whenever it is nighttime, just like the old version of this trigger");
                 fb.add("\t\tNote - If the fade is not the last number it will not work properly");
+                fb.add("\t\tSongs=<");
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            } else if (Categories[i].matches("Difficulty")) {
+                fb.add("\t\tSongs per difficulty");
+                fb.add("\t\tFormat[songname,difficulty [int],(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]]");
+                fb.add("\t\tNote - peaceful=0 easy=1 normal=2 hard=3 hardcore=4");
+                fb.add("\t\tExample normal,2,111");
                 fb.add("\t\tSongs=<");
                 List<String> songList = accountForNullSongTriggerData(i);
                 for (String iter : songList) {
