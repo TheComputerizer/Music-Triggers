@@ -19,6 +19,7 @@ import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.boss.EntityDragon;
 import net.minecraft.entity.monster.EntityMob;
+import net.minecraft.entity.passive.EntityTameable;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.SoundCategory;
@@ -324,8 +325,8 @@ public class MusicPicker {
             dynamicPriorities.put("underwater", config.underwater.underwaterPriority);
             dynamicFade.put("underwater", config.underwater.underwaterFade);
         }
-        for (EntityMob ent : world.getEntitiesWithinAABB(EntityMob.class, new AxisAlignedBB(player.posX - 16, player.posY - 8, player.posZ - 16, player.posX + 16, player.posY + 8, player.posZ + 16))) {
-            if (ent.serializeNBT().getString("Owner").matches(player.getName())) {
+        for (EntityLiving ent : world.getEntitiesWithinAABB(EntityLiving.class, new AxisAlignedBB(player.posX - 16, player.posY - 8, player.posZ - 16, player.posX + 16, player.posY + 8, player.posZ + 16))) {
+            if (ent instanceof EntityTameable && ent.serializeNBT().getString("Owner").matches(player.getName())) {
                 events.add("pet");
                 dynamicSongs.put("pet", config.pet.petSongs);
                 dynamicPriorities.put("pet", config.pet.petPriority);
