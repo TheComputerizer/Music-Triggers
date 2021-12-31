@@ -26,6 +26,8 @@ import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
+import sereneseasons.api.season.Season;
+import sereneseasons.api.season.SeasonHelper;
 
 import javax.annotation.Nullable;
 

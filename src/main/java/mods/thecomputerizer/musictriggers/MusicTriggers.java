@@ -44,6 +44,7 @@ public class MusicTriggers {
 
     public static final Logger logger = LogManager.getLogger();
 
+    @SuppressWarnings("InstantiationOfUtilityClass")
     public MusicTriggers() {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::commonsetup);
@@ -54,6 +55,15 @@ public class MusicTriggers {
         if (!configDir.exists()) {
             configDir.mkdir();
         }
+        File redir = new File("config/MusicTriggers/redirect.txt");
+        if(!redir.exists()) {
+            try {
+                Files.createFile(Paths.get(redir.getPath()));
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+        }
+        new readRedirect(redir);
         try {
             File baseConfig = new File(configDir, "musictriggers.txt");
             if (!baseConfig.exists()) {

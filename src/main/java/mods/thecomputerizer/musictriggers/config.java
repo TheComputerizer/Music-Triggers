@@ -396,7 +396,6 @@ public final class config {
                     }
                 }
             }
-            readTriggers.put(triggerCounter, new TriggerData(p, fade, l, songs));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -770,7 +769,9 @@ public final class config {
                 fb.add("\t\tExample spring,0,511,20");
                 fb.add("\t\tSongs=<");
                 List<String> songList = accountForNullSongTriggerData(i);
+                MusicTriggers.logger.info("seasons id: "+i);
                 for (String iter : songList) {
+                    MusicTriggers.logger.info("adding song back "+iter);
                     fb.add("\t\t" + iter);
                 }
                 fb.add("\t\t>");

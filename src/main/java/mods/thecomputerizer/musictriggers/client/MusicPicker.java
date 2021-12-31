@@ -25,7 +25,6 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.potion.Effect;
 import net.minecraft.util.SoundCategory;
@@ -589,7 +588,6 @@ public class MusicPicker {
         if(mc.screen!=null) {
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.guiSongsString.entrySet()) {
                 String guiName = ((Map.Entry) stringListEntry).getKey().toString();
-                MusicTriggers.logger.info("guiname: "+guiName);
                 if(mc.screen.toString().contains(guiName)) {
                     events.add(guiName);
                     dynamicSongs.put(guiName, SoundHandler.guiSongsString.get(guiName));
@@ -606,30 +604,30 @@ public class MusicPicker {
             for (Map.Entry<Integer, List<String>> intListEntry : SoundHandler.difficultySongsString.entrySet()) {
                 int diffID = intListEntry.getKey();
                 if (diffID == 4 && world.getLevelData().isHardcore()) {
-                    events.add("hardcore");
-                    dynamicSongs.put("hardcore", SoundHandler.difficultySongsString.get(diffID));
-                    dynamicPriorities.put("hardcore", SoundHandler.difficultyPriorities.get(diffID));
-                    dynamicFade.put("hardcore", SoundHandler.difficultyFade.get(diffID));
+                    events.add("difficulty:"+diffID);
+                    dynamicSongs.put("difficulty:"+diffID, SoundHandler.difficultySongsString.get(diffID));
+                    dynamicPriorities.put("difficulty:"+diffID, SoundHandler.difficultyPriorities.get(diffID));
+                    dynamicFade.put("difficulty:"+diffID, SoundHandler.difficultyFade.get(diffID));
                 } else if (diffID == 3 && mc.level.getDifficulty() == Difficulty.HARD) {
-                    events.add("hard");
-                    dynamicSongs.put("hard", SoundHandler.difficultySongsString.get(diffID));
-                    dynamicPriorities.put("hard", SoundHandler.difficultyPriorities.get(diffID));
-                    dynamicFade.put("hard", SoundHandler.difficultyFade.get(diffID));
+                    events.add("difficulty:"+diffID);
+                    dynamicSongs.put("difficulty:"+diffID, SoundHandler.difficultySongsString.get(diffID));
+                    dynamicPriorities.put("difficulty:"+diffID, SoundHandler.difficultyPriorities.get(diffID));
+                    dynamicFade.put("difficulty:"+diffID, SoundHandler.difficultyFade.get(diffID));
                 } else if (diffID == 2 && mc.level.getDifficulty() == Difficulty.NORMAL) {
-                    events.add("normal");
-                    dynamicSongs.put("normal", SoundHandler.difficultySongsString.get(diffID));
-                    dynamicPriorities.put("normal", SoundHandler.difficultyPriorities.get(diffID));
-                    dynamicFade.put("normal", SoundHandler.difficultyFade.get(diffID));
+                    events.add("difficulty:"+diffID);
+                    dynamicSongs.put("difficulty:"+diffID, SoundHandler.difficultySongsString.get(diffID));
+                    dynamicPriorities.put("difficulty:"+diffID, SoundHandler.difficultyPriorities.get(diffID));
+                    dynamicFade.put("difficulty:"+diffID, SoundHandler.difficultyFade.get(diffID));
                 } else if (diffID == 1 && mc.level.getDifficulty() == Difficulty.EASY) {
-                    events.add("easy");
-                    dynamicSongs.put("easy", SoundHandler.difficultySongsString.get(diffID));
-                    dynamicPriorities.put("easy", SoundHandler.difficultyPriorities.get(diffID));
-                    dynamicFade.put("easy", SoundHandler.difficultyFade.get(diffID));
+                    events.add("difficulty:"+diffID);
+                    dynamicSongs.put("difficulty:"+diffID, SoundHandler.difficultySongsString.get(diffID));
+                    dynamicPriorities.put("difficulty:"+diffID, SoundHandler.difficultyPriorities.get(diffID));
+                    dynamicFade.put("difficulty:"+diffID, SoundHandler.difficultyFade.get(diffID));
                 } else if (diffID == 0 && mc.level.getDifficulty() == Difficulty.PEACEFUL) {
-                    events.add("peaceful");
-                    dynamicSongs.put("peaceful", SoundHandler.difficultySongsString.get(diffID));
-                    dynamicPriorities.put("peaceful", SoundHandler.difficultyPriorities.get(diffID));
-                    dynamicFade.put("peaceful", SoundHandler.difficultyFade.get(diffID));
+                    events.add("difficulty:"+diffID);
+                    dynamicSongs.put("difficulty:"+diffID, SoundHandler.difficultySongsString.get(diffID));
+                    dynamicPriorities.put("difficulty:"+diffID, SoundHandler.difficultyPriorities.get(diffID));
+                    dynamicFade.put("difficulty:"+diffID, SoundHandler.difficultyFade.get(diffID));
                 }
             }
         }
@@ -844,20 +842,20 @@ public class MusicPicker {
             if (!SoundHandler.seasonsSongsString.isEmpty()) {
                 for (Map.Entry<Integer, List<String>> intListEntry : SoundHandler.seasonsSongsString.entrySet()) {
                     int seasonID = intListEntry.getKey();
-                    ISeasonState curSeason = SeasonHelper.getSeasonState(world);
+                    ISeasonState curSeason = SeasonHelper.getSeasonState(mc.level);
                     if (seasonID == 0 && curSeason.getSeason() == Season.SPRING) {
-                        dynamicSongs.put("spring", SoundHandler.seasonsSongsString.get(seasonID));
-                        dynamicPriorities.put("spring", SoundHandler.seasonsPriorities.get(seasonID));
-                        dynamicFade.put("spring", SoundHandler.seasonsFade.get(seasonID));
-                        if (!tempList.contains("spring")) {
-                            tempList.add("spring");
+                        dynamicSongs.put("season:"+seasonID, SoundHandler.seasonsSongsString.get(seasonID));
+                        dynamicPriorities.put("season:"+seasonID, SoundHandler.seasonsPriorities.get(seasonID));
+                        dynamicFade.put("season:"+seasonID, SoundHandler.seasonsFade.get(seasonID));
+                        if (!tempList.contains("season:"+seasonID)) {
+                            tempList.add("season:"+seasonID);
                         }
                     } else if (seasonID == 1 && curSeason.getSeason() == Season.SUMMER) {
-                        dynamicSongs.put("summer", SoundHandler.seasonsSongsString.get(seasonID));
-                        dynamicPriorities.put("summer", SoundHandler.seasonsPriorities.get(seasonID));
-                        dynamicFade.put("summer", SoundHandler.seasonsFade.get(seasonID));
-                        if (!tempList.contains("summer")) {
-                            tempList.add("summer");
+                        dynamicSongs.put("season:"+seasonID, SoundHandler.seasonsSongsString.get(seasonID));
+                        dynamicPriorities.put("season:"+seasonID, SoundHandler.seasonsPriorities.get(seasonID));
+                        dynamicFade.put("season:"+seasonID, SoundHandler.seasonsFade.get(seasonID));
+                        if (!tempList.contains("season:"+seasonID)) {
+                            tempList.add("season:"+seasonID);
                         }
                     } else if (seasonID == 2 && curSeason.getSeason() == Season.AUTUMN) {
                         dynamicSongs.put("autumn", SoundHandler.seasonsSongsString.get(seasonID));
@@ -867,11 +865,12 @@ public class MusicPicker {
                             tempList.add("autumn");
                         }
                     } else if (seasonID == 3 && curSeason.getSeason() == Season.WINTER) {
-                        dynamicSongs.put("winter", SoundHandler.seasonsSongsString.get(seasonID));
-                        dynamicPriorities.put("winter", SoundHandler.seasonsPriorities.get(seasonID));
-                        dynamicFade.put("winter", SoundHandler.seasonsFade.get(seasonID));
-                        if (!tempList.contains("winter")) {
-                            tempList.add("winter");
+                        MusicTriggers.logger.info("found winter");
+                        dynamicSongs.put("season:"+seasonID, SoundHandler.seasonsSongsString.get(seasonID));
+                        dynamicPriorities.put("season:"+seasonID, SoundHandler.seasonsPriorities.get(seasonID));
+                        dynamicFade.put("season:"+seasonID, SoundHandler.seasonsFade.get(seasonID));
+                        if (!tempList.contains("season:"+seasonID)) {
+                            tempList.add("season:"+seasonID);
                         }
                     }
                 }
