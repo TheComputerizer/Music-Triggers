@@ -28,6 +28,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
@@ -46,6 +47,7 @@ public class eventsClient {
     public static EntityPlayer playerSource;
     public static String GUIName;
     public static int GuiCounter = 0;
+    private static int reloadCounter = 0;
 
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
@@ -174,9 +176,19 @@ public class eventsClient {
             Minecraft.getMinecraft().getSoundHandler().stopSounds();
             MusicPicker.player.sendMessage(new TextComponentString("\u00A74\u00A7oReloading Music... This may take a while!"));
             MusicPlayer.reloading = true;
-            reload.readAndReload();
-            MusicPicker.player.sendMessage(new TextComponentString("\u00A7a\u00A7oFinished!"));
-            MusicPlayer.reloading = false;
+            reloadCounter = 5;
+        }
+    }
+
+    @SubscribeEvent
+    public static void onTick(TickEvent.ClientTickEvent event) {
+        if(reloadCounter>0) {
+            reloadCounter-=1;
+            if(reloadCounter==1) {
+                reload.readAndReload();
+                MusicPicker.player.sendMessage(new TextComponentString("\u00A7a\u00A7oFinished!"));
+                MusicPlayer.reloading = false;
+            }
         }
     }
 

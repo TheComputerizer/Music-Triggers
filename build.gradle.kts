@@ -67,7 +67,7 @@ configurations {
 }
 
 dependencies {
-    minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-14.23.5.2855")
+    minecraft(group = "net.minecraftforge", name = "forge", version = "1.12.2-14.23.5.2860")
 
     implementation(group = "ws.schild", name = "jave-all-deps", version = "3.2.0")
 
@@ -79,6 +79,7 @@ dependencies {
     implementation(fg.deobf(curse(mod = "weather-storms-tornadoes", projectId = 237746L, fileId = 2596867L)))
     implementation(fg.deobf(curse(mod = "coroutil", projectId = 237749L, fileId = 2902920L)))
     implementation(fg.deobf(curse(mod = "atomicstrykers-infernal-mobs", projectId = 227875L, fileId = 3431758L)))
+    implementation(fg.deobf(curse(mod = "serene-seasons", projectId = 291874L, fileId = 2799213L)))
     implementation(fg.deobf(group = "net.darkhax.gamestages", name = "GameStages-1.12.2", version = "2.0.98"))
 
     runtimeOnly(fg.deobf(group = "mezz.jei", name = "jei_1.12.2", version = "4.16.1.302"))

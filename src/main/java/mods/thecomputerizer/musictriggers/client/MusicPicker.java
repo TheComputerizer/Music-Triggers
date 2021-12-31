@@ -24,11 +24,15 @@ import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.Optional;
 import org.orecruncher.dsurround.client.weather.Weather;
+import sereneseasons.api.season.ISeasonState;
+import sereneseasons.api.season.Season;
+import sereneseasons.api.season.SeasonHelper;
 import weather2.api.WeatherDataHelper;
 import weather2.weathersystem.storm.StormObject;
 import weather2.weathersystem.storm.WeatherObjectSandstorm;
@@ -601,6 +605,46 @@ public class MusicPicker {
             musicVolSave = mc.gameSettings.getSoundLevel(SoundCategory.MUSIC);
             masterVolSave = mc.gameSettings.getSoundLevel(SoundCategory.MASTER);
         }
+        if(!SoundHandler.difficultySongsString.isEmpty()) {
+            for (Map.Entry<Integer, List<String>> intListEntry : SoundHandler.difficultySongsString.entrySet()) {
+                int diffID = intListEntry.getKey();
+                if(diffID==4 && mc.world.getWorldInfo().isHardcoreModeEnabled()) {
+                    events.add("hardcore");
+                    String[] difficultySongsArray = new String[SoundHandler.difficultySongsString.get(diffID).size()];
+                    dynamicSongs.put("hardcore", SoundHandler.difficultySongsString.get(diffID).toArray(difficultySongsArray));
+                    dynamicPriorities.put("hardcore", SoundHandler.difficultyPriorities.get(diffID));
+                    dynamicFade.put("hardcore", SoundHandler.difficultyFade.get(diffID));
+                }
+                else if(diffID==3 && mc.world.getDifficulty()==EnumDifficulty.HARD) {
+                    events.add("hard");
+                    String[] difficultySongsArray = new String[SoundHandler.difficultySongsString.get(diffID).size()];
+                    dynamicSongs.put("hard", SoundHandler.difficultySongsString.get(diffID).toArray(difficultySongsArray));
+                    dynamicPriorities.put("hard", SoundHandler.difficultyPriorities.get(diffID));
+                    dynamicFade.put("hard", SoundHandler.difficultyFade.get(diffID));
+                }
+                else if(diffID==2 && mc.world.getDifficulty()==EnumDifficulty.NORMAL) {
+                    events.add("normal");
+                    String[] difficultySongsArray = new String[SoundHandler.difficultySongsString.get(diffID).size()];
+                    dynamicSongs.put("normal", SoundHandler.difficultySongsString.get(diffID).toArray(difficultySongsArray));
+                    dynamicPriorities.put("normal", SoundHandler.difficultyPriorities.get(diffID));
+                    dynamicFade.put("normal", SoundHandler.difficultyFade.get(diffID));
+                }
+                else if(diffID==1 && mc.world.getDifficulty()==EnumDifficulty.EASY) {
+                    events.add("easy");
+                    String[] difficultySongsArray = new String[SoundHandler.difficultySongsString.get(diffID).size()];
+                    dynamicSongs.put("easy", SoundHandler.difficultySongsString.get(diffID).toArray(difficultySongsArray));
+                    dynamicPriorities.put("easy", SoundHandler.difficultyPriorities.get(diffID));
+                    dynamicFade.put("easy", SoundHandler.difficultyFade.get(diffID));
+                }
+                else if(diffID==0 && mc.world.getDifficulty()==EnumDifficulty.PEACEFUL) {
+                    events.add("peaceful");
+                    String[] difficultySongsArray = new String[SoundHandler.difficultySongsString.get(diffID).size()];
+                    dynamicSongs.put("peaceful", SoundHandler.difficultySongsString.get(diffID).toArray(difficultySongsArray));
+                    dynamicPriorities.put("peaceful", SoundHandler.difficultyPriorities.get(diffID));
+                    dynamicFade.put("peaceful", SoundHandler.difficultyFade.get(diffID));
+                }
+            }
+        }
         try {
             List<String> whitelist = stageWhitelistChecker();
             List<String> blacklist = stageBlacklistChecker();
@@ -658,8 +702,13 @@ public class MusicPicker {
             if (weatherSandstorm()) {
                 events.add("sandstorm");
             }
-        } catch (NoSuchMethodError ignored) {
-        }
+        } catch (NoSuchMethodError ignored) {}
+        try {
+            List<String> seasons = seasons();
+            if(!seasons.isEmpty()) {
+                events.addAll(seasons);
+            }
+        } catch (NoSuchMethodError ignored) {}
 
         playableList = events;
         return events;
@@ -778,7 +827,9 @@ public class MusicPicker {
                     dynamicSongs.put(entry, SoundHandler.tornadoSongsString.get(entry).toArray(tornadoSongsArray));
                     dynamicPriorities.put(entry, SoundHandler.tornadoPriorities.get(entry));
                     dynamicFade.put(entry, SoundHandler.tornadoFade.get(entry));
-                    tempList.add(entry);
+                    if(!tempList.contains(entry)) {
+                        tempList.add(entry);
+                    }
                 }
             }
         }
@@ -811,6 +862,54 @@ public class MusicPicker {
             }
         }
         return false;
+    }
+
+    @Optional.Method(modid = "sereneseasons")
+    private static List<String> seasons() {
+        List<String> tempList = new ArrayList<>();
+        if(!SoundHandler.seasonsSongsString.isEmpty()) {
+            for (Map.Entry<Integer, List<String>> intListEntry : SoundHandler.seasonsSongsString.entrySet()) {
+                int seasonID = intListEntry.getKey();
+                ISeasonState curSeason = SeasonHelper.getSeasonState(world);
+                if(seasonID==0 && curSeason.getSeason()==Season.SPRING) {
+                    String[] seasonSongsArray = new String[SoundHandler.seasonsSongsString.get(seasonID).size()];
+                    dynamicSongs.put("spring", SoundHandler.seasonsSongsString.get(seasonID).toArray(seasonSongsArray));
+                    dynamicPriorities.put("spring", SoundHandler.seasonsPriorities.get(seasonID));
+                    dynamicFade.put("spring", SoundHandler.seasonsFade.get(seasonID));
+                    if(!tempList.contains("spring")) {
+                        tempList.add("spring");
+                    }
+                }
+                else if(seasonID==1 && curSeason.getSeason()==Season.SUMMER) {
+                    String[] seasonSongsArray = new String[SoundHandler.seasonsSongsString.get(seasonID).size()];
+                    dynamicSongs.put("summer", SoundHandler.seasonsSongsString.get(seasonID).toArray(seasonSongsArray));
+                    dynamicPriorities.put("summer", SoundHandler.seasonsPriorities.get(seasonID));
+                    dynamicFade.put("summer", SoundHandler.seasonsFade.get(seasonID));
+                    if(!tempList.contains("summer")) {
+                        tempList.add("summer");
+                    }
+                }
+                else if(seasonID==2 && curSeason.getSeason()==Season.AUTUMN) {
+                    String[] seasonSongsArray = new String[SoundHandler.seasonsSongsString.get(seasonID).size()];
+                    dynamicSongs.put("autumn", SoundHandler.seasonsSongsString.get(seasonID).toArray(seasonSongsArray));
+                    dynamicPriorities.put("autumn", SoundHandler.seasonsPriorities.get(seasonID));
+                    dynamicFade.put("autumn", SoundHandler.seasonsFade.get(seasonID));
+                    if(!tempList.contains("autumn")) {
+                        tempList.add("autumn");
+                    }
+                }
+                else if(seasonID==3 && curSeason.getSeason()==Season.WINTER) {
+                    String[] seasonSongsArray = new String[SoundHandler.seasonsSongsString.get(seasonID).size()];
+                    dynamicSongs.put("winter", SoundHandler.seasonsSongsString.get(seasonID).toArray(seasonSongsArray));
+                    dynamicPriorities.put("winter", SoundHandler.seasonsPriorities.get(seasonID));
+                    dynamicFade.put("winter", SoundHandler.seasonsFade.get(seasonID));
+                    if(!tempList.contains("winter")) {
+                        tempList.add("winter");
+                    }
+                }
+            }
+        }
+        return tempList;
     }
 
     @Optional.Method(modid = "infernalmobs")

@@ -23,7 +23,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import org.lwjgl.input.Keyboard;
 import paulscode.sound.SoundSystem;
@@ -168,7 +167,6 @@ public class MusicPlayer {
                         for (Map.Entry<String, setVolumeSound> stringListEntry : musicLinker.entrySet()) {
                             String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
                             if(triggerLinker.get(checkThis)!=null) {
-                                MusicTriggers.logger.info("Song Index: "+checkThis);
                                 if (theDecidingFactor(MusicPicker.playableList,tempTitleCards,triggerLinker.get(checkThis)) && mc.player != null) {
                                     songNum = checkThis;
                                     break;
@@ -191,33 +189,30 @@ public class MusicPlayer {
                         else {
                             curTrackList = null;
                             renderCards();
-                            MusicTriggers.logger.info("Attempting to switch music volumes...");
                             Map<String, ISound> curplaying = ObfuscationReflectionHelper.getPrivateValue(SoundManager.class,ObfuscationReflectionHelper.getPrivateValue(net.minecraft.client.audio.SoundHandler.class,mc.getSoundHandler(),"field_147694_f"),"field_148629_h");
                             SoundSystem sndSys = ObfuscationReflectionHelper.getPrivateValue(SoundManager.class,ObfuscationReflectionHelper.getPrivateValue(net.minecraft.client.audio.SoundHandler.class,Minecraft.getMinecraft().getSoundHandler(),"field_147694_f"),"field_148620_e");
                             for (Map.Entry<String, setVolumeSound> stringListEntry : musicLinker.entrySet()) {
                                 String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
                                 String temp = curplaying.entrySet().stream().filter(entry -> entry.getValue()==musicLinker.get(checkThis)).map(Map.Entry::getKey).findFirst().orElse(null);
-                                MusicTriggers.logger.info("Found song id for "+checkThis+" to be +"+temp);
                                 if(checkThis.matches(songNum)) {
                                     musicLinker.get(checkThis).setVolume(1F);
                                     sndSys.setVolume(temp,1F);
-                                    MusicTriggers.logger.info("Set Volume of "+checkThis+" to 1");
                                     curMusic = musicLinker.get(checkThis);
                                     curTrack = musicLinker.get(checkThis).getSoundLocation().toString().replaceAll("music.","").replaceAll("riggers:","");
                                     if (configRegistry.registry.registerDiscs && MusicPicker.player != null) {
                                         RegistryHandler.network.sendToServer(new packetCurSong.packetCurSongMessage(curTrack, MusicPicker.player.getUniqueID()));
-                                        MusicTriggers.logger.info("Song packet successfully updated!");
                                     }
                                 }
                                 else {
                                     musicLinker.get(checkThis).setVolume(0.01F);
                                     sndSys.setVolume(temp,0.01F);
-                                    MusicTriggers.logger.info("Set Volume of "+checkThis+" to 0.01");
                                 }
                             }
                         }
                         MusicPicker.shouldChange = false;
                     } else if (curMusic == null && mc.gameSettings.getSoundLevel(SoundCategory.MUSIC)>0 && mc.gameSettings.getSoundLevel(SoundCategory.MASTER)>0) {
+                        triggerLinker = new HashMap<>();
+                        musicLinker = new HashMap<>();
                         eventsClient.GuiCounter = 0;
                         if (curTrackList.length >= 1) {
                             int i = rand.nextInt(curTrackList.length);
@@ -228,7 +223,6 @@ public class MusicPlayer {
                             }
                             curTrack = curTrackList[i];
                             String[] linked = stringBreaker(curTrack,";");
-                            musicLinker = new HashMap<>();
                             for(int index=0;index<linked.length;index++) {
                                 String[] tempTriggers = stringBreaker(linked[index],"/");
                                 float pitch = 1F;
@@ -291,26 +285,10 @@ public class MusicPlayer {
     }
 
     public static boolean theDecidingFactor(List<String> all, List<String> titlecard, String[] comparison) {
-        StringBuilder oldtrig = new StringBuilder("All triggers: ");
-        for (String tl : all) {
-            oldtrig.append(tl).append(" ");
-        }
-        MusicTriggers.logger.info(oldtrig);
-        StringBuilder newtrig = new StringBuilder("New triggers: ");
-        for (String tl : titlecard) {
-            newtrig.append(tl).append(" ");
-        }
-        MusicTriggers.logger.info(newtrig);
-        StringBuilder comptrig = new StringBuilder("Comparison triggers: ");
-        for (String tl : comparison) {
-            comptrig.append(tl).append(" ");
-        }
-        MusicTriggers.logger.info(comptrig);
         List<String> updatedComparison = new ArrayList<>();
         boolean cont = false;
         for(String el : comparison) {
             if(titlecard.contains(el)) {
-                MusicTriggers.logger.info("Caught "+el);
                 updatedComparison = Arrays.stream(comparison)
                         .filter(element -> !element.matches(el))
                         .collect(Collectors.toList());
@@ -322,11 +300,6 @@ public class MusicPlayer {
             }
         }
         if(cont) {
-            StringBuilder updcomptrig = new StringBuilder("Updated comparison triggers: ");
-            for (String tl : updatedComparison) {
-                updcomptrig.append(tl).append(" ");
-            }
-            MusicTriggers.logger.info(updcomptrig);
             return all.containsAll(updatedComparison);
         }
         return false;

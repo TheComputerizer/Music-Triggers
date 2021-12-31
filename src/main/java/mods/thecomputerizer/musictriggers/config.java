@@ -40,6 +40,23 @@ public class config {
         }
     }
 
+    @Comment("Difficulty")
+    public static Difficulty difficulty = new Difficulty(100,new String[] {});
+
+    public static class Difficulty {
+        @Comment("Default Priority [min: -99, max: 2147483647 default: 100]")
+        public int difficultyPriority;
+        @Comment("Songs per difficulty\nFormat[songname],difficulty [int],(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]]\n"+
+        "Note - peaceful=0 easy=1 normal=2 hard=3 hardcore=4\n"+
+        "Example normal,2,111")
+        public String[] difficultySongs;
+
+        public Difficulty(final int difficultyPriority, final String[] difficultySongs) {
+            this.difficultyPriority = difficultyPriority;
+            this.difficultySongs = difficultySongs;
+        }
+    }
+
     @Comment("Zones")
     public static Zones zones = new Zones(10000,0,new String[] {});
 
@@ -570,10 +587,10 @@ public class config {
     public static class Gui {
         @Comment("Priority [min: -99, max: 2147483647 default: 13333]")
         public int guiPriority;
-        @Comment("Songs - [Format: \"Gui Name,SongName,(Optional)Priority:[min: -99, max: 2147483647 ]\"]\n" +
-                "Example: net.minecraft.client.gui.inentory.GuiInventory@67d49176,inventory,67000\n" +
+        @Comment("Songs - [Format: \"Gui Name,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\n" +
+                "Example: net.minecraft.client.gui.inentory.GuiInventory,inventory,67000\n" +
                 "Note: This can also be a regex\n"+
-                "Example 2: GuiInventory@67d49176,inventory,67000")
+                "Example 2: GuiInventory,inventory,67000")
         public String[] guiSongs;
 
         public Gui(final int guiPriority, final String[] guiSongs) {
@@ -729,6 +746,23 @@ public class config {
             this.sandstormFade = sandstormFade;
             this.sandstormRange = sandstormRange;
             this.sandstormSongs = sandstormSongs;
+        }
+    }
+
+    @Comment("Seasons (Only fires if the mod serene season is active)")
+    public static Seasons seasons = new Seasons(500,new String[] {});
+
+    public static class Seasons {
+        @Comment("Default Priority [min: -99, max: 2147483647 default: 500]")
+        public int seasonsPriority;
+        @Comment("Songs per seasons\nFormat[songname],season [int],(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]]\n"+
+                "Note - Spring=0 Summer=1 Fall=2 Winter=3\n"+
+                "Example spring,0,511,20")
+        public String[] seasonsSongs;
+
+        public Seasons(final int seasonsPriority, final String[] seasonsSongs) {
+            this.seasonsPriority = seasonsPriority;
+            this.seasonsSongs = seasonsSongs;
         }
     }
 
