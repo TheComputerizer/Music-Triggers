@@ -6,6 +6,8 @@ import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.configDebug;
 import mods.thecomputerizer.musictriggers.configTitleCards;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.ISound;
+import net.minecraft.client.audio.SimpleSound;
 import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -17,10 +19,9 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.LightType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.InputEvent;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -38,20 +39,29 @@ public class eventsClient {
     public static int timer = 0;
     public static PlayerEntity playerHurt;
     public static PlayerEntity playerSource;
+    public static int GuiCounter = 0;
+    private static int reloadCounter = 0;
 
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
-        if (MusicPlayer.curMusic != null && e.getResultSound().getLocation().getNamespace().matches(MusicTriggers.MODID) && ((e.getManager().isActive(MusicPlayer.curMusic) && e.getSound().getLocation() != MusicPlayer.fromRecord.getLocation()) || MusicPlayer.playing)) {
-            e.setResultSound(null);
-        }
-        for (String s : configDebug.blockedmods.get()) {
-            if (e.getSound().getLocation().toString().contains(s) && e.getSound().getSource() == SoundCategory.MUSIC) {
-                e.setResultSound(null);
+        if (e.getSound()!=null) {
+            SimpleSound silenced = new SimpleSound(e.getSound().getLocation(), SoundCategory.MUSIC, 0F, 1F, false, 0, ISound.AttenuationType.NONE, 0.0D, 0.0D, 0.0D, true);
+            if ((MusicPlayer.curMusic != null || MusicPlayer.curTrackList == null || MusicPlayer.curTrackList.isEmpty()) && e.getSound().getLocation().getNamespace().matches(MusicTriggers.MODID) && (((MusicPlayer.curMusic!=null && e.getManager().isActive(MusicPlayer.curMusic)) && e.getSound().getLocation() != MusicPlayer.fromRecord.getLocation()) || MusicPlayer.playing)) {
+                e.setResultSound(silenced);
             }
-        }
-        if (e.getSound().getLocation().toString().contains("minecraft") && e.getSound().getSource() == SoundCategory.MUSIC) {
-            e.setResultSound(null);
+            for (String s : configDebug.blockedmods.get()) {
+                if (e.getSound().getLocation().getNamespace().contains(s) && e.getSound().getSource() == SoundCategory.MUSIC) {
+                    if (!(MusicPlayer.curMusic == null && configDebug.SilenceIsBad.get())) {
+                        e.setResultSound(silenced);
+                    }
+                }
+            }
+            if (e.getSound().getLocation().getNamespace().contains("minecraft") && e.getSound().getSource() == SoundCategory.MUSIC) {
+                if (!(MusicPlayer.curMusic == null && configDebug.SilenceIsBad.get())) {
+                    e.setResultSound(silenced);
+                }
+            }
         }
     }
 
@@ -146,10 +156,21 @@ public class eventsClient {
             ITextComponent msg = new StringTextComponent("\u00A74\u00A7oReloading Music... This may take a while!");
             MusicPicker.player.sendMessage(msg,MusicPicker.player.getUUID());
             MusicPlayer.reloading = true;
-            reload.readAndReload();
-            msg = new StringTextComponent("\u00A7a\u00A7oFinished!");
-            MusicPicker.player.sendMessage(msg,MusicPicker.player.getUUID());
-            MusicPlayer.reloading = false;
+            reloadCounter = 5;
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    @SubscribeEvent
+    public static void onTick(TickEvent.ClientTickEvent event) {
+        if(reloadCounter>0) {
+            reloadCounter-=1;
+            if(reloadCounter==1) {
+                reload.readAndReload();
+                ITextComponent msg = new StringTextComponent("\u00A7a\u00A7oFinished!");
+                MusicPicker.player.sendMessage(msg,MusicPicker.player.getUUID());
+                MusicPlayer.reloading = false;
+            }
         }
     }
 
@@ -192,6 +213,9 @@ public class eventsClient {
                 }
                 if(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity) != null) {
                     e.getLeft().add("Music Triggers Current Entity Name: "+getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity).getName().getString());
+                }
+                if(MusicPicker.mc.screen!=null) {
+                    e.getLeft().add("Music Triggers current GUI: "+MusicPicker.mc.screen.toString());
                 }
                 try {
                     if (infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)) != null) {

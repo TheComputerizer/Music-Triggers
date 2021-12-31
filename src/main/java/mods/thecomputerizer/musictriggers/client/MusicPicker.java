@@ -14,7 +14,6 @@ import corgitaco.enhancedcelestials.lunarevent.HarvestMoon;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.config;
-import mods.thecomputerizer.musictriggers.configDebug;
 import mods.thecomputerizer.musictriggers.configRegistry;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.packets.InfoForBiome;
@@ -27,6 +26,7 @@ import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.potion.Effect;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.LightType;
@@ -65,6 +65,9 @@ public class MusicPicker {
 
     public static int curFade = 0;
     public static boolean shouldChange = false;
+
+    public static float musicVolSave;
+    public static float masterVolSave;
 
     public static List<String> playThese() {
         if (!MusicPlayer.fading) {
@@ -140,9 +143,6 @@ public class MusicPicker {
         int highest = -100;
         String trueHighest = "";
         for (String list : sta) {
-            if (configDebug.ShowDebugInfo.get()) {
-                MusicTriggers.logger.info("DEBUG: Event: " + list + " Associated Priority: " + dynamicPriorities.get(list));
-            }
             if (dynamicPriorities.get(list) > highest && !dynamicSongs.get(list).isEmpty()) {
                 highest = dynamicPriorities.get(list);
                 trueHighest = list;
@@ -311,7 +311,7 @@ public class MusicPicker {
             dynamicFade.put("underwater", config.underwaterFade);
         }
         for (LivingEntity ent : world.getEntitiesOfClass(LivingEntity.class, new AxisAlignedBB(player.getX() - 16, player.getY() - 8, player.getZ() - 16, player.getX() + 16, player.getY() + 8, player.getZ() + 16))) {
-            if (ent.serializeNBT().getString("Owner").matches(player.getStringUUID())) {
+            if (ent.serializeNBT()!=null && ent.serializeNBT().getString("Owner").matches(player.getStringUUID())) {
                 events.add("pet");
                 dynamicSongs.put("pet", config.petSongs);
                 dynamicPriorities.put("pet", config.petPriority);
@@ -402,7 +402,6 @@ public class MusicPicker {
                     if (isMonster) {
                         if (e.canSee(player)) {
                             trackingCounter++;
-                            MusicTriggers.logger.info("I see you!");
                         }
                         if (e.getHealth() / e.getMaxHealth() <= SoundHandler.mobHealth.get(mobName) / 100F) {
                             healthCounter++;
@@ -432,15 +431,16 @@ public class MusicPicker {
                 int mobCounter = 0;
                 List<MobEntity> mobListSpecific = new ArrayList<>();
                 for (LivingEntity e : mobTempList) {
-                    if (e.getDisplayName().getString().matches(mobName)) {
-                        mobCounter++;
-                        mobListSpecific.add((MobEntity) e);
+                    if (e.getDisplayName().getString().matches(mobName) || e.getType().getRegistryName().toString().matches(mobName)) {
+                        if(e instanceof  MobEntity) {
+                            mobCounter++;
+                            mobListSpecific.add((MobEntity) e);
+                        }
                     }
                 }
                 for (MobEntity e : mobListSpecific) {
                     if (e.canSee(player)) {
                         trackingCounter++;
-                        MusicTriggers.logger.info("I see you!");
                     }
                     if (e.getHealth() / e.getMaxHealth() <= SoundHandler.mobHealth.get(mobName) / 100F) {
                         healthCounter++;
@@ -484,7 +484,7 @@ public class MusicPicker {
         if (!SoundHandler.zonesSongs.isEmpty()) {
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.zonesSongsString.entrySet()) {
                 String zoneRange = ((Map.Entry) stringListEntry).getKey().toString();
-                String[] broken = SoundHandler.stringBreaker(zoneRange);
+                String[] broken = SoundHandler.stringBreaker(zoneRange,",");
                 BlockPos bp = player.blockPosition();
                 int x1 = Integer.parseInt(broken[0]);
                 int y1 = Integer.parseInt(broken[1]);
@@ -576,6 +576,22 @@ public class MusicPicker {
             dynamicSongs.put("Victory" + victoryID, SoundHandler.victorySongsString.get("Victory" + victoryID));
             dynamicPriorities.put("Victory" + victoryID, SoundHandler.victoryPriorities.get("Victory" + victoryID));
             dynamicFade.put("Victory" + victoryID, SoundHandler.victoryFade.get("Victory" + victoryID));
+        }
+        if(mc.screen!=null) {
+            for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.guiSongsString.entrySet()) {
+                String guiName = ((Map.Entry) stringListEntry).getKey().toString();
+                MusicTriggers.logger.info("guiname: "+guiName);
+                if(mc.screen.toString().contains(guiName)) {
+                    events.add(guiName);
+                    dynamicSongs.put(guiName, SoundHandler.guiSongsString.get(guiName));
+                    dynamicPriorities.put(guiName, SoundHandler.guiPriorities.get(guiName));
+                    dynamicFade.put(guiName, SoundHandler.guiFade.get(guiName));
+                }
+            }
+        }
+        else {
+            musicVolSave = mc.options.getSoundSourceVolume(SoundCategory.MUSIC);
+            masterVolSave = mc.options.getSoundSourceVolume(SoundCategory.MASTER);
         }
         List<String> whitelist = stageWhitelistChecker();
         List<String> blacklist = stageBlacklistChecker();

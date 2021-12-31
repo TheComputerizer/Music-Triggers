@@ -14,10 +14,10 @@ import java.util.List;
 public final class config {
     public static List<String> fb = new ArrayList<>();
 
-    public static String[] Categories = {"Main Menu", "Generic", "Zones", "Day", "Night", "Sunrise", "Sunset", "Light Level", "Underground - underground with no sky visible", "Deep Under - deep below the surface with no sky visible", "Raining", "Storming", "Snowing", "Low HP", "Dead", "Void", "Spectator", "Creative", "Riding", "Pet", "High", "Underwater", "PVP", "Dimension", "Biome", "Structure", "Mob (This works for both bosses and hordes!)", "Effect (Trigger based on potion effects)", "Victory - This can only be called after the pvp or mob trigger", "Gamestages (Only fires if the mod Game Stages is active)", "Blood Moon (Only fires if the mod Enhanced Celestials is active)", "Harvest Moon (Only fires if the mod Enhanced Celestials is active)", "Blue Moon (Only fires if the mod Enhanced Celestials is active)", "Rain Intensity (Only fires if the mod dynamic surroundings is active)", "Acid Rain (Only fires if the mod better weather is active)", "Blizzard (Only fires if the mod better weather is active)", "Cloudy (Only fires if the mod better weather is active)", "Light Rain (Only fires if the mod better weather is active)"};
-    public static Integer[] withPriority = {-1111, -1111, 10000, 1000, 900, 1111, 1111, 500, 1500, 2000, 1300, 1350, 1333, 3000, 10000, 7777, 5000, 5000, 2222, 1200, 1200, 1999, 20000, 1150, 1160, 3333, 3500, 500, 20000, 500, 1200, 1400, 1400, 1349, 9999, 9999, 9999, 9999};
-    public static Integer[] withFade = {-1, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0};
-    public static Integer[] withLevel = {9999, 9999, 9999, 9999, 9999, 9999, 9999, 7, 55, 20, 9999, 9999, 9999, 30, 9999, 0, 9999, 9999, 9999, 9999, 150, 9999, 16, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999};
+    public static String[] Categories = {"Main Menu", "Generic", "Zones", "Day", "Night", "Sunrise", "Sunset", "Light Level", "Underground - underground with no sky visible", "Deep Under - deep below the surface with no sky visible", "Raining", "Storming", "Snowing", "Low HP", "Dead", "inVoid", "Spectator", "Creative", "Riding", "Pet", "High", "Underwater", "PVP", "Dimension", "Biome", "Structure", "Mob (This works for both bosses and hordes!)", "Effect (Trigger based on potion effects)", "Victory - This can only be called after the pvp or mob trigger", "Gui", "Gamestages (Only fires if the mod Game Stages is active)", "Blood Moon (Only fires if the mod Enhanced Celestials is active)", "Harvest Moon (Only fires if the mod Enhanced Celestials is active)", "Blue Moon (Only fires if the mod Enhanced Celestials is active)", "Rain Intensity (Only fires if the mod dynamic surroundings is active)", "Acid Rain (Only fires if the mod better weather is active)", "Blizzard (Only fires if the mod better weather is active)", "Cloudy (Only fires if the mod better weather is active)", "Light Rain (Only fires if the mod better weather is active)"};
+    public static Integer[] withPriority = {-1111, -1111, 10000, 1000, 900, 1111, 1111, 500, 1500, 2000, 1300, 1350, 1333, 3000, 10000, 7777, 5000, 5000, 2222, 1200, 1200, 1999, 20000, 1150, 1160, 3333, 3500, 500, 20000, 13333, 500, 1200, 1400, 1400, 1349, 9999, 9999, 9999, 9999};
+    public static Integer[] withFade = {-1, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0};
+    public static Integer[] withLevel = {9999, 9999, 9999, 9999, 9999, 9999, 9999, 7, 55, 20, 9999, 9999, 9999, 30, 9999, 0, 9999, 9999, 9999, 9999, 150, 9999, 16, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999};
 
     public static HashMap<Integer, TriggerData> readTriggers = new HashMap<>();
     public static int triggerCounter = 0;
@@ -139,6 +139,9 @@ public final class config {
 
     public static int victoryPriority;
     public static List<String> victorySongs;
+
+    public static int guiPriority;
+    public static List<String> guiSongs;
 
     public static int gamestagePriority;
     public static List<String> gamestageSongs;
@@ -292,6 +295,13 @@ public final class config {
                 fb.add("\t\tExample: enderdragonwin,11,300,9999999,20");
                 fb.add("\t\tSongs=<\n\t\t>");
                 fb.add("");
+            } else if (Categories[i].contains("Gui")) {
+                fb.add("\t\tSongs - [Format: \"Gui Name,SongName,(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tExample: net.minecraft.client.gui.screen.ChatScreen,inventory,67000");
+                fb.add("\t\tNote: This can also be a regex");
+                fb.add("\t\tExample 2: ChatScreen,inventory,67000");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
             } else if (Categories[i].contains("Only fires if the mod Game Stages is active")) {
                 fb.add("\t\tSongs Per Gamestage [Format: \"StageName,whitelist,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
                 fb.add("\t\tNote: You only have to set the priority per gamestage name for 1 song");
@@ -329,7 +339,7 @@ public final class config {
                     universalDelay = Integer.parseInt(stringBreakerRegex(line.replaceAll(" ", ""), "=")[1]);
                 }
                 for(int i=0;i<Categories.length;i++) {
-                    if(line.contains(Categories[i])) {
+                    if(line.contains(Categories[i]) && !songLines) {
                         triggerCounter=i;
                     }
                 }
@@ -485,40 +495,43 @@ public final class config {
         victoryPriority = accountForNullNumericalTriggerData(28,1);
         victorySongs = accountForNullSongTriggerData(28);
 
-        gamestagePriority = accountForNullNumericalTriggerData(29,1);
-        gamestageSongs = accountForNullSongTriggerData(29);
+        guiPriority = accountForNullNumericalTriggerData(29,1);
+        guiSongs = accountForNullSongTriggerData(29);
 
-        bloodmoonPriority = accountForNullNumericalTriggerData(30,1);
-        bloodmoonFade = accountForNullNumericalTriggerData(30,2);
-        bloodmoonSongs = accountForNullSongTriggerData(30);
+        gamestagePriority = accountForNullNumericalTriggerData(30,1);
+        gamestageSongs = accountForNullSongTriggerData(30);
 
-        harvestmoonPriority = accountForNullNumericalTriggerData(31,1);
-        harvestmoonFade = accountForNullNumericalTriggerData(31,2);
-        harvestmoonSongs = accountForNullSongTriggerData(31);
+        bloodmoonPriority = accountForNullNumericalTriggerData(31,1);
+        bloodmoonFade = accountForNullNumericalTriggerData(31,2);
+        bloodmoonSongs = accountForNullSongTriggerData(31);
 
-        bluemoonPriority = accountForNullNumericalTriggerData(32,1);
-        bluemoonFade = accountForNullNumericalTriggerData(32,2);
-        bluemoonSongs = accountForNullSongTriggerData(32);
+        harvestmoonPriority = accountForNullNumericalTriggerData(32,1);
+        harvestmoonFade = accountForNullNumericalTriggerData(32,2);
+        harvestmoonSongs = accountForNullSongTriggerData(32);
 
-        rainintensityPriority = accountForNullNumericalTriggerData(33,1);
-        rainintensityFade = accountForNullNumericalTriggerData(33,2);
-        rainintensitySongs = accountForNullSongTriggerData(33);
+        bluemoonPriority = accountForNullNumericalTriggerData(33,1);
+        bluemoonFade = accountForNullNumericalTriggerData(33,2);
+        bluemoonSongs = accountForNullSongTriggerData(33);
 
-        acidrainPriority = accountForNullNumericalTriggerData(34,1);
-        acidrainFade = accountForNullNumericalTriggerData(34,2);
-        acidrainSongs = accountForNullSongTriggerData(34);
+        rainintensityPriority = accountForNullNumericalTriggerData(34,1);
+        rainintensityFade = accountForNullNumericalTriggerData(34,2);
+        rainintensitySongs = accountForNullSongTriggerData(34);
 
-        blizzardPriority = accountForNullNumericalTriggerData(35,1);
-        blizzardFade = accountForNullNumericalTriggerData(35,2);
-        blizzardSongs = accountForNullSongTriggerData(35);
+        acidrainPriority = accountForNullNumericalTriggerData(35,1);
+        acidrainFade = accountForNullNumericalTriggerData(35,2);
+        acidrainSongs = accountForNullSongTriggerData(35);
 
-        cloudyPriority = accountForNullNumericalTriggerData(36,1);
-        cloudyFade = accountForNullNumericalTriggerData(36,2);
-        cloudySongs = accountForNullSongTriggerData(36);
+        blizzardPriority = accountForNullNumericalTriggerData(36,1);
+        blizzardFade = accountForNullNumericalTriggerData(36,2);
+        blizzardSongs = accountForNullSongTriggerData(36);
 
-        lightrainPriority = accountForNullNumericalTriggerData(37,1);
-        lightrainFade = accountForNullNumericalTriggerData(37,2);
-        lightrainSongs = accountForNullSongTriggerData(37);
+        cloudyPriority = accountForNullNumericalTriggerData(37,1);
+        cloudyFade = accountForNullNumericalTriggerData(37,2);
+        cloudySongs = accountForNullSongTriggerData(37);
+
+        lightrainPriority = accountForNullNumericalTriggerData(38,1);
+        lightrainFade = accountForNullNumericalTriggerData(38,2);
+        lightrainSongs = accountForNullSongTriggerData(38);
     }
 
     public static void update(File f) {
@@ -672,6 +685,18 @@ public final class config {
                 fb.add("\t\tNote - The victory time is how long the victory trigger will last for");
                 fb.add("\t\tAdditional Note: Dying will cut the trigger short");
                 fb.add("\t\tExample: enderdragonwin,11,300,9999999,20");
+                fb.add("\t\tSongs=<");
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            } else if (Categories[i].contains("Gui")) {
+                fb.add("Songs - [Format: \"Gui Name,SongName,(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("Example: net.minecraft.client.gui.inentory.GuiInventory,inventory,67000");
+                fb.add("Note: This can also be a regex");
+                fb.add("Example 2: GuiInventory,inventory,67000");
                 fb.add("\t\tSongs=<");
                 List<String> songList = accountForNullSongTriggerData(i);
                 for (String iter : songList) {

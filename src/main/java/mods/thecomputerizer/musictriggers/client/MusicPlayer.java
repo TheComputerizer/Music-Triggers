@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.client;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.common.ModSounds;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
 import mods.thecomputerizer.musictriggers.config;
@@ -9,9 +8,12 @@ import mods.thecomputerizer.musictriggers.configRegistry;
 import mods.thecomputerizer.musictriggers.configTitleCards;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.packets.CurSong;
+import mods.thecomputerizer.musictriggers.util.setVolumeSound;
 import net.minecraft.block.JukeboxBlock;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.ChannelManager;
 import net.minecraft.client.audio.ISound;
+import net.minecraft.client.audio.SoundEngine;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.client.util.InputMappings;
 import net.minecraft.tileentity.JukeboxTileEntity;
@@ -26,9 +28,11 @@ import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static mods.thecomputerizer.musictriggers.util.packets.CurSong.curSong;
 
@@ -53,6 +57,8 @@ public class MusicPlayer {
     public static SoundEvent fromRecord = new SoundEvent(new ResourceLocation("nonsensicalresourcelocation"));
     public static boolean playing = false;
     public static boolean reloading = false;
+    public static HashMap<String, setVolumeSound> musicLinker = new HashMap<>();
+    public static HashMap<String, String[]> triggerLinker = new HashMap<>();
 
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent event) {
@@ -145,16 +151,62 @@ public class MusicPlayer {
                         eventsClient.IMAGE_CARD = null;
                         curTrackList = null;
                         tempTitleCards = MusicPicker.titleCardEvents;
-                        if (MusicPicker.curFade == 0) {
-                            mc.getSoundManager().stop(curMusic);
+                        String songNum = null;
+                        for (Map.Entry<String, setVolumeSound> stringListEntry : musicLinker.entrySet()) {
+                            String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
+                            if(triggerLinker.get(checkThis)!=null) {
+                                if (theDecidingFactor(MusicPicker.playableList,tempTitleCards,triggerLinker.get(checkThis)) && mc.player != null) {
+                                    songNum = checkThis;
+                                    break;
+                                }
+                            }
+                        }
+                        if(songNum==null) {
+                            triggerLinker = new HashMap<>();
+                            musicLinker = new HashMap<>();
+                            if (MusicPicker.curFade == 0) {
+                                mc.getSoundManager().stop(curMusic);
+                                renderCards();
+                            } else {
+                                fading = true;
+                                tempFade = MusicPicker.curFade;
+                                saveVol = mc.options.getSoundSourceVolume(SoundCategory.MASTER);
+                            }
+                        }
+                        else {
+                            curTrackList = null;
                             renderCards();
-                        } else {
-                            fading = true;
-                            tempFade = MusicPicker.curFade;
-                            saveVol = mc.options.getSoundSourceVolume(SoundCategory.MASTER);
+                            Map<ISound, ChannelManager.Entry>  curplaying = ObfuscationReflectionHelper.getPrivateValue(SoundEngine.class,ObfuscationReflectionHelper.getPrivateValue(net.minecraft.client.audio.SoundHandler.class,mc.getSoundManager(),"field_147694_f"),"field_217942_m");
+                            for (Map.Entry<String, setVolumeSound> stringListEntry : musicLinker.entrySet()) {
+                                String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
+                                if(checkThis.matches(songNum)) {
+                                    musicLinker.get(checkThis).setVolume(1F);
+                                    if(curplaying.get(musicLinker.get(checkThis))!=null) {
+                                        curplaying.get(musicLinker.get(checkThis)).execute(sound -> sound.setVolume(1F));
+                                    }
+                                    curMusic = musicLinker.get(checkThis);
+                                    curTrack = musicLinker.get(checkThis).getLocation().toString().replaceAll("music.","").replaceAll("riggers:","");
+                                    if (MusicPicker.player != null) {
+                                        if (!configRegistry.clientSideOnly) {
+                                            PacketHandler.sendToServer(new CurSong(curTrack, MusicPicker.player.getUUID()));
+                                        } else {
+                                            curSong.put(MusicPicker.player.getUUID(), curTrack);
+                                        }
+                                    }
+                                }
+                                else {
+                                    musicLinker.get(checkThis).setVolume(0.01F);
+                                    if(curplaying.get(musicLinker.get(checkThis))!=null) {
+                                        curplaying.get(musicLinker.get(checkThis)).execute(sound -> sound.setVolume(0.01F));
+                                    }
+                                }
+                            }
                         }
                         MusicPicker.shouldChange = false;
                     } else if (curMusic == null && mc.options.getSoundSourceVolume(SoundCategory.MASTER) > 0 && mc.options.getSoundSourceVolume(SoundCategory.MUSIC) > 0) {
+                        triggerLinker = new HashMap<>();
+                        musicLinker = new HashMap<>();
+                        eventsClient.GuiCounter = 0;
                         if (curTrackList.size() >= 1) {
                             int i = rand.nextInt(curTrackList.size());
                             if (curTrackList.size() > 1 && curTrack != null) {
@@ -163,6 +215,17 @@ public class MusicPlayer {
                                 }
                             }
                             curTrack = curTrackList.get(i);
+                            String[] linked = stringBreaker(curTrack,";");
+                            for(int index=0;index<linked.length;index++) {
+                                String[] tempTriggers = stringBreaker(linked[index],"/");
+                                float pitch = 1F;
+                                if(tempTriggers.length>1) {
+                                    pitch = Float.parseFloat(stringBreaker(linked[index], "/")[1]);
+                                    triggerLinker.put("song-" + index, Arrays.copyOfRange(tempTriggers, 2, tempTriggers.length));
+                                }
+                                musicLinker.put("song-"+index, new setVolumeSound(new ResourceLocation(MusicTriggers.MODID, "music." +stringBreaker(linked[index],"/")[0]), SoundCategory.MUSIC, 1F, pitch, false, 1, ISound.AttenuationType.NONE, 0F, 0F, 0F));
+                            }
+                            curTrack = stringBreaker(stringBreaker(curTrack,";")[0],"/")[0];
                             if (MusicPicker.player != null) {
                                 if (!configRegistry.clientSideOnly) {
                                     PacketHandler.sendToServer(new CurSong(curTrack, MusicPicker.player.getUUID()));
@@ -170,9 +233,17 @@ public class MusicPlayer {
                                     curSong.put(MusicPicker.player.getUUID(), curTrack);
                                 }
                             }
-                            curMusic = ModSounds.playableSounds.get("music." + curTrack);
                             mc.getSoundManager().stop();
-                            mc.getSoundManager().play(curMusic);
+                            for (Map.Entry<String, setVolumeSound> stringListEntry : musicLinker.entrySet()) {
+                                String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
+                                if(!checkThis.matches("song-0")) {
+                                    musicLinker.get(checkThis).setVolume(0.01F);
+                                }
+                                else {
+                                    curMusic = musicLinker.get(checkThis);
+                                }
+                                mc.getSoundManager().play(musicLinker.get(checkThis));
+                            }
                         }
                     }
                 } else {
@@ -203,5 +274,30 @@ public class MusicPlayer {
                 eventsClient.activated = true;
             }
         }
+    }
+
+    public static String[] stringBreaker(String s, String regex) {
+        return s.split(regex);
+    }
+
+    public static boolean theDecidingFactor(List<String> all, List<String> titlecard, String[] comparison) {
+        List<String> updatedComparison = new ArrayList<>();
+        boolean cont = false;
+        for(String el : comparison) {
+            if(titlecard.contains(el)) {
+                updatedComparison = Arrays.stream(comparison)
+                        .filter(element -> !element.matches(el))
+                        .collect(Collectors.toList());
+                if(updatedComparison.size()<=0) {
+                    return true;
+                }
+                cont = true;
+                break;
+            }
+        }
+        if(cont) {
+            return all.containsAll(updatedComparison);
+        }
+        return false;
     }
 }
