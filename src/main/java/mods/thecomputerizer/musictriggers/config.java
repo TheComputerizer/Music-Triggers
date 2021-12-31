@@ -497,10 +497,10 @@ public class config {
     public static class Mob {
         @Comment("General Priority [min: -99, max: 2147483647 default: 3500]\nNote: Priorities specified for individual mobs will override this")
         public int mobPriority;
-        @Comment("Songs Per Mob [Format: \"MobName,number of mobs,SongName,(Optional)detection range[min: 1, max: 1000, default: 16],(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0],(Optional)Targetting[default: false],(Optional)Horde Targetting percentage[default: 100], (Optional)Health[default: 100],(Optional)Horde Health Percentage[default: 100],(Optional)Battle Time[in ticks, default: 0],(Optional)Trigger Victory[default: false],(Optional)Victory ID[min:0, max:2147483647, default: 0](Optional)Infernal[only works with the mod infernal mobs active]\"]\n" +
+        @Comment("Songs Per Mob [Format: \"MobName,number of mobs,SongName,(Optional)detection range[min: 1, max: 1000, default: 16],(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0],(Optional)CanSee[default: false],(Optional)Horde Targetting percentage[default: 100], (Optional)Health[default: 100],(Optional)Horde Health Percentage[default: 100],(Optional)Battle Time[in ticks, default: 0],(Optional)Trigger Victory[default: false],(Optional)Victory ID[min:0, max:2147483647, default: 0](Optional)Infernal[only works with the mod infernal mobs active]\"]\n" +
                 "Note: You only have to set the priority per mob name for 1 song\n" +
                 "Additional Note: Putting high numbers (over 100) for the mob range may cause lag! The higher it is, the more noticable that lag will be. Only use higher numbers for a boss that could be far away, like the Ender Dragon\n" +
-                "Additional Note: Targetting requires the mob(s) to be looking at you while horde targetting percentage is the total percentage of the number of mobs you set that have to be looking at you\n"+
+                "Additional Note: CanSee requires you to be able to see the mobs while horde targetting percentage is the total percentage of the number of mobs you set that have to be able to be seen\n"+
                 "Additional Note: Health requires the mob(s) to be below the set percentage threshold of health while horde health percentage is the total percentage of the number of mobs you set that have to be below the set percentage threshold of health\n"+
                 "Additional Note: Battle time is how long the trigger will persist after the conditions are no longer met. Due to possible conflicts it may to better to leave this at 0\n"+
                 "Additional Note: The victory trigger is special in that it can only activated after escaping the set trigger. The ID exists so there can multiple different victory scenarios\n"+
@@ -588,7 +588,7 @@ public class config {
         @Comment("Priority [min: -99, max: 2147483647 default: 13333]")
         public int guiPriority;
         @Comment("Songs - [Format: \"Gui Name,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\n" +
-                "Example: net.minecraft.client.gui.inentory.GuiInventory,inventory,67000\n" +
+                "Example: net.minecraft.client.gui.inventory.GuiInventory,inventory,67000\n" +
                 "Note: This can also be a regex\n"+
                 "Example 2: GuiInventory,inventory,67000")
         public String[] guiSongs;

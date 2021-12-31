@@ -79,31 +79,10 @@ public class eventsClient {
     }
 
     @SubscribeEvent
-    public static void guiOpen(GuiOpenEvent e) {
-        if(e.getGui() instanceof GuiIngameMenu) {
-            for(String ev : MusicPicker.playableList) {
-                if(ev.contains("Gui") && ev.contains("Menu")) {
-                    MusicPicker.mc.getSoundHandler().stopSounds();
-                }
-            }
-        }
-    }
-
-    @SubscribeEvent
     public static void guiScreen(GuiScreenEvent e) {
         GUIName = e.getGui().toString();
         if(configDebug.ShowGUIName) {
             e.getGui().drawHoveringText(e.getGui().toString(), 0, 0);
-        }
-        if(e.getGui() instanceof GuiIngameMenu) {
-            for(String ev : MusicPicker.playableList) {
-                if(ev.contains("Gui") && ev.contains("Menu") && GuiCounter==1) {
-                    MusicPicker.mc.getSoundHandler().resumeSounds();
-                    MusicPicker.mc.getSoundHandler().setSoundLevel(SoundCategory.MUSIC,MusicPicker.musicVolSave);
-                    MusicPicker.mc.getSoundHandler().setSoundLevel(SoundCategory.MASTER,MusicPicker.masterVolSave);
-                    GuiCounter-=1;
-                }
-            }
         }
     }
 
@@ -220,10 +199,6 @@ public class eventsClient {
                     e.getLeft().add("Music Triggers Current Dimension: " + MusicPicker.player.dimension);
                     e.getLeft().add("Music Triggers Current Total Light: " + MusicPicker.world.getLight(MusicPicker.roundedPos(MusicPicker.player), true));
                     e.getLeft().add("Music Triggers Current Block Light: " + MusicPicker.world.getLightFor(EnumSkyBlock.BLOCK, MusicPicker.roundedPos(MusicPicker.player)));
-                }
-                e.getLeft().add("Music Triggers Is game in focus? " + Minecraft.getMinecraft().inGameHasFocus);
-                if(MusicPlayer.curMusic!=null) {
-                    e.getLeft().add("Music Triggers Volume of current song " + MusicPlayer.curMusic.getVolume());
                 }
                 if(MusicPicker.effectList!=null && !MusicPicker.effectList.isEmpty()) {
                     StringBuilder se = new StringBuilder();

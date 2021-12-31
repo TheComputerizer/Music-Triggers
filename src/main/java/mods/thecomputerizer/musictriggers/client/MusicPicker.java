@@ -406,7 +406,7 @@ public class MusicPicker {
             boolean infernalDone = false;
             if (mobName.matches("MOB")) {
                 for (EntityLiving e : mobList) {
-                    if (e.getAttackTarget() instanceof EntityPlayer && e.getAttackTarget().getUniqueID() == player.getUniqueID()) {
+                    if (player.canEntityBeSeen(e)) {
                         trackingCounter++;
                     }
                     if (e.getHealth() / e.getMaxHealth() <= SoundHandler.mobHealth.get(mobName) / 100F) {
@@ -447,7 +447,7 @@ public class MusicPicker {
                     }
                 }
                 for (EntityLiving e : mobListSpecific) {
-                    if (e.canEntityBeSeen(player)) {
+                    if (player.canEntityBeSeen(e)) {
                         trackingCounter++;
                     }
                     if (e.getHealth() / e.getMaxHealth() <= SoundHandler.mobHealth.get(mobName) / 100F) {
@@ -593,11 +593,11 @@ public class MusicPicker {
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.guiSongsString.entrySet()) {
                 String guiName = ((Map.Entry) stringListEntry).getKey().toString();
                 if(eventsClient.GUIName.contains(guiName)) {
-                    events.add("Gui-"+guiName);
+                    events.add(guiName);
                     String[] guiSongsArray = new String[SoundHandler.guiSongsString.get(guiName).size()];
-                    dynamicSongs.put("Gui-"+guiName, SoundHandler.guiSongsString.get(guiName).toArray(guiSongsArray));
-                    dynamicPriorities.put("Gui-"+guiName, SoundHandler.guiPriorities.get(guiName));
-                    dynamicFade.put("Gui-"+guiName, SoundHandler.guiFade.get(guiName));
+                    dynamicSongs.put(guiName, SoundHandler.guiSongsString.get(guiName).toArray(guiSongsArray));
+                    dynamicPriorities.put(guiName, SoundHandler.guiPriorities.get(guiName));
+                    dynamicFade.put(guiName, SoundHandler.guiFade.get(guiName));
                 }
             }
         }
@@ -608,35 +608,31 @@ public class MusicPicker {
         if(!SoundHandler.difficultySongsString.isEmpty()) {
             for (Map.Entry<Integer, List<String>> intListEntry : SoundHandler.difficultySongsString.entrySet()) {
                 int diffID = intListEntry.getKey();
-                if(diffID==4 && mc.world.getWorldInfo().isHardcoreModeEnabled()) {
+                if (diffID == 4 && mc.world.getWorldInfo().isHardcoreModeEnabled()) {
                     events.add("hardcore");
                     String[] difficultySongsArray = new String[SoundHandler.difficultySongsString.get(diffID).size()];
                     dynamicSongs.put("hardcore", SoundHandler.difficultySongsString.get(diffID).toArray(difficultySongsArray));
                     dynamicPriorities.put("hardcore", SoundHandler.difficultyPriorities.get(diffID));
                     dynamicFade.put("hardcore", SoundHandler.difficultyFade.get(diffID));
-                }
-                else if(diffID==3 && mc.world.getDifficulty()==EnumDifficulty.HARD) {
+                } else if (diffID == 3 && mc.world.getDifficulty() == EnumDifficulty.HARD) {
                     events.add("hard");
                     String[] difficultySongsArray = new String[SoundHandler.difficultySongsString.get(diffID).size()];
                     dynamicSongs.put("hard", SoundHandler.difficultySongsString.get(diffID).toArray(difficultySongsArray));
                     dynamicPriorities.put("hard", SoundHandler.difficultyPriorities.get(diffID));
                     dynamicFade.put("hard", SoundHandler.difficultyFade.get(diffID));
-                }
-                else if(diffID==2 && mc.world.getDifficulty()==EnumDifficulty.NORMAL) {
+                } else if (diffID == 2 && mc.world.getDifficulty() == EnumDifficulty.NORMAL) {
                     events.add("normal");
                     String[] difficultySongsArray = new String[SoundHandler.difficultySongsString.get(diffID).size()];
                     dynamicSongs.put("normal", SoundHandler.difficultySongsString.get(diffID).toArray(difficultySongsArray));
                     dynamicPriorities.put("normal", SoundHandler.difficultyPriorities.get(diffID));
                     dynamicFade.put("normal", SoundHandler.difficultyFade.get(diffID));
-                }
-                else if(diffID==1 && mc.world.getDifficulty()==EnumDifficulty.EASY) {
+                } else if (diffID == 1 && mc.world.getDifficulty() == EnumDifficulty.EASY) {
                     events.add("easy");
                     String[] difficultySongsArray = new String[SoundHandler.difficultySongsString.get(diffID).size()];
                     dynamicSongs.put("easy", SoundHandler.difficultySongsString.get(diffID).toArray(difficultySongsArray));
                     dynamicPriorities.put("easy", SoundHandler.difficultyPriorities.get(diffID));
                     dynamicFade.put("easy", SoundHandler.difficultyFade.get(diffID));
-                }
-                else if(diffID==0 && mc.world.getDifficulty()==EnumDifficulty.PEACEFUL) {
+                } else if (diffID == 0 && mc.world.getDifficulty() == EnumDifficulty.PEACEFUL) {
                     events.add("peaceful");
                     String[] difficultySongsArray = new String[SoundHandler.difficultySongsString.get(diffID).size()];
                     dynamicSongs.put("peaceful", SoundHandler.difficultySongsString.get(diffID).toArray(difficultySongsArray));
