@@ -1,6 +1,8 @@
 package mods.thecomputerizer.musictriggers.util;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.configDebug;
+import mods.thecomputerizer.musictriggers.readRedirect;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
@@ -13,6 +15,10 @@ public class json {
 
     public static List<String> create() {
         allSongs = collector();
+        String[] redirected = {};
+        if(configDebug.enableRedirect) {
+            redirected = readRedirect.songs;
+        }
         if (allSongs != null && !allSongs.isEmpty()) {
             System.out.print(allSongs.size());
             js.add("{");
@@ -21,6 +27,16 @@ public class json {
                 js.add("\t\t\"category\": \"music\",");
                 js.add("\t\t\"sounds\": [{");
                 js.add("\t\t\t\"name\": \"" + MusicTriggers.MODID + ":music/" + allSongs.get(i) + "\",");
+                js.add("\t\t\t\"stream\": true");
+                js.add("\t\t}]");
+                js.add("\t},");
+            }
+            for (String s : redirected) {
+                String[] songs = stringBreaker(s, ",");
+                js.add("  \"music." + songs[0] + "\": {");
+                js.add("\t\t\"category\": \"music\",");
+                js.add("\t\t\"sounds\": [{");
+                js.add("\t\t\t\"name\": \"" + MusicTriggers.MODID + ":music/" + songs[1] + "\",");
                 js.add("\t\t\t\"stream\": true");
                 js.add("\t\t}]");
                 js.add("\t},");
@@ -39,13 +55,19 @@ public class json {
 
     public static List<String> lang() {
         allSongs = collector();
-        if (allSongs != null) {
+        if(configDebug.enableRedirect) {
+            for (String a : readRedirect.songs) {
+                allSongs.add(stringBreaker(a, ",")[0]);
+            }
+        }
+        if (allSongs != null && !allSongs.isEmpty()) {
             System.out.print(allSongs.size());
             js.add("{");
             for (String allSong : allSongs) {
                 js.add("item.musictriggers:" + allSong.toLowerCase() + ".name=Music Disc");
                 js.add("item.record." + allSong.toLowerCase() + ".desc=Music Triggers - " + allSong);
             }
+            js.add("}");
         }
         return js;
     }
@@ -80,5 +102,9 @@ public class json {
             matchCheck = false;
         }
         return allSongs;
+    }
+
+    public static String[] stringBreaker(String s, String regex) {
+        return s.split(regex);
     }
 }

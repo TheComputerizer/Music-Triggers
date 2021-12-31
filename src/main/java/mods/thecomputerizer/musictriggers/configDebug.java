@@ -24,6 +24,11 @@ public class configDebug {
     @Config.Comment("Only silence blocked music when there is music from Music Triggers already playing")
     public static boolean SilenceIsBad = false;
 
+    @Config.Comment("Allows you to set variable names for songs to avoid needing multiple copies of the same song (see redirect.txt)\n"+
+    "Usage: customname,songname\n"+
+    "Note - All names used in the main config will still generate music discs if that option is turned on")
+    public static boolean enableRedirect = true;
+
     @Mod.EventBusSubscriber(modid = MusicTriggers.MODID)
     private static class EventHandler {
         @SubscribeEvent
