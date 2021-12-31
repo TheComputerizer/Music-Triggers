@@ -14,10 +14,10 @@ import java.util.List;
 public final class config {
     public static List<String> fb = new ArrayList<>();
 
-    public static String[] Categories = {"Main Menu", "Generic", "Zones", "Day", "Night", "Sunrise", "Sunset", "Light Level", "Underground - underground with no sky visible", "Deep Under - deep below the surface with no sky visible", "Raining", "Storming", "Snowing", "Low HP", "Dead", "inVoid", "Spectator", "Creative", "Riding", "Pet", "High", "Underwater", "PVP", "Dimension", "Biome", "Structure", "Mob (This works for both bosses and hordes!)", "Effect (Trigger based on potion effects)", "Victory - This can only be called after the pvp or mob trigger", "Gui", "Gamestages (Only fires if the mod Game Stages is active)", "Blood Moon (Only fires if the mod Enhanced Celestials is active)", "Harvest Moon (Only fires if the mod Enhanced Celestials is active)", "Blue Moon (Only fires if the mod Enhanced Celestials is active)", "Rain Intensity (Only fires if the mod dynamic surroundings is active)", "Acid Rain (Only fires if the mod better weather is active)", "Blizzard (Only fires if the mod better weather is active)", "Cloudy (Only fires if the mod better weather is active)", "Light Rain (Only fires if the mod better weather is active)"};
-    public static Integer[] withPriority = {-1111, -1111, 10000, 1000, 900, 1111, 1111, 500, 1500, 2000, 1300, 1350, 1333, 3000, 10000, 7777, 5000, 5000, 2222, 1200, 1200, 1999, 20000, 1150, 1160, 3333, 3500, 500, 20000, 13333, 500, 1200, 1400, 1400, 1349, 9999, 9999, 9999, 9999};
-    public static Integer[] withFade = {-1, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0};
-    public static Integer[] withLevel = {9999, 9999, 9999, 9999, 9999, 9999, 9999, 7, 55, 20, 9999, 9999, 9999, 30, 9999, 0, 9999, 9999, 9999, 9999, 150, 9999, 16, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999};
+    public static String[] Categories = {"Main Menu", "Generic", "Difficulty", "Zones", "Day", "Night", "Sunrise", "Sunset", "Light Level", "Underground - underground with no sky visible", "Deep Under - deep below the surface with no sky visible", "Raining", "Storming", "Snowing", "Low HP", "Dead", "inVoid", "Spectator", "Creative", "Riding", "Pet", "High", "Underwater", "PVP", "Dimension", "Biome", "Structure", "Mob (This works for both bosses and hordes!)", "Effect (Trigger based on potion effects)", "Victory - This can only be called after the pvp or mob trigger", "Gui", "Gamestages (Only fires if the mod Game Stages is active)", "Blood Moon (Only fires if the mod Enhanced Celestials is active)", "Harvest Moon (Only fires if the mod Enhanced Celestials is active)", "Blue Moon (Only fires if the mod Enhanced Celestials is active)", "Rain Intensity (Only fires if the mod dynamic surroundings is active)", "Acid Rain (Only fires if the mod better weather is active)", "Blizzard (Only fires if the mod better weather is active)", "Cloudy (Only fires if the mod better weather is active)", "Light Rain (Only fires if the mod better weather is active)", "Seasons (Only fires if the mod serene season is active)"};
+    public static Integer[] withPriority = {-1111, -1111, 100, 10000, 1000, 900, 1111, 1111, 500, 1500, 2000, 1300, 1350, 1333, 3000, 10000, 7777, 5000, 5000, 2222, 1200, 1200, 1999, 20000, 1150, 1160, 3333, 3500, 500, 20000, 13333, 500, 1200, 1400, 1400, 1349, 9999, 9999, 9999, 9999, 500};
+    public static Integer[] withFade = {-1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    public static Integer[] withLevel = {9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 7, 55, 20, 9999, 9999, 9999, 30, 9999, 0, 9999, 9999, 9999, 9999, 150, 9999, 16, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999};
 
     public static HashMap<Integer, TriggerData> readTriggers = new HashMap<>();
     public static int triggerCounter = 0;
@@ -28,6 +28,9 @@ public final class config {
 
     public static int genericFade;
     public static List<String> genericSongs;
+
+    public static int difficultyPriority;
+    public static List<String> difficultySongs;
 
     public static int zonesPriority;
     public static int zonesFade;
@@ -178,6 +181,8 @@ public final class config {
     public static int lightrainFade;
     public static List<String> lightrainSongs;
 
+    public static int seasonsPriority;
+    public static List<String> seasonsSongs;
 
     public static void build(File f) {
         fb.add("All event Triggers");
@@ -314,6 +319,13 @@ public final class config {
                 fb.add("\t\tExample: intenserain,70");
                 fb.add("\t\tSongs=<\n\t\t>");
                 fb.add("");
+            } else if (Categories[i].contains("Only fires if the mod serene season is active")) {
+                fb.add("\t\tSongs per seasons");
+                fb.add("\t\tFormat[songname],season [int],(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0]]");
+                fb.add("\t\tNote - Spring=0 Summer=1 Fall=2 Winter=3");
+                fb.add("\t\tExample spring,0,511,20");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
             } else {
                 fb.add("\t\tSongs=<\n\t\t>");
                 fb.add("");
@@ -386,152 +398,158 @@ public final class config {
 
         genericFade = accountForNullNumericalTriggerData(1,2);
         genericSongs = accountForNullSongTriggerData(1);
+        
+        difficultyPriority = accountForNullNumericalTriggerData(2,1);
+        difficultySongs = accountForNullSongTriggerData(2);
 
-        zonesPriority = accountForNullNumericalTriggerData(2,1);
-        zonesFade = accountForNullNumericalTriggerData(2,2);
-        zonesSongs = accountForNullSongTriggerData(2);
+        zonesPriority = accountForNullNumericalTriggerData(3,1);
+        zonesFade = accountForNullNumericalTriggerData(3,2);
+        zonesSongs = accountForNullSongTriggerData(3);
 
-        dayPriority = accountForNullNumericalTriggerData(3,1);
-        dayFade = accountForNullNumericalTriggerData(3,2);
-        daySongs = accountForNullSongTriggerData(3);
+        dayPriority = accountForNullNumericalTriggerData(4,1);
+        dayFade = accountForNullNumericalTriggerData(4,2);
+        daySongs = accountForNullSongTriggerData(4);
 
-        nightPriority = accountForNullNumericalTriggerData(4,1);
-        nightSongs = accountForNullSongTriggerData(4);
+        nightPriority = accountForNullNumericalTriggerData(5,1);
+        nightSongs = accountForNullSongTriggerData(5);
 
-        sunrisePriority = accountForNullNumericalTriggerData(5,1);
-        sunriseFade = accountForNullNumericalTriggerData(5,2);
-        sunriseSongs = accountForNullSongTriggerData(5);
+        sunrisePriority = accountForNullNumericalTriggerData(6,1);
+        sunriseFade = accountForNullNumericalTriggerData(6,2);
+        sunriseSongs = accountForNullSongTriggerData(6);
 
-        sunsetPriority = accountForNullNumericalTriggerData(6,1);
-        sunsetFade = accountForNullNumericalTriggerData(6,2);
-        sunsetSongs = accountForNullSongTriggerData(6);
+        sunsetPriority = accountForNullNumericalTriggerData(7,1);
+        sunsetFade = accountForNullNumericalTriggerData(7,2);
+        sunsetSongs = accountForNullSongTriggerData(7);
 
-        lightPriority = accountForNullNumericalTriggerData(7,1);
-        lightFade = accountForNullNumericalTriggerData(7,2);
-        lightLevel = accountForNullNumericalTriggerData(7,3);
-        lightSongs = accountForNullSongTriggerData(7);
+        lightPriority = accountForNullNumericalTriggerData(8,1);
+        lightFade = accountForNullNumericalTriggerData(8,2);
+        lightLevel = accountForNullNumericalTriggerData(8,3);
+        lightSongs = accountForNullSongTriggerData(8);
 
-        undergroundPriority = accountForNullNumericalTriggerData(8,1);
-        undergroundFade = accountForNullNumericalTriggerData(8,2);
-        undergroundLevel = accountForNullNumericalTriggerData(8,3);
-        undergroundSongs = accountForNullSongTriggerData(8);
+        undergroundPriority = accountForNullNumericalTriggerData(9,1);
+        undergroundFade = accountForNullNumericalTriggerData(9,2);
+        undergroundLevel = accountForNullNumericalTriggerData(9,3);
+        undergroundSongs = accountForNullSongTriggerData(9);
 
-        deepUnderPriority = accountForNullNumericalTriggerData(9,1);
-        deepUnderFade = accountForNullNumericalTriggerData(9,2);
-        deepUnderLevel = accountForNullNumericalTriggerData(9,3);
-        deepUnderSongs = accountForNullSongTriggerData(9);
+        deepUnderPriority = accountForNullNumericalTriggerData(10,1);
+        deepUnderFade = accountForNullNumericalTriggerData(10,2);
+        deepUnderLevel = accountForNullNumericalTriggerData(10,3);
+        deepUnderSongs = accountForNullSongTriggerData(10);
 
-        rainingPriority = accountForNullNumericalTriggerData(10,1);
-        rainingFade = accountForNullNumericalTriggerData(10,2);
-        rainingSongs = accountForNullSongTriggerData(10);
+        rainingPriority = accountForNullNumericalTriggerData(11,1);
+        rainingFade = accountForNullNumericalTriggerData(11,2);
+        rainingSongs = accountForNullSongTriggerData(11);
 
-        stormingPriority = accountForNullNumericalTriggerData(11,1);
-        stormingFade = accountForNullNumericalTriggerData(11,2);
-        stormingSongs = accountForNullSongTriggerData(11);
+        stormingPriority = accountForNullNumericalTriggerData(12,1);
+        stormingFade = accountForNullNumericalTriggerData(12,2);
+        stormingSongs = accountForNullSongTriggerData(12);
 
-        snowingPriority = accountForNullNumericalTriggerData(12,1);
-        snowingFade = accountForNullNumericalTriggerData(12,2);
-        snowingSongs = accountForNullSongTriggerData(12);
+        snowingPriority = accountForNullNumericalTriggerData(13,1);
+        snowingFade = accountForNullNumericalTriggerData(13,2);
+        snowingSongs = accountForNullSongTriggerData(13);
 
-        lowHPPriority = accountForNullNumericalTriggerData(13,1);
-        lowHPFade = accountForNullNumericalTriggerData(13,2);
-        lowHPLevel = accountForNullNumericalTriggerData(13,3);
-        lowHPSongs = accountForNullSongTriggerData(13);
+        lowHPPriority = accountForNullNumericalTriggerData(14,1);
+        lowHPFade = accountForNullNumericalTriggerData(14,2);
+        lowHPLevel = accountForNullNumericalTriggerData(14,3);
+        lowHPSongs = accountForNullSongTriggerData(14);
 
-        deadPriority = accountForNullNumericalTriggerData(14,1);
-        deadFade = accountForNullNumericalTriggerData(14,2);
-        deadSongs = accountForNullSongTriggerData(14);
+        deadPriority = accountForNullNumericalTriggerData(15,1);
+        deadFade = accountForNullNumericalTriggerData(15,2);
+        deadSongs = accountForNullSongTriggerData(15);
 
-        inVoidPriority = accountForNullNumericalTriggerData(15,1);
-        inVoidFade = accountForNullNumericalTriggerData(15,2);
-        inVoidLevel = accountForNullNumericalTriggerData(15,3);
-        inVoidSongs = accountForNullSongTriggerData(15);
+        inVoidPriority = accountForNullNumericalTriggerData(16,1);
+        inVoidFade = accountForNullNumericalTriggerData(16,2);
+        inVoidLevel = accountForNullNumericalTriggerData(16,3);
+        inVoidSongs = accountForNullSongTriggerData(16);
 
-        spectatorPriority = accountForNullNumericalTriggerData(16,1);
-        spectatorFade = accountForNullNumericalTriggerData(16,2);
-        spectatorSongs = accountForNullSongTriggerData(16);
+        spectatorPriority = accountForNullNumericalTriggerData(17,1);
+        spectatorFade = accountForNullNumericalTriggerData(17,2);
+        spectatorSongs = accountForNullSongTriggerData(17);
 
-        creativePriority = accountForNullNumericalTriggerData(17,1);
-        creativeFade = accountForNullNumericalTriggerData(17,2);
-        creativeSongs = accountForNullSongTriggerData(17);
+        creativePriority = accountForNullNumericalTriggerData(18,1);
+        creativeFade = accountForNullNumericalTriggerData(18,2);
+        creativeSongs = accountForNullSongTriggerData(18);
 
-        ridingPriority = accountForNullNumericalTriggerData(18,1);
-        ridingFade = accountForNullNumericalTriggerData(18,2);
-        ridingSongs = accountForNullSongTriggerData(18);
+        ridingPriority = accountForNullNumericalTriggerData(19,1);
+        ridingFade = accountForNullNumericalTriggerData(19,2);
+        ridingSongs = accountForNullSongTriggerData(19);
 
-        petPriority = accountForNullNumericalTriggerData(19,1);
-        petFade = accountForNullNumericalTriggerData(19,2);
-        petSongs = accountForNullSongTriggerData(19);
+        petPriority = accountForNullNumericalTriggerData(20,1);
+        petFade = accountForNullNumericalTriggerData(20,2);
+        petSongs = accountForNullSongTriggerData(20);
 
-        highPriority = accountForNullNumericalTriggerData(20,1);
-        highFade = accountForNullNumericalTriggerData(20,2);
-        highLevel = accountForNullNumericalTriggerData(20,3);
-        highSongs = accountForNullSongTriggerData(20);
+        highPriority = accountForNullNumericalTriggerData(21,1);
+        highFade = accountForNullNumericalTriggerData(21,2);
+        highLevel = accountForNullNumericalTriggerData(21,3);
+        highSongs = accountForNullSongTriggerData(21);
 
-        underwaterPriority = accountForNullNumericalTriggerData(21,1);
-        underwaterFade = accountForNullNumericalTriggerData(21,2);
-        underwaterSongs = accountForNullSongTriggerData(21);
+        underwaterPriority = accountForNullNumericalTriggerData(22,1);
+        underwaterFade = accountForNullNumericalTriggerData(22,2);
+        underwaterSongs = accountForNullSongTriggerData(22);
 
-        pvpPriority = accountForNullNumericalTriggerData(22,1);
-        pvpFade = accountForNullNumericalTriggerData(22,2);
-        pvpRange = accountForNullNumericalTriggerData(22,3);
-        pvpSongs = accountForNullSongTriggerData(22);
+        pvpPriority = accountForNullNumericalTriggerData(23,1);
+        pvpFade = accountForNullNumericalTriggerData(23,2);
+        pvpRange = accountForNullNumericalTriggerData(23,3);
+        pvpSongs = accountForNullSongTriggerData(23);
 
-        dimensionPriority = accountForNullNumericalTriggerData(23,1);
-        dimensionSongs = accountForNullSongTriggerData(23);
+        dimensionPriority = accountForNullNumericalTriggerData(24,1);
+        dimensionSongs = accountForNullSongTriggerData(24);
 
-        biomePriority = accountForNullNumericalTriggerData(24,1);
-        biomeSongs = accountForNullSongTriggerData(24);
+        biomePriority = accountForNullNumericalTriggerData(25,1);
+        biomeSongs = accountForNullSongTriggerData(25);
 
-        structurePriority = accountForNullNumericalTriggerData(25,1);
-        structureSongs = accountForNullSongTriggerData(25);
+        structurePriority = accountForNullNumericalTriggerData(26,1);
+        structureSongs = accountForNullSongTriggerData(26);
 
-        mobPriority = accountForNullNumericalTriggerData(26,1);
-        mobSongs = accountForNullSongTriggerData(26);
+        mobPriority = accountForNullNumericalTriggerData(27,1);
+        mobSongs = accountForNullSongTriggerData(27);
 
-        effectPriority = accountForNullNumericalTriggerData(27,1);
-        effectSongs = accountForNullSongTriggerData(27);
+        effectPriority = accountForNullNumericalTriggerData(28,1);
+        effectSongs = accountForNullSongTriggerData(28);
 
-        victoryPriority = accountForNullNumericalTriggerData(28,1);
-        victorySongs = accountForNullSongTriggerData(28);
+        victoryPriority = accountForNullNumericalTriggerData(29,1);
+        victorySongs = accountForNullSongTriggerData(29);
 
-        guiPriority = accountForNullNumericalTriggerData(29,1);
-        guiSongs = accountForNullSongTriggerData(29);
+        guiPriority = accountForNullNumericalTriggerData(30,1);
+        guiSongs = accountForNullSongTriggerData(30);
 
-        gamestagePriority = accountForNullNumericalTriggerData(30,1);
-        gamestageSongs = accountForNullSongTriggerData(30);
+        gamestagePriority = accountForNullNumericalTriggerData(31,1);
+        gamestageSongs = accountForNullSongTriggerData(31);
 
-        bloodmoonPriority = accountForNullNumericalTriggerData(31,1);
-        bloodmoonFade = accountForNullNumericalTriggerData(31,2);
-        bloodmoonSongs = accountForNullSongTriggerData(31);
+        bloodmoonPriority = accountForNullNumericalTriggerData(32,1);
+        bloodmoonFade = accountForNullNumericalTriggerData(32,2);
+        bloodmoonSongs = accountForNullSongTriggerData(32);
 
-        harvestmoonPriority = accountForNullNumericalTriggerData(32,1);
-        harvestmoonFade = accountForNullNumericalTriggerData(32,2);
-        harvestmoonSongs = accountForNullSongTriggerData(32);
+        harvestmoonPriority = accountForNullNumericalTriggerData(33,1);
+        harvestmoonFade = accountForNullNumericalTriggerData(33,2);
+        harvestmoonSongs = accountForNullSongTriggerData(33);
 
-        bluemoonPriority = accountForNullNumericalTriggerData(33,1);
-        bluemoonFade = accountForNullNumericalTriggerData(33,2);
-        bluemoonSongs = accountForNullSongTriggerData(33);
+        bluemoonPriority = accountForNullNumericalTriggerData(34,1);
+        bluemoonFade = accountForNullNumericalTriggerData(34,2);
+        bluemoonSongs = accountForNullSongTriggerData(34);
 
-        rainintensityPriority = accountForNullNumericalTriggerData(34,1);
-        rainintensityFade = accountForNullNumericalTriggerData(34,2);
-        rainintensitySongs = accountForNullSongTriggerData(34);
+        rainintensityPriority = accountForNullNumericalTriggerData(35,1);
+        rainintensityFade = accountForNullNumericalTriggerData(35,2);
+        rainintensitySongs = accountForNullSongTriggerData(35);
 
-        acidrainPriority = accountForNullNumericalTriggerData(35,1);
-        acidrainFade = accountForNullNumericalTriggerData(35,2);
-        acidrainSongs = accountForNullSongTriggerData(35);
+        acidrainPriority = accountForNullNumericalTriggerData(36,1);
+        acidrainFade = accountForNullNumericalTriggerData(36,2);
+        acidrainSongs = accountForNullSongTriggerData(36);
 
-        blizzardPriority = accountForNullNumericalTriggerData(36,1);
-        blizzardFade = accountForNullNumericalTriggerData(36,2);
-        blizzardSongs = accountForNullSongTriggerData(36);
+        blizzardPriority = accountForNullNumericalTriggerData(37,1);
+        blizzardFade = accountForNullNumericalTriggerData(37,2);
+        blizzardSongs = accountForNullSongTriggerData(37);
 
-        cloudyPriority = accountForNullNumericalTriggerData(37,1);
-        cloudyFade = accountForNullNumericalTriggerData(37,2);
-        cloudySongs = accountForNullSongTriggerData(37);
+        cloudyPriority = accountForNullNumericalTriggerData(38,1);
+        cloudyFade = accountForNullNumericalTriggerData(38,2);
+        cloudySongs = accountForNullSongTriggerData(38);
 
-        lightrainPriority = accountForNullNumericalTriggerData(38,1);
-        lightrainFade = accountForNullNumericalTriggerData(38,2);
-        lightrainSongs = accountForNullSongTriggerData(38);
+        lightrainPriority = accountForNullNumericalTriggerData(39,1);
+        lightrainFade = accountForNullNumericalTriggerData(39,2);
+        lightrainSongs = accountForNullSongTriggerData(39);
+
+        seasonsPriority = accountForNullNumericalTriggerData(40,1);
+        seasonsSongs = accountForNullSongTriggerData(40);
     }
 
     public static void update(File f) {
@@ -694,7 +712,7 @@ public final class config {
                 fb.add("");
             } else if (Categories[i].contains("Gui")) {
                 fb.add("Songs - [Format: \"Gui Name,SongName,(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0]\"]");
-                fb.add("Example: net.minecraft.client.gui.inentory.GuiInventory,inventory,67000");
+                fb.add("Example: net.minecraft.client.gui.inventory.GuiInventory,inventory,67000");
                 fb.add("Note: This can also be a regex");
                 fb.add("Example 2: GuiInventory,inventory,67000");
                 fb.add("\t\tSongs=<");
@@ -719,6 +737,18 @@ public final class config {
                 fb.add("\t\tSongs [Format: \"songname,Intensity Level (min: 0, max: 100)\"]");
                 fb.add("\t\tNote - This trigger will play when the rain has a higher intensity than you put in");
                 fb.add("\t\tExample: intenserain,70");
+                fb.add("\t\tSongs=<");
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            } else if (Categories[i].contains("Only fires if the mod serene season is active")) {
+                fb.add("\t\tSongs per seasons");
+                fb.add("\t\tFormat[songname],season [int],(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0]]");
+                fb.add("\t\tNote - Spring=0 Summer=1 Fall=2 Winter=3");
+                fb.add("\t\tExample spring,0,511,20");
                 fb.add("\t\tSongs=<");
                 List<String> songList = accountForNullSongTriggerData(i);
                 for (String iter : songList) {

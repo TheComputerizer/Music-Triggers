@@ -1,3 +1,5 @@
+//file:noinspection GroovyUnusedAssignment
+//file:noinspection GroovyAssignabilityCheck
 buildscript {
     repositories {
         maven { url = 'https://maven.minecraftforge.net' }
@@ -111,15 +113,16 @@ repositories {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.16.5-36.2.8'
+    minecraft 'net.minecraftforge:forge:1.16.5-36.2.22'
 
     implementation fg.deobf("curse.maven:game-stages-268655:3480161")
     implementation fg.deobf("curse.maven:bookshelf-228525:3474499")
-    implementation fg.deobf("curse.maven:enhanced-celestials-438447:3453410")
-    implementation fg.deobf("curse.maven:configured-457570:3434071")
+    implementation fg.deobf("curse.maven:enhanced-celestials-438447:3532022")
+    implementation fg.deobf("curse.maven:configured-457570:3546348")
     implementation fg.deobf("curse.maven:atomicstrykers-infernal-mobs-227875:3048405")
     implementation fg.deobf("curse.maven:dynamic-surroundings-238891:3502320")
     implementation fg.deobf("curse.maven:better-weather-400714:3420517")
+    implementation fg.deobf("curse.maven:serene-seasons-291874:3510900")
 
     implementation fg.deobf("curse.maven:jei-238222:3488178")
 }

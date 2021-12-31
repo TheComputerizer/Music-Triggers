@@ -4,6 +4,7 @@ import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.config;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
+import net.minecraftforge.fml.common.thread.SidedThreadGroups;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,6 +43,16 @@ public class SoundHandler {
     public static List<SoundEvent> high = new ArrayList<>();
     public static List<SoundEvent> underwater = new ArrayList<>();
     public static List<SoundEvent> pvp = new ArrayList<>();
+
+    public static HashMap<Integer, List<SoundEvent>> difficultySongs = new HashMap<>();
+    public static HashMap<Integer, List<String>> difficultySongsString = new HashMap<>();
+    public static HashMap<Integer, Integer> difficultyPriorities = new HashMap<>();
+    public static HashMap<Integer, Integer> difficultyFade = new HashMap<>();
+
+    public static HashMap<Integer, List<SoundEvent>> seasonsSongs = new HashMap<>();
+    public static HashMap<Integer, List<String>> seasonsSongsString = new HashMap<>();
+    public static HashMap<Integer, Integer> seasonsPriorities = new HashMap<>();
+    public static HashMap<Integer, Integer> seasonsFade = new HashMap<>();
 
     public static HashMap<Integer, List<SoundEvent>> nightSongs = new HashMap<>();
     public static HashMap<Integer, List<String>> nightSongsString = new HashMap<>();
@@ -1335,6 +1346,86 @@ public class SoundHandler {
                 }
             }
         }
+        if (config.difficultySongs != null) {
+            for (int i = 0; i < config.difficultySongs.size(); i++) {
+                String[] broken = stringBreaker(config.difficultySongs.get(i), ",");
+                int extractedID = Integer.parseInt(broken[1]);
+                difficultyPriorities.computeIfAbsent(extractedID, k -> config.difficultyPriority);
+                if (broken.length >= 3) {
+                    int extractedPriority = Integer.parseInt(broken[2]);
+                    difficultyPriorities.put(extractedID, extractedPriority);
+                }
+                difficultyFade.putIfAbsent(extractedID, 0);
+                if (broken.length == 4) {
+                    int extractedFade = Integer.parseInt(broken[3]);
+                    difficultyFade.put(extractedID, extractedFade);
+                }
+                String songName = broken[0].toLowerCase();
+                String songNamePlus = songName;
+                if (songName.startsWith("@")) {
+                    songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
+                    songCombos.get(songName).add("difficulty" + extractedID);
+                    songName = songName.substring(1);
+                }
+                difficultySongs.computeIfAbsent(extractedID, k -> new ArrayList<>());
+                difficultySongsString.computeIfAbsent(extractedID, k -> new ArrayList<>());
+                difficultySongsString.get(extractedID).add(songNamePlus);
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName, ";")[0], "/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName, ";")[0], "/")[0]));
+                difficultySongs.get(extractedID).add(sound);
+                boolean cont = false;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
+                    }
+                }
+                if (!cont) {
+                    allSoundEvents.add(sound);
+                }
+                if (!allSongs.contains(songName)) {
+                    allSongs.add(songName);
+                }
+            }
+        }
+        if (config.seasonsSongs != null) {
+            for (int i = 0; i < config.seasonsSongs.size(); i++) {
+                String[] broken = stringBreaker(config.seasonsSongs.get(i),",");
+                int extractedID = Integer.parseInt(broken[1]);
+                seasonsPriorities.computeIfAbsent(extractedID, k -> config.seasonsPriority);
+                if (broken.length >= 3) {
+                    int extractedPriority = Integer.parseInt(broken[2]);
+                    seasonsPriorities.put(extractedID, extractedPriority);
+                }
+                seasonsFade.putIfAbsent(extractedID, 0);
+                if(broken.length==4) {
+                    int extractedFade = Integer.parseInt(broken[3]);
+                    seasonsFade.put(extractedID, extractedFade);
+                }
+                String songName = broken[0].toLowerCase();
+                String songNamePlus = songName;
+                if (songName.startsWith("@")) {
+                    songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
+                    songCombos.get(songName).add("season"+extractedID);
+                    songName = songName.substring(1);
+                }
+                seasonsSongs.computeIfAbsent(extractedID, k -> new ArrayList<>());
+                seasonsSongsString.computeIfAbsent(extractedID, k -> new ArrayList<>());
+                seasonsSongsString.get(extractedID).add(songNamePlus);
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
+                seasonsSongs.get(extractedID).add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
+                if (!allSongs.contains(songName)) {
+                    allSongs.add(songName);
+                }
+            }
+        }
     }
 
     public static String[] stringBreaker(String s, String regex) {
@@ -1372,6 +1463,16 @@ public class SoundHandler {
         high = new ArrayList<>();
         underwater = new ArrayList<>();
         pvp = new ArrayList<>();
+
+        difficultySongs = new HashMap<>();
+        difficultySongsString = new HashMap<>();
+        difficultyPriorities = new HashMap<>();
+        difficultyFade = new HashMap<>();
+
+        seasonsSongs = new HashMap<>();
+        seasonsSongsString = new HashMap<>();
+        seasonsPriorities = new HashMap<>();
+        seasonsFade = new HashMap<>();
 
         nightSongs = new HashMap<>();
         nightSongsString = new HashMap<>();
