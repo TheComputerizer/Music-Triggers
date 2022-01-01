@@ -1474,7 +1474,7 @@ public class SoundHandler {
                 String songNamePlus = songName;
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
-                    songCombos.get(songName).add("difficulty"+extractedID);
+                    songCombos.get(songName).add("difficulty:"+extractedID);
                     songName = songName.substring(1);
                 }
                 difficultySongs.computeIfAbsent(extractedID, k -> new ArrayList<>());
@@ -1517,7 +1517,7 @@ public class SoundHandler {
                 String songNamePlus = songName;
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
-                    songCombos.get(songName).add("season"+extractedID);
+                    songCombos.get(songName).add("season:"+extractedID);
                     songName = songName.substring(1);
                 }
                 seasonsSongs.computeIfAbsent(extractedID, k -> new ArrayList<>());
