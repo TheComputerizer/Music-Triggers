@@ -110,26 +110,23 @@ public class SoundHandler {
     public static HashMap<String, Integer> guiPriorities = new HashMap<>();
     public static HashMap<String, Integer> guiFade = new HashMap<>();
 
-    public static HashMap<String, List<SoundEvent>> gamestageSongsWhitelist = new HashMap<>();
+    /*public static HashMap<String, List<SoundEvent>> gamestageSongsWhitelist = new HashMap<>();
     public static HashMap<String, List<String>> gamestageSongsStringWhitelist = new HashMap<>();
     public static HashMap<String, Integer> gamestagePrioritiesWhitelist = new HashMap<>();
     public static HashMap<String, Integer> gamestageFadeWhitelist = new HashMap<>();
     public static HashMap<String, List<SoundEvent>> gamestageSongsBlacklist = new HashMap<>();
     public static HashMap<String, List<String>> gamestageSongsStringBlacklist = new HashMap<>();
     public static HashMap<String, Integer> gamestagePrioritiesBlacklist = new HashMap<>();
-    public static HashMap<String, Integer> gamestageFadeBlacklist = new HashMap<>();
+    public static HashMap<String, Integer> gamestageFadeBlacklist = new HashMap<>();*/
 
     public static List<SoundEvent> bloodmoon = new ArrayList<>();
     public static List<SoundEvent> harvestmoon = new ArrayList<>();
     public static List<SoundEvent> bluemoon = new ArrayList<>();
 
-    public static HashMap<Integer, List<SoundEvent>> rainintensitySongs = new HashMap<>();
-    public static HashMap<Integer, List<String>> rainintensitySongsString = new HashMap<>();
-
-    public static List<SoundEvent> acidrain = new ArrayList<>();
-    public static List<SoundEvent> blizzard = new ArrayList<>();
-    public static List<SoundEvent> cloudy = new ArrayList<>();
-    public static List<SoundEvent> lightrain = new ArrayList<>();
+    //public static List<SoundEvent> acidrain = new ArrayList<>();
+    //public static List<SoundEvent> blizzard = new ArrayList<>();
+    //public static List<SoundEvent> cloudy = new ArrayList<>();
+    //public static List<SoundEvent> lightrain = new ArrayList<>();
 
     public static HashMap<String, List<String>> songCombos = new HashMap<>();
 
@@ -1179,7 +1176,7 @@ public class SoundHandler {
                 }
             }
         }
-        if (config.acidrainSongs != null) {
+        /*if (config.acidrainSongs != null) {
             for (int i = 0; i < config.acidrainSongs.size(); i++) {
                 String songName = config.acidrainSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
@@ -1274,7 +1271,7 @@ public class SoundHandler {
                     allSongs.add(songName);
                 }
             }
-        }
+        }*/
         if (config.guiSongs != null) {
             for (int i = 0; i < config.guiSongs.size(); i++) {
                 String[] broken = stringBreaker(config.guiSongs.get(i),",");
@@ -1500,26 +1497,23 @@ public class SoundHandler {
         guiPriorities = new HashMap<>();
         guiFade = new HashMap<>();
 
-        gamestageSongsWhitelist = new HashMap<>();
+        /*gamestageSongsWhitelist = new HashMap<>();
         gamestageSongsStringWhitelist = new HashMap<>();
         gamestagePrioritiesWhitelist = new HashMap<>();
         gamestageFadeWhitelist = new HashMap<>();
         gamestageSongsBlacklist = new HashMap<>();
         gamestageSongsStringBlacklist = new HashMap<>();
         gamestagePrioritiesBlacklist = new HashMap<>();
-        gamestageFadeBlacklist = new HashMap<>();
+        gamestageFadeBlacklist = new HashMap<>();*/
 
         bloodmoon = new ArrayList<>();
         harvestmoon = new ArrayList<>();
         bluemoon = new ArrayList<>();
 
-        rainintensitySongs = new HashMap<>();
-        rainintensitySongsString = new HashMap<>();
-
-        acidrain = new ArrayList<>();
-        blizzard = new ArrayList<>();
-        cloudy = new ArrayList<>();
-        lightrain = new ArrayList<>();
+        //acidrain = new ArrayList<>();
+        //blizzard = new ArrayList<>();
+        //cloudy = new ArrayList<>();
+        //lightrain = new ArrayList<>();
 
         songCombos = new HashMap<>();
     }
