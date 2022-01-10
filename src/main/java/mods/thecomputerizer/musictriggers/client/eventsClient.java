@@ -1,8 +1,10 @@
 package mods.thecomputerizer.musictriggers.client;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
+import com.mojang.blaze3d.systems.RenderSystem;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.configDebug;
+import mods.thecomputerizer.musictriggers.configTitleCards;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
@@ -118,7 +120,6 @@ public class eventsClient {
                     startDelayCount = 0;
                 }
                 if (fadeCount != 1000) {
-                    /*
                     RenderSystem.pushMatrix();
 
                     float opacity = (int) (17 - (fadeCount / 80));
@@ -126,12 +127,10 @@ public class eventsClient {
 
                     float sizeX = 64 * configTitleCards.ImageSize;
                     float sizeY = 64 * configTitleCards.ImageSize;
-
                     int posY = (y / 64) + configTitleCards.ImageV;
                     int posX = ((x / 2) - (int) (sizeX / 2)) + configTitleCards.ImageH;
 
                     RenderSystem.pushTextureAttributes();
-
                     RenderSystem.enableAlphaTest();
                     RenderSystem.enableBlend();
                     RenderSystem.color4f(1F, 1F, 1F, Math.max(0, Math.min(0.95f, opacity)));
@@ -139,9 +138,7 @@ public class eventsClient {
                     AbstractGui.blit(e.getMatrixStack(), posX, posY, 10, 0F, 0F, (int) sizeX, (int) sizeY, (int) sizeX, (int) sizeY);
 
                     RenderSystem.popAttributes();
-
                     RenderSystem.popMatrix();
-                     */
                 }
             }
         }
