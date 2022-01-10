@@ -1,41 +1,29 @@
 package mods.thecomputerizer.musictriggers;
 
-import net.minecraftforge.common.config.Config;
-import net.minecraftforge.common.config.ConfigManager;
-import net.minecraftforge.fml.client.event.ConfigChangedEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.common.ForgeConfigSpec;
 
-@Config(modid = MusicTriggers.MODID, name = "MusicTriggers/debugoptions")
-public class configDebug {
+import java.util.ArrayList;
+import java.util.List;
 
-    @Config.Comment("Show the debug info")
-    public static boolean ShowDebugInfo = false;
 
-    @Config.Comment("If ShowDebugInfo is set to true, but you only want to see the song name")
-    public static boolean ShowJustCurSong = false;
+public final class configDebug {
+    public static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
+    public static final ForgeConfigSpec SPEC;
 
-    @Config.Comment("Show an overlay for the name of the current GUI")
-    public static boolean ShowGUIName = false;
+    public static final ForgeConfigSpec.ConfigValue<Boolean> ShowDebugInfo;
+    public static final ForgeConfigSpec.ConfigValue<Boolean> ShowJustCurSong;
+    public static final ForgeConfigSpec.ConfigValue<List<String>> blockedmods;
+    public static final ForgeConfigSpec.ConfigValue<Boolean> SilenceIsBad;
+    public static final ForgeConfigSpec.ConfigValue<Boolean> enableRedirect;
 
-    @Config.Comment("List of mod ids to remove the music from so there is not any overlap")
-    public static String[] blockedmods = {};
-
-    @Config.Comment("Only silence blocked music when there is music from Music Triggers already playing")
-    public static boolean SilenceIsBad = false;
-
-    @Config.Comment("Allows you to set variable names for songs to avoid needing multiple copies of the same song (see redirect.txt)\n"+
-    "Usage: customname,songname\n"+
-    "Note - All names used in the main config will still generate music discs if that option is turned on")
-    public static boolean enableRedirect = true;
-
-    @Mod.EventBusSubscriber(modid = MusicTriggers.MODID)
-    private static class EventHandler {
-        @SubscribeEvent
-        public static void onConfigChanged(final ConfigChangedEvent.OnConfigChangedEvent event) {
-            if (event.getModID().equals(MusicTriggers.MODID)) {
-                ConfigManager.sync(MusicTriggers.MODID, Config.Type.INSTANCE);
-            }
-        }
+    static {
+        BUILDER.push("Debug Config");
+        ShowDebugInfo = BUILDER.comment("Show the debug info").define("ShowDebugInfo",false);
+        ShowJustCurSong = BUILDER.comment("If ShowDebugInfo is set to true, but you only want to see the song name").define("ShowJustCurSong",false);
+        blockedmods = BUILDER.comment("List of mod ids to remove the music from so there is not any overlap").define("blockedmods", new ArrayList<>());
+        SilenceIsBad = BUILDER.comment("Only silence blocked music when there is music from Music Triggers already playing").define("SilenceIsBad", false);
+        enableRedirect = BUILDER.comment("If ShowDebugInfo is set to true, but you only want to see the song name").define("enableRedirect",true);
+        BUILDER.pop();
+        SPEC = BUILDER.build();
     }
 }

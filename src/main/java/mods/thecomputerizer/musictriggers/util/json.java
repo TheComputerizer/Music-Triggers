@@ -6,8 +6,7 @@ import mods.thecomputerizer.musictriggers.readRedirect;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class json {
     public static List<String> allSongs = new ArrayList<>();
@@ -16,11 +15,10 @@ public class json {
     public static List<String> create() {
         allSongs = collector();
         String[] redirected = {};
-        if(configDebug.enableRedirect) {
+        if(configDebug.enableRedirect.get()) {
             redirected = readRedirect.songs;
         }
         if (allSongs != null && !allSongs.isEmpty()) {
-            System.out.print(allSongs.size());
             js.add("{");
             for (int i = 0; i < allSongs.size() - 1; i++) {
                 js.add("  \"music." + allSongs.get(i) + "\": {");
@@ -52,56 +50,53 @@ public class json {
         }
         return js;
     }
-
     public static List<String> lang() {
         allSongs = collector();
-        if(configDebug.enableRedirect) {
+        if(configDebug.enableRedirect.get()) {
             for (String a : readRedirect.songs) {
                 allSongs.add(stringBreaker(a, ",")[0]);
             }
         }
         if (allSongs != null && !allSongs.isEmpty()) {
-            System.out.print(allSongs.size());
             js.add("{");
-            for (String allSong : allSongs) {
-                js.add("item.musictriggers:" + allSong.toLowerCase() + ".name=Music Disc");
-                js.add("item.record." + allSong.toLowerCase() + ".desc=Music Triggers - " + allSong);
+            for (int i=0;i<allSongs.size()-1;i++) {
+                js.add("\t\"item.musictriggers." + allSongs.get(i).toLowerCase() + "\": \"Music Disc\",");
+                js.add("\t\"item.musictriggers." + allSongs.get(i).toLowerCase() + ".desc\": \"Music Triggers - "+allSongs.get(i)+"\",");
+            }
+            if(allSongs.size()>=1) {
+                js.add("\t\"item.musictriggers." + allSongs.get(allSongs.size() - 1).toLowerCase() + "\": \"Music Disc\",");
+                js.add("\t\"item.musictriggers." + allSongs.get(allSongs.size() - 1).toLowerCase() + ".desc\": \"Music Triggers - " + allSongs.get(allSongs.size() - 1) + "\"");
             }
             js.add("}");
         }
         return js;
     }
-
     public static List<String> collector() {
-        File folder = new File("." + "/config/MusicTriggers/songs/assets/musictriggers/sounds/music/");
-        File[] listOfMP3 = folder.listFiles((dir, name) -> name.endsWith(".mp3"));
-        if (listOfMP3 != null) {
-            for (File mp3 : listOfMP3) {
-                //audioConverter.mp3ToOgg(folder, mp3, mp3.getName().replaceAll(".mp3",".ogg"));
-            }
-        }
+        File folder = new File("."+"/config/MusicTriggers/songs/assets/musictriggers/sounds/music/");
         File[] listOfFiles = folder.listFiles((dir, name) -> name.endsWith(".ogg"));
-        assert listOfFiles != null;
-        for (File f : listOfFiles) {
-            //noinspection ResultOfMethodCallIgnored
-            f.renameTo(new File(folder.getPath(), f.getName().toLowerCase()));
-        }
-        boolean matchCheck = false;
-        String curfile;
-        for (File listOfFile : listOfFiles) {
-            curfile = FilenameUtils.getBaseName(listOfFile.getName());
-            for (String checker : allSongs) {
-                if (checker.matches(curfile)) {
-                    matchCheck = true;
-                    break;
+        if(listOfFiles!=null) {
+            for (File f : listOfFiles) {
+                //noinspection ResultOfMethodCallIgnored
+                f.renameTo(new File(folder.getPath(), f.getName().toLowerCase()));
+            }
+            boolean matchCheck = false;
+            String curfile;
+            for (File listOfFile : listOfFiles) {
+                curfile = FilenameUtils.getBaseName(listOfFile.getName());
+                for (String checker : allSongs) {
+                    if (checker.matches(curfile)) {
+                        matchCheck = true;
+                        break;
+                    }
                 }
+                if (!matchCheck) {
+                    allSongs.add(curfile);
+                }
+                matchCheck = false;
             }
-            if (!matchCheck) {
-                allSongs.add(curfile);
-            }
-            matchCheck = false;
+            return allSongs;
         }
-        return allSongs;
+        else return null;
     }
 
     public static String[] stringBreaker(String s, String regex) {

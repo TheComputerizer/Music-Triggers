@@ -1,17 +1,23 @@
 package mods.thecomputerizer.musictriggers.common.objects;
 
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.item.ItemRecord;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
+import net.minecraft.item.MusicDiscItem;
 import net.minecraft.util.SoundEvent;
+import net.minecraft.util.text.IFormattableTextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
-import java.util.Objects;
+public class MusicTriggersRecord extends MusicDiscItem {
 
-public class MusicTriggersRecord extends ItemRecord {
+    public MusicTriggersRecord(int i, SoundEvent soundIn, Item.Properties p) {
+        super(i, soundIn, p.stacksTo(1).tab(ItemGroup.TAB_MISC));
+    }
 
-    public MusicTriggersRecord(String name, SoundEvent soundIn) {
-        super(name, soundIn);
-        setRegistryName(name);
-        this.setTranslationKey(Objects.requireNonNull(this.getRegistryName()).toString());
-        setCreativeTab(CreativeTabs.MISC);
+    @OnlyIn(Dist.CLIENT)
+    @Override
+    public IFormattableTextComponent getDisplayName() {
+        return new TranslationTextComponent(this.getDescriptionId() + ".desc");
     }
 }

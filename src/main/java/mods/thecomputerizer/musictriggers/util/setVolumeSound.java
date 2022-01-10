@@ -1,18 +1,19 @@
 package mods.thecomputerizer.musictriggers.util;
 
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.Sound;
 import net.minecraft.client.audio.SoundEventAccessor;
 import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.common.Mod;
 
 import javax.annotation.Nullable;
 
 @SuppressWarnings("ALL")
-@SideOnly(Side.CLIENT)
+@Mod.EventBusSubscriber(modid = MusicTriggers.MODID, value = Dist.CLIENT)
 public class setVolumeSound implements ISound {
 
     protected Sound sound;
@@ -43,25 +44,21 @@ public class setVolumeSound implements ISound {
         this.zPosF = zPosF;
     }
 
-    public ResourceLocation getSoundLocation()
+    public ResourceLocation getLocation()
     {
         return this.positionedSoundLocation;
     }
 
-    public SoundEventAccessor createAccessor(SoundHandler handler)
+    public SoundEventAccessor resolve(SoundHandler handler)
     {
-        this.soundEvent = handler.getAccessor(this.positionedSoundLocation);
-
-        if (this.soundEvent == null)
-        {
-            this.sound = SoundHandler.MISSING_SOUND;
-        }
-        else
-        {
-            this.sound = this.soundEvent.cloneEntry();
+        SoundEventAccessor soundeventaccessor = handler.getSoundEvent(this.positionedSoundLocation);
+        if (soundeventaccessor == null) {
+            this.sound = SoundHandler.EMPTY_SOUND;
+        } else {
+            this.sound = soundeventaccessor.getSound();
         }
 
-        return this.soundEvent;
+        return soundeventaccessor;
     }
 
     public Sound getSound()
@@ -69,17 +66,22 @@ public class setVolumeSound implements ISound {
         return this.sound;
     }
 
-    public SoundCategory getCategory()
+    public SoundCategory getSource()
     {
         return this.category;
     }
 
-    public boolean canRepeat()
+    public boolean isLooping()
     {
         return this.repeat;
     }
 
-    public int getRepeatDelay()
+    public boolean isRelative()
+    {
+        return false;
+    }
+
+    public int getDelay()
     {
         return this.repeatDelay;
     }
@@ -94,22 +96,22 @@ public class setVolumeSound implements ISound {
         return this.pitch * this.sound.getPitch();
     }
 
-    public float getXPosF()
+    public double getX()
     {
         return this.xPosF;
     }
 
-    public float getYPosF()
+    public double getY()
     {
         return this.yPosF;
     }
 
-    public float getZPosF()
+    public double getZ()
     {
         return this.zPosF;
     }
 
-    public ISound.AttenuationType getAttenuationType()
+    public ISound.AttenuationType getAttenuation()
     {
         return this.attenuationType;
     }

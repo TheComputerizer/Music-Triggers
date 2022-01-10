@@ -1,0 +1,31 @@
+    modLoader="javafml"
+    loaderVersion="[36,)"
+    license="All Rights Reserved"
+    showAsResourcePack=false
+
+    [[mods]]
+      modId="musictriggers"
+      version="1.16.5-4.0"
+      displayName="Music Triggers"
+      updateJSONURL=""
+      displayURL="https://www.curseforge.com/minecraft/mc-mods/music-triggers"
+      logoFile="musictriggers_logo"
+      credits="The_Computerizer"
+      authors="The_Computerizer"
+      description='''
+      Lets you play music based on in game triggers
+      '''
+
+      [[dependencies.musictriggers]]
+        modId="forge"
+        mandatory=true
+        versionRange="[36,)"
+        ordering="NONE"
+        side="BOTH"
+
+      [[dependencies.musictriggers]]
+        modId="minecraft"
+        mandatory=true
+        versionRange="[1.16.5,1.17)"
+        ordering="NONE"
+        side="BOTH"

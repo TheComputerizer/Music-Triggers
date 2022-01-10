@@ -2,17 +2,15 @@ package mods.thecomputerizer.musictriggers.common;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.config;
-import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
-import net.minecraftforge.client.EnumHelperClient;
-import net.minecraftforge.fml.common.thread.SidedThreadGroups;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
 
 public class SoundHandler {
-
-    public static HashMap<String, PositionedSoundRecord> songsRecords = new HashMap<>();
 
     public static List<String> allSongs = new ArrayList<>();
     public static List<SoundEvent> allSoundEvents = new ArrayList<>();
@@ -59,10 +57,10 @@ public class SoundHandler {
     public static HashMap<Integer, List<String>> nightSongsString = new HashMap<>();
     public static HashMap<Integer, Integer> nightFade = new HashMap<>();
 
-    public static HashMap<Integer, List<SoundEvent>> dimensionSongs = new HashMap<>();
-    public static HashMap<Integer, List<String>> dimensionSongsString = new HashMap<>();
-    public static HashMap<Integer, Integer> dimensionPriorities = new HashMap<>();
-    public static HashMap<Integer, Integer> dimensionFade = new HashMap<>();
+    public static HashMap<String, List<SoundEvent>> dimensionSongs = new HashMap<>();
+    public static HashMap<String, List<String>> dimensionSongsString = new HashMap<>();
+    public static HashMap<String, Integer> dimensionPriorities = new HashMap<>();
+    public static HashMap<String, Integer> dimensionFade = new HashMap<>();
 
     public static HashMap<String, List<SoundEvent>> biomeSongs = new HashMap<>();
     public static HashMap<String, List<String>> biomeSongsString = new HashMap<>();
@@ -106,7 +104,7 @@ public class SoundHandler {
     public static HashMap<String, Integer> victoryTime = new HashMap<>();
     public static HashMap<String, Integer> victoryPriorities = new HashMap<>();
     public static HashMap<String, Integer> victoryFade = new HashMap<>();
-    
+
     public static HashMap<String, List<SoundEvent>> guiSongs = new HashMap<>();
     public static HashMap<String, List<String>> guiSongsString = new HashMap<>();
     public static HashMap<String, Integer> guiPriorities = new HashMap<>();
@@ -123,55 +121,49 @@ public class SoundHandler {
 
     public static List<SoundEvent> bloodmoon = new ArrayList<>();
     public static List<SoundEvent> harvestmoon = new ArrayList<>();
-    public static List<SoundEvent> fallingstars = new ArrayList<>();
+    public static List<SoundEvent> bluemoon = new ArrayList<>();
 
     public static HashMap<Integer, List<SoundEvent>> rainintensitySongs = new HashMap<>();
     public static HashMap<Integer, List<String>> rainintensitySongsString = new HashMap<>();
 
-    public static HashMap<String, List<SoundEvent>> tornadoSongs = new HashMap<>();
-    public static HashMap<String, List<String>> tornadoSongsString = new HashMap<>();
-    public static HashMap<String, Integer> tornadoIntensity = new HashMap<>();
-    public static HashMap<String, Integer> tornadoPriorities = new HashMap<>();
-    public static HashMap<String, Integer> tornadoFade = new HashMap<>();
-    public static List<SoundEvent> hurricane = new ArrayList<>();
-    public static List<SoundEvent> sandstorm = new ArrayList<>();
+    public static List<SoundEvent> acidrain = new ArrayList<>();
+    public static List<SoundEvent> blizzard = new ArrayList<>();
+    public static List<SoundEvent> cloudy = new ArrayList<>();
+    public static List<SoundEvent> lightrain = new ArrayList<>();
 
     public static HashMap<String, List<String>> songCombos = new HashMap<>();
 
 
     public static void registerSounds() {
 
-        if (config.menu.menuSongs != null) {
-            for (int i = 0; i < config.menu.menuSongs.length; i++) {
-                String songName = config.menu.menuSongs[i].toLowerCase();
+        if (config.menuSongs.size() != 0) {
+            for (int i = 0; i < config.menuSongs.size(); i++) {
+                String songName = config.menuSongs.get(i).toLowerCase().trim().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("menu");
                     songName = songName.substring(1);
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
+
                 menu.add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songName, sound, 0, 0);
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.generic.genericSongs != null) {
-            for (int i = 0; i < config.generic.genericSongs.length; i++) {
-                String songName = config.generic.genericSongs[i].toLowerCase();
+        if (config.genericSongs.size() != 0) {
+            for (int i = 0; i < config.genericSongs.size(); i++) {
+                String songName = config.genericSongs.get(i).toLowerCase().trim().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("generic");
@@ -180,25 +172,22 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 generic.add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.day.daySongs != null) {
-            for (int i = 0; i < config.day.daySongs.length; i++) {
-                String songName = config.day.daySongs[i].toLowerCase();
+        if (config.daySongs.size() != 0) {
+            for (int i = 0; i < config.daySongs.size(); i++) {
+                String songName = config.daySongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("day");
@@ -207,69 +196,63 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 day.add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.night.nightSongs != null) {
-            for (int i = 0; i < config.night.nightSongs.length; i++) {
-                String[] broken = stringBreaker(config.night.nightSongs[i],",");
+        if (config.nightSongs.size() != 0) {
+            for (int i = 0; i < config.nightSongs.size(); i++) {
+                String[] broken = stringBreaker(config.nightSongs.get(i),",");
                 List<Integer> phasesPerSong = new ArrayList<>();
-                for(int j=1; j<broken.length; j++) {
-                    int phase = Integer.parseInt(broken[j]);
-                    if(phase<=8) {
-                        phasesPerSong.add(Integer.parseInt(broken[j]));
+                for (int j = 1; j < broken.length; j++) {
+                    int phase = Integer.parseInt(broken[j].trim());
+                    if (phase <= 8) {
+                        phasesPerSong.add(Integer.parseInt(broken[j].trim()));
                     }
-                    nightFade.put(Integer.parseInt(broken[j]), Integer.parseInt(broken[broken.length-1]));
+                    nightFade.put(Integer.parseInt(broken[j].trim()), Integer.parseInt(broken[broken.length - 1].trim()));
                 }
-                String songName = broken[0].toLowerCase();
+                String songName = broken[0].toLowerCase().trim();
                 String songNamePlus = songName;
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
-                    for(int p : phasesPerSong) {
+                    for (int p : phasesPerSong) {
                         songCombos.get(songName).add("night" + p);
                     }
                     songName = songName.substring(1);
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
-                for(int p : phasesPerSong) {
+                for (int p : phasesPerSong) {
                     nightSongs.computeIfAbsent(p, k -> new ArrayList<>());
                     nightSongsString.computeIfAbsent(p, k -> new ArrayList<>());
                     nightSongsString.get(p).add(songNamePlus);
                     nightSongs.get(p).add(sound);
                 }
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.sunrise.sunriseSongs != null) {
-            for (int i = 0; i < config.sunrise.sunriseSongs.length; i++) {
-                String songName = config.sunrise.sunriseSongs[i].toLowerCase();
+        if (config.sunriseSongs.size() != 0) {
+            for (int i = 0; i < config.sunriseSongs.size(); i++) {
+                String songName = config.sunriseSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("sunrise");
@@ -278,25 +261,22 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 sunrise.add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.sunset.sunsetSongs != null) {
-            for (int i = 0; i < config.sunset.sunsetSongs.length; i++) {
-                String songName = config.sunset.sunsetSongs[i].toLowerCase();
+        if (config.sunsetSongs.size() != 0) {
+            for (int i = 0; i < config.sunsetSongs.size(); i++) {
+                String songName = config.sunsetSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("sunset");
@@ -305,25 +285,22 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 sunset.add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.light.lightSongs != null) {
-            for (int i = 0; i < config.light.lightSongs.length; i++) {
-                String[] broken = stringBreaker(config.light.lightSongs[i],",");
+        if (config.lightSongs.size() != 0) {
+            for (int i = 0; i < config.lightSongs.size(); i++) {
+                String[] broken = stringBreaker(config.lightSongs.get(i),",");
                 String extractedName = broken[1];
                 lightLevel.put("Light-"+extractedName,Integer.parseInt(broken[2]));
                 lightSky.putIfAbsent("Light-"+extractedName, true);
@@ -336,7 +313,7 @@ public class SoundHandler {
                     int extractedTime = Integer.parseInt(broken[4]);
                     lightPriorities.put("Light-"+extractedName, extractedTime);
                 }
-                lightPriorities.computeIfAbsent("Light-"+extractedName, k -> config.light.lightPriority);
+                lightPriorities.computeIfAbsent("Light-"+extractedName, k -> config.lightPriority);
                 if (broken.length >= 6) {
                     int extractedPriority = Integer.parseInt(broken[5]);
                     lightPriorities.put("Light-"+extractedName, extractedPriority);
@@ -346,7 +323,7 @@ public class SoundHandler {
                     int extractedFade = Integer.parseInt(broken[6]);
                     lightFade.put("Light-"+extractedName, extractedFade);
                 }
-                String songName = broken[0].toLowerCase();
+                String songName = broken[0].toLowerCase().trim();
                 String songNamePlus = songName;
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
@@ -369,15 +346,12 @@ public class SoundHandler {
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.underground.undergroundSongs != null) {
-            for (int i = 0; i < config.underground.undergroundSongs.length; i++) {
-                String songName = config.underground.undergroundSongs[i].toLowerCase();
+        if (config.undergroundSongs.size() != 0) {
+            for (int i = 0; i < config.undergroundSongs.size(); i++) {
+                String songName = config.undergroundSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("underground");
@@ -386,25 +360,22 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 underground.add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.deepUnder.deepUnderSongs != null) {
-            for (int i = 0; i < config.deepUnder.deepUnderSongs.length; i++) {
-                String songName = config.deepUnder.deepUnderSongs[i].toLowerCase();
+        if (config.deepUnderSongs.size() != 0) {
+            for (int i = 0; i < config.deepUnderSongs.size(); i++) {
+                String songName = config.deepUnderSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("deepUnder");
@@ -413,25 +384,22 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 deepUnder.add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.raining.rainingSongs != null) {
-            for (int i = 0; i < config.raining.rainingSongs.length; i++) {
-                String songName = config.raining.rainingSongs[i].toLowerCase();
+        if (config.rainingSongs.size() != 0) {
+            for (int i = 0; i < config.rainingSongs.size(); i++) {
+                String songName = config.rainingSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("raining");
@@ -440,25 +408,22 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 raining.add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.storming.stormingSongs != null) {
-            for (int i = 0; i < config.storming.stormingSongs.length; i++) {
-                String songName = config.storming.stormingSongs[i].toLowerCase();
+        if (config.stormingSongs.size() != 0) {
+            for (int i = 0; i < config.stormingSongs.size(); i++) {
+                String songName = config.stormingSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("storming");
@@ -467,25 +432,22 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 storming.add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.snowing.snowingSongs != null) {
-            for (int i = 0; i < config.snowing.snowingSongs.length; i++) {
-                String songName = config.snowing.snowingSongs[i].toLowerCase();
+        if (config.snowingSongs.size() != 0) {
+            for (int i = 0; i < config.snowingSongs.size(); i++) {
+                String songName = config.snowingSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("snowing");
@@ -494,25 +456,22 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 snowing.add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.lowHP.lowHPSongs != null) {
-            for (int i = 0; i < config.lowHP.lowHPSongs.length; i++) {
-                String songName = config.lowHP.lowHPSongs[i].toLowerCase();
+        if (config.lowHPSongs.size() != 0) {
+            for (int i = 0; i < config.lowHPSongs.size(); i++) {
+                String songName = config.lowHPSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("lowHP");
@@ -521,25 +480,22 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 lowHP.add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.dead.deadSongs != null) {
-            for (int i = 0; i < config.dead.deadSongs.length; i++) {
-                String songName = config.dead.deadSongs[i].toLowerCase();
+        if (config.deadSongs.size() != 0) {
+            for (int i = 0; i < config.deadSongs.size(); i++) {
+                String songName = config.deadSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("dead");
@@ -548,25 +504,22 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 dead.add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.inVoid.inVoidSongs != null) {
-            for (int i = 0; i < config.inVoid.inVoidSongs.length; i++) {
-                String songName = config.inVoid.inVoidSongs[i].toLowerCase();
+        if (config.inVoidSongs.size() != 0) {
+            for (int i = 0; i < config.inVoidSongs.size(); i++) {
+                String songName = config.inVoidSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("inVoid");
@@ -575,25 +528,22 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 inVoid.add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.spectator.spectatorSongs != null) {
-            for (int i = 0; i < config.spectator.spectatorSongs.length; i++) {
-                String songName = config.spectator.spectatorSongs[i].toLowerCase();
+        if (config.spectatorSongs.size() != 0) {
+            for (int i = 0; i < config.spectatorSongs.size(); i++) {
+                String songName = config.spectatorSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("spectator");
@@ -602,25 +552,22 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 spectator.add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.creative.creativeSongs != null) {
-            for (int i = 0; i < config.creative.creativeSongs.length; i++) {
-                String songName = config.creative.creativeSongs[i].toLowerCase();
+        if (config.creativeSongs.size() != 0) {
+            for (int i = 0; i < config.creativeSongs.size(); i++) {
+                String songName = config.creativeSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("creative");
@@ -629,25 +576,22 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 creative.add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.riding.ridingSongs != null) {
-            for (int i = 0; i < config.riding.ridingSongs.length; i++) {
-                String songName = config.riding.ridingSongs[i].toLowerCase();
+        if (config.ridingSongs.size() != 0) {
+            for (int i = 0; i < config.ridingSongs.size(); i++) {
+                String songName = config.ridingSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("riding");
@@ -656,25 +600,22 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 riding.add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.pet.petSongs != null) {
-            for (int i = 0; i < config.pet.petSongs.length; i++) {
-                String songName = config.pet.petSongs[i].toLowerCase();
+        if (config.petSongs.size() != 0) {
+            for (int i = 0; i < config.petSongs.size(); i++) {
+                String songName = config.petSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("pet");
@@ -683,25 +624,22 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 pet.add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.high.highSongs != null) {
-            for (int i = 0; i < config.high.highSongs.length; i++) {
-                String songName = config.high.highSongs[i].toLowerCase();
+        if (config.highSongs.size() != 0) {
+            for (int i = 0; i < config.highSongs.size(); i++) {
+                String songName = config.highSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("high");
@@ -710,37 +648,34 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 high.add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.dimension.dimensionSongs != null) {
-            for (int i = 0; i < config.dimension.dimensionSongs.length; i++) {
-                String[] broken = stringBreaker(config.dimension.dimensionSongs[i],",");
-                int extractedID = Integer.parseInt(broken[0]);
-                dimensionPriorities.computeIfAbsent(extractedID, k -> config.dimension.dimensionPriority);
+        if (config.dimensionSongs.size() != 0) {
+            for (int i = 0; i < config.dimensionSongs.size(); i++) {
+                String[] broken = stringBreaker(config.dimensionSongs.get(i),",");
+                String extractedID = broken[0].trim();
+                dimensionPriorities.computeIfAbsent(extractedID, k -> config.dimensionPriority);
                 if (broken.length >= 3) {
-                    int extractedPriority = Integer.parseInt(broken[2]);
+                    int extractedPriority = Integer.parseInt(broken[2].trim());
                     dimensionPriorities.put(extractedID, extractedPriority);
                 }
                 dimensionFade.putIfAbsent(extractedID, 0);
-                if(broken.length==4) {
-                    int extractedFade = Integer.parseInt(broken[3]);
+                if (broken.length == 4) {
+                    int extractedFade = Integer.parseInt(broken[3].trim());
                     dimensionFade.put(extractedID, extractedFade);
                 }
-                String songName = broken[1].toLowerCase();
+                String songName = broken[1].toLowerCase().trim();
                 String songNamePlus = songName;
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
@@ -753,42 +688,39 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 dimensionSongs.get(extractedID).add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.biome.biomeSongs != null) {
-            for (int i = 0; i < config.biome.biomeSongs.length; i++) {
-                String[] broken = stringBreaker(config.biome.biomeSongs[i],",");
-                String extractedBiome = broken[0];
-                biomePriorities.computeIfAbsent(extractedBiome, k -> config.biome.biomePriority);
+        if (config.biomeSongs.size() != 0) {
+            for (int i = 0; i < config.biomeSongs.size(); i++) {
+                String[] broken = stringBreaker(config.biomeSongs.get(i),",");
+                String extractedBiome = broken[0].trim();
+                biomePriorities.computeIfAbsent(extractedBiome, k -> config.biomePriority);
                 if (broken.length >= 3) {
-                    int extractedPriority = Integer.parseInt(broken[2]);
+                    int extractedPriority = Integer.parseInt(broken[2].trim());
                     biomePriorities.put(extractedBiome, extractedPriority);
                 }
                 biomeFade.putIfAbsent(extractedBiome, 0);
-                if(broken.length>=4) {
-                    int extractedFade = Integer.parseInt(broken[3]);
+                if (broken.length >= 4) {
+                    int extractedFade = Integer.parseInt(broken[3].trim());
                     biomeFade.put(extractedBiome, extractedFade);
                 }
                 biomePersistence.putIfAbsent(extractedBiome, 0);
                 if(broken.length==5) {
-                    int extractedPersistence = Integer.parseInt(broken[4]);
+                    int extractedPersistence = Integer.parseInt(broken[4].trim());
                     biomePersistence.put(extractedBiome, extractedPersistence);
                 }
-                String songName = broken[1].toLowerCase();
+                String songName = broken[1].toLowerCase().trim();
                 String songNamePlus = songName;
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
@@ -801,37 +733,34 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 biomeSongs.get(extractedBiome).add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.structure.structureSongs != null) {
-            for (int i = 0; i < config.structure.structureSongs.length; i++) {
-                String[] broken = stringBreaker(config.structure.structureSongs[i],",");
-                String extractedStructName = broken[0];
-                structurePriorities.computeIfAbsent(extractedStructName, k -> config.structure.structurePriority);
+        if (config.structureSongs.size() != 0) {
+            for (int i = 0; i < config.structureSongs.size(); i++) {
+                String[] broken = stringBreaker(config.structureSongs.get(i),",");
+                String extractedStructName = broken[0].trim();
+                structurePriorities.computeIfAbsent(extractedStructName, k -> config.structurePriority);
                 if (broken.length >= 3) {
-                    int extractedPriority = Integer.parseInt(broken[2]);
+                    int extractedPriority = Integer.parseInt(broken[2].trim());
                     structurePriorities.put(extractedStructName, extractedPriority);
                 }
                 structureFade.putIfAbsent(extractedStructName, 0);
-                if(broken.length==4) {
-                    int extractedFade = Integer.parseInt(broken[3]);
+                if (broken.length == 4) {
+                    int extractedFade = Integer.parseInt(broken[3].trim());
                     structureFade.put(extractedStructName, extractedFade);
                 }
-                String songName = broken[1].toLowerCase();
+                String songName = broken[1].toLowerCase().trim();
                 String songNamePlus = songName;
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
@@ -844,37 +773,34 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 structureSongs.get(extractedStructName).add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.zones.zonesSongs != null) {
-            for (int i = 0; i < config.zones.zonesSongs.length; i++) {
-                String[] broken = stringBreaker(config.zones.zonesSongs[i],",");
-                String extractedRange = broken[0]+","+broken[1]+","+broken[2]+","+broken[3]+","+broken[4]+","+broken[5];
-                zonesPriorities.computeIfAbsent(extractedRange, k -> config.zones.zonesPriority);
+        if (config.zonesSongs.size() != 0) {
+            for (int i = 0; i < config.zonesSongs.size(); i++) {
+                String[] broken = stringBreaker(config.zonesSongs.get(i),",");
+                String extractedRange = broken[0].trim() + "," + broken[1].trim() + "," + broken[2].trim() + "," + broken[3].trim() + "," + broken[4].trim() + "," + broken[5].trim();
+                zonesPriorities.computeIfAbsent(extractedRange, k -> config.zonesPriority);
                 if (broken.length >= 8) {
-                    int extractedPriority = Integer.parseInt(broken[7]);
+                    int extractedPriority = Integer.parseInt(broken[7].trim());
                     zonesPriorities.put(extractedRange, extractedPriority);
                 }
-                zonesFade.putIfAbsent(extractedRange, config.zones.zonesFade);
-                if(broken.length==9) {
-                    int extractedFade = Integer.parseInt(broken[8]);
+                zonesFade.putIfAbsent(extractedRange, config.zonesFade);
+                if (broken.length == 9) {
+                    int extractedFade = Integer.parseInt(broken[8].trim());
                     zonesFade.put(extractedRange, extractedFade);
                 }
-                String songName = broken[6].toLowerCase();
+                String songName = broken[6].toLowerCase().trim();
                 String songNamePlus = songName;
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
@@ -887,74 +813,71 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 zonesSongs.get(extractedRange).add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.mob.mobSongs != null) {
-            for (int i = 0; i < config.mob.mobSongs.length; i++) {
-                String[] broken = stringBreaker(config.mob.mobSongs[i],",");
-                String extractedMobName = broken[0];
-                mobPriorities.computeIfAbsent(extractedMobName, k -> config.mob.mobPriority);
+        if (config.mobSongs.size() != 0) {
+            for (int i = 0; i < config.mobSongs.size(); i++) {
+                String[] broken = stringBreaker(config.mobSongs.get(i),",");
+                String extractedMobName = broken[0].trim();
+                mobPriorities.computeIfAbsent(extractedMobName, k -> config.mobPriority);
                 mobRange.putIfAbsent(extractedMobName, 16);
                 if (broken.length >= 4) {
-                    int extractedRange = Integer.parseInt(broken[3]);
+                    int extractedRange = Integer.parseInt(broken[3].trim());
                     mobRange.put(extractedMobName, extractedRange);
                 }
                 if (broken.length >= 5) {
-                    int extractedPriority = Integer.parseInt(broken[4]);
+                    int extractedPriority = Integer.parseInt(broken[4].trim());
                     mobPriorities.put(extractedMobName, extractedPriority);
                 }
                 mobFade.putIfAbsent(extractedMobName, 0);
                 if(broken.length>=6) {
-                    int extractedFade = Integer.parseInt(broken[5]);
+                    int extractedFade = Integer.parseInt(broken[5].trim());
                     mobFade.put(extractedMobName, extractedFade);
                 }
                 mobTargetting.putIfAbsent(extractedMobName,false);
                 if(broken.length>=7) {
-                    boolean extractedTargetting = Boolean.parseBoolean(broken[6]);
+                    boolean extractedTargetting = Boolean.parseBoolean(broken[6].trim());
                     mobTargetting.put(extractedMobName, extractedTargetting);
                 }
                 mobHordeTargetting.putIfAbsent(extractedMobName,100);
                 if(broken.length>=8) {
-                    int extractedHordeTargetting = Integer.parseInt(broken[7]);
+                    int extractedHordeTargetting = Integer.parseInt(broken[7].trim());
                     mobHordeTargetting.put(extractedMobName, extractedHordeTargetting);
                 }
                 mobHealth.putIfAbsent(extractedMobName,100);
                 if(broken.length>=9) {
-                    int extractedHealth = Integer.parseInt(broken[8]);
+                    int extractedHealth = Integer.parseInt(broken[8].trim());
                     mobHealth.put(extractedMobName, extractedHealth);
                 }
                 mobHordeHealth.putIfAbsent(extractedMobName,100);
                 if(broken.length>=10) {
-                    int extractedHordeHealth = Integer.parseInt(broken[9]);
+                    int extractedHordeHealth = Integer.parseInt(broken[9].trim());
                     mobHordeHealth.put(extractedMobName, extractedHordeHealth);
                 }
                 mobBattle.putIfAbsent(extractedMobName,0);
                 if(broken.length>=11) {
-                    int extractedBattleTime = Integer.parseInt(broken[10]);
+                    int extractedBattleTime = Integer.parseInt(broken[10].trim());
                     mobBattle.put(extractedMobName, extractedBattleTime);
                 }
                 mobVictory.putIfAbsent(extractedMobName,false);
                 if(broken.length>=12) {
-                    boolean extractedVictory = Boolean.parseBoolean(broken[11]);
+                    boolean extractedVictory = Boolean.parseBoolean(broken[11].trim());
                     mobVictory.put(extractedMobName, extractedVictory);
                 }
                 mobVictoryID.putIfAbsent(extractedMobName,100);
                 if(broken.length>=13) {
-                    int extractedVictoryID = Integer.parseInt(broken[12]);
+                    int extractedVictoryID = Integer.parseInt(broken[12].trim());
                     mobVictoryID.put(extractedMobName, extractedVictoryID);
                 }
                 mobInfernalMod.putIfAbsent(extractedMobName,null);
@@ -962,8 +885,8 @@ public class SoundHandler {
                     String extractedInfernalMod = broken[13];
                     mobInfernalMod.put(extractedMobName, extractedInfernalMod);
                 }
-                mobNumber.put(extractedMobName, Integer.parseInt(broken[1]));
-                String songName = broken[2].toLowerCase();
+                mobNumber.put(extractedMobName, Integer.parseInt(broken[1].trim()));
+                String songName = broken[2].toLowerCase().trim();
                 String songNamePlus = songName;
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
@@ -976,28 +899,25 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 mobSongs.get(extractedMobName).add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.gamestage.gamestageSongs != null) {
-            for (int i = 0; i < config.gamestage.gamestageSongs.length; i++) {
-                String[] broken = stringBreaker(config.gamestage.gamestageSongs[i],",");
-                String extractedStageName = broken[0];
-                boolean checkWhitelist = Boolean.parseBoolean(broken[1]);
-                String songName = broken[2].toLowerCase();
+        if (config.gamestageSongs.size() != 0) {
+            for (int i = 0; i < config.gamestageSongs.size(); i++) {
+                String[] broken = stringBreaker(config.gamestageSongs.get(i),",");
+                String extractedStageName = broken[0].trim();
+                boolean checkWhitelist = Boolean.parseBoolean(broken[1].trim());
+                String songName = broken[2].toLowerCase().trim();
                 String songNamePlus = songName;
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
@@ -1006,58 +926,55 @@ public class SoundHandler {
                 }
                 SoundEvent sound;
                 if (checkWhitelist) {
-                    gamestagePrioritiesWhitelist.computeIfAbsent(extractedStageName, k -> config.gamestage.gamestagePriority);
+                    gamestagePrioritiesWhitelist.computeIfAbsent(extractedStageName, k -> config.gamestagePriority);
                     if (broken.length >= 4) {
-                        int extractedPriority = Integer.parseInt(broken[3]);
+                        int extractedPriority = Integer.parseInt(broken[3].trim());
                         gamestagePrioritiesWhitelist.put(extractedStageName, extractedPriority);
                     }
                     gamestageFadeWhitelist.putIfAbsent(extractedStageName, 0);
-                    if(broken.length==5) {
-                        int extractedFade = Integer.parseInt(broken[4]);
+                    if (broken.length == 5) {
+                        int extractedFade = Integer.parseInt(broken[4].trim());
                         gamestageFadeWhitelist.put(extractedStageName, extractedFade);
                     }
                     gamestageSongsWhitelist.computeIfAbsent(extractedStageName, k -> new ArrayList<>());
                     gamestageSongsStringWhitelist.computeIfAbsent(extractedStageName, k -> new ArrayList<>());
                     gamestageSongsStringWhitelist.get(extractedStageName).add(songNamePlus);
-                    sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
+                    sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                     gamestageSongsWhitelist.get(extractedStageName).add(sound);
                 } else {
-                    gamestagePrioritiesBlacklist.computeIfAbsent(extractedStageName, k -> config.gamestage.gamestagePriority);
+                    gamestagePrioritiesBlacklist.computeIfAbsent(extractedStageName, k -> config.gamestagePriority);
                     if (broken.length >= 4) {
-                        int extractedPriority = Integer.parseInt(broken[3]);
+                        int extractedPriority = Integer.parseInt(broken[3].trim());
                         gamestagePrioritiesBlacklist.put(extractedStageName, extractedPriority);
                     }
                     gamestageFadeBlacklist.putIfAbsent(extractedStageName, 0);
-                    if(broken.length==5) {
-                        int extractedFade = Integer.parseInt(broken[4]);
+                    if (broken.length == 5) {
+                        int extractedFade = Integer.parseInt(broken[4].trim());
                         gamestageFadeBlacklist.put(extractedStageName, extractedFade);
                     }
                     gamestageSongsBlacklist.computeIfAbsent(extractedStageName, k -> new ArrayList<>());
                     gamestageSongsStringBlacklist.computeIfAbsent(extractedStageName, k -> new ArrayList<>());
                     gamestageSongsStringBlacklist.get(extractedStageName).add(songNamePlus);
-                    sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
+                    sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + songName)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, songName));
                     gamestageSongsBlacklist.get(extractedStageName).add(sound);
                 }
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.bloodmoon.bloodmoonSongs != null) {
-            for (int i = 0; i < config.bloodmoon.bloodmoonSongs.length; i++) {
-                String songName = config.bloodmoon.bloodmoonSongs[i].toLowerCase();
+        if (config.bloodmoonSongs.size() != 0) {
+            for (int i = 0; i < config.bloodmoonSongs.size(); i++) {
+                String songName = config.bloodmoonSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("bloodmoon");
@@ -1066,25 +983,22 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 bloodmoon.add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.harvestmoon.harvestmoonSongs != null) {
-            for (int i = 0; i < config.harvestmoon.harvestmoonSongs.length; i++) {
-                String songName = config.harvestmoon.harvestmoonSongs[i].toLowerCase();
+        if (config.harvestmoonSongs.size() != 0) {
+            for (int i = 0; i < config.harvestmoonSongs.size(); i++) {
+                String songName = config.harvestmoonSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("harvestmoon");
@@ -1093,54 +1007,49 @@ public class SoundHandler {
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
                 harvestmoon.add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.fallingstars.fallingstarsSongs != null) {
-            for (int i = 0; i < config.fallingstars.fallingstarsSongs.length; i++) {
-                String songName = config.fallingstars.fallingstarsSongs[i].toLowerCase();
+        if (config.bluemoonSongs.size() != 0) {
+            for (int i = 0; i < config.bluemoonSongs.size(); i++) {
+                String songName = config.bluemoonSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("fallingstars");
                     songName = songName.substring(1);
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
-                fallingstars.add(sound);
+                bluemoon.add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
+                    
                 }
             }
         }
-        if (config.rainintensity.rainintensitySongs != null) {
-            for (int i = 0; i < config.rainintensity.rainintensitySongs.length; i++) {
-                String[] broken = stringBreaker(config.rainintensity.rainintensitySongs[i],",");
-                int extractedIntensity = Integer.parseInt(broken[1]);
-                String songName = broken[0].toLowerCase();
+        if (config.rainintensitySongs != null) {
+            for (int i = 0; i < config.rainintensitySongs.size(); i++) {
+                String[] broken = stringBreaker(config.rainintensitySongs.get(i),",");
+                int extractedIntensity = Integer.parseInt(broken[1].trim());
+                String songName = broken[0].toLowerCase().trim();
                 String songNamePlus = songName;
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
@@ -1163,15 +1072,12 @@ public class SoundHandler {
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.underwater.underwaterSongs != null) {
-            for (int i = 0; i < config.underwater.underwaterSongs.length; i++) {
-                String songName = config.underwater.underwaterSongs[i].toLowerCase();
+        if (config.underwaterSongs != null) {
+            for (int i = 0; i < config.underwaterSongs.size(); i++) {
+                String songName = config.underwaterSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("underwater");
@@ -1190,27 +1096,24 @@ public class SoundHandler {
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.effect.effectSongs != null) {
-            for (int i = 0; i < config.effect.effectSongs.length; i++) {
-                String[] broken = stringBreaker(config.effect.effectSongs[i],",");
-                String effectName = broken[0];
-                effectPriorities.computeIfAbsent(effectName, k -> config.effect.effectPriority);
+        if (config.effectSongs != null) {
+            for (int i = 0; i < config.effectSongs.size(); i++) {
+                String[] broken = stringBreaker(config.effectSongs.get(i),",");
+                String effectName = broken[0].trim();
+                effectPriorities.computeIfAbsent(effectName, k -> config.effectPriority);
                 if (broken.length >= 3) {
-                    int extractedPriority = Integer.parseInt(broken[2]);
+                    int extractedPriority = Integer.parseInt(broken[2].trim());
                     effectPriorities.put(effectName, extractedPriority);
                 }
                 effectFade.putIfAbsent(effectName, 0);
                 if(broken.length==4) {
-                    int extractedFade = Integer.parseInt(broken[3]);
+                    int extractedFade = Integer.parseInt(broken[3].trim());
                     effectFade.put(effectName, extractedFade);
                 }
-                String songName = broken[1].toLowerCase();
+                String songName = broken[1].toLowerCase().trim();
                 String songNamePlus = songName;
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
@@ -1233,15 +1136,12 @@ public class SoundHandler {
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.pvp.pvpSongs != null) {
-            for (int i = 0; i < config.pvp.pvpSongs.length; i++) {
-                String songName = config.pvp.pvpSongs[i].toLowerCase();
+        if (config.pvpSongs != null) {
+            for (int i = 0; i < config.pvpSongs.size(); i++) {
+                String songName = config.pvpSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("pvp");
@@ -1260,33 +1160,30 @@ public class SoundHandler {
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.victory.victorySongs != null) {
-            for (int i = 0; i < config.victory.victorySongs.length; i++) {
-                String[] broken = stringBreaker(config.victory.victorySongs[i],",");
-                int extractedID = Integer.parseInt(broken[1]);
+        if (config.victorySongs != null) {
+            for (int i = 0; i < config.victorySongs.size(); i++) {
+                String[] broken = stringBreaker(config.victorySongs.get(i),",");
+                int extractedID = Integer.parseInt(broken[1].trim());
                 victoryID.put("Victory"+extractedID,extractedID);
                 victoryTime.putIfAbsent("Victory"+extractedID, 200);
                 if (broken.length >= 3) {
-                    int extractedTime = Integer.parseInt(broken[2]);
+                    int extractedTime = Integer.parseInt(broken[2].trim());
                     victoryTime.put("Victory"+extractedID, extractedTime);
                 }
-                victoryPriorities.computeIfAbsent("Victory"+extractedID, k -> config.victory.victoryPriority);
+                victoryPriorities.computeIfAbsent("Victory"+extractedID, k -> config.victoryPriority);
                 if (broken.length >= 4) {
-                    int extractedPriority = Integer.parseInt(broken[3]);
+                    int extractedPriority = Integer.parseInt(broken[3].trim());
                     victoryPriorities.put("Victory"+extractedID, extractedPriority);
                 }
                 victoryFade.putIfAbsent("Victory"+extractedID, 0);
                 if(broken.length==5) {
-                    int extractedFade = Integer.parseInt(broken[4]);
+                    int extractedFade = Integer.parseInt(broken[4].trim());
                     victoryFade.put("Victory"+extractedID, extractedFade);
                 }
-                String songName = broken[0].toLowerCase();
+                String songName = broken[0].toLowerCase().trim();
                 String songNamePlus = songName;
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
@@ -1309,39 +1206,19 @@ public class SoundHandler {
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.tornado.tornadoSongs != null) {
-            for (int i = 0; i < config.tornado.tornadoSongs.length; i++) {
-                String[] broken = stringBreaker(config.tornado.tornadoSongs[i],",");
-                int extractedIntensity = Integer.parseInt(broken[1]);
-                tornadoIntensity.put("Tornado"+extractedIntensity,extractedIntensity);
-                tornadoPriorities.computeIfAbsent("Tornado"+extractedIntensity, k -> config.tornado.tornadoPriority);
-                if (broken.length >= 3) {
-                    int extractedPriority = Integer.parseInt(broken[2]);
-                    tornadoPriorities.put("Tornado"+extractedIntensity, extractedPriority);
-                }
-                tornadoFade.putIfAbsent("Tornado"+extractedIntensity, 0);
-                if(broken.length==4) {
-                    int extractedFade = Integer.parseInt(broken[3]);
-                    tornadoFade.put("Tornado"+extractedIntensity, extractedFade);
-                }
-                String songName = broken[0].toLowerCase();
-                String songNamePlus = songName;
+        if (config.acidrainSongs != null) {
+            for (int i = 0; i < config.acidrainSongs.size(); i++) {
+                String songName = config.acidrainSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
-                    songCombos.get(songName).add("Tornado"+extractedIntensity);
+                    songCombos.get(songName).add("acidrain");
                     songName = songName.substring(1);
                 }
-                tornadoSongs.computeIfAbsent("Tornado"+extractedIntensity, k -> new ArrayList<>());
-                tornadoSongsString.computeIfAbsent("Tornado"+extractedIntensity, k -> new ArrayList<>());
-                tornadoSongsString.get("Tornado"+extractedIntensity).add(songNamePlus);
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
-                tornadoSongs.get("Tornado"+extractedIntensity).add(sound);
+                acidrain.add(sound);
                 boolean cont = false;
                 for(SoundEvent s: allSoundEvents) {
                     if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
@@ -1353,22 +1230,19 @@ public class SoundHandler {
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.hurricane.hurricaneSongs != null) {
-            for (int i = 0; i < config.hurricane.hurricaneSongs.length; i++) {
-                String songName = config.hurricane.hurricaneSongs[i].toLowerCase();
+        if (config.blizzardSongs != null) {
+            for (int i = 0; i < config.blizzardSongs.size(); i++) {
+                String songName = config.blizzardSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
-                    songCombos.get(songName).add("hurricane");
+                    songCombos.get(songName).add("blizzard");
                     songName = songName.substring(1);
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
-                hurricane.add(sound);
+                blizzard.add(sound);
                 boolean cont = false;
                 for(SoundEvent s: allSoundEvents) {
                     if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
@@ -1380,22 +1254,19 @@ public class SoundHandler {
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.sandstorm.sandstormSongs != null) {
-            for (int i = 0; i < config.sandstorm.sandstormSongs.length; i++) {
-                String songName = config.sandstorm.sandstormSongs[i].toLowerCase();
+        if (config.cloudySongs != null) {
+            for (int i = 0; i < config.cloudySongs.size(); i++) {
+                String songName = config.cloudySongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
-                    songCombos.get(songName).add("sandstorm");
+                    songCombos.get(songName).add("cloudy");
                     songName = songName.substring(1);
                 }
                 SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
-                sandstorm.add(sound);
+                cloudy.add(sound);
                 boolean cont = false;
                 for(SoundEvent s: allSoundEvents) {
                     if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
@@ -1407,17 +1278,38 @@ public class SoundHandler {
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.gui.guiSongs != null) {
-            for (int i = 0; i < config.gui.guiSongs.length; i++) {
-                String[] broken = stringBreaker(config.gui.guiSongs[i],",");
+        if (config.lightrainSongs != null) {
+            for (int i = 0; i < config.lightrainSongs.size(); i++) {
+                String songName = config.lightrainSongs.get(i).toLowerCase().trim();
+                if (songName.startsWith("@")) {
+                    songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
+                    songCombos.get(songName).add("lightrain");
+                    songName = songName.substring(1);
+                }
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
+                lightrain.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                }
+                if (!allSongs.contains(songName)) {
+                    allSongs.add(songName);
+                }
+            }
+        }
+        if (config.guiSongs != null) {
+            for (int i = 0; i < config.guiSongs.size(); i++) {
+                String[] broken = stringBreaker(config.guiSongs.get(i),",");
                 String extractedName = broken[0];
-                guiPriorities.computeIfAbsent(extractedName, k -> config.gui.guiPriority);
+                guiPriorities.computeIfAbsent(extractedName, k -> config.guiPriority);
                 if (broken.length >= 3) {
                     int extractedPriority = Integer.parseInt(broken[2]);
                     guiPriorities.put(extractedName, extractedPriority);
@@ -1450,23 +1342,20 @@ public class SoundHandler {
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.difficulty.difficultySongs != null) {
-            for (int i = 0; i < config.difficulty.difficultySongs.length; i++) {
-                String[] broken = stringBreaker(config.difficulty.difficultySongs[i],",");
+        if (config.difficultySongs != null) {
+            for (int i = 0; i < config.difficultySongs.size(); i++) {
+                String[] broken = stringBreaker(config.difficultySongs.get(i), ",");
                 int extractedID = Integer.parseInt(broken[1]);
-                difficultyPriorities.computeIfAbsent(extractedID, k -> config.difficulty.difficultyPriority);
+                difficultyPriorities.computeIfAbsent(extractedID, k -> config.difficultyPriority);
                 if (broken.length >= 3) {
                     int extractedPriority = Integer.parseInt(broken[2]);
                     difficultyPriorities.put(extractedID, extractedPriority);
                 }
                 difficultyFade.putIfAbsent(extractedID, 0);
-                if(broken.length==4) {
+                if (broken.length == 4) {
                     int extractedFade = Integer.parseInt(broken[3]);
                     difficultyFade.put(extractedID, extractedFade);
                 }
@@ -1474,36 +1363,33 @@ public class SoundHandler {
                 String songNamePlus = songName;
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
-                    songCombos.get(songName).add("difficulty:"+extractedID);
+                    songCombos.get(songName).add("difficulty:" + extractedID);
                     songName = songName.substring(1);
                 }
                 difficultySongs.computeIfAbsent(extractedID, k -> new ArrayList<>());
                 difficultySongsString.computeIfAbsent(extractedID, k -> new ArrayList<>());
                 difficultySongsString.get(extractedID).add(songNamePlus);
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName, ";")[0], "/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName, ";")[0], "/")[0]));
                 difficultySongs.get(extractedID).add(sound);
                 boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
+                for (SoundEvent s : allSoundEvents) {
+                    if (Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont = true;
                     }
                 }
-                if(!cont) {
+                if (!cont) {
                     allSoundEvents.add(sound);
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
-        if (config.seasons.seasonsSongs != null) {
-            for (int i = 0; i < config.seasons.seasonsSongs.length; i++) {
-                String[] broken = stringBreaker(config.seasons.seasonsSongs[i],",");
+        if (config.seasonsSongs != null) {
+            for (int i = 0; i < config.seasonsSongs.size(); i++) {
+                String[] broken = stringBreaker(config.seasonsSongs.get(i),",");
                 int extractedID = Integer.parseInt(broken[1]);
-                seasonsPriorities.computeIfAbsent(extractedID, k -> config.seasons.seasonsPriority);
+                seasonsPriorities.computeIfAbsent(extractedID, k -> config.seasonsPriority);
                 if (broken.length >= 3) {
                     int extractedPriority = Integer.parseInt(broken[2]);
                     seasonsPriorities.put(extractedID, extractedPriority);
@@ -1536,9 +1422,6 @@ public class SoundHandler {
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
-                    }
                 }
             }
         }
@@ -1547,7 +1430,7 @@ public class SoundHandler {
     public static String[] stringBreaker(String s, String regex) {
         return s.split(regex);
     }
-
+    
     public static void emptyListsAndMaps() {
         allSongs = new ArrayList<>();
         allSoundEvents = new ArrayList<>();
@@ -1579,17 +1462,17 @@ public class SoundHandler {
         high = new ArrayList<>();
         underwater = new ArrayList<>();
         pvp = new ArrayList<>();
-        
+
         difficultySongs = new HashMap<>();
         difficultySongsString = new HashMap<>();
         difficultyPriorities = new HashMap<>();
         difficultyFade = new HashMap<>();
-        
+
         seasonsSongs = new HashMap<>();
         seasonsSongsString = new HashMap<>();
         seasonsPriorities = new HashMap<>();
         seasonsFade = new HashMap<>();
-        
+
         nightSongs = new HashMap<>();
         nightSongsString = new HashMap<>();
         nightFade = new HashMap<>();
@@ -1658,19 +1541,15 @@ public class SoundHandler {
 
         bloodmoon = new ArrayList<>();
         harvestmoon = new ArrayList<>();
-        fallingstars = new ArrayList<>();
+        bluemoon = new ArrayList<>();
 
         rainintensitySongs = new HashMap<>();
         rainintensitySongsString = new HashMap<>();
 
-        tornadoSongs = new HashMap<>();
-        tornadoSongsString = new HashMap<>();
-        tornadoIntensity = new HashMap<>();
-        tornadoPriorities = new HashMap<>();
-        tornadoFade = new HashMap<>();
-        hurricane = new ArrayList<>();
-        sandstorm = new ArrayList<>();
-
+        acidrain = new ArrayList<>();
+        blizzard = new ArrayList<>();
+        cloudy = new ArrayList<>();
+        lightrain = new ArrayList<>();
 
         songCombos = new HashMap<>();
     }

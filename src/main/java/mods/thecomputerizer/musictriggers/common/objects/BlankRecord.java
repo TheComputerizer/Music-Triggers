@@ -1,47 +1,37 @@
 package mods.thecomputerizer.musictriggers.common.objects;
 
-import net.minecraft.block.BlockJukebox;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.EnumRarity;
+import net.minecraft.block.BlockState;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.item.ItemUseContext;
+import net.minecraft.util.ActionResultType;
+
+import java.util.Objects;
 
 public class BlankRecord extends Item {
 
-    public BlankRecord() {}
+    public BlankRecord(Item.Properties p) {
+        super(p);
+    }
 
-    @SuppressWarnings("NullableProblems")
     @Override
-    public EnumActionResult onItemUse( EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
+    public ActionResultType useOn(ItemUseContext ctx)
     {
-        IBlockState iblockstate = worldIn.getBlockState(pos);
+        BlockState blockstate = ctx.getLevel().getBlockState(ctx.getClickedPos());
 
-        if (iblockstate.getBlock() instanceof MusicRecorder)
+        if (blockstate.getBlock() instanceof MusicRecorder)
         {
-            MusicRecorder mr = (MusicRecorder) iblockstate.getBlock();
-            if(!worldIn.isRemote && !iblockstate.getValue(BlockJukebox.HAS_RECORD)) {
-                ItemStack itemstack = player.getHeldItem(hand);
-                mr.insertRecord(worldIn,pos,iblockstate,itemstack,player.getUniqueID());
+            MusicRecorder mr = (MusicRecorder) blockstate.getBlock();
+            if(!ctx.getLevel().isClientSide() && !blockstate.getValue(MusicRecorder.HAS_RECORD)) {
+                ItemStack itemstack = Objects.requireNonNull(ctx.getPlayer()).getItemInHand(ctx.getHand());
+                mr.insertRecord(ctx.getLevel(),ctx.getClickedPos(),blockstate,itemstack,ctx.getPlayer().getUUID());
                 itemstack.shrink(1);
             }
-            return EnumActionResult.SUCCESS;
+            return ActionResultType.SUCCESS;
         }
         else
         {
-            return EnumActionResult.PASS;
+            return ActionResultType.PASS;
         }
-    }
-
-    @SuppressWarnings("NullableProblems")
-    @Override
-    public net.minecraftforge.common.IRarity getForgeRarity(ItemStack stack)
-    {
-        return EnumRarity.EPIC;
     }
 }

@@ -1,19 +1,19 @@
 package mods.thecomputerizer.musictriggers.common.objects;
 
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.eventsCommon;
-import net.minecraft.block.Block;
-import net.minecraft.block.material.MapColor;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyBool;
-import net.minecraft.block.state.BlockStateContainer;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.block.*;
+import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumBlockRenderType;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
+import net.minecraft.state.BooleanProperty;
+import net.minecraft.state.StateContainer;
+import net.minecraft.state.properties.BlockStateProperties;
+import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Hand;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.World;
 
 import java.util.UUID;
@@ -21,75 +21,65 @@ import java.util.UUID;
 @SuppressWarnings("NullableProblems")
 public class MusicRecorder extends Block {
 
-    public static final PropertyBool HAS_RECORD = PropertyBool.create("has_record");
+    public static final BooleanProperty HAS_RECORD = BlockStateProperties.HAS_RECORD;
 
-    public MusicRecorder() {
-        super(Material.WOOD, MapColor.DIRT);
-        setHardness(1F);
-        this.setDefaultState(this.blockState.getBaseState().withProperty(HAS_RECORD, false));
-        setHarvestLevel("axe", 3);
-        setResistance(1F);
+    public MusicRecorder(AbstractBlock.Properties p) {
+        super(p);
+        this.registerDefaultState(this.stateDefinition.any().setValue(HAS_RECORD, Boolean.FALSE));
     }
 
     @Override
-    public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+    public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult ray) {
         if (state.getValue(HAS_RECORD)) {
             this.dropRecord(worldIn, pos);
-            state = state.withProperty(HAS_RECORD, false);
-            worldIn.setBlockState(pos, state, 2);
-            return true;
+            state = state.setValue(HAS_RECORD, false);
+            worldIn.setBlock(pos, state, 2);
+            return ActionResultType.sidedSuccess(worldIn.isClientSide);
         } else {
-            return false;
+            return ActionResultType.PASS;
         }
     }
 
-    public void insertRecord(World worldIn, BlockPos pos, IBlockState state, ItemStack recordStack, UUID uuid) {
+    public void insertRecord(World worldIn, BlockPos pos, BlockState state, ItemStack recordStack, UUID uuid) {
         eventsCommon.recordWorld.put(pos,worldIn);
         eventsCommon.recordHolder.put(pos, recordStack.copy());
         eventsCommon.recordUUID.put(pos, uuid);
         eventsCommon.tickCounter.put(pos, 0);
-        worldIn.setBlockState(pos, state.withProperty(HAS_RECORD, Boolean.TRUE), 2);
+        worldIn.setBlock(pos, state.setValue(HAS_RECORD, Boolean.TRUE), 2);
     }
 
     private void dropRecord(World worldIn, BlockPos pos) {
-        if (!worldIn.isRemote) {
+        if (!worldIn.isClientSide) {
             eventsCommon.recordHolder.putIfAbsent(pos,ItemStack.EMPTY);
             ItemStack itemstack = eventsCommon.recordHolder.get(pos);
             if (!itemstack.isEmpty()) {
                 eventsCommon.recordHolder.put(pos,ItemStack.EMPTY);
-                double d0 = (double) (worldIn.rand.nextFloat() * 0.7F) + 0.15000000596046448D;
-                double d1 = (double) (worldIn.rand.nextFloat() * 0.7F) + 0.06000000238418579D + 0.6D;
-                double d2 = (double) (worldIn.rand.nextFloat() * 0.7F) + 0.15000000596046448D;
+                double d0 = (double) (worldIn.random.nextFloat() * 0.7F) + 0.15000000596046448D;
+                double d1 = (double) (worldIn.random.nextFloat() * 0.7F) + 0.06000000238418579D + 0.6D;
+                double d2 = (double) (worldIn.random.nextFloat() * 0.7F) + 0.15000000596046448D;
                 ItemStack itemstack1 = itemstack.copy();
-                EntityItem entityitem = new EntityItem(worldIn, (double) pos.getX() + d0, (double) pos.getY() + d1, (double) pos.getZ() + d2, itemstack1);
-                entityitem.setDefaultPickupDelay();
-                worldIn.spawnEntity(entityitem);
+                ItemEntity itemEntity = new ItemEntity(worldIn, (double) pos.getX() + d0, (double) pos.getY() + d1, (double) pos.getZ() + d2, itemstack1);
+                itemEntity.setDefaultPickUpDelay();
+                worldIn.addFreshEntity(itemEntity);
             }
         }
     }
 
     @Override
-    public void breakBlock(World worldIn, BlockPos pos, IBlockState state) {
-        this.dropRecord(worldIn, pos);
-        super.breakBlock(worldIn, pos, state);
-    }
-
-    @Override
-    public void dropBlockAsItemWithChance(World worldIn, BlockPos pos, IBlockState state, float chance, int fortune) {
-        if (!worldIn.isRemote) {
-            super.dropBlockAsItemWithChance(worldIn, pos, state, chance, 0);
+    public void onRemove(BlockState state, World worldIn, BlockPos pos, BlockState state2, boolean b) {
+        if(!state.is(state2.getBlock())) {
+            this.dropRecord(worldIn, pos);
+            super.onRemove(state,worldIn,pos,state2,b);
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Override
-    public boolean hasComparatorInputOverride(IBlockState state) {
+    public boolean hasAnalogOutputSignal(BlockState state) {
         return true;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
-    public int getComparatorInputOverride(IBlockState blockState, World worldIn, BlockPos pos) {
+    public int getAnalogOutputSignal(BlockState blockState, World worldIn, BlockPos pos) {
         ItemStack itemstack = eventsCommon.recordHolder.get(pos);
         if (!itemstack.isEmpty()) {
             return 15;
@@ -97,25 +87,14 @@ public class MusicRecorder extends Block {
         return 0;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
-    public EnumBlockRenderType getRenderType(IBlockState state) {
-        return EnumBlockRenderType.MODEL;
+    public BlockRenderType getRenderShape(BlockState state) {
+        return BlockRenderType.MODEL;
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
-    public IBlockState getStateFromMeta(int meta) {
-        return this.getDefaultState().withProperty(HAS_RECORD, meta > 0);
-    }
 
     @Override
-    public int getMetaFromState(IBlockState state) {
-        return state.getValue(HAS_RECORD) ? 1 : 0;
-    }
-
-    @Override
-    protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, HAS_RECORD);
+    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> stateBuilder) {
+        stateBuilder.add(HAS_RECORD);
     }
 }

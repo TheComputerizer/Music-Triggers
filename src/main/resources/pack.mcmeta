@@ -1,7 +1,6 @@
 {
     "pack": {
-        "description": "musictriggers resources",
-        "pack_format": 3,
-        "_comment": "COMMENT"
+        "pack_format": 6,
+        "description": "mcmeta for Music Trigger"
     }
 }

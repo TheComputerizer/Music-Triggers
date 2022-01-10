@@ -1,13 +1,26 @@
 package mods.thecomputerizer.musictriggers.client;
 
+import mods.thecomputerizer.musictriggers.common.ModSounds;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
-import net.minecraftforge.client.resource.VanillaResourceType;
+import mods.thecomputerizer.musictriggers.config;
+import mods.thecomputerizer.musictriggers.configTitleCards;
+import net.minecraft.client.Minecraft;
+import net.minecraftforge.client.ForgeHooksClient;
+import net.minecraftforge.resource.VanillaResourceType;
+
+import java.io.File;
 
 public class reload {
 
     public static void readAndReload() {
+        File configBase = new File("config/MusicTriggers");
+        File mainConfig = new File(configBase,"musictriggers.txt");
+        File transitionsConfig = new File(configBase,"transitions.txt");
+        config.read(mainConfig);
+        configTitleCards.reload(transitionsConfig);
         SoundHandler.emptyListsAndMaps();
         SoundHandler.registerSounds();
-        net.minecraftforge.fml.client.FMLClientHandler.instance().refreshResources(VanillaResourceType.SOUNDS);
+        ModSounds.reload();
+        ForgeHooksClient.refreshResources(Minecraft.getInstance(), VanillaResourceType.SOUNDS);
     }
 }

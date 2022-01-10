@@ -1,778 +1,848 @@
 package mods.thecomputerizer.musictriggers;
 
-import net.minecraftforge.common.config.Config;
-import net.minecraftforge.common.config.Config.Comment;
-import net.minecraftforge.common.config.ConfigManager;
-import net.minecraftforge.fml.client.event.ConfigChangedEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-
-@Config(modid = MusicTriggers.MODID, name = "MusicTriggers/"+MusicTriggers.MODID)
-public class config {
-
-    @Comment("Universal Delay - Amount of time (in ticks) between songs after a song ends")
-    public static int universalDelay = 0;
-
-    @Comment("Main Menu")
-    public static Menu menu = new Menu(new String[] {});
-
-    public static class Menu {
-        @Comment("songs")
-        public String[] menuSongs;
-
-        public Menu(final String[] menuSongs) {
-            this.menuSongs = menuSongs;
-        }
-    }
-
-    @Comment("Generic")
-    public static Generic generic = new Generic(0,new String[] {});
-
-    public static class Generic {
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int genericFade;
-        @Comment("songs")
-        public String[] genericSongs;
-
-        public Generic(final int genericFade, final String[] genericSongs) {
-            this.genericFade = genericFade;
-            this.genericSongs = genericSongs;
-        }
-    }
-
-    @Comment("Difficulty")
-    public static Difficulty difficulty = new Difficulty(100,new String[] {});
-
-    public static class Difficulty {
-        @Comment("Default Priority [min: -99, max: 2147483647 default: 100]")
-        public int difficultyPriority;
-        @Comment("Songs per difficulty\nFormat[songname],difficulty [int],(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]]\n"+
-        "Note - peaceful=0 easy=1 normal=2 hard=3 hardcore=4\n"+
-        "Example normal,2,111")
-        public String[] difficultySongs;
-
-        public Difficulty(final int difficultyPriority, final String[] difficultySongs) {
-            this.difficultyPriority = difficultyPriority;
-            this.difficultySongs = difficultySongs;
-        }
-    }
-
-    @Comment("Zones")
-    public static Zones zones = new Zones(10000,0,new String[] {});
-
-    public static class Zones {
-        @Comment("Default Priority [min: -99, max: 2147483647 default: 10000]")
-        public int zonesPriority;
-        @Comment("Default Fade Time [in ticks, default: 0]")
-        public int zonesFade;
-        @Comment("Songs per zone\nFormat[min x,min y,min z,max x, max y,max z,songname,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]]\n" +
-                "Example: 0,0,0,100,100,100,home3,33981,200")
-        public String[] zonesSongs;
-
-        public Zones(final int zonesPriority, final int zonesFade, final String[] zonesSongs) {
-            this.zonesPriority = zonesPriority;
-            this.zonesFade = zonesFade;
-            this.zonesSongs = zonesSongs;
-        }
-    }
-
-    @Comment("Day")
-    public static Day day = new Day(1000,0,new String[] {});
-
-    public static class Day {
-        @Comment("Priority [min: -99, max: 2147483647 default: 1000]")
-        public int dayPriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int dayFade;
-        @Comment("songs")
-        public String[] daySongs;
-
-        public Day(final int dayPriority, final int dayFade, final String[] daySongs) {
-            this.dayPriority = dayPriority;
-            this.dayFade = dayFade;
-            this.daySongs = daySongs;
-        }
-    }
-
-    @Comment("Night")
-    public static Night night = new Night(900,new String[] {});
-
-    public static class Night {
-        @Comment("Priority [min: -99, max: 2147483647 default: 900]")
-        public int nightPriority;
-        @Comment("songs - There is a new format now!\n" +
-                "[song name,moon phase,(Optional)fade time [in ticks, default: 0]]\n" +
-                "Moon Phases: 1 - Full Moon, 2 - Waning Gibbous, 3 - Third Quarter, 4 - Waning Crescent\n" +
-                "5 - New Moon, 6 - Waxing Crescent, 7 - First Quarter, 8 - Waxing Gibbous\n" +
-                "You can put 0 to ignore moon phase, or put multiple numbers for a song to be active during multiple phases\n" +
-                "Example 1: [nighttime,1] - This will only play during a full moon\n" +
-                "Example 2: [nighttime,2,3,4,6,7,8] - This will play every night except for full moons and new moons\n" +
-                "Example 3: [nighttime,0] - This will play whenever it is nighttime, just like the old version of this trigger\n" +
-                "Note - If the fade is not the last number it will not work properly")
-        public String[] nightSongs;
-
-        public Night(final int nightPriority, final String[] nightSongs) {
-            this.nightPriority = nightPriority;
-            this.nightSongs = nightSongs;
-        }
-    }
-
-    @Comment("Sunrise")
-    public static Sunrise sunrise = new Sunrise(1111,0,new String[] {});
-
-    public static class Sunrise {
-        @Comment("Priority [min: -99, max: 2147483647 default: 1111]")
-        public int sunrisePriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int sunriseFade;
-        @Comment("songs")
-        public String[] sunriseSongs;
-
-        public Sunrise(final int sunrisePriority, final int sunriseFade, final String[] sunriseSongs) {
-            this.sunrisePriority = sunrisePriority;
-            this.sunriseFade = sunriseFade;
-            this.sunriseSongs = sunriseSongs;
-        }
-    }
-
-    @Comment("Sunset")
-    public static Sunset sunset = new Sunset(1111,0,new String[] {});
-
-    public static class Sunset {
-        @Comment("Priority [min: -99, max: 2147483647 default: 1111]")
-        public int sunsetPriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int sunsetFade;
-        @Comment("songs")
-        public String[] sunsetSongs;
-
-        public Sunset(final int sunsetPriority, final int sunsetFade, final String[] sunsetSongs) {
-            this.sunsetPriority = sunsetPriority;
-            this.sunsetFade = sunsetFade;
-            this.sunsetSongs = sunsetSongs;
-        }
-    }
-
-    @Comment("Light Level")
-    public static Light light = new Light(500,new String[] {});
-
-    public static class Light {
-        @Comment("Priority [min: -99, max: 2147483647 default: 500]")
-        public int lightPriority;
-        @Comment("Songs - [Format: \"SongName,Identifier(string name to tie a group of songs to a pool),Light Level(maximum light level),(Optional)Sky Light[default: true],(Optional)Light Time[default: 20],(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\n" +
-                "Note: Sky light will let you choose whether or not to take that into account\n" +
-                "Additional Note: The light time is how long it will take before the trigger is deactivated after the conditions are no longer met" +
-                "Example: spookydark,5,3,false,20,9945,50\n" +
-                "Tip - Setting sky light to false would work best when combining it with the night trigger")
-        public String[] lightSongs;
-
-        public Light(final int lightPriority,final String[] lightSongs) {
-            this.lightPriority = lightPriority;
-            this.lightSongs = lightSongs;
-        }
-    }
-
-    @Comment("Underground - underground with no sky visible")
-    public static Underground underground = new Underground(1500,0,55,new String[] {});
-
-    public static class Underground {
-        @Comment("Priority [min: -99, max: 2147483647 default: 1500]")
-        public int undergroundPriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int undergroundFade;
-        @Comment("The Y level that is considered underground [default: 55]")
-        public int undergroundLevel;
-        @Comment("songs")
-        public String[] undergroundSongs;
-
-        public Underground(final int undergroundPriority, final int undergroundFade, final int undergroundLevel, final String[] undergroundSongs) {
-            this.undergroundPriority = undergroundPriority;
-            this.undergroundFade = undergroundFade;
-            this.undergroundLevel = undergroundLevel;
-            this.undergroundSongs = undergroundSongs;
-        }
-    }
-
-    @Comment("Deep Under - deep below the surface with no sky visible")
-    public static DeepUnder deepUnder = new DeepUnder(2000,0,20,new String[] {});
-
-    public static class DeepUnder {
-        @Comment("Priority [min: -99, max: 2147483647 default: 2000]")
-        public int deepUnderPriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int deepUnderFade;
-        @Comment("The Y level that is considered deep underground [default: 20]")
-        public int deepUnderLevel;
-        @Comment("songs")
-        public String[] deepUnderSongs;
-
-        public DeepUnder(final int deepUnderPriority, final int deepUnderFade, final int deepUnderLevel, final String[] deepUnderSongs) {
-            this.deepUnderPriority = deepUnderPriority;
-            this.deepUnderFade = deepUnderFade;
-            this.deepUnderLevel = deepUnderLevel;
-            this.deepUnderSongs = deepUnderSongs;
-        }
-    }
-
-    @Comment("Raining")
-    public static Raining raining = new Raining(1300,0,new String[] {});
-
-    public static class Raining {
-        @Comment("Priority [min: -99, max: 2147483647 default: 1300]")
-        public int rainingPriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int rainingFade;
-        @Comment("songs")
-        public String[] rainingSongs;
-
-        public Raining(final int rainingPriority, final int rainingFade, final String[] rainingSongs) {
-            this.rainingPriority = rainingPriority;
-            this.rainingFade = rainingFade;
-            this.rainingSongs = rainingSongs;
-        }
-    }
-
-    @Comment("Storming")
-    public static Storming storming = new Storming(1350,0,new String[] {});
-
-    public static class Storming {
-        @Comment("Priority [min: -99, max: 2147483647 default: 1350]")
-        public int stormingPriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int stormingFade;
-        @Comment("songs")
-        public String[] stormingSongs;
-
-        public Storming(final int stormingPriority, final int stormingFade, final String[] stormingSongs) {
-            this.stormingPriority = stormingPriority;
-            this.stormingFade = stormingFade;
-            this.stormingSongs = stormingSongs;
-        }
-    }
-
-    @Comment("Snowing")
-    public static Snowing snowing = new Snowing(1333,0,new String[] {});
-
-    public static class Snowing {
-        @Comment("Priority [min: -99, max: 2147483647 default: 1333]")
-        public int snowingPriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int snowingFade;
-        @Comment("songs")
-        public String[] snowingSongs;
-
-        public Snowing(final int snowingPriority, final int snowingFade, final String[] snowingSongs) {
-            this.snowingPriority = snowingPriority;
-            this.snowingFade = snowingFade;
-            this.snowingSongs = snowingSongs;
-        }
-    }
-
-    @Comment("Low HP")
-    public static LowHP lowHP = new LowHP(3000,0,0.3, new String[] {});
-
-    public static class LowHP {
-        @Comment("Priority [min: -99, max: 2147483647 default: 3000]")
-        public int lowHPPriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int lowHPFade;
-        @Comment("HP decimal percentage to activate [min: 0, max: 1, default:0.3]")
-        public double lowHPLevel;
-        @Comment("songs")
-        public String[] lowHPSongs;
-
-        public LowHP(final int lowHPPriority, final int lowHPFade, final double lowHPLevel, final String[] lowHPSongs) {
-            this.lowHPPriority = lowHPPriority;
-            this.lowHPFade = lowHPFade;
-            this.lowHPLevel = lowHPLevel;
-            this.lowHPSongs = lowHPSongs;
-        }
-    }
-
-    @Comment("Dead")
-    public static Dead dead = new Dead(10000,0,new String[] {});
-
-    public static class Dead {
-        @Comment("Priority [min: -99, max: 2147483647 default: 10000]")
-        public int deadPriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int deadFade;
-        @Comment("songs")
-        public String[] deadSongs;
-
-        public Dead(final int deadPriority, final int deadFade, final String[] deadSongs) {
-            this.deadPriority = deadPriority;
-            this.deadFade = deadFade;
-            this.deadSongs = deadSongs;
-        }
-    }
-
-    @Comment("Void")
-    public static InVoid inVoid = new InVoid(7777,0,0,new String[] {});
-
-    public static class InVoid {
-        @Comment("Priority [min: -99, max: 2147483647 default: 7777]")
-        public int inVoidPriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int inVoidFade;
-        @Comment("Below what y level would consider to be actually in the void? [default: 0]")
-        public int inVoidLevel;
-        @Comment("songs")
-        public String[] inVoidSongs;
-
-        public InVoid(final int inVoidPriority, final int inVoidFade, final int inVoidLevel, final String[] inVoidSongs) {
-            this.inVoidPriority = inVoidPriority;
-            this.inVoidFade = inVoidFade;
-            this.inVoidLevel = inVoidLevel;
-            this.inVoidSongs = inVoidSongs;
-        }
-    }
-
-    @Comment("Spectator")
-    public static Spectator spectator = new Spectator(5000,0,new String[] {});
-
-    public static class Spectator {
-        @Comment("Priority [min: -99, max: 2147483647 default: 5000]")
-        public int spectatorPriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int spectatorFade;
-        @Comment("songs")
-        public String[] spectatorSongs;
-
-        public Spectator(final int spectatorPriority, final int spectatorFade, final String[] spectatorSongs) {
-            this.spectatorPriority = spectatorPriority;
-            this.spectatorFade = spectatorFade;
-            this.spectatorSongs = spectatorSongs;
-        }
-    }
-
-    @Comment("Creative")
-    public static Creative creative = new Creative(5000,0,new String[] {});
-
-    public static class Creative {
-        @Comment("Priority [min: -99, max: 2147483647 default: 5000]")
-        public int creativePriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int creativeFade;
-        @Comment("songs")
-        public String[] creativeSongs;
-
-        public Creative(final int creativePriority, final int creativeFade, final String[] creativeSongs) {
-            this.creativePriority = creativePriority;
-            this.creativeFade = creativeFade;
-            this.creativeSongs = creativeSongs;
-        }
-    }
-
-    @Comment("Riding")
-    public static Riding riding = new Riding(2222,0,new String[] {});
-
-    public static class Riding {
-        @Comment("Priority [min: -99, max: 2147483647 default: 2222]")
-        public int ridingPriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int ridingFade;
-        @Comment("songs")
-        public String[] ridingSongs;
-
-        public Riding(final int ridingPriority, final int ridingFade, final String[] ridingSongs) {
-            this.ridingPriority = ridingPriority;
-            this.ridingFade = ridingFade;
-            this.ridingSongs = ridingSongs;
-        }
-    }
-
-    @Comment("Pet")
-    public static Pet pet = new Pet(1200,0,new String[] {});
-
-    public static class Pet {
-        @Comment("Priority [min: -99, max: 2147483647 default: 1200]")
-        public int petPriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int petFade;
-        @Comment("songs")
-        public String[] petSongs;
-
-        public Pet(final int petPriority, final int petFade, final String[] petSongs) {
-            this.petPriority = petPriority;
-            this.petFade = petFade;
-            this.petSongs = petSongs;
-        }
-    }
-
-    @Comment("High")
-    public static High high = new High(1200,0,150,new String[] {});
-
-    public static class High {
-        @Comment("Priority [min: -99, max: 2147483647 default: 1200]")
-        public int highPriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int highFade;
-        @Comment("Minimum Y level to activate [default: 150]")
-        public int highLevel;
-        @Comment("songs")
-        public String[] highSongs;
-
-        public High(final int highPriority, final int highFade, final int highLevel, final String[] highSongs) {
-            this.highPriority = highPriority;
-            this.highFade = highFade;
-            this.highLevel = highLevel;
-            this.highSongs = highSongs;
-        }
-    }
-
-    @Comment("Underwater")
-    public static Underwater underwater = new Underwater(1999,0,new String[] {});
-
-    public static class Underwater {
-        @Comment("Priority [min: -99, max: 2147483647 default: 1999]")
-        public int underwaterPriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int underwaterFade;
-        @Comment("songs")
-        public String[] underwaterSongs;
-
-        public Underwater(final int underwaterPriority, final int underwaterFade, final String[] underwaterSongs) {
-            this.underwaterPriority = underwaterPriority;
-            this.underwaterFade = underwaterFade;
-            this.underwaterSongs = underwaterSongs;
-        }
-    }
-
-    @Comment("Dimension")
-    public static Dimension dimension = new Dimension(1150,new String[] {});
-
-    public static class Dimension {
-        @Comment("General Priority [min: -99, max: 2147483647 default: 1150]\nNote: Priorities specified for individual dimensions will override this")
-        public int dimensionPriority;
-        @Comment("Songs Per Dimension [Format: DimensionID,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\nNote: You only have to set the priority per dimension ID for 1 song\nExample: -1,(songname),11111")
-        public String[] dimensionSongs;
-
-        public Dimension(final int dimensionPriority, final String[] dimensionSongs) {
-            this.dimensionPriority = dimensionPriority;
-            this.dimensionSongs = dimensionSongs;
-        }
-    }
-
-    @Comment("Biome")
-    public static Biome biome = new Biome(1160,new String[] {});
-
-    public static class Biome {
-        @Comment("General Priority [min: -99, max: 2147483647 default: 1160]\nNote: Priorities specified for individual biomes will override this")
-        public int biomePriority;
-        @Comment("Songs Per Biome [Format: \"BiomeResourceName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0],(Optional)Biome Time[default: 20]\"]\n" +
-                "Note: You only have to set the priority per biome name for 1 song\n" +
-                "Example: minecraft:swampland,(songname),11111\n" +
-                "Additional Note: You can also specify multiple biomes at once through regexing! You can use this feature for both mod ids and biome names\n" +
-                "Example 2: minecraft,(songname),11111 (all minecraft biomes will have (songname))\n" +
-                "Example 3: forest,(songname),11111 (all biomes with \"forest\" in the name will have (songname))\n" +
-                "Final Note: The biome time will allow the trigger to persist after leaving the specified biome for that amount of time\n" +
-                "Full Scale Example: swamp,(songname),11111,50,30")
-        public String[] biomeSongs;
-
-        public Biome(final int biomePriority, final String[] biomeSongs) {
-            this.biomePriority = biomePriority;
-            this.biomeSongs = biomeSongs;
-        }
-    }
-
-    @Comment("Structure")
-    public static Structure structure = new Structure(3333,new String[] {});
-
-    public static class Structure {
-        @Comment("General Priority [min: -99, max: 2147483647 default: 3333]\nNote: Priorities specified for individual structures will override this")
-        public int structurePriority;
-        @Comment("Songs Per Structure [Format: \"StructureName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\nNote: You only have to set the priority per structure name for 1 song\nExample: Fortress,(songname),11111")
-        public String[] structureSongs;
-
-        public Structure(final int structurePriority, final String[] structureSongs) {
-            this.structurePriority = structurePriority;
-            this.structureSongs = structureSongs;
-        }
-    }
-
-    @Comment("Mob (This works for both bosses and hordes!)")
-    public static Mob mob = new Mob(3500,new String[] {});
-
-    public static class Mob {
-        @Comment("General Priority [min: -99, max: 2147483647 default: 3500]\nNote: Priorities specified for individual mobs will override this")
-        public int mobPriority;
-        @Comment("Songs Per Mob [Format: \"MobName,number of mobs,SongName,(Optional)detection range[min: 1, max: 1000, default: 16],(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0],(Optional)CanSee[default: false],(Optional)Horde Targetting percentage[default: 100], (Optional)Health[default: 100],(Optional)Horde Health Percentage[default: 100],(Optional)Battle Time[in ticks, default: 0],(Optional)Trigger Victory[default: false],(Optional)Victory ID[min:0, max:2147483647, default: 0](Optional)Infernal[only works with the mod infernal mobs active]\"]\n" +
-                "Note: You only have to set the priority per mob name for 1 song\n" +
-                "Additional Note: Putting high numbers (over 100) for the mob range may cause lag! The higher it is, the more noticable that lag will be. Only use higher numbers for a boss that could be far away, like the Ender Dragon\n" +
-                "Additional Note: CanSee requires you to be able to see the mobs while horde targetting percentage is the total percentage of the number of mobs you set that have to be able to be seen\n"+
-                "Additional Note: Health requires the mob(s) to be below the set percentage threshold of health while horde health percentage is the total percentage of the number of mobs you set that have to be below the set percentage threshold of health\n"+
-                "Additional Note: Battle time is how long the trigger will persist after the conditions are no longer met. Due to possible conflicts it may to better to leave this at 0\n"+
-                "Additional Note: The victory trigger is special in that it can only activated after escaping the set trigger. The ID exists so there can multiple different victory scenarios\n"+
-                "Final Note: The infernal trigger goes of of the mod name, which can be obtained via the debug info set by the debug config. Number of mobs will not affect this\n"+
-                "Example: Zombie,8,(songname),16,11111\n" +
-                "Full-Scale example: Skeleton,4,123486,50,true,50,80,25,0,Withering\n"+
-                "Special case - If you put \"MOB\" as the mob ID, it will default to any hostile mob")
-        public String[] mobSongs;
-
-        public Mob(final int mobPriority, final String[] mobSongs) {
-            this.mobPriority = mobPriority;
-            this.mobSongs = mobSongs;
-        }
-    }
-
-    @Comment("Effect (Trigger based on potion effects)")
-    public static Effect effect = new Effect(500,new String[] {});
-
-    public static class Effect {
-        @Comment("Priority [min: -99, max: 2147483647 default: 500]")
-        public int effectPriority;
-        @Comment("Songs Per Effect [Format: \"EffectName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\n" +
-                "Note: You only have to set the priority per effect name for 1 song\n" +
-                "Example: effect.regeneration,(songname),11111")
-        public String[] effectSongs;
-
-        public Effect(final int effectPriority, final String[] effectSongs) {
-            this.effectPriority = effectPriority;
-            this.effectSongs = effectSongs;
-        }
-    }
-
-    @Comment("PVP")
-    public static PVP pvp = new PVP(20000,0,16,200,false,0,new String[] {});
-
-    public static class PVP {
-        @Comment("Priority [min: -99, max: 2147483647 default: 20000]")
-        public int pvpPriority;
-        @Comment("Fade Time:[in ticks, default: 0]")
-        public int pvpFade;
-        @Comment("Detection Range[default: 16]")
-        public int pvpRange;
-        @Comment("Battle Time[in ticks, default: 200]")
-        public int pvpTime;
-        @Comment("Victory - whether to activate the victory trigger [default: false]")
-        public boolean pvpVictory;
-        @Comment("Victory ID - ID of the victory to activate [default: 0]")
-        public int pvpVictoryID;
-        @Comment("songs")
-        public String[] pvpSongs;
-
-        public PVP(final int pvpPriority, final int pvpFade, final int pvpRange, final int pvpTime, final boolean pvpVictory, final int pvpVictoryID, final String[] pvpSongs) {
-            this.pvpPriority = pvpPriority;
-            this.pvpFade = pvpFade;
-            this.pvpRange = pvpRange;
-            this.pvpTime = pvpTime;
-            this.pvpSongs = pvpSongs;
-            this.pvpVictory = pvpVictory;
-            this.pvpVictoryID = pvpVictoryID;
-        }
-    }
-
-    @Comment("Victory - This can only be called after the pvp or mob trigger")
-    public static Victory victory = new Victory(20000,new String[] {});
-
-    public static class Victory {
-        @Comment("Priority [min: -99, max: 2147483647 default: 20000]")
-        public int victoryPriority;
-        @Comment("Songs - [Format: \"SongName,Victory ID,(Optional)Victory Time[default: 200],(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\n" +
-                "Note - The victory time is how long the victory trigger will last for\n" +
-                "Additional Note: Dying will cut the trigger short\n" +
-                "Example: enderdragonwin,11,300,9999999,20")
-        public String[] victorySongs;
-
-        public Victory(final int victoryPriority, final String[] victorySongs) {
-            this.victoryPriority = victoryPriority;
-            this.victorySongs = victorySongs;
-        }
-    }
-
-    @Comment("Gui")
-    public static Gui gui = new Gui(13333,new String[] {});
-
-    public static class Gui {
-        @Comment("Priority [min: -99, max: 2147483647 default: 13333]")
-        public int guiPriority;
-        @Comment("Songs - [Format: \"Gui Name,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\n" +
-                "Example: net.minecraft.client.gui.inventory.GuiInventory,inventory,67000\n" +
-                "Note: This can also be a regex\n"+
-                "Example 2: GuiInventory,inventory,67000")
-        public String[] guiSongs;
-
-        public Gui(final int guiPriority, final String[] guiSongs) {
-            this.guiPriority = guiPriority;
-            this.guiSongs = guiSongs;
-        }
-    }
-
-    @Comment("Gamestages (Only fires if the mod Game Stages is active)")
-    public static Gamestage gamestage = new Gamestage(500,new String[] {});
-
-    public static class Gamestage {
-        @Comment("General Priority [min: -99, max: 2147483647 default: 500]\nNote: Priorities specified for individual gamestages will override this")
-        public int gamestagePriority;
-        @Comment("Songs Per Gamestage [Format: \"StageName,whitelist,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\nNote: You only have to set the priority per gamestage name for 1 song\nExample: StageOne,true,(songname),11111 - This will play when the player has the stage. If it were false it would play whenever the player does not have it.")
-        public String[] gamestageSongs;
-
-        public Gamestage(final int gamestagePriority, final String[] gamestageSongs) {
-            this.gamestagePriority = gamestagePriority;
-            this.gamestageSongs = gamestageSongs;
-        }
-    }
-
-    @Comment("Blood Moon (Only fires if the mod Blood Moon or nyx is active)")
-    public static BloodMoon bloodmoon = new BloodMoon(1200,0,new String[] {});
-
-    public static class BloodMoon {
-        @Comment("Priority [min: -99, max: 2147483647 default: 1200]")
-        public int bloodmoonPriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int bloodmoonFade;
-        @Comment("songs")
-        public String[] bloodmoonSongs;
-
-        public BloodMoon(final int bloodmoonPriority, final int bloodmoonFade, final String[] bloodmoonSongs) {
-            this.bloodmoonPriority = bloodmoonPriority;
-            this.bloodmoonFade = bloodmoonFade;
-            this.bloodmoonSongs = bloodmoonSongs;
-        }
-    }
-
-    @Comment("Harvest Moon (Only fires if the mod nyx is active)")
-    public static HarvestMoon harvestmoon = new HarvestMoon(1400,0,new String[] {});
-
-    public static class HarvestMoon {
-        @Comment("Priority [min: -99, max: 2147483647 default: 1400]")
-        public int harvestmoonPriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int harvestmoonFade;
-        @Comment("songs")
-        public String[] harvestmoonSongs;
-
-        public HarvestMoon(final int harvestmoonPriority, final int harvestmoonFade, final String[] harvestmoonSongs) {
-            this.harvestmoonPriority = harvestmoonPriority;
-            this.harvestmoonFade = harvestmoonFade;
-            this.harvestmoonSongs = harvestmoonSongs;
-        }
-    }
-
-    @Comment("Falling Stars (Only fires if the mod nyx is active)")
-    public static FallingStars fallingstars = new FallingStars(1400,0,new String[] {});
-
-    public static class FallingStars {
-        @Comment("Priority [min: -99, max: 2147483647 default: 1400]")
-        public int fallingstarsPriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int fallingstarsFade;
-        @Comment("songs")
-        public String[] fallingstarsSongs;
-
-        public FallingStars(final int fallingstarsPriority, final int fallingstarsFade, final String[] fallingstarsSongs) {
-            this.fallingstarsPriority = fallingstarsPriority;
-            this.fallingstarsFade = fallingstarsFade;
-            this.fallingstarsSongs = fallingstarsSongs;
-        }
-    }
-
-    @Comment("Rain Intensity (Only fires if the mod dynamic surroundings is active)")
-    public static RainIntensity rainintensity = new RainIntensity(1349,0,new String[] {});
-
-    public static class RainIntensity {
-        @Comment("Priority [min: -99, max: 2147483647 default: 1349]")
-        public int rainintensityPriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int rainintensityFade;
-        @Comment("Songs [Format: songname,Intensity Level (min: 0, max: 100)]\n" +
-                "Note - This trigger will play when the rain has a higher intensity than you put in\n" +
-                "Example: intenserain,70")
-        public String[] rainintensitySongs;
-
-        public RainIntensity(final int rainintensityPriority, final int rainintensityFade, final String[] rainintensitySongs) {
-            this.rainintensityPriority = rainintensityPriority;
-            this.rainintensityFade = rainintensityFade;
-            this.rainintensitySongs = rainintensitySongs;
-        }
-    }
-
-    @Comment("Tornado (Only fires if the mod weather2 is active)")
-    public static Tornado tornado = new Tornado(9999,200,new String[] {});
-
-    public static class Tornado {
-        @Comment("Priority [min: -99, max: 2147483647 default: 9999]")
-        public int tornadoPriority;
-        @Comment("Detection Radius [default: 200]")
-        public int tornadoRange;
-        @Comment("Songs [Format: songname,Intensity Level (min: 1, max: 5),(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\n" +
-                "Example: tornado3,3")
-        public String[] tornadoSongs;
-
-        public Tornado(final int tornadoPriority, final int tornadoRange, final String[] tornadoSongs) {
-            this.tornadoPriority = tornadoPriority;
-            this.tornadoRange = tornadoRange;
-            this.tornadoSongs = tornadoSongs;
-        }
-    }
-
-    @Comment("Hurricane (Only fires if the mod weather2 is active)")
-    public static Hurricane hurricane = new Hurricane(9999,0,200,new String[] {});
-
-    public static class Hurricane {
-        @Comment("Priority [min: -99, max: 2147483647 default: 9999]")
-        public int hurricanePriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int hurricaneFade;
-        @Comment("Detection Radius [default: 200]")
-        public int hurricaneRange;
-        @Comment("songs")
-        public String[] hurricaneSongs;
-
-        public Hurricane(final int hurricanePriority, final int hurricaneFade, final int hurricaneRange, final String[] hurricaneSongs) {
-            this.hurricanePriority = hurricanePriority;
-            this.hurricaneFade = hurricaneFade;
-            this.hurricaneRange = hurricaneRange;
-            this.hurricaneSongs = hurricaneSongs;
-        }
-    }
-
-    @Comment("Sandstorm (Only fires if the mod weather2 is active)")
-    public static Sandstorm sandstorm = new Sandstorm(9999,0,200,new String[] {});
-
-    public static class Sandstorm {
-        @Comment("Priority [min: -99, max: 2147483647 default: 9999]")
-        public int sandstormPriority;
-        @Comment("Fade Time [in ticks, default: 0]")
-        public int sandstormFade;
-        @Comment("Detection Radius [default: 200]")
-        public int sandstormRange;
-        @Comment("songs")
-        public String[] sandstormSongs;
-
-        public Sandstorm(final int sandstormPriority, final int sandstormFade, final int sandstormRange, final String[] sandstormSongs) {
-            this.sandstormPriority = sandstormPriority;
-            this.sandstormFade = sandstormFade;
-            this.sandstormRange = sandstormRange;
-            this.sandstormSongs = sandstormSongs;
-        }
-    }
-
-    @Comment("Seasons (Only fires if the mod serene season is active)")
-    public static Seasons seasons = new Seasons(500,new String[] {});
-
-    public static class Seasons {
-        @Comment("Default Priority [min: -99, max: 2147483647 default: 500]")
-        public int seasonsPriority;
-        @Comment("Songs per seasons\nFormat[songname],season [int],(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]]\n"+
-                "Note - Spring=0 Summer=1 Fall=2 Winter=3\n"+
-                "Example spring,0,511,20")
-        public String[] seasonsSongs;
-
-        public Seasons(final int seasonsPriority, final String[] seasonsSongs) {
-            this.seasonsPriority = seasonsPriority;
-            this.seasonsSongs = seasonsSongs;
-        }
-    }
-
-    @Mod.EventBusSubscriber(modid = MusicTriggers.MODID)
-    private static class EventHandler {
-        @SubscribeEvent
-        public static void onConfigChanged(final ConfigChangedEvent.OnConfigChangedEvent event) {
-            if (event.getModID().equals(MusicTriggers.MODID)) {
-                ConfigManager.sync(MusicTriggers.MODID, Config.Type.INSTANCE);
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+public final class config {
+    public static List<String> fb = new ArrayList<>();
+
+    public static String[] Categories = {"Main Menu", "Generic", "Difficulty", "Zones", "Day", "Night", "Sunrise", "Sunset", "Light Level", "Underground - underground with no sky visible", "Deep Under - deep below the surface with no sky visible", "Raining", "Storming", "Snowing", "Low HP", "Dead", "inVoid", "Spectator", "Creative", "Riding", "Pet", "High", "Underwater", "PVP", "Dimension", "Biome", "Structure", "Mob (This works for both bosses and hordes!)", "Effect (Trigger based on potion effects)", "Victory - This can only be called after the pvp or mob trigger", "Gui", "Gamestages (Only fires if the mod Game Stages is active)", "Blood Moon (Only fires if the mod Enhanced Celestials is active)", "Harvest Moon (Only fires if the mod Enhanced Celestials is active)", "Blue Moon (Only fires if the mod Enhanced Celestials is active)", "Rain Intensity (Only fires if the mod dynamic surroundings is active)", "Acid Rain (Only fires if the mod better weather is active)", "Blizzard (Only fires if the mod better weather is active)", "Cloudy (Only fires if the mod better weather is active)", "Light Rain (Only fires if the mod better weather is active)", "Seasons (Only fires if the mod serene season is active)"};
+    public static Integer[] withPriority = {-1111, -1111, 100, 10000, 1000, 900, 1111, 1111, 500, 1500, 2000, 1300, 1350, 1333, 3000, 10000, 7777, 5000, 5000, 2222, 1200, 1200, 1999, 20000, 1150, 1160, 3333, 3500, 500, 20000, 13333, 500, 1200, 1400, 1400, 1349, 9999, 9999, 9999, 9999, 500};
+    public static Integer[] withFade = {-1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    public static Integer[] withLevel = {9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 7, 55, 20, 9999, 9999, 9999, 30, 9999, 0, 9999, 9999, 9999, 9999, 150, 9999, 16, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999};
+
+    public static HashMap<Integer, TriggerData> readTriggers = new HashMap<>();
+    public static int triggerCounter = 0;
+
+    public static int universalDelay;
+
+    public static List<String> menuSongs;
+
+    public static int genericFade;
+    public static List<String> genericSongs;
+
+    public static int difficultyPriority;
+    public static List<String> difficultySongs;
+
+    public static int zonesPriority;
+    public static int zonesFade;
+    public static List<String> zonesSongs;
+
+    public static int dayPriority;
+    public static int dayFade;
+    public static List<String> daySongs;
+
+    public static int nightPriority;
+    public static List<String> nightSongs;
+
+    public static int sunrisePriority;
+    public static int sunriseFade;
+    public static List<String> sunriseSongs;
+
+    public static int sunsetPriority;
+    public static int sunsetFade;
+    public static List<String> sunsetSongs;
+
+    public static int lightPriority;
+    public static int lightFade;
+    public static int lightLevel;
+    public static List<String> lightSongs;
+
+    public static int undergroundPriority;
+    public static int undergroundFade;
+    public static int undergroundLevel;
+    public static List<String> undergroundSongs;
+
+    public static int deepUnderPriority;
+    public static int deepUnderFade;
+    public static int deepUnderLevel;
+    public static List<String> deepUnderSongs;
+
+    public static int rainingPriority;
+    public static int rainingFade;
+    public static List<String> rainingSongs;
+
+    public static int stormingPriority;
+    public static int stormingFade;
+    public static List<String> stormingSongs;
+
+    public static int snowingPriority;
+    public static int snowingFade;
+    public static List<String> snowingSongs;
+
+    public static int lowHPPriority;
+    public static int lowHPFade;
+    public static int lowHPLevel;
+    public static List<String> lowHPSongs;
+
+    public static int deadPriority;
+    public static int deadFade;
+    public static List<String> deadSongs;
+
+    public static int inVoidPriority;
+    public static int inVoidFade;
+    public static int inVoidLevel;
+    public static List<String> inVoidSongs;
+
+    public static int spectatorPriority;
+    public static int spectatorFade;
+    public static List<String> spectatorSongs;
+
+    public static int creativePriority;
+    public static int creativeFade;
+    public static List<String> creativeSongs;
+
+    public static int ridingPriority;
+    public static int ridingFade;
+    public static List<String> ridingSongs;
+
+    public static int petPriority;
+    public static int petFade;
+    public static List<String> petSongs;
+
+    public static int highPriority;
+    public static int highFade;
+    public static int highLevel;
+    public static List<String> highSongs;
+
+    public static int underwaterPriority;
+    public static int underwaterFade;
+    public static List<String> underwaterSongs;
+
+    public static int pvpPriority;
+    public static int pvpFade;
+    public static int pvpRange;
+    public static int pvpTime;
+    public static boolean pvpVictory;
+    public static int pvpVictoryID;
+    public static List<String> pvpSongs;
+
+    public static int dimensionPriority;
+    public static List<String> dimensionSongs;
+
+    public static int biomePriority;
+    public static List<String> biomeSongs;
+
+    public static int structurePriority;
+    public static List<String> structureSongs;
+
+    public static int mobPriority;
+    public static List<String> mobSongs;
+
+    public static int effectPriority;
+    public static List<String> effectSongs;
+
+    public static int victoryPriority;
+    public static List<String> victorySongs;
+
+    public static int guiPriority;
+    public static List<String> guiSongs;
+
+    public static int gamestagePriority;
+    public static List<String> gamestageSongs;
+
+    public static int bloodmoonPriority;
+    public static int bloodmoonFade;
+    public static List<String> bloodmoonSongs;
+
+    public static int harvestmoonPriority;
+    public static int harvestmoonFade;
+    public static List<String> harvestmoonSongs;
+
+    public static int bluemoonPriority;
+    public static int bluemoonFade;
+    public static List<String> bluemoonSongs;
+
+    public static int rainintensityPriority;
+    public static int rainintensityFade;
+    public static List<String> rainintensitySongs;
+
+    public static int acidrainPriority;
+    public static int acidrainFade;
+    public static List<String> acidrainSongs;
+
+    public static int blizzardPriority;
+    public static int blizzardFade;
+    public static List<String> blizzardSongs;
+
+    public static int cloudyPriority;
+    public static int cloudyFade;
+    public static List<String> cloudySongs;
+
+    public static int lightrainPriority;
+    public static int lightrainFade;
+    public static List<String> lightrainSongs;
+
+    public static int seasonsPriority;
+    public static List<String> seasonsSongs;
+
+    public static void build(File f) {
+        fb.add("All event Triggers");
+        fb.add("");
+        fb.add("\tUniversal Delay=0");
+        fb.add("");
+        for (int i = 0; i < Categories.length; i++) {
+            fb.add("\t" + Categories[i]);
+            if (withPriority[i] != -1111) {
+                fb.add("\t\tPriority [min: -99, max: 2147483647 default: " + withPriority[i] + "]");
+                fb.add("\t\tPriority Value=" + withPriority[i]);
+                fb.add("");
             }
+            if (withFade[i] != -1) {
+                fb.add("\t\tFade Time [in ticks, default: " + withFade[i] + "]");
+                fb.add("\t\tFade Value=" + withFade[i]);
+                fb.add("");
+            }
+            if (withLevel[i] != 9999) {
+                if (!Categories[i].matches("Low HP")) {
+                    fb.add("\t\tConfigurable Level [Y level to activate, default: " + withLevel[i] + "]");
+                    fb.add("\t\tLevel Value=" + withLevel[i]);
+                    fb.add("");
+                } else if (Categories[i].matches("PVP")) {
+                    fb.add("\t\tConfigurable Range [default: " + withLevel[i] + "]");
+                    fb.add("\t\tLevel Value=" + withLevel[i]);
+                    fb.add("");
+                } else {
+                    fb.add("\t\tPercentage of maximum health [Out of 100, default: " + withLevel[i] + "]");
+                    fb.add("\t\tLevel Value=" + withLevel[i]);
+                    fb.add("");
+                }
+            }
+            if (Categories[i].matches("PVP")) {
+                fb.add("\t\tBattle Time [in ticks, default: 200]");
+                fb.add("\t\tPersistence=200");
+                fb.add("");
+            }
+            if (Categories[i].matches("PVP")) {
+                fb.add("\t\tVictory - whether to activate the victory trigger [default: false]");
+                fb.add("\t\tVictory=false");
+                fb.add("");
+            }
+            if (Categories[i].matches("PVP")) {
+                fb.add("\t\tVictory ID - ID of the victory to activate [default: 0]");
+                fb.add("\t\tVictoryID=0");
+                fb.add("");
+            }
+            if (Categories[i].matches("Zones")) {
+                fb.add("\t\tSongs per zone");
+                fb.add("\t\tFormat[min x,min y,min z,max x, max y,max z,songname,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]]");
+                fb.add("\t\tExample: 0,0,0,100,100,100,home3,33981,200");
+                if (!fb.contains("\t\tSongs=<\n\t\t>")) {
+                    fb.add("\t\tSongs=<\n\t\t>");
+                }
+            }
+            if (Categories[i].matches("Night")) {
+                fb.add("\t\tSongs- Format: [song name,moon phase,(Optional)fade time [in ticks, default: 0]]");
+                fb.add("\t\tMoon Phases: 1 - Full Moon, 2 - Waning Gibbous, 3 - Third Quarter, 4 - Waning Crescent");
+                fb.add("\t\t5 - New Moon, 6 - Waxing Crescent, 7 - First Quarter, 8 - Waxing Gibbous");
+                fb.add("\t\tYou can put 0 to ignore moon phase, or put multiple numbers for a song to be active during multiple phases");
+                fb.add("\t\tExample 1: [nighttime,1] - This will only play during a full moon");
+                fb.add("\t\tExample 2: [nighttime,2,3,4,6,7,8] - This will play every night except for full moons and new moons");
+                fb.add("\t\tExample 3: [nighttime,0] - This will play whenever it is nighttime, just like the old version of this trigger");
+                fb.add("\t\tNote - If the fade is not the last number it will not work properly");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            } else if (Categories[i].matches("Difficulty")) {
+                fb.add("\t\tSongs per difficulty");
+                fb.add("\t\tFormat[songname,difficulty [int],(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]]");
+                fb.add("\t\tNote - peaceful=0 easy=1 normal=2 hard=3 hardcore=4");
+                fb.add("\t\tExample normal,2,111");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            } else if (Categories[i].matches("Dimension")) {
+                fb.add("\t\tSongs per dimension [Format: dimensionID,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]");
+                fb.add("\t\tNote: You only have to set the priority per dimension ID for 1 song");
+                fb.add("\t\tExample: minecraft:the_nether,(songname),11111");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            } else if (Categories[i].matches("Biome")) {
+                fb.add("\t\tSongs Per Biome [Format: \"BiomeResourceName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0],(Optional)Biome Time[default: 20]\"]");
+                fb.add("\t\tNote: You only have to set the priority per biome name for 1 song");
+                fb.add("\t\tExample: minecraft:swampland,(songname),11111");
+                fb.add("\t\tAdditional Note: You can also specify multiple biomes at once through regexing! You can use this feature for both mod ids and biome names");
+                fb.add("\t\tExample 2: minecraft,(songname),11111 (all minecraft biomes will have (songname))");
+                fb.add("\t\tExample 3: forest,(songname),11111 (all biomes with \"forest\" in the name will have (songname))");
+                fb.add("\t\tFinal Note: The biome time will allow the trigger to persist after leaving the specified biome for that amount of time");
+                fb.add("\t\tFull Scale Example: swamp,(songname),11111,50,30");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            } else if (Categories[i].matches("Structure")) {
+                fb.add("\t\tSongs per structure [Format: \"structurename,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tNote: You only have to set the priority per structure name for 1 song");
+                fb.add("\t\tExample: Fortress,(songname),11111");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            } else if (Categories[i].contains("This works for both bosses and hordes!")) {
+                fb.add("\t\tSongs Per Mob [Format: \"MobName,number of mobs,SongName,(Optional)detection range[min: 1, max: 1000, default: 16],(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0],(Optional)Targetting[default: false],(Optional)Horde Targetting percentage[default: 100], (Optional)Health[default: 100],(Optional)Horde Health Percentage[default: 100],(Optional)Battle Time[in ticks, default: 0],(Optional)Trigger Victory[default: false],(Optional)Victory ID[min:0, max:2147483647, default: 0](Optional)Infernal[only works with the mod infernal mobs active]\"]");
+                fb.add("\t\tNote: You only have to set the priority per mob name for 1 song");
+                fb.add("\t\tAdditional Note: Putting high numbers (over 100) for the mob range may cause lag! The higher it is, the more noticable that lag will be. Only use higher numbers for a boss that could be far away, like the Ender Dragon");
+                fb.add("\t\tAdditional Note: Targetting requires the mob(s) to be looking at you while horde targetting percentage is the total percentage of the number of mobs you set that have to be looking at you");
+                fb.add("\t\tAdditional Note: Health requires the mob(s) to be below the set percentage threshold of health while horde health percentage is the total percentage of the number of mobs you set that have to be below the set percentage threshold of health");
+                fb.add("\t\tAdditional Note: Battle time is how long the trigger will persist after the conditions are no longer met. Due to possible conflicts it may to better to leave this at 0");
+                fb.add("\t\tAdditional Note: The victory trigger is special in that it can only activated after escaping the set trigger. The ID exists so there can multiple different victory scenarios");
+                fb.add("\t\tFinal Note: The infernal trigger goes of of the mod name, which can be obtained via the debug info set by the debug config. Number of mobs will not affect this");
+                fb.add("\t\tExample: Zombie,8,(songname),16,11111");
+                fb.add("\t\tFull-Scale example: Skeleton,4,123486,50,true,50,80,25,0,Withering");
+                fb.add("\t\tSpecial case - If you put \"MOB\" as the mob ID, it will default to any hostile mob");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            } else if (Categories[i].contains("Trigger based on potion effects")) {
+                fb.add("\t\tSongs Per Effect [Format: \"EffectName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tNote: You only have to set the priority per effect name for 1 song");
+                fb.add("\t\tExample: effect.regeneration,(songname),11111");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            } else if (Categories[i].contains("Victory - This can only be called after the pvp or mob trigger")) {
+                fb.add("\t\tSongs - [Format: \"SongName,Victory ID,(Optional)Victory Time[default: 200],(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tNote - The victory time is how long the victory trigger will last for");
+                fb.add("\t\tAdditional Note: Dying will cut the trigger short");
+                fb.add("\t\tExample: enderdragonwin,11,300,9999999,20");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            } else if (Categories[i].contains("Gui")) {
+                fb.add("\t\tSongs - [Format: \"Gui Name,SongName,(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tExample: net.minecraft.client.gui.screen.ChatScreen,inventory,67000");
+                fb.add("\t\tNote: This can also be a regex");
+                fb.add("\t\tExample 2: ChatScreen,inventory,67000");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            } else if (Categories[i].contains("Only fires if the mod Game Stages is active")) {
+                fb.add("\t\tSongs Per Gamestage [Format: \"StageName,whitelist,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tNote: You only have to set the priority per gamestage name for 1 song");
+                fb.add("\t\tExample: StageOne,true,(songname),11111 - This will play when the player has the stage. If it were false it would play whenever the player does not have it.");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            } else if (Categories[i].contains("Only fires if the mod dynamic surroundings is active")) {
+                fb.add("\t\tSongs [Format: \"songname,Intensity Level (min: 0, max: 100)\"]");
+                fb.add("\t\tNote - This trigger will play when the rain has a higher intensity than you put in");
+                fb.add("\t\tExample: intenserain,70");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            } else if (Categories[i].contains("Only fires if the mod serene season is active")) {
+                fb.add("\t\tSongs per seasons");
+                fb.add("\t\tFormat[songname],season [int],(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0]]");
+                fb.add("\t\tNote - Spring=0 Summer=1 Fall=2 Winter=3");
+                fb.add("\t\tExample spring,0,511,20");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            } else {
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            }
+        }
+        try {
+            Files.write(Paths.get(f.getPath()), fb, StandardCharsets.UTF_8);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public static void read(File f) {
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+            String line;
+            int p = 1000;
+            int fade = 0;
+            int l = 0;
+            List<String> songs = new ArrayList<>();
+            boolean songLines = false;
+            while ((line = br.readLine()) != null) {
+                if (line.contains("Universal Delay=")) {
+                    universalDelay = Integer.parseInt(stringBreakerRegex(line.replaceAll(" ", ""), "=")[1]);
+                }
+                for(int i=0;i<Categories.length;i++) {
+                    if(line.contains(Categories[i]) && !songLines) {
+                        triggerCounter=i;
+                    }
+                }
+                if (line.contains("Priority Value=")) {
+                    p = Integer.parseInt(stringBreakerRegex(line, "=")[1]);
+                }
+                if (line.contains("Fade Value=")) {
+                    fade = Integer.parseInt(stringBreakerRegex(line, "=")[1]);
+                }
+                if (line.contains("Level Value=")) {
+                    l = Integer.parseInt(stringBreakerRegex(line, "=")[1]);
+                }
+                if (line.contains("Persistence=")) {
+                    pvpTime = Integer.parseInt(stringBreakerRegex(line, "=")[1]);
+                }
+                if (line.contains("Victory=")) {
+                    pvpVictory = Boolean.parseBoolean(stringBreakerRegex(line, "=")[1]);
+                }
+                if (line.contains("VictoryID=")) {
+                    pvpVictoryID = Integer.parseInt(stringBreakerRegex(line, "=")[1]);
+                }
+                if (line.contains("Songs=<")) {
+                    songLines = true;
+                }
+                if (line.contains(">")) {
+                    readTriggers.put(triggerCounter, new TriggerData(p, fade, l, songs));
+                    songs = new ArrayList<>();
+                    songLines = false;
+                }
+                if (songLines && !line.contains("Songs=<")) {
+                    line = line.trim();
+                    if (!songs.contains(line) && line.length() != 0) {
+                        MusicTriggers.logger.info("The song " + line + " is being added to the current trigger category " + Categories[triggerCounter] + "!");
+                        songs.add(line);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        menuSongs = accountForNullSongTriggerData(0);
+
+        genericFade = accountForNullNumericalTriggerData(1,2);
+        genericSongs = accountForNullSongTriggerData(1);
+        
+        difficultyPriority = accountForNullNumericalTriggerData(2,1);
+        difficultySongs = accountForNullSongTriggerData(2);
+
+        zonesPriority = accountForNullNumericalTriggerData(3,1);
+        zonesFade = accountForNullNumericalTriggerData(3,2);
+        zonesSongs = accountForNullSongTriggerData(3);
+
+        dayPriority = accountForNullNumericalTriggerData(4,1);
+        dayFade = accountForNullNumericalTriggerData(4,2);
+        daySongs = accountForNullSongTriggerData(4);
+
+        nightPriority = accountForNullNumericalTriggerData(5,1);
+        nightSongs = accountForNullSongTriggerData(5);
+
+        sunrisePriority = accountForNullNumericalTriggerData(6,1);
+        sunriseFade = accountForNullNumericalTriggerData(6,2);
+        sunriseSongs = accountForNullSongTriggerData(6);
+
+        sunsetPriority = accountForNullNumericalTriggerData(7,1);
+        sunsetFade = accountForNullNumericalTriggerData(7,2);
+        sunsetSongs = accountForNullSongTriggerData(7);
+
+        lightPriority = accountForNullNumericalTriggerData(8,1);
+        lightFade = accountForNullNumericalTriggerData(8,2);
+        lightLevel = accountForNullNumericalTriggerData(8,3);
+        lightSongs = accountForNullSongTriggerData(8);
+
+        undergroundPriority = accountForNullNumericalTriggerData(9,1);
+        undergroundFade = accountForNullNumericalTriggerData(9,2);
+        undergroundLevel = accountForNullNumericalTriggerData(9,3);
+        undergroundSongs = accountForNullSongTriggerData(9);
+
+        deepUnderPriority = accountForNullNumericalTriggerData(10,1);
+        deepUnderFade = accountForNullNumericalTriggerData(10,2);
+        deepUnderLevel = accountForNullNumericalTriggerData(10,3);
+        deepUnderSongs = accountForNullSongTriggerData(10);
+
+        rainingPriority = accountForNullNumericalTriggerData(11,1);
+        rainingFade = accountForNullNumericalTriggerData(11,2);
+        rainingSongs = accountForNullSongTriggerData(11);
+
+        stormingPriority = accountForNullNumericalTriggerData(12,1);
+        stormingFade = accountForNullNumericalTriggerData(12,2);
+        stormingSongs = accountForNullSongTriggerData(12);
+
+        snowingPriority = accountForNullNumericalTriggerData(13,1);
+        snowingFade = accountForNullNumericalTriggerData(13,2);
+        snowingSongs = accountForNullSongTriggerData(13);
+
+        lowHPPriority = accountForNullNumericalTriggerData(14,1);
+        lowHPFade = accountForNullNumericalTriggerData(14,2);
+        lowHPLevel = accountForNullNumericalTriggerData(14,3);
+        lowHPSongs = accountForNullSongTriggerData(14);
+
+        deadPriority = accountForNullNumericalTriggerData(15,1);
+        deadFade = accountForNullNumericalTriggerData(15,2);
+        deadSongs = accountForNullSongTriggerData(15);
+
+        inVoidPriority = accountForNullNumericalTriggerData(16,1);
+        inVoidFade = accountForNullNumericalTriggerData(16,2);
+        inVoidLevel = accountForNullNumericalTriggerData(16,3);
+        inVoidSongs = accountForNullSongTriggerData(16);
+
+        spectatorPriority = accountForNullNumericalTriggerData(17,1);
+        spectatorFade = accountForNullNumericalTriggerData(17,2);
+        spectatorSongs = accountForNullSongTriggerData(17);
+
+        creativePriority = accountForNullNumericalTriggerData(18,1);
+        creativeFade = accountForNullNumericalTriggerData(18,2);
+        creativeSongs = accountForNullSongTriggerData(18);
+
+        ridingPriority = accountForNullNumericalTriggerData(19,1);
+        ridingFade = accountForNullNumericalTriggerData(19,2);
+        ridingSongs = accountForNullSongTriggerData(19);
+
+        petPriority = accountForNullNumericalTriggerData(20,1);
+        petFade = accountForNullNumericalTriggerData(20,2);
+        petSongs = accountForNullSongTriggerData(20);
+
+        highPriority = accountForNullNumericalTriggerData(21,1);
+        highFade = accountForNullNumericalTriggerData(21,2);
+        highLevel = accountForNullNumericalTriggerData(21,3);
+        highSongs = accountForNullSongTriggerData(21);
+
+        underwaterPriority = accountForNullNumericalTriggerData(22,1);
+        underwaterFade = accountForNullNumericalTriggerData(22,2);
+        underwaterSongs = accountForNullSongTriggerData(22);
+
+        pvpPriority = accountForNullNumericalTriggerData(23,1);
+        pvpFade = accountForNullNumericalTriggerData(23,2);
+        pvpRange = accountForNullNumericalTriggerData(23,3);
+        pvpSongs = accountForNullSongTriggerData(23);
+
+        dimensionPriority = accountForNullNumericalTriggerData(24,1);
+        dimensionSongs = accountForNullSongTriggerData(24);
+
+        biomePriority = accountForNullNumericalTriggerData(25,1);
+        biomeSongs = accountForNullSongTriggerData(25);
+
+        structurePriority = accountForNullNumericalTriggerData(26,1);
+        structureSongs = accountForNullSongTriggerData(26);
+
+        mobPriority = accountForNullNumericalTriggerData(27,1);
+        mobSongs = accountForNullSongTriggerData(27);
+
+        effectPriority = accountForNullNumericalTriggerData(28,1);
+        effectSongs = accountForNullSongTriggerData(28);
+
+        victoryPriority = accountForNullNumericalTriggerData(29,1);
+        victorySongs = accountForNullSongTriggerData(29);
+
+        guiPriority = accountForNullNumericalTriggerData(30,1);
+        guiSongs = accountForNullSongTriggerData(30);
+
+        gamestagePriority = accountForNullNumericalTriggerData(31,1);
+        gamestageSongs = accountForNullSongTriggerData(31);
+
+        bloodmoonPriority = accountForNullNumericalTriggerData(32,1);
+        bloodmoonFade = accountForNullNumericalTriggerData(32,2);
+        bloodmoonSongs = accountForNullSongTriggerData(32);
+
+        harvestmoonPriority = accountForNullNumericalTriggerData(33,1);
+        harvestmoonFade = accountForNullNumericalTriggerData(33,2);
+        harvestmoonSongs = accountForNullSongTriggerData(33);
+
+        bluemoonPriority = accountForNullNumericalTriggerData(34,1);
+        bluemoonFade = accountForNullNumericalTriggerData(34,2);
+        bluemoonSongs = accountForNullSongTriggerData(34);
+
+        rainintensityPriority = accountForNullNumericalTriggerData(35,1);
+        rainintensityFade = accountForNullNumericalTriggerData(35,2);
+        rainintensitySongs = accountForNullSongTriggerData(35);
+
+        acidrainPriority = accountForNullNumericalTriggerData(36,1);
+        acidrainFade = accountForNullNumericalTriggerData(36,2);
+        acidrainSongs = accountForNullSongTriggerData(36);
+
+        blizzardPriority = accountForNullNumericalTriggerData(37,1);
+        blizzardFade = accountForNullNumericalTriggerData(37,2);
+        blizzardSongs = accountForNullSongTriggerData(37);
+
+        cloudyPriority = accountForNullNumericalTriggerData(38,1);
+        cloudyFade = accountForNullNumericalTriggerData(38,2);
+        cloudySongs = accountForNullSongTriggerData(38);
+
+        lightrainPriority = accountForNullNumericalTriggerData(39,1);
+        lightrainFade = accountForNullNumericalTriggerData(39,2);
+        lightrainSongs = accountForNullSongTriggerData(39);
+
+        seasonsPriority = accountForNullNumericalTriggerData(40,1);
+        seasonsSongs = accountForNullSongTriggerData(40);
+    }
+
+    public static void update(File f) {
+        read(f);
+        fb.add("All event Triggers");
+        fb.add("");
+        fb.add("\tUniversal Delay=" + universalDelay);
+        fb.add("");
+        for (int i = 0; i < Categories.length; i++) {
+            fb.add("\t" + Categories[i]);
+            if (withPriority[i] != -1111) {
+                fb.add("\t\tPriority [min: -99, max: 2147483647 default: " + withPriority[i] + "]");
+                fb.add("\t\tPriority Value=" + accountForNullNumericalTriggerData(i,1));
+                fb.add("");
+            }
+            if (withFade[i] != -1) {
+                fb.add("\t\tFade Time [in ticks, default: " + withFade[i] + "]");
+                fb.add("\t\tFade Value=" + accountForNullNumericalTriggerData(i,2));
+                fb.add("");
+            }
+            if (withLevel[i] != 9999) {
+                if (!Categories[i].matches("Low HP")) {
+                    fb.add("\t\tConfigurable Level [Y level to activate, default: " + withLevel[i] + "]");
+                    fb.add("\t\tLevel Value=" + accountForNullNumericalTriggerData(i,3));
+                    fb.add("");
+                } else if (Categories[i].matches("PVP")) {
+                    fb.add("\t\tConfigurable Range [default: " + withLevel[i] + "]");
+                    fb.add("\t\tLevel Value=" + accountForNullNumericalTriggerData(i,3));
+                    fb.add("");
+                } else {
+                    fb.add("\t\tPercentage of maximum health [Out of 100, default: " + withLevel[i] + "]");
+                    fb.add("\t\tLevel Value=" + accountForNullNumericalTriggerData(i,3));
+                    fb.add("");
+                }
+            }
+            if (Categories[i].matches("PVP")) {
+                fb.add("\t\tBattle Time [in ticks, default: 200]");
+                fb.add("\t\tPersistence=" + pvpTime);
+                fb.add("");
+            }
+            if (Categories[i].matches("PVP")) {
+                fb.add("\t\tVictory - whether to activate the victory trigger [default: false]");
+                fb.add("\t\tVictory=" + pvpVictory);
+                fb.add("");
+            }
+            if (Categories[i].matches("PVP")) {
+                fb.add("\t\tVictory ID - ID of the victory to activate [default: 0]");
+                fb.add("\t\tVictoryID=" + pvpVictoryID);
+                fb.add("");
+            }
+            if (Categories[i].matches("Zones")) {
+                fb.add("\t\tSongs per zone");
+                fb.add("\t\tFormat[min x,min y,min z,max x, max y,max z,songname,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]]");
+                fb.add("\t\tExample: 0,0,0,100,100,100,home3,33981,200");
+                if (!fb.contains("\t\tSongs=<")) {
+                    fb.add("\t\tSongs=<");
+                    List<String> songList = accountForNullSongTriggerData(i);
+                    for (String iter : songList) {
+                        fb.add("\t\t" + iter);
+                    }
+                    fb.add("\t\t>");
+                }
+                fb.add("");
+            }
+            if (Categories[i].matches("Night")) {
+                fb.add("\t\tSongs- Format: [song name,moon phase,(Optional)fade time [in ticks, default: 0]]");
+                fb.add("\t\tMoon Phases: 1 - Full Moon, 2 - Waning Gibbous, 3 - Third Quarter, 4 - Waning Crescent");
+                fb.add("\t\t5 - New Moon, 6 - Waxing Crescent, 7 - First Quarter, 8 - Waxing Gibbous");
+                fb.add("\t\tYou can put 0 to ignore moon phase, or put multiple numbers for a song to be active during multiple phases");
+                fb.add("\t\tExample 1: [nighttime,1] - This will only play during a full moon");
+                fb.add("\t\tExample 2: [nighttime,2,3,4,6,7,8] - This will play every night except for full moons and new moons");
+                fb.add("\t\tExample 3: [nighttime,0] - This will play whenever it is nighttime, just like the old version of this trigger");
+                fb.add("\t\tNote - If the fade is not the last number it will not work properly");
+                fb.add("\t\tSongs=<");
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            } else if (Categories[i].matches("Difficulty")) {
+                fb.add("\t\tSongs per difficulty");
+                fb.add("\t\tFormat[songname,difficulty [int],(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]]");
+                fb.add("\t\tNote - peaceful=0 easy=1 normal=2 hard=3 hardcore=4");
+                fb.add("\t\tExample normal,2,111");
+                fb.add("\t\tSongs=<");
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            } else if (Categories[i].matches("Dimension")) {
+                fb.add("\t\tSongs per dimension [Format: dimensionID,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]");
+                fb.add("\t\tNote: You only have to set the priority per dimension ID for 1 song");
+                fb.add("\t\tExample: minecraft:the_nether,(songname),11111");
+                fb.add("\t\tSongs=<");
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            } else if (Categories[i].matches("Biome")) {
+                fb.add("\t\tSongs Per Biome [Format: \"BiomeResourceName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0],(Optional)Biome Time[default: 20]\"]");
+                fb.add("\t\tNote: You only have to set the priority per biome name for 1 song");
+                fb.add("\t\tExample: minecraft:swampland,(songname),11111");
+                fb.add("\t\tAdditional Note: You can also specify multiple biomes at once through regexing! You can use this feature for both mod ids and biome names");
+                fb.add("\t\tExample 2: minecraft,(songname),11111 (all minecraft biomes will have (songname))");
+                fb.add("\t\tExample 3: forest,(songname),11111 (all biomes with \"forest\" in the name will have (songname))");
+                fb.add("\t\tFinal Note: The biome time will allow the trigger to persist after leaving the specified biome for that amount of time");
+                fb.add("\t\tFull Scale Example: swamp,(songname),11111,50,30");
+                fb.add("\t\tSongs=<");
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            } else if (Categories[i].matches("Structure")) {
+                fb.add("\t\tSongs per structure [Format: \"structurename,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tNote: You only have to set the priority per structure name for 1 song");
+                fb.add("\t\tExample: Fortress,(songname),11111");
+                fb.add("\t\tSongs=<");
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            } else if (Categories[i].contains("This works for both bosses and hordes!")) {
+                fb.add("\t\tSongs Per Mob [Format: \"MobName,number of mobs,SongName,(Optional)detection range[min: 1, max: 1000, default: 16],(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0],(Optional)Targetting[default: false],(Optional)Horde Targetting percentage[default: 100], (Optional)Health[default: 100],(Optional)Horde Health Percentage[default: 100],(Optional)Battle Time[in ticks, default: 0],(Optional)Trigger Victory[default: false],(Optional)Victory ID[min:0, max:2147483647, default: 0](Optional)Infernal[only works with the mod infernal mobs active]\"]");
+                fb.add("\t\tNote: You only have to set the priority per mob name for 1 song");
+                fb.add("\t\tAdditional Note: Putting high numbers (over 100) for the mob range may cause lag! The higher it is, the more noticable that lag will be. Only use higher numbers for a boss that could be far away, like the Ender Dragon");
+                fb.add("\t\tAdditional Note: Targetting requires the mob(s) to be looking at you while horde targetting percentage is the total percentage of the number of mobs you set that have to be looking at you");
+                fb.add("\t\tAdditional Note: Health requires the mob(s) to be below the set percentage threshold of health while horde health percentage is the total percentage of the number of mobs you set that have to be below the set percentage threshold of health");
+                fb.add("\t\tAdditional Note: Battle time is how long the trigger will persist after the conditions are no longer met. Due to possible conflicts it may to better to leave this at 0");
+                fb.add("\t\tAdditional Note: The victory trigger is special in that it can only activated after escaping the set trigger. The ID exists so there can multiple different victory scenarios");
+                fb.add("\t\tFinal Note: The infernal trigger goes of of the mod name, which can be obtained via the debug info set by the debug config. Number of mobs will not affect this");
+                fb.add("\t\tExample: Zombie,8,(songname),16,11111");
+                fb.add("\t\tFull-Scale example: Skeleton,4,123486,50,true,50,80,25,0,Withering");
+                fb.add("\t\tSpecial case - If you put \"MOB\" as the mob ID, it will default to any hostile mob");
+                fb.add("\t\tSongs=<");
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            } else if (Categories[i].contains("Trigger based on potion effects")) {
+                fb.add("\t\tSongs Per Effect [Format: \"EffectName,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tNote: You only have to set the priority per effect name for 1 song");
+                fb.add("\t\tExample: effect.regeneration,(songname),11111");
+                fb.add("\t\tSongs=<");
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            } else if (Categories[i].contains("Victory - This can only be called after the pvp or mob trigger")) {
+                fb.add("\t\tSongs - [Format: \"SongName,Victory ID,(Optional)Victory Time[default: 200],(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tNote - The victory time is how long the victory trigger will last for");
+                fb.add("\t\tAdditional Note: Dying will cut the trigger short");
+                fb.add("\t\tExample: enderdragonwin,11,300,9999999,20");
+                fb.add("\t\tSongs=<");
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            } else if (Categories[i].contains("Gui")) {
+                fb.add("Songs - [Format: \"Gui Name,SongName,(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("Example: net.minecraft.client.gui.inventory.GuiInventory,inventory,67000");
+                fb.add("Note: This can also be a regex");
+                fb.add("Example 2: GuiInventory,inventory,67000");
+                fb.add("\t\tSongs=<");
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            } else if (Categories[i].contains("Only fires if the mod Game Stages is active")) {
+                fb.add("\t\tSongs Per Gamestage [Format: \"StageName,whitelist,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tNote: You only have to set the priority per gamestage name for 1 song");
+                fb.add("\t\tExample: StageOne,true,(songname),11111 - This will play when the player has the stage. If it were false it would play whenever the player does not have it.");
+                fb.add("\t\tSongs=<");
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            } else if (Categories[i].contains("Only fires if the mod dynamic surroundings is active")) {
+                fb.add("\t\tSongs [Format: \"songname,Intensity Level (min: 0, max: 100)\"]");
+                fb.add("\t\tNote - This trigger will play when the rain has a higher intensity than you put in");
+                fb.add("\t\tExample: intenserain,70");
+                fb.add("\t\tSongs=<");
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            } else if (Categories[i].contains("Only fires if the mod serene season is active")) {
+                fb.add("\t\tSongs per seasons");
+                fb.add("\t\tFormat[songname],season [int],(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0]]");
+                fb.add("\t\tNote - Spring=0 Summer=1 Fall=2 Winter=3");
+                fb.add("\t\tExample spring,0,511,20");
+                fb.add("\t\tSongs=<");
+                List<String> songList = accountForNullSongTriggerData(i);
+                MusicTriggers.logger.info("seasons id: "+i);
+                for (String iter : songList) {
+                    MusicTriggers.logger.info("adding song back "+iter);
+                    fb.add("\t\t" + iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            } else {
+                fb.add("\t\tSongs=<");
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            }
+        }
+        try {
+            Files.delete(Paths.get(f.getPath()));
+            Files.write(Paths.get(f.getPath()), fb, StandardCharsets.UTF_8);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public static String[] stringBreakerRegex(String s, String regex) {
+        return s.split(regex);
+    }
+
+    private static int accountForNullNumericalTriggerData(int index, int selector) {
+        if(readTriggers.get(index)!=null) {
+            if(selector==1) {return readTriggers.get(index).getPriority();}
+            else if(selector==2) {return readTriggers.get(index).getFade();}
+            else {return readTriggers.get(index).getLevel();}
+        }
+        else {
+            if(selector==1) {return withPriority[index];}
+            else if(selector==2) {return 0;}
+            else {return withLevel[index];}
+        }
+    }
+
+    private static List<String> accountForNullSongTriggerData(int index) {
+        if(readTriggers.get(index)!=null) {return readTriggers.get(index).getSongs();}
+        return new ArrayList<>();
+    }
+
+    private static class TriggerData {
+        public int priority;
+        public int fade;
+        public int level;
+        public List<String> songs;
+
+        TriggerData(int p, int f, int l, List<String> s) {
+            this.priority = p;
+            this.fade = f;
+            this.level = l;
+            this.songs = s;
+        }
+
+        private int getPriority() {
+            return this.priority;
+        }
+
+        private int getFade() {
+            return this.fade;
+        }
+
+        private int getLevel() {
+            return this.level;
+        }
+
+        private List<String> getSongs() {
+            return this.songs;
         }
     }
 }
