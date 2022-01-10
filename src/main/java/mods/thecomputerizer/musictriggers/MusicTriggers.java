@@ -6,9 +6,13 @@ import mods.thecomputerizer.musictriggers.common.eventsCommon;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.json;
+import net.minecraft.server.packs.repository.FolderRepositorySource;
+import net.minecraft.server.packs.repository.PackSource;
+import net.minecraft.server.packs.repository.RepositorySource;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.AddPackFindersEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -38,12 +42,15 @@ public class MusicTriggers {
     public static File songsDir;
     public static File texturesDir;
 
+    private static RepositorySource source;
+
     public static final Logger logger = LogManager.getLogger();
 
     @SuppressWarnings("InstantiationOfUtilityClass")
     public MusicTriggers() {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::commonsetup);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::addPack);
         IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT,configDebug.SPEC, "MusicTriggers/debug.toml");
         MinecraftForge.EVENT_BUS.register(this);
@@ -117,7 +124,7 @@ public class MusicTriggers {
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
-                List<String> lines = Arrays.asList("{", "\t\"pack\": {", "\t\t\"pack_format\": 6,", "\t\t\"description\": \"Can you believe this was generated automatically?\"", "\t}", "}");
+                List<String> lines = Arrays.asList("{", "\t\"pack\": {", "\t\t\"pack_format\": 8,", "\t\t\"description\": \"Can you believe this was generated automatically?\"", "\t}", "}");
                 Path file = Paths.get(mcmeta.getPath());
                 try {
                     Files.write(file, lines, StandardCharsets.UTF_8);
@@ -148,16 +155,16 @@ public class MusicTriggers {
             makeSoundsJson();
             makeDiscLang();
             if(json.collector()!=null) {
-                File pack = new File("config/MusicTriggers/songs/");
-                if (pack.isDirectory() && new File(pack, "pack.mcmeta").isFile()) {
-                    new packFinder(pack);
+                File pack = new File("config/MusicTriggers/");
+                if (pack.isDirectory()/* && new File(pack, "pack.mcmeta").isFile()*/) {
+                    MusicTriggers.logger.info("found pack :)");
+                    source = new packFolder(pack, PackSource.DEFAULT);
                 }
             }
         }
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
         MinecraftForge.EVENT_BUS.register(eventsClient.class);
         MinecraftForge.EVENT_BUS.register(eventsCommon.class);
-        MinecraftForge.EVENT_BUS.register(packFinder.class);
     }
 
     private void clientSetup(final FMLClientSetupEvent ev) {
@@ -172,6 +179,15 @@ public class MusicTriggers {
             PacketHandler.register();
         }
     }
+
+    public void addPack(AddPackFindersEvent ev) {
+        MusicTriggers.logger.info("is this even being called");
+        if(source!=null) {
+            MusicTriggers.logger.info("source added?");
+            ev.addRepositorySource(source);
+        }
+    }
+
     public static void makeSoundsJson() {
         File sj = new File("config/MusicTriggers/songs/assets/musictriggers/sounds.json");
         if (sj.exists()) {
