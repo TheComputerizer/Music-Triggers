@@ -5,8 +5,6 @@ import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.config;
 import mods.thecomputerizer.musictriggers.configTitleCards;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.client.ForgeHooksClient;
-import net.minecraftforge.resource.VanillaResourceType;
 
 import java.io.File;
 
@@ -21,6 +19,6 @@ public class reload {
         SoundHandler.emptyListsAndMaps();
         SoundHandler.registerSounds();
         ModSounds.reload();
-        ForgeHooksClient.refreshResources(Minecraft.getInstance(), VanillaResourceType.SOUNDS);
+        Minecraft.getInstance().reloadResourcePacks();
     }
 }

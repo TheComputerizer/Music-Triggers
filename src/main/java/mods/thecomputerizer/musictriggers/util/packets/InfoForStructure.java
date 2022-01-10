@@ -1,10 +1,9 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.util.calculateFeatures;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
@@ -13,7 +12,7 @@ import java.util.function.Supplier;
 public class InfoForStructure {
     private String s;
 
-    public InfoForStructure(PacketBuffer buf) {
+    public InfoForStructure(FriendlyByteBuf buf) {
         this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
     }
 
@@ -21,7 +20,7 @@ public class InfoForStructure {
         this.s = s+","+p.asLong()+","+u.toString();
     }
 
-    public static void encode(InfoForStructure packet, PacketBuffer buf) {
+    public static void encode(InfoForStructure packet, FriendlyByteBuf buf) {
         buf.writeCharSequence(packet.s, StandardCharsets.UTF_8);
     }
 

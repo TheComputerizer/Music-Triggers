@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 public class MobTarget {
     private String s;
 
-    public MobTarget(PacketBuffer buf) {
+    public MobTarget(FriendlyByteBuf buf) {
         this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
     }
 
@@ -18,7 +18,7 @@ public class MobTarget {
         this.s = s+","+u.toString();
     }
 
-    public static void encode(MobTarget packet, PacketBuffer buf) {
+    public static void encode(MobTarget packet, FriendlyByteBuf buf) {
         buf.writeCharSequence(packet.s, StandardCharsets.UTF_8);
     }
 

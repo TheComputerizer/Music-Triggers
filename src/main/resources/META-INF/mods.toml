@@ -1,11 +1,11 @@
     modLoader="javafml"
-    loaderVersion="[36,)"
+    loaderVersion="[39,)"
     license="All Rights Reserved"
     showAsResourcePack=false
 
     [[mods]]
       modId="musictriggers"
-      version="1.16.5-4.0"
+      version="1.18.1-4.0"
       displayName="Music Triggers"
       updateJSONURL=""
       displayURL="https://www.curseforge.com/minecraft/mc-mods/music-triggers"
@@ -19,13 +19,13 @@
       [[dependencies.musictriggers]]
         modId="forge"
         mandatory=true
-        versionRange="[36,)"
+        versionRange="[39,)"
         ordering="NONE"
         side="BOTH"
 
       [[dependencies.musictriggers]]
         modId="minecraft"
         mandatory=true
-        versionRange="[1.16.5,1.17)"
+        versionRange="[1.18.1,1.19)"
         ordering="NONE"
         side="BOTH"

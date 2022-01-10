@@ -2,8 +2,8 @@ package mods.thecomputerizer.musictriggers.common;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.config;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -912,7 +912,7 @@ public class SoundHandler {
                 }
             }
         }
-        if (config.gamestageSongs.size() != 0) {
+        /*if (config.gamestageSongs.size() != 0) {
             for (int i = 0; i < config.gamestageSongs.size(); i++) {
                 String[] broken = stringBreaker(config.gamestageSongs.get(i),",");
                 String extractedStageName = broken[0].trim();
@@ -971,7 +971,7 @@ public class SoundHandler {
                     allSongs.add(songName);
                 }
             }
-        }
+        }*/
         if (config.bloodmoonSongs.size() != 0) {
             for (int i = 0; i < config.bloodmoonSongs.size(); i++) {
                 String songName = config.bloodmoonSongs.get(i).toLowerCase().trim();
@@ -1042,36 +1042,6 @@ public class SoundHandler {
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
                     
-                }
-            }
-        }
-        if (config.rainintensitySongs != null) {
-            for (int i = 0; i < config.rainintensitySongs.size(); i++) {
-                String[] broken = stringBreaker(config.rainintensitySongs.get(i),",");
-                int extractedIntensity = Integer.parseInt(broken[1].trim());
-                String songName = broken[0].toLowerCase().trim();
-                String songNamePlus = songName;
-                if (songName.startsWith("@")) {
-                    songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
-                    songCombos.get(songName).add("Rain Intensity"+extractedIntensity);
-                    songName = songName.substring(1);
-                }
-                rainintensitySongs.computeIfAbsent(extractedIntensity, k -> new ArrayList<>());
-                rainintensitySongsString.computeIfAbsent(extractedIntensity, k -> new ArrayList<>());
-                rainintensitySongsString.get(extractedIntensity).add(songNamePlus);
-                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
-                rainintensitySongs.get(extractedIntensity).add(sound);
-                boolean cont = false;
-                for(SoundEvent s: allSoundEvents) {
-                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
-                        cont=true;
-                    }
-                }
-                if(!cont) {
-                    allSoundEvents.add(sound);
-                }
-                if (!allSongs.contains(songName)) {
-                    allSongs.add(songName);
                 }
             }
         }

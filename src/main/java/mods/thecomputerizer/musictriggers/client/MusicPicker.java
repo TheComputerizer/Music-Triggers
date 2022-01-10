@@ -1,11 +1,7 @@
 package mods.thecomputerizer.musictriggers.client;
 
+
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
-import corgitaco.betterweather.helpers.BetterWeatherWorldData;
-import corgitaco.betterweather.weather.event.AcidRain;
-import corgitaco.betterweather.weather.event.Blizzard;
-import corgitaco.betterweather.weather.event.Cloudy;
-import corgitaco.betterweather.weather.event.Rain;
 import corgitaco.enhancedcelestials.EnhancedCelestialsWorldData;
 import corgitaco.enhancedcelestials.LunarContext;
 import corgitaco.enhancedcelestials.lunarevent.BloodMoon;
@@ -18,23 +14,21 @@ import mods.thecomputerizer.musictriggers.configRegistry;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.packets.InfoForBiome;
 import mods.thecomputerizer.musictriggers.util.packets.InfoForStructure;
-import net.darkhax.gamestages.GameStageHelper;
-import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MobEntity;
-import net.minecraft.entity.passive.AnimalEntity;
-import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.potion.Effect;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Difficulty;
-import net.minecraft.world.LightType;
-import net.minecraft.world.World;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.fml.ModList;
-import org.orecruncher.lib.WorldUtils;
 import sereneseasons.api.season.ISeasonState;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
@@ -43,20 +37,20 @@ import java.util.*;
 
 public class MusicPicker {
     public static Minecraft mc;
-    public static PlayerEntity player;
-    public static World world;
+    public static Player player;
+    public static Level world;
 
     public static HashMap<String, Integer> lightPersistence = new HashMap<>();
     public static HashMap<String, Integer> persistentMob = new HashMap<>();
     public static HashMap<String, Integer> persistentBiome = new HashMap<>();
     public static HashMap<Integer, Integer> persistentVictory = new HashMap<>();
     public static HashMap<Integer, List<LivingEntity>> victoryMobs = new HashMap<>();
-    public static HashMap<Integer, PlayerEntity> victoryPlayer = new HashMap<>();
+    public static HashMap<Integer, Player> victoryPlayer = new HashMap<>();
     public static HashMap<Integer, Boolean> victory = new HashMap<>();
     public static int persistentPVP = 0;
     public static int victoryID = 0;
     public static boolean setPVP = false;
-    public static PlayerEntity otherPVP;
+    public static Player otherPVP;
     public static boolean infernalLoaded = false;
 
     public static HashMap<String, List<String>> dynamicSongs = new HashMap<>();
@@ -318,8 +312,8 @@ public class MusicPicker {
             dynamicPriorities.put("underwater", config.underwaterPriority);
             dynamicFade.put("underwater", config.underwaterFade);
         }
-        for (LivingEntity ent : world.getEntitiesOfClass(LivingEntity.class, new AxisAlignedBB(player.getX() - 16, player.getY() - 8, player.getZ() - 16, player.getX() + 16, player.getY() + 8, player.getZ() + 16))) {
-            if (ent instanceof TameableEntity && ent.serializeNBT()!=null && ent.serializeNBT().getString("Owner").matches(player.getStringUUID())) {
+        for (LivingEntity ent : world.getEntitiesOfClass(LivingEntity.class, new AABB(player.getX() - 16, player.getY() - 8, player.getZ() - 16, player.getX() + 16, player.getY() + 8, player.getZ() + 16))) {
+            if (ent instanceof TamableAnimal && ent.serializeNBT()!=null && ent.serializeNBT().getString("Owner").matches(player.getStringUUID())) {
                 events.add("pet");
                 dynamicSongs.put("pet", config.petSongs);
                 dynamicPriorities.put("pet", config.petPriority);
@@ -387,11 +381,11 @@ public class MusicPicker {
         for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.mobSongsString.entrySet()) {
             String mobName = ((Map.Entry) stringListEntry).getKey().toString();
             double range = SoundHandler.mobRange.get(mobName);
-            List<LivingEntity> mobTempList = world.getEntitiesOfClass(LivingEntity.class, new AxisAlignedBB(player.getX() - range, player.getY() - (range / 2), player.getZ() - range, player.getX() + range, player.getY() + (range / 2), player.getZ() + range));
-            List<MobEntity> mobList = new ArrayList<>();
+            List<LivingEntity> mobTempList = world.getEntitiesOfClass(LivingEntity.class, new AABB(player.getX() - range, player.getY() - (range / 2), player.getZ() - range, player.getX() + range, player.getY() + (range / 2), player.getZ() + range));
+            List<Mob> mobList = new ArrayList<>();
             for (LivingEntity e : mobTempList) {
-                if (e instanceof MobEntity) {
-                    mobList.add((MobEntity) e);
+                if (e instanceof Mob) {
+                    mobList.add((Mob) e);
                 }
             }
             int trackingCounter = 0;
@@ -400,15 +394,15 @@ public class MusicPicker {
             boolean infernalChecked = false;
             boolean infernalDone = false;
             if (mobName.matches("MOB")) {
-                for (Iterator<MobEntity> it = mobList.iterator(); it.hasNext(); ) {
-                    MobEntity e = it.next();
+                for (Iterator<Mob> it = mobList.iterator(); it.hasNext(); ) {
+                    Mob e = it.next();
                     boolean isMonster = true;
-                    if (e instanceof AnimalEntity) {
+                    if (e instanceof Animal) {
                         it.remove();
                         isMonster = false;
                     }
                     if (isMonster) {
-                        if (player.canSee(e)) {
+                        if (e.getTarget() == player) {
                             trackingCounter++;
                         }
                         if (e.getHealth() / e.getMaxHealth() <= SoundHandler.mobHealth.get(mobName) / 100F) {
@@ -437,17 +431,17 @@ public class MusicPicker {
                 }
             } else {
                 int mobCounter = 0;
-                List<MobEntity> mobListSpecific = new ArrayList<>();
+                List<Mob> mobListSpecific = new ArrayList<>();
                 for (LivingEntity e : mobTempList) {
                     if (e.getDisplayName().getString().matches(mobName) || e.getType().getRegistryName().toString().matches(mobName)) {
-                        if(e instanceof  MobEntity) {
+                        if(e instanceof  Mob) {
                             mobCounter++;
-                            mobListSpecific.add((MobEntity) e);
+                            mobListSpecific.add((Mob) e);
                         }
                     }
                 }
-                for (MobEntity e : mobListSpecific) {
-                    if (player.canSee(e)) {
+                for (Mob e : mobListSpecific) {
+                    if (e.getTarget() == player) {
                         trackingCounter++;
                     }
                     if (e.getHealth() / e.getMaxHealth() <= SoundHandler.mobHealth.get(mobName) / 100F) {
@@ -511,7 +505,7 @@ public class MusicPicker {
         }
         if (!SoundHandler.effectSongs.isEmpty()) {
             effectList = new ArrayList<>();
-            for (Effect p : player.getActiveEffectsMap().keySet()) {
+            for (MobEffect p : player.getActiveEffectsMap().keySet()) {
                 effectList.add(p.getRegistryName().toString());
                 if (SoundHandler.effectSongsString.containsKey(p.getRegistryName().toString())) {
                     events.add(p.getRegistryName().toString());
@@ -597,8 +591,8 @@ public class MusicPicker {
             }
         }
         else {
-            musicVolSave = mc.options.getSoundSourceVolume(SoundCategory.MUSIC);
-            masterVolSave = mc.options.getSoundSourceVolume(SoundCategory.MASTER);
+            musicVolSave = mc.options.getSoundSourceVolume(SoundSource.MUSIC);
+            masterVolSave = mc.options.getSoundSourceVolume(SoundSource.MASTER);
         }
         if(!SoundHandler.difficultySongsString.isEmpty()) {
             for (Map.Entry<Integer, List<String>> intListEntry : SoundHandler.difficultySongsString.entrySet()) {
@@ -652,11 +646,6 @@ public class MusicPicker {
             events.add("bluemoon");
         }
 
-        String dynamicrain = dynamicrain();
-        if (dynamicrain != null) {
-            events.add(dynamicrain);
-        }
-
         boolean acidrain = acidrain();
         if (acidrain) {
             events.add("acidrain");
@@ -682,9 +671,9 @@ public class MusicPicker {
         return events;
     }
 
-    @SuppressWarnings("rawtypes")
+    //@SuppressWarnings("rawtypes")
     private static List<String> stageWhitelistChecker() {
-        if (ModList.get().isLoaded("gamestages")) {
+        /*if (ModList.get().isLoaded("gamestages")) {
             List<String> events = new ArrayList<>();
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.gamestageSongsStringWhitelist.entrySet()) {
                 String stageName = ((Map.Entry) stringListEntry).getKey().toString();
@@ -704,11 +693,14 @@ public class MusicPicker {
         } else {
             return null;
         }
+
+         */
+        return null;
     }
 
-    @SuppressWarnings("rawtypes")
+    //@SuppressWarnings("rawtypes")
     private static List<String> stageBlacklistChecker() {
-        if (ModList.get().isLoaded("gamestages")) {
+        /*if (ModList.get().isLoaded("gamestages")) {
             List<String> events = new ArrayList<>();
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.gamestageSongsStringBlacklist.entrySet()) {
                 String stageName = ((Map.Entry) stringListEntry).getKey().toString();
@@ -728,6 +720,8 @@ public class MusicPicker {
         } else {
             return null;
         }
+         */
+        return null;
     }
 
     private static boolean bloodmoon() {
@@ -760,32 +754,17 @@ public class MusicPicker {
         if (ModList.get().isLoaded("enhancedcelestials")) {
             LunarContext lunarContext = ((EnhancedCelestialsWorldData) world).getLunarContext();
             if (lunarContext != null && lunarContext.getCurrentEvent() instanceof BlueMoon) {
-                dynamicSongs.put("bluemoon", config.acidrainSongs);
-                dynamicPriorities.put("bluemoon", config.acidrainPriority);
-                dynamicFade.put("bluemoon", config.acidrainFade);
+                dynamicSongs.put("bluemoon", config.bluemoonSongs);
+                dynamicPriorities.put("bluemoon", config.bluemoonPriority);
+                dynamicFade.put("bluemoon", config.bluemoonFade);
                 return true;
             }
         }
         return false;
     }
 
-    private static String dynamicrain() {
-        if (ModList.get().isLoaded("dsurround")) {
-            for (Map.Entry<Integer, List<String>> integerListEntry : SoundHandler.rainintensitySongsString.entrySet()) {
-                int intensity = integerListEntry.getKey();
-                if (WorldUtils.getRainStrength(world, 1F) > (float) intensity / 100F) {
-                    dynamicSongs.put("Rain Intensity" + intensity, SoundHandler.rainintensitySongsString.get(intensity));
-                    dynamicPriorities.put("Rain Intensity" + intensity, config.rainintensityPriority);
-                    dynamicFade.put("Rain Intensity" + intensity, config.rainintensityFade);
-                    return intensity + "";
-                }
-            }
-        }
-        return null;
-    }
-
     private static boolean acidrain() {
-        if (ModList.get().isLoaded("betterweather")) {
+        /*if (ModList.get().isLoaded("betterweather")) {
             BetterWeatherWorldData weatherdata = (BetterWeatherWorldData) world;
             if (weatherdata.getWeatherEventContext() != null && weatherdata.getWeatherEventContext().getCurrentEvent() instanceof AcidRain) {
                 dynamicSongs.put("acidrain", config.acidrainSongs);
@@ -793,12 +772,12 @@ public class MusicPicker {
                 dynamicFade.put("acidrain", config.acidrainFade);
                 return true;
             }
-        }
+        }*/
         return false;
     }
 
     private static boolean blizzard() {
-        if (ModList.get().isLoaded("betterweather")) {
+        /*if (ModList.get().isLoaded("betterweather")) {
             BetterWeatherWorldData weatherdata = (BetterWeatherWorldData) world;
             if (weatherdata.getWeatherEventContext() != null && weatherdata.getWeatherEventContext().getCurrentEvent() instanceof Blizzard) {
                 dynamicSongs.put("blizzard", config.blizzardSongs);
@@ -806,12 +785,12 @@ public class MusicPicker {
                 dynamicFade.put("blizzard", config.blizzardFade);
                 return true;
             }
-        }
+        }*/
         return false;
     }
 
     private static boolean cloudy() {
-        if (ModList.get().isLoaded("betterweather")) {
+        /*if (ModList.get().isLoaded("betterweather")) {
             BetterWeatherWorldData weatherdata = (BetterWeatherWorldData) world;
             if (weatherdata.getWeatherEventContext() != null && weatherdata.getWeatherEventContext().getCurrentEvent() instanceof Cloudy) {
                 dynamicSongs.put("cloudy", config.cloudySongs);
@@ -819,12 +798,12 @@ public class MusicPicker {
                 dynamicFade.put("cloudy", config.cloudyFade);
                 return true;
             }
-        }
+        }*/
         return false;
     }
 
     private static boolean lightrain() {
-        if (ModList.get().isLoaded("betterweather")) {
+        /*if (ModList.get().isLoaded("betterweather")) {
             BetterWeatherWorldData weatherdata = (BetterWeatherWorldData) world;
             if (weatherdata.getWeatherEventContext() != null && weatherdata.getWeatherEventContext().getCurrentEvent() instanceof Rain && !(weatherdata.getWeatherEventContext().getCurrentEvent() instanceof AcidRain)) {
                 dynamicSongs.put("lightrain", config.lightrainSongs);
@@ -832,7 +811,7 @@ public class MusicPicker {
                 dynamicFade.put("lightrain", config.lightrainFade);
                 return true;
             }
-        }
+        }*/
         return false;
     }
 
@@ -842,7 +821,7 @@ public class MusicPicker {
             if (!SoundHandler.seasonsSongsString.isEmpty()) {
                 for (Map.Entry<Integer, List<String>> intListEntry : SoundHandler.seasonsSongsString.entrySet()) {
                     int seasonID = intListEntry.getKey();
-                    ISeasonState curSeason = SeasonHelper.getSeasonState(mc.level);
+                    ISeasonState curSeason = SeasonHelper.getSeasonState(Objects.requireNonNull(mc.level));
                     if (seasonID == 0 && curSeason.getSeason() == Season.SPRING) {
                         dynamicSongs.put("season:"+seasonID, SoundHandler.seasonsSongsString.get(seasonID));
                         dynamicPriorities.put("season:"+seasonID, SoundHandler.seasonsPriorities.get(seasonID));
@@ -890,11 +869,11 @@ public class MusicPicker {
         return false;
     }
 
-    public static BlockPos roundedPos(PlayerEntity p) {
+    public static BlockPos roundedPos(Player p) {
         return new BlockPos((Math.round(p.blockPosition().getX() * 2) / 2.0), (Math.round(p.blockPosition().getY() * 2) / 2.0), (Math.round(p.blockPosition().getZ() * 2) / 2.0));
     }
 
     public static double averageLight(BlockPos p, boolean b) {
-        return b ? world.getRawBrightness(p, 0) : world.getBrightness(LightType.BLOCK, p);
+        return b ? world.getRawBrightness(p, 0) : world.getBrightness(LightLayer.BLOCK, p);
     }
 }

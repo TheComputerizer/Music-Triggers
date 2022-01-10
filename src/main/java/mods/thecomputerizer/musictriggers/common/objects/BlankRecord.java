@@ -1,10 +1,11 @@
 package mods.thecomputerizer.musictriggers.common.objects;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUseContext;
-import net.minecraft.util.ActionResultType;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
@@ -15,23 +16,22 @@ public class BlankRecord extends Item {
     }
 
     @Override
-    public ActionResultType useOn(ItemUseContext ctx)
+    public @NotNull InteractionResult useOn(UseOnContext ctx)
     {
         BlockState blockstate = ctx.getLevel().getBlockState(ctx.getClickedPos());
 
-        if (blockstate.getBlock() instanceof MusicRecorder)
+        if (blockstate.getBlock() instanceof MusicRecorder mr)
         {
-            MusicRecorder mr = (MusicRecorder) blockstate.getBlock();
             if(!ctx.getLevel().isClientSide() && !blockstate.getValue(MusicRecorder.HAS_RECORD)) {
                 ItemStack itemstack = Objects.requireNonNull(ctx.getPlayer()).getItemInHand(ctx.getHand());
                 mr.insertRecord(ctx.getLevel(),ctx.getClickedPos(),blockstate,itemstack,ctx.getPlayer().getUUID());
                 itemstack.shrink(1);
             }
-            return ActionResultType.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
         else
         {
-            return ActionResultType.PASS;
+            return InteractionResult.PASS;
         }
     }
 }

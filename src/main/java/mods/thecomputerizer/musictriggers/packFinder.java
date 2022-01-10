@@ -1,25 +1,32 @@
 package mods.thecomputerizer.musictriggers;
 
-import net.minecraft.resources.*;
-import net.minecraft.resources.ResourcePackInfo.Priority;
+import net.minecraft.server.packs.repository.FolderRepositorySource;
+import net.minecraft.server.packs.repository.PackSource;
+import net.minecraft.server.packs.repository.RepositorySource;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.event.AddPackFindersEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 
 import java.io.File;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
-
-public class packFinder implements IPackFinder {
-    private File pack;
+@Mod.EventBusSubscriber(modid = MusicTriggers.MODID, value = Dist.CLIENT)
+public class packFinder {
+    private static RepositorySource source;
 
     packFinder(File p) {
-        pack = p;
+        if(p!=null) {
+            source = new FolderRepositorySource(p, PackSource.BUILT_IN);
+        }
+        else {
+            source = null;
+        }
     }
 
-    @Override
-    public void loadPacks(Consumer<ResourcePackInfo> info, ResourcePackInfo.IFactory factory) {
-        String packName = pack.getName();
-        Supplier<IResourcePack> rPack = pack.isDirectory() ? () -> new FolderPack(pack) : () -> new FilePack(pack);
-        ResourcePackInfo packInfo = ResourcePackInfo.create(packName, true, rPack, factory, Priority.TOP, IPackNameDecorator.DEFAULT);
-        info.accept(packInfo);
+    @SubscribeEvent
+    public static void addPack(AddPackFindersEvent ev) {
+        if(source!=null) {
+            ev.addRepositorySource(source);
+        }
     }
 }

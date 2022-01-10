@@ -1,33 +1,29 @@
 package mods.thecomputerizer.musictriggers.client;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
-import com.mojang.blaze3d.systems.RenderSystem;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.configDebug;
-import mods.thecomputerizer.musictriggers.configTitleCards;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.ISound;
-import net.minecraft.client.audio.SimpleSound;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.world.LightType;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.LightLayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.*;
+import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderLevelLastEvent;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
-import sereneseasons.api.season.Season;
-import sereneseasons.api.season.SeasonHelper;
 
 import javax.annotation.Nullable;
 
@@ -39,8 +35,8 @@ public class eventsClient {
     public static float startDelayCount = 0;
     public static Boolean activated = false;
     public static int timer = 0;
-    public static PlayerEntity playerHurt;
-    public static PlayerEntity playerSource;
+    public static Player playerHurt;
+    public static Player playerSource;
     public static int GuiCounter = 0;
     private static int reloadCounter = 0;
 
@@ -48,20 +44,19 @@ public class eventsClient {
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
         if (e.getSound()!=null) {
-            SimpleSound silenced = new SimpleSound(e.getSound().getLocation(), SoundCategory.MUSIC, 0F, 1F, false, 0, ISound.AttenuationType.NONE, 0.0D, 0.0D, 0.0D, true);
-            if ((MusicPlayer.curMusic != null || MusicPlayer.curTrackList == null || MusicPlayer.curTrackList.isEmpty()) && e.getSound().getLocation().getNamespace().matches(MusicTriggers.MODID) && (((MusicPlayer.curMusic!=null && e.getManager().isActive(MusicPlayer.curMusic)) && e.getSound().getLocation() != MusicPlayer.fromRecord.getLocation()) || MusicPlayer.playing)) {
-                e.setResultSound(silenced);
+            if ((MusicPlayer.curMusic != null || MusicPlayer.curTrackList == null || MusicPlayer.curTrackList.isEmpty()) && e.getSound().getLocation().getNamespace().matches(MusicTriggers.MODID) && (((MusicPlayer.curMusic!=null && e.getEngine().isActive(MusicPlayer.curMusic)) && e.getSound().getLocation() != MusicPlayer.fromRecord.getLocation()) || MusicPlayer.playing)) {
+                e.setSound(new SimpleSoundInstance(e.getSound().getLocation(), SoundSource.MUSIC, 0F, 1F, false, 0, SoundInstance.Attenuation.LINEAR, 0,0,0, false));
             }
             for (String s : configDebug.blockedmods.get()) {
-                if (e.getSound().getLocation().getNamespace().contains(s) && e.getSound().getSource() == SoundCategory.MUSIC) {
+                if (e.getSound().getLocation().getNamespace().contains(s) && e.getSound().getSource() == SoundSource.MUSIC) {
                     if (!(MusicPlayer.curMusic == null && configDebug.SilenceIsBad.get())) {
-                        e.setResultSound(silenced);
+                        e.setSound(new SimpleSoundInstance(e.getSound().getLocation(), SoundSource.MUSIC, 0F, 1F, false, 0, SoundInstance.Attenuation.LINEAR, 0,0,0, false));
                     }
                 }
             }
-            if (e.getSound().getLocation().getNamespace().contains("minecraft") && e.getSound().getSource() == SoundCategory.MUSIC) {
+            if (e.getSound().getLocation().getNamespace().contains("minecraft") && e.getSound().getSource() == SoundSource.MUSIC) {
                 if (!(MusicPlayer.curMusic == null && configDebug.SilenceIsBad.get())) {
-                    e.setResultSound(silenced);
+                    e.setSound(new SimpleSoundInstance(e.getSound().getLocation(), SoundSource.MUSIC, 0F, 1F, false, 0, SoundInstance.Attenuation.LINEAR, 0,0,0, false));
                 }
             }
         }
@@ -69,15 +64,15 @@ public class eventsClient {
 
     @SubscribeEvent
     public static void onDamage(LivingDamageEvent e) {
-        if (e.getEntity() instanceof PlayerEntity && e.getSource().getEntity() instanceof PlayerEntity) {
-            playerHurt = (PlayerEntity) e.getEntity();
-            playerSource = (PlayerEntity) e.getSource().getEntity();
+        if (e.getEntity() instanceof Player && e.getSource().getEntity() instanceof Player) {
+            playerHurt = (Player) e.getEntity();
+            playerSource = (Player) e.getSource().getEntity();
         }
     }
 
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
-    public static void worldRender(RenderWorldLastEvent e) {
+    public static void worldRender(RenderLevelLastEvent e) {
         isWorldRendered = true;
     }
 
@@ -93,7 +88,7 @@ public class eventsClient {
     @SubscribeEvent
     public static void imageCards(RenderGameOverlayEvent.Post e) {
         Minecraft mc = Minecraft.getInstance();
-        PlayerEntity player = mc.player;
+        Player player = mc.player;
         if (e.getType() == RenderGameOverlayEvent.ElementType.ALL) {
             if (player != null) {
                 int x = mc.getWindow().getGuiScaledWidth();
@@ -123,6 +118,7 @@ public class eventsClient {
                     startDelayCount = 0;
                 }
                 if (fadeCount != 1000) {
+                    /*
                     RenderSystem.pushMatrix();
 
                     float opacity = (int) (17 - (fadeCount / 80));
@@ -145,6 +141,7 @@ public class eventsClient {
                     RenderSystem.popAttributes();
 
                     RenderSystem.popMatrix();
+                     */
                 }
             }
         }
@@ -155,7 +152,7 @@ public class eventsClient {
     public static void onKeyInput(InputEvent.KeyInputEvent e) {
         if(MusicPlayer.RELOAD.isDown()) {
             Minecraft.getInstance().getSoundManager().stop();
-            ITextComponent msg = new StringTextComponent("\u00A74\u00A7oReloading Music... This may take a while!");
+            TextComponent msg = new TextComponent("\u00A74\u00A7oReloading Music... This may take a while!");
             MusicPicker.player.sendMessage(msg,MusicPicker.player.getUUID());
             MusicPlayer.reloading = true;
             reloadCounter = 5;
@@ -169,7 +166,7 @@ public class eventsClient {
             reloadCounter-=1;
             if(reloadCounter==1) {
                 reload.readAndReload();
-                ITextComponent msg = new StringTextComponent("\u00A7a\u00A7oFinished!");
+                TextComponent msg = new TextComponent("\u00A7a\u00A7oFinished!");
                 MusicPicker.player.sendMessage(msg,MusicPicker.player.getUUID());
                 MusicPlayer.reloading = false;
             }
@@ -204,7 +201,7 @@ public class eventsClient {
                     e.getLeft().add("Music Triggers Current Biome: " + fromServer.curBiome);
                     e.getLeft().add("Music Triggers Current Dimension: " + MusicPicker.player.level.dimension().location());
                     e.getLeft().add("Music Triggers Current Total Light: " + MusicPicker.world.getRawBrightness(MusicPicker.roundedPos(MusicPicker.player), 0));
-                    e.getLeft().add("Music Triggers Current Block Light: " + MusicPicker.world.getBrightness(LightType.BLOCK, MusicPicker.roundedPos(MusicPicker.player)));
+                    e.getLeft().add("Music Triggers Current Block Light: " + MusicPicker.world.getBrightness(LightLayer.BLOCK, MusicPicker.roundedPos(MusicPicker.player)));
                 }
                 if (MusicPicker.effectList != null && !MusicPicker.effectList.isEmpty()) {
                     StringBuilder se = new StringBuilder();

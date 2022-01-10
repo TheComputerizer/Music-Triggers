@@ -1,20 +1,20 @@
 package mods.thecomputerizer.musictriggers.common.objects;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.eventsCommon;
-import net.minecraft.block.*;
-import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.state.BooleanProperty;
-import net.minecraft.state.StateContainer;
-import net.minecraft.state.properties.BlockStateProperties;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Hand;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.BlockRayTraceResult;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.phys.BlockHitResult;
 
 import java.util.UUID;
 
@@ -23,24 +23,23 @@ public class MusicRecorder extends Block {
 
     public static final BooleanProperty HAS_RECORD = BlockStateProperties.HAS_RECORD;
 
-    public MusicRecorder(AbstractBlock.Properties p) {
+    public MusicRecorder(Block.Properties p) {
         super(p);
         this.registerDefaultState(this.stateDefinition.any().setValue(HAS_RECORD, Boolean.FALSE));
     }
 
-    @Override
-    public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockRayTraceResult ray) {
+    public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player playerIn, InteractionHand hand, BlockHitResult res) {
         if (state.getValue(HAS_RECORD)) {
             this.dropRecord(worldIn, pos);
             state = state.setValue(HAS_RECORD, false);
             worldIn.setBlock(pos, state, 2);
-            return ActionResultType.sidedSuccess(worldIn.isClientSide);
+            return InteractionResult.sidedSuccess(worldIn.isClientSide);
         } else {
-            return ActionResultType.PASS;
+            return InteractionResult.PASS;
         }
     }
 
-    public void insertRecord(World worldIn, BlockPos pos, BlockState state, ItemStack recordStack, UUID uuid) {
+    public void insertRecord(Level worldIn, BlockPos pos, BlockState state, ItemStack recordStack, UUID uuid) {
         eventsCommon.recordWorld.put(pos,worldIn);
         eventsCommon.recordHolder.put(pos, recordStack.copy());
         eventsCommon.recordUUID.put(pos, uuid);
@@ -48,7 +47,7 @@ public class MusicRecorder extends Block {
         worldIn.setBlock(pos, state.setValue(HAS_RECORD, Boolean.TRUE), 2);
     }
 
-    private void dropRecord(World worldIn, BlockPos pos) {
+    private void dropRecord(Level worldIn, BlockPos pos) {
         if (!worldIn.isClientSide) {
             eventsCommon.recordHolder.putIfAbsent(pos,ItemStack.EMPTY);
             ItemStack itemstack = eventsCommon.recordHolder.get(pos);
@@ -66,7 +65,7 @@ public class MusicRecorder extends Block {
     }
 
     @Override
-    public void onRemove(BlockState state, World worldIn, BlockPos pos, BlockState state2, boolean b) {
+    public void onRemove(BlockState state, Level worldIn, BlockPos pos, BlockState state2, boolean b) {
         if(!state.is(state2.getBlock())) {
             this.dropRecord(worldIn, pos);
             super.onRemove(state,worldIn,pos,state2,b);
@@ -79,7 +78,7 @@ public class MusicRecorder extends Block {
     }
 
     @Override
-    public int getAnalogOutputSignal(BlockState blockState, World worldIn, BlockPos pos) {
+    public int getAnalogOutputSignal(BlockState blockState, Level worldIn, BlockPos pos) {
         ItemStack itemstack = eventsCommon.recordHolder.get(pos);
         if (!itemstack.isEmpty()) {
             return 15;
@@ -88,13 +87,12 @@ public class MusicRecorder extends Block {
     }
 
     @Override
-    public BlockRenderType getRenderShape(BlockState state) {
-        return BlockRenderType.MODEL;
+    public RenderShape getRenderShape(BlockState p_54296_) {
+        return net.minecraft.world.level.block.RenderShape.MODEL;
     }
 
-
     @Override
-    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> stateBuilder) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> stateBuilder) {
         stateBuilder.add(HAS_RECORD);
     }
 }

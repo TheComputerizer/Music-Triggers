@@ -1,12 +1,12 @@
 package mods.thecomputerizer.musictriggers.util;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import net.minecraft.client.audio.ISound;
-import net.minecraft.client.audio.Sound;
-import net.minecraft.client.audio.SoundEventAccessor;
-import net.minecraft.client.audio.SoundHandler;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundCategory;
+import net.minecraft.client.resources.sounds.Sound;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.client.sounds.SoundManager;
+import net.minecraft.client.sounds.WeighedSoundEvents;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundSource;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.common.Mod;
 
@@ -14,12 +14,12 @@ import javax.annotation.Nullable;
 
 @SuppressWarnings("ALL")
 @Mod.EventBusSubscriber(modid = MusicTriggers.MODID, value = Dist.CLIENT)
-public class setVolumeSound implements ISound {
+public class setVolumeSound implements SoundInstance {
 
     protected Sound sound;
     @Nullable
-    private SoundEventAccessor soundEvent;
-    protected SoundCategory category;
+    private WeighedSoundEvents soundEvent;
+    protected SoundSource category;
     protected ResourceLocation positionedSoundLocation;
     protected float volume;
     protected float pitch;
@@ -28,9 +28,9 @@ public class setVolumeSound implements ISound {
     protected float zPosF;
     protected boolean repeat;
     protected int repeatDelay;
-    protected ISound.AttenuationType attenuationType;
+    protected SoundInstance.Attenuation attenuationType;
 
-    public setVolumeSound(ResourceLocation soundId, SoundCategory categoryIn, float volume, float pitch, boolean repeat, int repeatDelay, ISound.AttenuationType soundAttenuation, float xPosF, float yPosF, float zPosF)
+    public setVolumeSound(ResourceLocation soundId, SoundSource categoryIn, float volume, float pitch, boolean repeat, int repeatDelay, SoundInstance.Attenuation soundAttenuation, float xPosF, float yPosF, float zPosF)
     {
         this.positionedSoundLocation = soundId;
         this.category = categoryIn;
@@ -49,11 +49,11 @@ public class setVolumeSound implements ISound {
         return this.positionedSoundLocation;
     }
 
-    public SoundEventAccessor resolve(SoundHandler handler)
+    public WeighedSoundEvents resolve(SoundManager handler)
     {
-        SoundEventAccessor soundeventaccessor = handler.getSoundEvent(this.positionedSoundLocation);
+        WeighedSoundEvents soundeventaccessor = handler.getSoundEvent(this.positionedSoundLocation);
         if (soundeventaccessor == null) {
-            this.sound = SoundHandler.EMPTY_SOUND;
+            this.sound = SoundManager.EMPTY_SOUND;
         } else {
             this.sound = soundeventaccessor.getSound();
         }
@@ -66,7 +66,7 @@ public class setVolumeSound implements ISound {
         return this.sound;
     }
 
-    public SoundCategory getSource()
+    public SoundSource getSource()
     {
         return this.category;
     }
@@ -111,7 +111,7 @@ public class setVolumeSound implements ISound {
         return this.zPosF;
     }
 
-    public ISound.AttenuationType getAttenuation()
+    public SoundInstance.Attenuation getAttenuation()
     {
         return this.attenuationType;
     }

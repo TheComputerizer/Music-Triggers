@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -12,7 +12,7 @@ public class CurSong {
     public static HashMap<UUID,String> curSong = new HashMap<>();
     private String s;
 
-    public CurSong(PacketBuffer buf) {
+    public CurSong(FriendlyByteBuf buf) {
         this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
     }
 
@@ -20,7 +20,7 @@ public class CurSong {
         this.s = s+","+u.toString();
     }
 
-    public static void encode(CurSong packet, PacketBuffer buf) {
+    public static void encode(CurSong packet, FriendlyByteBuf buf) {
         buf.writeCharSequence(packet.s, StandardCharsets.UTF_8);
     }
 

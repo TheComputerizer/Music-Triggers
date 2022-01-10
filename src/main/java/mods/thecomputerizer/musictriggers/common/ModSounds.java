@@ -2,10 +2,10 @@ package mods.thecomputerizer.musictriggers.common;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.configRegistry;
-import net.minecraft.client.audio.ISound;
-import net.minecraft.client.audio.SimpleSound;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundEvent;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.registries.DeferredRegister;
@@ -20,7 +20,7 @@ public class ModSounds {
     public static final ModSounds INSTANCE = new ModSounds();
     public static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, MusicTriggers.MODID);
 
-    public static HashMap<String,ISound> playableSounds = new HashMap<>();
+    public static HashMap<String,SoundInstance> playableSounds = new HashMap<>();
 
     public void init(){
         List<SoundEvent> sounds = SoundHandler.allSoundEvents;
@@ -31,7 +31,7 @@ public class ModSounds {
                 MusicTriggers.logger.info(songName+" is being initialized at resource location "+new ResourceLocation(MusicTriggers.MODID+":music." + songName));
             }
             if(FMLEnvironment.dist == Dist.CLIENT) {
-                ISound i = SimpleSound.forMusic(new SoundEvent(new ResourceLocation(MusicTriggers.MODID + ":music." + songName)));
+                SoundInstance i = SimpleSoundInstance.forMusic(new SoundEvent(new ResourceLocation(MusicTriggers.MODID + ":music." + songName)));
                 playableSounds.put("music." + songName, i);
             }
         }
@@ -42,7 +42,7 @@ public class ModSounds {
         for(SoundEvent s: sounds) {
             String songName = Objects.requireNonNull(s.getRegistryName()).toString().replaceAll("musictriggers:", "");
             if(FMLEnvironment.dist == Dist.CLIENT) {
-                ISound i = SimpleSound.forMusic(new SoundEvent(new ResourceLocation(MusicTriggers.MODID + ":music." + songName)));
+                SoundInstance i = SimpleSoundInstance.forMusic(new SoundEvent(new ResourceLocation(MusicTriggers.MODID + ":music." + songName)));
                 playableSounds.put("music." + songName, i);
             }
         }

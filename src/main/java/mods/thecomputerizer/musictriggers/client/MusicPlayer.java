@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
@@ -9,26 +10,24 @@ import mods.thecomputerizer.musictriggers.configTitleCards;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.packets.CurSong;
 import mods.thecomputerizer.musictriggers.util.setVolumeSound;
-import net.minecraft.block.JukeboxBlock;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.ChannelManager;
-import net.minecraft.client.audio.ISound;
-import net.minecraft.client.audio.SoundEngine;
-import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.client.util.InputMappings;
-import net.minecraft.tileentity.JukeboxTileEntity;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.client.sounds.ChannelAccess;
+import net.minecraft.client.sounds.SoundEngine;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.level.block.JukeboxBlock;
+import net.minecraft.world.level.block.entity.JukeboxBlockEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
@@ -39,12 +38,12 @@ import static mods.thecomputerizer.musictriggers.util.packets.CurSong.curSong;
 @SuppressWarnings("rawtypes")
 @Mod.EventBusSubscriber(modid = MusicTriggers.MODID, value = Dist.CLIENT)
 public class MusicPlayer {
-    public static final KeyBinding RELOAD = new KeyBinding("key.reload_musictriggers", KeyConflictContext.UNIVERSAL, InputMappings.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.categories.musictriggers");
+    public static final KeyMapping RELOAD = new KeyMapping("key.reload_musictriggers", KeyConflictContext.UNIVERSAL, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.categories.musictriggers");
 
     public static List<String> curTrackList;
     public static List<String> holder;
     public static String curTrack;
-    public static ISound curMusic;
+    public static SoundInstance curMusic;
     public static Random rand = new Random();
     public static Minecraft mc = Minecraft.getInstance();
     public static int tickCounter = 0;
@@ -98,10 +97,10 @@ public class MusicPlayer {
                 if (tempFade == 0) {
                     fading = false;
                     mc.getSoundManager().stop(curMusic);
-                    mc.getSoundManager().updateSourceVolume(SoundCategory.MASTER, saveVol);
+                    mc.getSoundManager().updateSourceVolume(SoundSource.MASTER, saveVol);
                     renderCards();
                 } else {
-                    mc.getSoundManager().updateSourceVolume(SoundCategory.MASTER, saveVol * (float) (((double) tempFade) / ((double) MusicPicker.curFade)));
+                    mc.getSoundManager().updateSourceVolume(SoundSource.MASTER, saveVol * (float) (((double) tempFade) / ((double) MusicPicker.curFade)));
                     tempFade -= 1;
                 }
             }
@@ -119,13 +118,11 @@ public class MusicPlayer {
                 }
                 playing = false;
                 if (MusicPicker.player != null) {
-                    for (int x = MusicPicker.player.xChunk - 3; x <= MusicPicker.player.xChunk + 3; x++) {
-                        for (int z = MusicPicker.player.zChunk - 3; z <= MusicPicker.player.zChunk + 3; z++) {
+                    for (int x = MusicPicker.player.chunkPosition().x - 3; x <= MusicPicker.player.chunkPosition().x  + 3; x++) {
+                        for (int z = MusicPicker.player.chunkPosition().z - 3; z <= MusicPicker.player.chunkPosition().z + 3; z++) {
                             Set<BlockPos> currentChunkTEPos = MusicPicker.world.getChunk(x, z).getBlockEntitiesPos();
                             for (BlockPos b : currentChunkTEPos) {
-                                if (MusicPicker.world.getChunk(x, z).getBlockEntity(b) instanceof JukeboxTileEntity) {
-                                    JukeboxTileEntity te = (JukeboxTileEntity) MusicPicker.world.getChunk(x, z).getBlockEntity(b);
-                                    assert te != null;
+                                if (MusicPicker.world.getChunk(x, z).getBlockEntity(b) instanceof JukeboxBlockEntity te) {
                                     if (te.getBlockState().getValue(JukeboxBlock.HAS_RECORD)) {
                                         playing = true;
                                     }
@@ -140,7 +137,7 @@ public class MusicPlayer {
                         curTrackList = holder;
                     }
                     if (curMusic != null) {
-                        if (!mc.getSoundManager().isActive(curMusic) || mc.options.getSoundSourceVolume(SoundCategory.MUSIC) == 0 || mc.options.getSoundSourceVolume(SoundCategory.MASTER) == 0) {
+                        if (!mc.getSoundManager().isActive(curMusic) || mc.options.getSoundSourceVolume(SoundSource.MUSIC) == 0 || mc.options.getSoundSourceVolume(SoundSource.MASTER) == 0) {
                             mc.getSoundManager().stop();
                             curMusic = null;
                             delay = true;
@@ -170,13 +167,13 @@ public class MusicPlayer {
                             } else {
                                 fading = true;
                                 tempFade = MusicPicker.curFade;
-                                saveVol = mc.options.getSoundSourceVolume(SoundCategory.MASTER);
+                                saveVol = mc.options.getSoundSourceVolume(SoundSource.MASTER);
                             }
                         }
                         else {
                             curTrackList = null;
                             renderCards();
-                            Map<ISound, ChannelManager.Entry>  curplaying = ObfuscationReflectionHelper.getPrivateValue(SoundEngine.class,ObfuscationReflectionHelper.getPrivateValue(net.minecraft.client.audio.SoundHandler.class,mc.getSoundManager(),"field_147694_f"),"field_217942_m");
+                            Map<SoundInstance, ChannelAccess.ChannelHandle>  curplaying = ObfuscationReflectionHelper.getPrivateValue(SoundEngine.class,ObfuscationReflectionHelper.getPrivateValue(net.minecraft.client.sounds.SoundManager.class,mc.getSoundManager(),"field_147694_f"),"field_217942_m");
                             for (Map.Entry<String, setVolumeSound> stringListEntry : musicLinker.entrySet()) {
                                 String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
                                 if(checkThis.matches(songNum)) {
@@ -203,7 +200,7 @@ public class MusicPlayer {
                             }
                         }
                         MusicPicker.shouldChange = false;
-                    } else if (curMusic == null && mc.options.getSoundSourceVolume(SoundCategory.MASTER) > 0 && mc.options.getSoundSourceVolume(SoundCategory.MUSIC) > 0) {
+                    } else if (curMusic == null && mc.options.getSoundSourceVolume(SoundSource.MASTER) > 0 && mc.options.getSoundSourceVolume(SoundSource.MUSIC) > 0) {
                         triggerLinker = new HashMap<>();
                         musicLinker = new HashMap<>();
                         eventsClient.GuiCounter = 0;
@@ -223,7 +220,7 @@ public class MusicPlayer {
                                     pitch = Float.parseFloat(stringBreaker(linked[index], "/")[1]);
                                     triggerLinker.put("song-" + index, Arrays.copyOfRange(tempTriggers, 2, tempTriggers.length));
                                 }
-                                musicLinker.put("song-"+index, new setVolumeSound(new ResourceLocation(MusicTriggers.MODID, "music." +stringBreaker(linked[index],"/")[0]), SoundCategory.MUSIC, 1F, pitch, false, 1, ISound.AttenuationType.NONE, 0F, 0F, 0F));
+                                musicLinker.put("song-"+index, new setVolumeSound(new ResourceLocation(MusicTriggers.MODID, "music." +stringBreaker(linked[index],"/")[0]), SoundSource.MUSIC, 1F, pitch, false, 1, SoundInstance.Attenuation.NONE, 0F, 0F, 0F));
                             }
                             curTrack = stringBreaker(stringBreaker(curTrack,";")[0],"/")[0];
                             if (MusicPicker.player != null) {
@@ -262,8 +259,8 @@ public class MusicPlayer {
             String[] line = t.split(",");
             String[] temp = Arrays.copyOfRange(line, 2, line.length);
             if (tempTitleCards.containsAll(Arrays.asList(temp)) && mc.player != null) {
-                mc.gui.setTitles(new TranslationTextComponent(line[0]).withStyle(TextFormatting.DARK_RED), new TranslationTextComponent(line[1]), 5, 20, 20);
-                mc.gui.setTitles(null, new TranslationTextComponent(line[1]), 5, 20, 20);
+                mc.gui.setTitle(new TranslatableComponent(line[0]));
+                mc.gui.setSubtitle(new TranslatableComponent(line[1]));
             }
         }
         for (String t : configTitleCards.ImageCards) {

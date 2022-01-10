@@ -1,8 +1,8 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
 import mods.thecomputerizer.musictriggers.client.fromServer;
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.network.NetworkEvent;
 
 import java.nio.charset.StandardCharsets;
 import java.util.function.Supplier;
@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 public class InfoFromBiome {
     private String s;
 
-    public InfoFromBiome(PacketBuffer buf) {
+    public InfoFromBiome(FriendlyByteBuf buf) {
         this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
     }
 
@@ -18,7 +18,7 @@ public class InfoFromBiome {
         this.s = b +","+s+","+d;
     }
 
-    public static void encode(InfoFromBiome packet, PacketBuffer buf) {
+    public static void encode(InfoFromBiome packet, FriendlyByteBuf buf) {
         buf.writeCharSequence(packet.s, StandardCharsets.UTF_8);
     }
 

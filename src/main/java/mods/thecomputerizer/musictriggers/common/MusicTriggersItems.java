@@ -4,10 +4,10 @@ import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.objects.BlankRecord;
 import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
 import mods.thecomputerizer.musictriggers.configRegistry;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.Rarity;
-import net.minecraft.util.SoundEvent;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Rarity;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -33,7 +33,7 @@ public class MusicTriggersItems {
                 ITEMS.register(name, () -> new MusicTriggersRecord(15, s, new Item.Properties().rarity(Rarity.EPIC).fireResistant()));
                 buildModel(name);
             }
-            ITEMS.register("blank_record", () -> new BlankRecord(new Item.Properties().rarity(Rarity.EPIC).fireResistant().stacksTo(1).tab(ItemGroup.TAB_MISC)));
+            ITEMS.register("blank_record", () -> new BlankRecord(new Item.Properties().rarity(Rarity.EPIC).fireResistant().stacksTo(1).tab(CreativeModeTab.TAB_MISC)));
         }
     }
 

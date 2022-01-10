@@ -6,21 +6,17 @@ import mods.thecomputerizer.musictriggers.common.eventsCommon;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.json;
-import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.ExtensionPoint;
 import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
-import net.minecraftforge.fml.network.FMLNetworkConstants;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -154,14 +150,14 @@ public class MusicTriggers {
             if(json.collector()!=null) {
                 File pack = new File("config/MusicTriggers/songs/");
                 if (pack.isDirectory() && new File(pack, "pack.mcmeta").isFile()) {
-                    packFinder p = new packFinder(pack);
-                    Minecraft.getInstance().getResourcePackRepository().addPackFinder(p);
+                    new packFinder(pack);
                 }
             }
         }
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
         MinecraftForge.EVENT_BUS.register(eventsClient.class);
         MinecraftForge.EVENT_BUS.register(eventsCommon.class);
+        MinecraftForge.EVENT_BUS.register(packFinder.class);
     }
 
     private void clientSetup(final FMLClientSetupEvent ev) {
@@ -170,7 +166,7 @@ public class MusicTriggers {
 
     public void commonsetup(FMLCommonSetupEvent ev) {
         if(configRegistry.clientSideOnly) {
-            ModLoadingContext.get().registerExtensionPoint(ExtensionPoint.DISPLAYTEST,() -> Pair.of(()-> FMLNetworkConstants.IGNORESERVERONLY,(a,b)->true));
+            //ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DISPLAYTEST,() -> Pair.of(()-> FMLNetworkConstants.IGNORESERVERONLY,(a, b)->true));
         }
         else {
             PacketHandler.register();
