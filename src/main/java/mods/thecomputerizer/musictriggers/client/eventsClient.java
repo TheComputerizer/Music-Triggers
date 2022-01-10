@@ -6,6 +6,7 @@ import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.configDebug;
 import mods.thecomputerizer.musictriggers.configTitleCards;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.network.chat.TextComponent;
@@ -120,7 +121,7 @@ public class eventsClient {
                     startDelayCount = 0;
                 }
                 if (fadeCount != 1000) {
-                    RenderSystem.pushMatrix();
+                    e.getMatrixStack().pushPose();
 
                     float opacity = (int) (17 - (fadeCount / 80));
                     opacity = (opacity * 1.15f) / 15;
@@ -130,15 +131,11 @@ public class eventsClient {
                     int posY = (y / 64) + configTitleCards.ImageV;
                     int posX = ((x / 2) - (int) (sizeX / 2)) + configTitleCards.ImageH;
 
-                    RenderSystem.pushTextureAttributes();
-                    RenderSystem.enableAlphaTest();
-                    RenderSystem.enableBlend();
-                    RenderSystem.color4f(1F, 1F, 1F, Math.max(0, Math.min(0.95f, opacity)));
-                    mc.getTextureManager().bind(IMAGE_CARD);
-                    AbstractGui.blit(e.getMatrixStack(), posX, posY, 10, 0F, 0F, (int) sizeX, (int) sizeY, (int) sizeX, (int) sizeY);
+                    RenderSystem.setShaderColor(1F, 1F, 1F, Math.max(0, Math.min(0.95f, opacity)));
+                    mc.getTextureManager().bindForSetup(IMAGE_CARD);
+                    GuiComponent.blit(e.getMatrixStack(), posX, posY, 10, 0F, 0F, (int) sizeX, (int) sizeY, (int) sizeX, (int) sizeY);
 
-                    RenderSystem.popAttributes();
-                    RenderSystem.popMatrix();
+                    e.getMatrixStack().popPose();
                 }
             }
         }
