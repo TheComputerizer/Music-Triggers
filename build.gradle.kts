@@ -76,8 +76,6 @@ dependencies {
     bundled (group = "com.googlecode.soundlibs", name = "mp3spi", version = "1.9.5.4")
     bundled (group = "com.sedmelluq", name = "lavaplayer", version = "1.3.78")
     bundled (group = "org.slf4j", name = "slf4j-log4j12", version = "2.0.0-alpha5")
-    bundled (group = "org.apache.logging.log4j", name = "log4j-core", version = "2.17.1")
-    bundled (group = "org.apache.logging.log4j", name = "log4j-slf4j-impl", version = "2.17.1")
 
     implementation(fg.deobf(curse(mod = "codechicken-lib", projectId = 242818L, fileId = 2779848L)))
     implementation(fg.deobf(curse(mod = "bloodmoon", projectId = 226321L, fileId = 2537917L)))
