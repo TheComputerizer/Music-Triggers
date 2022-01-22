@@ -138,7 +138,7 @@ public class SoundHandler {
 
         if (config.menuSongs.size() != 0) {
             for (int i = 0; i < config.menuSongs.size(); i++) {
-                String songName = config.menuSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.menuSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("menu");
@@ -164,7 +164,7 @@ public class SoundHandler {
         }
         if (config.genericSongs.size() != 0) {
             for (int i = 0; i < config.genericSongs.size(); i++) {
-                String songName = config.genericSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.genericSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("generic");
@@ -189,7 +189,7 @@ public class SoundHandler {
         }
         if (config.daySongs.size() != 0) {
             for (int i = 0; i < config.daySongs.size(); i++) {
-                String songName = config.daySongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.daySongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("day");
@@ -256,7 +256,7 @@ public class SoundHandler {
         }
         if (config.sunriseSongs.size() != 0) {
             for (int i = 0; i < config.sunriseSongs.size(); i++) {
-                String songName = config.sunriseSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.sunriseSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("sunrise");
@@ -281,7 +281,7 @@ public class SoundHandler {
         }
         if (config.sunsetSongs.size() != 0) {
             for (int i = 0; i < config.sunsetSongs.size(); i++) {
-                String songName = config.sunsetSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.sunsetSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("sunset");
@@ -358,7 +358,7 @@ public class SoundHandler {
         }
         if (config.undergroundSongs.size() != 0) {
             for (int i = 0; i < config.undergroundSongs.size(); i++) {
-                String songName = config.undergroundSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.undergroundSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("underground");
@@ -383,7 +383,7 @@ public class SoundHandler {
         }
         if (config.deepUnderSongs.size() != 0) {
             for (int i = 0; i < config.deepUnderSongs.size(); i++) {
-                String songName = config.deepUnderSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.deepUnderSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("deepUnder");
@@ -408,7 +408,7 @@ public class SoundHandler {
         }
         if (config.rainingSongs.size() != 0) {
             for (int i = 0; i < config.rainingSongs.size(); i++) {
-                String songName = config.rainingSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.rainingSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("raining");
@@ -433,7 +433,7 @@ public class SoundHandler {
         }
         if (config.stormingSongs.size() != 0) {
             for (int i = 0; i < config.stormingSongs.size(); i++) {
-                String songName = config.stormingSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.stormingSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("storming");
@@ -458,7 +458,7 @@ public class SoundHandler {
         }
         if (config.snowingSongs.size() != 0) {
             for (int i = 0; i < config.snowingSongs.size(); i++) {
-                String songName = config.snowingSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.snowingSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("snowing");
@@ -483,7 +483,7 @@ public class SoundHandler {
         }
         if (config.lowHPSongs.size() != 0) {
             for (int i = 0; i < config.lowHPSongs.size(); i++) {
-                String songName = config.lowHPSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.lowHPSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("lowHP");
@@ -508,7 +508,7 @@ public class SoundHandler {
         }
         if (config.deadSongs.size() != 0) {
             for (int i = 0; i < config.deadSongs.size(); i++) {
-                String songName = config.deadSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.deadSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("dead");
@@ -533,7 +533,7 @@ public class SoundHandler {
         }
         if (config.inVoidSongs.size() != 0) {
             for (int i = 0; i < config.inVoidSongs.size(); i++) {
-                String songName = config.inVoidSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.inVoidSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("inVoid");
@@ -558,7 +558,7 @@ public class SoundHandler {
         }
         if (config.spectatorSongs.size() != 0) {
             for (int i = 0; i < config.spectatorSongs.size(); i++) {
-                String songName = config.spectatorSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.spectatorSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("spectator");
@@ -583,7 +583,7 @@ public class SoundHandler {
         }
         if (config.creativeSongs.size() != 0) {
             for (int i = 0; i < config.creativeSongs.size(); i++) {
-                String songName = config.creativeSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.creativeSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("creative");
@@ -608,7 +608,7 @@ public class SoundHandler {
         }
         if (config.ridingSongs.size() != 0) {
             for (int i = 0; i < config.ridingSongs.size(); i++) {
-                String songName = config.ridingSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.ridingSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("riding");
@@ -633,7 +633,7 @@ public class SoundHandler {
         }
         if (config.petSongs.size() != 0) {
             for (int i = 0; i < config.petSongs.size(); i++) {
-                String songName = config.petSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.petSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("pet");
@@ -658,7 +658,7 @@ public class SoundHandler {
         }
         if (config.highSongs.size() != 0) {
             for (int i = 0; i < config.highSongs.size(); i++) {
-                String songName = config.highSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.highSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("high");
@@ -999,7 +999,7 @@ public class SoundHandler {
         }*/
         if (config.bloodmoonSongs.size() != 0) {
             for (int i = 0; i < config.bloodmoonSongs.size(); i++) {
-                String songName = config.bloodmoonSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.bloodmoonSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("bloodmoon");
@@ -1024,7 +1024,7 @@ public class SoundHandler {
         }
         if (config.harvestmoonSongs.size() != 0) {
             for (int i = 0; i < config.harvestmoonSongs.size(); i++) {
-                String songName = config.harvestmoonSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.harvestmoonSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("harvestmoon");
@@ -1049,7 +1049,7 @@ public class SoundHandler {
         }
         if (config.bluemoonSongs.size() != 0) {
             for (int i = 0; i < config.bluemoonSongs.size(); i++) {
-                String songName = config.bluemoonSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.bluemoonSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("bluemoon");
@@ -1075,7 +1075,7 @@ public class SoundHandler {
         }
         if (config.underwaterSongs != null) {
             for (int i = 0; i < config.underwaterSongs.size(); i++) {
-                String songName = config.underwaterSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.underwaterSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("underwater");
@@ -1141,7 +1141,7 @@ public class SoundHandler {
         }
         if (config.pvpSongs != null) {
             for (int i = 0; i < config.pvpSongs.size(); i++) {
-                String songName = config.pvpSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.pvpSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("pvp");
@@ -1213,7 +1213,7 @@ public class SoundHandler {
         }
         /*if (config.acidrainSongs != null) {
             for (int i = 0; i < config.acidrainSongs.size(); i++) {
-                String songName = config.acidrainSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.acidrainSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("acidrain");
@@ -1237,7 +1237,7 @@ public class SoundHandler {
         }
         if (config.blizzardSongs != null) {
             for (int i = 0; i < config.blizzardSongs.size(); i++) {
-                String songName = config.blizzardSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.blizzardSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("blizzard");
@@ -1261,7 +1261,7 @@ public class SoundHandler {
         }
         if (config.cloudySongs != null) {
             for (int i = 0; i < config.cloudySongs.size(); i++) {
-                String songName = config.cloudySongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.cloudySongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("cloudy");
@@ -1285,7 +1285,7 @@ public class SoundHandler {
         }
         if (config.lightrainSongs != null) {
             for (int i = 0; i < config.lightrainSongs.size(); i++) {
-                String songName = config.lightrainSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.lightrainSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("lightrain");
@@ -1432,7 +1432,7 @@ public class SoundHandler {
         }
         if (config.elytraSongs != null) {
             for (int i = 0; i < config.elytraSongs.size(); i++) {
-                String songName = config.elytraSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.elytraSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("elytra");
@@ -1457,7 +1457,7 @@ public class SoundHandler {
         }
         if (config.fishingSongs != null) {
             for (int i = 0; i < config.fishingSongs.size(); i++) {
-                String songName = config.fishingSongs.get(i).toLowerCase().trim().replaceAll(" ","_");
+                String songName = config.fishingSongs.get(i).toLowerCase().trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("fishing");
