@@ -31,14 +31,14 @@ public class MusicTriggersItems {
             for (SoundEvent s : SoundHandler.allSoundEvents) {
                 String name = Objects.requireNonNull(s.getRegistryName()).toString().replaceAll("musictriggers:", "");
                 ITEMS.register(name, () -> new MusicTriggersRecord(15, s, new Item.Properties().rarity(Rarity.EPIC).fireResistant()));
-                buildModel(name);
+                buildModel(name,SoundHandler.allSoundEventsWithTriggers.get(s));
             }
             ITEMS.register("blank_record", () -> new BlankRecord(new Item.Properties().rarity(Rarity.EPIC).fireResistant().stacksTo(1).tab(CreativeModeTab.TAB_MISC)));
         }
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public static void buildModel(String name) {
+    public static void buildModel(String name, String trigger) {
         try {
             File modelsFolder = new File("config/MusicTriggers/songs/assets/musictriggers", "models");
             if (!modelsFolder.exists()) {
@@ -56,7 +56,7 @@ public class MusicTriggersItems {
             fb.add("{");
             fb.add("\t\"parent\": \"item/generated\",");
             fb.add("\t\"textures\": {");
-            fb.add("\t\t\"layer0\": \"musictriggers:item/record\"");
+            fb.add("\t\t\"layer0\": \"musictriggers:item/record_"+trigger+"\"");
             fb.add("\t}");
             fb.add("}");
             Files.write(Paths.get(model.getPath()), fb, StandardCharsets.UTF_8);

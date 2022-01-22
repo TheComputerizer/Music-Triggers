@@ -15,6 +15,9 @@ import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.packets.InfoForBiome;
 import mods.thecomputerizer.musictriggers.util.packets.InfoForStructure;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.BossHealthOverlay;
+import net.minecraft.client.gui.components.LerpingBossEvent;
+import net.minecraft.client.gui.screens.WinScreen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Difficulty;
@@ -29,6 +32,7 @@ import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
 import sereneseasons.api.season.ISeasonState;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
@@ -49,6 +53,9 @@ public class MusicPicker {
     public static HashMap<Integer, Boolean> victory = new HashMap<>();
     public static int persistentPVP = 0;
     public static int victoryID = 0;
+    public static boolean fishBool = false;
+    public static int fishingStart = 0;
+    public static int persistentFishing = 0;
     public static boolean setPVP = false;
     public static Player otherPVP;
     public static boolean infernalLoaded = false;
@@ -254,6 +261,31 @@ public class MusicPicker {
             dynamicPriorities.put("high", config.highPriority);
             dynamicFade.put("high", config.highFade);
         }
+        if (player.getFallFlyingTicks()>=config.elytraStart) {
+            events.add("elytra");
+            dynamicSongs.put("elytra", config.elytraSongs);
+            dynamicPriorities.put("elytra", config.elytraPriority);
+            dynamicFade.put("elytra", config.elytraFade);
+        }
+        if(player.fishing!=null && player.fishing.isInWaterOrBubble()) {
+            fishBool = true;
+        }
+        else {
+            fishingStart=0;
+        }
+        if(fishingStart>config.fishingStart) {
+            events.add("fishing");
+            dynamicSongs.put("fishing", config.fishingSongs);
+            dynamicPriorities.put("fishing", config.fishingPriority);
+            dynamicFade.put("fishing", config.fishingFade);
+            persistentFishing = config.fishingPersistence;
+        }
+        else if(persistentFishing>0) {
+            events.add("fishing");
+            dynamicSongs.put("fishing", config.fishingSongs);
+            dynamicPriorities.put("fishing", config.fishingPriority);
+            dynamicFade.put("fishing", config.fishingFade);
+        }
         if (world.isRaining()) {
             events.add("raining");
             dynamicSongs.put("raining", config.rainingSongs);
@@ -429,6 +461,16 @@ public class MusicPicker {
                     persistentMob.put(mobName, SoundHandler.mobBattle.get(mobName));
                     victory.put(victoryID, SoundHandler.mobVictory.get(mobName));
                 }
+            } else if (mobName.matches("BOSS")) {
+                Map<UUID, LerpingBossEvent> info = ObfuscationReflectionHelper.getPrivateValue(BossHealthOverlay.class, mc.gui.getBossOverlay(), "f_93699_");
+                if (!info.isEmpty()) {
+                    events.add(mobName);
+                    dynamicSongs.put(mobName, SoundHandler.mobSongsString.get(mobName));
+                    dynamicPriorities.put(mobName, SoundHandler.mobPriorities.get(mobName));
+                    dynamicFade.put(mobName, SoundHandler.mobFade.get(mobName));
+                    persistentMob.put(mobName, SoundHandler.mobBattle.get(mobName));
+                    victory.put(victoryID, SoundHandler.mobVictory.get(mobName));
+                }
             } else {
                 int mobCounter = 0;
                 List<Mob> mobListSpecific = new ArrayList<>();
@@ -583,6 +625,12 @@ public class MusicPicker {
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.guiSongsString.entrySet()) {
                 String guiName = ((Map.Entry) stringListEntry).getKey().toString();
                 if(mc.screen.toString().contains(guiName)) {
+                    events.add(guiName);
+                    dynamicSongs.put(guiName, SoundHandler.guiSongsString.get(guiName));
+                    dynamicPriorities.put(guiName, SoundHandler.guiPriorities.get(guiName));
+                    dynamicFade.put(guiName, SoundHandler.guiFade.get(guiName));
+                }
+                else if(guiName.matches("CREDITS") && mc.screen instanceof WinScreen) {
                     events.add(guiName);
                     dynamicSongs.put(guiName, SoundHandler.guiSongsString.get(guiName));
                     dynamicPriorities.put(guiName, SoundHandler.guiPriorities.get(guiName));
