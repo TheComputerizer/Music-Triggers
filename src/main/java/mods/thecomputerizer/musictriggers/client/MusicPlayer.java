@@ -66,6 +66,12 @@ public class MusicPlayer {
             if (MusicPicker.persistentPVP > 0) {
                 MusicPicker.persistentPVP -= 1;
             }
+            if(MusicPicker.fishBool) {
+                MusicPicker.fishingStart++;
+            }
+            if(MusicPicker.persistentFishing>0) {
+                MusicPicker.persistentFishing -= 1;
+            }
             for (Map.Entry<Integer, Integer> integerListEntry : MusicPicker.persistentVictory.entrySet()) {
                 int victoryID = integerListEntry.getKey();
                 MusicPicker.persistentVictory.putIfAbsent(victoryID, 0);

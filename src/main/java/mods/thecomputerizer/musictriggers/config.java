@@ -14,10 +14,10 @@ import java.util.List;
 public final class config {
     public static List<String> fb = new ArrayList<>();
 
-    public static String[] Categories = {"Main Menu", "Generic", "Difficulty", "Zones", "Day", "Night", "Sunrise", "Sunset", "Light Level", "Underground - underground with no sky visible", "Deep Under - deep below the surface with no sky visible", "Raining", "Storming", "Snowing", "Low HP", "Dead", "inVoid", "Spectator", "Creative", "Riding", "Pet", "High", "Underwater", "PVP", "Dimension", "Biome", "Structure", "Mob (This works for both bosses and hordes!)", "Effect (Trigger based on potion effects)", "Victory - This can only be called after the pvp or mob trigger", "Gui", "Gamestages (Only fires if the mod Game Stages is active)", "Blood Moon (Only fires if the mod Enhanced Celestials is active)", "Harvest Moon (Only fires if the mod Enhanced Celestials is active)", "Blue Moon (Only fires if the mod Enhanced Celestials is active)", "Rain Intensity (Only fires if the mod dynamic surroundings is active)", "Acid Rain (Only fires if the mod better weather is active)", "Blizzard (Only fires if the mod better weather is active)", "Cloudy (Only fires if the mod better weather is active)", "Light Rain (Only fires if the mod better weather is active)", "Seasons (Only fires if the mod serene season is active)"};
-    public static Integer[] withPriority = {-1111, -1111, 100, 10000, 1000, 900, 1111, 1111, 500, 1500, 2000, 1300, 1350, 1333, 3000, 10000, 7777, 5000, 5000, 2222, 1200, 1200, 1999, 20000, 1150, 1160, 3333, 3500, 500, 20000, 13333, 500, 1200, 1400, 1400, 1349, 9999, 9999, 9999, 9999, 500};
-    public static Integer[] withFade = {-1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    public static Integer[] withLevel = {9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 7, 55, 20, 9999, 9999, 9999, 30, 9999, 0, 9999, 9999, 9999, 9999, 150, 9999, 16, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999};
+    public static String[] Categories = {"Main Menu", "Generic", "Difficulty", "Zones", "Day", "Night", "Sunrise", "Sunset", "Light Level", "Underground - underground with no sky visible", "Deep Under - deep below the surface with no sky visible", "Raining", "Storming", "Snowing", "Low HP", "Dead", "inVoid", "Spectator", "Creative", "Riding", "Pet", "High", "Underwater", "PVP", "Dimension", "Biome", "Structure", "Mob (This works for both bosses and hordes!)", "Effect (Trigger based on potion effects)", "Victory - This can only be called after the pvp or mob trigger", "Gui", "Elytra", "Fishing", "Gamestages (Only fires if the mod Game Stages is active)", "Blood Moon (Only fires if the mod Enhanced Celestials is active)", "Harvest Moon (Only fires if the mod Enhanced Celestials is active)", "Blue Moon (Only fires if the mod Enhanced Celestials is active)", "Rain Intensity (Only fires if the mod dynamic surroundings is active)", "Acid Rain (Only fires if the mod better weather is active)", "Blizzard (Only fires if the mod better weather is active)", "Cloudy (Only fires if the mod better weather is active)", "Light Rain (Only fires if the mod better weather is active)", "Seasons (Only fires if the mod serene season is active)"};
+    public static Integer[] withPriority = {-1111, -1111, 100, 10000, 1000, 900, 1111, 1111, 500, 1500, 2000, 1300, 1350, 1333, 3000, 10000, 7777, 5000, 5000, 2222, 1200, 1200, 1999, 20000, 1150, 1160, 3333, 3500, 500, 20000, 999, 1234, 13333, 500, 1200, 1400, 1400, 1349, 9999, 9999, 9999, 9999, 500};
+    public static Integer[] withFade = {-1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -1, -1, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    public static Integer[] withLevel = {9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 7, 55, 20, 9999, 9999, 9999, 30, 9999, 0, 9999, 9999, 9999, 9999, 150, 9999, 16, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 60, 60, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999, 9999};
 
     public static HashMap<Integer, TriggerData> readTriggers = new HashMap<>();
     public static int triggerCounter = 0;
@@ -146,6 +146,17 @@ public final class config {
     public static int guiPriority;
     public static List<String> guiSongs;
 
+    public static int elytraPriority;
+    public static int elytraFade;
+    public static int elytraStart;
+    public static List<String> elytraSongs;
+
+    public static int fishingPriority;
+    public static int fishingFade;
+    public static int fishingStart;
+    public static int fishingPersistence;
+    public static List<String> fishingSongs;
+
     public static int gamestagePriority;
     public static List<String> gamestageSongs;
 
@@ -210,15 +221,32 @@ public final class config {
                     fb.add("\t\tConfigurable Range [default: " + withLevel[i] + "]");
                     fb.add("\t\tLevel Value=" + withLevel[i]);
                     fb.add("");
+                } else if (Categories[i].matches("Elytra")) {
+                    fb.add("\t\tStart time:[in ticks, default: " + withLevel[i] + "]");
+                    fb.add("\t\tElytra Start=" + withLevel[i]);
+                    fb.add("");
+                } else if (Categories[i].matches("Fishing")) {
+                    fb.add("\t\tStart time:[in ticks, default: " + withLevel[i] + "]");
+                    fb.add("\t\tFishing Start=" + withLevel[i]);
+                    fb.add("");
+                } else if (Categories[i].matches("Light Level")) {
+                    fb.add("\t\tConfigurable Level [Y level to activate, default: "+withLevel[i]+"]");
+                    fb.add("\t\tFishing Start=" + withLevel[i]);
+                    fb.add("");
                 } else {
                     fb.add("\t\tPercentage of maximum health [Out of 100, default: " + withLevel[i] + "]");
                     fb.add("\t\tLevel Value=" + withLevel[i]);
                     fb.add("");
                 }
             }
+            if (Categories[i].matches("Fishing")) {
+                fb.add("\t\tPersistence time:[in ticks, default: 100]");
+                fb.add("\t\tFishing Persistence=100");
+                fb.add("");
+            }
             if (Categories[i].matches("PVP")) {
                 fb.add("\t\tBattle Time [in ticks, default: 200]");
-                fb.add("\t\tPersistence=200");
+                fb.add("\t\tPVP Persistence=200");
                 fb.add("");
             }
             if (Categories[i].matches("PVP")) {
@@ -248,6 +276,14 @@ public final class config {
                 fb.add("\t\tExample 2: [nighttime,2,3,4,6,7,8] - This will play every night except for full moons and new moons");
                 fb.add("\t\tExample 3: [nighttime,0] - This will play whenever it is nighttime, just like the old version of this trigger");
                 fb.add("\t\tNote - If the fade is not the last number it will not work properly");
+                fb.add("\t\tSongs=<\n\t\t>");
+                fb.add("");
+            } else if (Categories[i].matches("Light Level")) {
+                fb.add("\t\tSongs - [Format: \"SongName,Identifier(string name to tie a group of songs to a pool),Light Level(maximum light level),(Optional)Sky Light[default: true],(Optional)Light Time[default: 20],(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tNote: Sky light will let you choose whether or not to take that into account");
+                fb.add("\t\tAdditional Note: The light time is how long it will take before the trigger is deactivated after the conditions are no longer met");
+                fb.add("\t\tExample: spookydark,5,3,false,20,9945,50");
+                fb.add("\t\tTip - Setting sky light to false would work best when combining it with the night trigger");
                 fb.add("\t\tSongs=<\n\t\t>");
                 fb.add("");
             } else if (Categories[i].matches("Difficulty")) {
@@ -292,6 +328,7 @@ public final class config {
                 fb.add("\t\tExample: Zombie,8,(songname),16,11111");
                 fb.add("\t\tFull-Scale example: Skeleton,4,123486,50,true,50,80,25,0,Withering");
                 fb.add("\t\tSpecial case - If you put \"MOB\" as the mob ID, it will default to any hostile mob");
+                fb.add("\t\tSpecial case - If you put \"BOSS\" as the mob ID, it will work whenever a boss health bar is present. Note that this breaks the other parameters, except battle time");
                 fb.add("\t\tSongs=<\n\t\t>");
                 fb.add("");
             } else if (Categories[i].contains("Trigger based on potion effects")) {
@@ -311,6 +348,7 @@ public final class config {
                 fb.add("\t\tSongs - [Format: \"Gui Name,SongName,(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0]\"]");
                 fb.add("\t\tExample: net.minecraft.client.gui.screen.ChatScreen,inventory,67000");
                 fb.add("\t\tNote: This can also be a regex");
+                fb.add("\t\tAdditional Note: If you set the gui name to CREDITS it will function while the end game credits are playing");
                 fb.add("\t\tExample 2: ChatScreen,inventory,67000");
                 fb.add("\t\tSongs=<\n\t\t>");
                 fb.add("");
@@ -371,7 +409,10 @@ public final class config {
                 if (line.contains("Level Value=")) {
                     l = Integer.parseInt(stringBreakerRegex(line, "=")[1]);
                 }
-                if (line.contains("Persistence=")) {
+                if (line.contains("Fishing Persistence=")) {
+                    fishingPersistence = Integer.parseInt(stringBreakerRegex(line, "=")[1]);
+                }
+                if (line.contains("PVP Persistence=")) {
                     pvpTime = Integer.parseInt(stringBreakerRegex(line, "=")[1]);
                 }
                 if (line.contains("Victory=")) {
@@ -519,43 +560,53 @@ public final class config {
         guiPriority = accountForNullNumericalTriggerData(30,1);
         guiSongs = accountForNullSongTriggerData(30);
 
-        gamestagePriority = accountForNullNumericalTriggerData(31,1);
-        gamestageSongs = accountForNullSongTriggerData(31);
+        elytraPriority = accountForNullNumericalTriggerData(31,1);
+        elytraFade = accountForNullNumericalTriggerData(31,2);
+        elytraStart = accountForNullNumericalTriggerData(31,3);
+        elytraSongs = accountForNullSongTriggerData(31);
 
-        bloodmoonPriority = accountForNullNumericalTriggerData(32,1);
-        bloodmoonFade = accountForNullNumericalTriggerData(32,2);
-        bloodmoonSongs = accountForNullSongTriggerData(32);
+        fishingPriority = accountForNullNumericalTriggerData(32,1);
+        fishingFade = accountForNullNumericalTriggerData(32,2);
+        fishingStart = accountForNullNumericalTriggerData(32,3);
+        fishingSongs = accountForNullSongTriggerData(32);
 
-        harvestmoonPriority = accountForNullNumericalTriggerData(33,1);
-        harvestmoonFade = accountForNullNumericalTriggerData(33,2);
-        harvestmoonSongs = accountForNullSongTriggerData(33);
+        gamestagePriority = accountForNullNumericalTriggerData(33,1);
+        gamestageSongs = accountForNullSongTriggerData(33);
 
-        bluemoonPriority = accountForNullNumericalTriggerData(34,1);
-        bluemoonFade = accountForNullNumericalTriggerData(34,2);
-        bluemoonSongs = accountForNullSongTriggerData(34);
+        bloodmoonPriority = accountForNullNumericalTriggerData(34,1);
+        bloodmoonFade = accountForNullNumericalTriggerData(34,2);
+        bloodmoonSongs = accountForNullSongTriggerData(34);
 
-        rainintensityPriority = accountForNullNumericalTriggerData(35,1);
-        rainintensityFade = accountForNullNumericalTriggerData(35,2);
-        rainintensitySongs = accountForNullSongTriggerData(35);
+        harvestmoonPriority = accountForNullNumericalTriggerData(35,1);
+        harvestmoonFade = accountForNullNumericalTriggerData(35,2);
+        harvestmoonSongs = accountForNullSongTriggerData(35);
 
-        acidrainPriority = accountForNullNumericalTriggerData(36,1);
-        acidrainFade = accountForNullNumericalTriggerData(36,2);
-        acidrainSongs = accountForNullSongTriggerData(36);
+        bluemoonPriority = accountForNullNumericalTriggerData(36,1);
+        bluemoonFade = accountForNullNumericalTriggerData(36,2);
+        bluemoonSongs = accountForNullSongTriggerData(36);
 
-        blizzardPriority = accountForNullNumericalTriggerData(37,1);
-        blizzardFade = accountForNullNumericalTriggerData(37,2);
-        blizzardSongs = accountForNullSongTriggerData(37);
+        rainintensityPriority = accountForNullNumericalTriggerData(37,1);
+        rainintensityFade = accountForNullNumericalTriggerData(37,2);
+        rainintensitySongs = accountForNullSongTriggerData(37);
 
-        cloudyPriority = accountForNullNumericalTriggerData(38,1);
-        cloudyFade = accountForNullNumericalTriggerData(38,2);
-        cloudySongs = accountForNullSongTriggerData(38);
+        acidrainPriority = accountForNullNumericalTriggerData(38,1);
+        acidrainFade = accountForNullNumericalTriggerData(38,2);
+        acidrainSongs = accountForNullSongTriggerData(38);
 
-        lightrainPriority = accountForNullNumericalTriggerData(39,1);
-        lightrainFade = accountForNullNumericalTriggerData(39,2);
-        lightrainSongs = accountForNullSongTriggerData(39);
+        blizzardPriority = accountForNullNumericalTriggerData(39,1);
+        blizzardFade = accountForNullNumericalTriggerData(39,2);
+        blizzardSongs = accountForNullSongTriggerData(39);
 
-        seasonsPriority = accountForNullNumericalTriggerData(40,1);
-        seasonsSongs = accountForNullSongTriggerData(40);
+        cloudyPriority = accountForNullNumericalTriggerData(40,1);
+        cloudyFade = accountForNullNumericalTriggerData(40,2);
+        cloudySongs = accountForNullSongTriggerData(40);
+
+        lightrainPriority = accountForNullNumericalTriggerData(41,1);
+        lightrainFade = accountForNullNumericalTriggerData(41,2);
+        lightrainSongs = accountForNullSongTriggerData(41);
+
+        seasonsPriority = accountForNullNumericalTriggerData(42,1);
+        seasonsSongs = accountForNullSongTriggerData(42);
     }
 
     public static void update(File f) {
@@ -585,15 +636,32 @@ public final class config {
                     fb.add("\t\tConfigurable Range [default: " + withLevel[i] + "]");
                     fb.add("\t\tLevel Value=" + accountForNullNumericalTriggerData(i,3));
                     fb.add("");
+                } else if (Categories[i].matches("Elytra")) {
+                    fb.add("\t\tStart time:[in ticks, default: " + withLevel[i] + "]");
+                    fb.add("\t\tElytra Start=" + accountForNullNumericalTriggerData(i,3));
+                    fb.add("");
+                } else if (Categories[i].matches("Fishing")) {
+                    fb.add("\t\tStart time:[in ticks, default: " + withLevel[i] + "]");
+                    fb.add("\t\tFishing Start=" + accountForNullNumericalTriggerData(i,3));
+                    fb.add("");
+                } else if (Categories[i].matches("Light Level")) {
+                    fb.add("\t\tConfigurable Level [Y level to activate, default: "+withLevel[i]+"]");
+                    fb.add("\t\tFishing Start=" + accountForNullNumericalTriggerData(i,3));
+                    fb.add("");
                 } else {
                     fb.add("\t\tPercentage of maximum health [Out of 100, default: " + withLevel[i] + "]");
                     fb.add("\t\tLevel Value=" + accountForNullNumericalTriggerData(i,3));
                     fb.add("");
                 }
             }
+            if (Categories[i].matches("Fishing")) {
+                fb.add("\t\tPersistence time:[in ticks, default: 100]");
+                fb.add("\t\tFishing Persistence="+fishingPersistence);
+                fb.add("");
+            }
             if (Categories[i].matches("PVP")) {
                 fb.add("\t\tBattle Time [in ticks, default: 200]");
-                fb.add("\t\tPersistence=" + pvpTime);
+                fb.add("\t\tPVP Persistence=" + pvpTime);
                 fb.add("");
             }
             if (Categories[i].matches("PVP")) {
@@ -629,6 +697,19 @@ public final class config {
                 fb.add("\t\tExample 2: [nighttime,2,3,4,6,7,8] - This will play every night except for full moons and new moons");
                 fb.add("\t\tExample 3: [nighttime,0] - This will play whenever it is nighttime, just like the old version of this trigger");
                 fb.add("\t\tNote - If the fade is not the last number it will not work properly");
+                fb.add("\t\tSongs=<");
+                List<String> songList = accountForNullSongTriggerData(i);
+                for (String iter : songList) {
+                    fb.add("\t\t" + iter);
+                }
+                fb.add("\t\t>");
+                fb.add("");
+            } else if (Categories[i].matches("Light Level")) {
+                fb.add("\t\tSongs - [Format: \"SongName,Identifier(string name to tie a group of songs to a pool),Light Level(maximum light level),(Optional)Sky Light[default: true],(Optional)Light Time[default: 20],(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]");
+                fb.add("\t\tNote: Sky light will let you choose whether or not to take that into account");
+                fb.add("\t\tAdditional Note: The light time is how long it will take before the trigger is deactivated after the conditions are no longer met");
+                fb.add("\t\tExample: spookydark,5,3,false,20,9945,50");
+                fb.add("\t\tTip - Setting sky light to false would work best when combining it with the night trigger");
                 fb.add("\t\tSongs=<");
                 List<String> songList = accountForNullSongTriggerData(i);
                 for (String iter : songList) {

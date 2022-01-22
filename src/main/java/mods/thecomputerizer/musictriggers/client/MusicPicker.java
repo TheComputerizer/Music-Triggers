@@ -21,8 +21,12 @@ import mods.thecomputerizer.musictriggers.util.packets.InfoForStructure;
 import net.darkhax.gamestages.GameStageHelper;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ClientBossInfo;
+import net.minecraft.client.gui.overlay.BossOverlayGui;
+import net.minecraft.client.gui.screen.WinGameScreen;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.boss.dragon.EnderDragonEntity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -30,10 +34,13 @@ import net.minecraft.potion.Effect;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.BossInfo;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.orecruncher.lib.WorldUtils;
 import sereneseasons.api.season.ISeasonState;
 import sereneseasons.api.season.Season;
@@ -55,6 +62,9 @@ public class MusicPicker {
     public static HashMap<Integer, Boolean> victory = new HashMap<>();
     public static int persistentPVP = 0;
     public static int victoryID = 0;
+    public static boolean fishBool = false;
+    public static int fishingStart = 0;
+    public static int persistentFishing = 0;
     public static boolean setPVP = false;
     public static PlayerEntity otherPVP;
     public static boolean infernalLoaded = false;
@@ -260,6 +270,31 @@ public class MusicPicker {
             dynamicPriorities.put("high", config.highPriority);
             dynamicFade.put("high", config.highFade);
         }
+        if (player.getFallFlyingTicks()>=config.elytraStart) {
+            events.add("elytra");
+            dynamicSongs.put("elytra", config.elytraSongs);
+            dynamicPriorities.put("elytra", config.elytraPriority);
+            dynamicFade.put("elytra", config.elytraFade);
+        }
+        if(player.fishing!=null) {
+            fishBool = true;
+        }
+        else {
+            fishingStart=0;
+        }
+        if(fishingStart>config.fishingStart) {
+            events.add("fishing");
+            dynamicSongs.put("fishing", config.fishingSongs);
+            dynamicPriorities.put("fishing", config.fishingPriority);
+            dynamicFade.put("fishing", config.fishingFade);
+            persistentFishing = config.fishingPersistence;
+        }
+        else if(persistentFishing>0) {
+            events.add("fishing");
+            dynamicSongs.put("fishing", config.fishingSongs);
+            dynamicPriorities.put("fishing", config.fishingPriority);
+            dynamicFade.put("fishing", config.fishingFade);
+        }
         if (world.isRaining()) {
             events.add("raining");
             dynamicSongs.put("raining", config.rainingSongs);
@@ -435,6 +470,17 @@ public class MusicPicker {
                     persistentMob.put(mobName, SoundHandler.mobBattle.get(mobName));
                     victory.put(victoryID, SoundHandler.mobVictory.get(mobName));
                 }
+            } else if (mobName.matches("BOSS")) {
+                mc.gui.getBossOverlay();
+                Map<UUID, ClientBossInfo> info = ObfuscationReflectionHelper.getPrivateValue(BossOverlayGui.class, mc.gui.getBossOverlay(), "field_184060_g");
+                if (!info.isEmpty()) {
+                    events.add(mobName);
+                    dynamicSongs.put(mobName, SoundHandler.mobSongsString.get(mobName));
+                    dynamicPriorities.put(mobName, SoundHandler.mobPriorities.get(mobName));
+                    dynamicFade.put(mobName, SoundHandler.mobFade.get(mobName));
+                    persistentMob.put(mobName, SoundHandler.mobBattle.get(mobName));
+                    victory.put(victoryID, SoundHandler.mobVictory.get(mobName));
+                }
             } else {
                 int mobCounter = 0;
                 List<MobEntity> mobListSpecific = new ArrayList<>();
@@ -589,6 +635,12 @@ public class MusicPicker {
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.guiSongsString.entrySet()) {
                 String guiName = ((Map.Entry) stringListEntry).getKey().toString();
                 if(mc.screen.toString().contains(guiName)) {
+                    events.add(guiName);
+                    dynamicSongs.put(guiName, SoundHandler.guiSongsString.get(guiName));
+                    dynamicPriorities.put(guiName, SoundHandler.guiPriorities.get(guiName));
+                    dynamicFade.put(guiName, SoundHandler.guiFade.get(guiName));
+                }
+                else if(guiName.matches("CREDITS") && mc.screen instanceof WinGameScreen) {
                     events.add(guiName);
                     dynamicSongs.put(guiName, SoundHandler.guiSongsString.get(guiName));
                     dynamicPriorities.put(guiName, SoundHandler.guiPriorities.get(guiName));
@@ -760,9 +812,9 @@ public class MusicPicker {
         if (ModList.get().isLoaded("enhancedcelestials")) {
             LunarContext lunarContext = ((EnhancedCelestialsWorldData) world).getLunarContext();
             if (lunarContext != null && lunarContext.getCurrentEvent() instanceof BlueMoon) {
-                dynamicSongs.put("bluemoon", config.acidrainSongs);
-                dynamicPriorities.put("bluemoon", config.acidrainPriority);
-                dynamicFade.put("bluemoon", config.acidrainFade);
+                dynamicSongs.put("bluemoon", config.bluemoonSongs);
+                dynamicPriorities.put("bluemoon", config.bluemoonPriority);
+                dynamicFade.put("bluemoon", config.bluemoonFade);
                 return true;
             }
         }
@@ -842,6 +894,7 @@ public class MusicPicker {
             if (!SoundHandler.seasonsSongsString.isEmpty()) {
                 for (Map.Entry<Integer, List<String>> intListEntry : SoundHandler.seasonsSongsString.entrySet()) {
                     int seasonID = intListEntry.getKey();
+                    assert mc.level != null;
                     ISeasonState curSeason = SeasonHelper.getSeasonState(mc.level);
                     if (seasonID == 0 && curSeason.getSeason() == Season.SPRING) {
                         dynamicSongs.put("season:"+seasonID, SoundHandler.seasonsSongsString.get(seasonID));

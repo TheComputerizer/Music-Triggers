@@ -13,6 +13,7 @@ public class json {
     public static List<String> js = new ArrayList<>();
 
     public static List<String> create() {
+        format();
         allSongs = collector();
         String[] redirected = {};
         if(configDebug.enableRedirect.get()) {
@@ -97,6 +98,17 @@ public class json {
             return allSongs;
         }
         else return null;
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public static void format() {
+        File folder = new File("." + "/config/MusicTriggers/songs/assets/musictriggers/sounds/music/");
+        File[] music = folder.listFiles();
+        if (music!=null) {
+            for (File f : music) {
+                f.renameTo(new File(folder, f.getName().toLowerCase()));
+            }
+        }
     }
 
     public static String[] stringBreaker(String s, String regex) {
