@@ -324,6 +324,7 @@ public final class config {
                 fb.add("\t\tExample: Zombie,8,(songname),16,11111");
                 fb.add("\t\tFull-Scale example: Skeleton,4,123486,50,true,50,80,25,0,Withering");
                 fb.add("\t\tSpecial case - If you put \"MOB\" as the mob ID, it will default to any hostile mob");
+                fb.add("\t\tSpecial case - If you put \"BOSS\" as the mob ID, it will work whenever a boss health bar is present. Note that this breaks the other parameters, except battle time");
                 fb.add("\t\tSongs=<\n\t\t>");
                 fb.add("");
             } else if (Categories[i].contains("Trigger based on potion effects")) {
@@ -343,6 +344,7 @@ public final class config {
                 fb.add("\t\tSongs - [Format: \"Gui Name,SongName,(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0]\"]");
                 fb.add("\t\tExample: net.minecraft.client.gui.screen.ChatScreen,inventory,67000");
                 fb.add("\t\tNote: This can also be a regex");
+                fb.add("\t\tAdditional Note: If you set the gui name to CREDITS it will function while the end game credits are playing");
                 fb.add("\t\tExample 2: ChatScreen,inventory,67000");
                 fb.add("\t\tSongs=<\n\t\t>");
                 fb.add("");
@@ -763,6 +765,7 @@ public final class config {
                 fb.add("\t\tExample: Zombie,8,(songname),16,11111");
                 fb.add("\t\tFull-Scale example: Skeleton,4,123486,50,true,50,80,25,0,Withering");
                 fb.add("\t\tSpecial case - If you put \"MOB\" as the mob ID, it will default to any hostile mob");
+                fb.add("\t\tSpecial case - If you put \"BOSS\" as the mob ID, it will work whenever a boss health bar is present. Note that this breaks the other parameters, except battle time");
                 fb.add("\t\tSongs=<");
                 List<String> songList = accountForNullSongTriggerData(i);
                 for (String iter : songList) {
@@ -797,6 +800,7 @@ public final class config {
                 fb.add("Songs - [Format: \"Gui Name,SongName,(Optional)Priority:[min: -99, max: 2147483647],(Optional)Fade Time:[in ticks, default: 0]\"]");
                 fb.add("Example: net.minecraft.client.gui.inventory.GuiInventory,inventory,67000");
                 fb.add("Note: This can also be a regex");
+                fb.add("\t\tAdditional Note: If you set the gui name to CREDITS it will function while the end game credits are playing");
                 fb.add("Example 2: GuiInventory,inventory,67000");
                 fb.add("\t\tSongs=<");
                 List<String> songList = accountForNullSongTriggerData(i);
