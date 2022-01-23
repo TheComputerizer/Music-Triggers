@@ -276,7 +276,7 @@ public class MusicPicker {
             dynamicPriorities.put("elytra", config.elytraPriority);
             dynamicFade.put("elytra", config.elytraFade);
         }
-        if(player.fishing!=null) {
+        if(player.fishing!=null && player.fishing.isInWaterOrBubble()) {
             fishBool = true;
         }
         else {
@@ -471,7 +471,6 @@ public class MusicPicker {
                     victory.put(victoryID, SoundHandler.mobVictory.get(mobName));
                 }
             } else if (mobName.matches("BOSS")) {
-                mc.gui.getBossOverlay();
                 Map<UUID, ClientBossInfo> info = ObfuscationReflectionHelper.getPrivateValue(BossOverlayGui.class, mc.gui.getBossOverlay(), "field_184060_g");
                 if (!info.isEmpty()) {
                     events.add(mobName);

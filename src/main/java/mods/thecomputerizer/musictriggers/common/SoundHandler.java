@@ -141,7 +141,7 @@ public class SoundHandler {
 
         if (config.menuSongs.size() != 0) {
             for (int i = 0; i < config.menuSongs.size(); i++) {
-                String songName = config.menuSongs.get(i).toLowerCase().trim().trim();
+                String songName = config.menuSongs.get(i).toLowerCase().trim().replaceAll(" ","_").trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("menu");
@@ -167,7 +167,7 @@ public class SoundHandler {
         }
         if (config.genericSongs.size() != 0) {
             for (int i = 0; i < config.genericSongs.size(); i++) {
-                String songName = config.genericSongs.get(i).toLowerCase().trim().trim();
+                String songName = config.genericSongs.get(i).toLowerCase().trim().replaceAll(" ","_").trim();
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
                     songCombos.get(songName).add("generic");
@@ -1073,7 +1073,7 @@ public class SoundHandler {
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
-                    
+
                 }
             }
         }
@@ -1360,7 +1360,7 @@ public class SoundHandler {
                     int extractedFade = Integer.parseInt(broken[3]);
                     guiFade.put(extractedName, extractedFade);
                 }
-                String songName = broken[1].toLowerCase();
+                String songName = broken[1].toLowerCase().trim();
                 String songNamePlus = songName;
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
@@ -1401,7 +1401,7 @@ public class SoundHandler {
                     int extractedFade = Integer.parseInt(broken[3]);
                     difficultyFade.put(extractedID, extractedFade);
                 }
-                String songName = broken[0].toLowerCase();
+                String songName = broken[0].toLowerCase().trim();
                 String songNamePlus = songName;
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
@@ -1442,7 +1442,7 @@ public class SoundHandler {
                     int extractedFade = Integer.parseInt(broken[3]);
                     seasonsFade.put(extractedID, extractedFade);
                 }
-                String songName = broken[0].toLowerCase();
+                String songName = broken[0].toLowerCase().trim();
                 String songNamePlus = songName;
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());

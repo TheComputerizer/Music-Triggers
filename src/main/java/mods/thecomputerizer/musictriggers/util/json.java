@@ -106,7 +106,7 @@ public class json {
         File[] music = folder.listFiles();
         if (music!=null) {
             for (File f : music) {
-                f.renameTo(new File(folder, f.getName().toLowerCase()));
+                f.renameTo(new File(folder, f.getName().toLowerCase().replaceAll(" ","_")));
             }
         }
     }
