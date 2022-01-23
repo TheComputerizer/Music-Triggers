@@ -14,6 +14,12 @@ public class json {
     public static List<String> js = new ArrayList<>();
 
     public static List<String> create() {
+        format();
+        try {
+            //audioGrabber.dl("https://youtu.be/z3Q4WBpCXhs?list=PLu8sO3xkHSvhBQA1PpCQTdzFkp3G7y8pZ");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         allSongs = collector();
         String[] redirected = {};
         if(configDebug.enableRedirect) {
@@ -32,14 +38,16 @@ public class json {
                 js.add("\t},");
             }
             for (String s : redirected) {
-                String[] songs = stringBreaker(s, ",");
-                js.add("  \"music." + songs[0] + "\": {");
-                js.add("\t\t\"category\": \"music\",");
-                js.add("\t\t\"sounds\": [{");
-                js.add("\t\t\t\"name\": \"" + MusicTriggers.MODID + ":music/" + songs[1] + "\",");
-                js.add("\t\t\t\"stream\": true");
-                js.add("\t\t}]");
-                js.add("\t},");
+                if (s.contains(",")) {
+                    String[] songs = stringBreaker(s, ",");
+                    js.add("  \"music." + songs[0] + "\": {");
+                    js.add("\t\t\"category\": \"music\",");
+                    js.add("\t\t\"sounds\": [{");
+                    js.add("\t\t\t\"name\": \"" + MusicTriggers.MODID + ":music/" + songs[1] + "\",");
+                    js.add("\t\t\t\"stream\": true");
+                    js.add("\t\t}]");
+                    js.add("\t},");
+                }
             }
             js.add("  \"music." + allSongs.get(allSongs.size() - 1).toLowerCase() + "\": {");
             js.add("\t\t\"category\": \"music\",");
@@ -77,19 +85,15 @@ public class json {
         File[] listOfMP3 = folder.listFiles((dir, name) -> name.endsWith(".mp3"));
         if (listOfMP3 != null) {
             for (File mp3 : listOfMP3) {
-                //audioConverter.mp3ToOgg(folder, mp3, mp3.getName().replaceAll(".mp3",".ogg"));
+                //audioConverter.mp3ToOgg(mp3, folder, mp3.getName().replaceAll(".mp3",".wav"));
             }
         }
         File[] listOfFiles = folder.listFiles((dir, name) -> name.endsWith(".ogg"));
         assert listOfFiles != null;
-        for (File f : listOfFiles) {
-            //noinspection ResultOfMethodCallIgnored
-            f.renameTo(new File(folder.getPath(), f.getName().toLowerCase()));
-        }
         boolean matchCheck = false;
         String curfile;
-        for (File listOfFile : listOfFiles) {
-            curfile = FilenameUtils.getBaseName(listOfFile.getName());
+        for (File f : listOfFiles) {
+            curfile = FilenameUtils.getBaseName(f.getName());
             for (String checker : allSongs) {
                 if (checker.matches(curfile)) {
                     matchCheck = true;
@@ -102,6 +106,17 @@ public class json {
             matchCheck = false;
         }
         return allSongs;
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public static void format() {
+        File folder = new File("." + "/config/MusicTriggers/songs/assets/musictriggers/sounds/music/");
+        File[] music = folder.listFiles();
+        if (music!=null) {
+            for (File f : music) {
+                f.renameTo(new File(folder, f.getName().toLowerCase()));
+            }
+        }
     }
 
     public static String[] stringBreaker(String s, String regex) {

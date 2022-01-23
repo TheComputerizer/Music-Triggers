@@ -16,6 +16,7 @@ public class SoundHandler {
 
     public static List<String> allSongs = new ArrayList<>();
     public static List<SoundEvent> allSoundEvents = new ArrayList<>();
+    public static HashMap<SoundEvent,String> allSoundEventsTriggers = new HashMap<>();
 
     public static List<SoundEvent> menu = new ArrayList<>();
     public static List<SoundEvent> generic = new ArrayList<>();
@@ -44,6 +45,8 @@ public class SoundHandler {
     public static List<SoundEvent> high = new ArrayList<>();
     public static List<SoundEvent> underwater = new ArrayList<>();
     public static List<SoundEvent> pvp = new ArrayList<>();
+    public static List<SoundEvent> elytra = new ArrayList<>();
+    public static List<SoundEvent> fishing = new ArrayList<>();
 
     public static HashMap<Integer, List<SoundEvent>> difficultySongs = new HashMap<>();
     public static HashMap<Integer, List<String>> difficultySongsString = new HashMap<>();
@@ -159,6 +162,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"menu");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -187,6 +191,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"generic");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -214,6 +219,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"day");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -258,6 +264,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"night");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -285,6 +292,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"sunrise");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -312,6 +320,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"sunset");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -366,6 +375,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"lightlevel");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -393,6 +403,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"underground");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -420,6 +431,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"deepunder");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -447,6 +459,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"rain");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -474,6 +487,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"storming");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -501,6 +515,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"snowing");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -528,6 +543,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"lowhp");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -555,6 +571,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"dead");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -582,6 +599,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"invoid");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -609,6 +627,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"spectator");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -636,6 +655,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"creative");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -663,6 +683,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"riding");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -690,6 +711,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"pet");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -717,6 +739,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"high");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -760,6 +783,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"dimension");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -808,6 +832,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"biome");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -851,6 +876,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"structure");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -894,6 +920,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"zone");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -983,6 +1010,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"mob");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -1046,6 +1074,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"gamestage");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -1073,6 +1102,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"bloodmoon");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -1100,6 +1130,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"harvestmoon");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -1127,6 +1158,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"fallingstars");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -1160,6 +1192,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"rainintensity");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -1187,6 +1220,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"underwater");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -1214,7 +1248,7 @@ public class SoundHandler {
                 String songNamePlus = songName;
                 if (songName.startsWith("@")) {
                     songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
-                    songCombos.get(songName).add("Rain Intensity");
+                    songCombos.get(songName).add(effectName);
                     songName = songName.substring(1);
                 }
                 effectSongs.computeIfAbsent(effectName, k -> new ArrayList<>());
@@ -1230,6 +1264,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"effect");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -1257,6 +1292,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"pvp");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -1306,6 +1342,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"victory");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -1350,6 +1387,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"tornado");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -1377,6 +1415,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"hurricane");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -1404,6 +1443,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"sandstorm");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -1447,6 +1487,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"gui");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -1490,6 +1531,7 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"difficulty");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -1533,6 +1575,63 @@ public class SoundHandler {
                 }
                 if(!cont) {
                     allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"season");
+                }
+                if (!allSongs.contains(songName)) {
+                    allSongs.add(songName);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
+                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
+                    }
+                }
+            }
+        }
+        if (config.elytra.elytraSongs != null) {
+            for (int i = 0; i < config.elytra.elytraSongs.length; i++) {
+                String songName = config.elytra.elytraSongs[i].toLowerCase();
+                if (songName.startsWith("@")) {
+                    songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
+                    songCombos.get(songName).add("elytra");
+                    songName = songName.substring(1);
+                }
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
+                elytra.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"elytra");
+                }
+                if (!allSongs.contains(songName)) {
+                    allSongs.add(songName);
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
+                        songsRecords.put(songName, PositionedSoundRecord.getMusicRecord(new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]))));
+                    }
+                }
+            }
+        }
+        if (config.fishing.fishingSongs != null) {
+            for (int i = 0; i < config.fishing.fishingSongs.length; i++) {
+                String songName = config.fishing.fishingSongs[i].toLowerCase();
+                if (songName.startsWith("@")) {
+                    songCombos.computeIfAbsent(songName, k -> new ArrayList<>());
+                    songCombos.get(songName).add("fishing");
+                    songName = songName.substring(1);
+                }
+                SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + stringBreaker(stringBreaker(songName,";")[0],"/")[0])).setRegistryName(new ResourceLocation(MusicTriggers.MODID, stringBreaker(stringBreaker(songName,";")[0],"/")[0]));
+                fishing.add(sound);
+                boolean cont = false;
+                for(SoundEvent s: allSoundEvents) {
+                    if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) {
+                        cont=true;
+                    }
+                }
+                if(!cont) {
+                    allSoundEvents.add(sound);
+                    allSoundEventsTriggers.put(sound,"fishing");
                 }
                 if (!allSongs.contains(songName)) {
                     allSongs.add(songName);
@@ -1551,6 +1650,7 @@ public class SoundHandler {
     public static void emptyListsAndMaps() {
         allSongs = new ArrayList<>();
         allSoundEvents = new ArrayList<>();
+        allSoundEventsTriggers = new HashMap<>();
 
         menu = new ArrayList<>();
         generic = new ArrayList<>();
@@ -1579,6 +1679,8 @@ public class SoundHandler {
         high = new ArrayList<>();
         underwater = new ArrayList<>();
         pvp = new ArrayList<>();
+        elytra = new ArrayList<>();
+        fishing = new ArrayList<>();
         
         difficultySongs = new HashMap<>();
         difficultySongsString = new HashMap<>();

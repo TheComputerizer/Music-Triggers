@@ -7,7 +7,6 @@ import de.ellpeck.nyx.lunarevents.BloodMoon;
 import de.ellpeck.nyx.lunarevents.HarvestMoon;
 import de.ellpeck.nyx.lunarevents.StarShower;
 import lumien.bloodmoon.Bloodmoon;
-import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.config;
 import mods.thecomputerizer.musictriggers.configRegistry;
@@ -16,6 +15,8 @@ import mods.thecomputerizer.musictriggers.util.packet;
 import net.darkhax.gamestages.GameStageHelper;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.BossInfoClient;
+import net.minecraft.client.gui.GuiBossOverlay;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.boss.EntityDragon;
@@ -30,6 +31,7 @@ import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.Optional;
 import org.orecruncher.dsurround.client.weather.Weather;
 import sereneseasons.api.season.ISeasonState;
@@ -55,6 +57,9 @@ public class MusicPicker {
     public static HashMap<Integer, Boolean> victory = new HashMap<>();
     public static int persistentPVP = 0;
     public static int victoryID = 0;
+    public static boolean fishBool = false;
+    public static int fishingStart = 0;
+    public static int persistentFishing = 0;
     public static boolean setPVP = false;
     public static EntityPlayer otherPVP;
     public static boolean infernalLoaded = false;
@@ -268,6 +273,31 @@ public class MusicPicker {
             dynamicPriorities.put("high", config.high.highPriority);
             dynamicFade.put("high", config.high.highFade);
         }
+        if(player.getTicksElytraFlying()>config.elytra.elytraStart) {
+            events.add("elytra");
+            dynamicSongs.put("elytra", config.elytra.elytraSongs);
+            dynamicPriorities.put("elytra", config.elytra.elytraPriority);
+            dynamicFade.put("elytra", config.elytra.elytraFade);
+        }
+        if(player.fishEntity.isOverWater()) {
+            fishBool = true;
+        }
+        else {
+            fishingStart=0;
+        }
+        if(fishingStart>config.fishing.fishingStart) {
+            events.add("fishing");
+            dynamicSongs.put("fishing", config.fishing.fishingSongs);
+            dynamicPriorities.put("fishing", config.fishing.fishingPriority);
+            dynamicFade.put("fishing", config.fishing.fishingFade);
+            persistentFishing = config.fishing.fishingPersistence;
+        }
+        else if(persistentFishing>0) {
+            events.add("fishing");
+            dynamicSongs.put("fishing", config.fishing.fishingSongs);
+            dynamicPriorities.put("fishing", config.fishing.fishingPriority);
+            dynamicFade.put("fishing", config.fishing.fishingFade);
+        }
         if (world.isRaining()) {
             events.add("raining");
             dynamicSongs.put("raining", config.raining.rainingSongs);
@@ -431,6 +461,45 @@ public class MusicPicker {
                     }
                 }
                 if (mobList.size() >= SoundHandler.mobNumber.get(mobName) && (((SoundHandler.mobTargetting.get(mobName) && (float) trackingCounter / SoundHandler.mobNumber.get(mobName) >= SoundHandler.mobHordeTargetting.get(mobName) / 100F) || !SoundHandler.mobTargetting.get(mobName)) && infernalDone && (float) healthCounter / SoundHandler.mobNumber.get(mobName) >= SoundHandler.mobHordeHealth.get(mobName) / 100F)) {
+                    events.add(mobName);
+                    String[] mobSongsArray = new String[SoundHandler.mobSongsString.get(mobName).size()];
+                    dynamicSongs.put(mobName, SoundHandler.mobSongsString.get(mobName).toArray(mobSongsArray));
+                    dynamicPriorities.put(mobName, SoundHandler.mobPriorities.get(mobName));
+                    dynamicFade.put(mobName, SoundHandler.mobFade.get(mobName));
+                    persistentMob.put(mobName, SoundHandler.mobBattle.get(mobName));
+                    victory.put(victoryID, SoundHandler.mobVictory.get(mobName));
+                }
+            } else if (mobName.matches("BOSS")) {
+                mc.ingameGUI.getBossOverlay();
+                Map<UUID, BossInfoClient> info = ObfuscationReflectionHelper.getPrivateValue(GuiBossOverlay.class, mc.ingameGUI.getBossOverlay(), "field_184060_g");
+                int mobCounter = 0;
+                for (EntityLiving e : mobList) {
+                    if(!e.isNonBoss()) {
+                        mobCounter++;
+                        if (player.canEntityBeSeen(e)) {
+                            trackingCounter++;
+                        }
+                        if (e.getHealth() / e.getMaxHealth() <= SoundHandler.mobHealth.get(mobName) / 100F) {
+                            healthCounter++;
+                        }
+                        try {
+                            infernalChecked = infernalChecker(e, SoundHandler.mobInfernalMod.get(mobName));
+                        } catch (NoSuchMethodError ignored) {
+                            infernal = false;
+                        }
+                        if (!infernal || (infernal && infernalChecked)) {
+                            infernalDone = true;
+                        }
+                        if (SoundHandler.mobVictory.get(mobName)) {
+                            victoryID = SoundHandler.mobVictoryID.get(mobName);
+                            victoryMobs.computeIfAbsent(victoryID, k -> new ArrayList<>());
+                            if (!victoryMobs.get(victoryID).contains(e) && victoryMobs.get(victoryID).size() < SoundHandler.mobNumber.get(mobName)) {
+                                victoryMobs.get(victoryID).add(e);
+                            }
+                        }
+                    }
+                }
+                if ((SoundHandler.mobNumber.get(mobName)==0 && !info.isEmpty()) || (mobCounter>=SoundHandler.mobNumber.get(mobName) && (((SoundHandler.mobTargetting.get(mobName) && (float) trackingCounter / SoundHandler.mobNumber.get(mobName) >= SoundHandler.mobHordeTargetting.get(mobName) / 100F) || !SoundHandler.mobTargetting.get(mobName)) && infernalDone && (float) healthCounter / SoundHandler.mobNumber.get(mobName) >= SoundHandler.mobHordeHealth.get(mobName) / 100F))) {
                     events.add(mobName);
                     String[] mobSongsArray = new String[SoundHandler.mobSongsString.get(mobName).size()];
                     dynamicSongs.put(mobName, SoundHandler.mobSongsString.get(mobName).toArray(mobSongsArray));

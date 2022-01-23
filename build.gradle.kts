@@ -17,7 +17,7 @@ plugins {
     id("com.github.johnrengelman.shadow") version "6.1.0"
 }
 
-version = "4.0"
+version = "4.1"
 group = "mods.thecomputerizer.musictriggers"
 
 minecraft {
@@ -71,11 +71,14 @@ dependencies {
 
     implementation(group = "com.googlecode.soundlibs", name = "jlayer", version = "1.0.1.4")
     implementation(group = "com.googlecode.soundlibs", name = "mp3spi", version = "1.9.5.4")
-    implementation(group = "com.sedmelluq", name = "lavaplayer", version = "1.3.78")
+    implementation(group = "de.jarnbjo", name = "j-ogg-all", version = "1.0.0")
+    implementation(group = "org.gagravarr", name = "vorbis-java-core", version = "0.8")
+    implementation(group = "com.squareup.okhttp", name = "okhttp", version = "2.5.0")
     bundled (group = "com.googlecode.soundlibs", name = "jlayer", version = "1.0.1.4")
     bundled (group = "com.googlecode.soundlibs", name = "mp3spi", version = "1.9.5.4")
-    bundled (group = "com.sedmelluq", name = "lavaplayer", version = "1.3.78")
-    bundled (group = "org.slf4j", name = "slf4j-log4j12", version = "2.0.0-alpha5")
+    bundled (group = "de.jarnbjo", name = "j-ogg-all", version = "1.0.0")
+    bundled (group = "org.gagravarr", name = "vorbis-java-core", version = "0.8")
+    bundled (group = "com.squareup.okhttp", name = "okhttp", version = "2.5.0")
 
     implementation(fg.deobf(curse(mod = "codechicken-lib", projectId = 242818L, fileId = 2779848L)))
     implementation(fg.deobf(curse(mod = "bloodmoon", projectId = 226321L, fileId = 2537917L)))

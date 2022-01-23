@@ -507,7 +507,8 @@ public class config {
                 "Final Note: The infernal trigger goes of of the mod name, which can be obtained via the debug info set by the debug config. Number of mobs will not affect this\n"+
                 "Example: Zombie,8,(songname),16,11111\n" +
                 "Full-Scale example: Skeleton,4,123486,50,true,50,80,25,0,Withering\n"+
-                "Special case - If you put \"MOB\" as the mob ID, it will default to any hostile mob")
+                "Special case - If you put \"MOB\" as the mob ID, it will default to any hostile mob\n"+
+                "Special case - If you put \"BOSS\" as the mob ID, it will only count boss mobs. A mob number of 0 will make this work whenever a boss health bas is present")
         public String[] mobSongs;
 
         public Mob(final int mobPriority, final String[] mobSongs) {
@@ -590,12 +591,58 @@ public class config {
         @Comment("Songs - [Format: \"Gui Name,SongName,(Optional)Priority:[min: -99, max: 2147483647 ],(Optional)Fade Time:[in ticks, default: 0]\"]\n" +
                 "Example: net.minecraft.client.gui.inventory.GuiInventory,inventory,67000\n" +
                 "Note: This can also be a regex\n"+
+                "Additional Note: If you set the gui name to CREDITS it will function while the end game credits are playing\n"+
                 "Example 2: GuiInventory,inventory,67000")
         public String[] guiSongs;
 
         public Gui(final int guiPriority, final String[] guiSongs) {
             this.guiPriority = guiPriority;
             this.guiSongs = guiSongs;
+        }
+    }
+    
+    @Comment("Elytra")
+    public static Elytra elytra = new Elytra(999,0,60,new String[] {});
+
+    public static class Elytra {
+        @Comment("Priority [min: -99, max: 2147483647 default: 999]")
+        public int elytraPriority;
+        @Comment("Fade Time:[in ticks, default: 0]")
+        public int elytraFade;
+        @Comment("Start time:[in ticks, default: 60]")
+        public int elytraStart;
+        @Comment("songs")
+        public String[] elytraSongs;
+
+        public Elytra(final int elytraPriority, final int elytraFade, final int elytraStart, final String[] elytraSongs) {
+            this.elytraPriority = elytraPriority;
+            this.elytraFade = elytraFade;
+            this.elytraStart = elytraStart;
+            this.elytraSongs = elytraSongs;
+        }
+    }
+
+    @Comment("Fishing")
+    public static Fishing fishing = new Fishing(1234,0,60,100,new String[] {});
+
+    public static class Fishing {
+        @Comment("Priority [min: -99, max: 2147483647 default: 1234]")
+        public int fishingPriority;
+        @Comment("Fade Time:[in ticks, default: 0]")
+        public int fishingFade;
+        @Comment("Start time:[in ticks, default: 60]")
+        public int fishingStart;
+        @Comment("Persistence time:[in ticks, default: 100]")
+        public int fishingPersistence;
+        @Comment("songs")
+        public String[] fishingSongs;
+
+        public Fishing(final int fishingPriority, final int fishingFade, final int fishingStart, final int fishingPersistence, final String[] fishingSongs) {
+            this.fishingPriority = fishingPriority;
+            this.fishingFade = fishingFade;
+            this.fishingStart = fishingStart;
+            this.fishingPersistence = fishingPersistence;
+            this.fishingSongs = fishingSongs;
         }
     }
 

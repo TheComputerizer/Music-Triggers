@@ -1,6 +1,5 @@
 package mods.thecomputerizer.musictriggers.common;
 
-import com.google.common.collect.Lists;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.objects.BlankRecord;
 import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
@@ -11,12 +10,15 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.util.SoundEvent;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class MusicTriggersItems {
+    public static HashMap<Item,String> allItemsWithTrigger;
     public static List<Item> allItems;
     public static final MusicTriggersItems INSTANCE = new MusicTriggersItems();
     public static final Item BLANK_RECORD = makeItem("blank_record", BlankRecord::new, item -> item.setCreativeTab(CreativeTabs.MISC));
@@ -25,11 +27,13 @@ public class MusicTriggersItems {
     public void init() {
         SoundHandler.registerSounds();
         if(configRegistry.registry.registerDiscs) {
-            allItems = Lists.newArrayList();
+            allItemsWithTrigger = new HashMap<>();
+            allItems = new ArrayList<>();
             for (SoundEvent s : SoundHandler.allSoundEvents) {
                 Item i = (new MusicTriggersRecord(Objects.requireNonNull(s.getRegistryName()).toString().replace("musictriggers:", ""), s));
                 if (!allItems.contains(i)) {
                     allItems.add(i);
+                    allItemsWithTrigger.put(i,SoundHandler.allSoundEventsTriggers.get(s));
                 }
             }
         }

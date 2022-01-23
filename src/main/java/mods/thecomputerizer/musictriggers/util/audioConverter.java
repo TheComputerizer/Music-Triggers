@@ -1,48 +1,54 @@
 package mods.thecomputerizer.musictriggers.util;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
-import ws.schild.jave.Encoder;
-import ws.schild.jave.MultimediaObject;
-import ws.schild.jave.encode.AudioAttributes;
-import ws.schild.jave.encode.EncodingAttributes;
+import javazoom.jl.converter.Converter;
+import javazoom.jl.player.AudioDeviceBase;
+import org.apache.commons.compress.utils.IOUtils;
+import org.gagravarr.ogg.OggPacketReader;
+import org.gagravarr.opus.OpusFile;
+import org.tritonus.share.sampled.AudioFormatSet;
+import org.tritonus.share.sampled.AudioFormats;
+import org.tritonus.share.sampled.AudioSystemShadow;
+import org.tritonus.share.sampled.AudioUtils;
+import sun.audio.AudioTranslatorStream;
 
-import java.io.File;
+import java.io.*;
 
 public class audioConverter {
-    private static final Integer bitrate = 256000;//Minimal bitrate only
-    private static final Integer channels = 2; //2 for stereo, 1 for mono
-    private static final Integer samplingRate = 44100;//For good quality.
-
-    /* Data structures for the audio
-     *  and Encoding attributes
-     */
-    private static AudioAttributes audioAttr = new AudioAttributes();
-    private static EncodingAttributes encoAttrs = new EncodingAttributes();
-    private static Encoder encoder = new Encoder();
-    private static MultimediaObject obj;
-
-    /*
-     * File formats that will be converted
-     */
-    private static String oggFormat = "ogg";
-    private static String mp3Format = "mp3";
-    private static String wavFormat = "wav";
-
-    /*
-     * Codecs to be used
-     */
-    private static String oggCodec = "vorbis";
 
     public static void mp3ToOgg(File source, File folder, String name){
         File target = new File(folder,name);
-        encoAttrs.setOutputFormat(oggFormat);
-        audioAttr.setCodec(oggCodec);
-        encoAttrs.setAudioAttributes(audioAttr);
-        obj = new MultimediaObject(source);
-        try{
-            encoder.encode(obj, target, encoAttrs);
-        }catch(Exception e){
-            MusicTriggers.logger.warn("Encoding Failed");
+        if(target.exists()) {
+            target.delete();
+        }
+        Converter c = new Converter();
+        try {
+            c.convert(source.getPath(),target.getPath());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        WavToOgg(target.getPath(), target.getPath().replaceAll(".wav",".ogg"));
+    }
+
+    public static void WavToOgg(String sourcePath, String targetPath) {
+        try {
+            File target = new File(targetPath);
+            if(target.exists()) {
+                target.delete();
+            }
+            OutputStream out = new FileOutputStream(targetPath);
+            InputStream audioStream = new BufferedInputStream(new FileInputStream(sourcePath));
+            OpusFile opus = new OpusFile(new OggPacketReader(audioStream));
+            opus.getInfo().setSampleRate(48000);
+            opus.getInfo().setNumChannels(2);
+            opus.getTags().addComment("title", "music triggers links implementation");
+            OpusFile file = new OpusFile(out,opus.getInfo(),opus.getTags());
+            while (opus.getNextAudioPacket()!=null) {
+                file.writeAudioData(opus.getNextAudioPacket());
+            }
+            IOUtils.closeQuietly(audioStream);
+            IOUtils.closeQuietly(out);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

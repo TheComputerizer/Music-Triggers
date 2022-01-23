@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiWinGame;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
@@ -78,8 +79,13 @@ public class eventsClient {
 
     @SubscribeEvent
     public static void guiScreen(GuiScreenEvent e) {
-        GUIName = e.getGui().toString();
-        if(configDebug.ShowGUIName) {
+        if(!(e.getGui() instanceof GuiWinGame)) {
+            GUIName = e.getGui().toString();
+        }
+        else {
+            GUIName = "CREDITS";
+        }
+        if (configDebug.ShowGUIName) {
             e.getGui().drawHoveringText(e.getGui().toString(), 0, 0);
         }
     }
