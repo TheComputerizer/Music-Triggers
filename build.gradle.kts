@@ -58,6 +58,9 @@ repositories {
     maven {
         url = uri("https://m2.dv8tion.net/releases")
     }
+    maven {
+        url = uri("https://www.beatunes.com/repo/maven2/")
+    }
 }
 
 val bundled: Configuration by configurations.creating
@@ -74,11 +77,13 @@ dependencies {
     implementation(group = "de.jarnbjo", name = "j-ogg-all", version = "1.0.0")
     implementation(group = "org.gagravarr", name = "vorbis-java-core", version = "0.8")
     implementation(group = "com.squareup.okhttp", name = "okhttp", version = "2.5.0")
+    implementation(group = "javazoom.vorbisspi", name = "vorbisspi", version = "1.0.3")
     bundled (group = "com.googlecode.soundlibs", name = "jlayer", version = "1.0.1.4")
     bundled (group = "com.googlecode.soundlibs", name = "mp3spi", version = "1.9.5.4")
     bundled (group = "de.jarnbjo", name = "j-ogg-all", version = "1.0.0")
     bundled (group = "org.gagravarr", name = "vorbis-java-core", version = "0.8")
     bundled (group = "com.squareup.okhttp", name = "okhttp", version = "2.5.0")
+    bundled (group = "javazoom.vorbisspi", name = "vorbisspi", version = "1.0.3")
 
     implementation(fg.deobf(curse(mod = "codechicken-lib", projectId = 242818L, fileId = 2779848L)))
     implementation(fg.deobf(curse(mod = "bloodmoon", projectId = 226321L, fileId = 2537917L)))

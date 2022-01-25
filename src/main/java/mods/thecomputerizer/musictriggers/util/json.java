@@ -85,7 +85,7 @@ public class json {
         File[] listOfMP3 = folder.listFiles((dir, name) -> name.endsWith(".mp3"));
         if (listOfMP3 != null) {
             for (File mp3 : listOfMP3) {
-                //audioConverter.mp3ToOgg(mp3, folder, mp3.getName().replaceAll(".mp3",".wav"));
+                audioConverter.mp3ToOgg(mp3, folder, mp3.getName().replaceAll(".mp3",".wav"));
             }
         }
         File[] listOfFiles = folder.listFiles((dir, name) -> name.endsWith(".ogg"));
