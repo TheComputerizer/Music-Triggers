@@ -8,7 +8,7 @@ import mods.thecomputerizer.musictriggers.configRegistry;
 import mods.thecomputerizer.musictriggers.configTitleCards;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.packetCurSong;
-import mods.thecomputerizer.musictriggers.util.setVolumeSound;
+import mods.thecomputerizer.musictriggers.util.audio.setVolumeSound;
 import net.minecraft.block.BlockJukebox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;

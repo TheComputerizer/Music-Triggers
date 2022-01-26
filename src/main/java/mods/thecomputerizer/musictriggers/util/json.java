@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.util;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.configDebug;
 import mods.thecomputerizer.musictriggers.readRedirect;
+import mods.thecomputerizer.musictriggers.util.audio.audioConverter;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
@@ -86,6 +87,12 @@ public class json {
         if (listOfMP3 != null) {
             for (File mp3 : listOfMP3) {
                 audioConverter.mp3ToOgg(mp3, folder, mp3.getName().replaceAll(".mp3",".wav"));
+            }
+        }
+        File[] listOfWav = folder.listFiles((dir, name) -> name.endsWith(".wav"));
+        if (listOfWav != null) {
+            for (File wav : listOfWav) {
+                audioConverter.WavToOgg(wav.getPath(), wav.getPath().replaceAll(".wav",".ogg"), false);
             }
         }
         File[] listOfFiles = folder.listFiles((dir, name) -> name.endsWith(".ogg"));

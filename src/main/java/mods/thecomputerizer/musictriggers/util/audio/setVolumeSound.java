@@ -1,4 +1,4 @@
-package mods.thecomputerizer.musictriggers.util;
+package mods.thecomputerizer.musictriggers.util.audio;
 
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.Sound;

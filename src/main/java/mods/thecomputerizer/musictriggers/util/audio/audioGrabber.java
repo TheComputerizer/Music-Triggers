@@ -1,4 +1,4 @@
-package mods.thecomputerizer.musictriggers.util;
+package mods.thecomputerizer.musictriggers.util.audio;
 
 
 import com.squareup.okhttp.OkHttpClient;
