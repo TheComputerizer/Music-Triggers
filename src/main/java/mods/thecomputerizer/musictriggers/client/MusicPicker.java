@@ -279,7 +279,7 @@ public class MusicPicker {
             dynamicPriorities.put("elytra", config.elytra.elytraPriority);
             dynamicFade.put("elytra", config.elytra.elytraFade);
         }
-        if(player.fishEntity.isOverWater()) {
+        if(player.fishEntity!=null && player.fishEntity.isOverWater()) {
             fishBool = true;
         }
         else {

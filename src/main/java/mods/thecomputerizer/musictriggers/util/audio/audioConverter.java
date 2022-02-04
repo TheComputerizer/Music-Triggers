@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.util.audio;
 import javazoom.jl.converter.Converter;
 
 import java.io.File;
+import java.io.FileInputStream;
 
 public class audioConverter {
 
@@ -24,8 +25,13 @@ public class audioConverter {
         File target = new File(targetPath);
         File source = new File(sourcePath);
         if (target.exists()) target.delete();
-        VorbisEncoder.encode(sourcePath,targetPath);
-        source.delete();
+        try {
+            FileInputStream stream = new FileInputStream(sourcePath);
+            VorbisEncoder.encode(stream,targetPath);
+            source.delete();
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
         if(temp) target.deleteOnExit();
     }
 }

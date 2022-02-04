@@ -1,43 +1,34 @@
 package mods.thecomputerizer.musictriggers.util.audio;
 
+import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat;
+import com.sedmelluq.discord.lavaplayer.format.AudioPlayerInputStream;
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.player.FunctionalResultHandler;
+import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
-import de.jarnbjo.theora.OggpackBuffer;
-import org.apache.commons.compress.utils.IOUtils;
-import org.gagravarr.ogg.OggFile;
-import org.gagravarr.ogg.OggPacketReader;
-import org.gagravarr.opus.OpusAudioData;
-import org.gagravarr.opus.OpusFile;
-import org.gagravarr.opus.OpusInfo;
-import org.gagravarr.opus.OpusPacket;
+import javax.sound.sampled.AudioInputStream;
 
-import java.io.*;
+import static com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats.COMMON_PCM_S16_BE;
 
 public class audioGrabber {
 
     public static void dl(String url) {
-        /*
         try {
-            OkHttpClient client = new OkHttpClient();
-            Request request = new Request.Builder().url(url).build();
-            Response response = client.newCall(request).execute();
-            InputStream audioStream = new BufferedInputStream(response.body().byteStream());
-            OutputStream out = new FileOutputStream("config/MusicTriggers/songs/assets/musictriggers/sounds/music/output.opus");
-            OpusFile opus = new OpusFile(new OggPacketReader(audioStream));
-            opus.getInfo().setSampleRate(48000);
-            opus.getInfo().setNumChannels(2);
-            opus.getTags().addComment("title","music triggers links implementation");
-            OpusFile file = new OpusFile(out,opus.getInfo(),opus.getTags());
-            while (opus.getNextAudioPacket()!=null) {
-                file.writeAudioData(opus.getNextAudioPacket());
-            }
-            IOUtils.closeQuietly(audioStream);
-            IOUtils.closeQuietly(out);
+            AudioPlayerManager manager = new DefaultAudioPlayerManager();
+            AudioSourceManagers.registerRemoteSources(manager);
+            manager.getConfiguration().setOutputFormat(COMMON_PCM_S16_BE);
+
+            AudioPlayer player = manager.createPlayer();
+
+            manager.loadItem(url, new FunctionalResultHandler(null, playlist -> player.playTrack(playlist.getTracks().get(0)), null, null));
+
+            AudioDataFormat format = manager.getConfiguration().getOutputFormat();
+            AudioInputStream stream = AudioPlayerInputStream.createStream(player, format, 10000L, false);
+            VorbisEncoder.encode(stream, "./config/MusicTriggers/songs/assets/musictriggers/sounds/music/output.ogg");
         } catch(Exception e) {
             e.printStackTrace();
         }
-         */
     }
 }
