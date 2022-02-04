@@ -20,6 +20,7 @@ import org.xiph.libvorbis.*;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 
 public class VorbisEncoder {
     static vorbisenc 			encoder;
@@ -49,7 +50,7 @@ public class VorbisEncoder {
      * java -cp VorbisEncoder <Input File[.wav]> <Output File[.ogg]>
      *
      */
-    public static void encode(String wav, String ogg) {
+    public static void encode(InputStream wav, String ogg) {
 
         boolean eos = false;
 
@@ -106,13 +107,12 @@ public class VorbisEncoder {
             }
             System.out.print(  "Done.\n" );
 
-            FileInputStream fin = new FileInputStream(wav);
 
             System.out.print( "Encoding." );
             while ( !eos ) {
 
                 int i;
-                int bytes = fin.read( readbuffer, 0, READ*4 ); // stereo hardwired here
+                int bytes = wav.read( readbuffer, 0, READ*4 ); // stereo hardwired here
 
                 int break_count = 0;
 
@@ -178,7 +178,7 @@ public class VorbisEncoder {
                 System.out.print( "." );
             }
 
-            fin.close();
+            wav.close();
             fos.close();
 
             System.out.print( "Done.\n" );
