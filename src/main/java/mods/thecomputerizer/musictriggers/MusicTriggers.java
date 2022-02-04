@@ -35,7 +35,7 @@ import java.util.List;
 public class MusicTriggers {
     public static final String MODID = "musictriggers";
     public static final String NAME = "Music Triggers";
-    public static final String VERSION = "4.1";
+    public static final String VERSION = "4.1-hf";
 
     public static File songsDir;
     public static File texturesDir;

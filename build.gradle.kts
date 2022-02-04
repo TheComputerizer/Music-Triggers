@@ -17,7 +17,7 @@ plugins {
     id("com.github.johnrengelman.shadow") version "6.1.0"
 }
 
-version = "4.1"
+version = "4.1-hf"
 group = "mods.thecomputerizer.musictriggers"
 
 minecraft {
