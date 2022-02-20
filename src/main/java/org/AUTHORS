@@ -5,7 +5,7 @@ and the rest of the Xiph.org Foundation.
 Java port by Ben Cohee <bpcohee@gmail.com>
 
 Thanks to:
-IceCast Team (http://www.icecast.org/index.php)
-JCraft Jorbis Team (http://www.jcraft.com/jorbis/)
-Java Sound Resources - Matthias Pfisterer, Florian Bomers - (http://www.jsresources.org/)
-Java Sound Tritonus Team (http://tritonus.org/)
+IceCast Team (org.apache.http://www.icecast.org/index.php)
+JCraft Jorbis Team (org.apache.http://www.jcraft.com/jorbis/)
+Java Sound Resources - Matthias Pfisterer, Florian Bomers - (org.apache.http://www.jsresources.org/)
+Java Sound Tritonus Team (org.apache.http://tritonus.org/)
