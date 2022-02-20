@@ -54,7 +54,7 @@ public class configToml {
                                     if (Arrays.asList(triggers).contains(triggerID) || Arrays.asList(modtriggers).contains(triggerID)) {
                                         songholder.put("song" + songCounter, s);
                                         reversesongholder.put(s, "song" + songCounter);
-                                        triggerholder.put("song" + songCounter, new HashMap<>());
+                                        triggerholder.putIfAbsent("song" + songCounter, new HashMap<>());
                                         triggerholder.get("song" + songCounter).put(triggerID, populateTriggers);
                                         if (trigger.contains("priority")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
@@ -159,7 +159,7 @@ public class configToml {
                                 if (Arrays.asList(triggers).contains(triggerID) || Arrays.asList(modtriggers).contains(triggerID)) {
                                     songholder.put("song" + songCounter, s);
                                     reversesongholder.put(s, "song" + songCounter);
-                                    triggerholder.put("song" + songCounter, new HashMap<>());
+                                    triggerholder.putIfAbsent("song" + songCounter, new HashMap<>());
                                     triggerholder.get("song" + songCounter).put(triggerID, populateTriggers);
                                     if (trigger.contains("priority")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
@@ -306,10 +306,11 @@ public class configToml {
                         for (Toml trigger : song.getTables("trigger")) {
                             if (trigger.contains("name")) {
                                 String triggerID = trigger.getString("name");
+                                MusicTriggers.logger.info("found trigger of "+triggerID+" for "+s);
                                 if (Arrays.asList(triggers).contains(triggerID) || Arrays.asList(modtriggers).contains(triggerID)) {
                                     songholder.put("song" + songCounter, s);
                                     reversesongholder.put(s, "song" + songCounter);
-                                    triggerholder.put("song" + songCounter, new HashMap<>());
+                                    triggerholder.putIfAbsent("song" + songCounter, new HashMap<>());
                                     triggerholder.get("song" + songCounter).put(triggerID, populateTriggers);
                                     if (trigger.contains("priority")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
@@ -415,7 +416,7 @@ public class configToml {
                             if (Arrays.asList(triggers).contains(triggerID) || Arrays.asList(modtriggers).contains(triggerID)) {
                                 songholder.put("song" + songCounter, s);
                                 reversesongholder.put(s, "song" + songCounter);
-                                triggerholder.put("song" + songCounter, new HashMap<>());
+                                triggerholder.putIfAbsent("song" + songCounter, new HashMap<>());
                                 triggerholder.get("song" + songCounter).put(triggerID, populateTriggers);
                                 if (trigger.contains("priority")) {
                                     triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
