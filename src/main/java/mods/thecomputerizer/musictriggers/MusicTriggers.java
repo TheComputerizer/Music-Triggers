@@ -3,6 +3,8 @@ package mods.thecomputerizer.musictriggers;
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.client.eventsClient;
 import mods.thecomputerizer.musictriggers.common.eventsCommon;
+import mods.thecomputerizer.musictriggers.config.configRegistry;
+import mods.thecomputerizer.musictriggers.config.configToml;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.json;
 import net.minecraft.client.Minecraft;
@@ -35,7 +37,7 @@ import java.util.List;
 public class MusicTriggers {
     public static final String MODID = "musictriggers";
     public static final String NAME = "Music Triggers";
-    public static final String VERSION = "4.1-hf";
+    public static final String VERSION = "5.0";
 
     public static File songsDir;
     public static File texturesDir;
@@ -173,6 +175,7 @@ public class MusicTriggers {
                 }
             }
             songs = musictriggersDir;
+            configToml.parse();
         }
         if(!configRegistry.registry.clientSideOnly) {
             RegistryHandler.init();

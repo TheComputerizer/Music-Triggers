@@ -2,8 +2,8 @@ package mods.thecomputerizer.musictriggers.client;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.configDebug;
-import mods.thecomputerizer.musictriggers.configTitleCards;
+import mods.thecomputerizer.musictriggers.config.configDebug;
+import mods.thecomputerizer.musictriggers.config.configTitleCards;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -196,29 +196,30 @@ public class eventsClient {
                 }
                 e.getLeft().add("Music Triggers Current Blocked Mods: " + sm);
                 if(MusicPicker.player!=null && MusicPicker.world!=null) {
-                    if(fromServer.curStruct!=null) {
-                        //e.getLeft().add("Music Triggers Current Structure: " + fromServer.curStruct);
-                    }
                     e.getLeft().add("Music Triggers Current Biome: " + MusicPicker.world.getBiome(MusicPicker.player.getPosition()).getRegistryName());
                     e.getLeft().add("Music Triggers Current Dimension: " + MusicPicker.player.dimension);
                     e.getLeft().add("Music Triggers Current Total Light: " + MusicPicker.world.getLight(MusicPicker.roundedPos(MusicPicker.player), true));
                     e.getLeft().add("Music Triggers Current Block Light: " + MusicPicker.world.getLightFor(EnumSkyBlock.BLOCK, MusicPicker.roundedPos(MusicPicker.player)));
-                }
-                if(MusicPicker.effectList!=null && !MusicPicker.effectList.isEmpty()) {
-                    StringBuilder se = new StringBuilder();
-                    for (String ev : MusicPicker.effectList) {
-                        se.append(" ").append(ev);
+
+                    if (MusicPicker.effectList != null && !MusicPicker.effectList.isEmpty()) {
+                        StringBuilder se = new StringBuilder();
+                        for (String ev : MusicPicker.effectList) {
+                            se.append(" ").append(ev);
+                        }
+                        e.getLeft().add("Music Triggers Current Effect List:" + se);
                     }
-                    e.getLeft().add("Music Triggers Current Effect List:" + se);
-                }
-                if(getLivingFromEntity(Minecraft.getMinecraft().objectMouseOver.entityHit) != null) {
-                    e.getLeft().add("Music Triggers Current Entity Name: "+getLivingFromEntity(Minecraft.getMinecraft().objectMouseOver.entityHit).getName());
-                }
-                try {
-                    if(infernalChecker(getLivingFromEntity(Minecraft.getMinecraft().objectMouseOver.entityHit))!=null) {
-                        e.getLeft().add("Music Triggers Infernal Mob Mod Name: " + infernalChecker(getLivingFromEntity(Minecraft.getMinecraft().objectMouseOver.entityHit)));
+                    if(Minecraft.getMinecraft().objectMouseOver != null) {
+                        if (getLivingFromEntity(Minecraft.getMinecraft().objectMouseOver.entityHit) != null) {
+                            e.getLeft().add("Music Triggers Current Entity Name: " + getLivingFromEntity(Minecraft.getMinecraft().objectMouseOver.entityHit).getName());
+                        }
+                        try {
+                            if (infernalChecker(getLivingFromEntity(Minecraft.getMinecraft().objectMouseOver.entityHit)) != null) {
+                                e.getLeft().add("Music Triggers Infernal Mob Mod Name: " + infernalChecker(getLivingFromEntity(Minecraft.getMinecraft().objectMouseOver.entityHit)));
+                            }
+                        } catch (NoSuchMethodError ignored) {
+                        }
                     }
-                } catch (NoSuchMethodError ignored) {}
+                }
             }
         }
     }

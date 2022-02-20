@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.util;
 
 import io.netty.buffer.ByteBuf;
-import mods.thecomputerizer.musictriggers.common.calculateStructure;
+import mods.thecomputerizer.musictriggers.common.calculateFeature;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -18,7 +18,7 @@ public class packet implements IMessageHandler<packet.packetMessage, IMessage> {
         if(message.getDataStruct()==null) {
             return null;
         }
-        calculateStructure.calculateAndSend(message.getDataStruct(), message.getDataBlockPos(), message.getDataInt(), message.getDataUUID());
+        calculateFeature.calculateStructAndSend(message.getDataStruct(), message.getDataBlockPos(), message.getDataInt(), message.getDataUUID());
         return null;
     }
 

@@ -1,5 +1,6 @@
-package mods.thecomputerizer.musictriggers;
+package mods.thecomputerizer.musictriggers.config;
 
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;

@@ -22,7 +22,7 @@ public class audioGrabber {
 
             AudioPlayer player = manager.createPlayer();
 
-            manager.loadItem(url, new FunctionalResultHandler(null, playlist -> player.playTrack(playlist.getTracks().get(0)), null, null));
+            manager.loadItem(url, new FunctionalResultHandler(player::playTrack, null, null, null));
 
             AudioDataFormat format = manager.getConfiguration().getOutputFormat();
             AudioInputStream stream = AudioPlayerInputStream.createStream(player, format, 10000L, false);

@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.common;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.objects.BlankRecord;
 import mods.thecomputerizer.musictriggers.util.packetCurSong;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.effect.EntityLightningBolt;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -12,10 +13,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Mod.EventBusSubscriber(modid= MusicTriggers.MODID)
@@ -28,6 +26,17 @@ public class eventsCommon {
 
     @SubscribeEvent
     public static void serverTick(TickEvent.ServerTickEvent e) {
+        for (Map.Entry<Integer, Map<EntityLiving, Integer>> integerMapEntry : calculateFeature.victoryMobs.entrySet()) {
+            for (Map.Entry<EntityLiving, Integer> entityLivingIntegerEntry : calculateFeature.victoryMobs.get((integerMapEntry).getKey()).entrySet()) {
+                int temp = calculateFeature.victoryMobs.get(integerMapEntry.getKey()).get(entityLivingIntegerEntry.getKey());
+                if(temp>0) {
+                    calculateFeature.victoryMobs.get(integerMapEntry.getKey()).put(entityLivingIntegerEntry.getKey(), temp-1);
+                }
+                else {
+                    calculateFeature.victoryMobs.put(integerMapEntry.getKey(), new HashMap<>());
+                }
+            }
+        }
         int randomNum = ThreadLocalRandom.current().nextInt(0, 5600);
         for (Map.Entry<BlockPos, ItemStack> blockPosItemStackEntry : recordHolder.entrySet()) {
             MusicTriggers.logger.info("ok");
