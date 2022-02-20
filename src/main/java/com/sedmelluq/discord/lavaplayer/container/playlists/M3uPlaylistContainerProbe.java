@@ -91,7 +91,7 @@ public class M3uPlaylistContainerProbe implements MediaContainerProbe {
       if (line.startsWith("#EXTINF")) {
         trackTitle = extractTitleFromInfo(line);
       } else if (!line.startsWith("#") && line.length() > 0) {
-        if (line.startsWith("http://") || line.startsWith("https://") || line.startsWith("icy://")) {
+        if (line.startsWith("org.apache.http://") || line.startsWith("https://") || line.startsWith("icy://")) {
           return refer(this, new AudioReference(line.trim(), trackTitle));
         }
 

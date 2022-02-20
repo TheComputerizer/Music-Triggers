@@ -107,7 +107,7 @@ public class DefaultYoutubeLinkRouter implements YoutubeLinkRouter {
 
   private static UrlInfo getUrlInfo(String url, boolean retryValidPart) {
     try {
-      if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      if (!url.startsWith("org.apache.http://") && !url.startsWith("https://")) {
         url = "https://" + url;
       }
 

@@ -25,8 +25,8 @@ public class HttpInterface implements Closeable {
   private boolean available;
 
   /**
-   * @param client The http client instance used.
-   * @param context The http context instance used.
+   * @param client The org.apache.http client instance used.
+   * @param context The org.apache.http context instance used.
    * @param ownedClient True if the client should be closed when this instance is closed.
    * @param filter
    */

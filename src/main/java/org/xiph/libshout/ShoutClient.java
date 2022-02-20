@@ -86,7 +86,7 @@ public class ShoutClient {
 			}
 			catch ( IOException e ) {
 				connected = false;
-				System.out.println( "Socket Connection Error: http://" + host + ":" + port );
+				System.out.println( "Socket Connection Error: org.apache.http://" + host + ":" + port );
 				System.out.println( e + "\n" );
 			}
 		}
@@ -228,7 +228,7 @@ public class ShoutClient {
 		}
 		catch ( IOException e ) {
 			connected = false;
-			System.out.println( "Socket Connection Error: http://" + host + ":" + port );
+			System.out.println( "Socket Connection Error: org.apache.http://" + host + ":" + port );
 			System.out.println( e );
 		}
 	}
@@ -243,9 +243,9 @@ public class ShoutClient {
 			socket = null;
 		}
 		catch ( Exception e ) {
-			System.out.println( "Socket Connection Error: http://" + host + ":" + port );
+			System.out.println( "Socket Connection Error: org.apache.http://" + host + ":" + port );
 			System.out.println( e );
 		}
-		System.out.println( "Disconnected from: http://" + host + ":" + port );
+		System.out.println( "Disconnected from: org.apache.http://" + host + ":" + port );
 	}
 }

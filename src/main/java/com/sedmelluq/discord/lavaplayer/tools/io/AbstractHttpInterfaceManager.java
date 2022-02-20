@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Base class for an HTTP interface manager with lazily initialized http client instance.
+ * Base class for an HTTP interface manager with lazily initialized org.apache.http client instance.
  */
 public abstract class AbstractHttpInterfaceManager implements HttpInterfaceManager {
   private static final Logger log = LoggerFactory.getLogger(AbstractHttpInterfaceManager.class);
@@ -76,7 +76,7 @@ public abstract class AbstractHttpInterfaceManager implements HttpInterfaceManag
   protected CloseableHttpClient getSharedClient() {
     synchronized (lock) {
       if (closed) {
-        throw new IllegalStateException("Cannot get http client for a closed manager.");
+        throw new IllegalStateException("Cannot get org.apache.http client for a closed manager.");
       }
 
       if (sharedClient == null) {

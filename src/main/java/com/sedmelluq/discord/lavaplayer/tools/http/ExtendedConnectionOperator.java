@@ -28,7 +28,7 @@ import org.apache.http.impl.conn.SystemDefaultDnsResolver;
 import org.apache.http.protocol.HttpContext;
 
 public class ExtendedConnectionOperator implements HttpClientConnectionOperator {
-  private static final String SOCKET_FACTORY_REGISTRY = "http.socket-factory-registry";
+  private static final String SOCKET_FACTORY_REGISTRY = "org.apache.http.socket-factory-registry";
   private static final String RESOLVED_ADDRESSES = "lp.resolved-addresses";
 
   private final Lookup<ConnectionSocketFactory> socketFactoryRegistry;

@@ -236,7 +236,7 @@ public class RemoteNodeProcessor implements RemoteNode, Runnable {
 
   private boolean dispatchOneTick(HttpInterface httpInterface, TickBuilder tickBuilder) throws Exception {
     boolean success = false;
-    HttpPost post = new HttpPost("http://" + nodeAddress + "/tick");
+    HttpPost post = new HttpPost("org.apache.http://" + nodeAddress + "/tick");
 
     abandonedTrackManager.distribute(Collections.singletonList(this));
 

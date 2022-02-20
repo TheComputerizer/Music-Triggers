@@ -105,10 +105,10 @@ public class HttpAudioSourceManager extends ProbingAudioSourceManager implements
   }
 
   public static AudioReference getAsHttpReference(AudioReference reference) {
-    if (reference.identifier.startsWith("https://") || reference.identifier.startsWith("http://")) {
+    if (reference.identifier.startsWith("https://") || reference.identifier.startsWith("org.apache.http://")) {
       return reference;
     } else if (reference.identifier.startsWith("icy://")) {
-      return new AudioReference("http://" + reference.identifier.substring(6), reference.title);
+      return new AudioReference("org.apache.http://" + reference.identifier.substring(6), reference.title);
     }
     return null;
   }
