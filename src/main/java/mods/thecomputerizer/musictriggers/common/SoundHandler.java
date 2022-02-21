@@ -29,11 +29,11 @@ public class SoundHandler {
             String songEntry = ((Map.Entry) stringListEntry).getKey().toString();
             SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." +configToml.songholder.get(songEntry))).setRegistryName(new ResourceLocation(MusicTriggers.MODID, configToml.songholder.get(songEntry)));
             List<String> triggers = new ArrayList<>();
-            MusicTriggers.logger.info("song "+songEntry+" has "+configToml.triggerholder.get(songEntry).keySet().size()+" trigger(s)");
+            MusicTriggers.logger.info("song "+configToml.songholder.get(songEntry)+" has "+configToml.triggerholder.get(songEntry).keySet().size()+" trigger(s)");
             for (Map.Entry<String, String[]> nestedStringListEntry : configToml.triggerholder.get(songEntry).entrySet()) {
                 String temp = ((Map.Entry) nestedStringListEntry).getKey().toString();
                 if(configToml.triggerholder.get(songEntry).get(temp)[6].matches("not")) {
-                    MusicTriggers.logger.info("anti trigger for "+temp);
+                    MusicTriggers.logger.info("Registered "+temp+" as an anti trigger for "+configToml.songholder.get(songEntry));
                     antiSongs.computeIfAbsent(songEntry, k -> new ArrayList<>());
                     if(configToml.triggerholder.get(songEntry).get(temp)[10].matches("")) {
                         antiSongs.get(songEntry).add(temp);
@@ -50,7 +50,7 @@ public class SoundHandler {
                 String trigger = triggers.get(0);
                 TriggerSongMap.putIfAbsent(trigger, new HashMap<>());
                 TriggerSongMap.get(trigger).putIfAbsent(songEntry,configToml.triggerholder.get(songEntry).get(trigger)[10]);
-                MusicTriggers.logger.info("size was 1 so putting "+songEntry+" in "+trigger);
+                MusicTriggers.logger.info("Detected the single trigger of "+trigger+" for song "+configToml.songholder.get(songEntry));
                 TriggerInfoMap.putIfAbsent(trigger, configToml.triggerholder.get(songEntry).get(trigger));
                 if(!configToml.triggerholder.get(songEntry).get(trigger)[10].matches("")) {
                     if (!TriggerInfoMap.containsKey(trigger + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10])) {
@@ -68,20 +68,17 @@ public class SoundHandler {
             else {
                 for(String trigger : triggers) {
                     if(configToml.triggerholder.get(songEntry).get(trigger)[6].matches("and")) {
-                        MusicTriggers.logger.info("Building song combo with trigger: "+trigger);
-                        songCombos.computeIfAbsent(songEntry, k -> new ArrayList<>());
                         songCombos.computeIfAbsent(songEntry, k -> new ArrayList<>());
                         if(configToml.triggerholder.get(songEntry).get(trigger)[10].matches("")) {
                             songCombos.get(songEntry).add(trigger);
-                            MusicTriggers.logger.info("Added some combo with blank identifier");
+                            MusicTriggers.logger.info("Added trigger combination for trigger "+trigger+" with blank identifier for song "+configToml.songholder.get(songEntry));
                         }
                         else {
                             songCombos.get(songEntry).add(trigger+"-"+configToml.triggerholder.get(songEntry).get(trigger)[10]);
-                            MusicTriggers.logger.info("Added some combo with identifier of "+configToml.triggerholder.get(songEntry).get(trigger)[10]);
+                            MusicTriggers.logger.info("Added trigger combination for trigger "+trigger+" with identifier of "+configToml.triggerholder.get(songEntry).get(trigger)[10]+" for song "+configToml.songholder.get(songEntry));
                         }
                         TriggerSongMap.putIfAbsent(trigger, new HashMap<>());
                         TriggerSongMap.get(trigger).putIfAbsent("@"+songEntry,configToml.triggerholder.get(songEntry).get(trigger)[10]);
-                        MusicTriggers.logger.info("size wasn't 1 so putting "+songEntry+" in "+trigger);
                         TriggerInfoMap.putIfAbsent(trigger, configToml.triggerholder.get(songEntry).get(trigger));
                         if(!configToml.triggerholder.get(songEntry).get(trigger)[10].matches("")) {
                             if (!TriggerInfoMap.containsKey(trigger + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10])) {
@@ -96,6 +93,30 @@ public class SoundHandler {
                             EnumHelperClient.addMusicType(songEntry, sound, 0, 0);
                         }
                     }
+                }
+            }
+            if(configToml.triggerlinking.get(songEntry) !=null) {
+                int triggerCounter=0;
+                for(String song : configToml.triggerlinking.get(songEntry).keySet()) {
+                    if(triggerCounter!=0) {
+                        SoundEvent soundLink = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + song)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, song));
+                        boolean shouldBeAdded = true;
+                        for(SoundEvent s : allSoundEvents) {
+                            if(soundLink.getRegistryName().toString().matches(s.getRegistryName().toString())) {
+                                shouldBeAdded = false;
+                            }
+                        }
+                        if(shouldBeAdded) {
+                            if(!allSoundEvents.contains(soundLink)) {
+                                allSoundEvents.add(soundLink);
+                                allSoundEventsTriggers.put(soundLink, configToml.triggerlinking.get(songEntry).get(song)[0]);
+                                if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
+                                    EnumHelperClient.addMusicType(songEntry, soundLink, 0, 0);
+                                }
+                            }
+                        }
+                    }
+                    triggerCounter++;
                 }
             }
         }

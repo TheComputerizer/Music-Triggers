@@ -39,7 +39,6 @@ public class eventsCommon {
         }
         int randomNum = ThreadLocalRandom.current().nextInt(0, 5600);
         for (Map.Entry<BlockPos, ItemStack> blockPosItemStackEntry : recordHolder.entrySet()) {
-            MusicTriggers.logger.info("ok");
             BlockPos blockPos = blockPosItemStackEntry.getKey();
             if(recordHolder.get(blockPos)!=null && !recordHolder.get(blockPos).isEmpty() && recordHolder.get(blockPos).getItem() instanceof BlankRecord) {
                 tickCounter.put(blockPos,tickCounter.get(blockPos)+1);

@@ -7,6 +7,7 @@ import net.minecraftforge.client.resource.VanillaResourceType;
 public class reload {
 
     public static void readAndReload() {
+        configToml.emptyMaps();
         SoundHandler.emptyListsAndMaps();
         configToml.parse();
         SoundHandler.registerSounds();

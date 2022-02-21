@@ -188,7 +188,6 @@ public class MusicPicker {
             time = time - (long) time;
         }
         if (time < 0.54166666666) {
-            MusicTriggers.logger.info("Added "+SoundHandler.TriggerSongMap.get("day").keySet().size()+"day songs");
             events.add("day");
             dynamicSongs.put("day", new ArrayList<>(SoundHandler.TriggerSongMap.get("day").keySet()));
             dynamicPriorities.put("day", Integer.parseInt(SoundHandler.TriggerInfoMap.get("day")[0]));
@@ -275,7 +274,6 @@ public class MusicPicker {
                 String undergroundSong = ((Map.Entry) stringListEntry).getKey().toString();
                 String identifier = configToml.triggerholder.get(undergroundSong.replaceAll("@","")).get("underground")[10];
                 if (player.posY < Integer.parseInt(SoundHandler.TriggerInfoMap.get("underground-" + identifier)[2]) && !world.canSeeSky(roundedPos(player))) {
-                    MusicTriggers.logger.info("Added underground song "+undergroundSong);
                     events.add("underground-" + identifier);
                     dynamicSongs.put("underground-" + identifier, buildSongsFromIdentifier(SoundHandler.TriggerSongMap.get("underground"), identifier));
                     dynamicPriorities.put("underground-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("underground-" + identifier)[0]));
@@ -328,7 +326,7 @@ public class MusicPicker {
             dynamicFade.put("fishing", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fishing")[1]));
             triggerPersistence.put("fishing", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fishing")[3]));
         }
-        else if (triggerPersistence.get("fishin")!=null && triggerPersistence.get("fishing") > 0) {
+        else if (triggerPersistence.get("fishing")!=null && triggerPersistence.get("fishing") > 0) {
             events.add("fishing");
             dynamicSongs.put("fishing", new ArrayList<>(SoundHandler.TriggerSongMap.get("fishing").keySet()));
             dynamicPriorities.put("fishing", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fishing")[0]));

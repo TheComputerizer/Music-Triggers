@@ -178,8 +178,8 @@ public class eventsClient {
     @SubscribeEvent
     public static void debugInfo(RenderGameOverlayEvent.Text e) {
         if(configDebug.ShowDebugInfo && isWorldRendered) {
-            if(MusicPlayer.curTrack!=null) {
-                e.getLeft().add("Music Triggers Current song: " + MusicPlayer.curTrack);
+            if(MusicPlayer.curTrackHolder!=null) {
+                e.getLeft().add("Music Triggers Current song: " + MusicPlayer.curTrackHolder);
             }
             if(!configDebug.ShowJustCurSong) {
                 if(MusicPicker.playableList!=null && !MusicPicker.playableList.isEmpty()) {
