@@ -88,6 +88,9 @@ repositories {
             includeGroup "curse.maven"
         }
     }
+    //maven {
+        //url = "https://www.beatunes.com/repo/maven2/"
+    //}
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
@@ -101,7 +104,11 @@ dependencies {
     minecraft 'net.minecraftforge:forge:1.16.5-36.2.22'
 
     implementation("com.moandjiezana.toml:toml4j:0.7.2")
+    //implementation("javazoom.vorbisspi:vorbisspi:1.0.3")
+    implementation("com.googlecode.soundlibs:jlayer:1.0.1.4")
     shade ("com.moandjiezana.toml:toml4j:0.7.2")
+    //shade ("javazoom.vorbisspi:vorbisspi:1.0.3")
+    shade ("com.googlecode.soundlibs:jlayer:1.0.1.4")
 
     implementation fg.deobf("curse.maven:game-stages-268655:3480161")
     implementation fg.deobf("curse.maven:bookshelf-228525:3474499")

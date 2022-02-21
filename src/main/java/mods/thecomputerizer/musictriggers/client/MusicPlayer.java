@@ -7,7 +7,7 @@ import mods.thecomputerizer.musictriggers.config.configTitleCards;
 import mods.thecomputerizer.musictriggers.config.configToml;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.packets.CurSong;
-import mods.thecomputerizer.musictriggers.util.setVolumeSound;
+import mods.thecomputerizer.musictriggers.util.audio.setVolumeSound;
 import net.minecraft.block.JukeboxBlock;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ChannelManager;
@@ -165,12 +165,12 @@ public class MusicPlayer {
                                         curplaying.get(musicLinker.get(checkThis)).execute(sound -> sound.setVolume(1F));
                                     }
                                     curMusic = musicLinker.get(checkThis);
-                                    curTrack = musicLinker.get(checkThis).getLocation().toString().replaceAll("music.","").replaceAll("riggers:","");
+                                    curTrackHolder = musicLinker.get(checkThis).getLocation().toString().replaceAll("music.","").replaceAll("riggers:","");
                                     if (MusicPicker.player != null) {
                                         if (!configRegistry.clientSideOnly) {
-                                            PacketHandler.sendToServer(new CurSong(curTrack, MusicPicker.player.getUUID()));
+                                            PacketHandler.sendToServer(new CurSong(curTrackHolder, MusicPicker.player.getUUID()));
                                         } else {
-                                            curSong.put(MusicPicker.player.getUUID(), curTrack);
+                                            curSong.put(MusicPicker.player.getUUID(), curTrackHolder);
                                         }
                                     }
                                 }
@@ -205,7 +205,6 @@ public class MusicPlayer {
                                     int linkcounter = 0;
                                     for (String song : configToml.triggerlinking.get(curTrack).keySet()) {
                                         if(!song.matches(curTrack)) {
-                                            MusicTriggers.logger.info("Float info : curtrack: " + curTrack + ", song: " + song);
                                             triggerLinker.put("song-" + linkcounter, configToml.triggerlinking.get(curTrack).get(song));
                                             musicLinker.put("song-" + linkcounter, new setVolumeSound(new ResourceLocation(MusicTriggers.MODID, "music." + song), SoundCategory.MUSIC, 1F,
                                                     Float.parseFloat(configToml.otherlinkinginfo.get(curTrack).get(song)[0]), false, 1, ISound.AttenuationType.NONE, 0F, 0F, 0F));

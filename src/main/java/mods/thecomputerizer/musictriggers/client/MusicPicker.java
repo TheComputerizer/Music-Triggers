@@ -110,11 +110,11 @@ public class MusicPicker {
         for (String s : dynamicSongs.get(st)) {
             for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.songCombos.entrySet()) {
                 String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
-                if (s.matches(checkThis)) {
-                    if (playableList.containsAll(SoundHandler.songCombos.get(s)) && SoundHandler.songCombos.get(s).size() != 1) {
+                if (s.startsWith("@") && s.replaceAll("@","").matches(checkThis)) {
+                    if (playableList.containsAll(SoundHandler.songCombos.get(s.replaceAll("@",""))) && SoundHandler.songCombos.get(s.replaceAll("@","")).size() != 1) {
                         playableSongs.add(s.substring(1));
                         if (!titleCardEvents.contains(st)) {
-                            titleCardEvents.addAll(SoundHandler.songCombos.get(s));
+                            titleCardEvents.addAll(SoundHandler.songCombos.get(s.replaceAll("@","")));
                         }
                     }
                 }
@@ -785,7 +785,7 @@ public class MusicPicker {
             }
             return events;
         } else {
-            return null;
+            return new ArrayList<>();
         }
     }
 
