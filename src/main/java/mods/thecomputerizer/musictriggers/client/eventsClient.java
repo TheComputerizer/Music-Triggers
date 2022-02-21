@@ -3,8 +3,8 @@ package mods.thecomputerizer.musictriggers.client;
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
 import com.mojang.blaze3d.systems.RenderSystem;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.configDebug;
-import mods.thecomputerizer.musictriggers.configTitleCards;
+import mods.thecomputerizer.musictriggers.config.configDebug;
+import mods.thecomputerizer.musictriggers.config.configTitleCards;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.SimpleSound;
@@ -26,8 +26,6 @@ import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
-import sereneseasons.api.season.Season;
-import sereneseasons.api.season.SeasonHelper;
 
 import javax.annotation.Nullable;
 
@@ -181,7 +179,7 @@ public class eventsClient {
     public static void debugInfo(RenderGameOverlayEvent.Text e) {
         if (configDebug.ShowDebugInfo.get() && isWorldRendered) {
             if (MusicPlayer.curTrack != null) {
-                e.getLeft().add("Music Triggers Current song: " + MusicPlayer.curTrack);
+                e.getLeft().add("Music Triggers Current song: " + MusicPlayer.curTrackHolder);
             }
             if (!configDebug.ShowJustCurSong.get()) {
                 if (MusicPicker.playableList != null && !MusicPicker.playableList.isEmpty()) {
@@ -205,25 +203,27 @@ public class eventsClient {
                     e.getLeft().add("Music Triggers Current Dimension: " + MusicPicker.player.level.dimension().location());
                     e.getLeft().add("Music Triggers Current Total Light: " + MusicPicker.world.getRawBrightness(MusicPicker.roundedPos(MusicPicker.player), 0));
                     e.getLeft().add("Music Triggers Current Block Light: " + MusicPicker.world.getBrightness(LightType.BLOCK, MusicPicker.roundedPos(MusicPicker.player)));
-                }
-                if (MusicPicker.effectList != null && !MusicPicker.effectList.isEmpty()) {
-                    StringBuilder se = new StringBuilder();
-                    for (String ev : MusicPicker.effectList) {
-                        se.append(" ").append(ev);
+                    if (MusicPicker.effectList != null && !MusicPicker.effectList.isEmpty()) {
+                        StringBuilder se = new StringBuilder();
+                        for (String ev : MusicPicker.effectList) {
+                            se.append(" ").append(ev);
+                        }
+                        e.getLeft().add("Music Triggers Current Effect List:" + se);
                     }
-                    e.getLeft().add("Music Triggers Current Effect List:" + se);
-                }
-                if(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity) != null) {
-                    e.getLeft().add("Music Triggers Current Entity Name: "+getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity).getName().getString());
-                }
-                if(MusicPicker.mc.screen!=null) {
-                    e.getLeft().add("Music Triggers current GUI: "+MusicPicker.mc.screen.toString());
-                }
-                try {
-                    if (infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)) != null) {
-                        e.getLeft().add("Music Triggers Infernal Mob Mod Name: " + infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)));
+                    if (MusicPicker.mc.screen != null) {
+                        e.getLeft().add("Music Triggers current GUI: " + MusicPicker.mc.screen.toString());
                     }
-                } catch (NoSuchMethodError ignored) {
+                    if(Minecraft.getInstance().crosshairPickEntity != null) {
+                        if (getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity) != null) {
+                            e.getLeft().add("Music Triggers Current Entity Name: " + getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity).getName().getString());
+                        }
+                        try {
+                            if (infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)) != null) {
+                                e.getLeft().add("Music Triggers Infernal Mob Mod Name: " + infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)));
+                            }
+                        } catch (NoSuchMethodError ignored) {
+                        }
+                    }
                 }
             }
         }

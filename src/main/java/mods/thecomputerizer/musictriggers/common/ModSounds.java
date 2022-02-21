@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.common;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.configRegistry;
+import mods.thecomputerizer.musictriggers.config.configRegistry;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.SimpleSound;
 import net.minecraft.util.ResourceLocation;

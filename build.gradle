@@ -78,6 +78,7 @@ minecraft {
 }
 
 repositories {
+    mavenCentral()
     maven {
         url = 'https://www.cursemaven.com'
         content {
@@ -90,6 +91,8 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
     minecraft 'net.minecraftforge:forge:1.16.5-36.2.22'
+
+    implementation("com.moandjiezana.toml:toml4j:0.7.2")
 
     implementation fg.deobf("curse.maven:game-stages-268655:3480161")
     implementation fg.deobf("curse.maven:bookshelf-228525:3474499")

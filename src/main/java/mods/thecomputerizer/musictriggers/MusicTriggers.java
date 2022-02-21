@@ -3,6 +3,10 @@ package mods.thecomputerizer.musictriggers;
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.client.eventsClient;
 import mods.thecomputerizer.musictriggers.common.eventsCommon;
+import mods.thecomputerizer.musictriggers.config.configDebug;
+import mods.thecomputerizer.musictriggers.config.configRegistry;
+import mods.thecomputerizer.musictriggers.config.configTitleCards;
+import mods.thecomputerizer.musictriggers.config.configToml;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.json;
@@ -49,7 +53,7 @@ public class MusicTriggers {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::commonsetup);
         IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT,configDebug.SPEC, "MusicTriggers/debug.toml");
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, configDebug.SPEC, "MusicTriggers/debug.toml");
         MinecraftForge.EVENT_BUS.register(this);
         File configDir = new File("config", "MusicTriggers");
         if (!configDir.exists()) {
@@ -64,31 +68,6 @@ public class MusicTriggers {
             }
         }
         new readRedirect(redir);
-        try {
-            File baseConfig = new File(configDir, "musictriggers.txt");
-            if (!baseConfig.exists()) {
-                Files.createFile(Paths.get(baseConfig.getPath()));
-                config.build(baseConfig);
-                config.read(baseConfig);
-            }
-            else {
-                config.update(baseConfig);
-            }
-            File Transitionconfig = new File(configDir,"transitions.txt");
-            if(!Transitionconfig.exists()) {
-                configTitleCards.build(Transitionconfig);
-            }
-            configTitleCards.read(Transitionconfig);
-            File Registrationconfig = new File(configDir,"registration.txt");
-            if(!Registrationconfig.exists()) {
-                configRegistry.build(Registrationconfig);
-                configRegistry.read(Registrationconfig);
-            }
-            configRegistry.update(Registrationconfig);
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
-        RegistryHandler.init(eventBus);
         if (FMLEnvironment.dist == Dist.CLIENT) {
             songsDir = new File(configDir.getPath(), "songs");
             if (!songsDir.exists()) {
@@ -101,6 +80,14 @@ public class MusicTriggers {
             File musictriggersDir = new File(assetsDir.getPath(), "musictriggers");
             if (!musictriggersDir.exists()) {
                 musictriggersDir.mkdir();
+            }
+            File jjson = new File(musictriggersDir.getPath() + "/sounds.json");
+            if (!jjson.exists() && json.collector()!=null) {
+                try {
+                    jjson.createNewFile();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
             }
             File soundsDir = new File(musictriggersDir.getPath(), "sounds");
             if (!soundsDir.exists()) {
@@ -129,14 +116,6 @@ public class MusicTriggers {
                     ex.printStackTrace();
                 }
             }
-            File jjson = new File(musictriggersDir.getPath() + "/sounds.json");
-            if (!jjson.exists() && json.collector()!=null) {
-                try {
-                    jjson.createNewFile();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            }
             File langDir = new File(musictriggersDir.getPath(), "lang");
             if (!langDir.exists()) {
                 langDir.mkdir();
@@ -159,6 +138,23 @@ public class MusicTriggers {
                 }
             }
         }
+        try {
+            configToml.parse();
+            File Transitionconfig = new File(configDir,"transitions.txt");
+            if(!Transitionconfig.exists()) {
+                configTitleCards.build(Transitionconfig);
+            }
+            configTitleCards.read(Transitionconfig);
+            File Registrationconfig = new File(configDir,"registration.txt");
+            if(!Registrationconfig.exists()) {
+                configRegistry.build(Registrationconfig);
+                configRegistry.read(Registrationconfig);
+            }
+            configRegistry.update(Registrationconfig);
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+        RegistryHandler.init(eventBus);
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
         MinecraftForge.EVENT_BUS.register(eventsClient.class);
         MinecraftForge.EVENT_BUS.register(eventsCommon.class);

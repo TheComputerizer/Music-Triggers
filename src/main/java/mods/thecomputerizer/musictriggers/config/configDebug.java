@@ -1,4 +1,4 @@
-package mods.thecomputerizer.musictriggers;
+package mods.thecomputerizer.musictriggers.config;
 
 import net.minecraftforge.common.ForgeConfigSpec;
 

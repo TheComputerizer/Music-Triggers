@@ -3,7 +3,7 @@ package mods.thecomputerizer.musictriggers.common;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.objects.BlankRecord;
 import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
-import mods.thecomputerizer.musictriggers.configRegistry;
+import mods.thecomputerizer.musictriggers.config.configRegistry;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.Rarity;
