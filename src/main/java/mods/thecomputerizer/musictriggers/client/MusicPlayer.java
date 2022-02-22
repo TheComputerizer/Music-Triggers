@@ -2,14 +2,13 @@ package mods.thecomputerizer.musictriggers.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
-import mods.thecomputerizer.musictriggers.config;
-import mods.thecomputerizer.musictriggers.configRegistry;
-import mods.thecomputerizer.musictriggers.configTitleCards;
+import mods.thecomputerizer.musictriggers.config.configRegistry;
+import mods.thecomputerizer.musictriggers.config.configTitleCards;
+import mods.thecomputerizer.musictriggers.config.configToml;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.packets.CurSong;
-import mods.thecomputerizer.musictriggers.util.setVolumeSound;
+import mods.thecomputerizer.musictriggers.util.audio.setVolumeSound;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SoundInstance;
@@ -43,6 +42,7 @@ public class MusicPlayer {
     public static List<String> curTrackList;
     public static List<String> holder;
     public static String curTrack;
+    public static String curTrackHolder;
     public static SoundInstance curMusic;
     public static Random rand = new Random();
     public static Minecraft mc = Minecraft.getInstance();
@@ -62,41 +62,14 @@ public class MusicPlayer {
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent event) {
         if(!reloading) {
-            if (MusicPicker.persistentPVP > 0) {
-                MusicPicker.persistentPVP -= 1;
-            }
             if(MusicPicker.fishBool) {
                 MusicPicker.fishingStart++;
             }
-            if(MusicPicker.persistentFishing>0) {
-                MusicPicker.persistentFishing -= 1;
-            }
-            for (Map.Entry<Integer, Integer> integerListEntry : MusicPicker.persistentVictory.entrySet()) {
-                int victoryID = integerListEntry.getKey();
-                MusicPicker.persistentVictory.putIfAbsent(victoryID, 0);
-                if (MusicPicker.persistentVictory.get(victoryID) > 0) {
-                    MusicPicker.persistentVictory.put(victoryID, MusicPicker.persistentVictory.get(victoryID) - 1);
-                }
-            }
-            for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.mobSongsString.entrySet()) {
-                String mobName = ((Map.Entry) stringListEntry).getKey().toString();
-                MusicPicker.persistentMob.putIfAbsent(mobName, 0);
-                if (MusicPicker.persistentMob.get(mobName) > 0) {
-                    MusicPicker.persistentMob.put(mobName, MusicPicker.persistentMob.get(mobName) - 1);
-                }
-            }
-            for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.biomeSongsString.entrySet()) {
-                String biomeRegex = ((Map.Entry) stringListEntry).getKey().toString();
-                MusicPicker.persistentBiome.putIfAbsent(biomeRegex, 0);
-                if (MusicPicker.persistentBiome.get(biomeRegex) > 0) {
-                    MusicPicker.persistentBiome.put(biomeRegex, MusicPicker.persistentBiome.get(biomeRegex) - 1);
-                }
-            }
-            for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.lightSongsString.entrySet()) {
-                String lightName = ((Map.Entry) stringListEntry).getKey().toString();
-                MusicPicker.lightPersistence.putIfAbsent(lightName, 0);
-                if (MusicPicker.lightPersistence.get(lightName) > 0) {
-                    MusicPicker.lightPersistence.put(lightName, MusicPicker.lightPersistence.get(lightName) - 1);
+            for (Map.Entry<String, Integer> stringListEntry : MusicPicker.triggerPersistence.entrySet()) {
+                String eventID = ((Map.Entry) stringListEntry).getKey().toString();
+                MusicPicker.triggerPersistence.putIfAbsent(eventID, 0);
+                if (MusicPicker.triggerPersistence.get(eventID) > 0) {
+                    MusicPicker.triggerPersistence.put(eventID, MusicPicker.triggerPersistence.get(eventID) - 1);
                 }
             }
             if (fading) {
@@ -147,7 +120,7 @@ public class MusicPlayer {
                             mc.getSoundManager().stop();
                             curMusic = null;
                             delay = true;
-                            delayTime = config.universalDelay;
+                            delayTime = 20;
                         }
                     }
                     if (MusicPicker.shouldChange || !Arrays.equals(curTrackList.toArray(new String[0]), holder.toArray(new String[0]))) {
@@ -188,12 +161,12 @@ public class MusicPlayer {
                                         curplaying.get(musicLinker.get(checkThis)).execute(sound -> sound.setVolume(1F));
                                     }
                                     curMusic = musicLinker.get(checkThis);
-                                    curTrack = musicLinker.get(checkThis).getLocation().toString().replaceAll("music.","").replaceAll("riggers:","");
+                                    curTrackHolder = musicLinker.get(checkThis).getLocation().toString().replaceAll("music.","").replaceAll("riggers:","");
                                     if (MusicPicker.player != null) {
                                         if (!configRegistry.clientSideOnly) {
-                                            PacketHandler.sendToServer(new CurSong(curTrack, MusicPicker.player.getUUID()));
+                                            PacketHandler.sendToServer(new CurSong(curTrackHolder, MusicPicker.player.getUUID()));
                                         } else {
-                                            curSong.put(MusicPicker.player.getUUID(), curTrack);
+                                            curSong.put(MusicPicker.player.getUUID(), curTrackHolder);
                                         }
                                     }
                                 }
@@ -218,38 +191,50 @@ public class MusicPlayer {
                                 }
                             }
                             curTrack = curTrackList.get(i);
-                            String[] linked = stringBreaker(curTrack,";");
-                            for(int index=0;index<linked.length;index++) {
-                                String[] tempTriggers = stringBreaker(linked[index],"/");
-                                float pitch = 1F;
-                                if(tempTriggers.length>1) {
-                                    pitch = Float.parseFloat(stringBreaker(linked[index], "/")[1]);
-                                    triggerLinker.put("song-" + index, Arrays.copyOfRange(tempTriggers, 2, tempTriggers.length));
-                                }
-                                musicLinker.put("song-"+index, new setVolumeSound(new ResourceLocation(MusicTriggers.MODID, "music." +stringBreaker(linked[index],"/")[0]), SoundSource.MUSIC, 1F, pitch, false, 1, SoundInstance.Attenuation.NONE, 0F, 0F, 0F));
-                            }
-                            curTrack = stringBreaker(stringBreaker(curTrack,";")[0],"/")[0];
-                            if (MusicPicker.player != null) {
-                                if (!configRegistry.clientSideOnly) {
-                                    PacketHandler.sendToServer(new CurSong(curTrack, MusicPicker.player.getUUID()));
+                            if (curTrack != null) {
+                                curTrackHolder = configToml.songholder.get(curTrack);
+                                MusicTriggers.logger.info("Attempting to play track: " + curTrackHolder);
+                                if (configToml.triggerlinking.get(curTrack) != null) {
+                                    triggerLinker.put("song-" + 0, configToml.triggerlinking.get(curTrack).get(curTrack));
+                                    musicLinker.put("song-" + 0, new setVolumeSound(new ResourceLocation(MusicTriggers.MODID, "music." + curTrackHolder), SoundSource.MUSIC, 1F, Float.parseFloat(configToml.otherinfo.get(curTrack)[0]), false, 1, SoundInstance.Attenuation.NONE, 0F, 0F, 0F));
+                                    int linkcounter = 0;
+                                    for (String song : configToml.triggerlinking.get(curTrack).keySet()) {
+                                        if(!song.matches(curTrack)) {
+                                            triggerLinker.put("song-" + linkcounter, configToml.triggerlinking.get(curTrack).get(song));
+                                            musicLinker.put("song-" + linkcounter, new setVolumeSound(new ResourceLocation(MusicTriggers.MODID, "music." + song), SoundSource.MUSIC, 1F,
+                                                    Float.parseFloat(configToml.otherlinkinginfo.get(curTrack).get(song)[0]), false, 1, SoundInstance.Attenuation.NONE, 0F, 0F, 0F));
+                                        }
+                                        linkcounter++;
+                                    }
                                 } else {
-                                    curSong.put(MusicPicker.player.getUUID(), curTrack);
+                                    musicLinker.put("song-" + 0, new setVolumeSound(new ResourceLocation(MusicTriggers.MODID, "music." + curTrackHolder), SoundSource.MUSIC, 1F, Float.parseFloat(configToml.otherinfo.get(curTrack)[0]), false, 1, SoundInstance.Attenuation.NONE, 0F, 0F, 0F));
+                                }
+                                if (MusicPicker.player != null) {
+                                    if (!configRegistry.clientSideOnly) {
+                                        PacketHandler.sendToServer(new CurSong(curTrackHolder, MusicPicker.player.getUUID()));
+                                    } else {
+                                        curSong.put(MusicPicker.player.getUUID(), curTrackHolder);
+                                    }
+                                }
+                                mc.getSoundManager().stop();
+                                for (Map.Entry<String, setVolumeSound> stringListEntry : musicLinker.entrySet()) {
+                                    String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
+                                    if (!checkThis.matches("song-0")) {
+                                        musicLinker.get(checkThis).setVolume(0.01F);
+                                    } else {
+                                        curMusic = musicLinker.get(checkThis);
+                                    }
+                                    mc.getSoundManager().play(musicLinker.get(checkThis));
                                 }
                             }
-                            mc.getSoundManager().stop();
-                            for (Map.Entry<String, setVolumeSound> stringListEntry : musicLinker.entrySet()) {
-                                String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
-                                if(!checkThis.matches("song-0")) {
-                                    musicLinker.get(checkThis).setVolume(0.01F);
-                                }
-                                else {
-                                    curMusic = musicLinker.get(checkThis);
-                                }
-                                mc.getSoundManager().play(musicLinker.get(checkThis));
+                            else {
+                                curTrackList = null;
                             }
                         }
                     }
                 } else {
+                    curTrack = null;
+                    curTrackHolder = null;
                     if (curMusic != null) {
                         mc.getSoundManager().stop(curMusic);
                         curMusic = null;

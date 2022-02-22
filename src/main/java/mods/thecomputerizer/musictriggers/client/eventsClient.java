@@ -3,8 +3,8 @@ package mods.thecomputerizer.musictriggers.client;
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
 import com.mojang.blaze3d.systems.RenderSystem;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.configDebug;
-import mods.thecomputerizer.musictriggers.configTitleCards;
+import mods.thecomputerizer.musictriggers.config.configDebug;
+import mods.thecomputerizer.musictriggers.config.configTitleCards;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -172,7 +172,7 @@ public class eventsClient {
     public static void debugInfo(RenderGameOverlayEvent.Text e) {
         if (configDebug.ShowDebugInfo.get() && isWorldRendered) {
             if (MusicPlayer.curTrack != null) {
-                e.getLeft().add("Music Triggers Current song: " + MusicPlayer.curTrack);
+                e.getLeft().add("Music Triggers Current song: " + MusicPlayer.curTrackHolder);
             }
             if (!configDebug.ShowJustCurSong.get()) {
                 if (MusicPicker.playableList != null && !MusicPicker.playableList.isEmpty()) {
@@ -196,25 +196,25 @@ public class eventsClient {
                     e.getLeft().add("Music Triggers Current Dimension: " + MusicPicker.player.level.dimension().location());
                     e.getLeft().add("Music Triggers Current Total Light: " + MusicPicker.world.getRawBrightness(MusicPicker.roundedPos(MusicPicker.player), 0));
                     e.getLeft().add("Music Triggers Current Block Light: " + MusicPicker.world.getBrightness(LightLayer.BLOCK, MusicPicker.roundedPos(MusicPicker.player)));
-                }
-                if (MusicPicker.effectList != null && !MusicPicker.effectList.isEmpty()) {
-                    StringBuilder se = new StringBuilder();
-                    for (String ev : MusicPicker.effectList) {
-                        se.append(" ").append(ev);
+                    if (MusicPicker.effectList != null && !MusicPicker.effectList.isEmpty()) {
+                        StringBuilder se = new StringBuilder();
+                        for (String ev : MusicPicker.effectList) {
+                            se.append(" ").append(ev);
+                        }
+                        e.getLeft().add("Music Triggers Current Effect List:" + se);
                     }
-                    e.getLeft().add("Music Triggers Current Effect List:" + se);
-                }
-                if(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity) != null) {
-                    e.getLeft().add("Music Triggers Current Entity Name: "+getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity).getName().getString());
-                }
-                if(MusicPicker.mc.screen!=null) {
-                    e.getLeft().add("Music Triggers current GUI: "+MusicPicker.mc.screen.toString());
-                }
-                try {
-                    if (infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)) != null) {
-                        e.getLeft().add("Music Triggers Infernal Mob Mod Name: " + infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)));
+                    if (getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity) != null) {
+                        e.getLeft().add("Music Triggers Current Entity Name: " + getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity).getName().getString());
                     }
-                } catch (NoSuchMethodError ignored) {
+                    if (MusicPicker.mc.screen != null) {
+                        e.getLeft().add("Music Triggers current GUI: " + MusicPicker.mc.screen.toString());
+                    }
+                    try {
+                        if (infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)) != null) {
+                            e.getLeft().add("Music Triggers Infernal Mob Mod Name: " + infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)));
+                        }
+                    } catch (NoSuchMethodError ignored) {
+                    }
                 }
             }
         }

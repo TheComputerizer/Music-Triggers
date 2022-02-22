@@ -7,8 +7,10 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.level.material.MaterialColor;
+import net.minecraftforge.client.model.obj.MaterialLibrary;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -22,7 +24,7 @@ public class MusicTriggersBlocks {
     public static RegistryObject<Block> MUSIC_RECORDER;
 
     public void initBlock() {
-        MUSIC_RECORDER = BLOCKS.register("music_recorder",() -> new MusicRecorder(Block.Properties.of(Material.WOOD, MaterialColor.NONE)));
+        MUSIC_RECORDER = BLOCKS.register("music_recorder",() -> new MusicRecorder(Block.Properties.of(Material.WOOD, MaterialColor.WOOD).strength(2.0F, 6.0F).requiresCorrectToolForDrops()));
     }
 
     public void initItem() {

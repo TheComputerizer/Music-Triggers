@@ -1,4 +1,4 @@
-package mods.thecomputerizer.musictriggers;
+package mods.thecomputerizer.musictriggers.config;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -83,26 +83,28 @@ public class configTitleCards {
                 if (line.contains("title cards=<")) {
                     titleLines = true;
                 }
-                else if (!line.contains(">") && titleLines) {
+                if (line.contains(">") && titleLines) {
+                    titleLines = false;
+                }
+                if(titleLines && !line.contains("title cards=<")) {
+                    line = line.trim();
                     line = line.replaceAll("\t", "");
                     if (!TitleCards.contains(line) && line.length() != 0) {
-                        MusicTriggers.logger.warn("is this even reading");
                         TitleCards.add(line);
                     }
                 }
                 if (line.contains("image cards=<")) {
                     imageLines = true;
                 }
-                else if (!line.contains(">") && imageLines) {
-                    line = line.replaceAll(" ", "");
+                if (line.contains(">") && imageLines) {
+                    imageLines = false;
+                }
+                else if (imageLines && !line.contains("image cards=<")) {
+                    line = line.trim();
                     line = line.replaceAll("\t", "");
                     if (!ImageCards.contains(line) && line.length() != 0) {
                         ImageCards.add(line);
                     }
-                }
-                if (line.contains(">")) {
-                    titleLines = false;
-                    imageLines = false;
                 }
                 if (line.contains("horizontal offset=")) {
                     ImageH=Integer.parseInt(stringBreakerRegex(line,"=")[1]);
