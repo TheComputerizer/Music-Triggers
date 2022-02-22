@@ -109,7 +109,8 @@ public class SoundHandler {
                         if(shouldBeAdded) {
                             if(!allSoundEvents.contains(soundLink)) {
                                 allSoundEvents.add(soundLink);
-                                allSoundEventsTriggers.put(soundLink, configToml.triggerlinking.get(songEntry).get(song)[0]);
+                                MusicTriggers.logger.info("linked trigger disc lol "+configToml.triggerlinking.get(songEntry).get(song)[0].split("-")[0]);
+                                allSoundEventsTriggers.put(soundLink, configToml.triggerlinking.get(songEntry).get(song)[0].split("-")[0]);
                                 if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                                     EnumHelperClient.addMusicType(songEntry, soundLink, 0, 0);
                                 }

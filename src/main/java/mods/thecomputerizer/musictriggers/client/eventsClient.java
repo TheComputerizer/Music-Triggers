@@ -33,6 +33,8 @@ import net.minecraftforge.fml.relauncher.Side;
 
 import javax.annotation.Nullable;
 import javax.vecmath.Vector4f;
+import java.util.ArrayList;
+import java.util.List;
 
 @Mod.EventBusSubscriber(modid = MusicTriggers.MODID, value = Side.CLIENT)
 public class eventsClient {
@@ -48,6 +50,9 @@ public class eventsClient {
     public static String GUIName;
     public static int GuiCounter = 0;
     private static int reloadCounter = 0;
+    public static boolean ismoving;
+    public static List<ResourceLocation> pngs = new ArrayList<>();
+    public static int movingcounter = 0;
 
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
@@ -113,16 +118,27 @@ public class eventsClient {
                 int x = res.getScaledWidth();
                 int y = res.getScaledHeight();
                 Vector4f color = new Vector4f(1, 1, 1, 1);
-                if(timer>200){
+                if(timer>configTitleCards.imagecards.get(curImageIndex).getTime()){
                     activated=false;
                     timer=0;
+                    ismoving = false;
+                    movingcounter = 0;
+                }
+                else if(ismoving) {
+                    if(timer%configTitleCards.imagecards.get(curImageIndex).getDelay()==0) {
+                        movingcounter++;
+                        if (movingcounter>=pngs.size()) {
+                            movingcounter = 0;
+                        }
+                    }
+                    IMAGE_CARD = pngs.get(movingcounter);
                 }
                 if (activated) {
                     timer++;
                     startDelayCount++;
                     if(startDelayCount>0) {
                         if (fadeCount > 1) {
-                            fadeCount -= 15;
+                            fadeCount -= 6;
                             if (fadeCount < 1) {
                                 fadeCount = 1;
                             }
@@ -130,9 +146,10 @@ public class eventsClient {
                     }
                 } else {
                     if (fadeCount < 1000) {
-                        fadeCount += 12;
+                        fadeCount += 4;
                         if (fadeCount > 1000) {
                             fadeCount = 1000;
+                            ismoving = false;
                         }
                     }
                     startDelayCount=0;
@@ -145,8 +162,12 @@ public class eventsClient {
                     GlStateManager.translate(0, 0, 0);
                     GlStateManager.scale(0.140625*(configTitleCards.imagecards.get(curImageIndex).getScale()/100f),0.25*(configTitleCards.imagecards.get(curImageIndex).getScale()/100f),1);
                     GlStateManager.color(color.getX(), color.getY(), color.getZ(), Math.max(0, Math.min(0.95f, opacity)));
-                    mc.getTextureManager().bindTexture(IMAGE_CARD);
-                    GuiScreen.drawModalRectWithCustomSizedTexture((3*(x+configTitleCards.imagecards.get(curImageIndex).getHorizontal())),(y+configTitleCards.imagecards.get(curImageIndex).getVertical())/4,x,y,x,y,x,y);
+                    if(IMAGE_CARD!=null) {
+                        mc.getTextureManager().bindTexture(IMAGE_CARD);
+                    }
+                    float x_translation = (((1f/0.140625f)*.5f)*(1f/(configTitleCards.imagecards.get(curImageIndex).getScale()/100f))*(x+configTitleCards.imagecards.get(curImageIndex).getHorizontal()));
+                    GuiScreen.drawModalRectWithCustomSizedTexture((int)(x_translation-(x*0.496)),
+                            (int)((y+configTitleCards.imagecards.get(curImageIndex).getVertical())/4f),x,y,x,y,x,y);
                     GlStateManager.color(1F, 1F, 1F, 1);
                     GlStateManager.popMatrix();
                 }
@@ -171,6 +192,7 @@ public class eventsClient {
             if(reloadCounter==1) {
                 reload.readAndReload();
                 MusicPicker.player.sendMessage(new TextComponentString("\u00A7a\u00A7oFinished!"));
+                MusicPlayer.cards = true;
                 MusicPlayer.reloading = false;
             }
         }

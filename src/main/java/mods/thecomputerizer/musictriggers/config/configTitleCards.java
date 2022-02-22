@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.config;
 
 import com.moandjiezana.toml.Toml;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ public class configTitleCards {
     public static String CrashHelper;
     public static HashMap<Integer, Title> titlecards = new HashMap<>();
     public static HashMap<Integer, Image> imagecards = new HashMap<>();
+    public static HashMap<Integer, Boolean> ismoving = new HashMap<>();
 
     public static void parse() {
         File file = new File("config/MusicTriggers/transitions.toml");
@@ -26,7 +28,7 @@ public class configTitleCards {
             CrashHelper = "There was a problem initializing transitions";
             int titleCounter = 0;
             int imageCounter = 0;
-            try {
+            //try {
                 Toml toml = new Toml().read(file);
                 if(toml.containsTableArray("title")) {
                     CrashHelper = "There was a problem initializing title cards";
@@ -45,6 +47,7 @@ public class configTitleCards {
                     }
                 }
                 else if(toml.containsTable("title")) {
+                    MusicTriggers.logger.info("Found title card");
                     CrashHelper = "There was a problem initializing title cards";
                     Toml title = toml.getTable("title");
                     titlecards.putIfAbsent(titleCounter,new Title());
@@ -55,48 +58,66 @@ public class configTitleCards {
                         titlecards.get(titleCounter).setSubTitle(title.getString("subtitle"));
                     }
                     if(title.contains("triggers")) {
+                        MusicTriggers.logger.info("Found triggers for title card");
                         titlecards.get(titleCounter).addTriggers(new ArrayList<>(title.getList("triggers")));
                     }
                 }
                 if(toml.containsTableArray("image")) {
                     CrashHelper = "There was a problem initializing image cards";
-                    for(Toml title : toml.getTables("image")) {
+                    for(Toml image : toml.getTables("image")) {
                         imagecards.putIfAbsent(imageCounter,new Image());
-                        if(title.contains("vertical")) {
-                            imagecards.get(imageCounter).setVertical(Integer.parseInt(title.getString("vertical")));
+                        if(image.contains("name")) {
+                            imagecards.get(imageCounter).setName(image.getString("name"));
                         }
-                        if(title.contains("horizontal")) {
-                            imagecards.get(imageCounter).setHorizontal(Integer.parseInt(title.getString("horizontal")));
+                        if(image.contains("vertical")) {
+                            imagecards.get(imageCounter).setVertical(Integer.parseInt(image.getString("vertical")));
                         }
-                        if(title.contains("scale")) {
-                            imagecards.get(imageCounter).setScale(Integer.parseInt(title.getString("scale")));
+                        if(image.contains("horizontal")) {
+                            imagecards.get(imageCounter).setHorizontal(Integer.parseInt(image.getString("horizontal")));
                         }
-                        if(title.contains("triggers")) {
-                            imagecards.get(imageCounter).addTriggers(new ArrayList<>(title.getList("triggers")));
+                        if(image.contains("scale")) {
+                            imagecards.get(imageCounter).setScale(Integer.parseInt(image.getString("scale")));
+                        }
+                        if(image.contains("triggers")) {
+                            imagecards.get(imageCounter).addTriggers(new ArrayList<>(image.getList("triggers")));
                         }
                         imageCounter++;
                     }
                 }
                 else if(toml.containsTable("image")) {
                     CrashHelper = "There was a problem initializing image cards";
-                    Toml title = toml.getTable("title");
+                    Toml image = toml.getTable("image");
                     imagecards.putIfAbsent(imageCounter,new Image());
-                    if(title.contains("vertical")) {
-                        imagecards.get(imageCounter).setVertical(Integer.parseInt(title.getString("vertical")));
+                    ismoving.putIfAbsent(imageCounter, false);
+                    if(image.containsTable("gif")) {
+                        Toml gif = image.getTable("gif");
+                        if(gif.contains("delay")) {
+                            imagecards.get(imageCounter).setDelay(Integer.parseInt(gif.getString("delay")));
+                            ismoving.put(imageCounter,true);
+                        }
                     }
-                    if(title.contains("horizontal")) {
-                        imagecards.get(imageCounter).setHorizontal(Integer.parseInt(title.getString("horizontal")));
+                    if(image.contains("name")) {
+                        imagecards.get(imageCounter).setName(image.getString("name"));
                     }
-                    if(title.contains("scale")) {
-                        imagecards.get(imageCounter).setScale(Integer.parseInt(title.getString("scale")));
+                    if(image.contains("vertical")) {
+                        imagecards.get(imageCounter).setVertical(Integer.parseInt(image.getString("vertical")));
                     }
-                    if(title.contains("triggers")) {
-                        imagecards.get(imageCounter).addTriggers(new ArrayList<>(title.getList("triggers")));
+                    if(image.contains("horizontal")) {
+                        imagecards.get(imageCounter).setHorizontal(Integer.parseInt(image.getString("horizontal")));
+                    }
+                    if(image.contains("scale")) {
+                        imagecards.get(imageCounter).setScale(Integer.parseInt(image.getString("scale")));
+                    }
+                    if(image.contains("time")) {
+                        imagecards.get(imageCounter).setTime(Integer.parseInt(image.getString("time")));
+                    }
+                    if(image.contains("triggers")) {
+                        imagecards.get(imageCounter).addTriggers(new ArrayList<>(image.getList("triggers")));
                     }
                 }
-            } catch (Exception e) {
-                throw new RuntimeException(CrashHelper);
-            }
+            //} catch (Exception e) {
+                //throw new RuntimeException(CrashHelper);
+            //}
         }
     }
 
@@ -141,6 +162,8 @@ public class configTitleCards {
         private int vertical;
         private int horizontal;
         private int scale;
+        private int time;
+        private int delay;
         private final List<String> triggers;
 
         public Image() {
@@ -148,6 +171,8 @@ public class configTitleCards {
             this.vertical = 0;
             this.horizontal = 0;
             this.scale = 100;
+            this.time = 750;
+            this.delay = 10;
             this.triggers = new ArrayList<>();
         }
 
@@ -183,6 +208,22 @@ public class configTitleCards {
             return this.scale;
         }
 
+        public int getTime() {
+            return this.time;
+        }
+
+        public void setTime(int t) {
+            this.time = t;
+        }
+
+        public int getDelay() {
+            return this.delay;
+        }
+
+        public void setDelay(int d) {
+            this.delay = d;
+        }
+
         public void addTriggers(ArrayList<String> t) {
             this.triggers.addAll(t);
         }
@@ -190,5 +231,11 @@ public class configTitleCards {
         public List<String> getTriggers() {
             return this.triggers;
         }
+    }
+
+    public static void emptyMaps() {
+        titlecards = new HashMap<>();
+        imagecards = new HashMap<>();
+        ismoving = new HashMap<>();
     }
 }
