@@ -37,6 +37,7 @@ import javax.vecmath.Vector4f;
 @Mod.EventBusSubscriber(modid = MusicTriggers.MODID, value = Side.CLIENT)
 public class eventsClient {
     public static ResourceLocation IMAGE_CARD = null;
+    public static int curImageIndex;
     public static boolean isWorldRendered;
     public static float fadeCount = 1000;
     public static float startDelayCount = 0;
@@ -142,10 +143,10 @@ public class eventsClient {
                     GlStateManager.enableBlend();
                     GlStateManager.pushMatrix();
                     GlStateManager.translate(0, 0, 0);
-                    GlStateManager.scale(0.140625*configTitleCards.ImageSize,0.25*configTitleCards.ImageSize,1);
+                    GlStateManager.scale(0.140625*(configTitleCards.imagecards.get(curImageIndex).getScale()/100f),0.25*(configTitleCards.imagecards.get(curImageIndex).getScale()/100f),1);
                     GlStateManager.color(color.getX(), color.getY(), color.getZ(), Math.max(0, Math.min(0.95f, opacity)));
                     mc.getTextureManager().bindTexture(IMAGE_CARD);
-                    GuiScreen.drawModalRectWithCustomSizedTexture((3*(x+configTitleCards.ImageH)),(y+configTitleCards.ImageV)/4,x,y,x,y,x,y);
+                    GuiScreen.drawModalRectWithCustomSizedTexture((3*(x+configTitleCards.imagecards.get(curImageIndex).getHorizontal())),(y+configTitleCards.imagecards.get(curImageIndex).getVertical())/4,x,y,x,y,x,y);
                     GlStateManager.color(1F, 1F, 1F, 1);
                     GlStateManager.popMatrix();
                 }

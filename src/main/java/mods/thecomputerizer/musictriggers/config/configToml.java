@@ -1,12 +1,13 @@
 package mods.thecomputerizer.musictriggers.config;
 
 import com.moandjiezana.toml.Toml;
-import jdk.nashorn.internal.runtime.regexp.joni.exception.SyntaxException;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.util.json;
 
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class configToml {
@@ -310,7 +311,7 @@ public class configToml {
                             songCounter++;
                         }
                     } catch (Exception e) {
-                        throw new SyntaxException("Failed to initialize song block from song "+s+" at "+CrashHelper);
+                        throw new RuntimeException("Failed to initialize song block from song "+s+" at "+CrashHelper);
                     }
                 } else if (toml.containsTable(s)) {
                     try {
@@ -577,7 +578,7 @@ public class configToml {
                         }
                         songCounter++;
                     } catch (Exception e) {
-                        throw new SyntaxException("Failed to initialize song block from song "+s+" at "+CrashHelper);
+                        throw new RuntimeException("Failed to initialize song block from song "+s+" at "+CrashHelper);
                     }
                 }
             }

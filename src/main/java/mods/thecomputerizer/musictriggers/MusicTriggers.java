@@ -4,6 +4,7 @@ import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.client.eventsClient;
 import mods.thecomputerizer.musictriggers.common.eventsCommon;
 import mods.thecomputerizer.musictriggers.config.configRegistry;
+import mods.thecomputerizer.musictriggers.config.configTitleCards;
 import mods.thecomputerizer.musictriggers.config.configToml;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.json;
@@ -176,6 +177,7 @@ public class MusicTriggers {
             }
             songs = musictriggersDir;
             configToml.parse();
+            configTitleCards.parse();
         }
         if(!configRegistry.registry.clientSideOnly) {
             RegistryHandler.init();

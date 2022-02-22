@@ -253,20 +253,17 @@ public class MusicPlayer {
     }
 
     public static void renderCards() {
-        for (String t : configTitleCards.TitleCards) {
-            String[] line = t.split(",");
-            String[] temp = Arrays.copyOfRange(line, 2, line.length);
-            if (tempTitleCards.containsAll(Arrays.asList(temp)) && mc.player != null) {
-                mc.ingameGUI.displayTitle("\u00A74" + line[0], line[1], 5, 20, 20);
+        for (int i : configTitleCards.titlecards.keySet()) {
+            if (tempTitleCards.containsAll(configTitleCards.titlecards.keySet()) && mc.player != null) {
+                mc.ingameGUI.displayTitle("\u00A74" + configTitleCards.titlecards.get(i).getTitle(), configTitleCards.titlecards.get(i).getSubTitle(), 5, 20, 20);
                 //noinspection ConstantConditions
-                mc.ingameGUI.displayTitle(null, line[1], 5, 20, 20);
+                mc.ingameGUI.displayTitle(null, configTitleCards.titlecards.get(i).getSubTitle(), 5, 20, 20);
             }
         }
-        for (String t : configTitleCards.ImageCards) {
-            String[] line = t.split(",");
-            String[] temp = Arrays.copyOfRange(line, 1, line.length);
-            if (tempTitleCards.containsAll(Arrays.asList(temp)) && mc.player != null) {
-                eventsClient.IMAGE_CARD = new ResourceLocation(MusicTriggers.MODID, "textures/" + line[0] + ".png");
+        for (int i : configTitleCards.imagecards.keySet()) {
+            if (tempTitleCards.containsAll(configTitleCards.imagecards.keySet()) && mc.player != null) {
+                eventsClient.IMAGE_CARD = new ResourceLocation(MusicTriggers.MODID, "textures/" + configTitleCards.imagecards.get(i).getName() + ".png");
+                eventsClient.curImageIndex = i;
                 eventsClient.activated = true;
             }
         }
