@@ -28,19 +28,25 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class eventsClient {
 
     public static ResourceLocation IMAGE_CARD = null;
+    public static int curImageIndex;
     public static boolean isWorldRendered;
     public static float fadeCount = 1000;
     public static float startDelayCount = 0;
     public static Boolean activated = false;
-    public static int timer = 0;
+    public static int timer=0;
     public static PlayerEntity playerHurt;
     public static PlayerEntity playerSource;
     public static int GuiCounter = 0;
     private static int reloadCounter = 0;
+    public static boolean ismoving;
+    public static List<ResourceLocation> pngs = new ArrayList<>();
+    public static int movingcounter = 0;
 
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
@@ -99,13 +105,24 @@ public class eventsClient {
                 if (timer > 200) {
                     activated = false;
                     timer = 0;
+                    ismoving = false;
+                    movingcounter = 0;
+                }
+                else if(ismoving) {
+                    if(timer%configTitleCards.imagecards.get(curImageIndex).getDelay()==0) {
+                        movingcounter++;
+                        if (movingcounter>=pngs.size()) {
+                            movingcounter = 0;
+                        }
+                    }
+                    IMAGE_CARD = pngs.get(movingcounter);
                 }
                 if (activated) {
                     timer++;
                     startDelayCount++;
                     if (startDelayCount > 0) {
                         if (fadeCount > 1) {
-                            fadeCount -= 15;
+                            fadeCount -= 6;
                             if (fadeCount < 1) {
                                 fadeCount = 1;
                             }
@@ -113,7 +130,7 @@ public class eventsClient {
                     }
                 } else {
                     if (fadeCount < 1000) {
-                        fadeCount += 12;
+                        fadeCount += 4;
                         if (fadeCount > 1000) {
                             fadeCount = 1000;
                         }
@@ -126,18 +143,20 @@ public class eventsClient {
                     float opacity = (int) (17 - (fadeCount / 80));
                     opacity = (opacity * 1.15f) / 15;
 
-                    float sizeX = 64 * configTitleCards.ImageSize;
-                    float sizeY = 64 * configTitleCards.ImageSize;
+                    float sizeX = (float)(0.140625*(configTitleCards.imagecards.get(curImageIndex).getScale()/100f));
+                    float sizeY = (float)(0.25*(configTitleCards.imagecards.get(curImageIndex).getScale()/100f));
 
-                    int posY = (y / 64) + configTitleCards.ImageV;
-                    int posX = ((x / 2) - (int) (sizeX / 2)) + configTitleCards.ImageH;
+                    int posY = (int)((y+configTitleCards.imagecards.get(curImageIndex).getVertical())/4f);
+                    int posX = (int)((((1f/0.140625f)*.5f)*(1f/(configTitleCards.imagecards.get(curImageIndex).getScale()/100f))*(x+configTitleCards.imagecards.get(curImageIndex).getHorizontal()))-(x*0.496));
 
                     RenderSystem.pushTextureAttributes();
 
                     RenderSystem.enableAlphaTest();
                     RenderSystem.enableBlend();
                     RenderSystem.color4f(1F, 1F, 1F, Math.max(0, Math.min(0.95f, opacity)));
-                    mc.getTextureManager().bind(IMAGE_CARD);
+                    if(IMAGE_CARD!=null) {
+                        mc.getTextureManager().bind(IMAGE_CARD);
+                    }
                     AbstractGui.blit(e.getMatrixStack(), posX, posY, 10, 0F, 0F, (int) sizeX, (int) sizeY, (int) sizeX, (int) sizeY);
 
                     RenderSystem.popAttributes();
@@ -169,6 +188,7 @@ public class eventsClient {
                 reload.readAndReload();
                 ITextComponent msg = new StringTextComponent("\u00A7a\u00A7oFinished!");
                 MusicPicker.player.sendMessage(msg,MusicPicker.player.getUUID());
+                MusicPlayer.cards = true;
                 MusicPlayer.reloading = false;
             }
         }
@@ -213,16 +233,14 @@ public class eventsClient {
                     if (MusicPicker.mc.screen != null) {
                         e.getLeft().add("Music Triggers current GUI: " + MusicPicker.mc.screen.toString());
                     }
-                    if(Minecraft.getInstance().crosshairPickEntity != null) {
-                        if (getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity) != null) {
-                            e.getLeft().add("Music Triggers Current Entity Name: " + getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity).getName().getString());
+                    if (getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity) != null) {
+                        e.getLeft().add("Music Triggers Current Entity Name: " + getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity).getName().getString());
+                    }
+                    try {
+                        if (infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)) != null) {
+                            e.getLeft().add("Music Triggers Infernal Mob Mod Name: " + infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)));
                         }
-                        try {
-                            if (infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)) != null) {
-                                e.getLeft().add("Music Triggers Infernal Mob Mod Name: " + infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)));
-                            }
-                        } catch (NoSuchMethodError ignored) {
-                        }
+                    } catch (NoSuchMethodError ignored) {
                     }
                 }
             }

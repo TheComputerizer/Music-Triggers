@@ -30,6 +30,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import org.lwjgl.glfw.GLFW;
 
+import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -57,6 +58,7 @@ public class MusicPlayer {
     public static SoundEvent fromRecord = new SoundEvent(new ResourceLocation("nonsensicalresourcelocation"));
     public static boolean playing = false;
     public static boolean reloading = false;
+    public static boolean cards = true;
     public static HashMap<String, setVolumeSound> musicLinker = new HashMap<>();
     public static HashMap<String, String[]> triggerLinker = new HashMap<>();
 
@@ -78,7 +80,7 @@ public class MusicPlayer {
                     fading = false;
                     mc.getSoundManager().stop(curMusic);
                     mc.getSoundManager().updateSourceVolume(SoundCategory.MASTER, saveVol);
-                    renderCards();
+                    cards = true;
                 } else {
                     mc.getSoundManager().updateSourceVolume(SoundCategory.MASTER, saveVol * (float) (((double) tempFade) / ((double) MusicPicker.curFade)));
                     tempFade -= 1;
@@ -145,7 +147,7 @@ public class MusicPlayer {
                             musicLinker = new HashMap<>();
                             if (MusicPicker.curFade == 0) {
                                 mc.getSoundManager().stop(curMusic);
-                                renderCards();
+                                cards = true;
                             } else {
                                 fading = true;
                                 tempFade = MusicPicker.curFade;
@@ -154,7 +156,7 @@ public class MusicPlayer {
                         }
                         else {
                             curTrackList = null;
-                            renderCards();
+                            cards = true;
                             Map<ISound, ChannelManager.Entry>  curplaying = ObfuscationReflectionHelper.getPrivateValue(SoundEngine.class,ObfuscationReflectionHelper.getPrivateValue(net.minecraft.client.audio.SoundHandler.class,mc.getSoundManager(),"field_147694_f"),"field_217942_m");
                             for (Map.Entry<String, setVolumeSound> stringListEntry : musicLinker.entrySet()) {
                                 String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
@@ -222,6 +224,9 @@ public class MusicPlayer {
                                     }
                                 }
                                 mc.getSoundManager().stop();
+                                if(cards) {
+                                    renderCards();
+                                }
                                 for (Map.Entry<String, setVolumeSound> stringListEntry : musicLinker.entrySet()) {
                                     String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
                                     if (!checkThis.matches("song-0")) {
@@ -251,22 +256,38 @@ public class MusicPlayer {
     }
 
     public static void renderCards() {
-        for (String t : configTitleCards.TitleCards) {
-            String[] line = t.split(",");
-            String[] temp = Arrays.copyOfRange(line, 2, line.length);
-            if (tempTitleCards.containsAll(Arrays.asList(temp)) && mc.player != null) {
-                mc.gui.setTitles(new TranslationTextComponent(line[0]).withStyle(TextFormatting.DARK_RED), new TranslationTextComponent(line[1]), 5, 20, 20);
-                mc.gui.setTitles(null, new TranslationTextComponent(line[1]), 5, 20, 20);
+        MusicTriggers.logger.info("Finding cards to render");
+        for (int i : configTitleCards.titlecards.keySet()) {
+            if (MusicPicker.titleCardEvents.containsAll(configTitleCards.titlecards.get(i).getTriggers()) && mc.player != null) {
+                MusicTriggers.logger.info("displaying title card "+i);
+                mc.gui.setTitles(new TranslationTextComponent(configTitleCards.titlecards.get(i).getTitle()).withStyle(TextFormatting.DARK_RED), new TranslationTextComponent(configTitleCards.titlecards.get(i).getSubTitle()), 5, 20, 20);
+                mc.gui.setTitles(null, new TranslationTextComponent(configTitleCards.titlecards.get(i).getSubTitle()), 5, 20, 20);
             }
         }
-        for (String t : configTitleCards.ImageCards) {
-            String[] line = t.split(",");
-            String[] temp = Arrays.copyOfRange(line, 1, line.length);
-            if (tempTitleCards.containsAll(Arrays.asList(temp)) && mc.player != null) {
-                eventsClient.IMAGE_CARD = new ResourceLocation(MusicTriggers.MODID, "textures/" + line[0] + ".png");
+        for (int i : configTitleCards.imagecards.keySet()) {
+            if (MusicPicker.titleCardEvents.containsAll(configTitleCards.imagecards.get(i).getTriggers()) && mc.player != null) {
+                MusicTriggers.logger.info("displaying image card "+configTitleCards.imagecards.get(i).getName());
+                if(!configTitleCards.ismoving.get(i)) {
+                    eventsClient.IMAGE_CARD = new ResourceLocation(MusicTriggers.MODID, "textures/" + configTitleCards.imagecards.get(i).getName() + ".png");
+                }
+                else {
+                    if(configTitleCards.imagecards.get(i).getName()!=null) {
+                        eventsClient.pngs = new ArrayList<>();
+                        eventsClient.ismoving = true;
+                        eventsClient.movingcounter = 0;
+                        File folder = new File("." + "/config/MusicTriggers/songs/assets/musictriggers/textures/" + configTitleCards.imagecards.get(i).getName());
+                        MusicTriggers.logger.info(folder.getName() + " with path " + folder.getPath());
+                        File[] listOfPNG = folder.listFiles();
+                        for (File f : listOfPNG) {
+                            eventsClient.pngs.add(new ResourceLocation(MusicTriggers.MODID, "textures/" + configTitleCards.imagecards.get(i).getName() + "/" + f.getName()));
+                        }
+                    }
+                }
+                eventsClient.curImageIndex = i;
                 eventsClient.activated = true;
             }
         }
+        cards = false;
     }
 
     public static String[] stringBreaker(String s, String regex) {

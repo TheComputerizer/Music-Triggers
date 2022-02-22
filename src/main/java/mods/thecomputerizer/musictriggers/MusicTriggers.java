@@ -140,11 +140,7 @@ public class MusicTriggers {
         }
         try {
             configToml.parse();
-            File Transitionconfig = new File(configDir,"transitions.txt");
-            if(!Transitionconfig.exists()) {
-                configTitleCards.build(Transitionconfig);
-            }
-            configTitleCards.read(Transitionconfig);
+            configTitleCards.parse();
             File Registrationconfig = new File(configDir,"registration.txt");
             if(!Registrationconfig.exists()) {
                 configRegistry.build(Registrationconfig);
