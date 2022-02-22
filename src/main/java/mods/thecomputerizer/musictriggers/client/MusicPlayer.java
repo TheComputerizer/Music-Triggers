@@ -221,7 +221,7 @@ public class MusicPlayer {
                                     musicLinker.put("song-" + 0, new setVolumeSound(new ResourceLocation(MusicTriggers.MODID, "music." + curTrackHolder), SoundCategory.MUSIC, 1F, Float.parseFloat(configToml.otherinfo.get(curTrack)[0]), false, 1, ISound.AttenuationType.NONE, 0F, 0F, 0F));
                                 }
                                 if (configRegistry.registry.registerDiscs && MusicPicker.player != null) {
-                                    RegistryHandler.network.sendToServer(new packetCurSong.packetCurSongMessage(curTrack, MusicPicker.player.getUniqueID()));
+                                    RegistryHandler.network.sendToServer(new packetCurSong.packetCurSongMessage(curTrackHolder, MusicPicker.player.getUniqueID()));
                                 }
                                 mc.getSoundHandler().stopSounds();
                                 for (Map.Entry<String, setVolumeSound> stringListEntry : musicLinker.entrySet()) {
@@ -241,6 +241,7 @@ public class MusicPlayer {
                     }
                 } else {
                     curTrack = null;
+                    curTrackHolder = null;
                     if (curMusic != null) {
                         mc.getSoundHandler().stopSound(curMusic);
                         curMusic = null;

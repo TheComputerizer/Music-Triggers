@@ -125,7 +125,8 @@ public class SoundHandler {
     public static void emptyListsAndMaps() {
         allSoundEvents = new ArrayList<>();
         allSoundEventsTriggers = new HashMap<>();
-
+        TriggerSongMap = new HashMap<>();
+        TriggerInfoMap = new HashMap<>();
         songCombos = new HashMap<>();
         antiSongs = new HashMap<>();
     }
