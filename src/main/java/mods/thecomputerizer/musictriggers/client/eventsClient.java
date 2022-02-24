@@ -8,7 +8,6 @@ import mods.thecomputerizer.musictriggers.config.configTitleCards;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.SimpleSound;
-import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -19,7 +18,9 @@ import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.LightType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.*;
+import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
@@ -100,15 +101,14 @@ public class eventsClient {
         PlayerEntity player = mc.player;
         if (e.getType() == RenderGameOverlayEvent.ElementType.ALL) {
             if (player != null) {
-                int x = mc.getWindow().getGuiScaledWidth();
+                int x = mc.getWindow().getScreenWidth();
                 int y = mc.getWindow().getScreenHeight();
-                if (timer > 200) {
+                if (timer > configTitleCards.imagecards.get(curImageIndex).getTime()) {
                     activated = false;
                     timer = 0;
-                    ismoving = false;
-                    movingcounter = 0;
                 }
-                else if(ismoving) {
+                if(ismoving) {
+                    MusicTriggers.logger.info(movingcounter);
                     if(timer%configTitleCards.imagecards.get(curImageIndex).getDelay()==0) {
                         movingcounter++;
                         if (movingcounter>=pngs.size()) {
@@ -122,7 +122,7 @@ public class eventsClient {
                     startDelayCount++;
                     if (startDelayCount > 0) {
                         if (fadeCount > 1) {
-                            fadeCount -= 6;
+                            fadeCount -= 12;
                             if (fadeCount < 1) {
                                 fadeCount = 1;
                             }
@@ -130,37 +130,38 @@ public class eventsClient {
                     }
                 } else {
                     if (fadeCount < 1000) {
-                        fadeCount += 4;
+                        fadeCount += 9;
                         if (fadeCount > 1000) {
                             fadeCount = 1000;
+                            ismoving = false;
+                            movingcounter = 0;
                         }
                     }
                     startDelayCount = 0;
                 }
-                if (fadeCount != 1000) {
+                if (fadeCount != 1000 && IMAGE_CARD!=null) {
                     RenderSystem.pushMatrix();
+                    RenderSystem.pushTextureAttributes();
+                    RenderSystem.enableAlphaTest();
+                    RenderSystem.enableBlend();
 
                     float opacity = (int) (17 - (fadeCount / 80));
                     opacity = (opacity * 1.15f) / 15;
-
-                    float sizeX = (float)(0.140625*(configTitleCards.imagecards.get(curImageIndex).getScale()/100f));
-                    float sizeY = (float)(0.25*(configTitleCards.imagecards.get(curImageIndex).getScale()/100f));
-
-                    int posY = (int)((y+configTitleCards.imagecards.get(curImageIndex).getVertical())/4f);
-                    int posX = (int)((((1f/0.140625f)*.5f)*(1f/(configTitleCards.imagecards.get(curImageIndex).getScale()/100f))*(x+configTitleCards.imagecards.get(curImageIndex).getHorizontal()))-(x*0.496));
-
-                    RenderSystem.pushTextureAttributes();
-
-                    RenderSystem.enableAlphaTest();
-                    RenderSystem.enableBlend();
                     RenderSystem.color4f(1F, 1F, 1F, Math.max(0, Math.min(0.95f, opacity)));
-                    if(IMAGE_CARD!=null) {
-                        mc.getTextureManager().bind(IMAGE_CARD);
-                    }
-                    AbstractGui.blit(e.getMatrixStack(), posX, posY, 10, 0F, 0F, (int) sizeX, (int) sizeY, (int) sizeX, (int) sizeY);
+
+                    int sizeX = configTitleCards.imageDimensions.get(IMAGE_CARD).getWidth();
+                    int sizeY = configTitleCards.imageDimensions.get(IMAGE_CARD).getHeight();
+
+                    float scaleY = (0.25f*(configTitleCards.imagecards.get(curImageIndex).getScaleY()/100f));
+                    float scaleX = (0.25f*(configTitleCards.imagecards.get(curImageIndex).getScaleX()/100f));
+                    RenderSystem.scalef(scaleX,scaleY,1F);
+
+                    mc.getTextureManager().bind(IMAGE_CARD);
+                    float posY = (y/(4f*(configTitleCards.imagecards.get(curImageIndex).getScaleY()/100f)))+configTitleCards.imagecards.get(curImageIndex).getVertical();
+                    float posX = (x/(configTitleCards.imagecards.get(curImageIndex).getScaleX()/100f))-(sizeX/2f)+configTitleCards.imagecards.get(curImageIndex).getHorizontal();
+                    mc.gui.blit(e.getMatrixStack(),(int)posX, (int)posY, 0, 0, sizeX, sizeY, sizeX, sizeY);
 
                     RenderSystem.popAttributes();
-
                     RenderSystem.popMatrix();
                 }
             }
@@ -188,6 +189,11 @@ public class eventsClient {
                 reload.readAndReload();
                 ITextComponent msg = new StringTextComponent("\u00A7a\u00A7oFinished!");
                 MusicPicker.player.sendMessage(msg,MusicPicker.player.getUUID());
+                IMAGE_CARD = null;
+                fadeCount = 1000;
+                timer = 0;
+                activated = false;
+                ismoving = false;
                 MusicPlayer.cards = true;
                 MusicPlayer.reloading = false;
             }

@@ -130,6 +130,8 @@ public class MusicTriggers {
             }
             makeSoundsJson();
             makeDiscLang();
+            configToml.parse();
+            configTitleCards.parse();
             if(json.collector()!=null) {
                 File pack = new File("config/MusicTriggers/songs/");
                 if (pack.isDirectory() && new File(pack, "pack.mcmeta").isFile()) {
@@ -139,8 +141,6 @@ public class MusicTriggers {
             }
         }
         try {
-            configToml.parse();
-            configTitleCards.parse();
             File Registrationconfig = new File(configDir,"registration.txt");
             if(!Registrationconfig.exists()) {
                 configRegistry.build(Registrationconfig);
