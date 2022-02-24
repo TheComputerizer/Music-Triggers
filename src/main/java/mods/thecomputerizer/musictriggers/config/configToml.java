@@ -311,7 +311,7 @@ public class configToml {
                             songCounter++;
                         }
                     } catch (Exception e) {
-                        throw new RuntimeException("Failed to initialize song block from song "+s+" at "+CrashHelper);
+                        throw new RuntimeException("Failed to initialize song block from song "+s+" at "+CrashHelper+" (Internally: File "+e.getCause().getStackTrace()[0].getFileName()+" at line "+e.getCause().getStackTrace()[0].getLineNumber()+")");
                     }
                 } else if (toml.containsTable(s)) {
                     try {
@@ -578,7 +578,7 @@ public class configToml {
                         }
                         songCounter++;
                     } catch (Exception e) {
-                        throw new RuntimeException("Failed to initialize song block from song "+s+" at "+CrashHelper);
+                        throw new RuntimeException("Failed to initialize song block from song "+s+" at "+CrashHelper+" (Internally: File "+e.getCause().getStackTrace()[0].getFileName()+" at line "+e.getCause().getStackTrace()[0].getLineNumber()+")");
                     }
                 }
             }

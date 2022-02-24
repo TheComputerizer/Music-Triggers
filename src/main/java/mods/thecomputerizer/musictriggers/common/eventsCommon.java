@@ -2,7 +2,7 @@ package mods.thecomputerizer.musictriggers.common;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.objects.BlankRecord;
-import mods.thecomputerizer.musictriggers.util.packetCurSong;
+import mods.thecomputerizer.musictriggers.util.packets.packetCurSong;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.effect.EntityLightningBolt;
 import net.minecraft.item.Item;

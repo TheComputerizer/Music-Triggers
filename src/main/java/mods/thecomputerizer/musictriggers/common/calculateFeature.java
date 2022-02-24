@@ -2,8 +2,8 @@ package mods.thecomputerizer.musictriggers.common;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
-import mods.thecomputerizer.musictriggers.util.packetGetMobInfo;
-import mods.thecomputerizer.musictriggers.util.packetToClient;
+import mods.thecomputerizer.musictriggers.util.packets.packetGetMobInfo;
+import mods.thecomputerizer.musictriggers.util.packets.packetToClient;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.boss.EntityDragon;

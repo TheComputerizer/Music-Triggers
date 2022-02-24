@@ -50,68 +50,7 @@ public class MusicTriggers {
 
     public MusicTriggers() {
         logger = LogManager.getLogger(MODID);
-        readFrom = new File("config/MusicTriggers/songs/");
-        if (readFrom.exists() && Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-            File redir = new File("config/MusicTriggers/redirect.txt");
-            if(!redir.exists()) {
-                try {
-                    Files.createFile(Paths.get(redir.getPath()));
-                } catch(Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            new readRedirect(redir);
-            File sj = new File("config/MusicTriggers/songs/assets/musictriggers/sounds.json");
-            if (sj.exists()) {
-                sj.delete();
-            }
-            List<String> writeThis = json.create();
-            if (writeThis != null) {
-                try {
-                    sj.createNewFile();
-                    FileWriter writer = new FileWriter(sj);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
-                    for (String str : writeThis) {
-                        writer.write(str + System.lineSeparator());
-                    }
-                    writer.close();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            }
-            sj = new File("config/MusicTriggers/songs/assets/musictriggers/lang/en_us.lang");
-            if (sj.exists()) {
-                sj.delete();
-            }
-            assert writeThis != null;
-            writeThis.clear();
-            writeThis = json.lang();
-            if (writeThis != null) {
-                try {
-                    sj.createNewFile();
-                    FileWriter writer = new FileWriter(sj);
-                    for (String str : writeThis) {
-                        writer.write(str + System.lineSeparator());
-                    }
-                    writer.close();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            }
-            pack = new File("config/MusicTriggers/songs/");
-            if (pack.exists()) {
-                try {
-                    List<IResourcePack> defaultResourcePacks = ReflectionHelper.getPrivateValue(Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "field_110449_ao", "ap");
-                    defaultResourcePacks.add(new FolderResourcePack(pack));
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-        }
-    }
-
-    @EventHandler
-    public void preInit(FMLPreInitializationEvent event) {
-        File configDir = new File(event.getSuggestedConfigurationFile().getParentFile().getPath(), "MusicTriggers");
+        File configDir = new File(".", "config/MusicTriggers");
         if (!configDir.exists()) {
             configDir.mkdir();
         }
@@ -182,6 +121,67 @@ public class MusicTriggers {
         if(!configRegistry.registry.clientSideOnly) {
             RegistryHandler.init();
         }
+        readFrom = new File("config/MusicTriggers/songs/");
+        if (readFrom.exists() && Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
+            File redir = new File("config/MusicTriggers/redirect.txt");
+            if(!redir.exists()) {
+                try {
+                    Files.createFile(Paths.get(redir.getPath()));
+                } catch(Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            new readRedirect(redir);
+            File sj = new File("config/MusicTriggers/songs/assets/musictriggers/sounds.json");
+            if (sj.exists()) {
+                sj.delete();
+            }
+            List<String> writeThis = json.create();
+            if (writeThis != null) {
+                try {
+                    sj.createNewFile();
+                    FileWriter writer = new FileWriter(sj);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+                    for (String str : writeThis) {
+                        writer.write(str + System.lineSeparator());
+                    }
+                    writer.close();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            sj = new File("config/MusicTriggers/songs/assets/musictriggers/lang/en_us.lang");
+            if (sj.exists()) {
+                sj.delete();
+            }
+            assert writeThis != null;
+            writeThis.clear();
+            writeThis = json.lang();
+            if (writeThis != null) {
+                try {
+                    sj.createNewFile();
+                    FileWriter writer = new FileWriter(sj);
+                    for (String str : writeThis) {
+                        writer.write(str + System.lineSeparator());
+                    }
+                    writer.close();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            pack = new File("config/MusicTriggers/songs/");
+            if (pack.exists()) {
+                try {
+                    List<IResourcePack> defaultResourcePacks = ReflectionHelper.getPrivateValue(Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "field_110449_ao", "ap");
+                    defaultResourcePacks.add(new FolderResourcePack(pack));
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void preInit(FMLPreInitializationEvent event) {
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
         if(event.getSide()== Side.CLIENT) {
             MinecraftForge.EVENT_BUS.register(eventsClient.class);

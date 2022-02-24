@@ -154,18 +154,16 @@ public class eventsClient {
                     }
                     startDelayCount=0;
                 }
-                if (fadeCount != 1000) {
+                if (fadeCount != 1000 && IMAGE_CARD!=null) {
                     float opacity = (int) (17 - (fadeCount / 80));
                     opacity = (opacity * 1.15f) / 15;
                     GlStateManager.enableBlend();
                     GlStateManager.pushMatrix();
                     GlStateManager.translate(0, 0, 0);
-                    GlStateManager.scale(0.140625*(configTitleCards.imagecards.get(curImageIndex).getScale()/100f),0.25*(configTitleCards.imagecards.get(curImageIndex).getScale()/100f),1);
+                    GlStateManager.scale(0.140625*(configTitleCards.imagecards.get(curImageIndex).getScaleX()/100f),0.25*(configTitleCards.imagecards.get(curImageIndex).getScaleY()/100f),1);
                     GlStateManager.color(color.getX(), color.getY(), color.getZ(), Math.max(0, Math.min(0.95f, opacity)));
-                    if(IMAGE_CARD!=null) {
-                        mc.getTextureManager().bindTexture(IMAGE_CARD);
-                    }
-                    float x_translation = (((1f/0.140625f)*.5f)*(1f/(configTitleCards.imagecards.get(curImageIndex).getScale()/100f))*(x+configTitleCards.imagecards.get(curImageIndex).getHorizontal()));
+                    mc.getTextureManager().bindTexture(IMAGE_CARD);
+                    float x_translation = (((1f/0.140625f)*.5f)*(1f/(configTitleCards.imagecards.get(curImageIndex).getScaleX()/100f))*(x+configTitleCards.imagecards.get(curImageIndex).getHorizontal()));
                     GuiScreen.drawModalRectWithCustomSizedTexture((int)(x_translation-(x*0.496)),
                             (int)((y+configTitleCards.imagecards.get(curImageIndex).getVertical())/4f),x,y,x,y,x,y);
                     GlStateManager.color(1F, 1F, 1F, 1);
@@ -192,6 +190,11 @@ public class eventsClient {
             if(reloadCounter==1) {
                 reload.readAndReload();
                 MusicPicker.player.sendMessage(new TextComponentString("\u00A7a\u00A7oFinished!"));
+                IMAGE_CARD = null;
+                fadeCount = 1000;
+                timer = 0;
+                activated = false;
+                ismoving = false;
                 MusicPlayer.cards = true;
                 MusicPlayer.reloading = false;
             }
