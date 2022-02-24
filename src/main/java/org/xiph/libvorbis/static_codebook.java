@@ -12,6 +12,7 @@
 
 package org.xiph.libvorbis;
 
+@SuppressWarnings("removal")
 public class static_codebook {
 
 	int dim;			// long dim // codebook dimensions (elements per vector)

@@ -12,9 +12,7 @@
 
 package org.xiph.libvorbis;
 
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import org.xiph.libogg.*;
-import scala.reflect.internal.Trees;
 
 import java.io.IOException;
 
