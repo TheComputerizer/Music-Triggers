@@ -132,6 +132,8 @@ public class MusicTriggers {
             }
             makeSoundsJson();
             makeDiscLang();
+            configToml.parse();
+            configTitleCards.parse();
             if(json.collector()!=null) {
                 File pack = new File("config/MusicTriggers/");
                 if (pack.isDirectory()/* && new File(pack, "pack.mcmeta").isFile()*/) {
@@ -141,12 +143,6 @@ public class MusicTriggers {
             }
         }
         try {
-            configToml.parse();
-            File Transitionconfig = new File(configDir,"transitions.txt");
-            if(!Transitionconfig.exists()) {
-                configTitleCards.build(Transitionconfig);
-            }
-            configTitleCards.read(Transitionconfig);
             File Registrationconfig = new File(configDir,"registration.txt");
             if(!Registrationconfig.exists()) {
                 configRegistry.build(Registrationconfig);

@@ -29,10 +29,13 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class eventsClient {
 
     public static ResourceLocation IMAGE_CARD = null;
+    public static int curImageIndex;
     public static boolean isWorldRendered;
     public static float fadeCount = 1000;
     public static float startDelayCount = 0;
@@ -42,6 +45,9 @@ public class eventsClient {
     public static Player playerSource;
     public static int GuiCounter = 0;
     private static int reloadCounter = 0;
+    public static boolean ismoving;
+    public static List<ResourceLocation> pngs = new ArrayList<>();
+    public static int movingcounter = 0;
 
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
@@ -87,6 +93,7 @@ public class eventsClient {
         MusicPicker.player = null;
     }
 
+    @SuppressWarnings("SuspiciousMethodCalls")
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void imageCards(RenderGameOverlayEvent.Post e) {
@@ -94,11 +101,21 @@ public class eventsClient {
         Player player = mc.player;
         if (e.getType() == RenderGameOverlayEvent.ElementType.ALL) {
             if (player != null) {
-                int x = mc.getWindow().getGuiScaledWidth();
+                int x = mc.getWindow().getScreenWidth();
                 int y = mc.getWindow().getScreenHeight();
-                if (timer > 200) {
+                if (timer > configTitleCards.imagecards.get(curImageIndex).getTime()) {
                     activated = false;
                     timer = 0;
+                }
+                if(ismoving) {
+                    MusicTriggers.logger.info(movingcounter);
+                    if(timer%configTitleCards.imagecards.get(curImageIndex).getDelay()==0) {
+                        movingcounter++;
+                        if (movingcounter>=pngs.size()) {
+                            movingcounter = 0;
+                        }
+                    }
+                    IMAGE_CARD = pngs.get(movingcounter);
                 }
                 if (activated) {
                     timer++;
@@ -116,24 +133,33 @@ public class eventsClient {
                         fadeCount += 12;
                         if (fadeCount > 1000) {
                             fadeCount = 1000;
+                            ismoving = false;
+                            movingcounter = 0;
                         }
                     }
                     startDelayCount = 0;
                 }
-                if (fadeCount != 1000) {
+                if (fadeCount != 1000 && IMAGE_CARD!=null) {
                     e.getMatrixStack().pushPose();
 
                     float opacity = (int) (17 - (fadeCount / 80));
                     opacity = (opacity * 1.15f) / 15;
 
-                    float sizeX = 64 * configTitleCards.ImageSize;
-                    float sizeY = 64 * configTitleCards.ImageSize;
-                    int posY = (y / 64) + configTitleCards.ImageV;
-                    int posX = ((x / 2) - (int) (sizeX / 2)) + configTitleCards.ImageH;
+                    int sizeX = configTitleCards.imageDimensions.get(IMAGE_CARD).getWidth();
+                    int sizeY = configTitleCards.imageDimensions.get(IMAGE_CARD).getHeight();
+
+                    float scaleY = (0.25f*(configTitleCards.imagecards.get(curImageIndex).getScaleY()/100f));
+                    float scaleX = (0.25f*(configTitleCards.imagecards.get(curImageIndex).getScaleX()/100f));
+                    e.getMatrixStack().scale(scaleX,scaleY,1f);
+
+                    float posY = ((y*2f)/((4f*(configTitleCards.imagecards.get(curImageIndex).getScaleY()/100f))*3f))+configTitleCards.imagecards.get(curImageIndex).getVertical();
+                    float posX = ((x*2f)/((configTitleCards.imagecards.get(curImageIndex).getScaleX()/100f)*3f))-(sizeX/2f)+configTitleCards.imagecards.get(curImageIndex).getHorizontal();
+
+                    MusicTriggers.logger.info(IMAGE_CARD+" X: "+x+" Y: "+y+" PosX: "+posX+" PosY: "+posY);
 
                     RenderSystem.setShaderColor(1F, 1F, 1F, Math.max(0, Math.min(0.95f, opacity)));
-                    mc.getTextureManager().bindForSetup(IMAGE_CARD);
-                    GuiComponent.blit(e.getMatrixStack(), posX, posY, 10, 0F, 0F, (int) sizeX, (int) sizeY, (int) sizeX, (int) sizeY);
+                    RenderSystem.setShaderTexture(0, IMAGE_CARD);
+                    mc.gui.blit(e.getMatrixStack(), (int)posX, (int)posY, 0F, 0F, sizeX, sizeY, sizeX, sizeY);
 
                     e.getMatrixStack().popPose();
                 }
@@ -162,6 +188,12 @@ public class eventsClient {
                 reload.readAndReload();
                 TextComponent msg = new TextComponent("\u00A7a\u00A7oFinished!");
                 MusicPicker.player.sendMessage(msg,MusicPicker.player.getUUID());
+                IMAGE_CARD = null;
+                fadeCount = 1000;
+                timer = 0;
+                activated = false;
+                ismoving = false;
+                MusicPlayer.cards = true;
                 MusicPlayer.reloading = false;
             }
         }

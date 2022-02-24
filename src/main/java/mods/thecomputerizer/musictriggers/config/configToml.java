@@ -27,7 +27,7 @@ public class configToml {
 
     //priority,fade,level,time,one time,must finish,operator,zone,start,
     //resourcename,identifier,range,mobtargetting,hordetargetpercentage,health,hordehealthpercentage,
-    //victory,victoryID,infernalmob,gamestagewhitelist
+    //victory,victoryID,infernalmob,gamestagewhitelist,phase,victory_timeout
 
     //pitch,defaulttrigger
 
@@ -57,7 +57,7 @@ public class configToml {
                                             triggerholder.putIfAbsent("song" + songCounter, new HashMap<>());
                                             triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "false", "false", "and", "0,0,0,0,0,0", "60",
                                                     "minecraft", "", "16", "false", "100", "100", "100",
-                                                    "false", "0", "minecraft", "true"});
+                                                    "false", "0", "minecraft", "true","0","0"});
                                             if (trigger.contains("priority")) {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                             }
@@ -164,7 +164,7 @@ public class configToml {
                                         triggerholder.putIfAbsent("song" + songCounter, new HashMap<>());
                                         triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "false", "false", "and", "0,0,0,0,0,0", "60",
                                                 "minecraft", "", "16", "false", "100", "100", "100",
-                                                "false", "0", "minecraft", "true"});
+                                                "false", "0", "minecraft", "true","0","0"});
                                         if (trigger.contains("priority")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                         }
@@ -310,7 +310,7 @@ public class configToml {
                             songCounter++;
                         }
                     } catch (Exception e) {
-                        throw new SyntaxException("Failed to initialize song block from song "+s+" at "+CrashHelper);
+                        throw new SyntaxException("Failed to initialize song block from song "+s+" at "+CrashHelper+" (Internally: File "+e.getStackTrace()[0].getFileName()+" at line "+e.getStackTrace()[0].getLineNumber()+")");
                     }
                 } else if (toml.containsTable(s)) {
                     try {
@@ -325,7 +325,7 @@ public class configToml {
                                         triggerholder.putIfAbsent("song" + songCounter, new HashMap<>());
                                         triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "false", "false", "and", "0,0,0,0,0,0", "60",
                                                 "minecraft", "", "16", "false", "100", "100", "100",
-                                                "false", "0", "minecraft", "true"});
+                                                "false", "0", "minecraft", "true","0","0"});
                                         if (trigger.contains("priority")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                         }
@@ -432,7 +432,7 @@ public class configToml {
                                     triggerholder.putIfAbsent("song" + songCounter, new HashMap<>());
                                     triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "false", "false", "and", "0,0,0,0,0,0", "60",
                                             "minecraft", "", "16", "false", "100", "100", "100",
-                                            "false", "0", "minecraft", "true"});
+                                            "false", "0", "minecraft", "true","0","0"});
                                     if (trigger.contains("priority")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                     }
@@ -577,7 +577,7 @@ public class configToml {
                         }
                         songCounter++;
                     } catch (Exception e) {
-                        throw new SyntaxException("Failed to initialize song block from song "+s+" at "+CrashHelper);
+                        throw new SyntaxException("Failed to initialize song block from song "+s+" at "+CrashHelper+" (Internally: File "+e.getStackTrace()[0].getFileName()+" at line "+e.getStackTrace()[0].getLineNumber()+")");
                     }
                 }
             }

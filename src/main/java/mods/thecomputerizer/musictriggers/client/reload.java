@@ -6,16 +6,14 @@ import mods.thecomputerizer.musictriggers.config.configTitleCards;
 import mods.thecomputerizer.musictriggers.config.configToml;
 import net.minecraft.client.Minecraft;
 
-import java.io.File;
-
 public class reload {
 
     public static void readAndReload() {
-        File transitionsConfig = new File("config/MusicTriggers/transitions.txt");
         configToml.emptyMaps();
+        configTitleCards.emptyMaps();
         SoundHandler.emptyListsAndMaps();
         configToml.parse();
-        configTitleCards.reload(transitionsConfig);
+        configTitleCards.parse();
         SoundHandler.registerSounds();
         ModSounds.reload();
         Minecraft.getInstance().reloadResourcePacks();

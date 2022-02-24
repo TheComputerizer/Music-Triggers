@@ -1,3 +1,4 @@
+//file:noinspection GroovyAssignabilityCheck
 buildscript {
     repositories {
         // These repositories are only for Gradle plugins, put any other repositories in the repository block further below
@@ -91,12 +92,16 @@ repositories {
     }
 }
 
+
+
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.18.1-39.0.16'
+    minecraft 'net.minecraftforge:forge:1.18.1-39.0.85'
 
     implementation("com.moandjiezana.toml:toml4j:0.7.2")
     implementation("com.googlecode.soundlibs:jlayer:1.0.1.4")
-    shade ("com.moandjiezana.toml:toml4j:0.7.2")
+    shade ("com.moandjiezana.toml:toml4j:0.7.2"){
+        exclude group: 'com.google.code.gson', module: 'gson' // Provided by Minecraft
+    }
     shade ("com.googlecode.soundlibs:jlayer:1.0.1.4")
 
     implementation fg.deobf("curse.maven:enhanced-celestials-438447:3544493")
@@ -106,8 +111,6 @@ dependencies {
 
 shadowJar {
     configurations = [project.configurations.shade]
-    relocate 'com.moandjiezana.shadowed', 'com.moandjiezana.musictriggers.shadowed'
-    relocate 'com.moandjiezana.toml', 'com.moandjiezana.musictriggers.toml'
 
     classifier ''
 
@@ -127,7 +130,7 @@ jar {
         attributes([
                 "Specification-Title"     : "musictriggers",
                 "Specification-Vendor"    : "The_Computerizer",
-                "Specification-Version"   : "4.1", // We are version 1 of ourselves
+                "Specification-Version"   : "5.0-EX",
                 "Implementation-Title"    : project.name,
                 "Implementation-Version"  : project.jar.archiveVersion,
                 "Implementation-Vendor"   : "The_Computerizer",
