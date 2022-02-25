@@ -114,7 +114,7 @@ public class eventsClient {
         EntityPlayer player = mc.player;
         if(e.getType()== RenderGameOverlayEvent.ElementType.ALL) {
             ScaledResolution res = e.getResolution();
-            if (player != null) {
+            if (player != null && configTitleCards.imagecards.get(curImageIndex)!=null) {
                 int x = res.getScaledWidth();
                 int y = res.getScaledHeight();
                 Vector4f color = new Vector4f(1, 1, 1, 1);

@@ -33,7 +33,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
-@SuppressWarnings({"ResultOfMethodCallIgnored", "deprecation"})
+@SuppressWarnings("ALL")
 @Mod(modid = MusicTriggers.MODID, name = MusicTriggers.NAME, version = MusicTriggers.VERSION)
 public class MusicTriggers {
     public static final String MODID = "musictriggers";
@@ -115,19 +115,14 @@ public class MusicTriggers {
                 }
             }
             songs = musictriggersDir;
-            configToml.parse();
-            configTitleCards.parse();
-        }
-        if(!configRegistry.registry.clientSideOnly) {
-            RegistryHandler.init();
         }
         readFrom = new File("config/MusicTriggers/songs/");
         if (readFrom.exists() && Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
             File redir = new File("config/MusicTriggers/redirect.txt");
-            if(!redir.exists()) {
+            if (!redir.exists()) {
                 try {
                     Files.createFile(Paths.get(redir.getPath()));
-                } catch(Exception e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
@@ -140,7 +135,7 @@ public class MusicTriggers {
             if (writeThis != null) {
                 try {
                     sj.createNewFile();
-                    FileWriter writer = new FileWriter(sj);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+                    FileWriter writer = new FileWriter(sj);
                     for (String str : writeThis) {
                         writer.write(str + System.lineSeparator());
                     }
@@ -168,6 +163,10 @@ public class MusicTriggers {
                     ex.printStackTrace();
                 }
             }
+        }
+        configToml.parse();
+        if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
+            configTitleCards.parse();
             pack = new File("config/MusicTriggers/songs/");
             if (pack.exists()) {
                 try {
@@ -182,8 +181,11 @@ public class MusicTriggers {
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
+        if(!configRegistry.registry.clientSideOnly) {
+            RegistryHandler.init();
+        }
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
-        if(event.getSide()== Side.CLIENT) {
+        if(event.getSide()==Side.CLIENT) {
             MinecraftForge.EVENT_BUS.register(eventsClient.class);
         }
         MinecraftForge.EVENT_BUS.register(eventsCommon.class);
@@ -191,7 +193,7 @@ public class MusicTriggers {
 
     @EventHandler
     public void init(FMLInitializationEvent e) {
-        if(e.getSide()== Side.CLIENT) {
+        if(e.getSide()==Side.CLIENT) {
             ClientRegistry.registerKeyBinding(MusicPlayer.RELOAD);
         }
     }
