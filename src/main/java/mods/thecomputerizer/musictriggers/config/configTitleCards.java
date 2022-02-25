@@ -51,6 +51,9 @@ public class configTitleCards {
                         if(title.contains("triggers")) {
                             titlecards.get(titleCounter).addTriggers(new ArrayList<>(title.getList("triggers")));
                         }
+                        if(title.contains("play_once")) {
+                            titlecards.get(titleCounter).setPlayonce(Boolean.parseBoolean(title.getString("play_once")));
+                        }
                         titleCounter++;
                     }
                 }
@@ -66,6 +69,9 @@ public class configTitleCards {
                     }
                     if(title.contains("triggers")) {
                         titlecards.get(titleCounter).addTriggers(new ArrayList<>(title.getList("triggers")));
+                    }
+                    if(title.contains("play_once")) {
+                        titlecards.get(titleCounter).setPlayonce(Boolean.parseBoolean(title.getString("play_once")));
                     }
                 }
                 if(toml.containsTableArray("image")) {
@@ -100,6 +106,9 @@ public class configTitleCards {
                         }
                         if(image.contains("triggers")) {
                             imagecards.get(imageCounter).addTriggers(new ArrayList<>(image.getList("triggers")));
+                        }
+                        if(image.contains("play_once")) {
+                            imagecards.get(imageCounter).setPlayonce(Boolean.parseBoolean(image.getString("play_once")));
                         }
                         imageCounter++;
                     }
@@ -139,6 +148,9 @@ public class configTitleCards {
                     }
                     if(image.contains("triggers")) {
                         imagecards.get(imageCounter).addTriggers(new ArrayList<>(image.getList("triggers")));
+                    }
+                    if(image.contains("play_once")) {
+                        imagecards.get(imageCounter).setPlayonce(Boolean.parseBoolean(image.getString("play_once")));
                     }
                 }
             } catch (Exception e) {
@@ -219,11 +231,13 @@ public class configTitleCards {
     public static class Title {
         private String title;
         private String subtitle;
+        private Boolean playonce;
         private final List<String> triggers;
 
         public Title() {
             this.title = "";
             this.subtitle = "";
+            this.playonce = false;
             this.triggers = new ArrayList<>();
         }
 
@@ -241,6 +255,14 @@ public class configTitleCards {
 
         public String getSubTitle() {
             return this.subtitle;
+        }
+
+        public void setPlayonce(Boolean b) {
+            this.playonce = b;
+        }
+
+        public Boolean getPlayonce() {
+            return this.playonce;
         }
 
         public void addTriggers(ArrayList<String> t) {
@@ -261,6 +283,7 @@ public class configTitleCards {
         private int time;
         private int delay;
         private int split;
+        private Boolean playonce;
         private final List<String> triggers;
 
         public Image() {
@@ -272,6 +295,7 @@ public class configTitleCards {
             this.time = 750;
             this.delay = 10;
             this.split = 0;
+            this.playonce = false;
             this.triggers = new ArrayList<>();
         }
 
@@ -337,6 +361,14 @@ public class configTitleCards {
 
         public void setSplit(int s) {
             this.split = s;
+        }
+
+        public void setPlayonce(Boolean b) {
+            this.playonce = b;
+        }
+
+        public Boolean getPlayonce() {
+            return this.playonce;
         }
 
         public void addTriggers(ArrayList<String> t) {

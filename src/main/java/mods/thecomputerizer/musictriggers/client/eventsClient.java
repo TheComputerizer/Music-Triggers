@@ -100,7 +100,7 @@ public class eventsClient {
         Minecraft mc = Minecraft.getInstance();
         PlayerEntity player = mc.player;
         if (e.getType() == RenderGameOverlayEvent.ElementType.ALL) {
-            if (player != null) {
+            if (player != null && configTitleCards.imagecards.get(curImageIndex)!=null) {
                 int x = mc.getWindow().getScreenWidth();
                 int y = mc.getWindow().getScreenHeight();
                 if (timer > configTitleCards.imagecards.get(curImageIndex).getTime()) {
