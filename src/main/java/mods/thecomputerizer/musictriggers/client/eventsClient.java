@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.config.configDebug;
 import mods.thecomputerizer.musictriggers.config.configTitleCards;
+import mods.thecomputerizer.musictriggers.util.CustomTick;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.SimpleSound;
@@ -24,6 +25,7 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
+import net.minecraftforge.event.entity.player.AdvancementEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
@@ -48,6 +50,8 @@ public class eventsClient {
     public static boolean ismoving;
     public static List<ResourceLocation> pngs = new ArrayList<>();
     public static int movingcounter = 0;
+    public static String lastAdvancement;
+    public static boolean advancement;
 
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
@@ -80,6 +84,12 @@ public class eventsClient {
         }
     }
 
+    @SubscribeEvent
+    public static void onAdvancement(AdvancementEvent e) {
+        lastAdvancement = e.getAdvancement().getId().toString();
+        advancement = true;
+    }
+
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void worldRender(RenderWorldLastEvent e) {
@@ -96,6 +106,49 @@ public class eventsClient {
 
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
+    public static void customTick(CustomTick ev) {
+        if(configTitleCards.imagecards.get(curImageIndex)!=null) {
+            if (timer > configTitleCards.imagecards.get(curImageIndex).getTime()) {
+                activated = false;
+                timer = 0;
+                ismoving = false;
+                movingcounter = 0;
+            }
+            if (ismoving) {
+                if (timer % configTitleCards.imagecards.get(curImageIndex).getDelay() == 0) {
+                    movingcounter++;
+                    if (movingcounter >= pngs.size()) {
+                        movingcounter = 0;
+                    }
+                }
+                IMAGE_CARD = pngs.get(movingcounter);
+            }
+            if (activated) {
+                timer++;
+                startDelayCount++;
+                if (startDelayCount > 0) {
+                    if (fadeCount > 1) {
+                        fadeCount -= 6;
+                        if (fadeCount < 1) {
+                            fadeCount = 1;
+                        }
+                    }
+                }
+            } else {
+                if (fadeCount < 1000) {
+                    fadeCount += 4;
+                    if (fadeCount > 1000) {
+                        fadeCount = 1000;
+                        ismoving = false;
+                    }
+                }
+                startDelayCount = 0;
+            }
+        }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    @SubscribeEvent
     public static void imageCards(RenderGameOverlayEvent.Post e) {
         Minecraft mc = Minecraft.getInstance();
         PlayerEntity player = mc.player;
@@ -103,42 +156,6 @@ public class eventsClient {
             if (player != null && configTitleCards.imagecards.get(curImageIndex)!=null) {
                 int x = mc.getWindow().getScreenWidth();
                 int y = mc.getWindow().getScreenHeight();
-                if (timer > configTitleCards.imagecards.get(curImageIndex).getTime()) {
-                    activated = false;
-                    timer = 0;
-                }
-                if(ismoving) {
-                    MusicTriggers.logger.info(movingcounter);
-                    if(timer%configTitleCards.imagecards.get(curImageIndex).getDelay()==0) {
-                        movingcounter++;
-                        if (movingcounter>=pngs.size()) {
-                            movingcounter = 0;
-                        }
-                    }
-                    IMAGE_CARD = pngs.get(movingcounter);
-                }
-                if (activated) {
-                    timer++;
-                    startDelayCount++;
-                    if (startDelayCount > 0) {
-                        if (fadeCount > 1) {
-                            fadeCount -= 12;
-                            if (fadeCount < 1) {
-                                fadeCount = 1;
-                            }
-                        }
-                    }
-                } else {
-                    if (fadeCount < 1000) {
-                        fadeCount += 9;
-                        if (fadeCount > 1000) {
-                            fadeCount = 1000;
-                            ismoving = false;
-                            movingcounter = 0;
-                        }
-                    }
-                    startDelayCount = 0;
-                }
                 if (fadeCount != 1000 && IMAGE_CARD!=null) {
                     RenderSystem.pushMatrix();
                     RenderSystem.pushTextureAttributes();

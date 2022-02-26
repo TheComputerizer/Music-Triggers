@@ -26,6 +26,7 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
@@ -65,7 +66,7 @@ public class MusicPlayer {
     public static HashMap<String, setVolumeSound> musicLinker = new HashMap<>();
     public static HashMap<String, String[]> triggerLinker = new HashMap<>();
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onTick(TickEvent.ClientTickEvent event) {
         if(!reloading) {
             if(MusicPicker.fishBool) {
@@ -134,7 +135,7 @@ public class MusicPlayer {
                             mc.getSoundManager().stop();
                             curMusic = null;
                             delay = true;
-                            delayTime = 20;
+                            delayTime = MusicPicker.curDelay;
                         }
                     }
                     if(!finish) {

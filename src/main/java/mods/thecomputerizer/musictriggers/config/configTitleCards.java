@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.config;
 import com.moandjiezana.toml.Toml;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.util.image.GIFHandler;
+import mods.thecomputerizer.musictriggers.util.image.MP4Handler;
 import mods.thecomputerizer.musictriggers.util.image.PNGMcMetaHandler;
 import net.minecraft.util.ResourceLocation;
 import org.apache.commons.io.FileDeleteStrategy;
@@ -88,6 +89,9 @@ public class configTitleCards {
                             if(gif.contains("split")) {
                                 imagecards.get(imageCounter).setSplit(Integer.parseInt(gif.getString("split")));
                             }
+                            if(gif.contains("frames_skipped")) {
+                                imagecards.get(imageCounter).setSkip(Integer.parseInt(gif.getString("frames_skipped")));
+                            }
                         }
                         if(image.contains("name")) {
                             imagecards.get(imageCounter).setName(image.getString("name"));
@@ -126,6 +130,9 @@ public class configTitleCards {
                         }
                         if(gif.contains("split")) {
                             imagecards.get(imageCounter).setSplit(Integer.parseInt(gif.getString("split")));
+                        }
+                        if(gif.contains("frames_skipped")) {
+                            imagecards.get(imageCounter).setSkip(Integer.parseInt(gif.getString("frames_skipped")));
                         }
                     }
                     if(image.contains("name")) {
@@ -167,10 +174,22 @@ public class configTitleCards {
                 if (configTitleCards.imagecards.get(i).getName() != null) {
                     String path = "." + "/config/MusicTriggers/songs/assets/musictriggers/textures/" + imagecards.get(i).getName();
                     File folder = new File(path);
+                    File findMP4 = new File(path + ".mp4");
                     File findGIF = new File(path + ".gif");
                     File findPng = new File(path + ".png");
                     File findPngMeta = new File(path + ".png.mcmeta");
-                    if (findGIF.exists()) {
+                    if (findMP4.exists()) {
+                        try {
+                            folder.mkdir();
+                            MP4Handler.splitMP4(findMP4, folder, configTitleCards.imagecards.get(i).getSkip());
+                            if(!findMP4.delete()) {
+                                FileDeleteStrategy.FORCE.delete(findMP4);
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            throw new RuntimeException("There was a problem breaking down the mp4 named " + imagecards.get(i).getName() + ".mp4 (Internally: File " + e.getStackTrace()[0].getFileName() + " at line " + e.getStackTrace()[0].getLineNumber()+")");
+                        }
+                    } else if (findGIF.exists()) {
                         try {
                             folder.mkdir();
                             GIFHandler.splitGif(findGIF, folder);
@@ -179,7 +198,7 @@ public class configTitleCards {
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
-                            //throw new RuntimeException("There was a problem breaking down the gif named " + imagecards.get(i).getName() + ".gif (Internally: File " + e.getStackTrace()[0].getFileName() + " at line " + e.getStackTrace()[0].getLineNumber() + " with message " + e.getMessage() + ")");
+                            throw new RuntimeException("There was a problem breaking down the gif named " + imagecards.get(i).getName() + ".gif (Internally: File " + e.getStackTrace()[0].getFileName() + " at line " + e.getStackTrace()[0].getLineNumber()+")");
                         }
                     } else if (findPngMeta.exists()) {
                         try {
@@ -188,7 +207,7 @@ public class configTitleCards {
                             findPng.delete();
                             findPngMeta.delete();
                         } catch (Exception e) {
-                            throw new RuntimeException("There was a problem breaking down the png named " + imagecards.get(i).getName() + ".png (Internally: File " + e.getStackTrace()[0].getFileName() + " at line " + e.getStackTrace()[0].getLineNumber() + " with message " + e.getMessage() + ")");
+                            throw new RuntimeException("There was a problem breaking down the png named " + imagecards.get(i).getName() + ".png (Internally: File " + e.getStackTrace()[0].getFileName() + " at line " + e.getStackTrace()[0].getLineNumber()+")");
                         }
                     }
                     if (!folder.exists()) {
@@ -200,7 +219,6 @@ public class configTitleCards {
                             assert listOfPNG != null;
                             for (File f : listOfPNG) {
                                 rl = new ResourceLocation(MusicTriggers.MODID, "textures/" + configTitleCards.imagecards.get(i).getName() + "/" + f.getName());
-                                MusicTriggers.logger.info("Adding resource locations (init): "+rl);
                                 try {
                                     BufferedImage image = ImageIO.read(new File("." + "/config/MusicTriggers/songs/assets/musictriggers/textures/" + imagecards.get(i).getName() + "/" + f.getName()));
                                     imageDimensions.put(rl, new ImageDimensions());
@@ -283,6 +301,7 @@ public class configTitleCards {
         private int time;
         private int delay;
         private int split;
+        private int skip;
         private Boolean playonce;
         private final List<String> triggers;
 
@@ -295,6 +314,7 @@ public class configTitleCards {
             this.time = 750;
             this.delay = 10;
             this.split = 0;
+            this.skip = 4;
             this.playonce = false;
             this.triggers = new ArrayList<>();
         }
@@ -361,6 +381,14 @@ public class configTitleCards {
 
         public void setSplit(int s) {
             this.split = s;
+        }
+
+        public int getSkip() {
+            return this.skip;
+        }
+
+        public void setSkip(int s) {
+            this.skip = s;
         }
 
         public void setPlayonce(Boolean b) {

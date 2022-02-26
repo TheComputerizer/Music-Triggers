@@ -7,6 +7,7 @@ import mods.thecomputerizer.musictriggers.config.configDebug;
 import mods.thecomputerizer.musictriggers.config.configRegistry;
 import mods.thecomputerizer.musictriggers.config.configTitleCards;
 import mods.thecomputerizer.musictriggers.config.configToml;
+import mods.thecomputerizer.musictriggers.util.CustomTick;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.json;
@@ -154,6 +155,7 @@ public class MusicTriggers {
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
         MinecraftForge.EVENT_BUS.register(eventsClient.class);
         MinecraftForge.EVENT_BUS.register(eventsCommon.class);
+        CustomTick.setUp();
     }
 
     private void clientSetup(final FMLClientSetupEvent ev) {
