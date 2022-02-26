@@ -10,6 +10,7 @@ import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.Rarity;
+import net.minecraftforge.common.ToolType;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -23,7 +24,7 @@ public class MusicTriggersBlocks {
     public static RegistryObject<Block> MUSIC_RECORDER;
 
     public void initBlock() {
-        MUSIC_RECORDER = BLOCKS.register("music_recorder",() -> new MusicRecorder(AbstractBlock.Properties.of(Material.WOOD,MaterialColor.NONE)));
+        MUSIC_RECORDER = BLOCKS.register("music_recorder",() -> new MusicRecorder(AbstractBlock.Properties.of(Material.WOOD,MaterialColor.NONE).harvestTool(ToolType.AXE).strength(5f)));
     }
 
     public void initItem() {

@@ -3,6 +3,8 @@ package mods.thecomputerizer.musictriggers.common.objects;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.eventsCommon;
 import net.minecraft.block.*;
+import net.minecraft.data.DataGenerator;
+import net.minecraft.data.LootTableProvider;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;

@@ -16,8 +16,8 @@ public class InfoForBiome {
         this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
     }
 
-    public InfoForBiome(String s, BlockPos p, UUID u) {
-        this.s = s+","+p.asLong()+","+u.toString();
+    public InfoForBiome(String s, BlockPos p, UUID u, String ct, String rt, String t, String c) {
+        this.s = s+","+p.asLong()+","+u.toString()+","+ct+","+rt+","+t+","+c;
     }
 
     public static void encode(InfoForBiome packet, PacketBuffer buf) {
@@ -29,7 +29,8 @@ public class InfoForBiome {
         ctx.enqueueWork(() -> {
         });
 
-        calculateFeatures.calculateBiomeAndSend(packet.getDataStruct(), packet.getDataBlockPos(), packet.getDataUUID());
+        calculateFeatures.calculateBiomeAndSend(packet.getDataStruct(), packet.getDataBlockPos(), packet.getDataUUID(),
+                packet.getDataCategory(), packet.getDataRainType(), packet.getDataTemperature(), packet.getDataCold());
 
         ctx.setPacketHandled(true);
     }
@@ -46,6 +47,18 @@ public class InfoForBiome {
     }
     public UUID getDataUUID() {
         return UUID.fromString(stringBreaker(s)[2]);
+    }
+    public String getDataCategory() {
+        return stringBreaker(s)[3];
+    }
+    public String getDataRainType() {
+        return stringBreaker(s)[4];
+    }
+    public float getDataTemperature() {
+        return Float.parseFloat(stringBreaker(s)[5]);
+    }
+    public boolean getDataCold() {
+        return Boolean.parseBoolean(stringBreaker(s)[6]);
     }
 
     public static String[] stringBreaker(String s) {

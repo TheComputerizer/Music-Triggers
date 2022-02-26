@@ -12,6 +12,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.ModList;
@@ -48,19 +49,34 @@ public class calculateFeatures {
         }
     }
 
-    public static void calculateBiomeAndSend(String biome, BlockPos pos, UUID uuid) {
+    public static void calculateBiomeAndSend(String biome, BlockPos pos, UUID uuid, String category, String rainType, float temperature, boolean cold) {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if(server.getPlayerList().getPlayer(uuid)!=null) {
             ServerWorld world = server.getLevel(Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)).level.dimension());
             if (world != null) {
-                String curBiome = Objects.requireNonNull(world.getBiome(pos).getRegistryName()).toString();
-                if (curBiome.contains(biome)) {
-                    PacketHandler.sendTo(new InfoFromBiome(true,biome,curBiome), Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)));
+                Biome curBiome = world.getBiome(pos);
+                boolean pass = checkBiome(curBiome,biome,category,rainType,temperature,cold);
+                if (pass) {
+                    PacketHandler.sendTo(new InfoFromBiome(true,biome, Objects.requireNonNull(curBiome.getRegistryName()).toString()), Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)));
                 } else {
-                    PacketHandler.sendTo(new InfoFromBiome(false,biome,curBiome), Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)));
+                    PacketHandler.sendTo(new InfoFromBiome(false,biome, Objects.requireNonNull(curBiome.getRegistryName()).toString()), Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)));
                 }
             }
         }
+    }
+
+    public static boolean checkBiome(Biome b, String name, String category, String rainType, float temperature, boolean cold) {
+        if(b.getRegistryName().toString().contains(name) || name.matches("minecraft")) {
+            if(b.getBiomeCategory().getName().contains(category) || category.matches("nope")) {
+                if(b.getPrecipitation().getName().contains(rainType) || rainType.matches("nope")) {
+                    float bt = b.getBaseTemperature();
+                    if(temperature==-111) return true;
+                    else if(bt>=temperature && !cold) return true;
+                    else if(bt<=temperature && cold) return true;
+                }
+            }
+        }
+        return false;
     }
 
     public static void calculateMobAndSend(UUID uuid, String mobname, int detectionrange, boolean targetting, int targettingpercentage, int health, int healthpercentage, boolean victory, int victoryID, String i, int num, int persistence, int timeout) {
