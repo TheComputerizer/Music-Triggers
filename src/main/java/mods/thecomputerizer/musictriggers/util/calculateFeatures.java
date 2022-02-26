@@ -1,8 +1,10 @@
 package mods.thecomputerizer.musictriggers.util;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
+import javazoom.jl.player.Player;
 import mods.thecomputerizer.musictriggers.util.packets.InfoFromBiome;
 import mods.thecomputerizer.musictriggers.util.packets.InfoFromMob;
+import mods.thecomputerizer.musictriggers.util.packets.InfoFromRaid;
 import mods.thecomputerizer.musictriggers.util.packets.InfoFromStructure;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
@@ -14,6 +16,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.feature.structure.Structure;
+import net.minecraft.world.raid.Raid;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
@@ -27,7 +30,7 @@ public class calculateFeatures {
     private static final HashMap<Integer, Boolean> dead = new HashMap<>();
     public static boolean boss;
 
-    public static void calculateStructAndSend(String struct, BlockPos pos, UUID uuid) {
+    public static void calculateStructAndSend(String triggerID, String struct, BlockPos pos, UUID uuid) {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if(server.getPlayerList().getPlayer(uuid)!=null) {
             ServerWorld world = server.getLevel(Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)).level.dimension());
@@ -44,12 +47,12 @@ public class calculateFeatures {
                         }
                     }
                 }
-                PacketHandler.sendTo(new InfoFromStructure(good,struct,curStruct), Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)));
+                PacketHandler.sendTo(new InfoFromStructure(good,triggerID,curStruct), Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)));
             }
         }
     }
 
-    public static void calculateBiomeAndSend(String biome, BlockPos pos, UUID uuid, String category, String rainType, float temperature, boolean cold) {
+    public static void calculateBiomeAndSend(String triggerID, String biome, BlockPos pos, UUID uuid, String category, String rainType, float temperature, boolean cold) {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if(server.getPlayerList().getPlayer(uuid)!=null) {
             ServerWorld world = server.getLevel(Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)).level.dimension());
@@ -57,13 +60,30 @@ public class calculateFeatures {
                 Biome curBiome = world.getBiome(pos);
                 boolean pass = checkBiome(curBiome,biome,category,rainType,temperature,cold);
                 if (pass) {
-                    PacketHandler.sendTo(new InfoFromBiome(true,biome, Objects.requireNonNull(curBiome.getRegistryName()).toString()), Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)));
+                    PacketHandler.sendTo(new InfoFromBiome(true,triggerID, Objects.requireNonNull(curBiome.getRegistryName()).toString()), Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)));
                 } else {
-                    PacketHandler.sendTo(new InfoFromBiome(false,biome, Objects.requireNonNull(curBiome.getRegistryName()).toString()), Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)));
+                    PacketHandler.sendTo(new InfoFromBiome(false,triggerID, Objects.requireNonNull(curBiome.getRegistryName()).toString()), Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)));
                 }
             }
         }
     }
+
+    public static void calculateRaidAndSend(String triggerID, int wave, BlockPos pos, UUID uuid) {
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        if(server.getPlayerList().getPlayer(uuid)!=null) {
+            ServerPlayerEntity player = server.getPlayerList().getPlayer(uuid);
+            ServerWorld world = server.getLevel(player.level.dimension());
+            if (world != null) {
+                Raid raid = world.getRaidAt(pos);
+                if (raid!=null && raid.getGroupsSpawned()>=wave) {
+                    PacketHandler.sendTo(new InfoFromRaid(triggerID,true),player);
+                } else {
+                    PacketHandler.sendTo(new InfoFromRaid(triggerID,false),player);
+                }
+            }
+        }
+    }
+
 
     public static boolean checkBiome(Biome b, String name, String category, String rainType, float temperature, boolean cold) {
         if(b.getRegistryName().toString().contains(name) || name.matches("minecraft")) {
@@ -79,7 +99,7 @@ public class calculateFeatures {
         return false;
     }
 
-    public static void calculateMobAndSend(UUID uuid, String mobname, int detectionrange, boolean targetting, int targettingpercentage, int health, int healthpercentage, boolean victory, int victoryID, String i, int num, int persistence, int timeout) {
+    public static void calculateMobAndSend(String triggerID, UUID uuid, String mobname, int detectionrange, boolean targetting, int targettingpercentage, int health, int healthpercentage, boolean victory, int victoryID, String i, int num, int persistence, int timeout) {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         ServerPlayerEntity player = server.getPlayerList().getPlayer(uuid);
         assert player != null;
@@ -184,7 +204,7 @@ public class calculateFeatures {
                 dead.put(victoryID, alldead);
             }
         }
-        PacketHandler.sendTo(new InfoFromMob(mobname,pass),player);
+        PacketHandler.sendTo(new InfoFromMob(triggerID,pass),player);
     }
 
     private static boolean infernalChecker(LivingEntity m, String s) {

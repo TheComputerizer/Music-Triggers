@@ -17,11 +17,13 @@ import mods.thecomputerizer.musictriggers.config.configToml;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.packets.InfoForBiome;
 import mods.thecomputerizer.musictriggers.util.packets.InfoForMob;
+import mods.thecomputerizer.musictriggers.util.packets.InfoForRaid;
 import mods.thecomputerizer.musictriggers.util.packets.InfoForStructure;
 import net.darkhax.gamestages.GameStageHelper;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.WinGameScreen;
+import net.minecraft.client.renderer.debug.RaidDebugRenderer;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -33,6 +35,8 @@ import net.minecraft.world.Difficulty;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.raid.Raid;
+import net.minecraft.world.raid.RaidManager;
 import net.minecraftforge.fml.ModList;
 import org.orecruncher.lib.WorldUtils;
 import sereneseasons.api.season.ISeasonState;
@@ -530,6 +534,21 @@ public class MusicPicker {
             dynamicFade.put("pet", Integer.parseInt(SoundHandler.TriggerInfoMap.get("pet")[1]));
             dynamicDelay.put("pet", Integer.parseInt(SoundHandler.TriggerInfoMap.get("pet")[4]));
         }
+        if(triggerPersistence.get("drowning")!=null && player.getAirSupply()<Integer.parseInt(SoundHandler.TriggerInfoMap.get("drowning")[2])) {
+            events.add("drowning");
+            dynamicSongs.put("drowning", new ArrayList<>(SoundHandler.TriggerSongMap.get("drowning").keySet()));
+            dynamicPriorities.put("drowning", Integer.parseInt(SoundHandler.TriggerInfoMap.get("drowning")[0]));
+            dynamicFade.put("drowning", Integer.parseInt(SoundHandler.TriggerInfoMap.get("drowning")[1]));
+            dynamicDelay.put("drowning", Integer.parseInt(SoundHandler.TriggerInfoMap.get("drowning")[4]));
+            triggerPersistence.put("drowning", Integer.parseInt(SoundHandler.TriggerInfoMap.get("drowning")[3]));
+        }
+        else if (triggerPersistence.get("drowning")!=null && triggerPersistence.get("drowning") > 0) {
+            events.add("drowning");
+            dynamicSongs.put("drowning", new ArrayList<>(SoundHandler.TriggerSongMap.get("drowning").keySet()));
+            dynamicPriorities.put("drowning", Integer.parseInt(SoundHandler.TriggerInfoMap.get("drowning")[0]));
+            dynamicFade.put("drowning", Integer.parseInt(SoundHandler.TriggerInfoMap.get("drowning")[1]));
+            dynamicDelay.put("drowning", Integer.parseInt(SoundHandler.TriggerInfoMap.get("drowning")[4]));
+        }
         if(SoundHandler.TriggerSongMap.get("dimension")!=null) {
             for (Map.Entry<String, String> stringListEntry : SoundHandler.TriggerSongMap.get("dimension").entrySet()) {
                 String dimensionSong = ((Map.Entry) stringListEntry).getKey().toString();
@@ -586,10 +605,11 @@ public class MusicPicker {
                 for (Map.Entry<String, String> stringListEntry : SoundHandler.TriggerSongMap.get("biome").entrySet()) {
                     String biomeSong = ((Map.Entry) stringListEntry).getKey().toString();
                     String identifier = configToml.triggerholder.get(biomeSong.replaceAll("@", "")).get("biome")[10];
-                    PacketHandler.sendToServer(new InfoForBiome(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[9], roundedPos(player), player.getUUID(),
+                    PacketHandler.sendToServer(new InfoForBiome("biome-" + identifier,SoundHandler.TriggerInfoMap.get("biome-" + identifier)[9], roundedPos(player), player.getUUID(),
                             SoundHandler.TriggerInfoMap.get("biome-" + identifier)[23], SoundHandler.TriggerInfoMap.get("biome-" + identifier)[24],
                             SoundHandler.TriggerInfoMap.get("biome-" + identifier)[25], SoundHandler.TriggerInfoMap.get("biome-" + identifier)[26]));
-                    if (fromServer.inBiome.get(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[9])) {
+                    fromServer.inBiome.putIfAbsent("biome-" + identifier,false);
+                    if (fromServer.inBiome.get("biome-" + identifier)) {
                         if (!events.contains("biome-" + identifier)) {
                             events.add("biome-" + identifier);
                         }
@@ -614,8 +634,9 @@ public class MusicPicker {
             for (Map.Entry<String, String> stringListEntry : SoundHandler.TriggerSongMap.get("structure").entrySet()) {
                 String structureSong = ((Map.Entry) stringListEntry).getKey().toString();
                 String identifier = configToml.triggerholder.get(structureSong.replaceAll("@","")).get("structure")[10];
-                PacketHandler.sendToServer(new InfoForStructure(SoundHandler.TriggerInfoMap.get("structure-"+identifier)[9], player.blockPosition(), player.getUUID()));
-                if (fromServer.inStructure.containsKey(SoundHandler.TriggerInfoMap.get("structure-"+identifier)[9])) {
+                PacketHandler.sendToServer(new InfoForStructure("structure-"+identifier,SoundHandler.TriggerInfoMap.get("structure-"+identifier)[9], player.blockPosition(), player.getUUID()));
+                fromServer.inStructure.putIfAbsent("structure-"+identifier,false);
+                if (fromServer.inStructure.get("structure-"+identifier)) {
                     if (!events.contains("structure-" + identifier)) {
                         events.add("structure-" + identifier);
                     }
@@ -642,14 +663,15 @@ public class MusicPicker {
                 String structureSong = ((Map.Entry) stringListEntry).getKey().toString();
                 String identifier = configToml.triggerholder.get(structureSong.replaceAll("@","")).get("mob")[10];
                 triggerPersistence.putIfAbsent("mob-" + identifier, 0);
-                PacketHandler.sendToServer(new InfoForMob(player.getUUID(),
+                PacketHandler.sendToServer(new InfoForMob("mob-" + identifier, player.getUUID(),
                         SoundHandler.TriggerInfoMap.get("mob-" + identifier)[9], SoundHandler.TriggerInfoMap.get("mob-" + identifier)[11],
                         SoundHandler.TriggerInfoMap.get("mob-" + identifier)[12], SoundHandler.TriggerInfoMap.get("mob-" + identifier)[13],
                         SoundHandler.TriggerInfoMap.get("mob-" + identifier)[14], SoundHandler.TriggerInfoMap.get("mob-" + identifier)[15],
                         SoundHandler.TriggerInfoMap.get("mob-" + identifier)[16], SoundHandler.TriggerInfoMap.get("mob-" + identifier)[17],
                         SoundHandler.TriggerInfoMap.get("mob-" + identifier)[18], SoundHandler.TriggerInfoMap.get("mob-" + identifier)[2],
                         triggerPersistence.get("mob-" + identifier), Integer.parseInt(SoundHandler.TriggerInfoMap.get("mob-" + identifier)[22])));
-                if (fromServer.mob.get(SoundHandler.TriggerInfoMap.get("mob-" + identifier)[9])) {
+                fromServer.mob.putIfAbsent("mob-" + identifier,false);
+                if (fromServer.mob.get("mob-" + identifier)) {
                     if (!events.contains("mob-" + identifier)) {
                         events.add("mob-" + identifier);
                     }
@@ -866,6 +888,34 @@ public class MusicPicker {
                 }
             }
             eventsClient.advancement = false;
+        }
+        if (!configRegistry.clientSideOnly && SoundHandler.TriggerSongMap.get("raid")!=null) {
+            for (Map.Entry<String, String> stringListEntry : SoundHandler.TriggerSongMap.get("raid").entrySet()) {
+                String raidSong = ((Map.Entry) stringListEntry).getKey().toString();
+                String identifier = configToml.triggerholder.get(raidSong.replaceAll("@","")).get("raid")[10];
+                PacketHandler.sendToServer(new InfoForRaid("raid-"+identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("raid-"+identifier)[2]), player.blockPosition(), player.getUUID()));
+                fromServer.isRaid.putIfAbsent("raid-"+identifier,false);
+                if (fromServer.isRaid.get("raid-"+identifier)) {
+                    if (!events.contains("raid-" + identifier)) {
+                        events.add("raid-" + identifier);
+                    }
+                    dynamicSongs.put("raid-"+identifier, buildSongsFromIdentifier(SoundHandler.TriggerSongMap.get("raid"), identifier));
+                    dynamicPriorities.put("raid-"+identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("raid-"+identifier)[0]));
+                    dynamicFade.put("raid-"+identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("raid-"+identifier)[1]));
+                    dynamicDelay.put("raid-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("raid-" + identifier)[4]));
+                    triggerPersistence.put("raid-"+identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("raid-"+identifier)[3]));
+                    fromServer.curStruct = SoundHandler.TriggerInfoMap.get("raid-"+identifier)[9];
+                }
+                else if (triggerPersistence.get("raid-"+identifier)!=null && triggerPersistence.get("raid-"+identifier) > 0) {
+                    if (!events.contains("raid-" + identifier)) {
+                        events.add("raid-" + identifier);
+                    }
+                    dynamicSongs.put("raid-"+identifier, buildSongsFromIdentifier(SoundHandler.TriggerSongMap.get("raid"), identifier));
+                    dynamicPriorities.put("raid-"+identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("raid-"+identifier)[0]));
+                    dynamicFade.put("raid-"+identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("raid-"+identifier)[1]));
+                    dynamicDelay.put("raid-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("raid-" + identifier)[4]));
+                }
+            }
         }
         List<String> stages = gamestages();
         if (!stages.isEmpty()) {

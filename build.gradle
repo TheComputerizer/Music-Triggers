@@ -102,7 +102,7 @@ configurations {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.16.5-36.2.22'
+    minecraft 'net.minecraftforge:forge:1.16.5-36.2.29'
 
     implementation("com.moandjiezana.toml:toml4j:0.7.2")
     implementation("com.googlecode.soundlibs:jlayer:1.0.1.4")

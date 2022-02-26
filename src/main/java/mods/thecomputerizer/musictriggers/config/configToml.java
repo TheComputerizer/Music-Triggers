@@ -21,10 +21,10 @@ public class configToml {
 
     public static final String[] triggers = new String[]
             {"menu","generic","difficulty","day","night","sunrise","sunset","light","underground","raining","storming","snowing",
-                    "lowhp","dead","creative","spectator","riding","pet","high","underwater","elytra","fishing","dimension","biome",
+                    "lowhp","dead","creative","spectator","riding","pet","high","underwater","elytra","fishing","drowning","dimension","biome",
                     "structure","mob","victory","gui","effect","zones","pvp","advancement"};
     public static final String[] modtriggers = new String[]
-            {"gamestage","bloodmoon","harvestmoon","bluemoon","rainintensity","acidrain","blizzard","cloudy","lightrain","season"};
+            {"gamestage","bloodmoon","harvestmoon","bluemoon","moon","rainintensity","acidrain","blizzard","cloudy","lightrain","season"};
 
     //priority,fade,level,time,delay,advancement,operator,zone,start,
     //resourcename,identifier,range,mobtargetting,hordetargetpercentage,health,hordehealthpercentage,
