@@ -232,6 +232,7 @@ public class MusicPicker {
                         dynamicPriorities.put("night-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("night-" + identifier)[0]));
                         dynamicFade.put("night-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("night-" + identifier)[1]));
                         dynamicDelay.put("night-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("night-" + identifier)[4]));
+                        triggerPersistence.put("night-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("night-" + identifier)[3]));
                     } else if (triggerPersistence.get("night-" + identifier) != null && triggerPersistence.get("night-" + identifier) > 0) {
                         if(!events.contains("night-" + identifier)) {
                             events.add("night-" + identifier);
@@ -259,7 +260,7 @@ public class MusicPicker {
             dynamicFade.put("sunset", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sunset")[1]));
             dynamicDelay.put("sunset", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sunset")[4]));
         }
-        else if (time >= 0.95833333333 && time < 1 && SoundHandler.TriggerSongMap.get("sunset")!=null) {
+        else if (time >= 0.95833333333 && time < 1 && SoundHandler.TriggerSongMap.get("sunrise")!=null) {
             events.add("sunrise");
             dynamicSongs.put("sunrise", new ArrayList<>(SoundHandler.TriggerSongMap.get("sunrise").keySet()));
             dynamicPriorities.put("sunrise", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sunrise")[0]));
@@ -763,6 +764,7 @@ public class MusicPicker {
                     dynamicPriorities.put("gui-"+identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("gui-"+identifier)[0]));
                     dynamicFade.put("gui-"+identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("gui-"+identifier)[1]));
                     dynamicDelay.put("gui-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("gui-" + identifier)[4]));
+                    triggerPersistence.put("gui-"+identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("gui-"+identifier)[3]));
                 }
                 else if (triggerPersistence.get("gui-"+identifier)!=null && triggerPersistence.get("gui-"+identifier) > 0) {
                     if(!events.contains("gui-" + identifier)) {

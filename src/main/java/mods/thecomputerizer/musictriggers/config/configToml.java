@@ -30,7 +30,7 @@ public class configToml {
     //resourcename,identifier,range,mobtargetting,hordetargetpercentage,health,hordehealthpercentage,
     //victory,victoryID,infernalmob,gamestagewhitelist,phase,victoryID
 
-    //pitch,one time,must finish
+    //pitch,one time,must finish,chance
 
     public static void parse() {
         File file = new File("config/MusicTriggers/musictriggers.toml");
@@ -264,7 +264,7 @@ public class configToml {
                             } else {
                                 MusicTriggers.logger.warn("Skipping instance of song " + s + " because no triggers were attached to it!");
                             }
-                            otherinfo.putIfAbsent("song" + songCounter, new String[]{"1", "false", "false"});
+                            otherinfo.putIfAbsent("song" + songCounter, new String[]{"1", "false", "false", "100"});
                             if (song.contains("pitch")) {
                                 otherinfo.get("song" + songCounter)[0] = song.getString("pitch");
                             }
@@ -273,6 +273,9 @@ public class configToml {
                             }
                             if (song.contains("must_finish")) {
                                 otherinfo.get("song" + songCounter)[2] = song.getString("must_finish");
+                            }
+                            if (song.contains("chance")) {
+                                otherinfo.get("song" + songCounter)[3] = song.getString("chance");
                             }
                             if (song.containsTable("link")) {
                                 Toml link = song.getTable("link");
@@ -538,7 +541,7 @@ public class configToml {
                         } else {
                             MusicTriggers.logger.warn("Skipping instance of song " + s + " because no triggers were attached to it!");
                         }
-                        otherinfo.putIfAbsent("song" + songCounter, new String[]{"1", "false", "false"});
+                        otherinfo.putIfAbsent("song" + songCounter, new String[]{"1", "false", "false", "100"});
                         if (song.contains("pitch")) {
                             otherinfo.get("song" + songCounter)[0] = song.getString("pitch");
                         }
@@ -547,6 +550,9 @@ public class configToml {
                         }
                         if (song.contains("must_finish")) {
                             otherinfo.get("song" + songCounter)[2] = song.getString("must_finish");
+                        }
+                        if (song.contains("chance")) {
+                            otherinfo.get("song" + songCounter)[3] = song.getString("chance");
                         }
                         if (song.containsTable("link")) {
                             Toml link = song.getTable("link");
