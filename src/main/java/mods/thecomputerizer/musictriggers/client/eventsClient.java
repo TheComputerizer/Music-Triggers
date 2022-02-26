@@ -61,7 +61,7 @@ public class eventsClient {
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
 
-        PositionedSoundRecord silenced = new PositionedSoundRecord(e.getSound().getSoundLocation(), SoundCategory.MUSIC, 0F, 1F, false, 1, ISound.AttenuationType.LINEAR, 0F, 0F, 0F);
+        PositionedSoundRecord silenced = new PositionedSoundRecord(e.getSound().getSoundLocation(), SoundCategory.MUSIC, Float.MIN_VALUE, 1F, false, 1, ISound.AttenuationType.LINEAR, 0F, 0F, 0F);
         if(e.getSound().getSoundLocation().getNamespace().matches(MusicTriggers.MODID) && ((e.getManager().isSoundPlaying(MusicPlayer.curMusic) && MusicPlayer.fromRecord==null) || MusicPlayer.playing)) {
             e.setResultSound(silenced);
         }

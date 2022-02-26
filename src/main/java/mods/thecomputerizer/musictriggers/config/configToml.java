@@ -21,7 +21,7 @@ public class configToml {
 
     public static final String[] triggers = new String[]
             {"menu","generic","difficulty","day","night","sunrise","sunset","light","underground","raining","storming","snowing",
-                    "lowhp","dead","creative","spectator","riding","pet","high","underwater","elytra","fishing","dimension","biome",
+                    "lowhp","dead","creative","spectator","riding","pet","high","underwater","elytra","fishing","drowning","dimension","biome",
                     "structure","mob","victory","gui","effect","zones","pvp","advancement"};
     public static final String[] modtriggers = new String[]
             {"gamestage","bloodmoon","harvestmoon","fallingstars","rainintensity","tornado","hurricane","sandstorm","season"};

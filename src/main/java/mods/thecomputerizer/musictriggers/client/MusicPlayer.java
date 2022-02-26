@@ -202,8 +202,8 @@ public class MusicPlayer {
                                             RegistryHandler.network.sendToServer(new packetCurSong.packetCurSongMessage(curTrack, MusicPicker.player.getUniqueID()));
                                         }
                                     } else {
-                                        musicLinker.get(checkThis).setVolume(0.01F);
-                                        sndSys.setVolume(temp, 0.01F);
+                                        musicLinker.get(checkThis).setVolume(Float.MIN_VALUE);
+                                        sndSys.setVolume(temp, Float.MIN_VALUE);
                                     }
                                 }
                             }
@@ -275,7 +275,7 @@ public class MusicPlayer {
                                     for (Map.Entry<String, setVolumeSound> stringListEntry : musicLinker.entrySet()) {
                                         String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
                                         if (!checkThis.matches("song-0")) {
-                                            musicLinker.get(checkThis).setVolume(0.01F);
+                                            musicLinker.get(checkThis).setVolume(Float.MIN_VALUE);
                                         } else {
                                             curMusic = musicLinker.get(checkThis);
                                         }
