@@ -211,11 +211,36 @@ public class MusicPlayer {
                             if (curTrackList.size() >= 1) {
                                 int i = rand.nextInt(curTrackList.size());
                                 if (curTrackList.size() > 1 && curTrack != null) {
-                                    while (curTrack.equals(curTrackList.get(i))) {
-                                        i = rand.nextInt(curTrackList.size());
+                                    Map<String, Integer> chanceMap = new HashMap<>();
+                                    int total = 0;
+                                    for (String s : curTrackList) {
+                                        total += Integer.parseInt(configToml.otherinfo.get(s)[3]);
+                                        chanceMap.put(s, total);
                                     }
+                                    int r = rand.nextInt(total);
+                                    String temp = curTrack;
+                                    int attempts = 0;
+                                    while (temp.matches(curTrack)) {
+                                        if (!curTrack.matches(curTrackList.get(0)) && r <= chanceMap.get(curTrackList.get(0))) {
+                                            temp = curTrackList.get(0);
+                                        } else {
+                                            for (int j = 1; j < curTrackList.size(); j++) {
+                                                if (!curTrack.matches(curTrackList.get(j)) && r <= chanceMap.get(curTrackList.get(j)) && r > chanceMap.get(curTrackList.get(j - 1))) {
+                                                    temp = curTrackList.get(j);
+                                                }
+                                            }
+                                        }
+                                        r = rand.nextInt(total);
+                                        attempts += 1;
+                                        if (attempts > 250) {
+                                            MusicTriggers.logger.warn("Attempt to get non duplicate song passed 250 tries! Forcing current song " + configToml.songholder.get(temp) + " to play.");
+                                            curTrack = temp;
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    curTrack = curTrackList.get(i);
                                 }
-                                curTrack = curTrackList.get(i);
                                 if (curTrack != null) {
                                     finish = Boolean.parseBoolean(configToml.otherinfo.get(curTrack)[2]);
                                     curTrackHolder = configToml.songholder.get(curTrack);
@@ -269,6 +294,7 @@ public class MusicPlayer {
                                 } else {
                                     curTrackList = null;
                                 }
+
                             }
                         }
                     }

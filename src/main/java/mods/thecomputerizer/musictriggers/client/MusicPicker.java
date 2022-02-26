@@ -229,6 +229,7 @@ public class MusicPicker {
                         dynamicPriorities.put("night-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("night-" + identifier)[0]));
                         dynamicFade.put("night-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("night-" + identifier)[1]));
                         dynamicDelay.put("night-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("night-" + identifier)[4]));
+                        triggerPersistence.put("night-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("night-" + identifier)[3]));
                     } else if (triggerPersistence.get("night-" + identifier) != null && triggerPersistence.get("night-" + identifier) > 0) {
                         if (!events.contains("night-" + identifier)) {
                             events.add("night-" + identifier);
@@ -759,6 +760,7 @@ public class MusicPicker {
                     dynamicPriorities.put("gui-"+identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("gui-"+identifier)[0]));
                     dynamicFade.put("gui-"+identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("gui-"+identifier)[1]));
                     dynamicDelay.put("gui-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("gui-" + identifier)[4]));
+                    triggerPersistence.put("gui-"+identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("gui-"+identifier)[3]));
                 }
                 else if (triggerPersistence.get("gui-"+identifier)!=null && triggerPersistence.get("gui-"+identifier) > 0) {
                     if (!events.contains("gui-" + identifier)) {
