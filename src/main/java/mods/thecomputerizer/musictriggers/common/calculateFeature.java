@@ -25,19 +25,19 @@ public class calculateFeature {
     private static final HashMap<Integer, Boolean> dead = new HashMap<>();
     public static boolean boss;
 
-    public static void calculateStructAndSend(String struct, BlockPos pos, Integer dimID, UUID uuid) {
+    public static void calculateStructAndSend(String triggerID, String struct, BlockPos pos, Integer dimID, UUID uuid) {
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
         WorldServer world = server.getWorld(dimID);
         if(world!=null) {
             if (world.getChunkProvider().isInsideStructure(world, struct, pos)) {
-                RegistryHandler.network.sendTo(new packetToClient.packetToClientMessage(true +","+struct), server.getPlayerList().getPlayerByUUID(uuid));
+                RegistryHandler.network.sendTo(new packetToClient.packetToClientMessage(true +","+triggerID), server.getPlayerList().getPlayerByUUID(uuid));
             } else {
-                RegistryHandler.network.sendTo(new packetToClient.packetToClientMessage(false +","+struct), server.getPlayerList().getPlayerByUUID(uuid));
+                RegistryHandler.network.sendTo(new packetToClient.packetToClientMessage(false +","+triggerID), server.getPlayerList().getPlayerByUUID(uuid));
             }
         }
     }
 
-    public static void calculateMobAndSend(UUID uuid, String mobname, int detectionrange, boolean targetting, int targettingpercentage, int health, int healthpercentage, boolean victory, int victoryID, String i, int num, int persistence, int timeout) {
+    public static void calculateMobAndSend(String triggerID, UUID uuid, String mobname, int detectionrange, boolean targetting, int targettingpercentage, int health, int healthpercentage, boolean victory, int victoryID, String i, int num, int persistence, int timeout) {
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
         EntityPlayerMP player = (EntityPlayerMP)server.getEntityFromUuid(uuid);
         assert player != null;
@@ -160,7 +160,7 @@ public class calculateFeature {
                 dead.put(victoryID, alldead);
             }
         }
-        RegistryHandler.network.sendTo(new packetGetMobInfo.packetGetMobInfoMessage(mobname,pass),player);
+        RegistryHandler.network.sendTo(new packetGetMobInfo.packetGetMobInfoMessage(triggerID,pass),player);
     }
 
     @Optional.Method(modid = "infernalmobs")

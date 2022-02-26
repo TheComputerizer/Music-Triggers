@@ -17,7 +17,7 @@ public class packetSendMobInfo implements IMessageHandler<packetSendMobInfo.pack
         if(message.getDataUUID()==null) {
             return null;
         }
-        calculateFeature.calculateMobAndSend(message.getDataUUID(), message.getMobName(), message.getDetectionRange(),
+        calculateFeature.calculateMobAndSend(message.getDataTriggerName(), message.getDataUUID(), message.getMobName(), message.getDetectionRange(),
                 message.getTargettingBoolean(), message.getHordeTargettingPercentage(), message.getHealth(),
                 message.getHealthTargettingPercentage(), message.getVictoryBoolean(), message.getVictoryID(), message.getInfernalID(),
                 message.getMobNumber(), message.getTime(), message.getTimeOut());
@@ -29,9 +29,9 @@ public class packetSendMobInfo implements IMessageHandler<packetSendMobInfo.pack
 
         public packetSendMobInfoMessage() {}
 
-        public packetSendMobInfoMessage(UUID u, String n, String r, String t, String tp, String h, String hp, String v, String vi, String i, String num, int time, int to)
+        public packetSendMobInfoMessage(String trigger, UUID u, String n, String r, String t, String tp, String h, String hp, String v, String vi, String i, String num, int time, int to)
         {
-            this.s = u.toString()+","+n+","+r+","+t+","+tp+","+h+","+hp+","+v+","+vi+","+i+","+num+","+time+","+to;
+            this.s = trigger+","+u.toString()+","+n+","+r+","+t+","+tp+","+h+","+hp+","+v+","+vi+","+i+","+num+","+time+","+to;
         }
 
         @Override
@@ -45,47 +45,50 @@ public class packetSendMobInfo implements IMessageHandler<packetSendMobInfo.pack
         {
             buf.writeCharSequence(s, StandardCharsets.UTF_8);
         }
-        public UUID getDataUUID() {
+        public String getDataTriggerName() {
             if(s==null) {
                 return null;
             }
-            return UUID.fromString(stringBreaker(s)[0]);
+            return stringBreaker(s)[0];
+        }
+        public UUID getDataUUID() {
+            return UUID.fromString(stringBreaker(s)[1]);
         }
         public String getMobName() {
-            return stringBreaker(s)[1];
+            return stringBreaker(s)[2];
         }
         public Integer getDetectionRange() {
-            return Integer.parseInt(stringBreaker(s)[2]);
+            return Integer.parseInt(stringBreaker(s)[3]);
         }
         public Boolean getTargettingBoolean() {
-            return Boolean.parseBoolean(stringBreaker(s)[3]);
+            return Boolean.parseBoolean(stringBreaker(s)[4]);
         }
         public Integer getHordeTargettingPercentage() {
-            return Integer.parseInt(stringBreaker(s)[4]);
-        }
-        public Integer getHealth() {
             return Integer.parseInt(stringBreaker(s)[5]);
         }
-        public Integer getHealthTargettingPercentage() {
+        public Integer getHealth() {
             return Integer.parseInt(stringBreaker(s)[6]);
         }
+        public Integer getHealthTargettingPercentage() {
+            return Integer.parseInt(stringBreaker(s)[7]);
+        }
         public Boolean getVictoryBoolean() {
-            return Boolean.parseBoolean(stringBreaker(s)[7]);
+            return Boolean.parseBoolean(stringBreaker(s)[8]);
         }
         public Integer getVictoryID() {
-            return Integer.parseInt(stringBreaker(s)[8]);
+            return Integer.parseInt(stringBreaker(s)[9]);
         }
         public String getInfernalID() {
-            return stringBreaker(s)[9];
+            return stringBreaker(s)[10];
         }
         public Integer getMobNumber() {
-            return Integer.parseInt(stringBreaker(s)[10]);
+            return Integer.parseInt(stringBreaker(s)[11]);
         }
         public Integer getTime() {
-            return Integer.parseInt(stringBreaker(s)[11]);
+            return Integer.parseInt(stringBreaker(s)[12]);
         }
         public Integer getTimeOut() {
-            return Integer.parseInt(stringBreaker(s)[11]);
+            return Integer.parseInt(stringBreaker(s)[13]);
         }
 
         public static String[] stringBreaker(String s) {

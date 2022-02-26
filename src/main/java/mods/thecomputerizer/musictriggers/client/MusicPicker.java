@@ -623,8 +623,9 @@ public class MusicPicker {
             for (Map.Entry<String, String> stringListEntry : SoundHandler.TriggerSongMap.get("structure").entrySet()) {
                 String structureSong = ((Map.Entry) stringListEntry).getKey().toString();
                 String identifier = configToml.triggerholder.get(structureSong.replaceAll("@","")).get("structure")[10];
-                RegistryHandler.network.sendToServer(new packet.packetMessage(SoundHandler.TriggerInfoMap.get("structure-"+identifier)[9], player.getPosition(), player.dimension, player.getUniqueID()));
-                if (fromServer.inStructure.get(SoundHandler.TriggerInfoMap.get("structure-"+identifier)[9])) {
+                RegistryHandler.network.sendToServer(new packet.packetMessage("structure-"+identifier,SoundHandler.TriggerInfoMap.get("structure-"+identifier)[9], player.getPosition(), player.dimension, player.getUniqueID()));
+                fromServer.inStructure.putIfAbsent("structure-"+identifier,false);
+                if (fromServer.inStructure.get("structure-"+identifier)) {
                     if(!events.contains("structure-" + identifier)) {
                         events.add("structure-" + identifier);
                     }
@@ -654,14 +655,15 @@ public class MusicPicker {
                 String structureSong = ((Map.Entry) stringListEntry).getKey().toString();
                 String identifier = configToml.triggerholder.get(structureSong.replaceAll("@","")).get("mob")[10];
                 triggerPersistence.putIfAbsent("mob-" + identifier, 0);
-                RegistryHandler.network.sendToServer(new packetSendMobInfo.packetSendMobInfoMessage(player.getUniqueID(),
+                RegistryHandler.network.sendToServer(new packetSendMobInfo.packetSendMobInfoMessage("mob-" + identifier,player.getUniqueID(),
                         SoundHandler.TriggerInfoMap.get("mob-" + identifier)[9], SoundHandler.TriggerInfoMap.get("mob-" + identifier)[11],
                         SoundHandler.TriggerInfoMap.get("mob-" + identifier)[12], SoundHandler.TriggerInfoMap.get("mob-" + identifier)[13],
                         SoundHandler.TriggerInfoMap.get("mob-" + identifier)[14], SoundHandler.TriggerInfoMap.get("mob-" + identifier)[15],
                         SoundHandler.TriggerInfoMap.get("mob-" + identifier)[16], SoundHandler.TriggerInfoMap.get("mob-" + identifier)[17],
                         SoundHandler.TriggerInfoMap.get("mob-" + identifier)[18], SoundHandler.TriggerInfoMap.get("mob-" + identifier)[2],
                         triggerPersistence.get("mob-" + identifier), Integer.parseInt(SoundHandler.TriggerInfoMap.get("mob-" + identifier)[22])));
-                if (fromServer.mob.get(SoundHandler.TriggerInfoMap.get("mob-" + identifier)[9])) {
+                fromServer.mob.putIfAbsent("mob-" + identifier,false);
+                if (fromServer.mob.get("mob-" + identifier)) {
                     if(!events.contains("mob-" + identifier)) {
                         events.add("mob-" + identifier);
                     }

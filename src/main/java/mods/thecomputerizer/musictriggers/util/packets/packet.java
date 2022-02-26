@@ -18,7 +18,7 @@ public class packet implements IMessageHandler<packet.packetMessage, IMessage> {
         if(message.getDataStruct()==null) {
             return null;
         }
-        calculateFeature.calculateStructAndSend(message.getDataStruct(), message.getDataBlockPos(), message.getDataInt(), message.getDataUUID());
+        calculateFeature.calculateStructAndSend(message.getDataTriggerName(), message.getDataStruct(), message.getDataBlockPos(), message.getDataInt(), message.getDataUUID());
         return null;
     }
 
@@ -27,9 +27,9 @@ public class packet implements IMessageHandler<packet.packetMessage, IMessage> {
 
         public packetMessage() {}
 
-        public packetMessage(String s, BlockPos p, int d, UUID u)
+        public packetMessage(String trigger, String s, BlockPos p, int d, UUID u)
         {
-            this.s = s+","+p.toLong()+","+d+","+u.toString();
+            this.s = trigger+","+s+","+p.toLong()+","+d+","+u.toString();
         }
 
         @Override
@@ -43,20 +43,23 @@ public class packet implements IMessageHandler<packet.packetMessage, IMessage> {
         {
             buf.writeCharSequence(s, StandardCharsets.UTF_8);
         }
-        public String getDataStruct() {
+        public String getDataTriggerName() {
             if(s==null) {
                 return null;
             }
             return stringBreaker(s)[0];
         }
+        public String getDataStruct() {
+            return stringBreaker(s)[1];
+        }
         public BlockPos getDataBlockPos() {
-            return BlockPos.fromLong(Long.parseLong(stringBreaker(s)[1]));
+            return BlockPos.fromLong(Long.parseLong(stringBreaker(s)[2]));
         }
         public Integer getDataInt() {
-            return Integer.parseInt(stringBreaker(s)[2]);
+            return Integer.parseInt(stringBreaker(s)[3]);
         }
         public UUID getDataUUID() {
-            return UUID.fromString(stringBreaker(s)[3]);
+            return UUID.fromString(stringBreaker(s)[4]);
         }
 
         public static String[] stringBreaker(String s) {
