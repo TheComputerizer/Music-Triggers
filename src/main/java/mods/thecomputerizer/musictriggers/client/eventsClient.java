@@ -58,18 +58,18 @@ public class eventsClient {
     public static void playSound(PlaySoundEvent e) {
         if (e.getSound()!=null) {
             if ((MusicPlayer.curMusic != null || MusicPlayer.curTrackList == null || MusicPlayer.curTrackList.isEmpty()) && e.getSound().getLocation().getNamespace().matches(MusicTriggers.MODID) && (((MusicPlayer.curMusic!=null && e.getEngine().isActive(MusicPlayer.curMusic)) && e.getSound().getLocation() != MusicPlayer.fromRecord.getLocation()) || MusicPlayer.playing)) {
-                e.setSound(new SimpleSoundInstance(e.getSound().getLocation(), SoundSource.MUSIC, 0F, 1F, false, 0, SoundInstance.Attenuation.LINEAR, 0,0,0, false));
+                e.setSound(new SimpleSoundInstance(e.getSound().getLocation(), SoundSource.MUSIC, Float.MIN_VALUE, 1F, false, 0, SoundInstance.Attenuation.LINEAR, 0,0,0, false));
             }
             for (String s : configDebug.blockedmods.get()) {
                 if (e.getSound().getLocation().getNamespace().contains(s) && e.getSound().getSource() == SoundSource.MUSIC) {
                     if (!(MusicPlayer.curMusic == null && configDebug.SilenceIsBad.get())) {
-                        e.setSound(new SimpleSoundInstance(e.getSound().getLocation(), SoundSource.MUSIC, 0F, 1F, false, 0, SoundInstance.Attenuation.LINEAR, 0,0,0, false));
+                        e.setSound(new SimpleSoundInstance(e.getSound().getLocation(), SoundSource.MUSIC, Float.MIN_VALUE, 1F, false, 0, SoundInstance.Attenuation.LINEAR, 0,0,0, false));
                     }
                 }
             }
             if (e.getSound().getLocation().getNamespace().contains("minecraft") && e.getSound().getSource() == SoundSource.MUSIC) {
                 if (!(MusicPlayer.curMusic == null && configDebug.SilenceIsBad.get())) {
-                    e.setSound(new SimpleSoundInstance(e.getSound().getLocation(), SoundSource.MUSIC, 0F, 1F, false, 0, SoundInstance.Attenuation.LINEAR, 0,0,0, false));
+                    e.setSound(new SimpleSoundInstance(e.getSound().getLocation(), SoundSource.MUSIC, Float.MIN_VALUE, 1F, false, 0, SoundInstance.Attenuation.LINEAR, 0,0,0, false));
                 }
             }
         }

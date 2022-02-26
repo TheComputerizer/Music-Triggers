@@ -6,6 +6,7 @@ import corgitaco.enhancedcelestials.LunarContext;
 import corgitaco.enhancedcelestials.lunarevent.BloodMoon;
 import corgitaco.enhancedcelestials.lunarevent.BlueMoon;
 import corgitaco.enhancedcelestials.lunarevent.HarvestMoon;
+import corgitaco.enhancedcelestials.lunarevent.Moon;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.config.configRegistry;
 import mods.thecomputerizer.musictriggers.config.configToml;
@@ -24,6 +25,7 @@ import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.fml.ModList;
@@ -533,7 +535,10 @@ public class MusicPicker {
                 for (Map.Entry<String, String> stringListEntry : SoundHandler.TriggerSongMap.get("biome").entrySet()) {
                     String biomeSong = ((Map.Entry) stringListEntry).getKey().toString();
                     String identifier = configToml.triggerholder.get(biomeSong.replaceAll("@", "")).get("biome")[10];
-                    if (Objects.requireNonNull(world.getBiome(roundedPos(player)).getRegistryName()).toString().contains(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[9])) {
+                    boolean pass = checkBiome(world.getBiome(roundedPos(player)), SoundHandler.TriggerInfoMap.get("biome-" + identifier)[9],
+                            SoundHandler.TriggerInfoMap.get("biome-" + identifier)[23], SoundHandler.TriggerInfoMap.get("biome-" + identifier)[24],
+                            Float.parseFloat(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[25]), Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[26]));
+                    if (pass) {
                         events.add("biome-" + identifier);
                         dynamicSongs.put("biome-" + identifier, buildSongsFromIdentifier(SoundHandler.TriggerSongMap.get("biome"), identifier));
                         dynamicPriorities.put("biome-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[0]));
@@ -552,7 +557,9 @@ public class MusicPicker {
                 for (Map.Entry<String, String> stringListEntry : SoundHandler.TriggerSongMap.get("biome").entrySet()) {
                     String biomeSong = ((Map.Entry) stringListEntry).getKey().toString();
                     String identifier = configToml.triggerholder.get(biomeSong.replaceAll("@", "")).get("biome")[10];
-                    PacketHandler.sendToServer(new InfoForBiome(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[9], roundedPos(player), player.getUUID()));
+                    PacketHandler.sendToServer(new InfoForBiome(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[9], roundedPos(player), player.getUUID(),
+                            SoundHandler.TriggerInfoMap.get("biome-" + identifier)[23], SoundHandler.TriggerInfoMap.get("biome-" + identifier)[24],
+                            SoundHandler.TriggerInfoMap.get("biome-" + identifier)[25], SoundHandler.TriggerInfoMap.get("biome-" + identifier)[26]));
                     if (fromServer.inBiome.get(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[9])) {
                         events.add("biome-" + identifier);
                         dynamicSongs.put("biome-" + identifier, buildSongsFromIdentifier(SoundHandler.TriggerSongMap.get("biome"), identifier));
@@ -803,6 +810,10 @@ public class MusicPicker {
         if (bluemoon) {
             events.add("bluemoon");
         }
+        List<String> moon = moon();
+        if (!moon.isEmpty()) {
+            events.addAll(moon);
+        }
         List<String> seasons = seasons();
         if(!seasons.isEmpty()) {
             events.addAll(seasons);
@@ -878,6 +889,38 @@ public class MusicPicker {
         return false;
     }
 
+    private static List<String> moon() {
+        List<String> events = new ArrayList<>();
+        if (ModList.get().isLoaded("enhancedcelestials") && SoundHandler.TriggerSongMap.get("moon")!=null) {
+            LunarContext lunarContext = ((EnhancedCelestialsWorldData) world).getLunarContext();
+            if(SoundHandler.TriggerSongMap.get("moon")!=null && lunarContext != null && lunarContext.getCurrentEvent() instanceof Moon) {
+                for (Map.Entry<String, String> stringListEntry : SoundHandler.TriggerSongMap.get("moon").entrySet()) {
+                    String moonSong = ((Map.Entry) stringListEntry).getKey().toString();
+                    String identifier = configToml.triggerholder.get(moonSong.replaceAll("@","")).get("moon")[10];
+                    if ((lunarContext.getCurrentEvent().getKey().contains(SoundHandler.TriggerInfoMap.get("moon-"+identifier)[9]))) {
+                        if (!events.contains("moon-" + identifier)) {
+                            events.add("moon-" + identifier);
+                        }
+                        dynamicSongs.put("moon-"+identifier, buildSongsFromIdentifier(SoundHandler.TriggerSongMap.get("moon"), identifier));
+                        dynamicPriorities.put("moon-"+identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("moon-"+identifier)[0]));
+                        dynamicFade.put("moon-"+identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("moon-"+identifier)[1]));
+                        dynamicDelay.put("moon-"+identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("moon-"+identifier)[4]));
+                        triggerPersistence.put("moon-"+identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("moon-"+identifier)[3]));
+                    } else if (triggerPersistence.get("moon-"+identifier) != null && triggerPersistence.get("moon-"+identifier) > 0) {
+                        if (!events.contains("moon-" + identifier)) {
+                            events.add("moon-" + identifier);
+                        }
+                        dynamicSongs.put("moon-"+identifier, buildSongsFromIdentifier(SoundHandler.TriggerSongMap.get("moon"), identifier));
+                        dynamicPriorities.put("moon-"+identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("moon-"+identifier)[0]));
+                        dynamicFade.put("moon-"+identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("moon-"+identifier)[1]));
+                        dynamicDelay.put("moon-"+identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("moon-"+identifier)[4]));
+                    }
+                }
+            }
+        }
+        return events;
+    }
+
     private static List<String> seasons() {
         List<String> tempList = new ArrayList<>();
         if (ModList.get().isLoaded("sereneseasons") && SoundHandler.TriggerSongMap.get("season")!=null) {
@@ -942,6 +985,20 @@ public class MusicPicker {
 
     public static double averageLight(BlockPos p, boolean b) {
         return b ? world.getRawBrightness(p, 0) : world.getBrightness(LightLayer.BLOCK, p);
+    }
+
+    public static boolean checkBiome(Biome b, String name, String category, String rainType, float temperature, boolean cold) {
+        if(Objects.requireNonNull(b.getRegistryName()).toString().contains(name) || name.matches("minecraft")) {
+            if(b.getBiomeCategory().getName().contains(category) || category.matches("nope")) {
+                if(b.getPrecipitation().getName().contains(rainType) || rainType.matches("nope")) {
+                    float bt = b.getBaseTemperature();
+                    if(temperature==-111) return true;
+                    else if(bt>=temperature && !cold) return true;
+                    else return bt <= temperature && cold;
+                }
+            }
+        }
+        return false;
     }
 
     public static String[] stringBreaker(String s, String regex) {

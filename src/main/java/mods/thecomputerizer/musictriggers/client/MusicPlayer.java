@@ -193,10 +193,10 @@ public class MusicPlayer {
                                             }
                                         }
                                     } else {
-                                        musicLinker.get(checkThis).setVolume(0.01F);
+                                        musicLinker.get(checkThis).setVolume(Float.MIN_VALUE);
                                         assert curplaying != null;
                                         if (curplaying.get(musicLinker.get(checkThis)) != null) {
-                                            curplaying.get(musicLinker.get(checkThis)).execute(sound -> sound.setVolume(0.01F));
+                                            curplaying.get(musicLinker.get(checkThis)).execute(sound -> sound.setVolume(Float.MIN_VALUE));
                                         }
                                     }
                                 }
@@ -272,7 +272,7 @@ public class MusicPlayer {
                                     for (Map.Entry<String, setVolumeSound> stringListEntry : musicLinker.entrySet()) {
                                         String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
                                         if (!checkThis.matches("song-0")) {
-                                            musicLinker.get(checkThis).setVolume(0.01F);
+                                            musicLinker.get(checkThis).setVolume(Float.MIN_VALUE);
                                         } else {
                                             curMusic = musicLinker.get(checkThis);
                                         }
