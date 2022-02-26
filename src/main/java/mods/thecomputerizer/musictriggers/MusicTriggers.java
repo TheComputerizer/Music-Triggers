@@ -6,6 +6,7 @@ import mods.thecomputerizer.musictriggers.common.eventsCommon;
 import mods.thecomputerizer.musictriggers.config.configRegistry;
 import mods.thecomputerizer.musictriggers.config.configTitleCards;
 import mods.thecomputerizer.musictriggers.config.configToml;
+import mods.thecomputerizer.musictriggers.util.CustomTick;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.json;
 import net.minecraft.client.Minecraft;
@@ -195,6 +196,7 @@ public class MusicTriggers {
     public void init(FMLInitializationEvent e) {
         if(e.getSide()==Side.CLIENT) {
             ClientRegistry.registerKeyBinding(MusicPlayer.RELOAD);
+            CustomTick.setUp();
         }
     }
 }

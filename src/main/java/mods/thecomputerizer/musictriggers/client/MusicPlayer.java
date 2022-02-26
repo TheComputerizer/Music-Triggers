@@ -21,6 +21,7 @@ import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -61,7 +62,7 @@ public class MusicPlayer {
     public static HashMap<String, String[]> triggerLinker = new HashMap<>();
 
     @SuppressWarnings("rawtypes")
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onTick(TickEvent.ClientTickEvent event) {
         if(!reloading) {
             if(MusicPicker.fishBool) {
@@ -146,7 +147,7 @@ public class MusicPlayer {
                             mc.getSoundHandler().stopSounds();
                             curMusic = null;
                             delay = true;
-                            delayTime = 20;
+                            delayTime = MusicPicker.curDelay;
                         }
                     }
                     if(!finish) {
@@ -341,6 +342,7 @@ public class MusicPlayer {
                         for (int index = 0; index < temp.size(); index++) {
                             eventsClient.pngs.add(index, new ResourceLocation(MusicTriggers.MODID, "textures/" + configTitleCards.imagecards.get(i).getName() + "/" + temp.get(index) + ".png"));
                         }
+                        eventsClient.timer = Minecraft.getSystemTime();
                     }
                     eventsClient.curImageIndex = i;
                     eventsClient.activated = true;

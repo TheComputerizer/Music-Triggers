@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.client;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
+import mods.thecomputerizer.musictriggers.util.CustomTick;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.config.configDebug;
 import mods.thecomputerizer.musictriggers.config.configTitleCards;
@@ -23,6 +24,7 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
+import net.minecraftforge.event.entity.player.AdvancementEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -44,7 +46,7 @@ public class eventsClient {
     public static float fadeCount = 1000;
     public static float startDelayCount = 0;
     public static Boolean activated = false;
-    public static int timer=0;
+    public static long timer=0;
     public static EntityPlayer playerHurt;
     public static EntityPlayer playerSource;
     public static String GUIName;
@@ -53,6 +55,8 @@ public class eventsClient {
     public static boolean ismoving;
     public static List<ResourceLocation> pngs = new ArrayList<>();
     public static int movingcounter = 0;
+    public static String lastAdvancement;
+    public static boolean advancement;
 
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
@@ -97,6 +101,12 @@ public class eventsClient {
     }
 
     @SubscribeEvent
+    public static void onAdvancement(AdvancementEvent e) {
+        lastAdvancement = e.getAdvancement().getId().toString();
+        advancement = true;
+    }
+
+    @SubscribeEvent
     public static void worldRender(RenderWorldLastEvent e) {
         isWorldRendered=true;
     }
@@ -109,6 +119,48 @@ public class eventsClient {
     }
 
     @SubscribeEvent
+    public static void customTick(CustomTick ev) {
+        if(configTitleCards.imagecards.get(curImageIndex)!=null) {
+            if (timer > configTitleCards.imagecards.get(curImageIndex).getTime()) {
+                activated = false;
+                timer = 0;
+                ismoving = false;
+                movingcounter = 0;
+            }
+            if (ismoving) {
+                if (timer % configTitleCards.imagecards.get(curImageIndex).getDelay() == 0) {
+                    movingcounter++;
+                    if (movingcounter >= pngs.size()) {
+                        movingcounter = 0;
+                    }
+                }
+                IMAGE_CARD = pngs.get(movingcounter);
+            }
+            if (activated) {
+                timer++;
+                startDelayCount++;
+                if (startDelayCount > 0) {
+                    if (fadeCount > 1) {
+                        fadeCount -= 6;
+                        if (fadeCount < 1) {
+                            fadeCount = 1;
+                        }
+                    }
+                }
+            } else {
+                if (fadeCount < 1000) {
+                    fadeCount += 4;
+                    if (fadeCount > 1000) {
+                        fadeCount = 1000;
+                        ismoving = false;
+                    }
+                }
+                startDelayCount = 0;
+            }
+        }
+    }
+
+    @SubscribeEvent
     public static void imageCards(RenderGameOverlayEvent.Post e) {
         Minecraft mc = Minecraft.getMinecraft();
         EntityPlayer player = mc.player;
@@ -118,42 +170,6 @@ public class eventsClient {
                 int x = res.getScaledWidth();
                 int y = res.getScaledHeight();
                 Vector4f color = new Vector4f(1, 1, 1, 1);
-                if(timer>configTitleCards.imagecards.get(curImageIndex).getTime()){
-                    activated=false;
-                    timer=0;
-                    ismoving = false;
-                    movingcounter = 0;
-                }
-                else if(ismoving) {
-                    if(timer%configTitleCards.imagecards.get(curImageIndex).getDelay()==0) {
-                        movingcounter++;
-                        if (movingcounter>=pngs.size()) {
-                            movingcounter = 0;
-                        }
-                    }
-                    IMAGE_CARD = pngs.get(movingcounter);
-                }
-                if (activated) {
-                    timer++;
-                    startDelayCount++;
-                    if(startDelayCount>0) {
-                        if (fadeCount > 1) {
-                            fadeCount -= 6;
-                            if (fadeCount < 1) {
-                                fadeCount = 1;
-                            }
-                        }
-                    }
-                } else {
-                    if (fadeCount < 1000) {
-                        fadeCount += 4;
-                        if (fadeCount > 1000) {
-                            fadeCount = 1000;
-                            ismoving = false;
-                        }
-                    }
-                    startDelayCount=0;
-                }
                 if (fadeCount != 1000 && IMAGE_CARD!=null) {
                     float opacity = (int) (17 - (fadeCount / 80));
                     opacity = (opacity * 1.15f) / 15;

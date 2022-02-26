@@ -85,6 +85,8 @@ dependencies {
     implementation(group = "com.fasterxml.jackson.core", name = "jackson-databind", version = "2.13.1")
     implementation(group = "org.jsoup", name = "jsoup", version = "1.14.3")
     implementation(group = "com.moandjiezana.toml", name = "toml4j", version = "0.7.2")
+    implementation(group = "org.jcodec", name = "jcodec", version = "0.2.5")
+    implementation(group = "org.jcodec", name = "jcodec-javase", version = "0.2.5")
     bundled (group = "com.googlecode.soundlibs", name = "jlayer", version = "1.0.1.4")
     bundled (group = "com.googlecode.soundlibs", name = "mp3spi", version = "1.9.5.4")
     bundled (group = "de.jarnbjo", name = "j-ogg-all", version = "1.0.0")
@@ -92,6 +94,8 @@ dependencies {
     bundled (group = "com.squareup.okhttp", name = "okhttp", version = "2.5.0")
     bundled (group = "javazoom.vorbisspi", name = "vorbisspi", version = "1.0.3")
     bundled (group = "com.moandjiezana.toml", name = "toml4j", version = "0.7.2")
+    bundled (group = "org.jcodec", name = "jcodec", version = "0.2.5")
+    bundled (group = "org.jcodec", name = "jcodec-javase", version = "0.2.5")
 
     implementation(fg.deobf(curse(mod = "codechicken-lib", projectId = 242818L, fileId = 2779848L)))
     implementation(fg.deobf(curse(mod = "bloodmoon", projectId = 226321L, fileId = 2537917L)))
