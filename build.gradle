@@ -1,71 +1,62 @@
 //file:noinspection GroovyAssignabilityCheck
 buildscript {
     repositories {
-        // These repositories are only for Gradle plugins, put any other repositories in the repository block further below
         maven { url = 'https://maven.minecraftforge.net' }
+        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
         mavenCentral()
         gradlePluginPortal()
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
         classpath group: 'gradle.plugin.com.github.johnrengelman', name: 'shadow', version: '7.1.2'
+        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
 apply plugin: 'net.minecraftforge.gradle'
-// Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
+apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'com.github.johnrengelman.shadow'
-apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
 version = '1.18.1-5.0-EX'
-group = 'mods.thecomputerizer.musictriggers' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+group = 'mods.thecomputerizer.musictriggers'
 archivesBaseName = 'musictriggers'
 
-// Mojang ships Java 17 to end users in 1.18+, so your mod should target Java 17.
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+mixin {
+    add sourceSets.main, "musictriggers.refmap.json"
+    config "musictriggers.mixins.json"
+}
 
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 minecraft {
     mappings channel: 'official', version: '1.18.1'
-
     runs {
         client {
             workingDirectory project.file('run')
-
             property 'forge.logging.markers', 'REGISTRIES'
-
             property 'forge.logging.console.level', 'debug'
-
             mods {
                 examplemod {
                     source sourceSets.main
                 }
             }
         }
-
         server {
             workingDirectory project.file('run')
-
             property 'forge.logging.markers', 'REGISTRIES'
-
             property 'forge.logging.console.level', 'debug'
-
             mods {
                 examplemod {
                     source sourceSets.main
                 }
             }
         }
-
         data {
             workingDirectory project.file('run')
-
             property 'forge.logging.markers', 'REGISTRIES'
-
             property 'forge.logging.console.level', 'debug'
-
             args '--mod', 'examplemod', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
-
             mods {
                 examplemod {
                     source sourceSets.main
@@ -73,14 +64,6 @@ minecraft {
             }
         }
     }
-}
-
-
-sourceSets.main.resources { srcDir 'src/generated/resources' }
-
-configurations {
-    shade
-    implementation.extendsFrom(shade)
 }
 
 repositories {
@@ -92,7 +75,12 @@ repositories {
     }
 }
 
+sourceSets.main.resources { srcDir 'src/generated/resources' }
 
+configurations {
+    shade
+    implementation.extendsFrom(shade)
+}
 
 dependencies {
     minecraft 'net.minecraftforge:forge:1.18.1-39.0.85'
@@ -107,6 +95,8 @@ dependencies {
     shade ("com.googlecode.soundlibs:jlayer:1.0.1.4")
     shade ("org.jcodec:jcodec:0.2.5")
     shade ("org.jcodec:jcodec-javase:0.2.5")
+
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     implementation fg.deobf("curse.maven:enhanced-celestials-438447:3544493")
     implementation fg.deobf("curse.maven:serene-seasons-291874:3599020")
@@ -136,7 +126,7 @@ jar {
                 "Specification-Vendor"    : "The_Computerizer",
                 "Specification-Version"   : "5.0-EX",
                 "Implementation-Title"    : project.name,
-                "Implementation-Version"  : project.jar.archiveVersion,
+                "Implementation-Version"  : "5.0-EX",
                 "Implementation-Vendor"   : "The_Computerizer",
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
