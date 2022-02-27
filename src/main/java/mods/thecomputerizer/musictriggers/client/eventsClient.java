@@ -43,8 +43,6 @@ public class eventsClient {
     public static float startDelayCount = 0;
     public static Boolean activated = false;
     public static int timer=0;
-    public static PlayerEntity playerHurt;
-    public static PlayerEntity playerSource;
     public static int GuiCounter = 0;
     private static int reloadCounter = 0;
     public static boolean ismoving;
@@ -52,6 +50,7 @@ public class eventsClient {
     public static int movingcounter = 0;
     public static String lastAdvancement;
     public static boolean advancement;
+    public static PlayerEntity PVPTracker;
 
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
@@ -78,9 +77,15 @@ public class eventsClient {
 
     @SubscribeEvent
     public static void onDamage(LivingDamageEvent e) {
-        if (e.getEntity() instanceof PlayerEntity && e.getSource().getEntity() instanceof PlayerEntity) {
-            playerHurt = (PlayerEntity) e.getEntity();
-            playerSource = (PlayerEntity) e.getSource().getEntity();
+        if(e.getEntityLiving() instanceof PlayerEntity && e.getSource().getEntity() instanceof PlayerEntity) {
+            if (e.getEntityLiving() == MusicPicker.player) {
+                PVPTracker = (PlayerEntity)e.getSource().getEntity();
+                MusicPicker.setPVP = true;
+            }
+            else if(e.getSource().getEntity() == MusicPicker.player) {
+                PVPTracker = (PlayerEntity)e.getEntityLiving();
+                MusicPicker.setPVP = true;
+            }
         }
     }
 

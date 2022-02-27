@@ -2,13 +2,16 @@ package mods.thecomputerizer.musictriggers.common;
 
 import mods.thecomputerizer.musictriggers.common.objects.BlankRecord;
 import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
+import mods.thecomputerizer.musictriggers.util.calculateFeatures;
 import mods.thecomputerizer.musictriggers.util.packets.CurSong;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerBossInfo;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -27,6 +30,30 @@ public class eventsCommon {
 
     @SubscribeEvent
     public static void serverTick(TickEvent.ServerTickEvent e) {
+        for (Map.Entry<Integer, Map<LivingEntity, Integer>> integerMapEntry : calculateFeatures.victoryMobs.entrySet()) {
+            Map<LivingEntity, Integer> tempMap = calculateFeatures.victoryMobs.get(integerMapEntry.getKey());
+            for (Map.Entry<LivingEntity, Integer> entityLivingIntegerEntry : tempMap.entrySet()) {
+                int temp = calculateFeatures.victoryMobs.get(integerMapEntry.getKey()).get(entityLivingIntegerEntry.getKey());
+                if(temp>0) {
+                    calculateFeatures.victoryMobs.get(integerMapEntry.getKey()).put(entityLivingIntegerEntry.getKey(), temp-1);
+                }
+                else {
+                    calculateFeatures.victoryMobs.put(integerMapEntry.getKey(), new HashMap<>());
+                }
+            }
+        }
+        for (Map.Entry<Integer, Map<ServerBossInfo, Integer>> integerMapEntry : calculateFeatures.victoryBosses.entrySet()) {
+            Map<ServerBossInfo, Integer> tempMap = calculateFeatures.victoryBosses.get(integerMapEntry.getKey());
+            for (Map.Entry<ServerBossInfo, Integer> bossInfoServerIntegerEntry : tempMap.entrySet()) {
+                int temp = calculateFeatures.victoryBosses.get(integerMapEntry.getKey()).get(bossInfoServerIntegerEntry.getKey());
+                if(temp>0) {
+                    calculateFeatures.victoryBosses.get(integerMapEntry.getKey()).put(bossInfoServerIntegerEntry.getKey(), temp-1);
+                }
+                else {
+                    calculateFeatures.victoryBosses.put(integerMapEntry.getKey(), new HashMap<>());
+                }
+            }
+        }
         int randomNum = ThreadLocalRandom.current().nextInt(0, 5600);
         for (Map.Entry<BlockPos, ItemStack> blockPosItemStackEntry : recordHolder.entrySet()) {
             BlockPos blockPos = blockPosItemStackEntry.getKey();

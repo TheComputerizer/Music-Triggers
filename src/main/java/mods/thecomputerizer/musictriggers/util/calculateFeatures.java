@@ -1,11 +1,7 @@
 package mods.thecomputerizer.musictriggers.util;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
-import javazoom.jl.player.Player;
-import mods.thecomputerizer.musictriggers.util.packets.InfoFromBiome;
-import mods.thecomputerizer.musictriggers.util.packets.InfoFromMob;
-import mods.thecomputerizer.musictriggers.util.packets.InfoFromRaid;
-import mods.thecomputerizer.musictriggers.util.packets.InfoFromStructure;
+import mods.thecomputerizer.musictriggers.util.packets.*;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
 import net.minecraft.entity.passive.AnimalEntity;
@@ -17,6 +13,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.raid.Raid;
+import net.minecraft.world.server.ServerBossInfo;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
@@ -27,8 +24,8 @@ public class calculateFeatures {
 
     public static HashMap<Integer, Map<LivingEntity, Integer>> victoryMobs = new HashMap<>();
     private static boolean infernalLoaded = false;
-    private static final HashMap<Integer, Boolean> dead = new HashMap<>();
-    public static boolean boss;
+    public static HashMap<Integer, Map<ServerBossInfo, Integer>> victoryBosses = new HashMap<>();
+    public static List<ServerBossInfo> bossInfo = new ArrayList<>();
 
     public static void calculateStructAndSend(String triggerID, String struct, BlockPos pos, UUID uuid) {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
@@ -68,10 +65,44 @@ public class calculateFeatures {
         }
     }
 
+    public static void calculateSnowAndSend(String triggerID, BlockPos pos, UUID uuid) {
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        ServerPlayerEntity player = server.getPlayerList().getPlayer(uuid);
+        if(server.getPlayerList().getPlayer(uuid)!=null) {
+            assert player != null;
+            ServerWorld world = server.getLevel(player.level.dimension());
+            if (world != null) {
+                Biome biome = world.getBiome(pos);
+                if (biome.getTemperature(pos)<0.15f) {
+                    PacketHandler.sendTo(new InfoFromSnow(true, triggerID), player);
+                } else {
+                    PacketHandler.sendTo(new InfoFromSnow(false, triggerID), player);
+                }
+            }
+        }
+    }
+
+    public static void calculateHomeAndSend(String triggerID, BlockPos pos, UUID uuid, int range) {
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        ServerPlayerEntity player = server.getPlayerList().getPlayer(uuid);
+        if(server.getPlayerList().getPlayer(uuid)!=null) {
+            assert player != null;
+            ServerWorld world = server.getLevel(player.level.dimension());
+            if (world != null) {
+                if (Objects.requireNonNull(player.getRespawnPosition()).closerThan(pos,range) && player.getRespawnDimension()==world.dimension() && !world.getSharedSpawnPos().closerThan(pos,range)) {
+                    PacketHandler.sendTo(new InfoFromHome(true, triggerID), player);
+                } else {
+                    PacketHandler.sendTo(new InfoFromHome(false, triggerID), player);
+                }
+            }
+        }
+    }
+
     public static void calculateRaidAndSend(String triggerID, int wave, BlockPos pos, UUID uuid) {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if(server.getPlayerList().getPlayer(uuid)!=null) {
             ServerPlayerEntity player = server.getPlayerList().getPlayer(uuid);
+            assert player != null;
             ServerWorld world = server.getLevel(player.level.dimension());
             if (world != null) {
                 Raid raid = world.getRaidAt(pos);
@@ -86,20 +117,20 @@ public class calculateFeatures {
 
 
     public static boolean checkBiome(Biome b, String name, String category, String rainType, float temperature, boolean cold) {
-        if(b.getRegistryName().toString().contains(name) || name.matches("minecraft")) {
+        if(Objects.requireNonNull(b.getRegistryName()).toString().contains(name) || name.matches("minecraft")) {
             if(b.getBiomeCategory().getName().contains(category) || category.matches("nope")) {
                 if(b.getPrecipitation().getName().contains(rainType) || rainType.matches("nope")) {
                     float bt = b.getBaseTemperature();
                     if(temperature==-111) return true;
                     else if(bt>=temperature && !cold) return true;
-                    else if(bt<=temperature && cold) return true;
+                    else return bt <= temperature && cold;
                 }
             }
         }
         return false;
     }
 
-    public static void calculateMobAndSend(String triggerID, UUID uuid, String mobname, int detectionrange, boolean targetting, int targettingpercentage, int health, int healthpercentage, boolean victory, int victoryID, String i, int num, int persistence, int timeout) {
+    public static void calculateMobAndSend(String triggerID, UUID uuid, String mobname, int detectionrange, boolean targetting, int targettingpercentage, int health, int healthpercentage, boolean victory, int victoryID, String i, int num, int persistence, int timeout, String nbtKey) {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         ServerPlayerEntity player = server.getPlayerList().getPlayer(uuid);
         assert player != null;
@@ -109,10 +140,11 @@ public class calculateFeatures {
         List<LivingEntity> mobTempList = world.getEntitiesOfClass(LivingEntity.class, new AxisAlignedBB(player.getX() - detectionrange, player.getY() - (detectionrange / 2f), player.getZ() - detectionrange, player.getX() + detectionrange, player.getY() + (detectionrange / 2f), player.getZ() + detectionrange));
         List<MobEntity> mobList = new ArrayList<>();
         for (LivingEntity e : mobTempList) {
-            if (e instanceof MobEntity) {
+            if (e instanceof MobEntity && (e.serializeNBT().contains(nbtKey) || nbtKey.matches(""))) {
                 mobList.add((MobEntity) e);
             }
         }
+        boolean victoryRet = true;
         int trackingCounter = 0;
         int healthCounter = 0;
         boolean infernal = true;
@@ -148,17 +180,59 @@ public class calculateFeatures {
             if (mobList.size() >= num && ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) && infernalDone && (float) healthCounter / num >= healthpercentage / 100F)) {
                 pass = true;
             }
+            if(victoryMobs.get(victoryID).keySet().size()<num) {
+                victoryMobs = new HashMap<>();
+                victoryRet = false;
+            } else {
+                for(LivingEntity el : victoryMobs.get(victoryID).keySet()) {
+                    if (!el.isDeadOrDying()) {
+                        victoryRet = false;
+                        break;
+                    }
+                }
+            }
         } else if (mobname.matches("BOSS")) {
-            //Map<UUID, ClientBossInfo> info = ObfuscationReflectionHelper.getPrivateValue(BossOverlayGui.class, mc.gui.getBossOverlay(), "field_184060_g");
-            //if (!info.isEmpty()) {
-                //pass = true;
-            //}
+            List<ServerBossInfo> tempBoss = bossInfo;
+            for(ServerBossInfo b : tempBoss) {
+                if(b.getPercent()<=0f) {
+                    bossInfo.remove(b);
+                }
+            }
+            if(!bossInfo.isEmpty()) {
+                for (ServerBossInfo e : bossInfo) {
+                    if (e.getPlayers().contains(player)) {
+                        if (health / 100f >= e.getPercent()) {
+                            healthCounter++;
+                        }
+                        if (victory) {
+                            victoryBosses.computeIfAbsent(victoryID, k -> new HashMap<>());
+                            if(!victoryBosses.get(victoryID).containsKey(e) && victoryBosses.keySet().size()<num) {
+                                victoryBosses.get(victoryID).put(e,timeout);
+                            }
+                        }
+                    }
+                }
+                if(bossInfo.size()>=num && (float)healthCounter/bossInfo.size()<=1f/healthpercentage) {
+                    pass = true;
+                }
+                if(victoryBosses.get(victoryID).keySet().size()<num) {
+                    victoryBosses = new HashMap<>();
+                    victoryRet = false;
+                } else {
+                    for(ServerBossInfo bis : victoryBosses.get(victoryID).keySet()) {
+                        if(bis.getPercent()!=0) {
+                            victoryRet = false;
+                            break;
+                        }
+                    }
+                }
+            }
         } else {
             int mobCounter = 0;
             List<MobEntity> mobListSpecific = new ArrayList<>();
             for (LivingEntity e : mobTempList) {
-                if (e.getDisplayName().getString().matches(mobname) || Objects.requireNonNull(e.getType().getRegistryName()).toString().matches(mobname)) {
-                    if(e instanceof  MobEntity) {
+                if ((e.getDisplayName().getString().matches(mobname) || Objects.requireNonNull(e.getType().getRegistryName()).toString().matches(mobname)) && (e.serializeNBT().contains(nbtKey) || nbtKey.matches(""))) {
+                    if(e instanceof MobEntity) {
                         mobCounter++;
                         mobListSpecific.add((MobEntity) e);
                     }
@@ -189,22 +263,23 @@ public class calculateFeatures {
             if (mobCounter >= num && ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) && infernalDone && (float) healthCounter / num >= healthpercentage / 100F)) {
                 pass = true;
             }
-        }
-        if (persistence > 0) {
-            pass = true;
-        } else {
-            for (Map.Entry<Integer, Map<LivingEntity, Integer>> integerMapEntry : victoryMobs.entrySet()) {
-                boolean alldead = true;
-                for (Map.Entry<LivingEntity, Integer> entityLivingIntegerEntry : victoryMobs.get((integerMapEntry).getKey()).entrySet()) {
-                    if (!entityLivingIntegerEntry.getKey().isDeadOrDying()) {
-                        alldead = false;
+            if(victoryMobs.get(victoryID).keySet().size()<num) {
+                victoryMobs = new HashMap<>();
+                victoryRet = false;
+            } else {
+                for(LivingEntity el : victoryMobs.get(victoryID).keySet()) {
+                    if (!el.isDeadOrDying()) {
+                        victoryRet = false;
                         break;
                     }
                 }
-                dead.put(victoryID, alldead);
             }
         }
-        PacketHandler.sendTo(new InfoFromMob(triggerID,pass),player);
+        if (persistence > 0) {
+            pass = true;
+        }
+        if(pass) victoryRet = false;
+        PacketHandler.sendTo(new InfoFromMob(triggerID,pass,victoryID,victoryRet),player);
     }
 
     private static boolean infernalChecker(LivingEntity m, String s) {
