@@ -3,32 +3,25 @@
 buildscript {
     repositories {
         maven { url = 'https://maven.minecraftforge.net' }
-        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
         mavenCentral()
         gradlePluginPortal()
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
         classpath group: 'gradle.plugin.com.github.johnrengelman', name: 'shadow', version: '7.1.2'
-        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
 apply plugin: 'net.minecraftforge.gradle'
 // Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
-apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
 version = '1.16.5-5.0-EX'
-group = 'mods.thecomputerizer.musictriggers'
+group = 'mods.thecomputerizer.musictriggers' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'musictriggers'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(8) // Mojang ships Java 8 to end users, so your mod should target Java 8.
-
-mixin {
-    add sourceSets.main, "musictriggers.refmap.json"
-    config "musictriggers.mixins.json"
-}
 
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 minecraft {
@@ -36,33 +29,48 @@ minecraft {
     runs {
         client {
             workingDirectory project.file('run')
+
             property 'forge.logging.markers', 'REGISTRIES'
+
             property 'forge.logging.console.level', 'debug'
+
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
+
             mods {
                 musictriggers {
                     source sourceSets.main
                 }
             }
         }
+
         server {
             workingDirectory project.file('run')
+
             property 'forge.logging.markers', 'REGISTRIES'
+
             property 'forge.logging.console.level', 'debug'
+
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
+
             mods {
                 musictriggers {
                     source sourceSets.main
                 }
             }
         }
+
         data {
             workingDirectory project.file('run')
+
             property 'forge.logging.markers', 'REGISTRIES'
+
             property 'forge.logging.console.level', 'debug'
+
+            // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
             args '--mod', 'musictriggers', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+
             mods {
                 musictriggers {
                     source sourceSets.main
@@ -81,6 +89,9 @@ repositories {
             includeGroup "curse.maven"
         }
     }
+    //maven {
+        //url = "https://www.beatunes.com/repo/maven2/"
+    //}
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
@@ -111,15 +122,11 @@ dependencies {
     implementation fg.deobf("curse.maven:better-weather-400714:3420517")
     implementation fg.deobf("curse.maven:serene-seasons-291874:3510900")
 
-    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-
     implementation fg.deobf("curse.maven:jei-238222:3488178")
 }
 
 shadowJar {
     configurations = [project.configurations.shade]
-    relocate 'com.moandjiezana.shadowed', 'com.moandjiezana.musictriggers.shadowed'
-    relocate 'com.moandjiezana.toml', 'com.moandjiezana.musictriggers.toml'
 
     classifier ''
 
@@ -139,9 +146,9 @@ jar {
         attributes([
             "Specification-Title": "musictriggers",
             "Specification-Vendor": "musictriggerssareus",
-            "Specification-Version": "5.0-EX",
+            "Specification-Version": "4.1",
             "Implementation-Title": project.name,
-            "Implementation-Version": "5.0-EX",
+            "Implementation-Version": "4.1",
             "Implementation-Vendor" :"musictriggers",
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
