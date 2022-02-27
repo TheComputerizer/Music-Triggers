@@ -9,27 +9,27 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-public class InfoForStructure {
+public class InfoForRaid {
     private String s;
 
-    public InfoForStructure(FriendlyByteBuf buf) {
+    public InfoForRaid(FriendlyByteBuf buf) {
         this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
     }
 
-    public InfoForStructure(String trigger, String s, BlockPos p, UUID u) {
-        this.s = trigger+","+s+","+p.asLong()+","+u.toString();
+    public InfoForRaid(String s, int i, BlockPos p, UUID u) {
+        this.s = s+","+i+","+p.asLong()+","+u.toString();
     }
 
-    public static void encode(InfoForStructure packet, FriendlyByteBuf buf) {
+    public static void encode(InfoForRaid packet, FriendlyByteBuf buf) {
         buf.writeCharSequence(packet.s, StandardCharsets.UTF_8);
     }
 
-    public static void handle(final InfoForStructure packet, Supplier<NetworkEvent.Context> context) {
+    public static void handle(final InfoForRaid packet, Supplier<NetworkEvent.Context> context) {
         NetworkEvent.Context ctx = context.get();
         ctx.enqueueWork(() -> {
         });
 
-        calculateFeatures.calculateStructAndSend(packet.getDataTriggerName(), packet.getDataStruct(), packet.getDataBlockPos(), packet.getDataUUID());
+        calculateFeatures.calculateRaidAndSend(packet.getDataTriggerName(), packet.getDataWave(), packet.getDataBlockPos(), packet.getDataUUID());
 
         ctx.setPacketHandled(true);
     }
@@ -40,8 +40,8 @@ public class InfoForStructure {
         }
         return stringBreaker(s)[0];
     }
-    public String getDataStruct() {
-        return stringBreaker(s)[1];
+    public int getDataWave() {
+        return Integer.parseInt(stringBreaker(s)[1]);
     }
     public BlockPos getDataBlockPos() {
         return BlockPos.of(Long.parseLong(stringBreaker(s)[2]));

@@ -6,6 +6,7 @@ public class fromServer {
     public static HashMap<String, Boolean> inStructure = new HashMap<>();
     public static HashMap<String, Boolean> inBiome = new HashMap<>();
     public static HashMap<String, Boolean> mob = new HashMap<>();
+    public static HashMap<String, Boolean> isRaid = new HashMap<>();
     public static String curStruct;
     public static String curBiome;
 
@@ -19,5 +20,8 @@ public class fromServer {
     }
     public static void clientSyncMob(String s,boolean b) {
         mob.put(s,b);
+    }
+    public static void clientSyncRaid(String s,boolean b) {
+        isRaid.put(s,b);
     }
 }

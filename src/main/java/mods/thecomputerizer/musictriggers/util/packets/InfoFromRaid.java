@@ -7,40 +7,36 @@ import net.minecraftforge.network.NetworkEvent;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Supplier;
 
-public class InfoFromBiome {
+public class InfoFromRaid {
     private String s;
 
-    public InfoFromBiome(FriendlyByteBuf buf) {
+    public InfoFromRaid(FriendlyByteBuf buf) {
         this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
     }
 
-    public InfoFromBiome(boolean b,String s,String d) {
-        this.s = b +","+s+","+d;
+    public InfoFromRaid(String s,boolean b) {
+        this.s = s+","+b;
     }
 
-    public static void encode(InfoFromBiome packet, FriendlyByteBuf buf) {
+    public static void encode(InfoFromRaid packet, FriendlyByteBuf buf) {
         buf.writeCharSequence(packet.s, StandardCharsets.UTF_8);
     }
 
-    public static void handle(final InfoFromBiome packet, Supplier<NetworkEvent.Context> context) {
+    public static void handle(final InfoFromRaid packet, Supplier<NetworkEvent.Context> context) {
         NetworkEvent.Context ctx = context.get();
         ctx.enqueueWork(() -> {
         });
 
-        fromServer.clientSyncBiome(packet.getDataBool(), packet.getDataTrigger(), packet.getDataCurBiome());
+        fromServer.clientSyncRaid(packet.getDataTriggerName(), packet.getDataBool());
 
         ctx.setPacketHandled(true);
     }
 
-    public String getDataCurBiome() {
-        return stringBreaker(s)[2];
-    }
-
-    public String getDataTrigger() {
-        return stringBreaker(s)[1];
+    public String getDataTriggerName() {
+        return stringBreaker(s)[0];
     }
     public boolean getDataBool() {
-        return Boolean.parseBoolean(stringBreaker(s)[0]);
+        return Boolean.parseBoolean(stringBreaker(s)[1]);
     }
 
     public static String[] stringBreaker(String s) {
