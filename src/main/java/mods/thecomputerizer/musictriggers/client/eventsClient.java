@@ -7,7 +7,6 @@ import mods.thecomputerizer.musictriggers.config.configDebug;
 import mods.thecomputerizer.musictriggers.config.configTitleCards;
 import mods.thecomputerizer.musictriggers.util.CustomTick;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.network.chat.TextComponent;
@@ -43,8 +42,6 @@ public class eventsClient {
     public static float startDelayCount = 0;
     public static Boolean activated = false;
     public static int timer = 0;
-    public static Player playerHurt;
-    public static Player playerSource;
     public static int GuiCounter = 0;
     private static int reloadCounter = 0;
     public static boolean ismoving;
@@ -52,6 +49,7 @@ public class eventsClient {
     public static int movingcounter = 0;
     public static String lastAdvancement;
     public static boolean advancement;
+    public static Player PVPTracker;
 
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
@@ -77,9 +75,15 @@ public class eventsClient {
 
     @SubscribeEvent
     public static void onDamage(LivingDamageEvent e) {
-        if (e.getEntity() instanceof Player && e.getSource().getEntity() instanceof Player) {
-            playerHurt = (Player) e.getEntity();
-            playerSource = (Player) e.getSource().getEntity();
+        if(e.getEntityLiving() instanceof Player && e.getSource().getEntity() instanceof Player) {
+            if (e.getEntityLiving() == MusicPicker.player) {
+                PVPTracker = (Player) e.getSource().getEntity();
+                MusicPicker.setPVP = true;
+            }
+            else if(e.getSource().getEntity() == MusicPicker.player) {
+                PVPTracker = (Player)e.getEntityLiving();
+                MusicPicker.setPVP = true;
+            }
         }
     }
 
@@ -145,7 +149,6 @@ public class eventsClient {
         }
     }
 
-    @SuppressWarnings("SuspiciousMethodCalls")
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void imageCards(RenderGameOverlayEvent.Post e) {

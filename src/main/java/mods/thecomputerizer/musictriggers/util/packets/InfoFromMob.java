@@ -14,8 +14,8 @@ public class InfoFromMob {
         this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
     }
 
-    public InfoFromMob(String s,boolean b) {
-        this.s = s+","+b;
+    public InfoFromMob(String s,boolean b,int i,boolean v) {
+        this.s = s+","+b+","+i+","+v;
     }
 
     public static void encode(InfoFromMob packet, FriendlyByteBuf buf) {
@@ -27,7 +27,7 @@ public class InfoFromMob {
         ctx.enqueueWork(() -> {
         });
 
-        fromServer.clientSyncMob(packet.getMobName(), packet.getPassBoolean());
+        fromServer.clientSyncMob(packet.getMobName(), packet.getPassBoolean(), packet.getVictoryID(), packet.getVictoryBoolean());
 
         ctx.setPacketHandled(true);
     }
@@ -40,6 +40,12 @@ public class InfoFromMob {
     }
     public Boolean getPassBoolean() {
         return Boolean.parseBoolean(stringBreaker(s)[1]);
+    }
+    public int getVictoryID() {
+        return Integer.parseInt(stringBreaker(s)[2]);
+    }
+    public Boolean getVictoryBoolean() {
+        return Boolean.parseBoolean(stringBreaker(s)[3]);
     }
 
 
