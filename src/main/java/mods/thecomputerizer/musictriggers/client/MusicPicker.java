@@ -345,7 +345,7 @@ public class MusicPicker {
             dynamicFade.put("raining", Integer.parseInt(SoundHandler.TriggerInfoMap.get("raining")[1]));
             dynamicDelay.put("raining", Integer.parseInt(SoundHandler.TriggerInfoMap.get("raining")[4]));
             triggerPersistence.put("raining", Integer.parseInt(SoundHandler.TriggerInfoMap.get("raining")[3]));
-            if(SoundHandler.TriggerSongMap.get("snowing")!=null) {
+            if(SoundHandler.TriggerSongMap.get("snowing")!=null && !configRegistry.clientSideOnly) {
                 PacketHandler.sendToServer(new InfoForSnow("snowing", roundedPos(player), player.getUUID()));
                 fromServer.inSnow.putIfAbsent("snowing", false);
                 if (fromServer.inSnow.get("snowing")) {
@@ -545,7 +545,7 @@ public class MusicPicker {
             victory.put(pvpVictoryID,true);
             eventsClient.PVPTracker = null;
         }
-        if(triggerPersistence.get("home")!=null) {
+        if(triggerPersistence.get("home")!=null && !configRegistry.clientSideOnly) {
             PacketHandler.sendToServer(new InfoForHome("home", roundedPos(player), player.getUUID(), SoundHandler.TriggerInfoMap.get("home")[11]));
             fromServer.inSnow.putIfAbsent("home", false);
             if (fromServer.inSnow.get("snowing")) {
@@ -656,7 +656,7 @@ public class MusicPicker {
                 }
             }
         }
-        if(SoundHandler.TriggerSongMap.get("mob")!=null) {
+        if(SoundHandler.TriggerSongMap.get("mob")!=null && !configRegistry.clientSideOnly) {
             for (Map.Entry<String, String> stringListEntry : SoundHandler.TriggerSongMap.get("mob").entrySet()) {
                 String structureSong = ((Map.Entry) stringListEntry).getKey().toString();
                 String identifier = configToml.triggerholder.get(structureSong.replaceAll("@","")).get("mob")[10];
