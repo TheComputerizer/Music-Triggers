@@ -1,10 +1,10 @@
 package mods.thecomputerizer.musictriggers.client;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
-import mods.thecomputerizer.musictriggers.util.CustomTick;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.config.configDebug;
 import mods.thecomputerizer.musictriggers.config.configTitleCards;
+import mods.thecomputerizer.musictriggers.util.CustomTick;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -47,8 +47,6 @@ public class eventsClient {
     public static float startDelayCount = 0;
     public static Boolean activated = false;
     public static long timer=0;
-    public static EntityPlayer playerHurt;
-    public static EntityPlayer playerSource;
     public static String GUIName;
     public static int GuiCounter = 0;
     private static int reloadCounter = 0;
@@ -57,12 +55,13 @@ public class eventsClient {
     public static int movingcounter = 0;
     public static String lastAdvancement;
     public static boolean advancement;
+    public static EntityPlayer PVPTracker;
 
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
 
         PositionedSoundRecord silenced = new PositionedSoundRecord(e.getSound().getSoundLocation(), SoundCategory.MUSIC, Float.MIN_VALUE, 1F, false, 1, ISound.AttenuationType.LINEAR, 0F, 0F, 0F);
-        if(e.getSound().getSoundLocation().getNamespace().matches(MusicTriggers.MODID) && ((e.getManager().isSoundPlaying(MusicPlayer.curMusic) && MusicPlayer.fromRecord==null) || MusicPlayer.playing)) {
+        if(e.getSound().getSoundLocation().getResourceDomain().matches(MusicTriggers.MODID) && ((e.getManager().isSoundPlaying(MusicPlayer.curMusic) && MusicPlayer.fromRecord==null) || MusicPlayer.playing)) {
             e.setResultSound(silenced);
         }
         for(String s : configDebug.blockedmods) {
@@ -81,9 +80,15 @@ public class eventsClient {
 
     @SubscribeEvent
     public static void onDamage(LivingDamageEvent e) {
-        if (e.getEntity() instanceof EntityPlayer && e.getSource().getTrueSource() instanceof EntityPlayer) {
-            playerHurt = (EntityPlayer) e.getEntity();
-            playerSource = (EntityPlayer) e.getSource().getTrueSource();
+        if(e.getEntityLiving() instanceof EntityPlayer && e.getSource().getTrueSource() instanceof EntityPlayer) {
+            if (e.getEntityLiving() == MusicPicker.player) {
+                PVPTracker = (EntityPlayer)e.getSource().getTrueSource();
+                MusicPicker.setPVP = true;
+            }
+            else if(e.getSource().getTrueSource() == MusicPicker.player) {
+                PVPTracker = (EntityPlayer)e.getEntityLiving();
+                MusicPicker.setPVP = true;
+            }
         }
     }
 

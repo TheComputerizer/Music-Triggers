@@ -11,7 +11,7 @@ public class MusicTriggersRecord extends ItemRecord {
     public MusicTriggersRecord(String name, SoundEvent soundIn) {
         super(name, soundIn);
         setRegistryName(name);
-        this.setTranslationKey(Objects.requireNonNull(this.getRegistryName()).toString());
+        this.setUnlocalizedName(Objects.requireNonNull(this.getRegistryName()).toString());
         setCreativeTab(CreativeTabs.MISC);
     }
 }

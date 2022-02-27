@@ -20,9 +20,9 @@ public class configToml {
     public static Map<String, Map<String, String[]>> triggerlinking = new HashMap<>();
 
     public static final String[] triggers = new String[]
-            {"menu","generic","difficulty","day","night","sunrise","sunset","light","underground","raining","storming","snowing",
-                    "lowhp","dead","creative","spectator","riding","pet","high","underwater","elytra","fishing","drowning","dimension","biome",
-                    "structure","mob","victory","gui","effect","zones","pvp","advancement"};
+            {"menu","generic","difficulty","time","light","underground","raining","storming","snowing","lowhp","dead",
+                    "creative","spectator","riding","pet","high","underwater","elytra","fishing","drowning","home",
+                    "dimension","biome", "structure","mob","victory","gui","effect","zones","pvp","advancement"};
     public static final String[] modtriggers = new String[]
             {"gamestage","bloodmoon","harvestmoon","fallingstars","rainintensity","tornado","hurricane","sandstorm","season"};
 
@@ -148,6 +148,21 @@ public class configToml {
                                             if (trigger.contains("victory_timeout")) {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[22] = trigger.getString("victory_timeout");
                                             }
+                                            if (trigger.contains("biome_category")) {
+                                                triggerholder.get("song" + songCounter).get(triggerID)[23] = trigger.getString("biome_category");
+                                            }
+                                            if (trigger.contains("rain_type")) {
+                                                triggerholder.get("song" + songCounter).get(triggerID)[24] = trigger.getString("rain_type");
+                                            }
+                                            if (trigger.contains("biome_temperature")) {
+                                                triggerholder.get("song" + songCounter).get(triggerID)[25] = trigger.getString("biome_temperature");
+                                            }
+                                            if (trigger.contains("biome_cold")) {
+                                                triggerholder.get("song" + songCounter).get(triggerID)[26] = trigger.getString("biome_cold");
+                                            }
+                                            if (trigger.contains("biome_cold")) {
+                                                triggerholder.get("song" + songCounter).get(triggerID)[27] = trigger.getString("biome_cold");
+                                            }
                                         } else {
                                             MusicTriggers.logger.warn("Could not find trigger with name " + triggerID);
                                         }
@@ -254,6 +269,21 @@ public class configToml {
                                         }
                                         if (trigger.contains("victory_timeout")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[22] = trigger.getString("victory_timeout");
+                                        }
+                                        if (trigger.contains("biome_category")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[23] = trigger.getString("biome_category");
+                                        }
+                                        if (trigger.contains("rain_type")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[24] = trigger.getString("rain_type");
+                                        }
+                                        if (trigger.contains("biome_temperature")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[25] = trigger.getString("biome_temperature");
+                                        }
+                                        if (trigger.contains("biome_cold")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[26] = trigger.getString("biome_cold");
+                                        }
+                                        if (trigger.contains("biome_cold")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[27] = trigger.getString("biome_cold");
                                         }
                                     } else {
                                         MusicTriggers.logger.warn("Could not find trigger with name " + triggerID);
@@ -425,6 +455,21 @@ public class configToml {
                                         if (trigger.contains("victory_timeout")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[22] = trigger.getString("victory_timeout");
                                         }
+                                        if (trigger.contains("biome_category")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[23] = trigger.getString("biome_category");
+                                        }
+                                        if (trigger.contains("rain_type")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[24] = trigger.getString("rain_type");
+                                        }
+                                        if (trigger.contains("biome_temperature")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[25] = trigger.getString("biome_temperature");
+                                        }
+                                        if (trigger.contains("biome_cold")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[26] = trigger.getString("biome_cold");
+                                        }
+                                        if (trigger.contains("biome_cold")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[27] = trigger.getString("biome_cold");
+                                        }
                                     } else {
                                         MusicTriggers.logger.warn("Could not find trigger with name " + triggerID);
                                     }
@@ -531,6 +576,21 @@ public class configToml {
                                     }
                                     if (trigger.contains("victory_timeout")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[22] = trigger.getString("victory_timeout");
+                                    }
+                                    if (trigger.contains("biome_category")) {
+                                        triggerholder.get("song" + songCounter).get(triggerID)[23] = trigger.getString("biome_category");
+                                    }
+                                    if (trigger.contains("rain_type")) {
+                                        triggerholder.get("song" + songCounter).get(triggerID)[24] = trigger.getString("rain_type");
+                                    }
+                                    if (trigger.contains("biome_temperature")) {
+                                        triggerholder.get("song" + songCounter).get(triggerID)[25] = trigger.getString("biome_temperature");
+                                    }
+                                    if (trigger.contains("biome_cold")) {
+                                        triggerholder.get("song" + songCounter).get(triggerID)[26] = trigger.getString("biome_cold");
+                                    }
+                                    if (trigger.contains("biome_cold")) {
+                                        triggerholder.get("song" + songCounter).get(triggerID)[27] = trigger.getString("biome_cold");
                                     }
                                 } else {
                                     MusicTriggers.logger.warn("Could not find trigger with name " + triggerID);

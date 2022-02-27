@@ -42,7 +42,7 @@ public class MusicTriggersItems {
     private static Item makeItem(final String name, final Supplier<Item> constructor, final Consumer<Item> config) {
         final Item item = constructor.get();
         config.accept(item);
-        item.setTranslationKey(MusicTriggers.MODID + "." + name);
+        item.setUnlocalizedName(MusicTriggers.MODID + "." + name);
         item.setRegistryName(MusicTriggers.MODID, name);
         item.setMaxStackSize(1);
         return item;
@@ -51,7 +51,7 @@ public class MusicTriggersItems {
     private static Item makeItemBlock(final Block constructor, final Consumer<Item> config) {
         final Item item = new ItemBlock(constructor);
         config.accept(item);
-        item.setTranslationKey(constructor.getTranslationKey());
+        item.setUnlocalizedName(constructor.getUnlocalizedName());
         item.setRegistryName(Objects.requireNonNull(constructor.getRegistryName()));
         item.setMaxStackSize(1);
         return item;

@@ -123,7 +123,7 @@ public class MusicPlayer {
                 if (MusicPicker.player != null) {
                     for (int x = MusicPicker.player.chunkCoordX - 3; x <= MusicPicker.player.chunkCoordX + 3; x++) {
                         for (int z = MusicPicker.player.chunkCoordZ - 3; z <= MusicPicker.player.chunkCoordZ + 3; z++) {
-                            Map<BlockPos, TileEntity> currentChunkTE = MusicPicker.world.getChunk(x, z).getTileEntityMap();
+                            Map<BlockPos, TileEntity> currentChunkTE = MusicPicker.world.getChunkFromChunkCoords(x, z).getTileEntityMap();
                             for (TileEntity te : currentChunkTE.values()) {
                                 if (te != null) {
                                     if (te instanceof BlockJukebox.TileEntityJukebox) {

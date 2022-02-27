@@ -1,0 +1,195 @@
+
+buildscript {
+    repositories {
+        maven { url = "http://maven.minecraftforge.net/" }
+        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:4.1.10'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:6.1.0'
+        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'org.spongepowered.mixin'
+apply plugin: 'maven-publish'
+
+version = '5.0-EX'
+group = 'mods.thecomputerizer.musictriggers'
+archivesBaseName = 'musictriggers'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+mixin {
+    add sourceSets.main, "musictriggers.refmap.json"
+
+    config "musictriggers.mixins.json"
+}
+
+minecraft {
+    mappings channel: 'snapshot', version: '20171003-1.12'
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+        }
+
+        server {
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+        }
+    }
+}
+
+repositories {
+    google()
+    mavenCentral()
+    maven {
+        url = 'https://www.cursemaven.com'
+        content {
+            includeGroup "curse.maven"
+        }
+    }
+    maven {
+        name = "Progwml6"
+        url = uri("https://dvs1.progwml6.com/files/maven/")
+    }
+    maven {
+        name = "ModMaven"
+        url = uri("https://modmaven.k-4u.nl")
+    }
+    maven {
+        url = uri("https://maven.mcmoddev.com")
+    }
+    maven {
+        url = uri("https://www.beatunes.com/repo/maven2/")
+    }
+    maven {
+        url = uri("https://m2.dv8tion.net/releases")
+    }
+    maven {
+        url "https://repo.spongepowered.org/repository/maven-public/"
+    }
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+configurations {
+    shade
+    implementation.extendsFrom(shade)
+}
+
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
+
+    implementation("com.googlecode.soundlibs:jlayer:1.0.1.4")
+    implementation("com.googlecode.soundlibs:mp3spi:1.9.5.4")
+    implementation("de.jarnbjo:j-ogg-all:1.0.0")
+    implementation("org.gagravarr:vorbis-java-core:0.8")
+    implementation("com.squareup.okhttp:okhttp:2.5.0")
+    implementation("javazoom.vorbisspi:vorbisspi:1.0.3")
+    implementation("org.slf4j:slf4j-log4j12:2.0.0-alpha6")
+    implementation("org.slf4j:slf4j-api:2.0.0-alpha6")
+    implementation("org.apache.httpcomponents:httpclient:4.5.13")
+    implementation("com.fasterxml.jackson.core:jackson-core:2.13.1")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.1")
+    implementation("org.jsoup:jsoup:1.14.3")
+    implementation("com.moandjiezana.toml:toml4j:0.7.2")
+    implementation("org.jcodec:jcodec:0.2.5")
+    implementation("org.jcodec:jcodec-javase:0.2.5")
+
+    shade ("com.googlecode.soundlibs:jlayer:1.0.1.4")
+    shade ("com.googlecode.soundlibs:mp3spi:1.9.5.4")
+    shade ("de.jarnbjo:j-ogg-all:1.0.0")
+    shade("org.gagravarr:vorbis-java-core:0.8")
+    shade ("com.squareup.okhttp:okhttp:2.5.0")
+    shade("javazoom.vorbisspi:vorbisspi:1.0.3")
+    shade ("com.moandjiezana.toml:toml4j:0.7.2")
+    shade ("org.jcodec:jcodec:0.2.5")
+    shade ("org.jcodec:jcodec-javase:0.2.5")
+
+    implementation("org.spongepowered:mixin:0.8") {
+        exclude module: "asm-commons"
+        exclude module: "asm-tree"
+        exclude module: "launchwrapper"
+        exclude module: "guava"
+        exclude module: "log4j-core"
+        exclude module: "gson"
+        exclude module: "commons-io"
+    }
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+
+    implementation fg.deobf("curse.maven:codechicken-lib-242818:2779848")
+    implementation fg.deobf("curse.maven:bloodmoon-226321:2537917")
+    implementation fg.deobf("curse.maven:nyx-349214:3161738")
+    implementation fg.deobf("curse.maven:weather-storms-tornadoes-237746:2596867")
+    implementation fg.deobf("curse.maven:atomicstrykers-infernal-mobs-227875:3431758")
+    implementation fg.deobf("curse.maven:dynamic-surroundings-238891:3497269")
+    implementation fg.deobf("curse.maven:coroutil-237749:2902920")
+    implementation fg.deobf("curse.maven:serene-seasons-291874:2799213")
+    implementation fg.deobf("curse.maven:jei-238222:3488178")
+    implementation fg.deobf("net.darkhax.gamestages:GameStages-1.12.2:2.0.98")
+}
+
+shadowJar {
+    configurations = [project.configurations.shade]
+    classifier ''
+    finalizedBy 'reobfShadowJar'
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier "sources"
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives tasks.shadowJar
+}
+
+reobf {
+    shadowJar {}
+}
+
+processResources {
+    filesMatching("mcmod.info") {
+        expand "version": project.version, "mcversion": "1.12.2"
+    }
+
+    inputs.property "version", project.version
+    inputs.property "mcversion", "1.12.2"
+}
+
+jar {
+    manifest {
+        attributes([
+            "Specification-Title": "musictriggers",
+            "Specification-Vendor": "musictriggerssareus",
+            "Specification-Version": "5.0-EX",
+            "Implementation-Title": project.name,
+            "Implementation-Version": "5.0-EX",
+            "Implementation-Vendor" :"musictriggers",
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}
+
+jar.finalizedBy('reobfJar')
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact jar
+        }
+    }
+    repositories {
+        maven {
+            url "file:///${project.projectDir}/mcmodsrepo"
+        }
+    }
+}

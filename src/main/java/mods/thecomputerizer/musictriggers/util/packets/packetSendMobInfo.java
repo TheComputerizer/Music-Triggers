@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
 import io.netty.buffer.ByteBuf;
-import mods.thecomputerizer.musictriggers.common.calculateFeature;
+import mods.thecomputerizer.musictriggers.util.calculateFeatures;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -17,10 +17,10 @@ public class packetSendMobInfo implements IMessageHandler<packetSendMobInfo.pack
         if(message.getDataUUID()==null) {
             return null;
         }
-        calculateFeature.calculateMobAndSend(message.getDataTriggerName(), message.getDataUUID(), message.getMobName(), message.getDetectionRange(),
+        calculateFeatures.calculateMobAndSend(message.getDataTriggerName(), message.getDataUUID(), message.getMobName(), message.getDetectionRange(),
                 message.getTargettingBoolean(), message.getHordeTargettingPercentage(), message.getHealth(),
                 message.getHealthTargettingPercentage(), message.getVictoryBoolean(), message.getVictoryID(), message.getInfernalID(),
-                message.getMobNumber(), message.getTime(), message.getTimeOut());
+                message.getMobNumber(), message.getTime(), message.getTimeOut(), message.getNBT());
         return null;
     }
 
@@ -29,9 +29,9 @@ public class packetSendMobInfo implements IMessageHandler<packetSendMobInfo.pack
 
         public packetSendMobInfoMessage() {}
 
-        public packetSendMobInfoMessage(String trigger, UUID u, String n, String r, String t, String tp, String h, String hp, String v, String vi, String i, String num, int time, int to)
+        public packetSendMobInfoMessage(String trigger, UUID u, String n, String r, String t, String tp, String h, String hp, String v, String vi, String i, String num, int time, int to, String nbt)
         {
-            this.s = trigger+","+u.toString()+","+n+","+r+","+t+","+tp+","+h+","+hp+","+v+","+vi+","+i+","+num+","+time+","+to;
+            this.s = trigger+","+u.toString()+","+n+","+r+","+t+","+tp+","+h+","+hp+","+v+","+vi+","+i+","+num+","+time+","+to+","+nbt;
         }
 
         @Override
@@ -89,6 +89,9 @@ public class packetSendMobInfo implements IMessageHandler<packetSendMobInfo.pack
         }
         public Integer getTimeOut() {
             return Integer.parseInt(stringBreaker(s)[13]);
+        }
+        public String getNBT() {
+            return stringBreaker(s)[14];
         }
 
         public static String[] stringBreaker(String s) {

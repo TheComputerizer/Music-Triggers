@@ -1,0 +1,10 @@
+{
+  "compatibilityLevel": "JAVA_8",
+  "package": "mods.thecomputerizer.musictriggers.mixin",
+  "refmap": "musictriggers.refmap.json",
+  "mixins": [
+    "MixinBossInfoServer"
+  ],
+  "client": [],
+  "server": []
+}

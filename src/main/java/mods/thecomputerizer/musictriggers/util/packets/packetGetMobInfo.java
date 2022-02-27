@@ -16,7 +16,8 @@ public class packetGetMobInfo  implements IMessageHandler<packetGetMobInfo.packe
         if(message.getMobName()==null) {
             return null;
         }
-        fromServer.clientSyncMob(message.getMobName(), message.getPassBoolean());
+        fromServer.clientSyncMob(message.getMobName(), message.getPassBoolean(),
+                message.getVictoryID(), message.getPassBoolean());
         return null;
     }
 
@@ -25,9 +26,9 @@ public class packetGetMobInfo  implements IMessageHandler<packetGetMobInfo.packe
 
         public packetGetMobInfoMessage() {}
 
-        public packetGetMobInfoMessage(String s, boolean b)
+        public packetGetMobInfoMessage(String s, boolean b, int i, boolean v)
         {
-            this.s = s+","+b;
+            this.s = s+","+b+","+i+","+v;
         }
 
         @Override
@@ -49,6 +50,13 @@ public class packetGetMobInfo  implements IMessageHandler<packetGetMobInfo.packe
         }
         public Boolean getPassBoolean() {
             return Boolean.parseBoolean(stringBreaker(s)[1]);
+        }
+
+        public int getVictoryID() {
+            return Integer.parseInt(stringBreaker(s)[2]);
+        }
+        public Boolean getVictoryBoolean() {
+            return Boolean.parseBoolean(stringBreaker(s)[3]);
         }
 
         public static String[] stringBreaker(String s) {
