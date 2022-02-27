@@ -28,6 +28,7 @@ import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fml.common.Optional;
 import org.orecruncher.dsurround.client.weather.Weather;
 import sereneseasons.api.season.ISeasonState;
@@ -599,7 +600,10 @@ public class MusicPicker {
             for (Map.Entry<String, String> stringListEntry : SoundHandler.TriggerSongMap.get("biome").entrySet()) {
                 String biomeSong = ((Map.Entry) stringListEntry).getKey().toString();
                 String identifier = configToml.triggerholder.get(biomeSong.replaceAll("@","")).get("biome")[10];
-                if (Objects.requireNonNull(world.getBiome(roundedPos(player)).getRegistryName()).toString().contains(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[9])) {
+                boolean pass = checkBiome(world.getBiome(roundedPos(player)), SoundHandler.TriggerInfoMap.get("biome-" + identifier)[9],
+                        SoundHandler.TriggerInfoMap.get("biome-" + identifier)[23], SoundHandler.TriggerInfoMap.get("biome-" + identifier)[24],
+                        Float.parseFloat(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[25]), Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[26]));
+                if (pass) {
                     if(!events.contains("biome-" + identifier)) {
                         events.add("biome-" + identifier);
                     }
@@ -675,7 +679,7 @@ public class MusicPicker {
                 }
             }
         }
-        if(SoundHandler.TriggerSongMap.get("mob")!=null) {
+        if(SoundHandler.TriggerSongMap.get("mob")!=null && !configRegistry.registry.clientSideOnly) {
             for (Map.Entry<String, String> stringListEntry : SoundHandler.TriggerSongMap.get("mob").entrySet()) {
                 String structureSong = ((Map.Entry) stringListEntry).getKey().toString();
                 String identifier = configToml.triggerholder.get(structureSong.replaceAll("@","")).get("mob")[10];
@@ -1275,6 +1279,32 @@ public class MusicPicker {
 
     public static double averageLight(BlockPos p, boolean b) {
         return b ? world.getLight(p, true) : world.getLightFor(EnumSkyBlock.BLOCK, p);
+    }
+
+    public static boolean checkBiome(Biome b, String name, String category, String rainType, float temperature, boolean cold) {
+        if(Objects.requireNonNull(b.getRegistryName()).toString().contains(name) || name.matches("minecraft")) {
+            if(b.getTempCategory().toString().contains(category) || category.matches("nope")) {
+                if(rainType.matches("nope")) {
+                    float bt = b.getDefaultTemperature();
+                    if(temperature==-111) return true;
+                    else if(bt>=temperature && !cold) return true;
+                    else return bt <= temperature && cold;
+                }
+                else if(b.canRain() && rainType.matches("rain")) {
+                    float bt = b.getDefaultTemperature();
+                    if(temperature==-111) return true;
+                    else if(bt>=temperature && !cold) return true;
+                    else return bt <= temperature && cold;
+                }
+                else if(b.isSnowyBiome() && rainType.matches("snow")) {
+                    float bt = b.getDefaultTemperature();
+                    if(temperature==-111) return true;
+                    else if(bt>=temperature && !cold) return true;
+                    else return bt <= temperature && cold;
+                }
+            }
+        }
+        return false;
     }
 
     public static String[] stringBreaker(String s, String regex) {
