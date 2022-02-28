@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "musictriggers",
+  "version": "${version}",
+
+  "name": "Music Triggers",
+  "description": "Plays customized music based on in game triggers",
+  "authors": [
+    "The_Computerizer"
+  ],
+  "contact": {
+    "homepage": "https://www.curseforge.com/minecraft/mc-mods/music-triggers"
+  },
+
+  "license": "CC0-1.0",
+  "icon": "assets/musictriggers/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "mods.thecomputerizer.musictriggers.MusicTriggersCommon"
+    ]
+  },
+  "mixins": [
+    "musictriggers.mixins.json"
+  ],
+
+  "depends": {
+    "fabricloader": ">=0.11.3",
+    "fabric": "*",
+    "minecraft": "1.18.x",
+    "java": ">=17"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
+}

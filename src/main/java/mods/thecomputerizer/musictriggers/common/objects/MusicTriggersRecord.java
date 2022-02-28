@@ -1,24 +1,32 @@
 package mods.thecomputerizer.musictriggers.common.objects;
 
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.TranslatableComponent;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.RecordItem;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.client.item.TooltipContext;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.MusicDiscItem;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Formatting;
+import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 
-public class MusicTriggersRecord extends RecordItem {
+import java.util.List;
 
-    public MusicTriggersRecord(int i, SoundEvent soundIn, Item.Properties p) {
-        super(i, soundIn, p.stacksTo(1).tab(CreativeModeTab.TAB_MISC));
+public class MusicTriggersRecord extends MusicDiscItem {
+
+    public MusicTriggersRecord(int i, SoundEvent soundIn, Item.Settings s) {
+        super(i, soundIn, s.maxCount(1).group(ItemGroup.MISC));
     }
 
-    @OnlyIn(Dist.CLIENT)
     @Override
-    public @NotNull MutableComponent getDisplayName() {
-        return new TranslatableComponent(this.getDescriptionId() + ".desc");
+    public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+        tooltip.add(this.getDescription().formatted(Formatting.GRAY));
+    }
+
+    public MutableText getDescription() {
+        return new TranslatableText(this.getTranslationKey() + ".desc");
     }
 }

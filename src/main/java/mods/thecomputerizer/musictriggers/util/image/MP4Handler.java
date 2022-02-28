@@ -28,6 +28,6 @@ public class MP4Handler {
                 grab = grab.seekToFramePrecise(i);
             }
         }
-        FCW.close();
+        FCW.close();//
     }
 }

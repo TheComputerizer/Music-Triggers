@@ -1,15 +1,15 @@
 package mods.thecomputerizer.musictriggers.common;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
 import mods.thecomputerizer.musictriggers.common.objects.BlankRecord;
 import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
-import mods.thecomputerizer.musictriggers.configRegistry;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Rarity;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
+import mods.thecomputerizer.musictriggers.config.configRegistry;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.Rarity;
+import net.minecraft.util.registry.Registry;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,23 +22,22 @@ import java.util.Objects;
 
 
 public class MusicTriggersItems {
-    public static final MusicTriggersItems INSTANCE = new MusicTriggersItems();
-    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MusicTriggers.MODID);
 
-    public void init() {
-        SoundHandler.registerSounds();
+    public static final Identifier BLANK_RECORD_ID = new Identifier(MusicTriggersCommon.MODID,"blank_record");
+    public static final Item BLANK_RECORD = new BlankRecord(new Item.Settings().rarity(Rarity.EPIC).fireproof().group(ItemGroup.MISC));
+    public static void init() {
+        Registry.register(Registry.ITEM,BLANK_RECORD_ID,BLANK_RECORD);
         if(configRegistry.registerDiscs) {
             for (SoundEvent s : SoundHandler.allSoundEvents) {
-                String name = Objects.requireNonNull(s.getRegistryName()).toString().replaceAll("musictriggers:", "");
-                ITEMS.register(name, () -> new MusicTriggersRecord(15, s, new Item.Properties().rarity(Rarity.EPIC).fireResistant()));
-                buildModel(name);
+                String name = Objects.requireNonNull(s.getId()).toString().replaceAll("musictriggers:", "");
+                Registry.register(Registry.ITEM, s.getId(), new MusicTriggersRecord(15, s, new Item.Settings().rarity(Rarity.EPIC).fireproof().group(ItemGroup.MISC)));
+                buildModel(name,SoundHandler.allSoundEventsWithTriggers.get(s));
             }
-            ITEMS.register("blank_record", () -> new BlankRecord(new Item.Properties().rarity(Rarity.EPIC).fireResistant().stacksTo(1).tab(CreativeModeTab.TAB_MISC)));
         }
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public static void buildModel(String name) {
+    public static void buildModel(String name, String trigger) {
         try {
             File modelsFolder = new File("config/MusicTriggers/songs/assets/musictriggers", "models");
             if (!modelsFolder.exists()) {
@@ -56,7 +55,7 @@ public class MusicTriggersItems {
             fb.add("{");
             fb.add("\t\"parent\": \"item/generated\",");
             fb.add("\t\"textures\": {");
-            fb.add("\t\t\"layer0\": \"musictriggers:item/record\"");
+            fb.add("\t\t\"layer0\": \"musictriggers:item/record_"+trigger+"\"");
             fb.add("\t}");
             fb.add("}");
             Files.write(Paths.get(model.getPath()), fb, StandardCharsets.UTF_8);

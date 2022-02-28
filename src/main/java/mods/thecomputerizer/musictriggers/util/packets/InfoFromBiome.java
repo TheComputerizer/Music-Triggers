@@ -1,45 +1,42 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
+import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
 import mods.thecomputerizer.musictriggers.client.fromServer;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.util.Identifier;
 
 import java.nio.charset.StandardCharsets;
-import java.util.function.Supplier;
 
 public class InfoFromBiome {
-    private String s;
+    public static final Identifier id = new Identifier(MusicTriggersCommon.MODID, "infofrombiome");
 
-    public InfoFromBiome(FriendlyByteBuf buf) {
-        this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
+    public static String decode(PacketByteBuf buf) {
+        return ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
     }
 
-    public InfoFromBiome(boolean b,String s,String d) {
-        this.s = b +","+s+","+d;
+    public static PacketByteBuf encode(boolean b,String s,String d) {
+        String send = b +","+s+","+d;
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeCharSequence(send, StandardCharsets.UTF_8);
+        return buf;
     }
 
-    public static void encode(InfoFromBiome packet, FriendlyByteBuf buf) {
-        buf.writeCharSequence(packet.s, StandardCharsets.UTF_8);
-    }
-
-    public static void handle(final InfoFromBiome packet, Supplier<NetworkEvent.Context> context) {
-        NetworkEvent.Context ctx = context.get();
-        ctx.enqueueWork(() -> {
+    public static void register() {
+        ClientPlayNetworking.registerGlobalReceiver(id,(client, handler, buf, responseSender) -> {
+            String s = decode(buf);
+            fromServer.clientSyncBiome(getDataBool(s), getDataTrigger(s), getDataCurBiome(s));
         });
-
-        fromServer.clientSyncBiome(packet.getDataBool(), packet.getDataStruct(), packet.getDataCurStruct());
-
-        ctx.setPacketHandled(true);
     }
 
-    public String getDataCurStruct() {
+    public static String getDataCurBiome(String s) {
         return stringBreaker(s)[2];
     }
-
-    public String getDataStruct() {
+    public static String getDataTrigger(String s) {
         return stringBreaker(s)[1];
     }
-    public boolean getDataBool() {
+    public static boolean getDataBool(String s) {
         return Boolean.parseBoolean(stringBreaker(s)[0]);
     }
 

@@ -1,15 +1,12 @@
 package mods.thecomputerizer.musictriggers.common;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.configRegistry;
-import net.minecraft.client.resources.sounds.SimpleSoundInstance;
-import net.minecraft.client.resources.sounds.SoundInstance;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.loading.FMLEnvironment;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
+import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
+import mods.thecomputerizer.musictriggers.config.configRegistry;
+import net.minecraft.client.sound.PositionedSoundInstance;
+import net.minecraft.client.sound.SoundInstance;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.registry.Registry;
 
 import java.util.HashMap;
 import java.util.List;
@@ -17,34 +14,29 @@ import java.util.Objects;
 
 public class ModSounds {
 
-    public static final ModSounds INSTANCE = new ModSounds();
-    public static final DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, MusicTriggers.MODID);
+    public static HashMap<String, SoundInstance> playableSounds = new HashMap<>();
 
-    public static HashMap<String,SoundInstance> playableSounds = new HashMap<>();
-
-    public void init(){
+    public static void init(){
         List<SoundEvent> sounds = SoundHandler.allSoundEvents;
         for(SoundEvent s: sounds) {
-            String songName = Objects.requireNonNull(s.getRegistryName()).toString().replaceAll("musictriggers:","");
+            String songName = Objects.requireNonNull(s.getId()).toString().replaceAll("musictriggers:","");
+            Identifier soundID = new Identifier(MusicTriggersCommon.MODID + ":music." + songName);
+            SoundEvent soundEvent = new SoundEvent(soundID);
             if(configRegistry.registerDiscs) {
-                SOUNDS.register(songName, () -> new SoundEvent(new ResourceLocation(MusicTriggers.MODID + ":music." + songName)));
-                MusicTriggers.logger.info(songName+" is being initialized at resource location "+new ResourceLocation(MusicTriggers.MODID+":music." + songName));
+                Registry.register(Registry.SOUND_EVENT, soundID, soundEvent);
+                MusicTriggersCommon.logger.info(songName+" is being initialized at resource location "+new Identifier(MusicTriggersCommon.MODID+":music." + songName));
             }
-            if(FMLEnvironment.dist == Dist.CLIENT) {
-                SoundInstance i = SimpleSoundInstance.forMusic(new SoundEvent(new ResourceLocation(MusicTriggers.MODID + ":music." + songName)));
-                playableSounds.put("music." + songName, i);
-            }
+            SoundInstance i = PositionedSoundInstance.music(soundEvent);
+            playableSounds.put("music." + songName, i);
         }
     }
     public static void reload() {
         playableSounds = new HashMap<>();
         List<SoundEvent> sounds = SoundHandler.allSoundEvents;
         for(SoundEvent s: sounds) {
-            String songName = Objects.requireNonNull(s.getRegistryName()).toString().replaceAll("musictriggers:", "");
-            if(FMLEnvironment.dist == Dist.CLIENT) {
-                SoundInstance i = SimpleSoundInstance.forMusic(new SoundEvent(new ResourceLocation(MusicTriggers.MODID + ":music." + songName)));
-                playableSounds.put("music." + songName, i);
-            }
+            String songName = Objects.requireNonNull(s.getId()).toString().replaceAll("musictriggers:", "");
+            SoundInstance i = PositionedSoundInstance.music(new SoundEvent(new Identifier(MusicTriggersCommon.MODID + ":music." + songName)));
+            playableSounds.put("music." + songName, i);
         }
     }
 }

@@ -1,47 +1,45 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+
+import io.netty.buffer.ByteBuf;
+import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.util.Identifier;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.UUID;
-import java.util.function.Supplier;
 
 public class CurSong {
+
+    public static final Identifier id = new Identifier(MusicTriggersCommon.MODID, "cursong");
     public static HashMap<UUID,String> curSong = new HashMap<>();
-    private String s;
 
-    public CurSong(FriendlyByteBuf buf) {
-        this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
+    public static String decode(PacketByteBuf buf) {
+        return ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
     }
 
-    public CurSong(String s, UUID u) {
-        this.s = s+","+u.toString();
+    public static PacketByteBuf encode(String s, UUID u) {
+        String send = s+","+u.toString();
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeCharSequence(send, StandardCharsets.UTF_8);
+        return buf;
     }
 
-    public static void encode(CurSong packet, FriendlyByteBuf buf) {
-        buf.writeCharSequence(packet.s, StandardCharsets.UTF_8);
-    }
-
-    public static void handle(final CurSong packet, Supplier<NetworkEvent.Context> context) {
-        NetworkEvent.Context ctx = context.get();
-        ctx.enqueueWork(() -> {
+    public static void register() {
+        ServerPlayNetworking.registerGlobalReceiver(id,(server, player, handler, buf, sender) -> {
+            String s = decode(buf);
+            curSong.put(getDataUUID(s),getSongName(s));
         });
-
-        curSong.put(packet.getDataUUID(),packet.getSongName());
-
-        ctx.setPacketHandled(true);
     }
 
-    public String getSongName() {
-        if(s==null) {
-            return null;
-        }
+    public static String getSongName(String s) {
         return stringBreaker(s)[0];
     }
 
-    public UUID getDataUUID() {
+    public static UUID getDataUUID(String s) {
         return UUID.fromString(stringBreaker(s)[1]);
     }
 

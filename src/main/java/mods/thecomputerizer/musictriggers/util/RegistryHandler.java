@@ -1,45 +1,37 @@
 package mods.thecomputerizer.musictriggers.util;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
 import mods.thecomputerizer.musictriggers.common.ModSounds;
 import mods.thecomputerizer.musictriggers.common.MusicTriggersBlocks;
 import mods.thecomputerizer.musictriggers.common.MusicTriggersItems;
-import mods.thecomputerizer.musictriggers.configRegistry;
-import net.minecraftforge.eventbus.api.IEventBus;
+import mods.thecomputerizer.musictriggers.common.SoundHandler;
+import mods.thecomputerizer.musictriggers.config.configRegistry;
 
 
 public final class RegistryHandler {
 
-    public static void registerItems(IEventBus eventBus) {
-        MusicTriggersItems.INSTANCE.init();
-        if(configRegistry.registerDiscs) {
-            MusicTriggers.logger.info("Loading Items from Music Triggers");
-            MusicTriggersBlocks.INSTANCE.initItem();
-            MusicTriggersItems.ITEMS.register(eventBus);
-            MusicTriggersBlocks.BLOCK_ITEMS.register(eventBus);
-        }
+    public static void registerItems() {
+        MusicTriggersCommon.logger.info("Loading Items from Music Triggers");
+        MusicTriggersItems.init();
     }
 
-    public static void registerSoundEvents(IEventBus eventBus)
+    public static void registerSoundEvents()
     {
-        MusicTriggers.logger.info("Loading Sounds from Music Triggers");
-        ModSounds.INSTANCE.init();
-        if(configRegistry.registerDiscs) {
-            ModSounds.SOUNDS.register(eventBus);
-        }
+        MusicTriggersCommon.logger.info("Loading Sounds from Music Triggers");
+        ModSounds.init();
     }
 
-    public static void registerBlocks(IEventBus eventBus) {
-        MusicTriggers.logger.info("Loading Blocks from Music Triggers");
-        MusicTriggersBlocks.INSTANCE.initBlock();
-        MusicTriggersBlocks.BLOCKS.register(eventBus);
+    public static void registerBlocks() {
+        MusicTriggersCommon.logger.info("Loading Blocks from Music Triggers");
+        MusicTriggersBlocks.initBlocks();
     }
 
-    public static void init(IEventBus eventBus) {
+    public static void init() {
+        SoundHandler.registerSounds();
         if(configRegistry.registerDiscs) {
-            registerBlocks(eventBus);
+            registerBlocks();
+            registerItems();
+            registerSoundEvents();
         }
-        registerItems(eventBus);
-        registerSoundEvents(eventBus);
     }
 }
