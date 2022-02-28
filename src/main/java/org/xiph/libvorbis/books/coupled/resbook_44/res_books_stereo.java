@@ -31,7 +31,7 @@ public class res_books_stereo {
 		vorbis_info_residue0 _residue_44_mid = new vorbis_info_residue0( 0,-1, -1, 10,-1, new int[]{0}, new int[]{-1},
 																		new float[] {  .5f,  1.5f,  1.5f,  2.5f,  2.5f,  4.5f,  8.5f,  16.5f, 32.5f },
 																		new float[] {  .5f,   .5f, 999.f,   .5f,  999.f, 4.5f,  8.5f,  16.5f, 32.5f } );
-
+//
 		vorbis_info_residue0 _residue_44_high = new vorbis_info_residue0( 0,-1, -1, 10,-1, new int[]{0}, new int[]{-1},
 																		new float[] {  .5f,  1.5f,  2.5f,  4.5f,  8.5f, 16.5f, 32.5f, 71.5f, 157.5f },
 																		new float[] {  .5f,  1.5f,  2.5f,  3.5f,  4.5f,  8.5f, 16.5f, 71.5f, 157.5f } );

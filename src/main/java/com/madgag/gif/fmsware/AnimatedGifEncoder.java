@@ -29,7 +29,7 @@ import java.awt.image.*;
 public class AnimatedGifEncoder {
 
 	protected int width; // image size
-	protected int height;
+	protected int height;//
 	protected Color transparent = null; // transparent color if given
 	protected boolean transparentExactMatch = false; // transparent color will be found by looking for the closest color
 													 // or for the exact color if transparentExactMatch == true
