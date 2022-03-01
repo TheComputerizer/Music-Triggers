@@ -1,14 +1,14 @@
-/********************************************************************
- *                                                                  *
- * THIS FILE IS PART OF THE OggVorbis SOFTWARE CODEC SOURCE CODE.   *
- * USE, DISTRIBUTION AND REPRODUCTION OF THIS LIBRARY SOURCE IS     *
- * GOVERNED BY A BSD-STYLE SOURCE LICENSE INCLUDED WITH THIS SOURCE *
- * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
- *                                                                  *
- * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2002             *
- * by the Xiph.Org Foundation http://www.xiph.org/                  *
- *                                                                  *
- ********************************************************************/
+/******************************************************************
+
+ THIS FILE IS PART OF THE OggVorbis SOFTWARE CODEC SOURCE CODE.   *
+ USE, DISTRIBUTION AND REPRODUCTION OF THIS LIBRARY SOURCE IS     *
+ GOVERNED BY A BSD-STYLE SOURCE LICENSE INCLUDED WITH THIS SOURCE *
+ IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
+
+ THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2002             *
+ by the Xiph.Org Foundation http://www.xiph.org/                  *
+
+ */
 
 package mods.thecomputerizer.musictriggers.util.audio;
 
@@ -37,9 +37,6 @@ public class VorbisEncoder {
 
     static int READ = 1024;
     static byte[] readbuffer = new byte[READ*4+44];
-
-    static int page_count = 0;
-    static int block_count = 0;
 
     /**
      * VorbisEncoder.java
@@ -112,8 +109,6 @@ public class VorbisEncoder {
                 int i;
                 int bytes = wav.read( readbuffer, 0, READ*4 ); // stereo hardwired here
 
-                int break_count = 0;
-
                 if ( bytes==0 ) {
 
                     // end of file.  this can be done implicitly in the mainline,
@@ -159,7 +154,6 @@ public class VorbisEncoder {
                         while ( !eos ) {
 
                             if ( !os.ogg_stream_pageout( og ) ) {
-                                break_count++;
                                 break;
                             }
 
