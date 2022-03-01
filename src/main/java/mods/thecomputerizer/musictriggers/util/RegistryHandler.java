@@ -5,9 +5,7 @@ import mods.thecomputerizer.musictriggers.common.ModSounds;
 import mods.thecomputerizer.musictriggers.common.MusicTriggersBlocks;
 import mods.thecomputerizer.musictriggers.common.MusicTriggersItems;
 import mods.thecomputerizer.musictriggers.config.configRegistry;
-import mods.thecomputerizer.musictriggers.util.packets.packet;
-import mods.thecomputerizer.musictriggers.util.packets.packetCurSong;
-import mods.thecomputerizer.musictriggers.util.packets.packetToClient;
+import mods.thecomputerizer.musictriggers.util.packets.*;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
@@ -83,5 +81,7 @@ public final class RegistryHandler {
         network.registerMessage(packetToClient.class, packetToClient.packetToClientMessage.class, 0, Side.CLIENT);
         network.registerMessage(packet.class, packet.packetMessage.class, 1, Side.SERVER);
         network.registerMessage(packetCurSong.class, packetCurSong.packetCurSongMessage.class, 2, Side.SERVER);
+        network.registerMessage(packetSendMobInfo.class, packetSendMobInfo.packetSendMobInfoMessage.class, 3, Side.SERVER);
+        network.registerMessage(packetGetMobInfo.class, packetGetMobInfo.packetGetMobInfoMessage.class, 4, Side.CLIENT);
     }
 }
