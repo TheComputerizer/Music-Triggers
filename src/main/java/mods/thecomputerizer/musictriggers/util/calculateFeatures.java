@@ -140,7 +140,7 @@ public class calculateFeatures {
         List<LivingEntity> mobTempList = world.getEntitiesOfClass(LivingEntity.class, new AxisAlignedBB(player.getX() - detectionrange, player.getY() - (detectionrange / 2f), player.getZ() - detectionrange, player.getX() + detectionrange, player.getY() + (detectionrange / 2f), player.getZ() + detectionrange));
         List<MobEntity> mobList = new ArrayList<>();
         for (LivingEntity e : mobTempList) {
-            if (e instanceof MobEntity && (e.serializeNBT().contains(nbtKey) || nbtKey.matches(""))) {
+            if (e instanceof MobEntity && (e.serializeNBT().contains(nbtKey) || nbtKey.matches("_"))) {
                 mobList.add((MobEntity) e);
             }
         }
@@ -231,7 +231,7 @@ public class calculateFeatures {
             int mobCounter = 0;
             List<MobEntity> mobListSpecific = new ArrayList<>();
             for (LivingEntity e : mobTempList) {
-                if ((e.getDisplayName().getString().matches(mobname) || Objects.requireNonNull(e.getType().getRegistryName()).toString().matches(mobname)) && (e.serializeNBT().contains(nbtKey) || nbtKey.matches(""))) {
+                if ((e.getDisplayName().getString().matches(mobname) || Objects.requireNonNull(e.getType().getRegistryName()).toString().matches(mobname)) && (e.serializeNBT().contains(nbtKey) || nbtKey.matches("_"))) {
                     if(e instanceof MobEntity) {
                         mobCounter++;
                         mobListSpecific.add((MobEntity) e);

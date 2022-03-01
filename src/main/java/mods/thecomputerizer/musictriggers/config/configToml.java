@@ -58,9 +58,9 @@ public class configToml {
                                             songholder.put("song" + songCounter, s);
                                             triggerholder.putIfAbsent("song" + songCounter, new HashMap<>());
                                             triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
-                                                    "minecraft", "", "16", "false", "100", "100", "100",
+                                                    "minecraft", "_", "16", "false", "100", "100", "100",
                                                     "false", "0", "minecraft", "true", "0", "0", "nope", "nope",
-                                                    "-111", "false", "nope",""});
+                                                    "-111", "false", "nope","_"});
                                             if (trigger.contains("priority")) {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                             }
@@ -181,9 +181,9 @@ public class configToml {
                                         songholder.put("song" + songCounter, s);
                                         triggerholder.putIfAbsent("song" + songCounter, new HashMap<>());
                                         triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
-                                                "minecraft", "", "16", "false", "100", "100", "100",
+                                                "minecraft", "_", "16", "false", "100", "100", "100",
                                                 "false", "0", "minecraft", "true", "0", "0", "nope", "nope",
-                                                "-111", "false", "nope",""});
+                                                "-111", "false", "nope","_"});
                                         if (trigger.contains("priority")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                         }
@@ -367,9 +367,9 @@ public class configToml {
                                         songholder.put("song" + songCounter, s);
                                         triggerholder.putIfAbsent("song" + songCounter, new HashMap<>());
                                         triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
-                                                "minecraft", "", "16", "false", "100", "100", "100",
+                                                "minecraft", "_", "16", "false", "100", "100", "100",
                                                 "false", "0", "minecraft", "true", "0", "0", "nope", "nope",
-                                                "-111", "false", "nope",""});
+                                                "-111", "false", "nope","_"});
                                         if (trigger.contains("priority")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                         }
@@ -490,9 +490,9 @@ public class configToml {
                                     songholder.put("song" + songCounter, s);
                                     triggerholder.putIfAbsent("song" + songCounter, new HashMap<>());
                                     triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
-                                            "minecraft", "", "16", "false", "100", "100", "100",
+                                            "minecraft", "_", "16", "false", "100", "100", "100",
                                             "false", "0", "minecraft", "true", "0", "0", "nope", "nope",
-                                            "-111", "false", "nope",""});
+                                            "-111", "false", "nope","_"});
                                     if (trigger.contains("priority")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                     }
