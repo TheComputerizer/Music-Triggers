@@ -29,6 +29,14 @@ public class PacketHandler {
         HANDLER.registerMessage(disc++, InfoForBiome.class, InfoForBiome::encode, InfoForBiome::new, InfoForBiome::handle);
         HANDLER.registerMessage(disc++, InfoFromBiome.class, InfoFromBiome::encode, InfoFromBiome::new, InfoFromBiome::handle);
         HANDLER.registerMessage(disc++, CurSong.class, CurSong::encode, CurSong::new, CurSong::handle);
+        HANDLER.registerMessage(disc++, InfoForMob.class, InfoForMob::encode, InfoForMob::new, InfoForMob::handle);
+        HANDLER.registerMessage(disc++, InfoFromMob.class, InfoFromMob::encode, InfoFromMob::new, InfoFromMob::handle);
+        HANDLER.registerMessage(disc++, InfoForRaid.class, InfoForRaid::encode, InfoForRaid::new, InfoForRaid::handle);
+        HANDLER.registerMessage(disc++, InfoFromRaid.class, InfoFromRaid::encode, InfoFromRaid::new, InfoFromRaid::handle);
+        HANDLER.registerMessage(disc++, InfoForHome.class, InfoForHome::encode, InfoForHome::new, InfoForHome::handle);
+        HANDLER.registerMessage(disc++, InfoFromHome.class, InfoFromHome::encode, InfoFromHome::new, InfoFromHome::handle);
+        HANDLER.registerMessage(disc++, InfoForSnow.class, InfoForSnow::encode, InfoForSnow::new, InfoForSnow::handle);
+        HANDLER.registerMessage(disc++, InfoFromSnow.class, InfoFromSnow::encode, InfoFromSnow::new, InfoFromSnow::handle);
     }
 
     public static void sendTo(Object message, ServerPlayer player) {
