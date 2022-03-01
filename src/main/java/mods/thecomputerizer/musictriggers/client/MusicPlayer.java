@@ -195,10 +195,10 @@ public class MusicPlayer {
                                             }
                                         }
                                     } else {
-                                        musicLinker.get(checkThis).setVolume(Float.MIN_VALUE);
+                                        musicLinker.get(checkThis).setVolume(Float.MIN_VALUE*1000);
                                         assert curplaying != null;
                                         if (curplaying.get(musicLinker.get(checkThis)) != null) {
-                                            curplaying.get(musicLinker.get(checkThis)).execute(sound -> sound.setVolume(Float.MIN_VALUE));
+                                            curplaying.get(musicLinker.get(checkThis)).execute(sound -> sound.setVolume(Float.MIN_VALUE*1000));
                                         }
                                     }
                                 }
