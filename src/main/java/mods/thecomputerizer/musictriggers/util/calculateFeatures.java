@@ -145,7 +145,7 @@ public class calculateFeatures {
             for (Iterator<MobEntity> it = mobList.iterator(); it.hasNext(); ) {
                 MobEntity e = it.next();
                 boolean isMonster = true;
-                if (e instanceof AnimalEntity || !(e.writeNbt(new NbtCompound()).contains(nbtKey) || nbtKey.matches(""))) {
+                if (e instanceof AnimalEntity || !(e.writeNbt(new NbtCompound()).contains(nbtKey) || nbtKey.matches("_"))) {
                     it.remove();
                     isMonster = false;
                 }
@@ -219,7 +219,7 @@ public class calculateFeatures {
             List<MobEntity> mobListSpecific = new ArrayList<>();
             for (LivingEntity e : mobTempList) {
                 if (e.getDisplayName().getString().matches(mobname) || Objects.requireNonNull(e.getType().getName()).asString().matches(mobname)) {
-                    if(e instanceof  MobEntity && (e.writeNbt(new NbtCompound()).contains(nbtKey) || nbtKey.matches(""))) {
+                    if(e instanceof  MobEntity && (e.writeNbt(new NbtCompound()).contains(nbtKey) || nbtKey.matches("_"))) {
                         mobCounter++;
                         mobListSpecific.add((MobEntity) e);
                     }
