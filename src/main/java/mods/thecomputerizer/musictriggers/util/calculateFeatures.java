@@ -138,7 +138,7 @@ public class calculateFeatures {
         List<LivingEntity> mobTempList = world.getEntitiesOfClass(LivingEntity.class, new AABB(player.getX() - detectionrange, player.getY() - (detectionrange / 2f), player.getZ() - detectionrange, player.getX() + detectionrange, player.getY() + (detectionrange / 2f), player.getZ() + detectionrange));
         List<Mob> mobList = new ArrayList<>();
         for (LivingEntity e : mobTempList) {
-            if (e instanceof Mob) {
+            if (e instanceof Mob && (e.serializeNBT().contains(nbtKey) || nbtKey.matches("_"))) {
                 mobList.add((Mob) e);
             }
         }
@@ -152,7 +152,7 @@ public class calculateFeatures {
             for (Iterator<Mob> it = mobList.iterator(); it.hasNext(); ) {
                 Mob e = it.next();
                 boolean isMonster = true;
-                if (e instanceof Animal  || !(e.serializeNBT().contains(nbtKey) || nbtKey.matches(""))) {
+                if (e instanceof Animal) {
                     it.remove();
                     isMonster = false;
                 }
@@ -230,7 +230,7 @@ public class calculateFeatures {
             List<Mob> mobListSpecific = new ArrayList<>();
             for (LivingEntity e : mobTempList) {
                 if (e.getDisplayName().getString().matches(mobname) || Objects.requireNonNull(e.getType().getRegistryName()).toString().matches(mobname)) {
-                    if(e instanceof  Mob && (e.serializeNBT().contains(nbtKey) || nbtKey.matches(""))) {
+                    if(e instanceof  Mob && (e.serializeNBT().contains(nbtKey) || nbtKey.matches("_"))) {
                         mobCounter++;
                         mobListSpecific.add((Mob) e);
                     }
