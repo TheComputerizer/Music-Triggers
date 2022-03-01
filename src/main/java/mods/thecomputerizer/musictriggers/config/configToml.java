@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.config;
 import com.moandjiezana.toml.Toml;
 import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
 import mods.thecomputerizer.musictriggers.util.json;
+import net.fabricmc.loader.impl.FabricLoaderImpl;
 
 import java.io.File;
 import java.util.Arrays;
@@ -34,7 +35,8 @@ public class configToml {
     //pitch,one time,must finish,chance
 
     public static void parse() {
-        File file = new File("config/MusicTriggers/musictriggers.toml");
+        MusicTriggersCommon.logger.info("Parsing");
+        File file = new File(FabricLoaderImpl.INSTANCE.getConfigDir().toString(),"MusicTriggers/musictriggers.toml");
         if(!file.exists()) {
             try {
                 file.createNewFile();
@@ -43,9 +45,11 @@ public class configToml {
             }
         }
         else {
+            MusicTriggersCommon.logger.info("Found config");
             Toml toml = new Toml().read(file);
             int songCounter = 0;
             for (String s : json.allSongs) {
+                MusicTriggersCommon.logger.info("Trying to parse song "+s);
                 if (toml.containsTableArray(s)) {
                     try {
                         for (Toml song : toml.getTables(s)) {
@@ -356,6 +360,7 @@ public class configToml {
                         throw new RuntimeException("Failed to initialize song block from song "+s+" at "+CrashHelper+" (Internally: File "+e.getStackTrace()[0].getFileName()+" at line "+e.getStackTrace()[0].getLineNumber()+")");
                     }
                 } else if (toml.containsTable(s)) {
+                    MusicTriggersCommon.logger.info("Trying again to parse song "+s);
                     try {
                         Toml song = toml.getTable(s);
                         if (song.containsTableArray("trigger")) {
@@ -485,6 +490,7 @@ public class configToml {
                             Toml trigger = song.getTable("trigger");
                             if (trigger.contains("name")) {
                                 String triggerID = trigger.getString("name");
+                                MusicTriggersCommon.logger.info("Found trigger "+triggerID);
                                 if (Arrays.asList(triggers).contains(triggerID) || Arrays.asList(modtriggers).contains(triggerID)) {
                                     CrashHelper = triggerID;
                                     songholder.put("song" + songCounter, s);

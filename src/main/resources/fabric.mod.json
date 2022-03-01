@@ -19,6 +19,9 @@
   "entrypoints": {
     "main": [
       "mods.thecomputerizer.musictriggers.MusicTriggersCommon"
+    ],
+    "client": [
+      "mods.thecomputerizer.musictriggers.MusicTriggersClient"
     ]
   },
   "mixins": [

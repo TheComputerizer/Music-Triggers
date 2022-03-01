@@ -5,6 +5,7 @@ import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
 import mods.thecomputerizer.musictriggers.util.image.GIFHandler;
 import mods.thecomputerizer.musictriggers.util.image.MP4Handler;
 import mods.thecomputerizer.musictriggers.util.image.PNGMcMetaHandler;
+import net.fabricmc.loader.impl.FabricLoaderImpl;
 import net.minecraft.util.Identifier;
 import org.apache.commons.io.FileDeleteStrategy;
 
@@ -25,7 +26,7 @@ public class configTitleCards {
     public static HashMap<Identifier, ImageDimensions> imageDimensions= new HashMap<>();
 
     public static void parse() {
-        File file = new File("config/MusicTriggers/transitions.toml");
+        File file = new File(FabricLoaderImpl.INSTANCE.getConfigDir().toString(),"MusicTriggers/transitions.toml");
         if(!file.exists()) {
             try {
                 file.createNewFile();
@@ -172,7 +173,7 @@ public class configTitleCards {
             Identifier rl;
             if(ismoving.get(i)) {
                 if (configTitleCards.imagecards.get(i).getName() != null) {
-                    String path = "." + "/config/MusicTriggers/songs/assets/musictriggers/textures/" + imagecards.get(i).getName();
+                    String path = FabricLoaderImpl.INSTANCE.getConfigDir().toString()+"MusicTriggers/songs/assets/musictriggers/textures/" + imagecards.get(i).getName();
                     File folder = new File(path);
                     File findMP4 = new File(path + ".mp4");
                     File findGIF = new File(path + ".gif");
@@ -220,7 +221,7 @@ public class configTitleCards {
                             for (File f : listOfPNG) {
                                 rl = new Identifier(MusicTriggersCommon.MODID, "textures/" + configTitleCards.imagecards.get(i).getName() + "/" + f.getName());
                                 try {
-                                    BufferedImage image = ImageIO.read(new File("." + "/config/MusicTriggers/songs/assets/musictriggers/textures/" + imagecards.get(i).getName() + "/" + f.getName()));
+                                    BufferedImage image = ImageIO.read(new File(FabricLoaderImpl.INSTANCE.getConfigDir().toString(),"MusicTriggers/songs/assets/musictriggers/textures/" + imagecards.get(i).getName() + "/" + f.getName()));
                                     imageDimensions.put(rl, new ImageDimensions());
                                     imageDimensions.get(rl).setWidth(image.getWidth());
                                     imageDimensions.get(rl).setHeight(image.getHeight());
@@ -235,7 +236,7 @@ public class configTitleCards {
             else {
                 rl = new Identifier(MusicTriggersCommon.MODID,"textures/"+imagecards.get(i).getName()+".png");
                 try {
-                    BufferedImage image = ImageIO.read(new File("." + "/config/MusicTriggers/songs/assets/musictriggers/textures/"+imagecards.get(i).getName()+".png"));
+                    BufferedImage image = ImageIO.read(new File(FabricLoaderImpl.INSTANCE.getConfigDir().toString(), "MusicTriggers/songs/assets/musictriggers/textures/"+imagecards.get(i).getName()+".png"));
                     imageDimensions.put(rl, new ImageDimensions());
                     imageDimensions.get(rl).setWidth(image.getWidth());
                     imageDimensions.get(rl).setHeight(image.getHeight());

@@ -3,10 +3,12 @@ package mods.thecomputerizer.musictriggers.util;
 import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
 import mods.thecomputerizer.musictriggers.readRedirect;
 import mods.thecomputerizer.musictriggers.util.audio.audioConverter;
+import net.fabricmc.loader.impl.FabricLoaderImpl;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class json {
@@ -16,8 +18,10 @@ public class json {
     public static List<String> create() {
         format();
         allSongs = collector();
-        String[] redirected;
-        redirected = readRedirect.songs;
+        List<String> redirected = new ArrayList<>();
+        if(readRedirect.songs!=null) {
+            redirected = Arrays.asList(readRedirect.songs);
+        }
         if (allSongs != null && !allSongs.isEmpty()) {
             js.add("{");
             for (int i = 0; i < allSongs.size() - 1; i++) {
@@ -71,7 +75,7 @@ public class json {
         return js;
     }
     public static List<String> collector() {
-        File folder = new File("."+"/config/MusicTriggers/songs/assets/musictriggers/sounds/music/");
+        File folder = new File(FabricLoaderImpl.INSTANCE.getConfigDir().toString(),"MusicTriggers/songs/assets/musictriggers/sounds/music/");
         File[] listOfMP3 = folder.listFiles((dir, name) -> name.endsWith(".mp3"));
         if (listOfMP3 != null) {
             for (File mp3 : listOfMP3) {
@@ -112,11 +116,11 @@ public class json {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void format() {
-        File folder = new File("." + "/config/MusicTriggers/songs/assets/musictriggers/sounds/music/");
+        File folder = new File(FabricLoaderImpl.INSTANCE.getConfigDir().toString(),"MusicTriggers/songs/assets/musictriggers/sounds/music/");
         File[] music = folder.listFiles();
         if (music!=null) {
             for (File f : music) {
-                f.renameTo(new File(folder, f.getName().toLowerCase().replaceAll(" ","_")));
+                f.renameTo(new File(folder, f.getName().toLowerCase().replaceAll(" ","_").replaceAll("-","_")));
             }
         }
     }

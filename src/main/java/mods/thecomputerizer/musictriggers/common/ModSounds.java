@@ -19,6 +19,7 @@ public class ModSounds {
     public static void init(){
         List<SoundEvent> sounds = SoundHandler.allSoundEvents;
         for(SoundEvent s: sounds) {
+            MusicTriggersCommon.logger.info("Too much sound logging: "+s.getId());
             String songName = Objects.requireNonNull(s.getId()).toString().replaceAll("musictriggers:","");
             Identifier soundID = new Identifier(MusicTriggersCommon.MODID + ":music." + songName);
             SoundEvent soundEvent = new SoundEvent(soundID);

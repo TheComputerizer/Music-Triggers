@@ -24,7 +24,6 @@ public class MixinSoundSystem {
 
 	@Inject(method = "play(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At(value = "TAIL", target = "Lnet/minecraft/client/sound/SoundSystem;play(Lnet/minecraft/client/sound/SoundInstance;)V"))
 	private void play(SoundInstance si, CallbackInfo info) {
-		MusicTriggersCommon.logger.info("testing sound sys");
 		MusicPlayer.sources = sources;
 	}
 }

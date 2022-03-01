@@ -45,17 +45,20 @@ public class eventsClient {
     public static SoundInstance playSound(SoundInstance sound) {
         if (sound!=null) {
             if ((MusicPlayer.curMusic != null || MusicPlayer.curTrackList == null || MusicPlayer.curTrackList.isEmpty()) && sound.getId().getNamespace().matches(MusicTriggersCommon.MODID) && (((MusicPlayer.curMusic!=null && MinecraftClient.getInstance().getSoundManager().isPlaying(MusicPlayer.curMusic)) && sound.getId() != MusicPlayer.fromRecord.getId()) || MusicPlayer.playing)) {
+                MinecraftClient.getInstance().getSoundManager().stop(sound);
                 return new PositionedSoundInstance(sound.getId(), SoundCategory.MUSIC, Float.MIN_VALUE*1000, 1F, false, 0, SoundInstance.AttenuationType.LINEAR, 0,0,0, false);
             }
             for (String s : configDebug.modList) {
                 if (sound.getId().getNamespace().contains(s) && sound.getCategory() == SoundCategory.MUSIC) {
                     if (!(MusicPlayer.curMusic == null && configDebug.silenceIsBad)) {
+                        MinecraftClient.getInstance().getSoundManager().stop(sound);
                         return new PositionedSoundInstance(sound.getId(), SoundCategory.MUSIC, Float.MIN_VALUE*1000, 1F, false, 0, SoundInstance.AttenuationType.LINEAR, 0,0,0, false);
                     }
                 }
             }
             if (sound.getId().getNamespace().contains("minecraft") && sound.getCategory() == SoundCategory.MUSIC) {
                 if (!(MusicPlayer.curMusic == null && configDebug.silenceIsBad)) {
+                    MinecraftClient.getInstance().getSoundManager().stop(sound);
                     return new PositionedSoundInstance(sound.getId(), SoundCategory.MUSIC, Float.MIN_VALUE*1000, 1F, false, 0, SoundInstance.AttenuationType.LINEAR, 0,0,0, false);
                 }
             }

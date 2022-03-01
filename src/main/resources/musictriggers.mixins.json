@@ -11,6 +11,7 @@
     "MixinAdvancementEvent"
   ],
   "client": [
+    "MixinResourcePack"
   ],
   "injectors": {
     "defaultRequire": 1

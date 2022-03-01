@@ -3,7 +3,6 @@
 plugins {
 	id 'fabric-loom' version '0.10-SNAPSHOT'
 	id 'maven-publish'
-	id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
 sourceCompatibility = JavaVersion.VERSION_17
@@ -22,42 +21,21 @@ repositories {
 	}
 }
 
-configurations {
-	shade
-	implementation.extendsFrom(shade)
-}
-
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-	implementation("com.moandjiezana.toml:toml4j:0.7.2")
-	implementation("com.googlecode.soundlibs:jlayer:1.0.1.4")
-	implementation("org.jcodec:jcodec:0.2.5")
-	implementation("org.jcodec:jcodec-javase:0.2.5")
-	shade ("com.moandjiezana.toml:toml4j:0.7.2"){
+	include (implementation("com.moandjiezana.toml:toml4j:0.7.2"){
 		exclude group: 'com.google.code.gson', module: 'gson' // Provided by Minecraft
-	}
-	shade ("com.googlecode.soundlibs:jlayer:1.0.1.4")
-	shade ("org.jcodec:jcodec:0.2.5")
-	shade ("org.jcodec:jcodec-javase:0.2.5")
+	})
+	include (implementation("com.googlecode.soundlibs:jlayer:1.0.1.4"))
+	include (implementation("org.jcodec:jcodec:0.2.5"))
+	include (implementation("org.jcodec:jcodec-javase:0.2.5"))
 
 	modImplementation "curse.maven:cloth-config-319057:3641132"
 	modImplementation "curse.maven:modmenu-308702:3570652"
-}
-
-shadowJar {
-	configurations = [project.configurations.shade]
-
-	classifier ''
-
-	finalizedBy 'reobfShadowJar'
-}
-
-artifacts {
-	archives tasks.shadowJar
 }
 
 processResources {
@@ -80,7 +58,6 @@ jar {
 	from("LICENSE") {
 		rename { "${it}_${project.archivesBaseName}"}
 	}
-	shadowJar {}
 }
 
 publishing {

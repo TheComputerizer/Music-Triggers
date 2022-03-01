@@ -24,9 +24,10 @@ public class SoundHandler {
 
 
     public static void registerSounds() {
-
+        MusicTriggersCommon.logger.info("Actually registering songs");
         for (Map.Entry<String, Map<String, String[]>> stringListEntry : configToml.triggerholder.entrySet()) {
             String songEntry = ((Map.Entry) stringListEntry).getKey().toString();
+            MusicTriggersCommon.logger.info("Actually registering song: "+songEntry);
             SoundEvent sound = new SoundEvent(new Identifier(MusicTriggersCommon.MODID, configToml.songholder.get(songEntry)));
             List<String> triggers = new ArrayList<>();
             MusicTriggersCommon.logger.info("song "+configToml.songholder.get(songEntry)+" has "+configToml.triggerholder.get(songEntry).keySet().size()+" trigger(s)");
