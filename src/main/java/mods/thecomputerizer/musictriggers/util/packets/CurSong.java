@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
 
-import io.netty.buffer.ByteBuf;
 import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;

@@ -1,14 +1,13 @@
 package mods.thecomputerizer.musictriggers.common.objects;
 
 import mods.thecomputerizer.musictriggers.common.eventsCommon;
-import net.minecraft.block.*;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.JukeboxBlockEntity;
+import net.minecraft.block.AbstractBlock;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockRenderType;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.MusicDiscItem;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.state.property.Properties;
@@ -20,7 +19,7 @@ import net.minecraft.world.World;
 
 import java.util.UUID;
 
-@SuppressWarnings("NullableProblems")
+@SuppressWarnings("deprecation")
 public class MusicRecorder extends Block {
 
     public static final BooleanProperty HAS_RECORD = Properties.HAS_RECORD;
@@ -46,7 +45,7 @@ public class MusicRecorder extends Block {
         eventsCommon.recordHolder.put(pos, recordStack.copy());
         eventsCommon.recordUUID.put(pos, uuid);
         eventsCommon.tickCounter.put(pos, 0);
-        worldIn.setBlockState(pos, (BlockState)state.with(HAS_RECORD, true), Block.NOTIFY_LISTENERS);
+        worldIn.setBlockState(pos, state.with(HAS_RECORD, true), Block.NOTIFY_LISTENERS);
     }
 
     private void dropRecord(World worldIn, BlockPos pos) {

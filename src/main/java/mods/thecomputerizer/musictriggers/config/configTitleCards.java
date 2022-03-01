@@ -5,7 +5,7 @@ import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
 import mods.thecomputerizer.musictriggers.util.image.GIFHandler;
 import mods.thecomputerizer.musictriggers.util.image.MP4Handler;
 import mods.thecomputerizer.musictriggers.util.image.PNGMcMetaHandler;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Identifier;
 import org.apache.commons.io.FileDeleteStrategy;
 
 import javax.imageio.ImageIO;
@@ -22,7 +22,7 @@ public class configTitleCards {
     public static HashMap<Integer, Title> titlecards = new HashMap<>();
     public static HashMap<Integer, Image> imagecards = new HashMap<>();
     public static HashMap<Integer, Boolean> ismoving = new HashMap<>();
-    public static HashMap<ResourceLocation, ImageDimensions> imageDimensions= new HashMap<>();
+    public static HashMap<Identifier, ImageDimensions> imageDimensions= new HashMap<>();
 
     public static void parse() {
         File file = new File("config/MusicTriggers/transitions.toml");
@@ -169,7 +169,7 @@ public class configTitleCards {
 
     private static void formatImages() {
         for (int i : configTitleCards.imagecards.keySet()) {
-            ResourceLocation rl;
+            Identifier rl;
             if(ismoving.get(i)) {
                 if (configTitleCards.imagecards.get(i).getName() != null) {
                     String path = "." + "/config/MusicTriggers/songs/assets/musictriggers/textures/" + imagecards.get(i).getName();
@@ -218,7 +218,7 @@ public class configTitleCards {
                             File[] listOfPNG = folder.listFiles();
                             assert listOfPNG != null;
                             for (File f : listOfPNG) {
-                                rl = new ResourceLocation(MusicTriggersCommon.MODID, "textures/" + configTitleCards.imagecards.get(i).getName() + "/" + f.getName());
+                                rl = new Identifier(MusicTriggersCommon.MODID, "textures/" + configTitleCards.imagecards.get(i).getName() + "/" + f.getName());
                                 try {
                                     BufferedImage image = ImageIO.read(new File("." + "/config/MusicTriggers/songs/assets/musictriggers/textures/" + imagecards.get(i).getName() + "/" + f.getName()));
                                     imageDimensions.put(rl, new ImageDimensions());
@@ -233,7 +233,7 @@ public class configTitleCards {
                 }
             }
             else {
-                rl = new ResourceLocation(MusicTriggersCommon.MODID,"textures/"+imagecards.get(i).getName()+".png");
+                rl = new Identifier(MusicTriggersCommon.MODID,"textures/"+imagecards.get(i).getName()+".png");
                 try {
                     BufferedImage image = ImageIO.read(new File("." + "/config/MusicTriggers/songs/assets/musictriggers/textures/"+imagecards.get(i).getName()+".png"));
                     imageDimensions.put(rl, new ImageDimensions());

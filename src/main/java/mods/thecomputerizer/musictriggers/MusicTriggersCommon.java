@@ -53,8 +53,6 @@ public class MusicTriggersCommon implements ModInitializer {
     }
 
     private static void setUpCommonEvents() {
-        ServerTickEvents.END_SERVER_TICK.register( server -> {
-            eventsCommon.onTick();
-        });
+        ServerTickEvents.END_SERVER_TICK.register( server -> eventsCommon.onTick());
     }
 }

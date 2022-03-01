@@ -7,14 +7,13 @@ import mods.thecomputerizer.musictriggers.config.configRegistry;
 import mods.thecomputerizer.musictriggers.config.configTitleCards;
 import mods.thecomputerizer.musictriggers.config.configToml;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
-import mods.thecomputerizer.musictriggers.util.packets.CurSong;
 import mods.thecomputerizer.musictriggers.util.audio.setVolumeSound;
-import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.MappingResolver;
+import mods.thecomputerizer.musictriggers.util.packets.CurSong;
 import net.minecraft.block.JukeboxBlock;
 import net.minecraft.block.entity.JukeboxBlockEntity;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.sound.*;
+import net.minecraft.client.sound.Channel;
+import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.text.Text;
@@ -23,7 +22,6 @@ import net.minecraft.util.math.BlockPos;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
-import java.lang.invoke.MethodHandles;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -91,7 +89,6 @@ public class MusicPlayer {
                 }
             }
             if (tickCounter % 10 == 0 && !fading && !delay) {
-                MappingResolver resolver = FabricLoader.getInstance().getMappingResolver();
                 if (MusicPicker.player != null && (MusicPicker.player.getActiveItem().getItem() instanceof MusicTriggersRecord)) {
                     fromRecord = ((MusicTriggersRecord) MusicPicker.player.getActiveItem().getItem()).getSound();
                 } else {
@@ -164,15 +161,12 @@ public class MusicPlayer {
                                 eventsClient.activated = false;
                                 eventsClient.ismoving = false;
                                 cards = true;
-                                MethodHandles.Lookup lookup = MethodHandles.privateLookupIn(SoundManager.class );
-                                Map<SoundInstance, ChannelAccess.ChannelHandle> curplaying = ObfuscationReflectionHelper.getPrivateValue(SoundEngine.class, ObfuscationReflectionHelper.getPrivateValue(net.minecraft.client.sounds.SoundManager.class, mc.getSoundManager(), "f_120349_"), "f_120226_");
                                 for (Map.Entry<String, setVolumeSound> stringListEntry : musicLinker.entrySet()) {
                                     String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
                                     if (checkThis.matches(songNum)) {
                                         musicLinker.get(checkThis).setVolume(1F);
-                                        assert curplaying != null;
-                                        if (curplaying.get(musicLinker.get(checkThis)) != null) {
-                                            curplaying.get(musicLinker.get(checkThis)).execute(sound -> sound.setVolume(1F));
+                                        if (sources.get(musicLinker.get(checkThis)) != null) {
+                                            sources.get(musicLinker.get(checkThis)).run(sound -> sound.setVolume(1F));
                                         }
                                         curMusic = musicLinker.get(checkThis);
                                         curTrackHolder = musicLinker.get(checkThis).getId().toString().replaceAll("music.", "").replaceAll("riggers:", "");
@@ -184,10 +178,9 @@ public class MusicPlayer {
                                             }
                                         }
                                     } else {
-                                        musicLinker.get(checkThis).setVolume(Float.MIN_VALUE);
-                                        assert curplaying != null;
-                                        if (curplaying.get(musicLinker.get(checkThis)) != null) {
-                                            curplaying.get(musicLinker.get(checkThis)).execute(sound -> sound.setVolume(Float.MIN_VALUE));
+                                        musicLinker.get(checkThis).setVolume(Float.MIN_VALUE*1000);
+                                        if (sources.get(musicLinker.get(checkThis)) != null) {
+                                            sources.get(musicLinker.get(checkThis)).run(sound -> sound.setVolume(Float.MIN_VALUE*1000));
                                         }
                                     }
                                 }

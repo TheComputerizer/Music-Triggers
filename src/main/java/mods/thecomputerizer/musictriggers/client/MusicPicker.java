@@ -66,6 +66,9 @@ public class MusicPicker {
         if (player != null) {
             world = player.getEntityWorld();
         }
+        else {
+            eventsClient.isWorldRendered = false;
+        }
         if(SoundHandler.TriggerSongMap.isEmpty()) {
             return null;
         }

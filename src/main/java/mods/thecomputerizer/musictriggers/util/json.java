@@ -1,13 +1,13 @@
 package mods.thecomputerizer.musictriggers.util;
 
 import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
-import mods.thecomputerizer.musictriggers.config.configDebug;
 import mods.thecomputerizer.musictriggers.readRedirect;
 import mods.thecomputerizer.musictriggers.util.audio.audioConverter;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class json {
     public static List<String> allSongs = new ArrayList<>();
@@ -16,7 +16,7 @@ public class json {
     public static List<String> create() {
         format();
         allSongs = collector();
-        String[] redirected = {};
+        String[] redirected;
         redirected = readRedirect.songs;
         if (allSongs != null && !allSongs.isEmpty()) {
             js.add("{");
@@ -53,6 +53,7 @@ public class json {
     public static List<String> lang() {
         allSongs = collector();
         for (String a : readRedirect.songs) {
+            assert allSongs != null;
             allSongs.add(stringBreaker(a, ",")[0]);
         }
         if (allSongs != null && !allSongs.isEmpty()) {

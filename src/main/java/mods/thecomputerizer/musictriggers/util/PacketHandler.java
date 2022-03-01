@@ -1,6 +1,5 @@
 package mods.thecomputerizer.musictriggers.util;
 
-import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
 import mods.thecomputerizer.musictriggers.util.packets.*;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

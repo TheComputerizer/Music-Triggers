@@ -12,8 +12,11 @@ import mods.thecomputerizer.musictriggers.util.json;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.resource.ResourceManager;
@@ -194,6 +197,12 @@ public class MusicTriggersClient implements ClientModInitializer {
 
     private static void setUpClientEvents() {
         PlaySoundEvent.EVENT.register(eventsClient::playSound);
+        ScreenKeyboardEvents.afterKeyPress(MinecraftClient.getInstance().currentScreen).register((screen, key, scancode, modifiers) -> eventsClient.onKeyInput());
+
+        WorldRenderEvents.LAST.register((context) -> {
+            eventsClient.imageCards(context);
+            eventsClient.debugInfo();
+        });
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             MusicPlayer.onTick();
