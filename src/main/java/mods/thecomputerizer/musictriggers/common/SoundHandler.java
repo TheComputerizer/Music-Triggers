@@ -35,7 +35,7 @@ public class SoundHandler {
                 if(configToml.triggerholder.get(songEntry).get(temp)[6].matches("not")) {
                     MusicTriggers.logger.info("Registered "+temp+" as an anti trigger for "+configToml.songholder.get(songEntry));
                     antiSongs.computeIfAbsent(songEntry, k -> new ArrayList<>());
-                    if(configToml.triggerholder.get(songEntry).get(temp)[10].matches("")) {
+                    if(configToml.triggerholder.get(songEntry).get(temp)[10].matches("_")) {
                         antiSongs.get(songEntry).add(temp);
                     }
                     else {
