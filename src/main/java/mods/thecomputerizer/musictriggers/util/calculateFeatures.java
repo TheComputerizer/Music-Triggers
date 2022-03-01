@@ -45,7 +45,7 @@ public class calculateFeatures {
         List<EntityLiving> mobTempList = world.getEntitiesWithinAABB(EntityLiving.class, new AxisAlignedBB(player.posX - (double) detectionrange, player.posY - ((double) detectionrange / 2), player.posZ - (double) detectionrange, player.posX + (double) detectionrange, player.posY + ((double) detectionrange / 2), player.posZ + (double) detectionrange));
         List<EntityLiving> mobList = new ArrayList<>();
         for (EntityLiving e : mobTempList) {
-            if ((e instanceof EntityMob || e instanceof EntityDragon) && (e.serializeNBT().hasKey(nbtKey) || nbtKey.matches(""))) {
+            if ((e instanceof EntityMob || e instanceof EntityDragon) && (e.serializeNBT().hasKey(nbtKey) || nbtKey.matches("_"))) {
                 mobList.add(e);
             }
         }
