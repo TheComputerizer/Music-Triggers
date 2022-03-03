@@ -57,24 +57,13 @@ repositories {
         }
     }
     maven {
-        name = "Progwml6"
-        url = uri("https://dvs1.progwml6.com/files/maven/")
-    }
-    maven {
-        name = "ModMaven"
-        url = uri("https://modmaven.k-4u.nl")
-    }
-    maven {
         url = uri("https://maven.mcmoddev.com")
     }
     maven {
-        url = uri("https://www.beatunes.com/repo/maven2/")
+        url = uri("https://jitpack.io")
     }
     maven {
-        url = uri("https://m2.dv8tion.net/releases")
-    }
-    maven {
-        url "https://repo.spongepowered.org/repository/maven-public/"
+        url = uri("https://www.dcm4che.org/maven2/")
     }
 }
 
@@ -83,36 +72,26 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 configurations {
     shade
     implementation.extendsFrom(shade)
+    shadow.extendsFrom shade
 }
 
 dependencies {
     minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
 
-    implementation("com.googlecode.soundlibs:jlayer:1.0.1.4")
-    implementation("com.googlecode.soundlibs:mp3spi:1.9.5.4")
-    implementation("de.jarnbjo:j-ogg-all:1.0.0")
-    implementation("org.gagravarr:vorbis-java-core:0.8")
-    implementation("com.squareup.okhttp:okhttp:2.5.0")
-    implementation("javazoom.vorbisspi:vorbisspi:1.0.3")
-    implementation("org.slf4j:slf4j-log4j12:2.0.0-alpha6")
-    implementation("org.slf4j:slf4j-api:2.0.0-alpha6")
-    implementation("org.apache.httpcomponents:httpclient:4.5.13")
-    implementation("com.fasterxml.jackson.core:jackson-core:2.13.1")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.1")
-    implementation("org.jsoup:jsoup:1.14.3")
-    implementation("com.moandjiezana.toml:toml4j:0.7.2")
-    implementation("org.jcodec:jcodec:0.2.5")
-    implementation("org.jcodec:jcodec-javase:0.2.5")
-
-    shade ("com.googlecode.soundlibs:jlayer:1.0.1.4")
-    shade ("com.googlecode.soundlibs:mp3spi:1.9.5.4")
-    shade ("de.jarnbjo:j-ogg-all:1.0.0")
+    shade("com.googlecode.soundlibs:jlayer:1.0.1.4")
     shade("org.gagravarr:vorbis-java-core:0.8")
-    shade ("com.squareup.okhttp:okhttp:2.5.0")
-    shade("javazoom.vorbisspi:vorbisspi:1.0.3")
-    shade ("com.moandjiezana.toml:toml4j:0.7.2")
-    shade ("org.jcodec:jcodec:0.2.5")
-    shade ("org.jcodec:jcodec-javase:0.2.5")
+    shade("com.github.sealedtx:java-youtube-downloader:3.0.2")
+    shade("com.moandjiezana.toml:toml4j:0.7.2"){
+        exclude group: 'com.google.code.gson', module: 'gson' // Provided by Minecraft
+    }
+    shade("org.jcodec:jcodec:0.2.5")
+    shade("org.jcodec:jcodec-javase:0.2.5")
+    shade ("xuggle:xuggle-xuggler:5.4"){
+        transitive = true
+        exclude group: "org.slf4j", module: "slf4j-api"
+    }
+
+    shade ("org.slf4j:slf4j-api:2.0.0-alpha6")          //relocate this
 
     implementation("org.spongepowered:mixin:0.8") {
         exclude module: "asm-commons"
@@ -138,24 +117,24 @@ dependencies {
 }
 
 shadowJar {
-    configurations = [project.configurations.shade]
+    relocate 'org.slf4j', 'mods.thecomputerizer.musictriggers.slf4j'    //forge library
+    relocate 'junit', 'libraries.junit'
+    relocate 'org.gagravarr', 'libraries.gagravarr'
+    relocate 'net.sourceforge', 'libraries.sourceforge'
+    relocate 'javazoom.jl', 'libraries.jl'
+    relocate 'com.xuggle', 'libraries.xuggle'
+    relocate 'com.alibaba', 'libraries.alibaba'
+    configurations = [project.configurations.shadow]
     classifier ''
-    finalizedBy 'reobfShadowJar'
 }
 
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier "sources"
-    from sourceSets.main.allSource
-}
-
-artifacts {
-    archives tasks.shadowJar
-}
 
 reobf {
-    shadowJar {}
+    shadowJar {
+        dependsOn createMcpToSrg
+        mappings = createMcpToSrg.output
+    }
 }
-
 processResources {
     filesMatching("mcmod.info") {
         expand "version": project.version, "mcversion": "1.12.2"
@@ -193,3 +172,4 @@ publishing {
         }
     }
 }
+tasks.assemble.dependsOn shadowJar
