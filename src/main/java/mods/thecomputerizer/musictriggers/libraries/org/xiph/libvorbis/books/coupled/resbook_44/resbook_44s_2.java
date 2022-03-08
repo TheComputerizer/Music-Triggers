@@ -15,7 +15,7 @@ package mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.books.co
 import mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.encode_aux_threshmatch;
 import mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.static_bookblock;
 import mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.static_codebook;
-import org.xiph.libvorbis.*;
+import mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.*;
 
 class resbook_44s_2 {
 	

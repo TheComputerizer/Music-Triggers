@@ -13,7 +13,7 @@
 package mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis;
 
 import mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.modes.setup_44;
-import org.xiph.libvorbis.modes.*;
+import mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.modes.*;
 import static mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.vorbis_constants.integer_constants.*;
 
 

@@ -16,7 +16,7 @@ import mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.vorbis_in
 import mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.vorbis_info_residue0;
 import mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.vorbis_mapping_template;
 import mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.vorbis_residue_template;
-import org.xiph.libvorbis.*;
+import mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.*;
 
 public class res_books_stereo {
 

@@ -13,7 +13,7 @@
 package mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.books.floor;
 
 import mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.static_codebook;
-import org.xiph.libvorbis.*;
+import mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.*;
 
 public class floor_books {
 
