@@ -137,7 +137,7 @@ public class MusicTriggers {
             configTitleCards.parse();
             if(json.collector()!=null) {
                 File pack = new File("config/MusicTriggers/");
-                if (pack.isDirectory()/* && new File(pack, "pack.mcmeta").isFile()*/) {
+                if (pack.isDirectory()) {
                     MusicTriggers.logger.info("found pack :)");
                     source = new packFolder(pack, PackSource.DEFAULT);
                 }

@@ -80,15 +80,12 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 configurations {
     shade
     implementation.extendsFrom(shade)
+    shadow.extendsFrom shade
 }
 
 dependencies {
     minecraft 'net.minecraftforge:forge:1.18.1-39.0.85'
 
-    implementation("com.moandjiezana.toml:toml4j:0.7.2")
-    implementation("com.googlecode.soundlibs:jlayer:1.0.1.4")
-    implementation("org.jcodec:jcodec:0.2.5")
-    implementation("org.jcodec:jcodec-javase:0.2.5")
     shade ("com.moandjiezana.toml:toml4j:0.7.2"){
         exclude group: 'com.google.code.gson', module: 'gson' // Provided by Minecraft
     }
@@ -104,19 +101,25 @@ dependencies {
 }
 
 shadowJar {
-    configurations = [project.configurations.shade]
-
+    //necessary relocation
+    //relocate 'org.slf4j', 'mods.thecomputerizer.musictriggers.libraries.sljf4'
+    //relocate 'org.apache.commons', 'mods.thecomputerizer.musictriggers.libraries.apache.commons'
+    //relocate 'org.apache.http', 'mods.thecomputerizer.musictriggers.libraries.apache.http'
+    //not strictly necessary relocation
+    relocate 'junit', 'mods.thecomputerizer.musictriggers.libraries.junit'
+    relocate 'net.sourceforge', 'mods.thecomputerizer.musictriggers.libraries.sourceforge'
+    relocate 'javazoom.jl', 'mods.thecomputerizer.musictriggers.libraries.jl'
+    relocate 'com.alibaba', 'mods.thecomputerizer.musictriggers.libraries.alibaba'
+    configurations = [project.configurations.shadow]
     classifier ''
-
-    finalizedBy 'reobfShadowJar'
 }
 
-artifacts {
-    archives tasks.shadowJar
-}
 
 reobf {
-    shadowJar {}
+    shadowJar {
+        dependsOn createMcpToSrg
+        mappings = createMcpToSrg.output
+    }
 }
 
 jar {
@@ -147,3 +150,4 @@ publishing {
         }
     }
 }
+tasks.assemble.dependsOn shadowJar

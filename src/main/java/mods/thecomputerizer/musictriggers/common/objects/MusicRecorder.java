@@ -10,11 +10,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.BlockHitResult;
 
 import java.util.UUID;
@@ -24,7 +24,7 @@ public class MusicRecorder extends Block {
 
     public static final BooleanProperty HAS_RECORD = BlockStateProperties.HAS_RECORD;
 
-    public MusicRecorder(Block.Properties p) {
+    public MusicRecorder(BlockBehaviour.Properties p) {
         super(p);
         this.registerDefaultState(this.stateDefinition.any().setValue(HAS_RECORD, Boolean.FALSE));
     }
@@ -71,11 +71,6 @@ public class MusicRecorder extends Block {
             this.dropRecord(worldIn, pos);
             super.onRemove(state,worldIn,pos,state2,b);
         }
-    }
-
-    @Override
-    public boolean onDestroyedByPlayer (BlockState state, Level world, BlockPos pos, Player player, boolean willHarvest, FluidState fluid) {
-        return willHarvest || super.onDestroyedByPlayer(state, world, pos, player, false, fluid);
     }
 
     @Override

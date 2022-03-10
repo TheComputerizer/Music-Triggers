@@ -114,6 +114,12 @@ public class configTitleCards {
                         if(image.contains("play_once")) {
                             imagecards.get(imageCounter).setPlayonce(Boolean.parseBoolean(image.getString("play_once")));
                         }
+                        if(image.contains("fade_in")) {
+                            imagecards.get(imageCounter).setFadeIn(Integer.parseInt(image.getString("fade_in")));
+                        }
+                        if(image.contains("fade_out")) {
+                            imagecards.get(imageCounter).setFadeOut(Integer.parseInt(image.getString("fade_out")));
+                        }
                         imageCounter++;
                     }
                 }
@@ -158,6 +164,12 @@ public class configTitleCards {
                     }
                     if(image.contains("play_once")) {
                         imagecards.get(imageCounter).setPlayonce(Boolean.parseBoolean(image.getString("play_once")));
+                    }
+                    if(image.contains("fade_in")) {
+                        imagecards.get(imageCounter).setFadeIn(Integer.parseInt(image.getString("fade_in")));
+                    }
+                    if(image.contains("fade_out")) {
+                        imagecards.get(imageCounter).setFadeOut(Integer.parseInt(image.getString("fade_out")));
                     }
                 }
             } catch (Exception e) {
@@ -302,6 +314,8 @@ public class configTitleCards {
         private int delay;
         private int split;
         private int skip;
+        private int fadeIn;
+        private int fadeOut;
         private Boolean playonce;
         private final List<String> triggers;
 
@@ -315,6 +329,8 @@ public class configTitleCards {
             this.delay = 10;
             this.split = 0;
             this.skip = 4;
+            this.fadeIn = 10;
+            this.fadeOut = 10;
             this.playonce = false;
             this.triggers = new ArrayList<>();
         }
@@ -389,6 +405,22 @@ public class configTitleCards {
 
         public void setSkip(int s) {
             this.skip = s;
+        }
+
+        public int getFadeIn() {
+            return this.fadeIn;
+        }
+
+        public void setFadeIn(int f) {
+            this.fadeIn = f;
+        }
+
+        public int getFadeOut() {
+            return this.fadeOut;
+        }
+
+        public void setFadeOut(int f) {
+            this.fadeOut = f;
         }
 
         public void setPlayonce(Boolean b) {
