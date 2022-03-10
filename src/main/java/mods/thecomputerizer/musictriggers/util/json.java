@@ -4,7 +4,6 @@ import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.config.configDebug;
 import mods.thecomputerizer.musictriggers.readRedirect;
 import mods.thecomputerizer.musictriggers.util.audio.audioConverter;
-import mods.thecomputerizer.musictriggers.util.audio.audioGrabber;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
@@ -17,11 +16,6 @@ public class json {
 
     public static List<String> create() {
         format();
-        try {
-            audioGrabber.dl("z3Q4WBpCXhs");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         allSongs = collector();
         String[] redirected = {};
         if(configDebug.enableRedirect) {

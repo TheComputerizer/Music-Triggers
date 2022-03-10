@@ -146,7 +146,7 @@ public class eventsClient {
                 startDelayCount++;
                 if (startDelayCount > 0) {
                     if (fadeCount > 1) {
-                        fadeCount -= 6;
+                        fadeCount -= configTitleCards.imagecards.get(curImageIndex).getFadeIn();
                         if (fadeCount < 1) {
                             fadeCount = 1;
                         }
@@ -154,7 +154,7 @@ public class eventsClient {
                 }
             } else {
                 if (fadeCount < 1000) {
-                    fadeCount += 4;
+                    fadeCount += configTitleCards.imagecards.get(curImageIndex).getFadeOut();
                     if (fadeCount > 1000) {
                         fadeCount = 1000;
                         ismoving = false;
@@ -181,7 +181,7 @@ public class eventsClient {
                     GlStateManager.enableBlend();
                     GlStateManager.pushMatrix();
                     GlStateManager.translate(0, 0, 0);
-                    GlStateManager.scale(0.140625*(configTitleCards.imagecards.get(curImageIndex).getScaleX()/100f),0.25*(configTitleCards.imagecards.get(curImageIndex).getScaleY()/100f),1);
+                    GlStateManager.scale((0.25f*((float)x/(float)y))*(configTitleCards.imagecards.get(curImageIndex).getScaleX()/100f),0.25f*(configTitleCards.imagecards.get(curImageIndex).getScaleY()/100f),1f);
                     GlStateManager.color(color.getX(), color.getY(), color.getZ(), Math.max(0, Math.min(0.95f, opacity)));
                     mc.getTextureManager().bindTexture(IMAGE_CARD);
                     float x_translation = (((1f/0.140625f)*.5f)*(1f/(configTitleCards.imagecards.get(curImageIndex).getScaleX()/100f))*(x+configTitleCards.imagecards.get(curImageIndex).getHorizontal()));

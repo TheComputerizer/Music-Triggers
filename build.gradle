@@ -65,6 +65,9 @@ repositories {
     maven {
         url = uri("https://www.dcm4che.org/maven2/")
     }
+    maven {
+        url = uri("https://m2.dv8tion.net/releases")
+    }
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
@@ -79,19 +82,15 @@ dependencies {
     minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
 
     shade("com.googlecode.soundlibs:jlayer:1.0.1.4")
-    shade("org.gagravarr:vorbis-java-core:0.8")
     shade("com.github.sealedtx:java-youtube-downloader:3.0.2")
     shade("com.moandjiezana.toml:toml4j:0.7.2"){
-        exclude group: 'com.google.code.gson', module: 'gson' // Provided by Minecraft
+        exclude group: 'com.google.code.gson', module: 'gson' // provided by minecraft
     }
     shade("org.jcodec:jcodec:0.2.5")
     shade("org.jcodec:jcodec-javase:0.2.5")
-    shade ("xuggle:xuggle-xuggler:5.4"){
-        transitive = true
-        exclude group: "org.slf4j", module: "slf4j-api"
-    }
 
-    shade ("org.slf4j:slf4j-api:2.0.0-alpha6")          //relocate this
+    //libraries that may or may not be included by forge/minecraft and need to be relocated
+    //theres nothing here...
 
     implementation("org.spongepowered:mixin:0.8") {
         exclude module: "asm-commons"
@@ -117,13 +116,15 @@ dependencies {
 }
 
 shadowJar {
-    relocate 'org.slf4j', 'mods.thecomputerizer.musictriggers.slf4j'    //forge library
-    relocate 'junit', 'libraries.junit'
-    relocate 'org.gagravarr', 'libraries.gagravarr'
-    relocate 'net.sourceforge', 'libraries.sourceforge'
-    relocate 'javazoom.jl', 'libraries.jl'
-    relocate 'com.xuggle', 'libraries.xuggle'
-    relocate 'com.alibaba', 'libraries.alibaba'
+    //necessary relocation
+    //relocate 'org.slf4j', 'mods.thecomputerizer.musictriggers.libraries.sljf4'
+    //relocate 'org.apache.commons', 'mods.thecomputerizer.musictriggers.libraries.apache.commons'
+    //relocate 'org.apache.http', 'mods.thecomputerizer.musictriggers.libraries.apache.http'
+    //not strictly necessary relocation
+    relocate 'junit', 'mods.thecomputerizer.musictriggers.libraries.junit'
+    relocate 'net.sourceforge', 'mods.thecomputerizer.musictriggers.libraries.sourceforge'
+    relocate 'javazoom.jl', 'mods.thecomputerizer.musictriggers.libraries.jl'
+    relocate 'com.alibaba', 'mods.thecomputerizer.musictriggers.libraries.alibaba'
     configurations = [project.configurations.shadow]
     classifier ''
 }

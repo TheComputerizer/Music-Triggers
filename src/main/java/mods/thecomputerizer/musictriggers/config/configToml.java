@@ -28,10 +28,10 @@ public class configToml {
 
     //priority,fade,level,time,delay,advancement,operator,zone,start,
     //resourcename,identifier,range,mobtargetting,hordetargetpercentage,health,hordehealthpercentage,
-    //victory,victoryID,infernalmob,gamestagewhitelist,phase,victoryID,biome_category,rain_type,
+    //victory,victoryID,infernalmob,gamestagewhitelist,skylight,phase,victoryID,biome_category,rain_type,
     //biome_temperature,biome_cold,temperature_modifier,mob_nbt
 
-    //pitch,one time,must finish,chance
+    //pitch,one time,must finish,chance,volume
 
     public static void parse() {
         File file = new File("config/MusicTriggers/musictriggers.toml");
@@ -59,8 +59,8 @@ public class configToml {
                                             triggerholder.putIfAbsent("song" + songCounter, new HashMap<>());
                                             triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
                                                     "minecraft", "_", "16", "false", "100", "100", "100",
-                                                    "false", "0", "minecraft", "true", "0", "0", "nope", "nope",
-                                                    "-111", "false", "nope","_"});
+                                                    "false", "0", "minecraft", "true", "true", "0", "0", "nope",
+                                                    "nope", "-111", "false", "nope","_"});
                                             if (trigger.contains("priority")) {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                             }
@@ -83,7 +83,7 @@ public class configToml {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[5] = trigger.getString("advancement");
                                             }
                                             if (trigger.contains("operator")) {
-                                                triggerholder.get("song" + songCounter).get(triggerID)[7] = trigger.getString("operator");
+                                                triggerholder.get("song" + songCounter).get(triggerID)[6] = trigger.getString("operator");
                                             }
                                             if (trigger.containsTable("zone")) {
                                                 Toml zone = trigger.getTable("zone");
@@ -182,7 +182,7 @@ public class configToml {
                                         triggerholder.putIfAbsent("song" + songCounter, new HashMap<>());
                                         triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
                                                 "minecraft", "_", "16", "false", "100", "100", "100",
-                                                "false", "0", "minecraft", "true", "0", "0", "nope", "nope",
+                                                "false", "0", "minecraft", "true", "true", "0", "0", "nope", "nope",
                                                 "-111", "false", "nope","_"});
                                         if (trigger.contains("priority")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
@@ -297,7 +297,7 @@ public class configToml {
                             } else {
                                 MusicTriggers.logger.warn("Skipping instance of song " + s + " because no triggers were attached to it!");
                             }
-                            otherinfo.putIfAbsent("song" + songCounter, new String[]{"1", "false", "false", "100"});
+                            otherinfo.putIfAbsent("song" + songCounter, new String[]{"1", "false", "false", "100", "1"});
                             if (song.contains("pitch")) {
                                 otherinfo.get("song" + songCounter)[0] = song.getString("pitch");
                             }
@@ -309,6 +309,9 @@ public class configToml {
                             }
                             if (song.contains("chance")) {
                                 otherinfo.get("song" + songCounter)[3] = song.getString("chance");
+                            }
+                            if (song.contains("volume")) {
+                                otherinfo.get("song" + songCounter)[4] = song.getString("volume");
                             }
                             if (song.containsTable("link")) {
                                 Toml link = song.getTable("link");
@@ -322,9 +325,12 @@ public class configToml {
                                                 triggerlinking.get("song" + songCounter).putIfAbsent("song" + songCounter, link.getList("default").toArray(new String[0]));
                                                 triggerlinking.get("song" + songCounter).put(trigger.getString("song"), trigger.getList("name").toArray(new String[0]));
                                                 otherlinkinginfo.put("song" + songCounter, new HashMap<>());
-                                                otherlinkinginfo.get("song" + songCounter).put(trigger.getString("song"), new String[]{"1"});
+                                                otherlinkinginfo.get("song" + songCounter).put(trigger.getString("song"), new String[]{"1", "1"});
                                                 if (trigger.contains("pitch")) {
                                                     otherlinkinginfo.get("song" + songCounter).get(trigger.getString("song"))[0] = trigger.getString("pitch");
+                                                }
+                                                if (trigger.contains("volume")) {
+                                                    otherlinkinginfo.get("song" + songCounter).get(trigger.getString("song"))[1] = trigger.getString("volume");
                                                 }
                                             }
                                         }
@@ -338,9 +344,12 @@ public class configToml {
                                             triggerlinking.get("song" + songCounter).putIfAbsent("song" + songCounter, link.getList("default").toArray(new String[0]));
                                             triggerlinking.get("song" + songCounter).put(trigger.getString("song"), trigger.getList("name").toArray(new String[0]));
                                             otherlinkinginfo.put("song" + songCounter, new HashMap<>());
-                                            otherlinkinginfo.get("song" + songCounter).put(trigger.getString("song"), new String[]{"1"});
+                                            otherlinkinginfo.get("song" + songCounter).put(trigger.getString("song"), new String[]{"1", "1"});
                                             if (trigger.contains("pitch")) {
                                                 otherlinkinginfo.get("song" + songCounter).get(trigger.getString("song"))[0] = trigger.getString("pitch");
+                                            }
+                                            if (trigger.contains("volume")) {
+                                                otherlinkinginfo.get("song" + songCounter).get(trigger.getString("song"))[1] = trigger.getString("volume");
                                             }
                                         }
                                     } else {
@@ -368,7 +377,7 @@ public class configToml {
                                         triggerholder.putIfAbsent("song" + songCounter, new HashMap<>());
                                         triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
                                                 "minecraft", "_", "16", "false", "100", "100", "100",
-                                                "false", "0", "minecraft", "true", "0", "0", "nope", "nope",
+                                                "false", "0", "minecraft", "true", "true", "0", "0", "nope", "nope",
                                                 "-111", "false", "nope","_"});
                                         if (trigger.contains("priority")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
@@ -491,7 +500,7 @@ public class configToml {
                                     triggerholder.putIfAbsent("song" + songCounter, new HashMap<>());
                                     triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
                                             "minecraft", "_", "16", "false", "100", "100", "100",
-                                            "false", "0", "minecraft", "true", "0", "0", "nope", "nope",
+                                            "false", "0", "minecraft", "true", "true", "0", "0", "nope", "nope",
                                             "-111", "false", "nope","_"});
                                     if (trigger.contains("priority")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
@@ -606,7 +615,7 @@ public class configToml {
                         } else {
                             MusicTriggers.logger.warn("Skipping instance of song " + s + " because no triggers were attached to it!");
                         }
-                        otherinfo.putIfAbsent("song" + songCounter, new String[]{"1", "false", "false", "100"});
+                        otherinfo.putIfAbsent("song" + songCounter, new String[]{"1", "false", "false", "100", "1"});
                         if (song.contains("pitch")) {
                             otherinfo.get("song" + songCounter)[0] = song.getString("pitch");
                         }
@@ -618,6 +627,9 @@ public class configToml {
                         }
                         if (song.contains("chance")) {
                             otherinfo.get("song" + songCounter)[3] = song.getString("chance");
+                        }
+                        if (song.contains("volume")) {
+                            otherinfo.get("song" + songCounter)[4] = song.getString("volume");
                         }
                         if (song.containsTable("link")) {
                             Toml link = song.getTable("link");
@@ -631,9 +643,12 @@ public class configToml {
                                             triggerlinking.get("song" + songCounter).putIfAbsent("song" + songCounter, link.getList("default").toArray(new String[0]));
                                             triggerlinking.get("song" + songCounter).put(trigger.getString("song"), trigger.getList("name").toArray(new String[0]));
                                             otherlinkinginfo.put("song" + songCounter, new HashMap<>());
-                                            otherlinkinginfo.get("song" + songCounter).put(trigger.getString("song"), new String[]{"1"});
+                                            otherlinkinginfo.get("song" + songCounter).put(trigger.getString("song"), new String[]{"1", "1"});
                                             if (trigger.contains("pitch")) {
                                                 otherlinkinginfo.get("song" + songCounter).get(trigger.getString("song"))[0] = trigger.getString("pitch");
+                                            }
+                                            if (trigger.contains("volume")) {
+                                                otherlinkinginfo.get("song" + songCounter).get(trigger.getString("song"))[1] = trigger.getString("volume");
                                             }
                                         }
                                     }
@@ -647,9 +662,12 @@ public class configToml {
                                         triggerlinking.get("song" + songCounter).putIfAbsent("song" + songCounter, link.getList("default").toArray(new String[0]));
                                         triggerlinking.get("song" + songCounter).put(trigger.getString("song"), trigger.getList("name").toArray(new String[0]));
                                         otherlinkinginfo.put("song" + songCounter, new HashMap<>());
-                                        otherlinkinginfo.get("song" + songCounter).put(trigger.getString("song"), new String[]{"1"});
+                                        otherlinkinginfo.get("song" + songCounter).put(trigger.getString("song"), new String[]{"1", "1"});
                                         if (trigger.contains("pitch")) {
                                             otherlinkinginfo.get("song" + songCounter).get(trigger.getString("song"))[0] = trigger.getString("pitch");
+                                        }
+                                        if (trigger.contains("volume")) {
+                                            otherlinkinginfo.get("song" + songCounter).get(trigger.getString("song"))[1] = trigger.getString("volume");
                                         }
                                     }
                                 } else {
