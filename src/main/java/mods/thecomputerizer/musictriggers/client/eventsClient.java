@@ -106,7 +106,7 @@ public class eventsClient {
                 startDelayCount++;
                 if (startDelayCount > 0) {
                     if (fadeCount > 1) {
-                        fadeCount -= 6;
+                        fadeCount -= configTitleCards.imagecards.get(curImageIndex).getFadeIn();
                         if (fadeCount < 1) {
                             fadeCount = 1;
                         }
@@ -114,7 +114,7 @@ public class eventsClient {
                 }
             } else {
                 if (fadeCount < 1000) {
-                    fadeCount += 4;
+                    fadeCount += configTitleCards.imagecards.get(curImageIndex).getFadeOut();
                     if (fadeCount > 1000) {
                         fadeCount = 1000;
                         ismoving = false;

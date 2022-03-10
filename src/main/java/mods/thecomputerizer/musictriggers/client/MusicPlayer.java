@@ -48,6 +48,7 @@ public class MusicPlayer {
     public static boolean finish = false;
     public static HashMap<String, setVolumeSound> musicLinker = new HashMap<>();
     public static HashMap<String, String[]> triggerLinker = new HashMap<>();
+    public static HashMap<String, Float> volumeLinker = new HashMap<>();
 
     public static Map<SoundInstance, Channel.SourceManager> sources;
 
@@ -164,9 +165,10 @@ public class MusicPlayer {
                                 for (Map.Entry<String, setVolumeSound> stringListEntry : musicLinker.entrySet()) {
                                     String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
                                     if (checkThis.matches(songNum)) {
-                                        musicLinker.get(checkThis).setVolume(1F);
+                                        musicLinker.get(checkThis).setVolume(volumeLinker.get(songNum));
                                         if (sources.get(musicLinker.get(checkThis)) != null) {
-                                            sources.get(musicLinker.get(checkThis)).run(sound -> sound.setVolume(1F));
+                                            String finalSongNum = songNum;
+                                            sources.get(musicLinker.get(checkThis)).run(sound -> sound.setVolume(volumeLinker.get(finalSongNum)));
                                         }
                                         curMusic = musicLinker.get(checkThis);
                                         curTrackHolder = musicLinker.get(checkThis).getId().toString().replaceAll("music.", "").replaceAll("riggers:", "");
@@ -229,18 +231,21 @@ public class MusicPlayer {
                                     MusicTriggersCommon.logger.info("Attempting to play track: " + curTrackHolder);
                                     if (configToml.triggerlinking.get(curTrack) != null) {
                                         triggerLinker.put("song-" + 0, configToml.triggerlinking.get(curTrack).get(curTrack));
-                                        musicLinker.put("song-" + 0, new setVolumeSound(new Identifier(MusicTriggersCommon.MODID, "music." + curTrackHolder), SoundCategory.MUSIC, 1F, Float.parseFloat(configToml.otherinfo.get(curTrack)[0]), false, 1, SoundInstance.AttenuationType.NONE, 0F, 0F, 0F));
+                                        musicLinker.put("song-" + 0, new setVolumeSound(new Identifier(MusicTriggersCommon.MODID, "music." + curTrackHolder), SoundCategory.MUSIC, Float.parseFloat(configToml.otherinfo.get(curTrack)[4]), Float.parseFloat(configToml.otherinfo.get(curTrack)[0]), false, 1, SoundInstance.AttenuationType.NONE, 0F, 0F, 0F));
+                                        volumeLinker.put("song-" + 0, Float.parseFloat(configToml.otherinfo.get(curTrack)[4]));
                                         int linkcounter = 0;
                                         for (String song : configToml.triggerlinking.get(curTrack).keySet()) {
                                             if (!song.matches(curTrack)) {
                                                 triggerLinker.put("song-" + linkcounter, configToml.triggerlinking.get(curTrack).get(song));
-                                                musicLinker.put("song-" + linkcounter, new setVolumeSound(new Identifier(MusicTriggersCommon.MODID, "music." + song), SoundCategory.MUSIC, 1F,
+                                                musicLinker.put("song-" + linkcounter, new setVolumeSound(new Identifier(MusicTriggersCommon.MODID, "music." + song), SoundCategory.MUSIC, Float.parseFloat(configToml.otherinfo.get(curTrack)[4]),
                                                         Float.parseFloat(configToml.otherlinkinginfo.get(curTrack).get(song)[0]), false, 1, SoundInstance.AttenuationType.NONE, 0F, 0F, 0F));
+                                                volumeLinker.put("song-" + linkcounter, Float.parseFloat(configToml.otherlinkinginfo.get(curTrack).get(song)[1]));
+
                                             }
                                             linkcounter++;
                                         }
                                     } else {
-                                        musicLinker.put("song-" + 0, new setVolumeSound(new Identifier(MusicTriggersCommon.MODID, "music." + curTrackHolder), SoundCategory.MUSIC, 1F, Float.parseFloat(configToml.otherinfo.get(curTrack)[0]), false, 1, SoundInstance.AttenuationType.NONE, 0F, 0F, 0F));
+                                        musicLinker.put("song-" + 0, new setVolumeSound(new Identifier(MusicTriggersCommon.MODID, "music." + curTrackHolder), SoundCategory.MUSIC, Float.parseFloat(configToml.otherinfo.get(curTrack)[4]), Float.parseFloat(configToml.otherinfo.get(curTrack)[0]), false, 1, SoundInstance.AttenuationType.NONE, 0F, 0F, 0F));
                                     }
                                     if (MusicPicker.player != null) {
                                         if (!configRegistry.clientSideOnly) {

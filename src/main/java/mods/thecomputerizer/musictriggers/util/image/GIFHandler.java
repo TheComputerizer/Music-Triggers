@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.util.image;
 
-import com.madgag.gif.fmsware.GifDecoder;
+import mods.thecomputerizer.musictriggers.libraries.com.madgag.gif.fmsware.GifDecoder;
 import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
 
 import javax.imageio.ImageIO;

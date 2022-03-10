@@ -24,17 +24,13 @@ public class SoundHandler {
 
 
     public static void registerSounds() {
-        MusicTriggersCommon.logger.info("Actually registering songs");
         for (Map.Entry<String, Map<String, String[]>> stringListEntry : configToml.triggerholder.entrySet()) {
             String songEntry = ((Map.Entry) stringListEntry).getKey().toString();
-            MusicTriggersCommon.logger.info("Actually registering song: "+songEntry);
             SoundEvent sound = new SoundEvent(new Identifier(MusicTriggersCommon.MODID, configToml.songholder.get(songEntry)));
             List<String> triggers = new ArrayList<>();
-            MusicTriggersCommon.logger.info("song "+configToml.songholder.get(songEntry)+" has "+configToml.triggerholder.get(songEntry).keySet().size()+" trigger(s)");
             for (Map.Entry<String, String[]> nestedStringListEntry : configToml.triggerholder.get(songEntry).entrySet()) {
                 String temp = ((Map.Entry) nestedStringListEntry).getKey().toString();
                 if(configToml.triggerholder.get(songEntry).get(temp)[6].matches("not")) {
-                    MusicTriggersCommon.logger.info("Registered "+temp+" as an anti trigger for "+configToml.songholder.get(songEntry));
                     antiSongs.computeIfAbsent(songEntry, k -> new ArrayList<>());
                     if(configToml.triggerholder.get(songEntry).get(temp)[10].matches("_")) {
                         antiSongs.get(songEntry).add(temp);
@@ -51,7 +47,6 @@ public class SoundHandler {
                 String trigger = triggers.get(0);
                 TriggerSongMap.putIfAbsent(trigger, new HashMap<>());
                 TriggerSongMap.get(trigger).putIfAbsent(songEntry,configToml.triggerholder.get(songEntry).get(trigger)[10]);
-                MusicTriggersCommon.logger.info("Detected the single trigger of "+trigger+" for song "+configToml.songholder.get(songEntry));
                 TriggerInfoMap.putIfAbsent(trigger, configToml.triggerholder.get(songEntry).get(trigger));
                 if(!configToml.triggerholder.get(songEntry).get(trigger)[10].matches("")) {
                     if (!TriggerInfoMap.containsKey(trigger + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10])) {
@@ -69,11 +64,9 @@ public class SoundHandler {
                         songCombos.computeIfAbsent(songEntry, k -> new ArrayList<>());
                         if(configToml.triggerholder.get(songEntry).get(trigger)[10].matches("")) {
                             songCombos.get(songEntry).add(trigger);
-                            MusicTriggersCommon.logger.info("Added trigger combination for trigger "+trigger+" with blank identifier for song "+configToml.songholder.get(songEntry));
                         }
                         else {
                             songCombos.get(songEntry).add(trigger+"-"+configToml.triggerholder.get(songEntry).get(trigger)[10]);
-                            MusicTriggersCommon.logger.info("Added trigger combination for trigger "+trigger+" with identifier of "+configToml.triggerholder.get(songEntry).get(trigger)[10]+" for song "+configToml.songholder.get(songEntry));
                         }
                         TriggerSongMap.putIfAbsent(trigger, new HashMap<>());
                         TriggerSongMap.get(trigger).putIfAbsent("@"+songEntry,configToml.triggerholder.get(songEntry).get(trigger)[10]);
