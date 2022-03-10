@@ -250,7 +250,8 @@ public class MusicPlayer {
                                     if (configToml.triggerlinking.get(curTrack) != null) {
                                         triggerLinker.put("song-" + 0, configToml.triggerlinking.get(curTrack).get(curTrack));
                                         musicLinker.put("song-" + 0, new setVolumeSound(new ResourceLocation(MusicTriggers.MODID, "music." + curTrackHolder), SoundCategory.MUSIC, Float.parseFloat(configToml.otherinfo.get(curTrack)[4]), Float.parseFloat(configToml.otherinfo.get(curTrack)[0]), false, 1, ISound.AttenuationType.NONE, 0F, 0F, 0F));
-                                        volumeLinker.put("song-" + 0, Float.parseFloat(configToml.otherinfo.get(curTrack)[4]));                                        int linkcounter = 0;
+                                        volumeLinker.put("song-" + 0, Float.parseFloat(configToml.otherinfo.get(curTrack)[4]));
+                                        int linkcounter = 0;
                                         for (String song : configToml.triggerlinking.get(curTrack).keySet()) {
                                             if (!song.matches(curTrack)) {
                                                 triggerLinker.put("song-" + linkcounter, configToml.triggerlinking.get(curTrack).get(song));
