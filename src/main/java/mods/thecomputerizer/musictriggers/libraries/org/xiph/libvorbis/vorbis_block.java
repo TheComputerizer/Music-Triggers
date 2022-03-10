@@ -13,7 +13,7 @@
 package mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis;
 
 import mods.thecomputerizer.musictriggers.libraries.org.xiph.libogg.ogg_packet;
-import org.xiph.libogg.*;
+import mods.thecomputerizer.musictriggers.libraries.org.xiph.libogg.*;
 
 import static mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.vorbis_constants.integer_constants.*;
 

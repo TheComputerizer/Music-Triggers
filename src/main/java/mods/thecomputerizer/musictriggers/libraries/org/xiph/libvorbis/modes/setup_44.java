@@ -15,9 +15,9 @@ package mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.modes;
 import mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.*;
 import mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.books.coupled.resbook_44.res_books_stereo;
 import mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.books.floor.floor_books;
-import org.xiph.libvorbis.*;
-import org.xiph.libvorbis.books.floor.*;
-import org.xiph.libvorbis.books.coupled.resbook_44.*;
+import mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.*;
+import mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.books.floor.*;
+import mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.books.coupled.resbook_44.*;
 
 public class setup_44 {
 	

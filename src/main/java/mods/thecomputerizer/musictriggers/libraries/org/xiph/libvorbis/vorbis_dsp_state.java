@@ -16,7 +16,7 @@ import java.util.*;
 
 import mods.thecomputerizer.musictriggers.libraries.org.xiph.libogg.ogg_packet;
 import mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.vorbis_constants.integer_constants;
-import org.xiph.libogg.*;
+import mods.thecomputerizer.musictriggers.libraries.org.xiph.libogg.*;
 
 public class vorbis_dsp_state {
 
