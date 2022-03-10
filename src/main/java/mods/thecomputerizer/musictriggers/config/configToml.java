@@ -344,7 +344,7 @@ public class configToml {
                                             triggerlinking.get("song" + songCounter).putIfAbsent("song" + songCounter, link.getList("default").toArray(new String[0]));
                                             triggerlinking.get("song" + songCounter).put(trigger.getString("song"), trigger.getList("name").toArray(new String[0]));
                                             otherlinkinginfo.put("song" + songCounter, new HashMap<>());
-                                            otherlinkinginfo.get("song" + songCounter).put(trigger.getString("song"), new String[]{"1"});
+                                            otherlinkinginfo.get("song" + songCounter).put(trigger.getString("song"), new String[]{"1", "1"});
                                             if (trigger.contains("pitch")) {
                                                 otherlinkinginfo.get("song" + songCounter).get(trigger.getString("song"))[0] = trigger.getString("pitch");
                                             }
@@ -662,7 +662,7 @@ public class configToml {
                                         triggerlinking.get("song" + songCounter).putIfAbsent("song" + songCounter, link.getList("default").toArray(new String[0]));
                                         triggerlinking.get("song" + songCounter).put(trigger.getString("song"), trigger.getList("name").toArray(new String[0]));
                                         otherlinkinginfo.put("song" + songCounter, new HashMap<>());
-                                        otherlinkinginfo.get("song" + songCounter).put(trigger.getString("song"), new String[]{"1"});
+                                        otherlinkinginfo.get("song" + songCounter).put(trigger.getString("song"), new String[]{"1", "1"});
                                         if (trigger.contains("pitch")) {
                                             otherlinkinginfo.get("song" + songCounter).get(trigger.getString("song"))[0] = trigger.getString("pitch");
                                         }
