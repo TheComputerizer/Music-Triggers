@@ -2,7 +2,9 @@ package mods.thecomputerizer.musictriggers.client;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.client.gui.GuiMain;
 import mods.thecomputerizer.musictriggers.config.configDebug;
+import mods.thecomputerizer.musictriggers.config.configObject;
 import mods.thecomputerizer.musictriggers.config.configTitleCards;
 import mods.thecomputerizer.musictriggers.util.CustomTick;
 import net.minecraft.client.Minecraft;
@@ -49,13 +51,14 @@ public class eventsClient {
     public static long timer=0;
     public static String GUIName;
     public static int GuiCounter = 0;
-    private static int reloadCounter = 0;
+    public static int reloadCounter = 0;
     public static boolean ismoving;
     public static List<ResourceLocation> pngs = new ArrayList<>();
     public static int movingcounter = 0;
     public static String lastAdvancement;
     public static boolean advancement;
     public static EntityPlayer PVPTracker;
+    public static boolean renderDebug = true;
 
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
@@ -121,6 +124,13 @@ public class eventsClient {
         MusicPicker.mc.getSoundHandler().stopSounds();
         isWorldRendered=false;
         MusicPicker.player=null;
+    }
+
+    @SubscribeEvent
+    public static void cancelRenders(RenderGameOverlayEvent.Pre e) {
+        if(e.getType()==RenderGameOverlayEvent.ElementType.ALL && !renderDebug) {
+            e.setCanceled(true);
+        }
     }
 
     @SubscribeEvent
@@ -197,10 +207,7 @@ public class eventsClient {
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent e) {
         if(MusicPlayer.RELOAD.isKeyDown()) {
-            Minecraft.getMinecraft().getSoundHandler().stopSounds();
-            MusicPicker.player.sendMessage(new TextComponentString("\u00A74\u00A7oReloading Music... This may take a while!"));
-            MusicPlayer.reloading = true;
-            reloadCounter = 5;
+            Minecraft.getMinecraft().displayGuiScreen(new GuiMain(configObject.createFromCurrent()));
         }
     }
 
@@ -224,7 +231,7 @@ public class eventsClient {
 
     @SubscribeEvent
     public static void debugInfo(RenderGameOverlayEvent.Text e) {
-        if(configDebug.ShowDebugInfo && isWorldRendered) {
+        if(configDebug.ShowDebugInfo && isWorldRendered && renderDebug) {
             if(MusicPlayer.curTrackHolder!=null) {
                 e.getLeft().add("Music Triggers Current song: " + MusicPlayer.curTrackHolder);
             }

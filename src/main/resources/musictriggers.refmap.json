@@ -1,14 +1,1 @@
-{
-  "mappings": {
-    "mods/thecomputerizer/reputation/mixin/MixinBossInfoServer": {
-      "openAllSelected()Ljava/util/List;": "Lnet/minecraft/server/packs/repository/PackRepository;m_10525_()Ljava/util/List;"
-    }
-  },
-  "data": {
-    "searge": {
-      "mods/thecomputerizer/reputation/mixin/MixinBossInfoServer": {
-        "openAllSelected()Ljava/util/List;": "Lnet/minecraft/server/packs/repository/PackRepository;m_10525_()Ljava/util/List;"
-      }
-    }
-  }
-}
+{}

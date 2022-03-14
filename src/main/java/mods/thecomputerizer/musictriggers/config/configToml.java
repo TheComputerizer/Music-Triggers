@@ -20,8 +20,8 @@ public class configToml {
     public static Map<String, Map<String, String[]>> triggerlinking = new HashMap<>();
 
     public static final String[] triggers = new String[]
-            {"menu","generic","difficulty","time","light","underground","raining","storming","snowing","lowhp","dead",
-                    "creative","spectator","riding","pet","high","underwater","elytra","fishing","drowning","home",
+            {"menu","generic","difficulty","time","light","height","raining","storming","snowing","lowhp","dead",
+                    "creative","spectator","riding","pet","underwater","elytra","fishing","drowning","home",
                     "dimension","biome", "structure","mob","victory","gui","effect","zones","pvp","advancement"};
     public static final String[] modtriggers = new String[]
             {"gamestage","bloodmoon","harvestmoon","fallingstars","rainintensity","tornado","hurricane","sandstorm","season"};
@@ -29,7 +29,7 @@ public class configToml {
     //priority,fade,level,time,delay,advancement,operator,zone,start,
     //resourcename,identifier,range,mobtargetting,hordetargetpercentage,health,hordehealthpercentage,
     //victory,victoryID,infernalmob,gamestagewhitelist,skylight,phase,victoryID,biome_category,rain_type,
-    //biome_temperature,biome_cold,temperature_modifier,mob_nbt
+    //biome_temperature,biome_cold,temperature_modifier,mob_nbt,underground
 
     //pitch,one time,must finish,chance,volume
 
@@ -60,7 +60,7 @@ public class configToml {
                                             triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
                                                     "minecraft", "_", "16", "false", "100", "100", "100",
                                                     "false", "0", "minecraft", "true", "true", "0", "0", "nope",
-                                                    "nope", "-111", "false", "nope","_"});
+                                                    "nope", "-111", "false", "nope","_", "true"});
                                             if (trigger.contains("priority")) {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                             }
@@ -165,6 +165,9 @@ public class configToml {
                                             if (trigger.contains("mob_nbt")) {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[27] = trigger.getString("mob_nbt");
                                             }
+                                            if (trigger.contains("is_underground")) {
+                                                triggerholder.get("song" + songCounter).get(triggerID)[28] = trigger.getString("is_underground");
+                                            }
                                         } else {
                                             MusicTriggers.logger.warn("Could not find trigger with name " + triggerID);
                                         }
@@ -183,7 +186,7 @@ public class configToml {
                                         triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
                                                 "minecraft", "_", "16", "false", "100", "100", "100",
                                                 "false", "0", "minecraft", "true", "true", "0", "0", "nope", "nope",
-                                                "-111", "false", "nope","_"});
+                                                "-111", "false", "nope","_", "true"});
                                         if (trigger.contains("priority")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                         }
@@ -287,6 +290,9 @@ public class configToml {
                                         }
                                         if (trigger.contains("mob_nbt")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[27] = trigger.getString("mob_nbt");
+                                        }
+                                        if (trigger.contains("is_underground")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[28] = trigger.getString("is_underground");
                                         }
                                     } else {
                                         MusicTriggers.logger.warn("Could not find trigger with name " + triggerID);
@@ -378,7 +384,7 @@ public class configToml {
                                         triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
                                                 "minecraft", "_", "16", "false", "100", "100", "100",
                                                 "false", "0", "minecraft", "true", "true", "0", "0", "nope", "nope",
-                                                "-111", "false", "nope","_"});
+                                                "-111", "false", "nope","_", "true"});
                                         if (trigger.contains("priority")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                         }
@@ -483,6 +489,9 @@ public class configToml {
                                         if (trigger.contains("mob_nbt")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[27] = trigger.getString("mob_nbt");
                                         }
+                                        if (trigger.contains("is_underground")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[28] = trigger.getString("is_underground");
+                                        }
                                     } else {
                                         MusicTriggers.logger.warn("Could not find trigger with name " + triggerID);
                                     }
@@ -501,7 +510,7 @@ public class configToml {
                                     triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
                                             "minecraft", "_", "16", "false", "100", "100", "100",
                                             "false", "0", "minecraft", "true", "true", "0", "0", "nope", "nope",
-                                            "-111", "false", "nope","_"});
+                                            "-111", "false", "nope","_", "true"});
                                     if (trigger.contains("priority")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                     }
@@ -605,6 +614,9 @@ public class configToml {
                                     }
                                     if (trigger.contains("mob_nbt")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[27] = trigger.getString("mob_nbt");
+                                    }
+                                    if (trigger.contains("is_underground")) {
+                                        triggerholder.get("song" + songCounter).get(triggerID)[28] = trigger.getString("is_underground");
                                     }
                                 } else {
                                     MusicTriggers.logger.warn("Could not find trigger with name " + triggerID);

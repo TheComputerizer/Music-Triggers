@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers;
 
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.client.eventsClient;
+import mods.thecomputerizer.musictriggers.client.gui.Mappings;
 import mods.thecomputerizer.musictriggers.common.eventsCommon;
 import mods.thecomputerizer.musictriggers.config.configRegistry;
 import mods.thecomputerizer.musictriggers.config.configTitleCards;
@@ -39,7 +40,7 @@ import java.util.List;
 public class MusicTriggers {
     public static final String MODID = "musictriggers";
     public static final String NAME = "Music Triggers";
-    public static final String VERSION = "5.0-EX";
+    public static final String VERSION = "1.12.2-5.0-EX";
 
     public static File songsDir;
     public static File texturesDir;
@@ -166,6 +167,7 @@ public class MusicTriggers {
             }
         }
         configToml.parse();
+        Mappings.init();
         if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
             configTitleCards.parse();
             pack = new File("config/MusicTriggers/songs/");

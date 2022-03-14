@@ -14,15 +14,16 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class configTitleCards {
 
     public static String CrashHelper;
-    public static HashMap<Integer, Title> titlecards = new HashMap<>();
-    public static HashMap<Integer, Image> imagecards = new HashMap<>();
-    public static HashMap<Integer, Boolean> ismoving = new HashMap<>();
-    public static HashMap<ResourceLocation, ImageDimensions> imageDimensions= new HashMap<>();
+    public static Map<Integer, Title> titlecards = new HashMap<>();
+    public static Map<Integer, Image> imagecards = new HashMap<>();
+    public static Map<Integer, Boolean> ismoving = new HashMap<>();
+    public static Map<ResourceLocation, ImageDimensions> imageDimensions= new HashMap<>();
 
     public static void parse() {
         File file = new File("config/MusicTriggers/transitions.toml");
