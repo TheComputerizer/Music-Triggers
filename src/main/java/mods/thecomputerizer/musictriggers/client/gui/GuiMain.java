@@ -45,31 +45,46 @@ public class GuiMain extends GuiScreen {
         this.addReloadButton();
         this.addAddTriggersButton();
         this.addEditTriggersButton();
+        this.addTransitionsButton();
+        this.addDebugButton();
+        this.addSkipSongButton();
         eventsClient.renderDebug = false;
     }
 
     private void addApplyButton() {
-        GuiButton apply = new GuiButton(1, this.width / 2 +25, this.height / 2 - 30, "Apply Changes");
+        GuiButton apply = new GuiButton(1, this.width / 2 +25, this.height / 2 - 50, "Apply Changes");
         apply.setWidth(150);
         this.buttonList.add(apply);
     }
 
     private void addReloadButton() {
-        GuiButton reload = new GuiButton(2, this.width / 2 - 175, this.height / 2 - 30, "Reload");
+        GuiButton reload = new GuiButton(2, this.width / 2 - 175, this.height / 2 - 50, "Reload");
         reload.setWidth(150);
         this.buttonList.add(reload);
     }
 
     private void addAddTriggersButton() {
-        GuiButton triggers = new GuiButton(3, this.width / 2 - 175, this.height / 2 + 10, "Add Songs");
+        GuiButton triggers = new GuiButton(3, this.width / 2 - 175, this.height / 2 - 10, "Add Songs");
         triggers.setWidth(150);
         this.buttonList.add(triggers);
     }
 
     private void addEditTriggersButton() {
-        GuiButton triggers = new GuiButton(4, this.width / 2 + 25, this.height / 2 + 10, "Edit Songs");
+        GuiButton triggers = new GuiButton(4, this.width / 2 + 25, this.height / 2 - 10, "Edit Songs");
         triggers.setWidth(150);
         this.buttonList.add(triggers);
+    }
+
+    private void addTransitionsButton() {
+        this.buttonList.add(new GuiButton(5, this.width/2 - 175, this.height/2 + 30, 150, 200, "Transitions"));
+    }
+
+    private void addDebugButton() {
+        this.buttonList.add(new GuiButton(6, this.width/2 + 25, this.height/2 + 30, 150, 200, "Other"));
+    }
+
+    private void addSkipSongButton() {
+        this.buttonList.add(new GuiButton(7, this.width-80, 8, 64, 16, "\u00A74Skip Song"));
     }
 
     @Override
@@ -86,12 +101,13 @@ public class GuiMain extends GuiScreen {
             this.mc.setIngameFocus();
         }
         if(button.id==2) {
+            this.holder.delete();
             this.reload = true;
             this.mc.displayGuiScreen(null);
             this.mc.setIngameFocus();
         }
         if(button.id==3) {
-            this.mc.displayGuiScreen(new GuiAddSongs(this, json.allSongs, holder));
+            this.mc.displayGuiScreen(new GuiAddSongs(this, json.allSongs, holder, null));
         }
         if(button.id==4) {
             this.mc.displayGuiScreen(new GuiEditSongs(this, holder));

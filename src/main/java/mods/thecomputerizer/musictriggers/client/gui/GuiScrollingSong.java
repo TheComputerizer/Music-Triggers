@@ -4,7 +4,6 @@ import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.config.configObject;
 import mods.thecomputerizer.musictriggers.config.configToml;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiSlot;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -28,8 +27,9 @@ public class GuiScrollingSong extends GuiSlot {
     private final ResourceLocation background;
     private final ResourceLocation darken;
     private final configObject holder;
+    private GuiLinking linking = null;
 
-    public GuiScrollingSong(Minecraft client, int width, int height, int top, int bottom, List<String> songs, List<String> codes, GuiScreen IN, configObject holder) {
+    public GuiScrollingSong(Minecraft client, int width, int height, int top, int bottom, List<String> songs, List<String> codes, GuiScreen IN, configObject holder, GuiLinking linking) {
         super(client, width, height, top, bottom, 32);
         this.size = songs.size();
         this.songs = songs;
@@ -38,6 +38,7 @@ public class GuiScrollingSong extends GuiSlot {
         this.background = new ResourceLocation(MusicTriggers.MODID,"textures/block/recorder_side_active.png");
         this.darken = new ResourceLocation(MusicTriggers.MODID,"textures/gui/background.png");
         this.holder = holder;
+        if(linking!=null) this.linking = linking;
     }
 
     @Override protected int getSize() {
@@ -48,15 +49,17 @@ public class GuiScrollingSong extends GuiSlot {
     public void elementClicked(int slotIndex, boolean isDoubleClick, int mouseX, int mouseY) {
         this.curSelected = this.songs.get(slotIndex)+"-"+slotIndex;
         if(isDoubleClick) {
-            if(this.codes!=null) {
-                String code = this.codes.get(slotIndex);
-                List<String> triggers = new ArrayList<>();
-                for(Map.Entry<String, String[]> stringEntry : configToml.triggerholder.get(code).entrySet()) {
-                    triggers.add(stringEntry.getKey());
+            if(this.linking==null) {
+                if (this.codes != null) {
+                    String code = this.codes.get(slotIndex);
+                    this.mc.displayGuiScreen(new GuiSongInfo(this.IN, this.songs.get(slotIndex), code, this.holder));
+                } else {
+                    this.mc.displayGuiScreen(new GuiSongInfo(this.IN, this.songs.get(slotIndex), this.holder.addSong(this.songs.get(slotIndex)), this.holder));
                 }
-                this.mc.displayGuiScreen(new GuiSongInfo(this.IN, this.songs.get(slotIndex), code, this.holder));
-            } else {
-                this.mc.displayGuiScreen(new GuiSongInfo(this.IN, this.songs.get(slotIndex), null, this.holder));
+            }
+            else {
+                this.holder.addLinkingSong(this.linking.songCode, this.songs.get(slotIndex));
+                this.mc.displayGuiScreen(new GuiLinkingInfo(this.IN, this.songs.get(slotIndex), this.linking.songCode, this.holder));
             }
         }
     }
@@ -66,7 +69,7 @@ public class GuiScrollingSong extends GuiSlot {
             return false;
         }
         else {
-            return (this.songs.get(index)+"-"+index).matches(this.curSelected);
+            return index==Integer.parseInt(curSelected.substring(curSelected.length()-1));
         }
     }
 

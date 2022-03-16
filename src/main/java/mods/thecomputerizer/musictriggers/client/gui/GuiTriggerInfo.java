@@ -17,8 +17,6 @@ public class GuiTriggerInfo extends GuiScreen {
     public List<String> parameters;
     public GuiScreen parentScreen;
     public GuiScrollingTriggerInfo scrollingSongs;
-    public String curInfo = "";
-    public boolean edit = false;
     public configObject holder;
 
     public GuiTriggerInfo(GuiScreen parentScreen, String trigger, String songCode, configObject holder, boolean create) {
@@ -64,7 +62,7 @@ public class GuiTriggerInfo extends GuiScreen {
     public void initGui() {
         this.addBackButton();
         this.addScrollable();
-        if(this.edit) this.addDeleteButton();
+        this.addDeleteButton();
         eventsClient.renderDebug = false;
     }
 
@@ -95,11 +93,17 @@ public class GuiTriggerInfo extends GuiScreen {
             this.mc.displayGuiScreen(this.parentScreen);
         }
         if (button.id == 2) {
-            GuiEditSongs parent = ((GuiEditSongs)this.parentScreen);
-            int index = parent.codes.indexOf(this.songCode);
-            parent.songs.remove(index);
-            parent.codes.remove(index);
-            this.mc.displayGuiScreen(parent);
+            if(this.parentScreen instanceof GuiSongInfo) {
+                GuiSongInfo parent = ((GuiSongInfo)this.parentScreen);
+                this.holder.removeTrigger(this.songCode,this.trigger);
+                parent.holder = this.holder;
+                parent.triggers = this.holder.getAllTriggersForCode(this.songCode);
+            } else {
+                GuiTriggers parent = ((GuiTriggers)this.parentScreen);
+                this.holder.removeTrigger(this.songCode,this.trigger);
+                parent.holder = this.holder;
+            }
+            this.mc.displayGuiScreen(this.parentScreen);
         }
     }
 

@@ -46,7 +46,7 @@ public class GuiEditSongs extends GuiScreen {
     }
 
     private void addSongs() {
-        this.scrollingSongs = new GuiScrollingSong(this.mc, this.width, this.height,32,this.height-32, this.songs, this.codes, this, this.holder);
+        this.scrollingSongs = new GuiScrollingSong(this.mc, this.width, this.height,32,this.height-32, this.songs, this.codes, this, this.holder, null);
         this.scrollingSongs.registerScrollButtons(7, 8);
     }
 

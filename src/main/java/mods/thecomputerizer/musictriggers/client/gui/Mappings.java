@@ -10,6 +10,8 @@ public class Mappings {
     public static Map<String, Integer> reverseparameters = new HashMap<>();
     public static Map<Integer, String> songparameters = new HashMap<>();
     public static Map<String, Integer> reversesongparameters = new HashMap<>();
+    public static Map<Integer, String> linkingparameters = new HashMap<>();
+    public static Map<String, Integer> reverselinkingparameters = new HashMap<>();
     public static String[] def = new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
             "minecraft", "_", "16", "false", "100", "100", "100",
             "false", "0", "minecraft", "true", "true", "0", "0", "nope",
@@ -51,6 +53,8 @@ public class Mappings {
         songparameters.put(2, "must_finish");
         songparameters.put(3, "chance");
         songparameters.put(4, "volume");
+        linkingparameters.put(0, "pitch");
+        linkingparameters.put(1, "volume");
         reverseparameters.put("priority", 0);
         reverseparameters.put("fade", 1);
         reverseparameters.put("level", 2);
@@ -85,6 +89,8 @@ public class Mappings {
         reversesongparameters.put("must_finish", 2);
         reversesongparameters.put("chance", 3);
         reversesongparameters.put("volume", 4);
+        reverselinkingparameters.put("pitch", 0);
+        reverselinkingparameters.put("volume", 1);
         for(int i=0;i<def.length;i++) {
             defparameters.put(i,def[i]);
         }
@@ -105,7 +111,9 @@ public class Mappings {
                 case "generic":
                     ret.add(1);
                     ret.add(4);
+                    return ret;
                 case "difficulty":
+                case "rainintensity":
                     ret.add(0);
                     ret.add(1);
                     ret.add(2);
@@ -113,14 +121,17 @@ public class Mappings {
                     ret.add(4);
                     ret.add(6);
                     ret.add(10);
+                    return ret;
                 case "time":
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
                     ret.add(4);
                     ret.add(6);
+                    ret.add(8);
                     ret.add(10);
                     ret.add(21);
+                    return ret;
                 case "light":
                     ret.add(0);
                     ret.add(1);
@@ -130,6 +141,7 @@ public class Mappings {
                     ret.add(6);
                     ret.add(10);
                     ret.add(20);
+                    return ret;
                 case "height":
                     ret.add(0);
                     ret.add(1);
@@ -138,24 +150,25 @@ public class Mappings {
                     ret.add(6);
                     ret.add(10);
                     ret.add(28);
+                    return ret;
                 case "raining":
-                    ret.add(0);
-                    ret.add(1);
-                    ret.add(3);
-                    ret.add(4);
-                    ret.add(6);
                 case "storming":
-                    ret.add(0);
-                    ret.add(1);
-                    ret.add(3);
-                    ret.add(4);
-                    ret.add(6);
                 case "snowing":
+                case "dead":
+                case "creative":
+                case "spectator":
+                case "pet":
+                case "underwater":
+                case "drowning":
+                case "bloodmoon":
+                case "harvestmoon":
+                case "fallingstars":
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
                     ret.add(4);
                     ret.add(6);
+                    return ret;
                 case "lowhp":
                     ret.add(0);
                     ret.add(1);
@@ -163,25 +176,12 @@ public class Mappings {
                     ret.add(3);
                     ret.add(4);
                     ret.add(6);
-                case "dead":
-                    ret.add(0);
-                    ret.add(1);
-                    ret.add(3);
-                    ret.add(4);
-                    ret.add(6);
-                case "creative":
-                    ret.add(0);
-                    ret.add(1);
-                    ret.add(3);
-                    ret.add(4);
-                    ret.add(6);
-                case "spectator":
-                    ret.add(0);
-                    ret.add(1);
-                    ret.add(3);
-                    ret.add(4);
-                    ret.add(6);
+                    return ret;
                 case "riding":
+                case "dimension":
+                case "structure":
+                case "gui":
+                case "effect":
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -189,25 +189,8 @@ public class Mappings {
                     ret.add(6);
                     ret.add(9);
                     ret.add(10);
-                case "pet":
-                    ret.add(0);
-                    ret.add(1);
-                    ret.add(3);
-                    ret.add(4);
-                    ret.add(6);
-                case "underwater":
-                    ret.add(0);
-                    ret.add(1);
-                    ret.add(3);
-                    ret.add(4);
-                    ret.add(6);
+                    return ret;
                 case "elytra":
-                    ret.add(0);
-                    ret.add(1);
-                    ret.add(3);
-                    ret.add(4);
-                    ret.add(6);
-                    ret.add(8);
                 case "fishing":
                     ret.add(0);
                     ret.add(1);
@@ -215,27 +198,17 @@ public class Mappings {
                     ret.add(4);
                     ret.add(6);
                     ret.add(8);
-                case "drowning":
-                    ret.add(0);
-                    ret.add(1);
-                    ret.add(3);
-                    ret.add(4);
-                    ret.add(6);
+                    return ret;
                 case "home":
+                case "hurricane":
+                case "sandstorm":
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
                     ret.add(4);
                     ret.add(6);
                     ret.add(11);
-                case "dimension":
-                    ret.add(0);
-                    ret.add(1);
-                    ret.add(3);
-                    ret.add(4);
-                    ret.add(6);
-                    ret.add(9);
-                    ret.add(10);
+                    return ret;
                 case "biome":
                     ret.add(0);
                     ret.add(1);
@@ -248,14 +221,7 @@ public class Mappings {
                     ret.add(24);
                     ret.add(25);
                     ret.add(26);
-                case "structure":
-                    ret.add(0);
-                    ret.add(1);
-                    ret.add(3);
-                    ret.add(4);
-                    ret.add(6);
-                    ret.add(9);
-                    ret.add(10);
+                    return ret;
                 case "mob":
                     ret.add(0);
                     ret.add(1);
@@ -275,6 +241,7 @@ public class Mappings {
                     ret.add(18);
                     ret.add(22);
                     ret.add(27);
+                    return ret;
                 case "victory":
                     ret.add(0);
                     ret.add(1);
@@ -283,22 +250,7 @@ public class Mappings {
                     ret.add(6);
                     ret.add(10);
                     ret.add(17);
-                case "gui":
-                    ret.add(0);
-                    ret.add(1);
-                    ret.add(3);
-                    ret.add(4);
-                    ret.add(6);
-                    ret.add(9);
-                    ret.add(10);
-                case "effect":
-                    ret.add(0);
-                    ret.add(1);
-                    ret.add(3);
-                    ret.add(4);
-                    ret.add(6);
-                    ret.add(9);
-                    ret.add(10);
+                    return ret;
                 case "zones":
                     ret.add(0);
                     ret.add(1);
@@ -307,6 +259,7 @@ public class Mappings {
                     ret.add(6);
                     ret.add(7);
                     ret.add(10);
+                    return ret;
                 case "pvp":
                     ret.add(0);
                     ret.add(1);
@@ -316,6 +269,7 @@ public class Mappings {
                     ret.add(10);
                     ret.add(17);
                     ret.add(22);
+                    return ret;
                 case "advancement":
                     ret.add(0);
                     ret.add(1);
@@ -324,6 +278,7 @@ public class Mappings {
                     ret.add(5);
                     ret.add(6);
                     ret.add(10);
+                    return ret;
                 case "gamestage":
                     ret.add(0);
                     ret.add(1);
@@ -333,32 +288,7 @@ public class Mappings {
                     ret.add(9);
                     ret.add(10);
                     ret.add(19);
-                case "bloodmoon":
-                    ret.add(0);
-                    ret.add(1);
-                    ret.add(3);
-                    ret.add(4);
-                    ret.add(6);
-                case "harvestmoon":
-                    ret.add(0);
-                    ret.add(1);
-                    ret.add(3);
-                    ret.add(4);
-                    ret.add(6);
-                case "fallingstars":
-                    ret.add(0);
-                    ret.add(1);
-                    ret.add(3);
-                    ret.add(4);
-                    ret.add(6);
-                case "rainintensity":
-                    ret.add(0);
-                    ret.add(1);
-                    ret.add(2);
-                    ret.add(3);
-                    ret.add(4);
-                    ret.add(6);
-                    ret.add(10);
+                    return ret;
                 case "tornado":
                     ret.add(0);
                     ret.add(1);
@@ -368,20 +298,7 @@ public class Mappings {
                     ret.add(6);
                     ret.add(10);
                     ret.add(11);
-                case "hurricane":
-                    ret.add(0);
-                    ret.add(1);
-                    ret.add(3);
-                    ret.add(4);
-                    ret.add(6);
-                    ret.add(11);
-                case "sandstorm":
-                    ret.add(0);
-                    ret.add(1);
-                    ret.add(3);
-                    ret.add(4);
-                    ret.add(6);
-                    ret.add(11);
+                    return ret;
                 case "season":
                     ret.add(0);
                     ret.add(1);
@@ -390,6 +307,7 @@ public class Mappings {
                     ret.add(6);
                     ret.add(8);
                     ret.add(10);
+                    return ret;
             }
         }
         return ret;

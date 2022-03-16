@@ -4,7 +4,6 @@ import com.rits.cloning.Cloner;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.gui.Mappings;
 import net.minecraft.util.ResourceLocation;
-import scala.collection.immutable.List$;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -25,6 +24,7 @@ public class configObject {
 
     private Map<String, List<Integer>> markSongInfoForWriting;
     private Map<String, Map<String, List<Integer>>> markTriggerInfoForWriting;
+    private Map<String, Map<String, List<Integer>>> markLinkingInfoForWriting;
 
     private final File mainConfig;
     private final File titleCardConfig;
@@ -33,7 +33,8 @@ public class configObject {
     public static final String[] triggerInfoDefaults = new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
             "minecraft", "_", "16", "false", "100", "100", "100",
             "false", "0", "minecraft", "true", "true", "0", "0", "nope", "nope",
-            "-111", "false", "nope","_", "true"};
+            "-111", "false","_", "true"};
+    public static final String[] linkingInfoDefaults = new String[]{"1", "1"};
 
     private configObject(Map<String, String> songholder, Map<String, Map<String, String[]>> triggerholder, Map<String, String[]> otherinfo,
                          Map<String, Map<String, String[]>> otherlinkinginfo, Map<String, Map<String, String[]>> triggerlinking, Map<Integer, configTitleCards.Title> titlecards,
@@ -50,6 +51,7 @@ public class configObject {
 
         this.markSongInfoForWriting = new HashMap<>();
         this.markTriggerInfoForWriting = new HashMap<>();
+        this.markLinkingInfoForWriting = new HashMap<>();
 
         this.mainConfig = new File("config/MusicTriggers/musictriggers.toml");
         this.titleCardConfig = new File("config/MusicTriggers/transitions.toml");
@@ -78,12 +80,36 @@ public class configObject {
         return  ret;
     }
 
-    public List<String> getAllTriggerForCode(String code) {
+    public List<String> getAllTriggersForCode(String code) {
         List<String> ret = new ArrayList<>();
         for(Map.Entry<String, String[]> stringEntry : this.triggerholder.get(code).entrySet()) {
             ret.add(stringEntry.getKey());
         }
         return ret;
+    }
+
+    public List<String> getAllSongsForLinking(String code) {
+        List<String> ret = new ArrayList<>();
+        if(this.triggerlinking.get(code)!=null) {
+            for (Map.Entry<String, String[]> stringEntry : this.triggerlinking.get(code).entrySet()) {
+                if(!stringEntry.getKey().matches(code)) ret.add(stringEntry.getKey());
+            }
+        }
+        return  ret;
+    }
+
+    public List<String> getAllLinkingInfo(String code, String song) {
+        List<String> ret = new ArrayList<>();
+        for(String ignored : this.triggerlinking.get(code).get(song)) {
+            ret.add("trigger");
+        }
+        ret.add("pitch");
+        ret.add("volume");
+        return  ret;
+    }
+
+    public String decode(String code) {
+        return this.songholder.get(code);
     }
 
     public String addSong(String name) {
@@ -104,11 +130,38 @@ public class configObject {
         this.triggerholder.get(code).put(trigger, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
                 "minecraft", "_", "16", "false", "100", "100", "100",
                 "false", "0", "minecraft", "true", "true", "0", "0", "nope", "nope",
-                "-111", "false", "nope","_", "true"});
+                "-111", "false","_", "true"});
     }
 
     public void removeTrigger(String code, String trigger) {
         this.triggerholder.get(code).remove(trigger);
+    }
+
+    public void addLinkingSong(String code, String name) {
+        this.triggerlinking.putIfAbsent(code, new HashMap<>());
+        this.otherlinkinginfo.putIfAbsent(code, new HashMap<>());
+        this.triggerlinking.get(code).put(name, new String[]{});
+        this.otherlinkinginfo.get(code).put(name, new String[]{"1", "1"});
+    }
+
+    public void removeLinkingSong(String code, String name) {
+        this.triggerlinking.get(code).remove(name);
+        this.otherlinkinginfo.get(code).remove(name);
+    }
+
+    public void addLinkingTrigger(String code, String name, String trigger) {
+        List<String> triggers = Arrays.stream(this.triggerlinking.get(code).get(name)).collect(Collectors.toList());
+        triggers.add(trigger);
+        this.triggerlinking.get(code).put(name, triggers.toArray(new String[0]));
+    }
+
+    public boolean isLinkingInfoTrigger(String code, String song, int index) {
+        return index<this.triggerlinking.get(code).get(song).length;
+    }
+    public void removeLinkingTrigger(String code, String name, int index) {
+        List<String> triggers = Arrays.stream(this.triggerlinking.get(code).get(name)).collect(Collectors.toList());
+        triggers.remove(index);
+        this.triggerlinking.get(code).put(name, triggers.toArray(new String[0]));
     }
 
     public String getSongInfoAtIndex(String code, int index) {
@@ -118,6 +171,12 @@ public class configObject {
 
     public String getTriggerInfoAtIndex(String code, String trigger, int index) {
         return this.triggerholder.get(code).get(trigger)[index];
+    }
+
+    public String getLinkingInfoAtIndex(String code, String song, int index) {
+        int triggerSize = this.triggerlinking.get(code).get(song).length;
+        if(index<triggerSize) return this.triggerlinking.get(code).get(song)[index];
+        else return this.otherlinkinginfo.get(code).get(song)[index-triggerSize];
     }
 
     public void editOtherInfoParameter(String code, int index, String newVal) {
@@ -132,7 +191,12 @@ public class configObject {
         for(Map.Entry<String, Map<String, String[]>> stringMapEntry : this.triggerholder.entrySet()) {
             addExistingEditedOtherInfoParameters(stringMapEntry.getKey());
             for(Map.Entry<String, String[]> stringEntry : this.triggerholder.get(stringMapEntry.getKey()).entrySet()) {
-                addExistingEditedTriggerInfoParameters(stringMapEntry.getKey(),stringEntry.getKey());
+                addExistingEditedTriggerInfoParameters(stringMapEntry.getKey(), stringEntry.getKey());
+            }
+            if(this.otherlinkinginfo.get(stringMapEntry.getKey()) != null) {
+                for (Map.Entry<String, String[]> stringEntry : this.otherlinkinginfo.get(stringMapEntry.getKey()).entrySet()) {
+                    addExistingEditedLinkingInfoParameters(stringMapEntry.getKey(), stringEntry.getKey());
+                }
             }
         }
     }
@@ -160,6 +224,18 @@ public class configObject {
         }
     }
 
+    private void addExistingEditedLinkingInfoParameters(String code, String song) {
+        this.markTriggerInfoForWriting.putIfAbsent(code, new HashMap<>());
+        this.markTriggerInfoForWriting.get(code).putIfAbsent(song, new ArrayList<>());
+        for(int i=0;i<this.otherlinkinginfo.get(code).get(song).length;i++) {
+            if(!this.otherlinkinginfo.get(code).get(song)[i].matches(linkingInfoDefaults[i])) {
+                if(!this.markLinkingInfoForWriting.get(code).get(song).contains(i)) {
+                    this.markLinkingInfoForWriting.get(code).get(song).add(i);
+                }
+            }
+        }
+    }
+
     public void editTriggerInfoParameter(String code, String trigger, int index, String newVal) {
         this.markTriggerInfoForWriting.putIfAbsent(code, new HashMap<>());
         this.markTriggerInfoForWriting.get(code).putIfAbsent(trigger, new ArrayList<>());
@@ -169,9 +245,17 @@ public class configObject {
         this.triggerholder.get(code).get(trigger)[index] = newVal;
     }
 
+    public void editLinkingInfoParameter(String code, String song, int index, String newVal) {
+        this.markLinkingInfoForWriting.putIfAbsent(code, new HashMap<>());
+        this.markLinkingInfoForWriting.get(code).putIfAbsent(song, new ArrayList<>());
+        int triggerSize = this.triggerlinking.get(code).get(song).length;
+        if(index>=triggerSize && !this.markLinkingInfoForWriting.get(code).get(song).contains(index-triggerSize)) this.markLinkingInfoForWriting.get(code).get(song).add(index-triggerSize);
+        if(index<triggerSize) this.triggerlinking.get(code).get(song)[index] = newVal;
+        else this.otherlinkinginfo.get(code).get(song)[index-triggerSize] = newVal;
+    }
+
     public void write() throws IOException {
         StringBuilder mainBuilder = new StringBuilder();
-        FileWriter writeTransitions = new FileWriter(this.titleCardConfig);
         for(Map.Entry<String, Map<String, String[]>> stringMapEntry : this.triggerholder.entrySet()) {
             String code = stringMapEntry.getKey();
             MusicTriggers.logger.info("writing code: "+code);
@@ -187,7 +271,29 @@ public class configObject {
                 mainBuilder.append("\t\tname = \"").append(trigger).append("\"\n");
                 if(this.markTriggerInfoForWriting.get(code)!=null && this.markTriggerInfoForWriting.get(code).get(trigger)!=null) {
                     for (int i : this.markTriggerInfoForWriting.get(code).get(trigger)) {
-                        mainBuilder.append("\t\t").append(Mappings.parameters.get(i)).append(" = \"").append(this.triggerholder.get(code).get(trigger)[i]).append("\"\n");
+                        if(!Mappings.parameters.get(i).matches("zone")) {
+                            mainBuilder.append("\t\t").append(Mappings.parameters.get(i)).append(" = \"").append(this.triggerholder.get(code).get(trigger)[i]).append("\"\n");
+                        } else {
+                            mainBuilder.append("\t\t").append("[").append(this.songholder.get(code)).append(".trigger.zone]\n");
+                            formatZoneParameter(mainBuilder, this.triggerholder.get(code).get(trigger)[i]);
+                        }
+                    }
+                }
+            }
+            if(this.triggerlinking.get(stringMapEntry.getKey())!=null && !getAllSongsForLinking(code).isEmpty()) {
+                mainBuilder.append("\t[").append(this.songholder.get(code)).append(".link]\n");
+                mainBuilder.append(this.formatLinkingDefaults(code)).append("\n");
+                for (Map.Entry<String, String[]> stringEntry : this.triggerlinking.get(stringMapEntry.getKey()).entrySet()) {
+                    String song = stringEntry.getKey();
+                    if(!song.matches(code)) {
+                        mainBuilder.append(this.formatLinkingBrackets(code, this.songholder.get(code))).append("\n");
+                        mainBuilder.append("\t\t\tsong = \"").append(song).append("\"\n");
+                        if (this.markLinkingInfoForWriting.get(code) != null && this.markLinkingInfoForWriting.get(code).get(song) != null) {
+                            for (int i : this.markLinkingInfoForWriting.get(code).get(song)) {
+                                mainBuilder.append("\t\t\t").append(Mappings.linkingparameters.get(i)).append(" = \"").append(this.otherlinkinginfo.get(code).get(song)[i]).append("\"\n");
+                            }
+                        }
+                        mainBuilder.append(this.formatLinkingTriggers(code, song)).append("\n");
                     }
                 }
             }
@@ -196,6 +302,10 @@ public class configObject {
         FileWriter writeMain = new FileWriter(this.mainConfig);
         writeMain.write(mainBuilder.toString());
         writeMain.close();
+        StringBuilder transitionBuilder = new StringBuilder();
+        FileWriter writeTransitions = new FileWriter(this.titleCardConfig);
+        writeTransitions.write(transitionBuilder.toString());
+        writeTransitions.close();
         this.delete();
     }
 
@@ -209,7 +319,53 @@ public class configObject {
         else return "["+song+".trigger]";
     }
 
-    private void delete() {
+    private String formatLinkingBrackets(String code, String song) {
+        if (this.triggerlinking.get(code).entrySet().size()>1) return "\t\t[["+song+".link.trigger]]";
+        else return "\t\t["+song+".link.trigger]";
+    }
+
+    private String formatLinkingDefaults(String code) {
+        List<String> temp = this.getAllTriggersForCode(code);
+        List<String> triggers = new ArrayList<>();
+        for(String trigger : temp) {
+            if(!this.triggerholder.get(code).get(trigger)[10].matches("minecraft")) triggers.add(trigger+"-"+this.triggerholder.get(code).get(trigger)[10]);
+            else triggers.add(trigger);
+        }
+        StringBuilder defaults = new StringBuilder();
+        defaults.append("\t\tdefault = [ ");
+        for(String trigger : triggers) {
+            defaults.append("\"").append(trigger).append("\" ");
+        }
+        defaults.append("]");
+        return defaults.toString();
+    }
+
+    private String formatLinkingTriggers(String code, String song) {
+        List<String> triggers = Arrays.stream(this.triggerlinking.get(code).get(song)).collect(Collectors.toList());
+        StringBuilder triggerbuilder = new StringBuilder();
+        triggerbuilder.append("\t\t\tname = [ ");
+        for(String trigger : triggers) {
+            triggerbuilder.append("\"").append(trigger).append("\" ");
+        }
+        triggerbuilder.append("]");
+        return triggerbuilder.toString();
+    }
+
+    private void formatZoneParameter(StringBuilder builder, String zone) {
+        String[] broken = stringBreaker(zone, ",");
+        builder.append("\t\t\tx_min = \"").append(broken[0]).append("\"\n");
+        builder.append("\t\t\ty_min = \"").append(broken[1]).append("\"\n");
+        builder.append("\t\t\tz_min = \"").append(broken[2]).append("\"\n");
+        builder.append("\t\t\tx_max = \"").append(broken[3]).append("\"\n");
+        builder.append("\t\t\ty_max = \"").append(broken[4]).append("\"\n");
+        builder.append("\t\t\tz_max = \"").append(broken[5]).append("\"\n");
+    }
+
+    public static String[] stringBreaker(String s, String regex) {
+        return s.split(regex);
+    }
+
+    public void delete() {
         this.songholder = new HashMap<>();
         this.triggerholder = new HashMap<>();
         this.otherinfo = new HashMap<>();
@@ -221,5 +377,6 @@ public class configObject {
         this.imageDimensions = new HashMap<>();
         this.markSongInfoForWriting = new HashMap<>();
         this.markTriggerInfoForWriting = new HashMap<>();
+        this.markLinkingInfoForWriting = new HashMap<>();
     }
 }

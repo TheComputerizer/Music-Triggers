@@ -47,7 +47,7 @@ public class GuiScrollingTriggerInfo extends GuiSlot {
             return false;
         }
         else {
-            return (this.parameters.get(index)+"-"+index).matches(this.curSelected);
+            return index==Integer.parseInt(curSelected.substring(curSelected.length()-1));
         }
     }
 

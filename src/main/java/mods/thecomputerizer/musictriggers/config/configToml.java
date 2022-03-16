@@ -29,7 +29,7 @@ public class configToml {
     //priority,fade,level,time,delay,advancement,operator,zone,start,
     //resourcename,identifier,range,mobtargetting,hordetargetpercentage,health,hordehealthpercentage,
     //victory,victoryID,infernalmob,gamestagewhitelist,skylight,phase,victoryID,biome_category,rain_type,
-    //biome_temperature,biome_cold,temperature_modifier,mob_nbt,underground
+    //biome_temperature,biome_cold,mob_nbt,underground
 
     //pitch,one time,must finish,chance,volume
 
@@ -60,7 +60,7 @@ public class configToml {
                                             triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
                                                     "minecraft", "_", "16", "false", "100", "100", "100",
                                                     "false", "0", "minecraft", "true", "true", "0", "0", "nope",
-                                                    "nope", "-111", "false", "nope","_", "true"});
+                                                    "nope", "-111", "false","_", "true"});
                                             if (trigger.contains("priority")) {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                             }
@@ -186,7 +186,7 @@ public class configToml {
                                         triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
                                                 "minecraft", "_", "16", "false", "100", "100", "100",
                                                 "false", "0", "minecraft", "true", "true", "0", "0", "nope", "nope",
-                                                "-111", "false", "nope","_", "true"});
+                                                "-111", "false","_", "true"});
                                         if (trigger.contains("priority")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                         }
@@ -384,7 +384,7 @@ public class configToml {
                                         triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
                                                 "minecraft", "_", "16", "false", "100", "100", "100",
                                                 "false", "0", "minecraft", "true", "true", "0", "0", "nope", "nope",
-                                                "-111", "false", "nope","_", "true"});
+                                                "-111", "false","_", "true"});
                                         if (trigger.contains("priority")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                         }
@@ -510,7 +510,7 @@ public class configToml {
                                     triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
                                             "minecraft", "_", "16", "false", "100", "100", "100",
                                             "false", "0", "minecraft", "true", "true", "0", "0", "nope", "nope",
-                                            "-111", "false", "nope","_", "true"});
+                                            "-111", "false","_", "true"});
                                     if (trigger.contains("priority")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                     }

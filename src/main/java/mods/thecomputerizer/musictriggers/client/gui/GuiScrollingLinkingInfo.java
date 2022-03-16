@@ -1,9 +1,7 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.config.configObject;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiSlot;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
@@ -13,24 +11,21 @@ import net.minecraft.util.ResourceLocation;
 
 import java.util.List;
 
-public class GuiScrollingTrigger extends GuiSlot {
+public class GuiScrollingLinkingInfo extends GuiSlot {
 
-    private final int size;
-    private final List<String> triggers;
-    private final GuiScreen IN;
-    private final String songCode;
-    private String curSelected;
+    private int size;
+    public List<String> info;
+    private final GuiLinkingInfo IN;
+    public String curSelected;
     private final ResourceLocation background;
-    private final configObject holder;
+    public int index;
 
-    public GuiScrollingTrigger(Minecraft client, int width, int height, int top, int bottom, List<String> triggers, GuiScreen IN, configObject holder, String songCode) {
+    public GuiScrollingLinkingInfo(Minecraft client, int width, int height, int top, int bottom, List<String> info, GuiLinkingInfo IN) {
         super(client, width, height, top, bottom, 32);
-        this.size = triggers.size();
-        this.triggers = triggers;
+        this.size = info.size();
+        this.info = info;
         this.IN = IN;
-        this.songCode = songCode;
         this.background = new ResourceLocation(MusicTriggers.MODID,"textures/block/recorder_side_active.png");
-        this.holder = holder;
     }
 
     @Override protected int getSize() {
@@ -39,10 +34,8 @@ public class GuiScrollingTrigger extends GuiSlot {
 
     @Override
     public void elementClicked(int slotIndex, boolean isDoubleClick, int mouseX, int mouseY) {
-        this.curSelected = this.triggers.get(slotIndex)+"-"+slotIndex;
-        if(isDoubleClick) {
-            this.mc.displayGuiScreen(new GuiTriggerInfo(this.IN, this.triggers.get(slotIndex), this.songCode, this.holder, true));
-        }
+        this.index = slotIndex;
+        this.curSelected = this.info.get(slotIndex)+"-"+slotIndex;
     }
 
     @Override protected boolean isSelected(int index) {
@@ -56,7 +49,7 @@ public class GuiScrollingTrigger extends GuiSlot {
 
     @Override
     public void drawSlot(int slotIndex, int xPos, int yPos, int heightIn, int mouseXIn, int mouseYIn, float partialTicks) {
-        this.IN.drawCenteredString(this.mc.fontRenderer, this.triggers.get(slotIndex), this.width / 2, yPos + 1, 16777215);
+        this.IN.drawCenteredString(this.mc.fontRenderer, this.info.get(slotIndex), this.width / 2, yPos + 1, 16777215);
     }
 
     @Override protected void drawBackground() {}
@@ -77,5 +70,11 @@ public class GuiScrollingTrigger extends GuiSlot {
         bufferbuilder.pos(this.left + this.width, startY, 0.0D).tex((float)this.width / 32.0F, (float)startY / 32.0F).color(64, 64, 64, startAlpha).endVertex();
         bufferbuilder.pos(this.left, startY, 0.0D).tex(0.0D, (float)startY / 32.0F).color(64, 64, 64, startAlpha).endVertex();
         tessellator.draw();
+    }
+
+    public void refreshList(List<String> info) {
+        this.size = info.size();
+        this.info = info;
+        this.IN.info = this.info;
     }
 }
