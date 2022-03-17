@@ -12,33 +12,42 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class configObject {
-    private Map<String, String> songholder;
-    private Map<String, Map<String, String[]>> triggerholder;
-    private Map<String, String[]> otherinfo;
-    private Map<String, Map<String, String[]>> otherlinkinginfo;
-    private Map<String, Map<String, String[]>> triggerlinking;
-    private Map<Integer, configTitleCards.Title> titlecards;
-    private Map<Integer, configTitleCards.Image> imagecards;
-    private Map<Integer, Boolean> ismoving;
-    private Map<ResourceLocation, configTitleCards.ImageDimensions> imageDimensions;
+    private final Map<String, String> songholder;
+    private final Map<String, Map<String, String[]>> triggerholder;
+    private final Map<String, String[]> otherinfo;
+    private final Map<String, Map<String, String[]>> otherlinkinginfo;
+    private final Map<String, Map<String, String[]>> triggerlinking;
+    private final Map<Integer, configTitleCards.Title> titlecards;
+    private final Map<Integer, configTitleCards.Image> imagecards;
+    private final Map<Integer, Boolean> ismoving;
+    private final Map<ResourceLocation, configTitleCards.ImageDimensions> imageDimensions;
+    private final List<String> blockedmods;
+    private final List<String> debugStuff;
 
-    private Map<String, List<Integer>> markSongInfoForWriting;
-    private Map<String, Map<String, List<Integer>>> markTriggerInfoForWriting;
-    private Map<String, Map<String, List<Integer>>> markLinkingInfoForWriting;
+    private final Map<String, List<Integer>> markSongInfoForWriting;
+    private final Map<String, Map<String, List<Integer>>> markTriggerInfoForWriting;
+    private final Map<String, Map<String, List<Integer>>> markLinkingInfoForWriting;
+    private final Map<Integer, List<Integer>> markTitleInfoForWriting;
+    private final Map<Integer, List<Integer>> markImageInfoForWriting;
 
     private final File mainConfig;
     private final File titleCardConfig;
+    private final File debugConfig;
+    private final File registrationConfig;
 
     public static final String[] otherInfoDefaults = new String[]{"1", "false", "false", "100", "1"};
     public static final String[] triggerInfoDefaults = new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
             "minecraft", "_", "16", "false", "100", "100", "100",
             "false", "0", "minecraft", "true", "true", "0", "0", "nope", "nope",
-            "-111", "false","_", "true"};
+            "-111", "false","_", "true", "-1"};
     public static final String[] linkingInfoDefaults = new String[]{"1", "1"};
+    public static final String[] titleInfoDefaults = new String[]{"title", "subtitle", "false", "red", "white"};
+    public static final String[] imageInfoDefaults = new String[]{"name", "750","0", "0", "100", "100", "false", "10", "10", "10", "0", "4"};
 
     private configObject(Map<String, String> songholder, Map<String, Map<String, String[]>> triggerholder, Map<String, String[]> otherinfo,
                          Map<String, Map<String, String[]>> otherlinkinginfo, Map<String, Map<String, String[]>> triggerlinking, Map<Integer, configTitleCards.Title> titlecards,
-                         Map<Integer, configTitleCards.Image> imagecards, Map<Integer, Boolean> ismoving, Map<ResourceLocation, configTitleCards.ImageDimensions> imageDimensions) {
+                         Map<Integer, configTitleCards.Image> imagecards, Map<Integer, Boolean> ismoving, Map<ResourceLocation, configTitleCards.ImageDimensions> imageDimensions,
+                         List<String> blockedmods, List<String> debugStuff) {
         this.songholder = songholder;
         this.triggerholder = triggerholder;
         this.otherinfo = otherinfo;
@@ -48,20 +57,52 @@ public class configObject {
         this.imagecards = imagecards;
         this.ismoving = ismoving;
         this.imageDimensions = imageDimensions;
+        this.blockedmods = blockedmods;
+        this.debugStuff = debugStuff;
 
         this.markSongInfoForWriting = new HashMap<>();
         this.markTriggerInfoForWriting = new HashMap<>();
         this.markLinkingInfoForWriting = new HashMap<>();
+        this.markTitleInfoForWriting = new HashMap<>();
+        this.markImageInfoForWriting = new HashMap<>();
 
         this.mainConfig = new File("config/MusicTriggers/musictriggers.toml");
         this.titleCardConfig = new File("config/MusicTriggers/transitions.toml");
+        this.debugConfig = new File("config/MusicTriggers/debug.toml");
+        this.registrationConfig = new File("config/MusicTriggers/registration.toml");
+    }
+
+    private static List<String> compileDebugStuff() {
+        List<String> ret = new ArrayList<>();
+        ret.add(configDebug.ShowDebugInfo+"");
+        ret.add(configDebug.ShowJustCurSong+"");
+        ret.add(configDebug.ShowGUIName+"");
+        ret.add(configDebug.SilenceIsBad+"");
+        ret.add(configRegistry.registerDiscs+"");
+        ret.add(configRegistry.clientSideOnly+"");
+        return ret;
     }
 
     public static configObject createFromCurrent() {
         Cloner cloner=new Cloner();
         return new configObject(cloner.deepClone(configToml.songholder),cloner.deepClone(configToml.triggerholder),cloner.deepClone(configToml.otherinfo),
                 cloner.deepClone(configToml.otherlinkinginfo),cloner.deepClone(configToml.triggerlinking),cloner.deepClone(configTitleCards.titlecards),
-                cloner.deepClone(configTitleCards.imagecards),cloner.deepClone(configTitleCards.ismoving),cloner.deepClone(configTitleCards.imageDimensions));
+                cloner.deepClone(configTitleCards.imagecards),cloner.deepClone(configTitleCards.ismoving),cloner.deepClone(configTitleCards.imageDimensions),
+                cloner.deepClone(Arrays.asList(configDebug.blockedmods)), cloner.deepClone(compileDebugStuff()));
+    }
+
+    public List<String> getAllDebugStuff() {
+        List<String> ret = new ArrayList<>();
+        for(String s : this.blockedmods) {
+            if(!s.matches("minecraft")) ret.add("blocked mod");
+        }
+        ret.add("show debug info");
+        ret.add("show just current song");
+        ret.add("show gui name");
+        ret.add("silence is bad");
+        ret.add("register discs");
+        ret.add("clientside only");
+        return  ret;
     }
 
     public List<String> getAllSongs() {
@@ -105,7 +146,76 @@ public class configObject {
         }
         ret.add("pitch");
         ret.add("volume");
-        return  ret;
+        return ret;
+    }
+
+    public List<String> getAllTransitions() {
+        List<String> ret = new ArrayList<>();
+        for(int ignored : this.titlecards.keySet()) {
+            ret.add("title card");
+        }
+        for(int ignored : this.imagecards.keySet()) {
+            ret.add("image card");
+        }
+        return ret;
+    }
+
+    public List<String> getAllTransitionParametersAtIndex(boolean title, int i) {
+        List<String> ret = new ArrayList<>();
+        if(title) {
+            for(String ignored : this.titlecards.get(i).getTriggers()) {
+                ret.add("trigger");
+            }
+            ret.add("title");
+            ret.add("subtitle");
+            ret.add("play_once");
+            ret.add("title_color");
+            ret.add("subtitle_color");
+        } else {
+            i=i-this.titlecards.size();
+            if(this.imagecards.get(i).getTriggers()==null) this.imagecards.get(i).addTriggers(new ArrayList<>());
+            for(String ignored : this.imagecards.get(i).getTriggers()) {
+                ret.add("trigger");
+            }
+            ret.add("name");
+            ret.add("time");
+            ret.add("vertical");
+            ret.add("horizontal");
+            ret.add("scale_x");
+            ret.add("scale_y");
+            ret.add("play_once");
+            ret.add("fade_in");
+            ret.add("fade_out");
+            if(this.ismoving.get(i)){
+                ret.add("delay");
+                ret.add("split");
+                ret.add("frames_skipped");
+            }
+        }
+        return ret;
+    }
+
+    public Map<String, Boolean> getAllImages() {
+        Map<String, Boolean> ret = new HashMap<>();
+        File imageFolder = new File("."+"/config/MusicTriggers/songs/assets/musictriggers/textures/");
+        File[] listOfFiles= imageFolder.listFiles();
+        assert listOfFiles != null;
+        for(File f : listOfFiles) {
+            if(f.isDirectory()) ret.put(f.getName(), true);
+            else if(f.getName().contains(".png") && !f.getName().contains(".png.mcmeta") && Arrays.stream(listOfFiles).collect(Collectors.toList()).contains(f.getName()+".mcmeta")) ret.put(f.getName(),true);
+            else if(f.getName().contains(".gif")) ret.put(f.getName(), true);
+            else if(f.getName().contains(".mp4")) ret.put(f.getName(), true);
+            else if(f.getName().contains(".png")) ret.put(f.getName(), false);
+        }
+        return ret;
+    }
+
+    public List<String> extractStringListFromMapKeys(Map<String, ?> map) {
+        List<String> ret = new ArrayList<>();
+        for(Map.Entry<String, ?> stringEntry : map.entrySet()) {
+            ret.add(stringEntry.getKey());
+        }
+        return ret;
     }
 
     public String decode(String code) {
@@ -130,7 +240,7 @@ public class configObject {
         this.triggerholder.get(code).put(trigger, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
                 "minecraft", "_", "16", "false", "100", "100", "100",
                 "false", "0", "minecraft", "true", "true", "0", "0", "nope", "nope",
-                "-111", "false","_", "true"});
+                "-111", "false","_", "true", "-1"});
     }
 
     public void removeTrigger(String code, String trigger) {
@@ -155,13 +265,69 @@ public class configObject {
         this.triggerlinking.get(code).put(name, triggers.toArray(new String[0]));
     }
 
+    public int addTransition(boolean title, boolean ismoving, String name) {
+        int index;
+        if(title) {
+            index = this.titlecards.size();
+            this.titlecards.put(index, new configTitleCards.Title());
+        } else {
+            index = this.imagecards.size();
+            MusicTriggers.logger.info(index);
+            this.imagecards.put(index, new configTitleCards.Image());
+            this.imagecards.get(index).setName(name);
+            this.ismoving.put(index, ismoving);
+            this.markImageInfoForWriting.putIfAbsent(index, new ArrayList<>());
+            this.markImageInfoForWriting.get(index).add(0);
+            index+=this.titlecards.size();
+        }
+        return index;
+    }
+
     public boolean isLinkingInfoTrigger(String code, String song, int index) {
         return index<this.triggerlinking.get(code).get(song).length;
     }
+
+    public boolean isTitle(int index) {
+        return index<this.titlecards.size();
+    }
+
     public void removeLinkingTrigger(String code, String name, int index) {
         List<String> triggers = Arrays.stream(this.triggerlinking.get(code).get(name)).collect(Collectors.toList());
         triggers.remove(index);
         this.triggerlinking.get(code).put(name, triggers.toArray(new String[0]));
+    }
+
+    public void removeTransition(boolean title, int index) {
+        if(title) this.titlecards.remove(index);
+        else {
+            index-=this.titlecards.size();
+            this.imagecards.remove(index);
+            this.imageDimensions.remove(index);
+        }
+    }
+
+    public void addTransitionTrigger(boolean title, int index) {
+        if(title) this.titlecards.get(index).getTriggers().add("trigger");
+        else {
+            index-=this.titlecards.size();
+            this.imagecards.get(index).getTriggers().add("trigger");
+        }
+    }
+
+    public boolean checkIfTransitionIndexIsTrigger(boolean title, int transitionIndex, int index) {
+        if(title) return index<this.titlecards.get(transitionIndex).getTriggers().size();
+        else {
+            index-=this.titlecards.size();
+            return index<this.imagecards.get(transitionIndex).getTriggers().size();
+        }
+    }
+
+    public void removeTransitionTrigger(boolean title, int transitionIndex, int index) {
+        if(title) this.titlecards.get(transitionIndex).getTriggers().remove(index);
+        else {
+            index-=this.titlecards.size();
+            this.imagecards.get(transitionIndex).getTriggers().remove(index);
+        }
     }
 
     public String getSongInfoAtIndex(String code, int index) {
@@ -177,6 +343,86 @@ public class configObject {
         int triggerSize = this.triggerlinking.get(code).get(song).length;
         if(index<triggerSize) return this.triggerlinking.get(code).get(song)[index];
         else return this.otherlinkinginfo.get(code).get(song)[index-triggerSize];
+    }
+
+    public String getTransitionInfoAtIndex(boolean title, int transitionIndex, int index) {
+        if(title) {
+            List<String> triggers = this.titlecards.get(transitionIndex).getTriggers();
+            if(index< triggers.size()) {
+                return triggers.get(index);
+            }
+            index-=triggers.size();
+            switch (index) {
+                case 0 :
+                    return this.titlecards.get(transitionIndex).getTitle();
+                case 1 :
+                    return this.titlecards.get(transitionIndex).getSubTitle();
+                case 2 :
+                    return this.titlecards.get(transitionIndex).getPlayonce().toString();
+                case 3 :
+                    return this.titlecards.get(transitionIndex).getTitlecolor();
+                case 4 :
+                    return this.titlecards.get(transitionIndex).getSubtitlecolor();
+            }
+        } else {
+            transitionIndex-=this.titlecards.size();
+            List<String> triggers = this.imagecards.get(transitionIndex).getTriggers();
+            if(index< triggers.size()) {
+                return triggers.get(index);
+            }
+            index-=triggers.size();
+            switch (index) {
+                case 0 :
+                    return this.imagecards.get(transitionIndex).getName();
+                case 1 :
+                    return this.imagecards.get(transitionIndex).getTime()+"";
+                case 2 :
+                    return this.imagecards.get(transitionIndex).getVertical()+"";
+                case 3 :
+                    return this.imagecards.get(transitionIndex).getHorizontal()+"";
+                case 4 :
+                    return this.imagecards.get(transitionIndex).getScaleX()+"";
+                case 5 :
+                    return this.imagecards.get(transitionIndex).getScaleY()+"";
+                case 6 :
+                    return this.imagecards.get(transitionIndex).getPlayonce().toString();
+                case 7 :
+                    return this.imagecards.get(transitionIndex).getFadeIn()+"";
+                case 8 :
+                    return this.imagecards.get(transitionIndex).getFadeOut()+"";
+                case 9 :
+                    return this.imagecards.get(transitionIndex).getDelay()+"";
+                case 10 :
+                    return this.imagecards.get(transitionIndex).getSplit()+"";
+                case 11 :
+                    return this.imagecards.get(transitionIndex).getSkip()+"";
+            }
+        }
+        return null;
+    }
+
+    public String getOtherInfoAtIndex(int index) {
+        if(index<this.blockedmods.size()) return this.blockedmods.get(index);
+        else {
+            index-=this.blockedmods.size();
+            return this.debugStuff.get(index);
+        }
+    }
+
+    public String getAllTriggersForTransition(int i) {
+        StringBuilder builder = new StringBuilder();
+        if(i<this.titlecards.size()) {
+            for(String trigger : this.titlecards.get(i).getTriggers()) {
+                builder.append(trigger).append(" ");
+            }
+        }
+        else {
+            i=i-titlecards.size();
+            for(String trigger : this.imagecards.get(i).getTriggers()) {
+                builder.append(trigger).append(" ");
+            }
+        }
+        return builder.toString();
     }
 
     public void editOtherInfoParameter(String code, int index, String newVal) {
@@ -198,6 +444,12 @@ public class configObject {
                     addExistingEditedLinkingInfoParameters(stringMapEntry.getKey(), stringEntry.getKey());
                 }
             }
+        }
+        for(int i : this.titlecards.keySet()) {
+            this.addExistingEditedTitleInfoParameters(i);
+        }
+        for(int i : this.imagecards.keySet()) {
+            this.addExistingEditedImageInfoParameters(i);
         }
     }
 
@@ -236,6 +488,55 @@ public class configObject {
         }
     }
 
+    private void addExistingEditedTitleInfoParameters(int i) {
+        this.markTitleInfoForWriting.putIfAbsent(i, new ArrayList<>());
+        String[] info = titleInfoToArray(titlecards.get(i));
+        for(int j=0;j<info.length;j++) {
+            if(!info[j].matches(titleInfoDefaults[j])) {
+                if(!this.markTitleInfoForWriting.get(i).contains(j)) {
+                    this.markTitleInfoForWriting.get(i).add(j);
+                }
+            }
+        }
+    }
+
+    private void addExistingEditedImageInfoParameters(int i) {
+        this.markImageInfoForWriting.putIfAbsent(i, new ArrayList<>());
+        String[] info = imageInfoToArray(imagecards.get(i));
+        for(int j=0;j<info.length;j++) {
+            if(!info[j].matches(imageInfoDefaults[j])) {
+                if(!this.markImageInfoForWriting.get(i).contains(j)) {
+                    this.markImageInfoForWriting.get(i).add(j);
+                }
+            }
+        }
+    }
+
+    private String[] titleInfoToArray(configTitleCards.Title title) {
+        List<String> ret = new ArrayList<>();
+        ret.add(title.getTitle());
+        ret.add(title.getSubTitle());
+        ret.add(title.getPlayonce().toString());
+        return ret.toArray(new String[0]);
+    }
+
+    private String[] imageInfoToArray(configTitleCards.Image image) {
+        List<String> ret = new ArrayList<>();
+        ret.add(image.getName());
+        ret.add(image.getTime()+"");
+        ret.add(image.getVertical()+"");
+        ret.add(image.getHorizontal()+"");
+        ret.add(image.getScaleX()+"");
+        ret.add(image.getScaleY()+"");
+        ret.add(image.getPlayonce().toString());
+        ret.add(image.getFadeIn()+"");
+        ret.add(image.getFadeOut()+"");
+        ret.add(image.getDelay()+"");
+        ret.add(image.getSplit()+"");
+        ret.add(image.getSkip()+"");
+        return ret.toArray(new String[0]);
+    }
+
     public void editTriggerInfoParameter(String code, String trigger, int index, String newVal) {
         this.markTriggerInfoForWriting.putIfAbsent(code, new HashMap<>());
         this.markTriggerInfoForWriting.get(code).putIfAbsent(trigger, new ArrayList<>());
@@ -252,6 +553,110 @@ public class configObject {
         if(index>=triggerSize && !this.markLinkingInfoForWriting.get(code).get(song).contains(index-triggerSize)) this.markLinkingInfoForWriting.get(code).get(song).add(index-triggerSize);
         if(index<triggerSize) this.triggerlinking.get(code).get(song)[index] = newVal;
         else this.otherlinkinginfo.get(code).get(song)[index-triggerSize] = newVal;
+    }
+
+    public void editTransitionInfoAtIndex(boolean title, int transitionIndex, int index, String newVal, char typedChar, int keyCode) {
+        if(title) {
+            List<String> triggers = this.titlecards.get(transitionIndex).getTriggers();
+            if(index<triggers.size()) {
+                this.titlecards.get(transitionIndex).getTriggers().set(index, newVal);
+                return;
+            }
+            index-=triggers.size();
+            this.markTitleInfoForWriting.putIfAbsent(transitionIndex, new ArrayList<>());
+            switch (index) {
+                case 0 :
+                    this.titlecards.get(transitionIndex).setTitle(newVal);
+                    if(!this.markTitleInfoForWriting.get(transitionIndex).contains(index)) this.markTitleInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 1 :
+                    this.titlecards.get(transitionIndex).setSubTitle(newVal);
+                    if(!this.markTitleInfoForWriting.get(transitionIndex).contains(index)) this.markTitleInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 2 :
+                    this.titlecards.get(transitionIndex).setPlayonce(!this.titlecards.get(transitionIndex).getPlayonce());
+                    if(!this.markTitleInfoForWriting.get(transitionIndex).contains(index)) this.markTitleInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 3 :
+                    this.titlecards.get(transitionIndex).setTitlecolor(newVal);
+                    if(!this.markTitleInfoForWriting.get(transitionIndex).contains(index)) this.markTitleInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 4 :
+                    this.titlecards.get(transitionIndex).setSubtitlecolor(newVal);
+                    if(!this.markTitleInfoForWriting.get(transitionIndex).contains(index)) this.markTitleInfoForWriting.get(transitionIndex).add(index);
+            }
+        } else {
+            transitionIndex-=this.titlecards.size();
+            List<String> triggers = this.imagecards.get(transitionIndex).getTriggers();
+            if(index< triggers.size()) {
+                this.imagecards.get(transitionIndex).getTriggers().set(index, newVal);
+                return;
+            }
+            markImageInfoForWriting.putIfAbsent(transitionIndex, new ArrayList<>());
+            index-=triggers.size();
+            int change;
+            if(keyCode==14) change=-10;
+            else if(typedChar=='1' || typedChar=='2' || typedChar=='3' || typedChar=='4' || typedChar=='5' || typedChar=='6' || typedChar=='7' || typedChar=='8' || typedChar=='9') change = Integer.parseInt(typedChar+"");
+            else if(typedChar=='0') change = 10;
+            else change = -1;
+            switch (index) {
+                case 0:
+                    this.imagecards.get(transitionIndex).setName(newVal);
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 1:
+                    this.imagecards.get(transitionIndex).setTime(this.imagecards.get(transitionIndex).getTime() + change);
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 2:
+                    this.imagecards.get(transitionIndex).setVertical(this.imagecards.get(transitionIndex).getVertical() + change);
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 3:
+                    this.imagecards.get(transitionIndex).setHorizontal(this.imagecards.get(transitionIndex).getHorizontal() + change);
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 4:
+                    this.imagecards.get(transitionIndex).setScaleX(this.imagecards.get(transitionIndex).getScaleX() + change);
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 5:
+                    this.imagecards.get(transitionIndex).setScaleY(this.imagecards.get(transitionIndex).getScaleY() + change);
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 6:
+                    this.imagecards.get(transitionIndex).setPlayonce(!this.imagecards.get(transitionIndex).getPlayonce());
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 7:
+                    this.imagecards.get(transitionIndex).setFadeIn(this.imagecards.get(transitionIndex).getFadeIn() + change);
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 8:
+                    this.imagecards.get(transitionIndex).setFadeOut(this.imagecards.get(transitionIndex).getFadeOut() + change);
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 9:
+                    this.imagecards.get(transitionIndex).setDelay(this.imagecards.get(transitionIndex).getDelay() + change);
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 10:
+                    this.imagecards.get(transitionIndex).setSplit(this.imagecards.get(transitionIndex).getSplit() + change);
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 11:
+                    this.imagecards.get(transitionIndex).setSkip(this.imagecards.get(transitionIndex).getSkip() + change);
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+            }
+        }
+    }
+
+    public void editOtherInfoAtIndex(int index, String newVal) {
+        if(index<this.blockedmods.size()) this.blockedmods.set(index, newVal);
+        else {
+            index-=this.blockedmods.size();
+            this.debugStuff.set(index, newVal);
+        }
     }
 
     public void write() throws IOException {
@@ -303,10 +708,38 @@ public class configObject {
         writeMain.write(mainBuilder.toString());
         writeMain.close();
         StringBuilder transitionBuilder = new StringBuilder();
+        for(int i : this.titlecards.keySet()) {
+            transitionBuilder.append(formatTitleBrackets());
+            this.formatTitleTriggers(i, transitionBuilder);
+            markTitleInfoForWriting.putIfAbsent(i, new ArrayList<>());
+            Mappings.buildTitleOutputForGuiFromIndex(this.titlecards.get(i), transitionBuilder, markTitleInfoForWriting.get(i));
+        }
+        for(int i : this.imagecards.keySet()) {
+            transitionBuilder.append(formatImageBrackets());
+            this.formatImageTriggers(i, transitionBuilder);
+            markImageInfoForWriting.putIfAbsent(i, new ArrayList<>());
+            Mappings.buildImageOutputForGuiFromIndex(this.imagecards.get(i), transitionBuilder, markImageInfoForWriting.get(i), this.ismoving.get(i));
+        }
         FileWriter writeTransitions = new FileWriter(this.titleCardConfig);
         writeTransitions.write(transitionBuilder.toString());
         writeTransitions.close();
-        this.delete();
+        this.writeOther();
+    }
+
+    public void writeOther() throws IOException {
+        String d = "# Show the debug info\n" + "showdebuginfo = \""+this.debugStuff.get(0)+"\"\n" +
+                "# If ShowDebugInfo is set to true, but you only want to see the song name\n" + "showjustcursong = \""+this.debugStuff.get(1)+"\"\n" +
+                "# Show an overlay for the name of the current GUI\n" + "showguiname = \""+this.debugStuff.get(2)+"\"\n" +
+                "# Only silence blocked music when there is music from Music Triggers already playing\n" + "silenceisbad = \""+this.debugStuff.get(3)+"\"\n" +
+                "# List of mod ids to remove the music from so there is not any overlap\n" + "blockedmods = ["+this.formatBlockedMods()+"]\n";
+        FileWriter debugWriter = new FileWriter(this.debugConfig);
+        debugWriter.write(d);
+        debugWriter.close();
+        String sb = "# Music Discs\n" + "registerdiscs = \""+this.debugStuff.get(4)+"\"\n" +
+                "# Client Side Only (Some triggers will not be able to trigger)\n" + "clientsideonly = \""+this.debugStuff.get(5)+"\"\n";
+        FileWriter registrationWriter = new FileWriter(this.registrationConfig);
+        registrationWriter.write(sb);
+        registrationWriter.close();
     }
 
     private String formatSongBrackets(String name) {
@@ -322,6 +755,16 @@ public class configObject {
     private String formatLinkingBrackets(String code, String song) {
         if (this.triggerlinking.get(code).entrySet().size()>1) return "\t\t[["+song+".link.trigger]]";
         else return "\t\t["+song+".link.trigger]";
+    }
+
+    private String formatTitleBrackets() {
+        if (this.titlecards.size()>1) return "[[title]]\n";
+        else return "[title]\n";
+    }
+
+    private String formatImageBrackets() {
+        if (this.titlecards.size()>1) return "[[image]]\n";
+        else return "[image]\n";
     }
 
     private String formatLinkingDefaults(String code) {
@@ -351,6 +794,31 @@ public class configObject {
         return triggerbuilder.toString();
     }
 
+    private void formatTitleTriggers(int i, StringBuilder triggerbuilder) {
+        triggerbuilder.append("\ttriggers = [ ");
+        for(String trigger : this.titlecards.get(i).getTriggers()) {
+            triggerbuilder.append("\"").append(trigger).append("\" ");
+        }
+        triggerbuilder.append("]\n");
+    }
+
+    private void formatImageTriggers(int i, StringBuilder triggerbuilder) {
+        triggerbuilder.append("\ttriggers = [ ");
+        for(String trigger : this.imagecards.get(i).getTriggers()) {
+            triggerbuilder.append("\"").append(trigger).append("\" ");
+        }
+        triggerbuilder.append("]\n");
+    }
+
+    private String formatBlockedMods() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(" ");
+        for(String mod : this.blockedmods) {
+            sb.append(mod).append(" ");
+        }
+        return sb.toString();
+    }
+
     private void formatZoneParameter(StringBuilder builder, String zone) {
         String[] broken = stringBreaker(zone, ",");
         builder.append("\t\t\tx_min = \"").append(broken[0]).append("\"\n");
@@ -363,20 +831,5 @@ public class configObject {
 
     public static String[] stringBreaker(String s, String regex) {
         return s.split(regex);
-    }
-
-    public void delete() {
-        this.songholder = new HashMap<>();
-        this.triggerholder = new HashMap<>();
-        this.otherinfo = new HashMap<>();
-        this.otherlinkinginfo = new HashMap<>();
-        this.triggerlinking = new HashMap<>();
-        this.titlecards = new HashMap<>();
-        this.imagecards = new HashMap<>();
-        this.ismoving = new HashMap<>();
-        this.imageDimensions = new HashMap<>();
-        this.markSongInfoForWriting = new HashMap<>();
-        this.markTriggerInfoForWriting = new HashMap<>();
-        this.markLinkingInfoForWriting = new HashMap<>();
     }
 }

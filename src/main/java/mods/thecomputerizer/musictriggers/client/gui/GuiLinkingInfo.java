@@ -47,13 +47,11 @@ public class GuiLinkingInfo extends GuiScreen {
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
         super.keyTyped(typedChar,keyCode);
         if(this.scrollingSongs.curSelected!=null) {
-            if(keyCode>=2 && keyCode<=14 || keyCode>=16 && keyCode<=25 || keyCode>=30 && keyCode<=38 || keyCode>=44 && keyCode<=52) {
+            if(keyCode>=2 && keyCode<=14 || keyCode>=16 && keyCode<=25 || keyCode>=30 && keyCode<=38 || keyCode>=44 && keyCode<=52 || keyCode==57) {
                 int index = this.scrollingSongs.index;
                 if(keyCode==14 && !this.holder.getLinkingInfoAtIndex(this.songCode, this.song, this.scrollingSongs.index).matches("")) this.holder.editLinkingInfoParameter(this.songCode, this.song, index, StringUtils.chop(this.holder.getLinkingInfoAtIndex(this.songCode, this.song, this.scrollingSongs.index)));
                 else if(keyCode==14) {
-                    MusicTriggers.logger.info("Remove this please");
                     if(this.holder.isLinkingInfoTrigger(this.songCode, this.song, index)) {
-                        MusicTriggers.logger.info("Remove this pleaser");
                         this.holder.removeLinkingTrigger(this.songCode, this.song, index);
                         this.scrollingSongs.refreshList(this.holder.getAllLinkingInfo(this.songCode, this.song));
                     }

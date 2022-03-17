@@ -1,5 +1,7 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
+import mods.thecomputerizer.musictriggers.config.configTitleCards;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,7 +17,7 @@ public class Mappings {
     public static String[] def = new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
             "minecraft", "_", "16", "false", "100", "100", "100",
             "false", "0", "minecraft", "true", "true", "0", "0", "nope",
-            "nope", "-111", "false", "nope","_", "true"};
+            "nope", "-111", "false", "nope","_", "true", "-1"};
     public static Map<Integer, String> defparameters = new HashMap<>();
 
     public static void init() {
@@ -48,6 +50,7 @@ public class Mappings {
         parameters.put(26, "biome_cold");
         parameters.put(27, "mob_nbt");
         parameters.put(28, "is_underground");
+        parameters.put(29, "end");
         songparameters.put(0, "pitch");
         songparameters.put(1, "play_once");
         songparameters.put(2, "must_finish");
@@ -84,6 +87,7 @@ public class Mappings {
         reverseparameters.put("biome_cold", 26);
         reverseparameters.put("mob_nbt", 27);
         reverseparameters.put("is_underground", 28);
+        reverseparameters.put("end", 29);
         reversesongparameters.put("pitch", 0);
         reversesongparameters.put("play_once", 1);
         reversesongparameters.put("must_finish", 2);
@@ -106,7 +110,7 @@ public class Mappings {
 
     public static List<Integer> buildGuiParameters(String trigger) {
         List<Integer> ret = new ArrayList<>();
-        if(trigger!=null) {
+        if (trigger != null) {
             switch (trigger) {
                 case "generic":
                     ret.add(1);
@@ -131,6 +135,7 @@ public class Mappings {
                     ret.add(8);
                     ret.add(10);
                     ret.add(21);
+                    ret.add(29);
                     return ret;
                 case "light":
                     ret.add(0);
@@ -145,6 +150,7 @@ public class Mappings {
                 case "height":
                     ret.add(0);
                     ret.add(1);
+                    ret.add(2);
                     ret.add(3);
                     ret.add(4);
                     ret.add(6);
@@ -311,5 +317,90 @@ public class Mappings {
             }
         }
         return ret;
+    }
+
+    public static void buildTitleOutputForGuiFromIndex(configTitleCards.Title title, StringBuilder builder, List<Integer> parameters) {
+        for(int i : parameters) {
+            buildIndividualTitleOutputForGuiFromIndex(title,builder,i);
+        }
+    }
+
+    private static void buildIndividualTitleOutputForGuiFromIndex(configTitleCards.Title title, StringBuilder builder, int index) {
+        switch (index) {
+            case 0:
+                builder.append("\ttitle = \"").append(title.getTitle()).append("\"\n");
+                return;
+            case 1:
+                builder.append("\tsubtitle = \"").append(title.getSubTitle()).append("\"\n");
+                return;
+            case 2:
+                builder.append("\tplay_once = \"").append(title.getPlayonce()).append("\"\n");
+                return;
+            case 3:
+                builder.append("\ttitle_color = \"").append(title.getPlayonce()).append("\"\n");
+                return;
+            case 4:
+                builder.append("\tsubtitle_color = \"").append(title.getPlayonce()).append("\"\n");
+        }
+    }
+
+    public static void buildImageOutputForGuiFromIndex(configTitleCards.Image image, StringBuilder builder, List<Integer> parameters, boolean ismoving) {
+        for(int i : parameters) {
+            buildIndividualStaticImageOutputForGuiFromIndex(image,builder,i);
+        }
+        if(ismoving) {
+            builder.append("\t[image.animation]\n");
+            for(int i : parameters) {
+                buildIndividualMovingImageOutputForGuiFromIndex(image,builder,i);
+            }
+        }
+    }
+
+    private static void buildIndividualStaticImageOutputForGuiFromIndex(configTitleCards.Image image, StringBuilder builder, int index) {
+        if(index<=8) {
+            switch (index) {
+                case 0:
+                    builder.append("\tname = \"").append(image.getName()).append("\"\n");
+                    return;
+                case 1:
+                    builder.append("\ttime = \"").append(image.getTime()).append("\"\n");
+                    return;
+                case 2:
+                    builder.append("\tvertical = \"").append(image.getVertical()).append("\"\n");
+                    return;
+                case 3:
+                    builder.append("\thorizontal = \"").append(image.getHorizontal()).append("\"\n");
+                    return;
+                case 4:
+                    builder.append("\tscale_x = \"").append(image.getScaleX()).append("\"\n");
+                    return;
+                case 5:
+                    builder.append("\tscale_y = \"").append(image.getScaleY()).append("\"\n");
+                    return;
+                case 6:
+                    builder.append("\tplay_once = \"").append(image.getPlayonce()).append("\"\n");
+                    return;
+                case 7:
+                    builder.append("\tfade_in = \"").append(image.getFadeIn()).append("\"\n");
+                    return;
+                case 8:
+                    builder.append("\tfade_out = \"").append(image.getFadeOut()).append("\"\n");
+            }
+        }
+    }
+
+    private static void buildIndividualMovingImageOutputForGuiFromIndex(configTitleCards.Image image, StringBuilder builder, int index) {
+        if(index>8) {
+            switch (index) {
+                case 9:
+                    builder.append("\t\tdelay = \"").append(image.getDelay()).append("\"\n");
+                    return;
+                case 10:
+                    builder.append("\t\tsplit = \"").append(image.getSplit()).append("\"\n");
+                    return;
+                case 11:
+                    builder.append("\t\tframes_skipped = \"").append(image.getSkip()).append("\"\n");
+            }
+        }
     }
 }

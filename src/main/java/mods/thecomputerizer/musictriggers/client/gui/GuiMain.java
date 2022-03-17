@@ -32,10 +32,16 @@ public class GuiMain extends GuiScreen {
     }
 
     @Override
+    protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        super.keyTyped(typedChar, keyCode);
+        MusicTriggers.logger.info("Key Code of key ["+typedChar+"]: "+keyCode);
+    }
+
+    @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        super.drawScreen(mouseX,mouseY,partialTicks);
         this.overlayBackground(0, 32, 255, 255);
         this.overlayBackground(this.height-32, this.height, 255, 255);
+        super.drawScreen(mouseX,mouseY,partialTicks);
         this.drawCenteredString(this.fontRenderer, "Music Triggers in game config integration", this.width/2, 8, 10526880);
     }
 
@@ -52,7 +58,7 @@ public class GuiMain extends GuiScreen {
     }
 
     private void addApplyButton() {
-        GuiButton apply = new GuiButton(1, this.width / 2 +25, this.height / 2 - 50, "Apply Changes");
+        GuiButton apply = new GuiButton(1, this.width / 2 +25, this.height / 2 - 50, "Apply All Changes");
         apply.setWidth(150);
         this.buttonList.add(apply);
     }
@@ -76,11 +82,11 @@ public class GuiMain extends GuiScreen {
     }
 
     private void addTransitionsButton() {
-        this.buttonList.add(new GuiButton(5, this.width/2 - 175, this.height/2 + 30, 150, 200, "Transitions"));
+        this.buttonList.add(new GuiButton(5, this.width/2 - 175, this.height/2 + 30, 150, 20, "Transitions"));
     }
 
     private void addDebugButton() {
-        this.buttonList.add(new GuiButton(6, this.width/2 + 25, this.height/2 + 30, 150, 200, "Other"));
+        this.buttonList.add(new GuiButton(6, this.width/2 + 25, this.height/2 + 30, 150, 20, "Other"));
     }
 
     private void addSkipSongButton() {
@@ -101,7 +107,6 @@ public class GuiMain extends GuiScreen {
             this.mc.setIngameFocus();
         }
         if(button.id==2) {
-            this.holder.delete();
             this.reload = true;
             this.mc.displayGuiScreen(null);
             this.mc.setIngameFocus();
@@ -111,6 +116,15 @@ public class GuiMain extends GuiScreen {
         }
         if(button.id==4) {
             this.mc.displayGuiScreen(new GuiEditSongs(this, holder));
+        }
+        if(button.id==5) {
+            this.mc.displayGuiScreen(new GuiTransitions(this, holder));
+        }
+        if(button.id==6) {
+            this.mc.displayGuiScreen(new GuiOther(this, holder));
+        }
+        if(button.id==7) {
+            if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing && !MusicPlayer.fading) this.mc.getSoundHandler().stopSound(MusicPlayer.curMusic);
         }
     }
 

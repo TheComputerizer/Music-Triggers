@@ -56,6 +56,12 @@ public class configTitleCards {
                         if(title.contains("play_once")) {
                             titlecards.get(titleCounter).setPlayonce(Boolean.parseBoolean(title.getString("play_once")));
                         }
+                        if(title.contains("title_color")) {
+                            titlecards.get(titleCounter).setTitlecolor(title.getString("title_color"));
+                        }
+                        if(title.contains("subtitle_color")) {
+                            titlecards.get(titleCounter).setSubtitlecolor(title.getString("subtitle_color"));
+                        }
                         titleCounter++;
                     }
                 }
@@ -74,6 +80,12 @@ public class configTitleCards {
                     }
                     if(title.contains("play_once")) {
                         titlecards.get(titleCounter).setPlayonce(Boolean.parseBoolean(title.getString("play_once")));
+                    }
+                    if(title.contains("title_color")) {
+                        titlecards.get(titleCounter).setTitlecolor(title.getString("title_color"));
+                    }
+                    if(title.contains("subtitle_color")) {
+                        titlecards.get(titleCounter).setSubtitlecolor(title.getString("subtitle_color"));
                     }
                 }
                 if(toml.containsTableArray("image")) {
@@ -263,12 +275,16 @@ public class configTitleCards {
         private String title;
         private String subtitle;
         private Boolean playonce;
+        private String titlecolor;
+        private String subtitlecolor;
         private final List<String> triggers;
 
         public Title() {
             this.title = "";
             this.subtitle = "";
             this.playonce = false;
+            this.titlecolor = "red";
+            this.subtitlecolor = "white";
             this.triggers = new ArrayList<>();
         }
 
@@ -294,6 +310,22 @@ public class configTitleCards {
 
         public Boolean getPlayonce() {
             return this.playonce;
+        }
+
+        public String getTitlecolor() {
+            return this.titlecolor;
+        }
+
+        public void setTitlecolor(String c) {
+            this.titlecolor = c;
+        }
+
+        public String getSubtitlecolor() {
+            return this.subtitlecolor;
+        }
+
+        public void setSubtitlecolor(String c) {
+            this.subtitlecolor = c;
         }
 
         public void addTriggers(ArrayList<String> t) {

@@ -52,7 +52,7 @@ public class GuiSongInfo extends GuiScreen {
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
         super.keyTyped(typedChar,keyCode);
         if(this.scrollingSongs.curSelected!=null) {
-            if(keyCode>=2 && keyCode<=14 || keyCode>=16 && keyCode<=25 || keyCode>=30 && keyCode<=38 || keyCode>=44 && keyCode<=52) {
+            if(keyCode>=2 && keyCode<=14 || keyCode>=16 && keyCode<=25 || keyCode>=30 && keyCode<=38 || keyCode>=44 && keyCode<=52 || keyCode==57) {
                 int index = this.scrollingSongs.index;
                 if(keyCode==14 && !this.holder.getSongInfoAtIndex(this.songCode, this.scrollingSongs.index).matches("")) this.holder.editOtherInfoParameter(this.songCode, index, StringUtils.chop(this.holder.getSongInfoAtIndex(this.songCode, this.scrollingSongs.index)));
                 else if(keyCode!=14) this.holder.editOtherInfoParameter(this.songCode, index, this.holder.getSongInfoAtIndex(this.songCode, this.scrollingSongs.index)+typedChar);
@@ -64,7 +64,7 @@ public class GuiSongInfo extends GuiScreen {
     public void initGui() {
         this.addBackButton();
         this.addScrollable();
-        addAddTriggerButton();
+        this.addAddTriggerButton();
         this.addLinkingButton();
         this.addDeleteButton();
         eventsClient.renderDebug = false;

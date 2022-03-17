@@ -50,7 +50,7 @@ public class GuiTriggerInfo extends GuiScreen {
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
         super.keyTyped(typedChar,keyCode);
         if(this.scrollingSongs.curSelected!=null) {
-            if(keyCode>=2 && keyCode<=14 || keyCode>=16 && keyCode<=25 || keyCode>=30 && keyCode<=38 || keyCode>=44 && keyCode<=52) {
+            if(keyCode>=2 && keyCode<=14 || keyCode>=16 && keyCode<=25 || keyCode>=30 && keyCode<=38 || keyCode>=44 && keyCode<=52 || keyCode==57) {
                 int index = this.scrollingSongs.index;
                 if(keyCode==14 && !this.holder.getTriggerInfoAtIndex(this.songCode, this.trigger, this.scrollingSongs.index).matches("")) this.holder.editTriggerInfoParameter(this.songCode, this.trigger, index, StringUtils.chop(this.holder.getTriggerInfoAtIndex(this.songCode, this.trigger, this.scrollingSongs.index)));
                 else if(keyCode!=14) this.holder.editTriggerInfoParameter(this.songCode, this.trigger, index, this.holder.getTriggerInfoAtIndex(this.songCode, this.trigger, this.scrollingSongs.index)+typedChar);

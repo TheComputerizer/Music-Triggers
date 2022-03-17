@@ -152,6 +152,7 @@ public class eventsClient {
                 IMAGE_CARD = pngs.get(movingcounter);
             }
             if (activated) {
+                MusicTriggers.logger.info("image timer "+timer);
                 timer++;
                 startDelayCount++;
                 if (startDelayCount > 0) {
@@ -191,12 +192,19 @@ public class eventsClient {
                     GlStateManager.enableBlend();
                     GlStateManager.pushMatrix();
                     GlStateManager.translate(0, 0, 0);
-                    GlStateManager.scale((0.25f*((float)x/(float)y))*(configTitleCards.imagecards.get(curImageIndex).getScaleX()/100f),0.25f*(configTitleCards.imagecards.get(curImageIndex).getScaleY()/100f),1f);
                     GlStateManager.color(color.getX(), color.getY(), color.getZ(), Math.max(0, Math.min(0.95f, opacity)));
                     mc.getTextureManager().bindTexture(IMAGE_CARD);
-                    float x_translation = (((1f/0.140625f)*.5f)*(1f/(configTitleCards.imagecards.get(curImageIndex).getScaleX()/100f))*(x+configTitleCards.imagecards.get(curImageIndex).getHorizontal()));
-                    GuiScreen.drawModalRectWithCustomSizedTexture((int)(x_translation-(x*0.496)),
-                            (int)((y+configTitleCards.imagecards.get(curImageIndex).getVertical())/4f),x,y,x,y,x,y);
+
+                    float scale_x = (0.25f*((float)y/(float)x))*(configTitleCards.imagecards.get(curImageIndex).getScaleX()/100f);
+                    float scale_y = 0.25f*(configTitleCards.imagecards.get(curImageIndex).getScaleY()/100f);
+
+                    GlStateManager.scale(scale_x,scale_y,1f);
+
+                    float posX = (x*scale_x*((float)x/(float)y));
+                    float posY = y*scale_y/2;
+                    GuiScreen.drawModalRectWithCustomSizedTexture((int)(posX)+configTitleCards.imagecards.get(curImageIndex).getHorizontal(),
+                            (int)(posY)+configTitleCards.imagecards.get(curImageIndex).getVertical(),x,y,x,y,x,y);
+                    MusicTriggers.logger.info("actual image coords "+(int)(posX)+configTitleCards.imagecards.get(curImageIndex).getHorizontal()+" by "+(int)(posY)+configTitleCards.imagecards.get(curImageIndex).getVertical());
                     GlStateManager.color(1F, 1F, 1F, 1);
                     GlStateManager.popMatrix();
                 }

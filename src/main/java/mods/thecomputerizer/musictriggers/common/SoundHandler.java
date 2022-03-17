@@ -51,7 +51,7 @@ public class SoundHandler {
                         TriggerInfoMap.put(trigger + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10], configToml.triggerholder.get(songEntry).get(trigger));
                     }
                 }
-                if(!allSoundEvents.contains(sound)) {
+                if(checkResourceLocation(sound)) {
                     allSoundEvents.add(sound);
                     allSoundEventsTriggers.put(sound, trigger);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -78,7 +78,7 @@ public class SoundHandler {
                             }
                         }
                     }
-                    if(!allSoundEvents.contains(sound)) {
+                    if(checkResourceLocation(sound)) {
                         allSoundEvents.add(sound);
                         allSoundEventsTriggers.put(sound, trigger);
                         if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -99,7 +99,7 @@ public class SoundHandler {
                             }
                         }
                         if(shouldBeAdded) {
-                            if(!allSoundEvents.contains(soundLink)) {
+                            if(checkResourceLocation(soundLink)) {
                                 allSoundEvents.add(soundLink);
                                 allSoundEventsTriggers.put(soundLink, configToml.triggerlinking.get(songEntry).get(song)[0].split("-")[0]);
                                 if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -112,6 +112,13 @@ public class SoundHandler {
                 }
             }
         }
+    }
+
+    public static boolean checkResourceLocation(SoundEvent sound) {
+        for(SoundEvent s : allSoundEvents) {
+            if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) return false;
+        }
+        return true;
     }
 
     public static void emptyListsAndMaps() {

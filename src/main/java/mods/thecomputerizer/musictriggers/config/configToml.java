@@ -2,12 +2,11 @@ package mods.thecomputerizer.musictriggers.config;
 
 import com.moandjiezana.toml.Toml;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.util.json;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.FileReader;
+import java.util.*;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class configToml {
@@ -45,7 +44,7 @@ public class configToml {
         else {
             Toml toml = new Toml().read(file);
             int songCounter = 0;
-            for (String s : json.allSongs) {
+            for (String s : songCollector(file)) {
                 if (toml.containsTableArray(s)) {
                     try {
                         for (Toml song : toml.getTables(s)) {
@@ -60,7 +59,7 @@ public class configToml {
                                             triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
                                                     "minecraft", "_", "16", "false", "100", "100", "100",
                                                     "false", "0", "minecraft", "true", "true", "0", "0", "nope",
-                                                    "nope", "-111", "false","_", "true"});
+                                                    "nope", "-111", "false","_", "true", "-1"});
                                             if (trigger.contains("priority")) {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                             }
@@ -168,6 +167,9 @@ public class configToml {
                                             if (trigger.contains("is_underground")) {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[28] = trigger.getString("is_underground");
                                             }
+                                            if (trigger.contains("end")) {
+                                                triggerholder.get("song" + songCounter).get(triggerID)[29] = trigger.getString("end");
+                                            }
                                         } else {
                                             MusicTriggers.logger.warn("Could not find trigger with name " + triggerID);
                                         }
@@ -186,7 +188,7 @@ public class configToml {
                                         triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
                                                 "minecraft", "_", "16", "false", "100", "100", "100",
                                                 "false", "0", "minecraft", "true", "true", "0", "0", "nope", "nope",
-                                                "-111", "false","_", "true"});
+                                                "-111", "false","_", "true", "-1"});
                                         if (trigger.contains("priority")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                         }
@@ -293,6 +295,9 @@ public class configToml {
                                         }
                                         if (trigger.contains("is_underground")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[28] = trigger.getString("is_underground");
+                                        }
+                                        if (trigger.contains("end")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[29] = trigger.getString("end");
                                         }
                                     } else {
                                         MusicTriggers.logger.warn("Could not find trigger with name " + triggerID);
@@ -384,7 +389,7 @@ public class configToml {
                                         triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
                                                 "minecraft", "_", "16", "false", "100", "100", "100",
                                                 "false", "0", "minecraft", "true", "true", "0", "0", "nope", "nope",
-                                                "-111", "false","_", "true"});
+                                                "-111", "false","_", "true", "-1"});
                                         if (trigger.contains("priority")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                         }
@@ -492,6 +497,9 @@ public class configToml {
                                         if (trigger.contains("is_underground")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[28] = trigger.getString("is_underground");
                                         }
+                                        if (trigger.contains("end")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[29] = trigger.getString("end");
+                                        }
                                     } else {
                                         MusicTriggers.logger.warn("Could not find trigger with name " + triggerID);
                                     }
@@ -510,7 +518,7 @@ public class configToml {
                                     triggerholder.get("song" + songCounter).putIfAbsent(triggerID, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
                                             "minecraft", "_", "16", "false", "100", "100", "100",
                                             "false", "0", "minecraft", "true", "true", "0", "0", "nope", "nope",
-                                            "-111", "false","_", "true"});
+                                            "-111", "false","_", "true", "-1"});
                                     if (trigger.contains("priority")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                     }
@@ -618,6 +626,9 @@ public class configToml {
                                     if (trigger.contains("is_underground")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[28] = trigger.getString("is_underground");
                                     }
+                                    if (trigger.contains("end")) {
+                                        triggerholder.get("song" + songCounter).get(triggerID)[29] = trigger.getString("end");
+                                    }
                                 } else {
                                     MusicTriggers.logger.warn("Could not find trigger with name " + triggerID);
                                 }
@@ -696,6 +707,24 @@ public class configToml {
                 }
             }
         }
+    }
+
+    public static List<String> songCollector(File toml) {
+        List<String> ret = new ArrayList<>();
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(toml));
+            String line = br.readLine();
+            while (line != null) {
+                if(!line.contains("\t") && !line.contains(" ") && line.contains("[") && line.contains("]")) {
+                    ret.add(line.replaceAll("\\[","").replaceAll("]",""));
+                }
+                line = br.readLine();
+            }
+            br.close();
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+        return ret;
     }
 
     public static void emptyMaps() {

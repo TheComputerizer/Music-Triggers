@@ -26,7 +26,7 @@ public class MusicTriggersItems {
 
     public void init() {
         SoundHandler.registerSounds();
-        if(configRegistry.registry.registerDiscs) {
+        if(configRegistry.registerDiscs) {
             allItemsWithTrigger = new HashMap<>();
             allItems = new ArrayList<>();
             for (SoundEvent s : SoundHandler.allSoundEvents) {

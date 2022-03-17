@@ -19,6 +19,11 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.Style;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextComponentUtils;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraftforge.client.event.RenderTooltipEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
@@ -30,8 +35,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.input.Keyboard;
 import paulscode.sound.SoundSystem;
 
+import javax.swing.text.AttributeSet;
+import javax.swing.text.StyleConstants;
+import java.awt.*;
 import java.io.File;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Mod.EventBusSubscriber(modid = MusicTriggers.MODID, value = Side.CLIENT)
@@ -199,7 +208,7 @@ public class MusicPlayer {
                                         sndSys.setVolume(temp, volumeLinker.get(songNum));
                                         curMusic = musicLinker.get(checkThis);
                                         curTrackHolder = musicLinker.get(checkThis).getSoundLocation().toString().replaceAll("music.", "").replaceAll("riggers:", "");
-                                        if (configRegistry.registry.registerDiscs && MusicPicker.player != null) {
+                                        if (configRegistry.registerDiscs && MusicPicker.player != null) {
                                             RegistryHandler.network.sendToServer(new packetCurSong.packetCurSongMessage(curTrack, MusicPicker.player.getUniqueID()));
                                         }
                                     } else {
@@ -268,7 +277,7 @@ public class MusicPlayer {
                                     } else {
                                         musicLinker.put("song-" + 0, new setVolumeSound(new ResourceLocation(MusicTriggers.MODID, "music." + curTrackHolder), SoundCategory.MUSIC, Float.parseFloat(configToml.otherinfo.get(curTrack)[4]), Float.parseFloat(configToml.otherinfo.get(curTrack)[0]), false, 1, ISound.AttenuationType.NONE, 0F, 0F, 0F));
                                     }
-                                    if (configRegistry.registry.registerDiscs && MusicPicker.player != null) {
+                                    if (configRegistry.registerDiscs && MusicPicker.player != null) {
                                         RegistryHandler.network.sendToServer(new packetCurSong.packetCurSongMessage(curTrackHolder, MusicPicker.player.getUniqueID()));
                                     }
                                     mc.getSoundHandler().stopSounds();
@@ -329,8 +338,8 @@ public class MusicPlayer {
         for (int i : configTitleCards.titlecards.keySet()) {
             if (MusicPicker.titleCardEvents.containsAll(configTitleCards.titlecards.get(i).getTriggers()) && configTitleCards.titlecards.get(i).getTriggers().containsAll(MusicPicker.titleCardEvents) && mc.player != null) {
                 MusicTriggers.logger.info("displaying title card "+i);
-                mc.ingameGUI.displayTitle("\u00A74" + configTitleCards.titlecards.get(i).getTitle(), configTitleCards.titlecards.get(i).getSubTitle(), 5, 20, 20);
-                mc.ingameGUI.displayTitle(null, configTitleCards.titlecards.get(i).getSubTitle(), 5, 20, 20);
+                mc.ingameGUI.displayTitle(TextFormatting.getValueByName(configTitleCards.titlecards.get(i).getTitlecolor()).toString()+configTitleCards.titlecards.get(i).getTitle(), null, 5, 20, 20);
+                mc.ingameGUI.displayTitle(null, TextFormatting.getValueByName(configTitleCards.titlecards.get(i).getSubtitlecolor()).toString()+configTitleCards.titlecards.get(i).getSubTitle(), 5, 20, 20);
                 if(configTitleCards.titlecards.get(i).getPlayonce()) {
                     markForDeletion = i;
                 }
@@ -346,8 +355,10 @@ public class MusicPlayer {
                 if(configTitleCards.imagecards.get(i).getName()!=null) {
                     MusicTriggers.logger.info("displaying image card " + configTitleCards.imagecards.get(i).getName());
                     if (!configTitleCards.ismoving.get(i)) {
+                        MusicTriggers.logger.info("image card is static");
                         eventsClient.IMAGE_CARD = new ResourceLocation(MusicTriggers.MODID, "textures/" + configTitleCards.imagecards.get(i).getName() + ".png");
                     } else {
+                        MusicTriggers.logger.info("image card is moving");
                         eventsClient.pngs = new ArrayList<>();
                         eventsClient.ismoving = true;
                         eventsClient.movingcounter = 0;

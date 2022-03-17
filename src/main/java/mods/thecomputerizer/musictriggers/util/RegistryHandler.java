@@ -37,7 +37,7 @@ public final class RegistryHandler {
     public static void onRegisterItems(RegistryEvent.Register<Item> e)
     {
         MusicTriggersItems.INSTANCE.init();
-        if(configRegistry.registry.registerDiscs) {
+        if(configRegistry.registerDiscs) {
             e.getRegistry().registerAll(MusicTriggersItems.INSTANCE.getItems().toArray(new Item[0]));
             e.getRegistry().register(BLANK_RECORD);
             e.getRegistry().register(MUSIC_RECORDER);
@@ -46,7 +46,7 @@ public final class RegistryHandler {
 
     @SubscribeEvent
     public static void registerBlocks(RegistryEvent.Register<Block> e) {
-        if(configRegistry.registry.registerDiscs) {
+        if(configRegistry.registerDiscs) {
             e.getRegistry().register(MusicTriggersBlocks.MUSIC_RECORDER);
         }
     }
@@ -62,7 +62,7 @@ public final class RegistryHandler {
     @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public static void onModelRegister(ModelRegistryEvent event) {
-        if(configRegistry.registry.registerDiscs) {
+        if(configRegistry.registerDiscs) {
             for (Map.Entry<Item, String> itemStringEntry : MusicTriggersItems.allItemsWithTrigger.entrySet()) {
                 Item record = itemStringEntry.getKey();
                 ModelLoader.setCustomModelResourceLocation(record, 0, new ModelResourceLocation("musictriggers:record_"+MusicTriggersItems.allItemsWithTrigger.get(record), "inventory"));

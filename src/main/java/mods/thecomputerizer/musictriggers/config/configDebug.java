@@ -1,42 +1,39 @@
 package mods.thecomputerizer.musictriggers.config;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
-import net.minecraftforge.common.config.Config;
-import net.minecraftforge.common.config.ConfigManager;
-import net.minecraftforge.fml.client.event.ConfigChangedEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import com.moandjiezana.toml.Toml;
 
-@Config(modid = MusicTriggers.MODID, name = "MusicTriggers/debugoptions")
+import java.io.File;
+import java.io.FileWriter;
+
 public class configDebug {
 
-    @Config.Comment("Show the debug info")
     public static boolean ShowDebugInfo = false;
-
-    @Config.Comment("If ShowDebugInfo is set to true, but you only want to see the song name")
     public static boolean ShowJustCurSong = false;
-
-    @Config.Comment("Show an overlay for the name of the current GUI")
     public static boolean ShowGUIName = false;
-
-    @Config.Comment("List of mod ids to remove the music from so there is not any overlap")
     public static String[] blockedmods = {};
-
-    @Config.Comment("Only silence blocked music when there is music from Music Triggers already playing")
     public static boolean SilenceIsBad = false;
 
-    @Config.Comment("Allows you to set variable names for songs to avoid needing multiple copies of the same song (see redirect.txt)\n"+
-    "Usage: customname,songname\n"+
-    "Note - All names used in the main config will still generate music discs if that option is turned on")
-    public static boolean enableRedirect = true;
-
-    @Mod.EventBusSubscriber(modid = MusicTriggers.MODID)
-    private static class EventHandler {
-        @SubscribeEvent
-        public static void onConfigChanged(final ConfigChangedEvent.OnConfigChangedEvent event) {
-            if (event.getModID().equals(MusicTriggers.MODID)) {
-                ConfigManager.sync(MusicTriggers.MODID, Config.Type.INSTANCE);
-            }
+    public static void create(File f) {
+        try {
+            String sb = "# Show the debug info\n" + "showdebuginfo = \"false\"\n" +
+                    "# If ShowDebugInfo is set to true, but you only want to see the song name\n" + "showjustcursong = \"false\"\n" +
+                    "# Show an overlay for the name of the current GUI\n" + "showguiname = \"false\"\n" +
+                    "# Only silence blocked music when there is music from Music Triggers already playing\n" + "silenceisbad = \"false\"\n" +
+                    "# List of mod ids to remove the music from so there is not any overlap\n" + "blockedmods = [ ]\n";
+            FileWriter writer = new FileWriter(f);
+            writer.write(sb);
+            writer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+    }
+
+    public static void parse(File f) {
+        Toml toml = new Toml().read(f);
+        ShowDebugInfo = Boolean.parseBoolean(toml.getString("showdebuginfo"));
+        ShowJustCurSong = Boolean.parseBoolean(toml.getString("showjustcursong"));
+        ShowGUIName = Boolean.parseBoolean(toml.getString("showguiname"));
+        SilenceIsBad = Boolean.parseBoolean(toml.getString("silenceisbad"));
+        blockedmods = toml.getList("blockedmods").toArray(new String[0]);
     }
 }

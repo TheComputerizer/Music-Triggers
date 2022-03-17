@@ -1,38 +1,29 @@
 package mods.thecomputerizer.musictriggers.config;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
-import net.minecraftforge.common.config.Config;
-import net.minecraftforge.common.config.ConfigManager;
-import net.minecraftforge.fml.client.event.ConfigChangedEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import com.moandjiezana.toml.Toml;
 
-@Config(modid = MusicTriggers.MODID, name = "MusicTriggers/registry")
+import java.io.File;
+import java.io.FileWriter;
+
 public class configRegistry {
-    @Config.Comment("Registry")
-    public static Registry registry = new Registry(true,false);
+    public static boolean registerDiscs = true;
+    public static boolean clientSideOnly = false;
 
-    public static class Registry {
-        @Config.Comment("Music Discs")
-        public boolean registerDiscs;
-
-        @Config.Comment("Client Side Only\n" +
-                "The following will not work: Structure trigger on servers, Mob Trigger targetting parameter")
-        public boolean clientSideOnly;
-
-        public Registry(final boolean registerDiscs, final boolean clientSideOnly) {
-            this.registerDiscs = registerDiscs;
-            this.clientSideOnly = clientSideOnly;
+    public static void create(File f) {
+        try {
+            String sb = "# Music Discs\n" + "registerdiscs = \"true\"\n" +
+                    "# Client Side Only (Some triggers will not be able to trigger)\n" + "clientsideonly = \"false\"\n";
+            FileWriter writer = new FileWriter(f);
+            writer.write(sb);
+            writer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-    @Mod.EventBusSubscriber(modid = MusicTriggers.MODID)
-    private static class EventHandler {
-        @SubscribeEvent
-        public static void onConfigChanged(final ConfigChangedEvent.OnConfigChangedEvent event) {
-            if (event.getModID().equals(MusicTriggers.MODID)) {
-                ConfigManager.sync(MusicTriggers.MODID, Config.Type.INSTANCE);
-            }
-        }
+    public static void parse(File f) {
+        Toml toml = new Toml().read(f);
+        registerDiscs = Boolean.parseBoolean(toml.getString("registerdiscs"));
+        clientSideOnly = Boolean.parseBoolean(toml.getString("clientSideOnly"));
     }
 }

@@ -1,9 +1,7 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.config.configObject;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiSlot;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
@@ -13,29 +11,21 @@ import net.minecraft.util.ResourceLocation;
 
 import java.util.List;
 
-@SuppressWarnings("NullableProblems")
-public class GuiScrollingSong extends GuiSlot {
+public class GuiScrollingTransitions extends GuiSlot {
 
-    private final int size;
-    private final List<String> songs;
-    private final List<String> codes;
-    private final GuiScreen IN;
-    private String curSelected;
+    public int size;
+    public List<String> info;
+    private final GuiTransitions IN;
+    public String curSelected;
     private final ResourceLocation background;
-    private final ResourceLocation darken;
-    private final configObject holder;
-    private GuiLinking linking = null;
+    public int index;
 
-    public GuiScrollingSong(Minecraft client, int width, int height, int top, int bottom, List<String> songs, List<String> codes, GuiScreen IN, configObject holder, GuiLinking linking) {
+    public GuiScrollingTransitions(Minecraft client, int width, int height, int top, int bottom, List<String> info, GuiTransitions IN) {
         super(client, width, height, top, bottom, 32);
-        this.size = songs.size();
-        this.songs = songs;
-        this.codes = codes;
+        this.size = info.size();
+        this.info = info;
         this.IN = IN;
         this.background = new ResourceLocation(MusicTriggers.MODID,"textures/block/recorder_side_active.png");
-        this.darken = new ResourceLocation(MusicTriggers.MODID,"textures/gui/background.png");
-        this.holder = holder;
-        if(linking!=null) this.linking = linking;
     }
 
     @Override protected int getSize() {
@@ -44,20 +34,10 @@ public class GuiScrollingSong extends GuiSlot {
 
     @Override
     public void elementClicked(int slotIndex, boolean isDoubleClick, int mouseX, int mouseY) {
-        this.curSelected = this.songs.get(slotIndex)+"-"+slotIndex;
+        this.index = slotIndex;
+        this.curSelected = this.info.get(slotIndex)+"-"+slotIndex;
         if(isDoubleClick) {
-            if(this.linking==null) {
-                if (this.codes != null) {
-                    String code = this.codes.get(slotIndex);
-                    this.mc.displayGuiScreen(new GuiSongInfo(this.IN, this.songs.get(slotIndex), code, this.holder));
-                } else {
-                    this.mc.displayGuiScreen(new GuiSongInfo(this.IN, this.songs.get(slotIndex), this.holder.addSong(this.songs.get(slotIndex)), this.holder));
-                }
-            }
-            else {
-                this.holder.addLinkingSong(this.linking.songCode, this.songs.get(slotIndex));
-                this.mc.displayGuiScreen(new GuiLinkingInfo(this.IN, this.songs.get(slotIndex), this.linking.songCode, this.holder));
-            }
+            this.mc.displayGuiScreen(new GuiTransitionInfo(this.IN, this.IN.holder, slotIndex, false, this.IN.holder.isTitle(slotIndex), false, ""));
         }
     }
 
@@ -72,7 +52,7 @@ public class GuiScrollingSong extends GuiSlot {
 
     @Override
     public void drawSlot(int slotIndex, int xPos, int yPos, int heightIn, int mouseXIn, int mouseYIn, float partialTicks) {
-        this.IN.drawCenteredString(this.mc.fontRenderer, this.songs.get(slotIndex), this.width / 2, yPos + 1, 16777215);
+        this.IN.drawCenteredString(this.mc.fontRenderer, this.info.get(slotIndex), this.width / 2, yPos + 1, 16777215);
     }
 
     @Override protected void drawBackground() {}

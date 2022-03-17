@@ -4,6 +4,7 @@ import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.client.eventsClient;
 import mods.thecomputerizer.musictriggers.client.gui.Mappings;
 import mods.thecomputerizer.musictriggers.common.eventsCommon;
+import mods.thecomputerizer.musictriggers.config.configDebug;
 import mods.thecomputerizer.musictriggers.config.configRegistry;
 import mods.thecomputerizer.musictriggers.config.configTitleCards;
 import mods.thecomputerizer.musictriggers.config.configToml;
@@ -180,11 +181,33 @@ public class MusicTriggers {
                 }
             }
         }
+        File debugConfig = new File("config/MusicTriggers/debug.toml");
+        if(!debugConfig.exists()) {
+            try {
+                debugConfig.createNewFile();
+                configDebug.create(debugConfig);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        configDebug.parse(debugConfig);
+        File registrationConfig = new File("config/MusicTriggers/registration.toml");
+        if(!registrationConfig.exists()) {
+            try {
+                registrationConfig.createNewFile();
+                configRegistry.create(registrationConfig);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        configRegistry.parse(registrationConfig);
     }
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        if(!configRegistry.registry.clientSideOnly) {
+        if(!configRegistry.clientSideOnly) {
             RegistryHandler.init();
         }
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
