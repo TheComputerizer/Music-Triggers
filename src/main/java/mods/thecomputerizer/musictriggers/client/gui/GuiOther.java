@@ -28,6 +28,7 @@ public class GuiOther extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        this.drawDefaultBackground();
         scrollingSongs.drawScreen(mouseX,mouseY,partialTicks);
         super.drawScreen(mouseX,mouseY,partialTicks);
         if(this.scrollingSongs.curSelected!=null && this.scrollingSongs.index!=-1) {

@@ -320,6 +320,16 @@ public class Mappings {
     }
 
     public static void buildTitleOutputForGuiFromIndex(configTitleCards.Title title, StringBuilder builder, List<Integer> parameters) {
+        builder.append("\ttitle = [ ");
+        for(String t : title.getTitles()) {
+            builder.append("\"").append(t).append("\" ");
+        }
+        builder.append("]\n");
+        builder.append("\tsubtitle = [ ");
+        for(String s : title.getSubTitles()) {
+            builder.append("\"").append(s).append("\" ");
+        }
+        builder.append("]\n");
         for(int i : parameters) {
             buildIndividualTitleOutputForGuiFromIndex(title,builder,i);
         }
@@ -328,19 +338,13 @@ public class Mappings {
     private static void buildIndividualTitleOutputForGuiFromIndex(configTitleCards.Title title, StringBuilder builder, int index) {
         switch (index) {
             case 0:
-                builder.append("\ttitle = \"").append(title.getTitle()).append("\"\n");
-                return;
-            case 1:
-                builder.append("\tsubtitle = \"").append(title.getSubTitle()).append("\"\n");
-                return;
-            case 2:
                 builder.append("\tplay_once = \"").append(title.getPlayonce()).append("\"\n");
                 return;
-            case 3:
-                builder.append("\ttitle_color = \"").append(title.getPlayonce()).append("\"\n");
+            case 1:
+                builder.append("\ttitle_color = \"").append(title.getTitlecolor()).append("\"\n");
                 return;
-            case 4:
-                builder.append("\tsubtitle_color = \"").append(title.getPlayonce()).append("\"\n");
+            case 2:
+                builder.append("\tsubtitle_color = \"").append(title.getSubtitlecolor()).append("\"\n");
         }
     }
 

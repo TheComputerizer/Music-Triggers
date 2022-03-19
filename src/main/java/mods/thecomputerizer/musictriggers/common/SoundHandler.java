@@ -30,16 +30,10 @@ public class SoundHandler {
                 String temp = ((Map.Entry) nestedStringListEntry).getKey().toString();
                 if(configToml.triggerholder.get(songEntry).get(temp)[6].matches("not")) {
                     antiSongs.computeIfAbsent(songEntry, k -> new ArrayList<>());
-                    if(configToml.triggerholder.get(songEntry).get(temp)[10].matches("_")) {
-                        antiSongs.get(songEntry).add(temp);
-                    }
-                    else {
-                        antiSongs.get(songEntry).add(temp+"-"+configToml.triggerholder.get(songEntry).get(temp)[10]);
-                    }
+                    if(configToml.triggerholder.get(songEntry).get(temp)[10].matches("_")) antiSongs.get(songEntry).add(temp);
+                    else antiSongs.get(songEntry).add(temp+"-"+configToml.triggerholder.get(songEntry).get(temp)[10]);
                 }
-                else {
-                    triggers.add(temp);
-                }
+                else triggers.add(temp);
             }
             if(triggers.size()==1) {
                 String trigger = triggers.get(0);
@@ -54,36 +48,26 @@ public class SoundHandler {
                 if(checkResourceLocation(sound)) {
                     allSoundEvents.add(sound);
                     allSoundEventsTriggers.put(sound, trigger);
-                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                        EnumHelperClient.addMusicType(songEntry, sound, 0, 0);
-                    }
+                    if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) EnumHelperClient.addMusicType(songEntry, sound, 0, 0);
                 }
             }
             else {
                 for(String trigger : triggers) {
                     if(configToml.triggerholder.get(songEntry).get(trigger)[6].matches("and")) {
                         songCombos.computeIfAbsent(songEntry, k -> new ArrayList<>());
-                        if(configToml.triggerholder.get(songEntry).get(trigger)[10].matches("")) {
-                            songCombos.get(songEntry).add(trigger);
-                        }
-                        else {
-                            songCombos.get(songEntry).add(trigger+"-"+configToml.triggerholder.get(songEntry).get(trigger)[10]);
-                        }
+                        if(configToml.triggerholder.get(songEntry).get(trigger)[10].matches("")) songCombos.get(songEntry).add(trigger);
+                        else songCombos.get(songEntry).add(trigger+"-"+configToml.triggerholder.get(songEntry).get(trigger)[10]);
                         TriggerSongMap.putIfAbsent(trigger, new HashMap<>());
                         TriggerSongMap.get(trigger).putIfAbsent("@"+songEntry,configToml.triggerholder.get(songEntry).get(trigger)[10]);
                         TriggerInfoMap.putIfAbsent(trigger, configToml.triggerholder.get(songEntry).get(trigger));
                         if(!configToml.triggerholder.get(songEntry).get(trigger)[10].matches("")) {
-                            if (!TriggerInfoMap.containsKey(trigger + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10])) {
-                                TriggerInfoMap.put(trigger + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10], configToml.triggerholder.get(songEntry).get(trigger));
-                            }
+                            if (!TriggerInfoMap.containsKey(trigger + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10])) TriggerInfoMap.put(trigger + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10], configToml.triggerholder.get(songEntry).get(trigger));
                         }
                     }
                     if(checkResourceLocation(sound)) {
                         allSoundEvents.add(sound);
                         allSoundEventsTriggers.put(sound, trigger);
-                        if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-                            EnumHelperClient.addMusicType(songEntry, sound, 0, 0);
-                        }
+                        if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) EnumHelperClient.addMusicType(songEntry, sound, 0, 0);
                     }
                 }
             }
@@ -94,9 +78,7 @@ public class SoundHandler {
                         SoundEvent soundLink = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + song)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, song));
                         boolean shouldBeAdded = true;
                         for(SoundEvent s : allSoundEvents) {
-                            if(Objects.requireNonNull(soundLink.getRegistryName()).toString().matches(Objects.requireNonNull(s.getRegistryName()).toString())) {
-                                shouldBeAdded = false;
-                            }
+                            if(Objects.requireNonNull(soundLink.getRegistryName()).toString().matches(Objects.requireNonNull(s.getRegistryName()).toString())) shouldBeAdded = false;
                         }
                         if(shouldBeAdded) {
                             if(checkResourceLocation(soundLink)) {
@@ -112,12 +94,18 @@ public class SoundHandler {
                 }
             }
         }
+        for(String t : TriggerSongMap.keySet()) {
+            StringBuilder triggerChecker = new StringBuilder();
+            triggerChecker.append("Final song check for trigger ").append(t).append(": ");
+            for(String s : TriggerSongMap.get(t).keySet()) {
+                triggerChecker.append(s).append("(").append(configToml.songholder.get(s.replaceAll("@",""))).append(") ");
+            }
+            MusicTriggers.logger.info(triggerChecker.toString());
+        }
     }
 
     public static boolean checkResourceLocation(SoundEvent sound) {
-        for(SoundEvent s : allSoundEvents) {
-            if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) return false;
-        }
+        for(SoundEvent s : allSoundEvents) if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) return false;
         return true;
     }
 

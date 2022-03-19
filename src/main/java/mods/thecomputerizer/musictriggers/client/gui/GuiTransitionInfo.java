@@ -32,6 +32,7 @@ public class GuiTransitionInfo extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        this.drawDefaultBackground();
         scrollingSongs.drawScreen(mouseX,mouseY,partialTicks);
         super.drawScreen(mouseX,mouseY,partialTicks);
         if(this.scrollingSongs.curSelected!=null && this.scrollingSongs.index!=-1) {
@@ -54,7 +55,7 @@ public class GuiTransitionInfo extends GuiScreen {
                 if(keyCode==14 && !this.holder.getTransitionInfoAtIndex(this.title, this.index, this.scrollingSongs.index).matches("")) this.holder.editTransitionInfoAtIndex(this.title, this.index, this.scrollingSongs.index, StringUtils.chop(this.holder.getTransitionInfoAtIndex(this.title, this.index, this.scrollingSongs.index)), typedChar, keyCode);
                 else if(keyCode==14
                         && this.holder.getTransitionInfoAtIndex(this.title, this.index, this.scrollingSongs.index).matches("")
-                        && this.holder.checkIfTransitionIndexIsTrigger(this.title, this.index, this.scrollingSongs.index)) {
+                        && this.holder.checkIfTransitionIndexIsArray(this.title, this.index, this.scrollingSongs.index)) {
                     this.holder.removeTransitionTrigger(this.title, this.index, this.scrollingSongs.index);
                     this.parameters = this.holder.getAllTransitionParametersAtIndex(this.title, this.index);
                     this.scrollingSongs.info = this.parameters;
@@ -71,6 +72,8 @@ public class GuiTransitionInfo extends GuiScreen {
         this.addScrollable();
         this.addDeleteButton();
         this.addAddTriggerButton();
+        this.addAddTitleButton();
+        this.addAddSubtitleButton();
         eventsClient.renderDebug = false;
     }
 
@@ -91,7 +94,15 @@ public class GuiTransitionInfo extends GuiScreen {
     }
 
     private void addAddTriggerButton() {
-        this.buttonList.add(new GuiButton(3, this.width/2-64, this.height-24, 128, 16, "Add Trigger"));
+        this.buttonList.add(new GuiButton(3, this.width/2-48, this.height-24, 96, 16, "Add Trigger"));
+    }
+
+    private void addAddTitleButton() {
+        this.buttonList.add(new GuiButton(4, this.width/2-160, this.height-24, 96, 16, "Add Title"));
+    }
+
+    private void addAddSubtitleButton() {
+        this.buttonList.add(new GuiButton(5, this.width/2+64, this.height-24, 96, 16, "Add Subtitle"));
     }
 
     @Override
@@ -141,6 +152,18 @@ public class GuiTransitionInfo extends GuiScreen {
         }
         if (button.id == 3) {
             this.holder.addTransitionTrigger(this.title, this.index);
+            this.parameters = this.holder.getAllTransitionParametersAtIndex(this.title, this.index);
+            this.scrollingSongs.info = this.parameters;
+            this.scrollingSongs.setSize(this.parameters.size());
+        }
+        if (button.id == 4) {
+            this.holder.addTitle(this.index);
+            this.parameters = this.holder.getAllTransitionParametersAtIndex(this.title, this.index);
+            this.scrollingSongs.info = this.parameters;
+            this.scrollingSongs.setSize(this.parameters.size());
+        }
+        if (button.id == 5) {
+            this.holder.addSubtitle(this.index);
             this.parameters = this.holder.getAllTransitionParametersAtIndex(this.title, this.index);
             this.scrollingSongs.info = this.parameters;
             this.scrollingSongs.setSize(this.parameters.size());

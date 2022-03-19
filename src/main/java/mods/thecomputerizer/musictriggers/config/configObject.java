@@ -41,7 +41,7 @@ public class configObject {
             "false", "0", "minecraft", "true", "true", "0", "0", "nope", "nope",
             "-111", "false","_", "true", "-1"};
     public static final String[] linkingInfoDefaults = new String[]{"1", "1"};
-    public static final String[] titleInfoDefaults = new String[]{"title", "subtitle", "false", "red", "white"};
+    public static final String[] titleInfoDefaults = new String[]{"false", "red", "white"};
     public static final String[] imageInfoDefaults = new String[]{"name", "750","0", "0", "100", "100", "false", "10", "10", "10", "0", "4"};
 
     private configObject(Map<String, String> songholder, Map<String, Map<String, String[]>> triggerholder, Map<String, String[]> otherinfo,
@@ -166,8 +166,12 @@ public class configObject {
             for(String ignored : this.titlecards.get(i).getTriggers()) {
                 ret.add("trigger");
             }
-            ret.add("title");
-            ret.add("subtitle");
+            for(String ignored : this.titlecards.get(i).getTitles()) {
+                ret.add("title");
+            }
+            for(String ignored : this.titlecards.get(i).getSubTitles()) {
+                ret.add("subtitle");
+            }
             ret.add("play_once");
             ret.add("title_color");
             ret.add("subtitle_color");
@@ -314,18 +318,46 @@ public class configObject {
         }
     }
 
-    public boolean checkIfTransitionIndexIsTrigger(boolean title, int transitionIndex, int index) {
-        if(title) return index<this.titlecards.get(transitionIndex).getTriggers().size();
+    public void addTitle(int index) {
+        this.titlecards.get(index).getTitles().add("title");
+    }
+
+    public void addSubtitle(int index) {
+        this.titlecards.get(index).getSubTitles().add("subtitle");
+    }
+
+    public boolean checkIfTransitionIndexIsArray(boolean title, int transitionIndex, int index) {
+        if(title) {
+            if(index<this.titlecards.get(transitionIndex).getTriggers().size()) return true;
+            else {
+                index-=this.titlecards.get(transitionIndex).getTriggers().size();
+                if(index<this.titlecards.get(transitionIndex).getTitles().size()) return true;
+                else {
+                    index-=this.titlecards.get(transitionIndex).getTitles().size();
+                    return index < this.titlecards.get(transitionIndex).getSubTitles().size();
+                }
+            }
+        }
         else {
-            index-=this.titlecards.size();
+            transitionIndex-=this.titlecards.size();
             return index<this.imagecards.get(transitionIndex).getTriggers().size();
         }
     }
 
     public void removeTransitionTrigger(boolean title, int transitionIndex, int index) {
-        if(title) this.titlecards.get(transitionIndex).getTriggers().remove(index);
+        if(title) {
+            if(index<this.titlecards.get(transitionIndex).getTriggers().size()) this.titlecards.get(transitionIndex).getTriggers().remove(index);
+            else {
+                index-=this.titlecards.get(transitionIndex).getTriggers().size();
+                if(index<this.titlecards.get(transitionIndex).getTitles().size()) this.titlecards.get(transitionIndex).getTitles().remove(index);
+                else {
+                    index-=this.titlecards.get(transitionIndex).getTitles().size();
+                    if(index<this.titlecards.get(transitionIndex).getSubTitles().size()) this.titlecards.get(transitionIndex).getSubTitles().remove(index);
+                }
+            }
+        }
         else {
-            index-=this.titlecards.size();
+            transitionIndex-=this.titlecards.size();
             this.imagecards.get(transitionIndex).getTriggers().remove(index);
         }
     }
@@ -348,20 +380,20 @@ public class configObject {
     public String getTransitionInfoAtIndex(boolean title, int transitionIndex, int index) {
         if(title) {
             List<String> triggers = this.titlecards.get(transitionIndex).getTriggers();
-            if(index< triggers.size()) {
-                return triggers.get(index);
-            }
+            if(index< triggers.size()) return triggers.get(index);
             index-=triggers.size();
+            List<String> titles = this.titlecards.get(transitionIndex).getTitles();
+            if(index< titles.size()) return titles.get(index);
+            index-=titles.size();
+            List<String> subtitles = this.titlecards.get(transitionIndex).getSubTitles();
+            if(index< subtitles.size()) return subtitles.get(index);
+            index-=subtitles.size();
             switch (index) {
                 case 0 :
-                    return this.titlecards.get(transitionIndex).getTitle();
-                case 1 :
-                    return this.titlecards.get(transitionIndex).getSubTitle();
-                case 2 :
                     return this.titlecards.get(transitionIndex).getPlayonce().toString();
-                case 3 :
+                case 1 :
                     return this.titlecards.get(transitionIndex).getTitlecolor();
-                case 4 :
+                case 2 :
                     return this.titlecards.get(transitionIndex).getSubtitlecolor();
             }
         } else {
@@ -514,9 +546,9 @@ public class configObject {
 
     private String[] titleInfoToArray(configTitleCards.Title title) {
         List<String> ret = new ArrayList<>();
-        ret.add(title.getTitle());
-        ret.add(title.getSubTitle());
         ret.add(title.getPlayonce().toString());
+        ret.add(title.getTitlecolor());
+        ret.add(title.getSubtitlecolor());
         return ret.toArray(new String[0]);
     }
 
@@ -563,25 +595,29 @@ public class configObject {
                 return;
             }
             index-=triggers.size();
+            List<String> titles = this.titlecards.get(transitionIndex).getTitles();
+            if(index< titles.size()) {
+                this.titlecards.get(transitionIndex).getTitles().set(index, newVal);
+                return;
+            }
+            index-=titles.size();
+            List<String> subtitles = this.titlecards.get(transitionIndex).getSubTitles();
+            if(index< subtitles.size()) {
+                this.titlecards.get(transitionIndex).getSubTitles().set(index, newVal);
+                return;
+            }
+            index-=subtitles.size();
             this.markTitleInfoForWriting.putIfAbsent(transitionIndex, new ArrayList<>());
             switch (index) {
                 case 0 :
-                    this.titlecards.get(transitionIndex).setTitle(newVal);
-                    if(!this.markTitleInfoForWriting.get(transitionIndex).contains(index)) this.markTitleInfoForWriting.get(transitionIndex).add(index);
-                    return;
-                case 1 :
-                    this.titlecards.get(transitionIndex).setSubTitle(newVal);
-                    if(!this.markTitleInfoForWriting.get(transitionIndex).contains(index)) this.markTitleInfoForWriting.get(transitionIndex).add(index);
-                    return;
-                case 2 :
                     this.titlecards.get(transitionIndex).setPlayonce(!this.titlecards.get(transitionIndex).getPlayonce());
                     if(!this.markTitleInfoForWriting.get(transitionIndex).contains(index)) this.markTitleInfoForWriting.get(transitionIndex).add(index);
                     return;
-                case 3 :
+                case 1 :
                     this.titlecards.get(transitionIndex).setTitlecolor(newVal);
                     if(!this.markTitleInfoForWriting.get(transitionIndex).contains(index)) this.markTitleInfoForWriting.get(transitionIndex).add(index);
                     return;
-                case 4 :
+                case 2 :
                     this.titlecards.get(transitionIndex).setSubtitlecolor(newVal);
                     if(!this.markTitleInfoForWriting.get(transitionIndex).contains(index)) this.markTitleInfoForWriting.get(transitionIndex).add(index);
             }
@@ -675,13 +711,15 @@ public class configObject {
                 mainBuilder.append("\t").append(formatTriggerBrackets(code, this.songholder.get(code))).append("\n");
                 mainBuilder.append("\t\tname = \"").append(trigger).append("\"\n");
                 if(this.markTriggerInfoForWriting.get(code)!=null && this.markTriggerInfoForWriting.get(code).get(trigger)!=null) {
+                    boolean zone = false;
                     for (int i : this.markTriggerInfoForWriting.get(code).get(trigger)) {
                         if(!Mappings.parameters.get(i).matches("zone")) {
                             mainBuilder.append("\t\t").append(Mappings.parameters.get(i)).append(" = \"").append(this.triggerholder.get(code).get(trigger)[i]).append("\"\n");
-                        } else {
-                            mainBuilder.append("\t\t").append("[").append(this.songholder.get(code)).append(".trigger.zone]\n");
-                            formatZoneParameter(mainBuilder, this.triggerholder.get(code).get(trigger)[i]);
-                        }
+                        } else zone = true;
+                    }
+                    if(zone) {
+                        mainBuilder.append("\t\t").append("[").append(this.songholder.get(code)).append(".trigger.zone]\n");
+                        formatZoneParameter(mainBuilder, this.triggerholder.get(code).get(trigger)[7]);
                     }
                 }
             }
@@ -713,12 +751,14 @@ public class configObject {
             this.formatTitleTriggers(i, transitionBuilder);
             markTitleInfoForWriting.putIfAbsent(i, new ArrayList<>());
             Mappings.buildTitleOutputForGuiFromIndex(this.titlecards.get(i), transitionBuilder, markTitleInfoForWriting.get(i));
+            transitionBuilder.append("\n");
         }
         for(int i : this.imagecards.keySet()) {
             transitionBuilder.append(formatImageBrackets());
             this.formatImageTriggers(i, transitionBuilder);
             markImageInfoForWriting.putIfAbsent(i, new ArrayList<>());
             Mappings.buildImageOutputForGuiFromIndex(this.imagecards.get(i), transitionBuilder, markImageInfoForWriting.get(i), this.ismoving.get(i));
+            transitionBuilder.append("\n");
         }
         FileWriter writeTransitions = new FileWriter(this.titleCardConfig);
         writeTransitions.write(transitionBuilder.toString());

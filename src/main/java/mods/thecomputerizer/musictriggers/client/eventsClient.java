@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.client;
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.gui.GuiMain;
+import mods.thecomputerizer.musictriggers.client.gui.GuiTriggerInfo;
 import mods.thecomputerizer.musictriggers.config.configDebug;
 import mods.thecomputerizer.musictriggers.config.configObject;
 import mods.thecomputerizer.musictriggers.config.configTitleCards;
@@ -10,6 +11,7 @@ import mods.thecomputerizer.musictriggers.util.CustomTick;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.PositionedSoundRecord;
+import net.minecraft.client.audio.Sound;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiWinGame;
 import net.minecraft.client.gui.ScaledResolution;
@@ -17,8 +19,11 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvent;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -59,6 +64,15 @@ public class eventsClient {
     public static boolean advancement;
     public static EntityPlayer PVPTracker;
     public static boolean renderDebug = true;
+    public static boolean zone = false;
+    public static boolean firstPass = false;
+    public static GuiTriggerInfo parentScreen = null;
+    public static int x1 = 0;
+    public static int y1 = 0;
+    public static int z1 = 0;
+    public static int x2 = 0;
+    public static int y2 = 0;
+    public static int z2 = 0;
 
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
@@ -152,7 +166,6 @@ public class eventsClient {
                 IMAGE_CARD = pngs.get(movingcounter);
             }
             if (activated) {
-                MusicTriggers.logger.info("image timer "+timer);
                 timer++;
                 startDelayCount++;
                 if (startDelayCount > 0) {
@@ -187,24 +200,23 @@ public class eventsClient {
                 int y = res.getScaledHeight();
                 Vector4f color = new Vector4f(1, 1, 1, 1);
                 if (fadeCount != 1000 && IMAGE_CARD!=null) {
-                    float opacity = (int) (17 - (fadeCount / 80));
-                    opacity = (opacity * 1.15f) / 15;
                     GlStateManager.enableBlend();
                     GlStateManager.pushMatrix();
-                    GlStateManager.translate(0, 0, 0);
-                    GlStateManager.color(color.getX(), color.getY(), color.getZ(), Math.max(0, Math.min(0.95f, opacity)));
                     mc.getTextureManager().bindTexture(IMAGE_CARD);
+
+                    float opacity = (int) (17 - (fadeCount / 80));
+                    opacity = (opacity * 1.15f) / 15;
+                    GlStateManager.color(color.getX(), color.getY(), color.getZ(), Math.max(0, Math.min(0.95f, opacity)));
 
                     float scale_x = (0.25f*((float)y/(float)x))*(configTitleCards.imagecards.get(curImageIndex).getScaleX()/100f);
                     float scale_y = 0.25f*(configTitleCards.imagecards.get(curImageIndex).getScaleY()/100f);
-
                     GlStateManager.scale(scale_x,scale_y,1f);
 
-                    float posX = (x*scale_x*((float)x/(float)y));
-                    float posY = y*scale_y/2;
-                    GuiScreen.drawModalRectWithCustomSizedTexture((int)(posX)+configTitleCards.imagecards.get(curImageIndex).getHorizontal(),
-                            (int)(posY)+configTitleCards.imagecards.get(curImageIndex).getVertical(),x,y,x,y,x,y);
-                    MusicTriggers.logger.info("actual image coords "+(int)(posX)+configTitleCards.imagecards.get(curImageIndex).getHorizontal()+" by "+(int)(posY)+configTitleCards.imagecards.get(curImageIndex).getVertical());
+                    float posX = ((x*(1f/scale_x))/2f)-(x/2f);
+                    float posY = (y*(1f/scale_y))/8f;
+                    GuiScreen.drawModalRectWithCustomSizedTexture((int)((posX)+(configTitleCards.imagecards.get(curImageIndex).getHorizontal()*(1/scale_x))),
+                            (int)((posY)+(configTitleCards.imagecards.get(curImageIndex).getVertical()*(1/scale_y))),x,y,x,y,x,y);
+
                     GlStateManager.color(1F, 1F, 1F, 1);
                     GlStateManager.popMatrix();
                 }
@@ -215,7 +227,25 @@ public class eventsClient {
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent e) {
         if(MusicPlayer.RELOAD.isKeyDown()) {
-            Minecraft.getMinecraft().displayGuiScreen(new GuiMain(configObject.createFromCurrent()));
+            BlockPos pos = MusicPicker.roundedPos(Minecraft.getMinecraft().player);
+            if(!zone) Minecraft.getMinecraft().displayGuiScreen(new GuiMain(configObject.createFromCurrent()));
+            else if(!firstPass) {
+                x1 = pos.getX();
+                y1 = pos.getY();
+                z1 = pos.getZ();
+                firstPass = true;
+                Minecraft.getMinecraft().getSoundHandler().playSound(new PositionedSoundRecord(SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.MUSIC, 1f, 1f, pos));
+            } else {
+                x2 = pos.getX();
+                y2 = pos.getY();
+                z2 = pos.getZ();
+                firstPass = false;
+                zone = false;
+                Minecraft.getMinecraft().getSoundHandler().playSound(new PositionedSoundRecord(SoundEvents.BLOCK_ANVIL_BREAK, SoundCategory.MUSIC, 1f, 1f, pos));
+                String compiledZoneCoords = x1+","+y1+","+z1+","+x2+","+y2+","+z2;
+                parentScreen.holder.editTriggerInfoParameter(parentScreen.songCode, parentScreen.trigger, parentScreen.scrollingSongs.index, compiledZoneCoords);
+                Minecraft.getMinecraft().displayGuiScreen(parentScreen);
+            }
         }
     }
 

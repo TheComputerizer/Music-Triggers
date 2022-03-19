@@ -25,6 +25,7 @@ public class GuiLinking extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        this.drawDefaultBackground();
         scrollingSongs.drawScreen(mouseX,mouseY,partialTicks);
         super.drawScreen(mouseX,mouseY,partialTicks);
         this.drawCenteredString(this.fontRenderer, "Linked Songs", this.width/2, 8, 10526880);

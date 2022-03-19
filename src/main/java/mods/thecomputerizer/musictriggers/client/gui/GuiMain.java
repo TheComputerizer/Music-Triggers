@@ -34,11 +34,11 @@ public class GuiMain extends GuiScreen {
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
         super.keyTyped(typedChar, keyCode);
-        MusicTriggers.logger.info("Key Code of key ["+typedChar+"]: "+keyCode);
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        this.drawDefaultBackground();
         this.overlayBackground(0, 32, 255, 255);
         this.overlayBackground(this.height-32, this.height, 255, 255);
         super.drawScreen(mouseX,mouseY,partialTicks);

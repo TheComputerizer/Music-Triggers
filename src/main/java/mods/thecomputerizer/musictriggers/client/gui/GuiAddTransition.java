@@ -25,6 +25,7 @@ public class GuiAddTransition extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
+        this.drawDefaultBackground();
         this.overlayBackground(0, 32, 255, 255);
         this.overlayBackground(this.height-32, this.height, 255, 255);
         super.drawScreen(mouseX,mouseY,partialTicks);
@@ -44,11 +45,11 @@ public class GuiAddTransition extends GuiScreen {
     }
 
     private void addTitleCardButton() {
-        this.buttonList.add(new GuiButton(2, this.width / 2 - 175, this.height / 2 - 10, "Title Card"));
+        this.buttonList.add(new GuiButton(2, this.width / 2 - 175, this.height / 2 - 10, 150, 20, "Title Card"));
     }
 
     private void addImageCardButton() {
-        this.buttonList.add( new GuiButton(3, this.width / 2 + 25, this.height / 2 - 10, "Image Card"));
+        this.buttonList.add( new GuiButton(3, this.width / 2 + 25, this.height / 2 - 10, 150, 20,"Image Card"));
     }
 
     @Override

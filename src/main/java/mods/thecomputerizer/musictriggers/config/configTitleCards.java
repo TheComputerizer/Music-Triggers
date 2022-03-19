@@ -45,10 +45,10 @@ public class configTitleCards {
                     for(Toml title : toml.getTables("title")) {
                         titlecards.putIfAbsent(titleCounter,new Title());
                         if(title.contains("title")) {
-                            titlecards.get(titleCounter).setTitle(title.getString("title"));
+                            titlecards.get(titleCounter).setTitles(title.getList("title"));
                         }
                         if(title.contains("subtitle")) {
-                            titlecards.get(titleCounter).setSubTitle(title.getString("subtitle"));
+                            titlecards.get(titleCounter).setSubTitles(title.getList("subtitle"));
                         }
                         if(title.contains("triggers")) {
                             titlecards.get(titleCounter).addTriggers(new ArrayList<>(title.getList("triggers")));
@@ -70,10 +70,10 @@ public class configTitleCards {
                     Toml title = toml.getTable("title");
                     titlecards.putIfAbsent(titleCounter,new Title());
                     if(title.contains("title")) {
-                        titlecards.get(titleCounter).setTitle(title.getString("title"));
+                        titlecards.get(titleCounter).setTitles(title.getList("title"));
                     }
                     if(title.contains("subtitle")) {
-                        titlecards.get(titleCounter).setSubTitle(title.getString("subtitle"));
+                        titlecards.get(titleCounter).setSubTitles(title.getList("subtitle"));
                     }
                     if(title.contains("triggers")) {
                         titlecards.get(titleCounter).addTriggers(new ArrayList<>(title.getList("triggers")));
@@ -272,36 +272,36 @@ public class configTitleCards {
     }
 
     public static class Title {
-        private String title;
-        private String subtitle;
+        private List<String> titles;
+        private List<String> subtitles;
         private Boolean playonce;
         private String titlecolor;
         private String subtitlecolor;
         private final List<String> triggers;
 
         public Title() {
-            this.title = "";
-            this.subtitle = "";
+            this.titles = new ArrayList<>();
+            this.subtitles = new ArrayList<>();
             this.playonce = false;
             this.titlecolor = "red";
             this.subtitlecolor = "white";
             this.triggers = new ArrayList<>();
         }
 
-        public void setTitle(String t) {
-            this.title = t;
+        public void setTitles(List<String> t) {
+            this.titles = t;
         }
 
-        public String getTitle() {
-            return this.title;
+        public List<String> getTitles() {
+            return this.titles;
         }
 
-        public void setSubTitle(String t) {
-            this.subtitle = t;
+        public void setSubTitles(List<String> t) {
+            this.subtitles = t;
         }
 
-        public String getSubTitle() {
-            return this.subtitle;
+        public List<String> getSubTitles() {
+            return this.subtitles;
         }
 
         public void setPlayonce(Boolean b) {

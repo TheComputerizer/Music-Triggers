@@ -19,11 +19,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.Style;
-import net.minecraft.util.text.TextComponentString;
-import net.minecraft.util.text.TextComponentUtils;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraftforge.client.event.RenderTooltipEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
@@ -35,12 +31,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.input.Keyboard;
 import paulscode.sound.SoundSystem;
 
-import javax.swing.text.AttributeSet;
-import javax.swing.text.StyleConstants;
-import java.awt.*;
 import java.io.File;
 import java.util.*;
-import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 @Mod.EventBusSubscriber(modid = MusicTriggers.MODID, value = Side.CLIENT)
@@ -223,39 +216,32 @@ public class MusicPlayer {
                             musicLinker = new HashMap<>();
                             eventsClient.GuiCounter = 0;
                             if (curTrackList.length >= 1) {
-                                int i = rand.nextInt(curTrackList.length);
+                                int i = ThreadLocalRandom.current().nextInt(0,curTrackList.length);
                                 if (curTrackList.length > 1 && curTrack != null) {
-                                    Map<String,Integer> chanceMap = new HashMap<>();
-                                    int total=0;
-                                    for(String s : curTrackList) {
-                                        total+=Integer.parseInt(configToml.otherinfo.get(s)[3]);
-                                        chanceMap.put(s,total);
-                                    }
-                                    int r = rand.nextInt(total);
-                                    String temp = curTrack;
-                                    int attempts = 0;
-                                    while(temp.matches(curTrack)) {
-                                        if (!curTrack.matches(curTrackList[0]) && r <= chanceMap.get(curTrackList[0])) {
-                                            temp = curTrackList[0];
-                                        } else {
-                                            for (int j = 1; j < curTrackList.length; j++) {
-                                                if (!curTrack.matches(curTrackList[j]) && r <= chanceMap.get(curTrackList[j]) && r > chanceMap.get(curTrackList[j - 1])) {
-                                                    temp = curTrackList[j];
-                                                }
+                                    int total = Arrays.stream(curTrackList).mapToInt(s -> Integer.parseInt(configToml.otherinfo.get(s)[3])).sum();
+                                    int j;
+                                    for(j=0;j<1000;j++) {
+                                        int r = ThreadLocalRandom.current().nextInt(1,total+1);
+                                        MusicTriggers.logger.debug("Random was between 1 and "+(total+1)+" "+r+" was chosen");
+                                        String temp = " ";
+                                        for (String s : curTrackList) {
+                                            if (r < Integer.parseInt(configToml.otherinfo.get(s)[3])) {
+                                                temp = s;
+                                                break;
                                             }
+                                            r-=Integer.parseInt(configToml.otherinfo.get(s)[3]);
                                         }
-                                        r = rand.nextInt(total);
-                                        attempts+=1;
-                                        if(attempts>250) {
-                                            MusicTriggers.logger.warn("Attempt to get non duplicate song passed 250 tries! Forcing current song "+configToml.songholder.get(temp)+" to play.");
+                                        if(!temp.matches(curTrack) && !temp.matches(" ")) {
                                             curTrack = temp;
                                             break;
                                         }
                                     }
+                                    if(j>=1000) MusicTriggers.logger.warn("Attempt to get non duplicate song passed 1000 tries! Forcing current song " + configToml.songholder.get(curTrack) + " to play.");
                                 }
                                 else {
                                     curTrack = curTrackList[i];
                                 }
+                                MusicTriggers.logger.debug(curTrack+" was chosen");
                                 if (curTrack != null) {
                                     finish = Boolean.parseBoolean(configToml.otherinfo.get(curTrack)[2]);
                                     curTrackHolder = configToml.songholder.get(curTrack);
@@ -338,11 +324,9 @@ public class MusicPlayer {
         for (int i : configTitleCards.titlecards.keySet()) {
             if (MusicPicker.titleCardEvents.containsAll(configTitleCards.titlecards.get(i).getTriggers()) && configTitleCards.titlecards.get(i).getTriggers().containsAll(MusicPicker.titleCardEvents) && mc.player != null) {
                 MusicTriggers.logger.info("displaying title card "+i);
-                mc.ingameGUI.displayTitle(TextFormatting.getValueByName(configTitleCards.titlecards.get(i).getTitlecolor()).toString()+configTitleCards.titlecards.get(i).getTitle(), null, 5, 20, 20);
-                mc.ingameGUI.displayTitle(null, TextFormatting.getValueByName(configTitleCards.titlecards.get(i).getSubtitlecolor()).toString()+configTitleCards.titlecards.get(i).getSubTitle(), 5, 20, 20);
-                if(configTitleCards.titlecards.get(i).getPlayonce()) {
-                    markForDeletion = i;
-                }
+                if(!configTitleCards.titlecards.get(i).getTitles().isEmpty()) mc.ingameGUI.displayTitle(TextFormatting.getValueByName(configTitleCards.titlecards.get(i).getTitlecolor()).toString()+configTitleCards.titlecards.get(i).getTitles().get(ThreadLocalRandom.current().nextInt(0, configTitleCards.titlecards.get(i).getTitles().size())), null, 5, 20, 20);
+                if(!configTitleCards.titlecards.get(i).getSubTitles().isEmpty()) mc.ingameGUI.displayTitle(null, TextFormatting.getValueByName(configTitleCards.titlecards.get(i).getSubtitlecolor()).toString()+configTitleCards.titlecards.get(i).getSubTitles().get(ThreadLocalRandom.current().nextInt(0, configTitleCards.titlecards.get(i).getSubTitles().size())), 5, 20, 20);
+                if(configTitleCards.titlecards.get(i).getPlayonce()) markForDeletion = i;
                 break;
             }
         }
@@ -387,16 +371,12 @@ public class MusicPlayer {
                     eventsClient.curImageIndex = i;
                     eventsClient.activated = true;
 
-                    if (configTitleCards.imagecards.get(i).getPlayonce()) {
-                        markForDeletion = i;
-                    }
+                    if (configTitleCards.imagecards.get(i).getPlayonce()) markForDeletion = i;
                     break;
                 }
             }
         }
-        if(markForDeletion!=-1) {
-            configTitleCards.imagecards.get(markForDeletion).setName(null);
-        }
+        if(markForDeletion!=-1) configTitleCards.imagecards.get(markForDeletion).setName(null);
         cards = false;
     }
 
@@ -415,9 +395,7 @@ public class MusicPlayer {
                 break;
             }
         }
-        if(cont) {
-            return all.containsAll(updatedComparison);
-        }
+        if(cont) return all.containsAll(updatedComparison);
         return false;
     }
 }

@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.client.eventsClient;
 import mods.thecomputerizer.musictriggers.config.configObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiSlot;
@@ -40,6 +41,11 @@ public class GuiScrollingTriggerInfo extends GuiSlot {
     public void elementClicked(int slotIndex, boolean isDoubleClick, int mouseX, int mouseY) {
         this.index = getIndex(this.parameters.get(slotIndex));
         this.curSelected = this.parameters.get(slotIndex)+"-"+slotIndex;
+        if(isDoubleClick && this.parameters.get(slotIndex).matches("zone")) {
+            eventsClient.parentScreen = this.IN;
+            eventsClient.zone = true;
+            this.mc.displayGuiScreen(null);
+        }
     }
 
     @Override protected boolean isSelected(int index) {
