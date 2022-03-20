@@ -3,7 +3,10 @@ package mods.thecomputerizer.musictriggers.client;
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
 import com.mojang.blaze3d.systems.RenderSystem;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.client.gui.GuiMain;
+import mods.thecomputerizer.musictriggers.client.gui.GuiTriggerInfo;
 import mods.thecomputerizer.musictriggers.config.configDebug;
+import mods.thecomputerizer.musictriggers.config.configObject;
 import mods.thecomputerizer.musictriggers.config.configTitleCards;
 import mods.thecomputerizer.musictriggers.util.CustomTick;
 import net.minecraft.client.Minecraft;
@@ -14,6 +17,8 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvents;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.LightType;
@@ -34,6 +39,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
+@OnlyIn(Dist.CLIENT)
 public class eventsClient {
 
     public static ResourceLocation IMAGE_CARD = null;
@@ -44,15 +50,24 @@ public class eventsClient {
     public static Boolean activated = false;
     public static int timer=0;
     public static int GuiCounter = 0;
-    private static int reloadCounter = 0;
+    public static int reloadCounter = 0;
     public static boolean ismoving;
     public static List<ResourceLocation> pngs = new ArrayList<>();
     public static int movingcounter = 0;
     public static String lastAdvancement;
     public static boolean advancement;
     public static PlayerEntity PVPTracker;
+    public static boolean renderDebug = true;
+    public static boolean zone = false;
+    public static boolean firstPass = false;
+    public static GuiTriggerInfo parentScreen = null;
+    public static int x1 = 0;
+    public static int y1 = 0;
+    public static int z1 = 0;
+    public static int x2 = 0;
+    public static int y2 = 0;
+    public static int z2 = 0;
 
-    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
         if (e.getSound()!=null) {
@@ -60,15 +75,15 @@ public class eventsClient {
             if ((MusicPlayer.curMusic != null || MusicPlayer.curTrackList == null || MusicPlayer.curTrackList.isEmpty()) && e.getSound().getLocation().getNamespace().matches(MusicTriggers.MODID) && (((MusicPlayer.curMusic!=null && e.getManager().isActive(MusicPlayer.curMusic)) && e.getSound().getLocation() != MusicPlayer.fromRecord.getLocation()) || MusicPlayer.playing)) {
                 e.setResultSound(silenced);
             }
-            for (String s : configDebug.blockedmods.get()) {
+            for (String s : configDebug.blockedmods) {
                 if (e.getSound().getLocation().getNamespace().contains(s) && e.getSound().getSource() == SoundCategory.MUSIC) {
-                    if (!(MusicPlayer.curMusic == null && configDebug.SilenceIsBad.get())) {
+                    if (!(MusicPlayer.curMusic == null && configDebug.SilenceIsBad)) {
                         e.setResultSound(silenced);
                     }
                 }
             }
             if (e.getSound().getLocation().getNamespace().contains("minecraft") && e.getSound().getSource() == SoundCategory.MUSIC) {
-                if (!(MusicPlayer.curMusic == null && configDebug.SilenceIsBad.get())) {
+                if (!(MusicPlayer.curMusic == null && configDebug.SilenceIsBad)) {
                     e.setResultSound(silenced);
                 }
             }
@@ -95,13 +110,11 @@ public class eventsClient {
         advancement = true;
     }
 
-    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void worldRender(RenderWorldLastEvent e) {
         isWorldRendered = true;
     }
 
-    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void clientDisconnected(PlayerEvent.PlayerLoggedOutEvent e) {
         MusicPicker.mc.getSoundManager().stop();
@@ -109,7 +122,13 @@ public class eventsClient {
         MusicPicker.player = null;
     }
 
-    @OnlyIn(Dist.CLIENT)
+    @SubscribeEvent
+    public static void cancelRenders(RenderGameOverlayEvent.Pre e) {
+        if(e.getType()==RenderGameOverlayEvent.ElementType.ALL && !renderDebug) {
+            e.setCanceled(true);
+        }
+    }
+
     @SubscribeEvent
     public static void customTick(CustomTick ev) {
         if(configTitleCards.imagecards.get(curImageIndex)!=null) {
@@ -152,7 +171,6 @@ public class eventsClient {
         }
     }
 
-    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void imageCards(RenderGameOverlayEvent.Post e) {
         Minecraft mc = Minecraft.getInstance();
@@ -190,19 +208,31 @@ public class eventsClient {
         }
     }
 
-    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent e) {
-        if(MusicPlayer.RELOAD.isDown()) {
-            Minecraft.getInstance().getSoundManager().stop();
-            ITextComponent msg = new StringTextComponent("\u00A74\u00A7oReloading Music... This may take a while!");
-            MusicPicker.player.sendMessage(msg,MusicPicker.player.getUUID());
-            MusicPlayer.reloading = true;
-            reloadCounter = 5;
+        if(MusicPlayer.RELOAD.isDown() && Minecraft.getInstance().player!=null) {
+            BlockPos pos = MusicPicker.roundedPos(Minecraft.getInstance().player);
+            if(!zone) Minecraft.getInstance().setScreen(new GuiMain(configObject.createFromCurrent()));
+            else if(!firstPass) {
+                x1 = pos.getX();
+                y1 = pos.getY();
+                z1 = pos.getZ();
+                firstPass = true;
+                Minecraft.getInstance().getSoundManager().play(SimpleSound.forUI(SoundEvents.ANVIL_LAND, 1f));
+            } else {
+                x2 = pos.getX();
+                y2 = pos.getY();
+                z2 = pos.getZ();
+                firstPass = false;
+                zone = false;
+                Minecraft.getInstance().getSoundManager().play(SimpleSound.forUI(SoundEvents.ANVIL_BREAK, 1f));
+                String compiledZoneCoords = x1+","+y1+","+z1+","+x2+","+y2+","+z2;
+                parentScreen.holder.editTriggerInfoParameter(parentScreen.songCode, parentScreen.trigger, parentScreen.scrollingSongs.index, compiledZoneCoords);
+                Minecraft.getInstance().setScreen(parentScreen);
+            }
         }
     }
 
-    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent event) {
         if(reloadCounter>0) {
@@ -222,14 +252,13 @@ public class eventsClient {
         }
     }
 
-    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void debugInfo(RenderGameOverlayEvent.Text e) {
-        if (configDebug.ShowDebugInfo.get() && isWorldRendered) {
+        if (configDebug.ShowDebugInfo && isWorldRendered) {
             if (MusicPlayer.curTrack != null) {
                 e.getLeft().add("Music Triggers Current song: " + MusicPlayer.curTrackHolder);
             }
-            if (!configDebug.ShowJustCurSong.get()) {
+            if (!configDebug.ShowJustCurSong) {
                 if (MusicPicker.playableList != null && !MusicPicker.playableList.isEmpty()) {
                     StringBuilder s = new StringBuilder();
                     for (String ev : MusicPicker.playableList) {
@@ -239,7 +268,7 @@ public class eventsClient {
                 }
                 StringBuilder sm = new StringBuilder();
                 sm.append("minecraft");
-                for (String ev : configDebug.blockedmods.get()) {
+                for (String ev : configDebug.blockedmods) {
                     sm.append(" ").append(ev);
                 }
                 e.getLeft().add("Music Triggers Current Blocked Mods: " + sm);

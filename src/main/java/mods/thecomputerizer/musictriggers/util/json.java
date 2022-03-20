@@ -1,13 +1,12 @@
 package mods.thecomputerizer.musictriggers.util;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.config.configDebug;
-import mods.thecomputerizer.musictriggers.readRedirect;
 import mods.thecomputerizer.musictriggers.util.audio.audioConverter;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class json {
     public static List<String> allSongs = new ArrayList<>();
@@ -16,10 +15,6 @@ public class json {
     public static List<String> create() {
         format();
         allSongs = collector();
-        String[] redirected = {};
-        if(configDebug.enableRedirect.get()) {
-            redirected = readRedirect.songs;
-        }
         if (allSongs != null && !allSongs.isEmpty()) {
             js.add("{");
             for (int i = 0; i < allSongs.size() - 1; i++) {
@@ -27,16 +22,6 @@ public class json {
                 js.add("\t\t\"category\": \"music\",");
                 js.add("\t\t\"sounds\": [{");
                 js.add("\t\t\t\"name\": \"" + MusicTriggers.MODID + ":music/" + allSongs.get(i) + "\",");
-                js.add("\t\t\t\"stream\": true");
-                js.add("\t\t}]");
-                js.add("\t},");
-            }
-            for (String s : redirected) {
-                String[] songs = stringBreaker(s, ",");
-                js.add("  \"music." + songs[0] + "\": {");
-                js.add("\t\t\"category\": \"music\",");
-                js.add("\t\t\"sounds\": [{");
-                js.add("\t\t\t\"name\": \"" + MusicTriggers.MODID + ":music/" + songs[1] + "\",");
                 js.add("\t\t\t\"stream\": true");
                 js.add("\t\t}]");
                 js.add("\t},");
@@ -54,11 +39,6 @@ public class json {
     }
     public static List<String> lang() {
         allSongs = collector();
-        if(configDebug.enableRedirect.get()) {
-            for (String a : readRedirect.songs) {
-                allSongs.add(stringBreaker(a, ",")[0]);
-            }
-        }
         if (allSongs != null && !allSongs.isEmpty()) {
             js.add("{");
             for (int i=0;i<allSongs.size()-1;i++) {
