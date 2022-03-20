@@ -1,58 +1,48 @@
+
 package mods.thecomputerizer.musictriggers.config;
 
+import com.moandjiezana.toml.Toml;
 
-import com.terraformersmc.modmenu.api.ConfigScreenFactory;
-import com.terraformersmc.modmenu.api.ModMenuApi;
-import me.shedaniel.clothconfig2.api.ConfigBuilder;
-import me.shedaniel.clothconfig2.api.ConfigCategory;
-import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.TranslatableText;
-
-import java.util.ArrayList;
-import java.util.List;
-
-public class configDebug implements ModMenuApi {
-    public static boolean showDebug = false;
-    public static boolean showJustCurSong = false;
-    public static boolean silenceIsBad = false;
-    public static List<String> modList = new ArrayList<>();
+import java.io.File;
+import java.io.FileWriter;
 
 
-    @Override
-    public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        return parent -> this.build();
+public class configDebug {
+
+    public static boolean ShowDebugInfo = false;
+    public static boolean ShowJustCurSong = false;
+    public static boolean ShowGUIName = false;
+    public static String[] blockedmods = {};
+    public static boolean SilenceIsBad = false;
+
+    public static void create(File f) {
+        try {
+            String sb = """
+                    # Show the debug info
+                    showdebuginfo = "false"
+                    # If ShowDebugInfo is set to true, but you only want to see the song name
+                    showjustcursong = "false"
+                    # Show an overlay for the name of the current GUI
+                    showguiname = "false"
+                    # Only silence blocked music when there is music from Music Triggers already playing
+                    silenceisbad = "false"
+                    # List of mod ids to remove the music from so there is not any overlap
+                    blockedmods = [ ]
+                    """;
+            FileWriter writer = new FileWriter(f);
+            writer.write(sb);
+            writer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    public Screen build() {
-        ConfigBuilder builder = ConfigBuilder.create()
-                .setTitle(new TranslatableText("title.musictriggers.config"));
-
-        ConfigCategory debug = builder.getOrCreateCategory(new TranslatableText("category.musictriggers.debug"));
-
-        ConfigEntryBuilder entryBuilder = builder.entryBuilder();
-
-        debug.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("option.musictriggers.showinfo"), showDebug)
-                .setDefaultValue(false)
-                .setTooltip(new TranslatableText("Show the debug info"))
-                .setSaveConsumer(newValue -> showDebug = newValue)
-                .build());
-        debug.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("option.musictriggers.showjustsong"), showJustCurSong)
-                .setDefaultValue(false)
-                .setTooltip(new TranslatableText("If ShowDebugInfo is set to true, but you only want to see the song name"))
-                .setSaveConsumer(newValue -> showJustCurSong = newValue)
-                .build());
-        debug.addEntry(entryBuilder.startStrList(new TranslatableText("option.musictriggers.blockedmods"), modList)
-                .setDefaultValue(new ArrayList<>())
-                .setTooltip(new TranslatableText("List of mod ids to remove the music from so there is not any overlap"))
-                .setSaveConsumer(newValue -> modList = newValue)
-                .build());
-        debug.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("option.musictriggers.silenceisbad"), silenceIsBad)
-                .setDefaultValue(false)
-                .setTooltip(new TranslatableText("Only silence blocked music when there is music from Music Triggers already playing"))
-                .setSaveConsumer(newValue -> silenceIsBad = newValue)
-                .build());
-
-        return builder.build();
+    public static void parse(File f) {
+        Toml toml = new Toml().read(f);
+        ShowDebugInfo = Boolean.parseBoolean(toml.getString("showdebuginfo"));
+        ShowJustCurSong = Boolean.parseBoolean(toml.getString("showjustcursong"));
+        ShowGUIName = Boolean.parseBoolean(toml.getString("showguiname"));
+        SilenceIsBad = Boolean.parseBoolean(toml.getString("silenceisbad"));
+        blockedmods = toml.getList("blockedmods").toArray(new String[0]);
     }
 }

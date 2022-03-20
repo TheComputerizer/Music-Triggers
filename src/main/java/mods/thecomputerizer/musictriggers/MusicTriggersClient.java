@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers;
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.client.eventsClient;
 import mods.thecomputerizer.musictriggers.config.configRegistry;
+import mods.thecomputerizer.musictriggers.util.CustomTick;
 import mods.thecomputerizer.musictriggers.util.events.AdvancementEvent;
 import mods.thecomputerizer.musictriggers.util.events.LivingDamageEvent;
 import mods.thecomputerizer.musictriggers.util.events.PlaySoundEvent;
@@ -14,7 +15,6 @@ import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.resource.FileResourcePackProvider;
 import net.minecraft.util.ActionResult;
 import org.lwjgl.glfw.GLFW;
 
@@ -26,13 +26,13 @@ import java.util.List;
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class MusicTriggersClient implements ClientModInitializer {
 
-    public static KeyBinding RELOAD;
+    public static KeyBinding GUI;
 
     @Override
     public void onInitializeClient() {
         setUpClientEvents();
-        RELOAD = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.reload_musictriggers",
+        GUI = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.musictriggers.menu",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_R,
                 "key.categories.musictriggers"
@@ -86,7 +86,6 @@ public class MusicTriggersClient implements ClientModInitializer {
 
     private static void setUpClientEvents() {
         PlaySoundEvent.EVENT.register(eventsClient::playSound);
-        //ScreenKeyboardEvents.afterKeyPress(MinecraftClient.getInstance().currentScreen).register((screen, key, scancode, modifiers) -> eventsClient.onKeyInput());
 
         WorldRenderEvents.LAST.register((context) -> {
             eventsClient.imageCards(context);
@@ -94,6 +93,7 @@ public class MusicTriggersClient implements ClientModInitializer {
         });
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if(GUI.wasPressed()) eventsClient.onKeyInput();
             MusicPlayer.onTick();
             eventsClient.onTick();
         });
@@ -107,5 +107,7 @@ public class MusicTriggersClient implements ClientModInitializer {
             eventsClient.onAdvancement(advancement);
             return ActionResult.PASS;
         }));
+
+        CustomTick.setUp();
     }
 }

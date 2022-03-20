@@ -1,6 +1,8 @@
 package mods.thecomputerizer.musictriggers;
 
+import mods.thecomputerizer.musictriggers.client.gui.Mappings;
 import mods.thecomputerizer.musictriggers.common.eventsCommon;
+import mods.thecomputerizer.musictriggers.config.configDebug;
 import mods.thecomputerizer.musictriggers.config.configRegistry;
 import mods.thecomputerizer.musictriggers.config.configTitleCards;
 import mods.thecomputerizer.musictriggers.config.configToml;
@@ -11,8 +13,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
-import net.minecraft.resource.*;
-import net.minecraft.text.Text;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,8 +24,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class MusicTriggersCommon implements ModInitializer {
@@ -40,6 +38,7 @@ public class MusicTriggersCommon implements ModInitializer {
     @SuppressWarnings("InstantiationOfUtilityClass")
     @Override
     public void onInitialize() {
+        Mappings.init();
         configDir = new File(FabricLoaderImpl.INSTANCE.getConfigDir().toString(), "MusicTriggers");
         if (!configDir.exists()) {
             configDir.mkdir();
@@ -57,19 +56,31 @@ public class MusicTriggersCommon implements ModInitializer {
             }
         }
         new readRedirect(redir);
-        try {
-            File Registrationconfig = new File(configDir,"registration.txt");
-            if(!Registrationconfig.exists()) {
-                configRegistry.build(Registrationconfig);
-                configRegistry.read(Registrationconfig);
-            }
-            configRegistry.update(Registrationconfig);
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
         if(FabricLoaderImpl.INSTANCE.getEnvironmentType()== EnvType.CLIENT) {
             setUpClientPt2();
         }
+        File debugConfig = new File("config/MusicTriggers/debug.toml");
+        if(!debugConfig.exists()) {
+            try {
+                debugConfig.createNewFile();
+                configDebug.create(debugConfig);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        configDebug.parse(debugConfig);
+        File registrationConfig = new File("config/MusicTriggers/registration.toml");
+        if(!registrationConfig.exists()) {
+            try {
+                registrationConfig.createNewFile();
+                configRegistry.create(registrationConfig);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        configRegistry.parse(registrationConfig);
         RegistryHandler.init();
         setUpCommonEvents();
         if(!configRegistry.clientSideOnly) {

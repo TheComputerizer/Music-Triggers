@@ -16,13 +16,17 @@ import net.minecraft.client.sound.Channel;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
-import net.minecraft.text.Text;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Style;
+import net.minecraft.text.Texts;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("rawtypes")
@@ -193,38 +197,32 @@ public class MusicPlayer {
                             musicLinker = new HashMap<>();
                             eventsClient.GuiCounter = 0;
                             if (curTrackList.size() >= 1) {
-                                int i = rand.nextInt(curTrackList.size());
+                                int i = ThreadLocalRandom.current().nextInt(0,curTrackList.size());
                                 if (curTrackList.size() > 1 && curTrack != null) {
-                                    Map<String, Integer> chanceMap = new HashMap<>();
-                                    int total = 0;
-                                    for (String s : curTrackList) {
-                                        total += Integer.parseInt(configToml.otherinfo.get(s)[3]);
-                                        chanceMap.put(s, total);
-                                    }
-                                    int r = rand.nextInt(total);
-                                    String temp = curTrack;
-                                    int attempts = 0;
-                                    while (temp.matches(curTrack)) {
-                                        if (!curTrack.matches(curTrackList.get(0)) && r <= chanceMap.get(curTrackList.get(0))) {
-                                            temp = curTrackList.get(0);
-                                        } else {
-                                            for (int j = 1; j < curTrackList.size(); j++) {
-                                                if (!curTrack.matches(curTrackList.get(j)) && r <= chanceMap.get(curTrackList.get(j)) && r > chanceMap.get(curTrackList.get(j - 1))) {
-                                                    temp = curTrackList.get(j);
-                                                }
+                                    int total = curTrackList.stream().mapToInt(s -> Integer.parseInt(configToml.otherinfo.get(s)[3])).sum();
+                                    int j;
+                                    for(j=0;j<1000;j++) {
+                                        int r = ThreadLocalRandom.current().nextInt(1,total+1);
+                                        MusicTriggersCommon.logger.debug("Random was between 1 and "+(total+1)+" "+r+" was chosen");
+                                        String temp = " ";
+                                        for (String s : curTrackList) {
+                                            if (r < Integer.parseInt(configToml.otherinfo.get(s)[3])) {
+                                                temp = s;
+                                                break;
                                             }
+                                            r-=Integer.parseInt(configToml.otherinfo.get(s)[3]);
                                         }
-                                        r = rand.nextInt(total);
-                                        attempts += 1;
-                                        if (attempts > 250) {
-                                            MusicTriggersCommon.logger.warn("Attempt to get non duplicate song passed 250 tries! Forcing current song " + configToml.songholder.get(temp) + " to play.");
+                                        if(!temp.matches(curTrack) && !temp.matches(" ")) {
                                             curTrack = temp;
                                             break;
                                         }
                                     }
-                                } else {
+                                    if(j>=1000) MusicTriggersCommon.logger.warn("Attempt to get non duplicate song passed 1000 tries! Forcing current song " + configToml.songholder.get(curTrack) + " to play.");
+                                }
+                                else {
                                     curTrack = curTrackList.get(i);
                                 }
+                                MusicTriggersCommon.logger.debug(curTrack+" was chosen");
                                 if (curTrack != null) {
                                     finish = Boolean.parseBoolean(configToml.otherinfo.get(curTrack)[2]);
                                     curTrackHolder = configToml.songholder.get(curTrack);
@@ -282,6 +280,7 @@ public class MusicPlayer {
                                     curTrackList = null;
                                 }
                             }
+                            MusicTriggersCommon.logger.info("track list too smol");
                         }
                     }
                 } else if(!finish || playing) {
@@ -311,8 +310,8 @@ public class MusicPlayer {
         for (int i : configTitleCards.titlecards.keySet()) {
             if (MusicPicker.titleCardEvents.containsAll(configTitleCards.titlecards.get(i).getTriggers()) && configTitleCards.titlecards.get(i).getTriggers().containsAll(MusicPicker.titleCardEvents) && mc.player != null) {
                 MusicTriggersCommon.logger.info("displaying title card "+i);
-                mc.inGameHud.setTitle(Text.of(configTitleCards.titlecards.get(i).getTitle()));
-                mc.inGameHud.setSubtitle(Text.of(configTitleCards.titlecards.get(i).getSubTitle()));
+                if(!configTitleCards.titlecards.get(i).getTitles().isEmpty()) mc.inGameHud.setTitle(Texts.setStyleIfAbsent(new LiteralText(configTitleCards.titlecards.get(i).getTitles().get(ThreadLocalRandom.current().nextInt(0, configTitleCards.titlecards.get(i).getTitles().size()))), Style.EMPTY.withFormatting(Formatting.valueOf(configTitleCards.titlecards.get(i).getTitlecolor()))));
+                if(!configTitleCards.titlecards.get(i).getSubTitles().isEmpty()) mc.inGameHud.setSubtitle(Texts.setStyleIfAbsent(new LiteralText(configTitleCards.titlecards.get(i).getSubTitles().get(ThreadLocalRandom.current().nextInt(0, configTitleCards.titlecards.get(i).getSubTitles().size()))), Style.EMPTY.withFormatting(Formatting.valueOf(configTitleCards.titlecards.get(i).getSubtitlecolor()))));
                 if(configTitleCards.titlecards.get(i).getPlayonce()) {
                     markForDeletion = i;
                 }

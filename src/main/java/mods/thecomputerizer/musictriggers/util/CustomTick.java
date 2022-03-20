@@ -1,6 +1,5 @@
 package mods.thecomputerizer.musictriggers.util;
 
-import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
 import mods.thecomputerizer.musictriggers.client.eventsClient;
 import mods.thecomputerizer.musictriggers.util.events.CustomTickEvent;
 
@@ -15,7 +14,6 @@ public class CustomTick {
     public static void setUp() {
         Runnable tickTimer = () ->  {
             CustomTickEvent.EVENT.register(client -> eventsClient.onCustomTick());
-            MusicTriggersCommon.logger.info("Ticking rally fast");
         };
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         executor.scheduleAtFixedRate(tickTimer, 0, 20, TimeUnit.MILLISECONDS);

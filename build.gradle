@@ -33,6 +33,8 @@ dependencies {
 	include (implementation("com.googlecode.soundlibs:jlayer:1.0.1.4"))
 	include (implementation("org.jcodec:jcodec:0.2.5"))
 	include (implementation("org.jcodec:jcodec-javase:0.2.5"))
+	include (implementation("io.github.kostaskougios:cloning:1.10.3"))
+	include (implementation("org.objenesis:objenesis:3.2"))
 
 	modImplementation "curse.maven:cloth-config-319057:3641132"
 	modImplementation "curse.maven:modmenu-308702:3570652"
