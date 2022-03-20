@@ -72,8 +72,10 @@ public class GuiTransitionInfo extends GuiScreen {
         this.addScrollable();
         this.addDeleteButton();
         this.addAddTriggerButton();
-        this.addAddTitleButton();
-        this.addAddSubtitleButton();
+        if(title) {
+            this.addAddTitleButton();
+            this.addAddSubtitleButton();
+        }
         eventsClient.renderDebug = false;
     }
 
