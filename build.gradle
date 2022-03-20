@@ -92,6 +92,7 @@ dependencies {
     shade ("com.googlecode.soundlibs:jlayer:1.0.1.4")
     shade ("org.jcodec:jcodec:0.2.5")
     shade ("org.jcodec:jcodec-javase:0.2.5")
+    shade("io.github.kostaskougios:cloning:1.10.3")
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 

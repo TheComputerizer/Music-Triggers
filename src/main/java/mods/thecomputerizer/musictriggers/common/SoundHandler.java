@@ -51,7 +51,7 @@ public class SoundHandler {
                         TriggerInfoMap.put(trigger + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10], configToml.triggerholder.get(songEntry).get(trigger));
                     }
                 }
-                if(!allSoundEvents.contains(sound)) {
+                if(checkResourceLocation(sound)) {
                     allSoundEvents.add(sound);
                     allSoundEventsWithTriggers.put(sound, trigger);
                 }
@@ -75,7 +75,7 @@ public class SoundHandler {
                             }
                         }
                     }
-                    if(!allSoundEvents.contains(sound)) {
+                    if(checkResourceLocation(sound)) {
                         allSoundEvents.add(sound);
                         allSoundEventsWithTriggers.put(sound, trigger);
                     }
@@ -93,7 +93,7 @@ public class SoundHandler {
                             }
                         }
                         if(shouldBeAdded) {
-                            if(!allSoundEvents.contains(soundLink)) {
+                            if(checkResourceLocation(soundLink)) {
                                 allSoundEvents.add(soundLink);
                                 allSoundEventsWithTriggers.put(soundLink, configToml.triggerlinking.get(songEntry).get(song)[0]);
                             }
@@ -103,6 +103,13 @@ public class SoundHandler {
                 }
             }
         }
+    }
+
+    public static boolean checkResourceLocation(SoundEvent sound) {
+        for(SoundEvent s : allSoundEvents) {
+            if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) return false;
+        }
+        return true;
     }
 
     public static void emptyListsAndMaps() {

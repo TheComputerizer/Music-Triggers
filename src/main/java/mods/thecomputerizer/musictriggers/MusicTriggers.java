@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers;
 
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.client.eventsClient;
+import mods.thecomputerizer.musictriggers.client.gui.Mappings;
 import mods.thecomputerizer.musictriggers.common.eventsCommon;
 import mods.thecomputerizer.musictriggers.config.configDebug;
 import mods.thecomputerizer.musictriggers.config.configRegistry;
@@ -18,9 +19,7 @@ import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddPackFindersEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -56,7 +55,6 @@ public class MusicTriggers {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::commonsetup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::addPack);
         IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, configDebug.SPEC, "MusicTriggers/debug.toml");
         MinecraftForge.EVENT_BUS.register(this);
         File configDir = new File("config", "MusicTriggers");
         if (!configDir.exists()) {
@@ -131,6 +129,7 @@ public class MusicTriggers {
                     ex.printStackTrace();
                 }
             }
+            Mappings.init();
             makeSoundsJson();
             makeDiscLang();
             configToml.parse();
@@ -143,16 +142,28 @@ public class MusicTriggers {
                 }
             }
         }
-        try {
-            File Registrationconfig = new File(configDir,"registration.txt");
-            if(!Registrationconfig.exists()) {
-                configRegistry.build(Registrationconfig);
-                configRegistry.read(Registrationconfig);
+        File debugConfig = new File("config/MusicTriggers/debug.toml");
+        if(!debugConfig.exists()) {
+            try {
+                debugConfig.createNewFile();
+                configDebug.create(debugConfig);
             }
-            configRegistry.update(Registrationconfig);
-        } catch(Exception e) {
-            e.printStackTrace();
+            catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+        configDebug.parse(debugConfig);
+        File registrationConfig = new File("config/MusicTriggers/registration.toml");
+        if(!registrationConfig.exists()) {
+            try {
+                registrationConfig.createNewFile();
+                configRegistry.create(registrationConfig);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        configRegistry.parse(registrationConfig);
         RegistryHandler.init(eventBus);
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
         MinecraftForge.EVENT_BUS.register(eventsClient.class);
@@ -165,12 +176,7 @@ public class MusicTriggers {
     }
 
     public void commonsetup(FMLCommonSetupEvent ev) {
-        if(configRegistry.clientSideOnly) {
-            //ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DISPLAYTEST,() -> Pair.of(()-> FMLNetworkConstants.IGNORESERVERONLY,(a, b)->true));
-        }
-        else {
-            PacketHandler.register();
-        }
+        if(!configRegistry.clientSideOnly) PacketHandler.register();
     }
 
     public void addPack(AddPackFindersEvent ev) {
