@@ -55,7 +55,7 @@ public class SoundHandler {
                 for(String trigger : triggers) {
                     if(configToml.triggerholder.get(songEntry).get(trigger)[6].matches("and")) {
                         songCombos.computeIfAbsent(songEntry, k -> new ArrayList<>());
-                        if(configToml.triggerholder.get(songEntry).get(trigger)[10].matches("")) songCombos.get(songEntry).add(trigger);
+                        if(configToml.triggerholder.get(songEntry).get(trigger)[10].matches("") || configToml.triggerholder.get(songEntry).get(trigger)[10].matches("_")) songCombos.get(songEntry).add(trigger);
                         else songCombos.get(songEntry).add(trigger+"-"+configToml.triggerholder.get(songEntry).get(trigger)[10]);
                         TriggerSongMap.putIfAbsent(trigger, new HashMap<>());
                         TriggerSongMap.get(trigger).putIfAbsent("@"+songEntry,configToml.triggerholder.get(songEntry).get(trigger)[10]);
