@@ -51,6 +51,7 @@ public class GuiEditSongs extends Screen {
     private void addSongs() {
         this.scrollingSongs = new GuiScrollingSong(this.client, this.width, this.height,32,this.height-32, this.songs, this.codes, this, this.holder, null);
         this.scrollingSongs.setRenderBackground(false);
+        this.scrollingSongs.setRenderHorizontalShadows(false);
         this.addSelectableChild(this.scrollingSongs);
     }
 

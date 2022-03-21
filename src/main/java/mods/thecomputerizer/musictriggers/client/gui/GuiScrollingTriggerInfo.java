@@ -4,6 +4,7 @@ import mods.thecomputerizer.musictriggers.client.eventsClient;
 import mods.thecomputerizer.musictriggers.config.configObject;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
+import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
@@ -43,6 +44,9 @@ public class GuiScrollingTriggerInfo extends AlwaysSelectedEntryListWidget<GuiSc
 
     @Override
     protected void renderBackground(@NotNull MatrixStack matrix) {}
+
+    @Override
+    protected void renderHeader(@NotNull MatrixStack matrices, int x, int y, Tessellator tessellator) {}
 
     @Override
     protected boolean isFocused() {

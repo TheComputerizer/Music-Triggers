@@ -67,9 +67,6 @@ public class MusicPicker {
         if (player != null) {
             world = player.getEntityWorld();
         }
-        else {
-            eventsClient.isWorldRendered = false;
-        }
         if(SoundHandler.TriggerSongMap.isEmpty()) {
             return null;
         }
@@ -181,7 +178,6 @@ public class MusicPicker {
 
     @SuppressWarnings({"rawtypes", "ConstantConditions"})
     public static List<String> playableEvents() {
-        MusicTriggersCommon.logger.info("checking playable events");
         String crashHelper = "";
         List<String> events = new ArrayList<>();
         try {

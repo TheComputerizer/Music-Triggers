@@ -59,6 +59,7 @@ public class GuiTriggers extends Screen {
     private void addScrollable() {
         this.scrollingSongs = new GuiScrollingTrigger(this.client, this.width, this.height, 32, this.height - 32, this.triggers, this, this.holder, this.songCode);
         this.scrollingSongs.setRenderBackground(false);
+        this.scrollingSongs.setRenderHorizontalShadows(false);
         this.addSelectableChild(this.scrollingSongs);
     }
 

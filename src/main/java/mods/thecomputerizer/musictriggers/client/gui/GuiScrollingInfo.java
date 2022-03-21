@@ -5,6 +5,7 @@ import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -47,7 +48,7 @@ public class GuiScrollingInfo extends AlwaysSelectedEntryListWidget<GuiScrolling
     }
 
     @Override
-    protected void renderBackground(MatrixStack matrix) {}
+    protected void renderBackground(@NotNull MatrixStack matrix) {}
 
     @Override
     protected boolean isFocused() {
@@ -88,7 +89,7 @@ public class GuiScrollingInfo extends AlwaysSelectedEntryListWidget<GuiScrolling
             if(this.index>=5) GuiScrollingInfo.this.client.setScreen(new GuiTriggerInfo(GuiScrollingInfo.this.IN, this.info, GuiScrollingInfo.this.IN.songCode, GuiScrollingInfo.this.IN.holder,false));
         }
 
-        public void render(MatrixStack matrix, int i, int j, int k, int l, int m, int n, int o, boolean b, float f) {
+        public void render(@NotNull MatrixStack matrix, int i, int j, int k, int l, int m, int n, int o, boolean b, float f) {
             MinecraftClient.getInstance().textRenderer.drawWithShadow(matrix, this.info, (float)(GuiScrollingInfo.this.width / 2 - MinecraftClient.getInstance().textRenderer.getWidth(this.info) / 2), (float)(j + 1), 16777215, true);
         }
     }

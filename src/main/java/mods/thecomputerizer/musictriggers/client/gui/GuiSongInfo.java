@@ -89,6 +89,7 @@ public class GuiSongInfo extends Screen {
         everything.addAll(this.triggers);
         this.scrollingSongs = new GuiScrollingInfo(this.client, this.width, this.height,32,this.height-32, everything,this);
         this.scrollingSongs.setRenderBackground(false);
+        this.scrollingSongs.setRenderHorizontalShadows(false);
         this.addSelectableChild(this.scrollingSongs);
     }
 

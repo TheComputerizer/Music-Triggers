@@ -20,7 +20,6 @@ public class MixinResourcePack {
     private void register(Consumer<ResourcePackProfile> consumer, ResourcePackProfile.Factory factory, CallbackInfo ci) {
         File resourcepack = new File(".","config/MusicTriggers/songs");
         if(resourcepack.exists()) {
-            MusicTriggersCommon.logger.info("Resource Packkkkkkkkkkkkkkkkk enabled: "+resourcepack.getAbsolutePath());
             Supplier<ResourcePack> resourcePackSupplier = () -> new DirectoryResourcePack(resourcepack);
             ResourcePackProfile profile = new ResourcePackProfile("songs",true,resourcePackSupplier, Text.of("Music Triggers Songs"),Text.of("Can you believe this was generated automatically?"), ResourcePackCompatibility.COMPATIBLE, ResourcePackProfile.InsertionPosition.TOP, true, ResourcePackSource.PACK_SOURCE_BUILTIN);
             consumer.accept(profile);

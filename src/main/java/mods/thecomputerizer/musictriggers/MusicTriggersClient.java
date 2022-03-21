@@ -6,12 +6,11 @@ import mods.thecomputerizer.musictriggers.config.configRegistry;
 import mods.thecomputerizer.musictriggers.util.CustomTick;
 import mods.thecomputerizer.musictriggers.util.events.AdvancementEvent;
 import mods.thecomputerizer.musictriggers.util.events.LivingDamageEvent;
-import mods.thecomputerizer.musictriggers.util.events.PlaySoundEvent;
 import mods.thecomputerizer.musictriggers.util.json;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
@@ -85,11 +84,10 @@ public class MusicTriggersClient implements ClientModInitializer {
     }
 
     private static void setUpClientEvents() {
-        PlaySoundEvent.EVENT.register(eventsClient::playSound);
 
-        WorldRenderEvents.LAST.register((context) -> {
-            eventsClient.imageCards(context);
-            eventsClient.debugInfo();
+        HudRenderCallback.EVENT.register((matrixStack, tickDelta) -> {
+            eventsClient.imageCards(matrixStack);
+            eventsClient.debugInfo(matrixStack);
         });
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {

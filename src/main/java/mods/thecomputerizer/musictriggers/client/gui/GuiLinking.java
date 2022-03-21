@@ -53,6 +53,7 @@ public class GuiLinking extends Screen {
     private void addSongs() {
         this.scrollingSongs = new GuiScrollingLinking(this.client, this.width, this.height,32,this.height-32, this.songs,this);
         this.scrollingSongs.setRenderBackground(false);
+        this.scrollingSongs.setRenderHorizontalShadows(false);
         this.addSelectableChild(this.scrollingSongs);
     }
 

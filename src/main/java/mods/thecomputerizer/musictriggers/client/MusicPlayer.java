@@ -280,7 +280,6 @@ public class MusicPlayer {
                                     curTrackList = null;
                                 }
                             }
-                            MusicTriggersCommon.logger.info("track list too smol");
                         }
                     }
                 } else if(!finish || playing) {

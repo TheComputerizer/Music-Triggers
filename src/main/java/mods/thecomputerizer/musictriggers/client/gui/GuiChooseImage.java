@@ -52,6 +52,7 @@ public class GuiChooseImage extends Screen {
     private void addSongs() {
         this.scrollingSongs = new GuiScrollingChooseImage(this.client, this.width, this.height,32,this.height-32, this.images, this, this.imageMap);
         this.scrollingSongs.setRenderBackground(false);
+        this.scrollingSongs.setRenderHorizontalShadows(false);
         this.addSelectableChild(this.scrollingSongs);
     }
 

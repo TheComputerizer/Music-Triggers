@@ -53,6 +53,7 @@ public class GuiTransitions extends Screen {
     private void addScrollable() {
         this.scrollingSongs = new GuiScrollingTransitions(this.client, this.width, this.height,32,this.height-32, this.info,this);
         this.scrollingSongs.setRenderBackground(false);
+        this.scrollingSongs.setRenderHorizontalShadows(false);
         this.addSelectableChild(this.scrollingSongs);
     }
 

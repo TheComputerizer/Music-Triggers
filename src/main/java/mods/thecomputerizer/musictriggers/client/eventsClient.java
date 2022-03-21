@@ -1,20 +1,18 @@
 package mods.thecomputerizer.musictriggers.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import mods.thecomputerizer.musictriggers.MusicTriggersClient;
 import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
 import mods.thecomputerizer.musictriggers.client.gui.GuiMain;
 import mods.thecomputerizer.musictriggers.client.gui.GuiTriggerInfo;
 import mods.thecomputerizer.musictriggers.config.configDebug;
 import mods.thecomputerizer.musictriggers.config.configObject;
 import mods.thecomputerizer.musictriggers.config.configTitleCards;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.render.debug.DebugRenderer;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.sound.SoundInstance;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
@@ -33,7 +31,6 @@ public class eventsClient {
 
     public static Identifier IMAGE_CARD = null;
     public static int curImageIndex;
-    public static boolean isWorldRendered;
     public static float fadeCount = 1000;
     public static float startDelayCount = 0;
     public static Boolean activated = false;
@@ -137,15 +134,14 @@ public class eventsClient {
         }
     }
 
-    public static void imageCards(WorldRenderContext context) {
-        isWorldRendered = true;
+    public static void imageCards(MatrixStack matrix) {
         MinecraftClient mc = MinecraftClient.getInstance();
         PlayerEntity player = mc.player;
         if (player != null && configTitleCards.imagecards.get(curImageIndex) != null) {
             int x = mc.getWindow().getWidth();
             int y = mc.getWindow().getHeight();
             if (fadeCount != 1000 && IMAGE_CARD != null) {
-                context.matrixStack().push();
+                matrix.push();
 
                 float opacity = (int) (17 - (fadeCount / 80));
                 opacity = (opacity * 1.15f) / 15;
@@ -155,7 +151,7 @@ public class eventsClient {
 
                 float scaleY = (0.25f * (configTitleCards.imagecards.get(curImageIndex).getScaleY() / 100f));
                 float scaleX = (0.25f * (configTitleCards.imagecards.get(curImageIndex).getScaleX() / 100f));
-                context.matrixStack().scale(scaleX, scaleY, 1f);
+                matrix.scale(scaleX, scaleY, 1f);
 
                 float posY = ((y * 2f) / ((4f * (configTitleCards.imagecards.get(curImageIndex).getScaleY() / 100f)) * 3f)) + configTitleCards.imagecards.get(curImageIndex).getVertical();
                 float posX = ((x * 2f) / ((configTitleCards.imagecards.get(curImageIndex).getScaleX() / 100f) * 3f)) - (sizeX / 2f) + configTitleCards.imagecards.get(curImageIndex).getHorizontal();
@@ -164,8 +160,8 @@ public class eventsClient {
 
                 RenderSystem.setShaderColor(1F, 1F, 1F, Math.max(0, Math.min(0.95f, opacity)));
                 RenderSystem.setShaderTexture(0, IMAGE_CARD);
-                DrawableHelper.drawTexture(context.matrixStack(), (int) posX, (int) posY, 0F, 0F, sizeX, sizeY, sizeX, sizeY);
-                context.matrixStack().pop();
+                DrawableHelper.drawTexture(matrix, (int) posX, (int) posY, 0F, 0F, sizeX, sizeY, sizeX, sizeY);
+                matrix.pop();
             }
         }
     }
@@ -196,6 +192,8 @@ public class eventsClient {
     }
 
     public static void onTick() {
+        if(!renderDebug) MinecraftClient.getInstance().options.hudHidden = true;
+        else MinecraftClient.getInstance().options.hudHidden = false;
         if(reloadCounter>0) {
             reloadCounter-=1;
             if(reloadCounter==1) {
@@ -213,11 +211,11 @@ public class eventsClient {
         }
     }
 
-    public static void debugInfo() {
-        if (configDebug.ShowDebugInfo && isWorldRendered) {
-            StringBuilder debug = new StringBuilder();
+    public static void debugInfo(MatrixStack matrix) {
+        if (configDebug.ShowDebugInfo && renderDebug) {
+            List<String> left = new ArrayList<>();
             if (MusicPlayer.curTrack != null) {
-                debug.append("Music Triggers Current song: ").append(MusicPlayer.curTrackHolder).append("\n");
+                left.add("Music Triggers Current song: "+MusicPlayer.curTrackHolder);
             }
             if (!configDebug.ShowJustCurSong) {
                 if (MusicPicker.playableList != null && !MusicPicker.playableList.isEmpty()) {
@@ -225,38 +223,44 @@ public class eventsClient {
                     for (String ev : MusicPicker.playableList) {
                         s.append(" ").append(ev);
                     }
-                    debug.append("Music Triggers Playable Triggers:").append(s).append("\n");
+                    left.add("Music Triggers Playable Triggers:"+s);
                 }
                 StringBuilder sm = new StringBuilder();
                 sm.append("minecraft");
                 for (String ev : configDebug.blockedmods) {
                     sm.append(" ").append(ev);
                 }
-                debug.append("Music Triggers Current Blocked Mods: ").append(sm).append("\n");
+                left.add("Music Triggers Current Blocked Mods: "+sm);
                 if (MusicPicker.player != null && MusicPicker.world != null) {
                     if (fromServer.curStruct != null) {
-                        debug.append("Music Triggers Current Structure: ").append(fromServer.curStruct).append("\n");
+                        left.add("Music Triggers Current Structure: "+fromServer.curStruct);
                     }
-                    debug.append("Music Triggers Current Biome: ").append(fromServer.curBiome).append("\n");
-                    debug.append("Music Triggers Current Dimension: ").append(MusicPicker.player.world.getDimension().getEffects()).append("\n");
-                    debug.append("Music Triggers Current Total Light: ").append(MusicPicker.world.getLightLevel(MusicPicker.roundedPos(MusicPicker.player))).append("\n");
-                    debug.append("Music Triggers Current Block Light: ").append(MusicPicker.world.getLightLevel(LightType.BLOCK, MusicPicker.roundedPos(MusicPicker.player))).append("\n");
+                    left.add("Music Triggers Current Biome: "+fromServer.curBiome);
+                    left.add("Music Triggers Current Dimension: "+MusicPicker.player.world.getDimension().getEffects());
+                    left.add("Music Triggers Current Total Light: "+MusicPicker.world.getLightLevel(MusicPicker.roundedPos(MusicPicker.player)));
+                    left.add("Music Triggers Current Block Light: "+MusicPicker.world.getLightLevel(LightType.BLOCK, MusicPicker.roundedPos(MusicPicker.player)));
                     if (MusicPicker.effectList != null && !MusicPicker.effectList.isEmpty()) {
                         StringBuilder se = new StringBuilder();
                         for (String ev : MusicPicker.effectList) {
                             se.append(" ").append(ev);
                         }
-                        debug.append("Music Triggers Current Effect List:").append(se).append("\n");
+                        left.add("Music Triggers Current Effect List:"+se);
                     }
                     if (getLivingFromEntity(MinecraftClient.getInstance().targetedEntity) != null) {
-                        debug.append("Music Triggers Current Entity Name: ").append(getLivingFromEntity(MinecraftClient.getInstance().targetedEntity).getName().getString()).append("\n");
+                        left.add("Music Triggers Current Entity Name: "+getLivingFromEntity(MinecraftClient.getInstance().targetedEntity).getName().getString());
                     }
                     if (MusicPicker.mc.currentScreen != null) {
-                        debug.append("Music Triggers current GUI: ").append(MusicPicker.mc.currentScreen.toString()).append("\n");
+                        left.add("Music Triggers current GUI: "+MusicPicker.mc.currentScreen);
                     }
                 }
             }
-            DebugRenderer.drawString(debug.toString(), 0, 0, 0, -1, 0.01f, false, 0.0f, true);
+            int top = 2;
+            for (String msg : left)
+            {
+                MinecraftClient.getInstance().inGameHud.fill(matrix, 1, top - 1, 2 + MinecraftClient.getInstance().textRenderer.getWidth(msg) + 1, top + MinecraftClient.getInstance().textRenderer.fontHeight - 1, -1873784752);
+                MinecraftClient.getInstance().textRenderer.draw(matrix, msg, 2, top, 14737632);
+                top += MinecraftClient.getInstance().textRenderer.fontHeight;
+            }
         }
     }
 

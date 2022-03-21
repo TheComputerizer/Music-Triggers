@@ -80,6 +80,7 @@ public class GuiTriggerInfo extends Screen {
     private void addScrollable() {
         this.scrollingSongs = new GuiScrollingTriggerInfo(this.client, this.width, this.height,32,this.height-32, this.parameters,this, this.holder);
         this.scrollingSongs.setRenderBackground(false);
+        this.scrollingSongs.setRenderHorizontalShadows(false);
         this.addDrawableChild(this.scrollingSongs);
     }
 
