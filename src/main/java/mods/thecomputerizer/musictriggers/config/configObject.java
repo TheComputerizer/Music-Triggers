@@ -107,16 +107,16 @@ public class configObject {
 
     public List<String> getAllSongs() {
         List<String> ret = new ArrayList<>();
-        for(Map.Entry<String, String> stringEntry : this.songholder.entrySet()) {
-            ret.add(stringEntry.getValue());
+        for(int i=0;i<this.songholder.entrySet().size();i++) {
+            ret.add(this.songholder.get("song"+i));
         }
         return  ret;
     }
 
     public List<String> getAllCodes() {
         List<String> ret = new ArrayList<>();
-        for(Map.Entry<String, String> stringEntry : this.songholder.entrySet()) {
-            ret.add(stringEntry.getKey());
+        for(int i=0;i<this.songholder.entrySet().size();i++) {
+            ret.add("song"+i);
         }
         return  ret;
     }
@@ -692,24 +692,24 @@ public class configObject {
 
     public void write() throws IOException {
         StringBuilder mainBuilder = new StringBuilder();
-        for(Map.Entry<String, Map<String, String[]>> stringMapEntry : this.triggerholder.entrySet()) {
-            String code = stringMapEntry.getKey();
+        for(int i=0;i<this.songholder.entrySet().size();i++) {
+            String code = "song"+i;
             MusicTriggersCommon.logger.debug("writing code: "+code);
             mainBuilder.append(formatSongBrackets(this.songholder.get(code))).append("\n");
             if(this.markSongInfoForWriting.get(code)!=null) {
-                for (int i : this.markSongInfoForWriting.get(code)) {
-                    mainBuilder.append("\t").append(Mappings.songparameters.get(i)).append(" = \"").append(this.otherinfo.get(code)[i]).append("\"\n");
+                for (int j : this.markSongInfoForWriting.get(code)) {
+                    mainBuilder.append("\t").append(Mappings.songparameters.get(j)).append(" = \"").append(this.otherinfo.get(code)[j]).append("\"\n");
                 }
             }
-            for(Map.Entry<String, String[]> stringEntry : this.triggerholder.get(stringMapEntry.getKey()).entrySet()) {
+            for(Map.Entry<String, String[]> stringEntry : this.triggerholder.get(code).entrySet()) {
                 String trigger = stringEntry.getKey();
                 mainBuilder.append("\t").append(formatTriggerBrackets(code, this.songholder.get(code))).append("\n");
                 mainBuilder.append("\t\tname = \"").append(trigger).append("\"\n");
                 if(this.markTriggerInfoForWriting.get(code)!=null && this.markTriggerInfoForWriting.get(code).get(trigger)!=null) {
                     boolean zone = false;
-                    for (int i : this.markTriggerInfoForWriting.get(code).get(trigger)) {
-                        if(!Mappings.parameters.get(i).matches("zone")) {
-                            mainBuilder.append("\t\t").append(Mappings.parameters.get(i)).append(" = \"").append(this.triggerholder.get(code).get(trigger)[i]).append("\"\n");
+                    for (int j : this.markTriggerInfoForWriting.get(code).get(trigger)) {
+                        if(!Mappings.parameters.get(j).matches("zone")) {
+                            mainBuilder.append("\t\t").append(Mappings.parameters.get(j)).append(" = \"").append(this.triggerholder.get(code).get(trigger)[j]).append("\"\n");
                         } else zone = true;
                     }
                     if(zone) {
@@ -718,17 +718,17 @@ public class configObject {
                     }
                 }
             }
-            if(this.triggerlinking.get(stringMapEntry.getKey())!=null && !getAllSongsForLinking(code).isEmpty()) {
+            if(this.triggerlinking.get(code)!=null && !getAllSongsForLinking(code).isEmpty()) {
                 mainBuilder.append("\t[").append(this.songholder.get(code)).append(".link]\n");
                 mainBuilder.append(this.formatLinkingDefaults(code)).append("\n");
-                for (Map.Entry<String, String[]> stringEntry : this.triggerlinking.get(stringMapEntry.getKey()).entrySet()) {
+                for (Map.Entry<String, String[]> stringEntry : this.triggerlinking.get(code).entrySet()) {
                     String song = stringEntry.getKey();
                     if(!song.matches(code)) {
                         mainBuilder.append(this.formatLinkingBrackets(code, this.songholder.get(code))).append("\n");
                         mainBuilder.append("\t\t\tsong = \"").append(song).append("\"\n");
                         if (this.markLinkingInfoForWriting.get(code) != null && this.markLinkingInfoForWriting.get(code).get(song) != null) {
-                            for (int i : this.markLinkingInfoForWriting.get(code).get(song)) {
-                                mainBuilder.append("\t\t\t").append(Mappings.linkingparameters.get(i)).append(" = \"").append(this.otherlinkinginfo.get(code).get(song)[i]).append("\"\n");
+                            for (int j : this.markLinkingInfoForWriting.get(code).get(song)) {
+                                mainBuilder.append("\t\t\t").append(Mappings.linkingparameters.get(j)).append(" = \"").append(this.otherlinkinginfo.get(code).get(song)[j]).append("\"\n");
                             }
                         }
                         mainBuilder.append(this.formatLinkingTriggers(code, song)).append("\n");

@@ -721,8 +721,9 @@ public class configToml {
             BufferedReader br = new BufferedReader(new FileReader(toml));
             String line = br.readLine();
             while (line != null) {
-                if(!line.contains("\t") && !line.contains(" ") && line.contains("[") && line.contains("]")) {
-                    ret.add(line.replaceAll("\\[","").replaceAll("]",""));
+                if(!line.contains("\t") && !line.contains(" ") && line.contains("[") && line.contains("]") && !line.contains("\"") && !line.contains(".") && !line.contains("#")) {
+                    String betterLine = line.replaceAll("\\[","").replaceAll("]","");
+                    if(!ret.contains(betterLine)) ret.add(betterLine);
                 }
                 line = br.readLine();
             }
