@@ -27,6 +27,7 @@ public class InfoForStructure {
 
     public static void register() {
         ServerPlayNetworking.registerGlobalReceiver(id,(server, player, handler, buf, sender) -> {
+            calculateFeatures.curServer = server;
             String s = decode(buf);
             calculateFeatures.calculateStructAndSend(getDataTriggerName(s), getDataStruct(s), getDataBlockPos(s), getDataUUID(s));
         });

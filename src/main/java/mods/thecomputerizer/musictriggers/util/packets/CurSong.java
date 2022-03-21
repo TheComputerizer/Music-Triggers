@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.util.packets;
 
 
 import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
+import mods.thecomputerizer.musictriggers.util.calculateFeatures;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.PacketByteBuf;
@@ -29,6 +30,7 @@ public class CurSong {
 
     public static void register() {
         ServerPlayNetworking.registerGlobalReceiver(id,(server, player, handler, buf, sender) -> {
+            calculateFeatures.curServer = server;
             String s = decode(buf);
             curSong.put(getDataUUID(s),getSongName(s));
         });

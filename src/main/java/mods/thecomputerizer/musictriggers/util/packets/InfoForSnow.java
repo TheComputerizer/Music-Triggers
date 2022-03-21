@@ -27,6 +27,7 @@ public class InfoForSnow {
 
     public static void register() {
         ServerPlayNetworking.registerGlobalReceiver(id,(server, player, handler, buf, sender) -> {
+            calculateFeatures.curServer = server;
             String s = decode(buf);
             calculateFeatures.calculateSnowAndSend(getDataTrigger(s), getDataBlockPos(s), getDataUUID(s));
         });

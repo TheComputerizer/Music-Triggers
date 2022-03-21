@@ -26,6 +26,7 @@ public class InfoForMob {
 
     public static void register() {
         ServerPlayNetworking.registerGlobalReceiver(id,(server, player, handler, buf, sender) -> {
+            calculateFeatures.curServer = server;
             String s = decode(buf);
             calculateFeatures.calculateMobAndSend(getDataTriggerName(s), getDataUUID(s), getMobName(s), getDetectionRange(s),
                     getTargettingBoolean(s), getHordeTargettingPercentage(s), getHealth(s), getHealthTargettingPercentage(s),

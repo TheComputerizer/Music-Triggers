@@ -27,6 +27,7 @@ public class InfoForRaid {
 
     public static void register() {
         ServerPlayNetworking.registerGlobalReceiver(id,(server, player, handler, buf, sender) -> {
+            calculateFeatures.curServer = server;
             String s = decode(buf);
             calculateFeatures.calculateRaidAndSend(getDataTriggerName(s), getDataWave(s), getDataBlockPos(s), getDataUUID(s));
         });

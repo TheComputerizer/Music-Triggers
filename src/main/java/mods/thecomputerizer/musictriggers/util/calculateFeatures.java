@@ -12,9 +12,11 @@ import net.minecraft.predicate.entity.EntityPredicates;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.tag.Tag;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.village.raid.Raid;
+import net.minecraft.world.RegistryWorldView;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.feature.StructureFeature;
 
@@ -55,7 +57,7 @@ public class calculateFeatures {
     public static void calculateSnowAndSend(String triggerID, BlockPos pos, UUID uuid) {
         ServerPlayerEntity player = curServer.getPlayerManager().getPlayer(uuid);
         if(player!=null) {
-            ServerWorld world = curServer.getWorld(player.getWorld().getRegistryKey());
+            RegistryWorldView world = curServer.getWorld(player.getWorld().getRegistryKey());
             if (world != null) {
                 Biome biome = world.getBiome(pos);
                 if (!biome.doesNotSnow(pos)) {
@@ -84,7 +86,7 @@ public class calculateFeatures {
     public static void calculateBiomeAndSend(String triggerID, String biome, BlockPos pos, UUID uuid, String category, String rainType, float temperature, boolean cold) {
         ServerPlayerEntity player = curServer.getPlayerManager().getPlayer(uuid);
         if(player!=null) {
-            ServerWorld world = curServer.getWorld(player.getWorld().getRegistryKey());
+            RegistryWorldView world = curServer.getWorld(player.getWorld().getRegistryKey());
             if (world != null) {
                 String curBiome = world.getBiomeKey(pos).get().getValue().toString();
                 boolean pass = checkBiome(world.getBiome(pos), curBiome,biome,category,rainType,temperature,cold);

@@ -5,6 +5,7 @@ import mods.thecomputerizer.musictriggers.util.calculateFeatures;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 
@@ -27,6 +28,7 @@ public class InfoForBiome {
 
     public static void register() {
         ServerPlayNetworking.registerGlobalReceiver(id,(server, player, handler, buf, sender) -> {
+            calculateFeatures.curServer = server;
             String s = decode(buf);
             calculateFeatures.calculateBiomeAndSend(getDataTrigger(s), getDataStruct(s), getDataBlockPos(s), getDataUUID(s),
                     getDataCategory(s), getDataRainType(s), getDataTemperature(s), getDataCold(s));

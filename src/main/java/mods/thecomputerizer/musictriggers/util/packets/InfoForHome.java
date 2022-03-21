@@ -27,6 +27,7 @@ public class InfoForHome {
 
     public static void register() {
         ServerPlayNetworking.registerGlobalReceiver(id,(server, player, handler, buf, sender) -> {
+            calculateFeatures.curServer = server;
             String s = decode(buf);
             calculateFeatures.calculateHomeAndSend(getDataTrigger(s), getDataBlockPos(s), getDataUUID(s), getDataRange(s));
         });

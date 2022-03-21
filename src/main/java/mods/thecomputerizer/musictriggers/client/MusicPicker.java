@@ -26,7 +26,7 @@ import net.minecraft.world.biome.Biome;
 
 import java.util.*;
 
-@SuppressWarnings({"rawtypes", "OptionalGetWithoutIsPresent"})
+@SuppressWarnings({"rawtypes"})
 public class MusicPicker {
     public static MinecraftClient mc;
     public static PlayerEntity player;
@@ -622,35 +622,7 @@ public class MusicPicker {
             }
             if (SoundHandler.TriggerSongMap.get("biome") != null) {
                 crashHelper = "biome";
-                if (world.getBiomeKey(roundedPos(player)).get().getValue() != null) {
-                    fromServer.curBiome = world.getBiomeKey(roundedPos(player)).get().getValue().toString();
-                    for (Map.Entry<String, String> stringListEntry : SoundHandler.TriggerSongMap.get("biome").entrySet()) {
-                        String biomeSong = ((Map.Entry) stringListEntry).getKey().toString();
-                        String identifier = configToml.triggerholder.get(biomeSong.replaceAll("@", "")).get("biome")[10];
-                        boolean pass = checkBiome(world.getBiome(roundedPos(player)), world.getBiomeKey(roundedPos(player)).get().getValue().toString(),
-                                SoundHandler.TriggerInfoMap.get("biome-" + identifier)[9], SoundHandler.TriggerInfoMap.get("biome-" + identifier)[23],
-                                SoundHandler.TriggerInfoMap.get("biome-" + identifier)[24], Float.parseFloat(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[25]),
-                                Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[26]));
-                        if (pass) {
-                            if (!events.contains("biome-" + identifier)) {
-                                events.add("biome-" + identifier);
-                                dynamicSongs.put("biome-" + identifier, buildSongsFromIdentifier(SoundHandler.TriggerSongMap.get("biome"), identifier));
-                                dynamicPriorities.put("biome-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[0]));
-                                dynamicFade.put("biome-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[1]));
-                                dynamicDelay.put("biome-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[4]));
-                                triggerPersistence.put("biome-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[3]));
-                            }
-                        } else if (triggerPersistence.get("biome-" + identifier) != null && triggerPersistence.get("biome-" + identifier) > 0) {
-                            if (!events.contains("biome-" + identifier)) {
-                                events.add("biome-" + identifier);
-                                dynamicSongs.put("biome-" + identifier, buildSongsFromIdentifier(SoundHandler.TriggerSongMap.get("biome"), identifier));
-                                dynamicPriorities.put("biome-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[0]));
-                                dynamicFade.put("biome-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[1]));
-                                dynamicDelay.put("biome-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[4]));
-                            }
-                        }
-                    }
-                } else if (!configRegistry.clientSideOnly) {
+                if (!configRegistry.clientSideOnly) {
                     for (Map.Entry<String, String> stringListEntry : SoundHandler.TriggerSongMap.get("biome").entrySet()) {
                         String biomeSong = ((Map.Entry) stringListEntry).getKey().toString();
                         String identifier = configToml.triggerholder.get(biomeSong.replaceAll("@", "")).get("biome")[10];
