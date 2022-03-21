@@ -3,7 +3,6 @@ package mods.thecomputerizer.musictriggers.config;
 import com.rits.cloning.Cloner;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.gui.Mappings;
-import net.minecraft.util.ResourceLocation;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -20,11 +19,8 @@ public class configObject {
     private final Map<Integer, configTitleCards.Title> titlecards;
     private final Map<Integer, configTitleCards.Image> imagecards;
     private final Map<Integer, Boolean> ismoving;
-    private final Map<ResourceLocation, configTitleCards.ImageDimensions> imageDimensions;
     private final List<String> blockedmods;
     private final List<String> debugStuff;
-
-    private final List<String> allSongs;
 
     private final Map<String, List<Integer>> markSongInfoForWriting;
     private final Map<String, Map<String, List<Integer>>> markTriggerInfoForWriting;
@@ -48,8 +44,7 @@ public class configObject {
 
     private configObject(Map<String, String> songholder, Map<String, Map<String, String[]>> triggerholder, Map<String, String[]> otherinfo,
                          Map<String, Map<String, String[]>> otherlinkinginfo, Map<String, Map<String, String[]>> triggerlinking, Map<Integer, configTitleCards.Title> titlecards,
-                         Map<Integer, configTitleCards.Image> imagecards, Map<Integer, Boolean> ismoving, Map<ResourceLocation, configTitleCards.ImageDimensions> imageDimensions,
-                         List<String> blockedmods, List<String> debugStuff, List<String> allSongs) {
+                         Map<Integer, configTitleCards.Image> imagecards, Map<Integer, Boolean> ismoving, List<String> blockedmods, List<String> debugStuff) {
         this.songholder = songholder;
         this.triggerholder = triggerholder;
         this.otherinfo = otherinfo;
@@ -58,11 +53,8 @@ public class configObject {
         this.titlecards = titlecards;
         this.imagecards = imagecards;
         this.ismoving = ismoving;
-        this.imageDimensions = imageDimensions;
         this.blockedmods = blockedmods;
         this.debugStuff = debugStuff;
-
-        this.allSongs = allSongs;
 
         this.markSongInfoForWriting = new HashMap<>();
         this.markTriggerInfoForWriting = new HashMap<>();
@@ -91,8 +83,8 @@ public class configObject {
         Cloner cloner=new Cloner();
         return new configObject(cloner.deepClone(configToml.songholder),cloner.deepClone(configToml.triggerholder),cloner.deepClone(configToml.otherinfo),
                 cloner.deepClone(configToml.otherlinkinginfo),cloner.deepClone(configToml.triggerlinking),cloner.deepClone(configTitleCards.titlecards),
-                cloner.deepClone(configTitleCards.imagecards),cloner.deepClone(configTitleCards.ismoving),cloner.deepClone(configTitleCards.imageDimensions),
-                cloner.deepClone(Arrays.asList(configDebug.blockedmods)), cloner.deepClone(compileDebugStuff()), cloner.deepClone(configToml.allSongs));
+                cloner.deepClone(configTitleCards.imagecards),cloner.deepClone(configTitleCards.ismoving),
+                cloner.deepClone(Arrays.asList(configDebug.blockedmods)), cloner.deepClone(compileDebugStuff()));
     }
 
     public List<String> getAllDebugStuff() {
@@ -109,22 +101,18 @@ public class configObject {
         return  ret;
     }
 
-    public List<String> getAllSongChoices() {
-        return this.allSongs;
-    }
-
     public List<String> getAllSongs() {
         List<String> ret = new ArrayList<>();
-        for(Map.Entry<String, String> stringEntry : this.songholder.entrySet()) {
-            ret.add(stringEntry.getValue());
+        for(int i=0;i<this.songholder.entrySet().size();i++) {
+            ret.add(this.songholder.get("song"+i));
         }
         return  ret;
     }
 
     public List<String> getAllCodes() {
         List<String> ret = new ArrayList<>();
-        for(Map.Entry<String, String> stringEntry : this.songholder.entrySet()) {
-            ret.add(stringEntry.getKey());
+        for(int i=0;i<this.songholder.entrySet().size();i++) {
+            ret.add("song"+i);
         }
         return  ret;
     }
@@ -214,7 +202,7 @@ public class configObject {
         assert listOfFiles != null;
         for(File f : listOfFiles) {
             if(f.isDirectory()) ret.put(f.getName(), true);
-            else if(f.getName().contains(".png") && !f.getName().contains(".png.mcmeta") && Arrays.stream(listOfFiles).collect(Collectors.toList()).contains(f.getName()+".mcmeta")) ret.put(f.getName(),true);
+            else if(f.getName().contains(".png") && !f.getName().contains(".png.mcmeta") && Arrays.stream(listOfFiles).collect(Collectors.toList()).contains(new File(f.getPath()+".mcmeta"))) ret.put(f.getName(),true);
             else if(f.getName().contains(".gif")) ret.put(f.getName(), true);
             else if(f.getName().contains(".mp4")) ret.put(f.getName(), true);
             else if(f.getName().contains(".png")) ret.put(f.getName(), false);
@@ -314,7 +302,6 @@ public class configObject {
         else {
             index-=this.titlecards.size();
             this.imagecards.remove(index);
-            this.imageDimensions.remove(index);
         }
     }
 
@@ -700,8 +687,8 @@ public class configObject {
 
     public void write() throws IOException {
         StringBuilder mainBuilder = new StringBuilder();
-        for(Map.Entry<String, Map<String, String[]>> stringMapEntry : this.triggerholder.entrySet()) {
-            String code = stringMapEntry.getKey();
+        for(int j=0;j<this.songholder.entrySet().size();j++) {
+            String code = "song"+j;
             MusicTriggers.logger.info("writing code: "+code);
             mainBuilder.append(formatSongBrackets(this.songholder.get(code))).append("\n");
             if(this.markSongInfoForWriting.get(code)!=null) {
@@ -709,7 +696,7 @@ public class configObject {
                     mainBuilder.append("\t").append(Mappings.songparameters.get(i)).append(" = \"").append(this.otherinfo.get(code)[i]).append("\"\n");
                 }
             }
-            for(Map.Entry<String, String[]> stringEntry : this.triggerholder.get(stringMapEntry.getKey()).entrySet()) {
+            for(Map.Entry<String, String[]> stringEntry : this.triggerholder.get(code).entrySet()) {
                 String trigger = stringEntry.getKey();
                 mainBuilder.append("\t").append(formatTriggerBrackets(code, this.songholder.get(code))).append("\n");
                 mainBuilder.append("\t\tname = \"").append(trigger).append("\"\n");
@@ -726,10 +713,10 @@ public class configObject {
                     }
                 }
             }
-            if(this.triggerlinking.get(stringMapEntry.getKey())!=null && !getAllSongsForLinking(code).isEmpty()) {
+            if(this.triggerlinking.get(code)!=null && !getAllSongsForLinking(code).isEmpty()) {
                 mainBuilder.append("\t[").append(this.songholder.get(code)).append(".link]\n");
                 mainBuilder.append(this.formatLinkingDefaults(code)).append("\n");
-                for (Map.Entry<String, String[]> stringEntry : this.triggerlinking.get(stringMapEntry.getKey()).entrySet()) {
+                for (Map.Entry<String, String[]> stringEntry : this.triggerlinking.get(code).entrySet()) {
                     String song = stringEntry.getKey();
                     if(!song.matches(code)) {
                         mainBuilder.append(this.formatLinkingBrackets(code, this.songholder.get(code))).append("\n");
