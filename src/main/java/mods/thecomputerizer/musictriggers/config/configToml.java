@@ -2,7 +2,6 @@ package mods.thecomputerizer.musictriggers.config;
 
 import com.moandjiezana.toml.Toml;
 import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
-import mods.thecomputerizer.musictriggers.util.json;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
 
 import java.io.BufferedReader;
