@@ -4,10 +4,10 @@ import com.moandjiezana.toml.Toml;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.util.json;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.FileReader;
+import java.util.*;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class configToml {
@@ -45,7 +45,7 @@ public class configToml {
         else {
             Toml toml = new Toml().read(file);
             int songCounter = 0;
-            for (String s : json.allSongs) {
+            for (String s : songCollector(file)) {
                 if (toml.containsTableArray(s)) {
                     try {
                         for (Toml song : toml.getTables(s)) {
@@ -708,6 +708,24 @@ public class configToml {
                 }
             }
         }
+    }
+
+    public static List<String> songCollector(File toml) {
+        List<String> ret = new ArrayList<>();
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(toml));
+            String line = br.readLine();
+            while (line != null) {
+                if(!line.contains("\t") && !line.contains(" ") && line.contains("[") && line.contains("]")) {
+                    ret.add(line.replaceAll("\\[","").replaceAll("]",""));
+                }
+                line = br.readLine();
+            }
+            br.close();
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+        return ret;
     }
 
     public static void emptyMaps() {

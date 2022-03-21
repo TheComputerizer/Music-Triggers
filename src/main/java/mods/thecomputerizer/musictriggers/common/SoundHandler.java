@@ -60,7 +60,7 @@ public class SoundHandler {
                 for(String trigger : triggers) {
                     if(configToml.triggerholder.get(songEntry).get(trigger)[6].matches("and")) {
                         songCombos.computeIfAbsent(songEntry, k -> new ArrayList<>());
-                        if(configToml.triggerholder.get(songEntry).get(trigger)[10].matches("")) {
+                        if(configToml.triggerholder.get(songEntry).get(trigger)[10].matches("") || configToml.triggerholder.get(songEntry).get(trigger)[10].matches("_")) {
                             songCombos.get(songEntry).add(trigger);
                         }
                         else {
@@ -69,7 +69,7 @@ public class SoundHandler {
                         TriggerSongMap.putIfAbsent(trigger, new HashMap<>());
                         TriggerSongMap.get(trigger).putIfAbsent("@"+songEntry,configToml.triggerholder.get(songEntry).get(trigger)[10]);
                         TriggerInfoMap.putIfAbsent(trigger, configToml.triggerholder.get(songEntry).get(trigger));
-                        if(!configToml.triggerholder.get(songEntry).get(trigger)[10].matches("")) {
+                        if(!(configToml.triggerholder.get(songEntry).get(trigger)[10].matches("") || configToml.triggerholder.get(songEntry).get(trigger)[10].matches("_"))) {
                             if (!TriggerInfoMap.containsKey(trigger + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10])) {
                                 TriggerInfoMap.put(trigger + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10], configToml.triggerholder.get(songEntry).get(trigger));
                             }
