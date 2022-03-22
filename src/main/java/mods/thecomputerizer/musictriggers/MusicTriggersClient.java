@@ -88,6 +88,7 @@ public class MusicTriggersClient implements ClientModInitializer {
         HudRenderCallback.EVENT.register((matrixStack, tickDelta) -> {
             eventsClient.imageCards(matrixStack);
             eventsClient.debugInfo(matrixStack);
+            eventsClient.renderBoss();
         });
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {

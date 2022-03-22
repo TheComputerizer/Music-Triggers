@@ -53,17 +53,15 @@ public class MusicPlayer {
     public static HashMap<String, setVolumeSound> musicLinker = new HashMap<>();
     public static HashMap<String, String[]> triggerLinker = new HashMap<>();
     public static HashMap<String, Float> volumeLinker = new HashMap<>();
+    public static List<String> oncePerTrigger = new ArrayList<>();
+    public static List<String> onceUntilEmpty = new ArrayList<>();
 
     public static Map<SoundInstance, Channel.SourceManager> sources;
 
     public static void onTick() {
-        if(!reloading) {
-            if(MusicPicker.fishBool) {
-                MusicPicker.fishingStart++;
-            }
-            if(MusicPicker.elytraBool) {
-                MusicPicker.elytraStart++;
-            }
+        if(!reloading && tickCounter % 2 == 0) {
+            if(MusicPicker.fishBool) MusicPicker.fishingStart++;
+            if(MusicPicker.elytraBool) MusicPicker.elytraStart++;
             for (Map.Entry<String, Integer> stringListEntry : MusicPicker.triggerPersistence.entrySet()) {
                 String eventID = ((Map.Entry) stringListEntry).getKey().toString();
                 MusicPicker.triggerPersistence.putIfAbsent(eventID, 0);
@@ -143,6 +141,8 @@ public class MusicPlayer {
                                 }
                             }
                             if (songNum == null) {
+                                oncePerTrigger = new ArrayList<>();
+                                onceUntilEmpty = new ArrayList<>();
                                 triggerLinker = new HashMap<>();
                                 musicLinker = new HashMap<>();
                                 if (MusicPicker.curFade == 0) {
@@ -196,6 +196,8 @@ public class MusicPlayer {
                             triggerLinker = new HashMap<>();
                             musicLinker = new HashMap<>();
                             eventsClient.GuiCounter = 0;
+                            curTrackList = curTrackList.stream().filter(track -> !oncePerTrigger.contains(track)).collect(Collectors.toList());
+                            curTrackList = curTrackList.stream().filter(track -> !onceUntilEmpty.contains(track)).collect(Collectors.toList());
                             if (curTrackList.size() >= 1) {
                                 int i = ThreadLocalRandom.current().nextInt(0,curTrackList.size());
                                 if (curTrackList.size() > 1 && curTrack != null) {
@@ -265,7 +267,9 @@ public class MusicPlayer {
                                         }
                                         mc.getSoundManager().play(musicLinker.get(checkThis));
                                     }
-                                    if (Boolean.parseBoolean(configToml.otherinfo.get(curTrack)[1])) {
+                                    if (Integer.parseInt(configToml.otherinfo.get(curTrack)[1])==1) onceUntilEmpty.add(curTrack);
+                                    if (Integer.parseInt(configToml.otherinfo.get(curTrack)[1])==2) oncePerTrigger.add(curTrack);
+                                    else if (Integer.parseInt(configToml.otherinfo.get(curTrack)[1])==3) {
                                         configToml.songholder.remove(curTrack);
                                         configToml.triggerlinking.remove(curTrack);
                                         configToml.triggerholder.remove(curTrack);
@@ -280,6 +284,7 @@ public class MusicPlayer {
                                     curTrackList = null;
                                 }
                             }
+                            else onceUntilEmpty = new ArrayList<>();
                         }
                     }
                 } else if(!finish || playing) {
@@ -299,8 +304,8 @@ public class MusicPlayer {
                     }
                 }
             }
-            tickCounter++;
         }
+        tickCounter++;
     }
 
     public static void renderCards() {

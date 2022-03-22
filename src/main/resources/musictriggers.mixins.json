@@ -4,11 +4,12 @@
   "package": "mods.thecomputerizer.musictriggers.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "MixinServerBossBar",
-    "MixinSoundSystem",
-    "MixinPlaySoundEvent",
+    "BossBarHudAccessor",
+    "InGameHudAccessor",
+    "MixinAdvancementEvent",
     "MixinLivingDamageEvent",
-    "MixinAdvancementEvent"
+    "MixinPlaySoundEvent",
+    "MixinSoundSystem"
   ],
   "client": [
     "MixinResourcePack"

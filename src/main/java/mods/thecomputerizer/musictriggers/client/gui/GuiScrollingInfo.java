@@ -8,6 +8,7 @@ import net.minecraft.text.TranslatableText;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class GuiScrollingInfo extends AlwaysSelectedEntryListWidget<GuiScrollingInfo.Entry> {
@@ -24,12 +25,11 @@ public class GuiScrollingInfo extends AlwaysSelectedEntryListWidget<GuiScrolling
     }
 
     public void resetEntries(List<String> info) {
-        for(GuiScrollingInfo.Entry entry : this.children()) {
-            this.removeEntry(entry);
-        }
+        List<GuiScrollingInfo.Entry> newEntries = new ArrayList<>();
         for(int i=0;i<info.size();i++) {
-            this.addEntry(new GuiScrollingInfo.Entry(info.get(i), i));
+            newEntries.add(new GuiScrollingInfo.Entry(info.get(i), i));
         }
+        this.replaceEntries(newEntries);
     }
 
     @Override

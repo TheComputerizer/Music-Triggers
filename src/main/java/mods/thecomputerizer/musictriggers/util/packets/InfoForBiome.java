@@ -19,8 +19,8 @@ public class InfoForBiome {
         return ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
     }
 
-    public static PacketByteBuf encode(String trigger, String s, BlockPos p, UUID u, String ct, String rt, String t, String c) {
-        String send = trigger+","+s+","+p.asLong()+","+u.toString()+","+ct+","+rt+","+t+","+c;
+    public static PacketByteBuf encode(String trigger, String s, BlockPos p, UUID u, String ct, String rt, String t, String c, String downfall, String toggle) {
+        String send = trigger+","+s+","+p.asLong()+","+u.toString()+","+ct+","+rt+","+t+","+c+","+downfall+","+toggle;
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeCharSequence(send, StandardCharsets.UTF_8);
         return buf;
@@ -31,7 +31,7 @@ public class InfoForBiome {
             calculateFeatures.curServer = server;
             String s = decode(buf);
             calculateFeatures.calculateBiomeAndSend(getDataTrigger(s), getDataStruct(s), getDataBlockPos(s), getDataUUID(s),
-                    getDataCategory(s), getDataRainType(s), getDataTemperature(s), getDataCold(s));
+                    getDataCategory(s), getDataRainType(s), getDataTemperature(s), getDataCold(s), getDataDownfall(s), getDataToggle(s));
         });
     }
 
@@ -58,6 +58,12 @@ public class InfoForBiome {
     }
     public static boolean getDataCold(String s) {
         return Boolean.parseBoolean(stringBreaker(s)[7]);
+    }
+    public static float getDataDownfall(String s) {
+        return Float.parseFloat(stringBreaker(s)[8]);
+    }
+    public static boolean getDataToggle(String s) {
+        return Boolean.parseBoolean(stringBreaker(s)[9]);
     }
 
     public static String[] stringBreaker(String s) {

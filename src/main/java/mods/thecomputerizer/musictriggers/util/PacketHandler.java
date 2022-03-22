@@ -26,6 +26,8 @@ public class PacketHandler {
         InfoFromHome.register();
         InfoFromHome.register();
         InfoFromStructure.register();
+        BossInfo.register();
+        AllTriggers.register();
     }
 
     public static void sendTo(Identifier id, PacketByteBuf buf, ServerPlayerEntity player) {

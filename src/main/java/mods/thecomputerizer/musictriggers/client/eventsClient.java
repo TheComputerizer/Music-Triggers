@@ -7,9 +7,14 @@ import mods.thecomputerizer.musictriggers.client.gui.GuiTriggerInfo;
 import mods.thecomputerizer.musictriggers.config.configDebug;
 import mods.thecomputerizer.musictriggers.config.configObject;
 import mods.thecomputerizer.musictriggers.config.configTitleCards;
+import mods.thecomputerizer.musictriggers.mixin.BossBarHudAccessor;
+import mods.thecomputerizer.musictriggers.mixin.InGameHudAccessor;
+import mods.thecomputerizer.musictriggers.util.PacketHandler;
+import mods.thecomputerizer.musictriggers.util.packets.BossInfo;
 import net.minecraft.advancement.Advancement;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.hud.ClientBossBar;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.client.util.math.MatrixStack;
@@ -26,6 +31,8 @@ import net.minecraft.world.LightType;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class eventsClient {
 
@@ -192,8 +199,7 @@ public class eventsClient {
     }
 
     public static void onTick() {
-        if(!renderDebug) MinecraftClient.getInstance().options.hudHidden = true;
-        else MinecraftClient.getInstance().options.hudHidden = false;
+        MinecraftClient.getInstance().options.hudHidden = !renderDebug;
         if(reloadCounter>0) {
             reloadCounter-=1;
             if(reloadCounter==1) {
@@ -261,6 +267,14 @@ public class eventsClient {
                 MinecraftClient.getInstance().textRenderer.draw(matrix, msg, 2, top, 14737632);
                 top += MinecraftClient.getInstance().textRenderer.fontHeight;
             }
+        }
+    }
+
+    public static void renderBoss() {
+        Map<UUID, ClientBossBar> bossbars = ((BossBarHudAccessor)((InGameHudAccessor)MinecraftClient.getInstance().inGameHud).getBossBarHud()).getBossBars();
+        for(UUID u : bossbars.keySet()) {
+            ClientBossBar bar = bossbars.get(u);
+            PacketHandler.sendToServer(BossInfo.id, BossInfo.encode(bar.getName().getString(), bar.getPercent()));
         }
     }
 
