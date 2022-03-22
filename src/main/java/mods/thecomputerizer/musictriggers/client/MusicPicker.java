@@ -419,7 +419,7 @@ public class MusicPicker {
                 dynamicDelay.put("storming", Integer.parseInt(SoundHandler.TriggerInfoMap.get("storming")[4]));
                 triggerPersistence.put("storming", Integer.parseInt(SoundHandler.TriggerInfoMap.get("storming")[3]));
                 if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("storming")[33])) timeSwitch.add("storming");
-            } else if (triggerPersistence.get("storming") != null && triggerPersistence.get("snowing") > 0) {
+            } else if (triggerPersistence.get("storming") != null && triggerPersistence.get("storming") > 0) {
                 crashHelper = "storming";
                 events.add("storming");
                 dynamicSongs.put("storming", new ArrayList<>(SoundHandler.TriggerSongMap.get("storming").keySet()));
