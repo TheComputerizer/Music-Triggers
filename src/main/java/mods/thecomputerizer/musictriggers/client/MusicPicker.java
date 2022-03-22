@@ -75,6 +75,10 @@ public class MusicPicker {
             else return null;
         }
         List<String> res = comboChecker(priorityHandler(playableEvents()));
+        for(String event : timeSwitch) {
+            if(!titleCardEvents.contains(event) && triggerPersistence.get(event) > 0) triggerPersistence.put(event, 0);
+        }
+        timeSwitch = new ArrayList<>();
         if (res != null && !res.isEmpty()) {
             dynamicSongs = new HashMap<>();
             dynamicPriorities = new HashMap<>();
