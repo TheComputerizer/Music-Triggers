@@ -15,10 +15,7 @@ import net.minecraft.world.server.ServerBossInfo;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class eventsCommon {
@@ -28,29 +25,29 @@ public class eventsCommon {
     public static HashMap<BlockPos, UUID> recordUUID = new HashMap<>();
     public static HashMap<BlockPos, World> recordWorld = new HashMap<>();
 
+    public static int bossTimer = 0;
+
     @SubscribeEvent
     public static void serverTick(TickEvent.ServerTickEvent e) {
-        for (Map.Entry<Integer, Map<LivingEntity, Integer>> integerMapEntry : calculateFeatures.victoryMobs.entrySet()) {
-            Map<LivingEntity, Integer> tempMap = calculateFeatures.victoryMobs.get(integerMapEntry.getKey());
-            for (Map.Entry<LivingEntity, Integer> entityLivingIntegerEntry : tempMap.entrySet()) {
-                int temp = calculateFeatures.victoryMobs.get(integerMapEntry.getKey()).get(entityLivingIntegerEntry.getKey());
-                if(temp>0) {
-                    calculateFeatures.victoryMobs.get(integerMapEntry.getKey()).put(entityLivingIntegerEntry.getKey(), temp-1);
-                }
-                else {
-                    calculateFeatures.victoryMobs.put(integerMapEntry.getKey(), new HashMap<>());
+        if(bossTimer>1) bossTimer-=1;
+        else if(bossTimer==1) calculateFeatures.bossInfo = new HashMap<>();
+        for (String trigger : calculateFeatures.victoryMobs.keySet()) {
+            if(!calculateFeatures.allTriggers.contains(trigger)) {
+                Map<UUID, Integer> tempMap = calculateFeatures.victoryMobs.get(trigger);
+                for (UUID u : tempMap.keySet()) {
+                    int temp = tempMap.get(u);
+                    if (temp > 0) calculateFeatures.victoryMobs.get(trigger).put(u, temp - 1);
+                    else calculateFeatures.victoryMobs.put(trigger, new HashMap<>());
                 }
             }
         }
-        for (Map.Entry<Integer, Map<ServerBossInfo, Integer>> integerMapEntry : calculateFeatures.victoryBosses.entrySet()) {
-            Map<ServerBossInfo, Integer> tempMap = calculateFeatures.victoryBosses.get(integerMapEntry.getKey());
-            for (Map.Entry<ServerBossInfo, Integer> bossInfoServerIntegerEntry : tempMap.entrySet()) {
-                int temp = calculateFeatures.victoryBosses.get(integerMapEntry.getKey()).get(bossInfoServerIntegerEntry.getKey());
-                if(temp>0) {
-                    calculateFeatures.victoryBosses.get(integerMapEntry.getKey()).put(bossInfoServerIntegerEntry.getKey(), temp-1);
-                }
-                else {
-                    calculateFeatures.victoryBosses.put(integerMapEntry.getKey(), new HashMap<>());
+        for (String trigger : calculateFeatures.victoryBosses.keySet()) {
+            if(!calculateFeatures.allTriggers.contains(trigger)) {
+                Map<String, Integer> tempMap = calculateFeatures.victoryBosses.get(trigger);
+                for (int j = 0; j < tempMap.keySet().size(); j++) {
+                    int temp = tempMap.get(j);
+                    if (temp > 0) calculateFeatures.victoryBosses.get(trigger).put(new ArrayList<>(tempMap.keySet()).get(j), temp - 1);
+                    else calculateFeatures.victoryBosses.put(trigger, new HashMap<>());
                 }
             }
         }

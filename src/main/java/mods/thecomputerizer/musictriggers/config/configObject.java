@@ -33,11 +33,12 @@ public class configObject {
     private final File debugConfig;
     private final File registrationConfig;
 
-    public static final String[] otherInfoDefaults = new String[]{"1", "false", "false", "100", "1"};
+    public static final String[] otherInfoDefaults = new String[]{"1", "0", "false", "100", "1"};
     public static final String[] triggerInfoDefaults = new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
             "minecraft", "_", "16", "false", "100", "100", "100",
-            "false", "0", "minecraft", "true", "true", "0", "0", "nope", "nope",
-            "-111", "false","_", "true", "-1"};
+            "false", "0", "minecraft", "true", "true", "0", "0", "nope",
+            "nope", "-111", "false","_", "true", "-1", "-111", "true",
+            "false", "false"};
     public static final String[] linkingInfoDefaults = new String[]{"1", "1"};
     public static final String[] titleInfoDefaults = new String[]{"false", "red", "white"};
     public static final String[] imageInfoDefaults = new String[]{"name", "750","0", "0", "100", "100", "false", "10", "10", "10", "0", "4"};
@@ -51,7 +52,7 @@ public class configObject {
         this.otherlinkinginfo = otherlinkinginfo;
         this.triggerlinking = triggerlinking;
         this.titlecards = titlecards;
-        this.imagecards = imagecards;
+        this.imagecards = fixNullImageCards(imagecards);
         this.ismoving = ismoving;
         this.blockedmods = blockedmods;
         this.debugStuff = debugStuff;
@@ -66,6 +67,10 @@ public class configObject {
         this.titleCardConfig = new File("config/MusicTriggers/transitions.toml");
         this.debugConfig = new File("config/MusicTriggers/debug.toml");
         this.registrationConfig = new File("config/MusicTriggers/registration.toml");
+    }
+
+    private static Map<Integer, configTitleCards.Image> fixNullImageCards(Map<Integer, configTitleCards.Image> input) {
+        return input.entrySet().stream().filter(entry -> entry.getValue().getName()!=null).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     private static List<String> compileDebugStuff() {
@@ -226,7 +231,7 @@ public class configObject {
         String code = "song" + this.songholder.keySet().size();
         this.songholder.put(code, name);
         this.triggerholder.put(code, new HashMap<>());
-        this.otherinfo.put(code, new String[]{"1", "false", "false", "100", "1"});
+        this.otherinfo.put(code, new String[]{"1", "0", "false", "100", "1"});
         return code;
     }
 
@@ -239,8 +244,9 @@ public class configObject {
     public void addTrigger(String code, String trigger) {
         this.triggerholder.get(code).put(trigger, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
                 "minecraft", "_", "16", "false", "100", "100", "100",
-                "false", "0", "minecraft", "true", "true", "0", "0", "nope", "nope",
-                "-111", "false","_", "true", "-1"});
+                "false", "0", "minecraft", "true", "true", "0", "0", "nope",
+                "nope", "-111", "false","_", "true", "-1", "-111", "true",
+                "false", "false"});
     }
 
     public void removeTrigger(String code, String trigger) {
@@ -793,7 +799,7 @@ public class configObject {
     }
 
     private String formatImageBrackets() {
-        if (this.titlecards.size()>1) return "[[image]]\n";
+        if (this.imagecards.size()>1) return "[[image]]\n";
         else return "[image]\n";
     }
 

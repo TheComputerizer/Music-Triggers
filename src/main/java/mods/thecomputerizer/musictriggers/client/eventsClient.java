@@ -9,6 +9,8 @@ import mods.thecomputerizer.musictriggers.config.configDebug;
 import mods.thecomputerizer.musictriggers.config.configObject;
 import mods.thecomputerizer.musictriggers.config.configTitleCards;
 import mods.thecomputerizer.musictriggers.util.CustomTick;
+import mods.thecomputerizer.musictriggers.util.PacketHandler;
+import mods.thecomputerizer.musictriggers.util.packets.BossInfo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.SimpleSound;
@@ -302,6 +304,11 @@ public class eventsClient {
                 }
             }
         }
+    }
+
+    @SubscribeEvent
+    public static void renderBoss(RenderGameOverlayEvent.BossInfo e) {
+        PacketHandler.sendToServer(new BossInfo(e.getBossInfo().getName().getString(), e.getBossInfo().getPercent()));
     }
 
     private static String infernalChecker(@Nullable LivingEntity m) {

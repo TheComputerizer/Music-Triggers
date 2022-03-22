@@ -18,28 +18,28 @@ public class SoundHandler {
 
     public static HashMap<String, List<String>> songCombos = new HashMap<>();
     public static HashMap<String, List<String>> antiSongs = new HashMap<>();
+    public static HashMap<String, List<String>> instantiationCombos = new HashMap<>();
 
 
     public static void registerSounds() {
 
-        for (Map.Entry<String, Map<String, String[]>> stringListEntry : configToml.triggerholder.entrySet()) {
-            String songEntry = ((Map.Entry) stringListEntry).getKey().toString();
+        for(int i=0;i<configToml.songholder.entrySet().size();i++) {
+            String songEntry = "song"+i;
             SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." +configToml.songholder.get(songEntry))).setRegistryName(new ResourceLocation(MusicTriggers.MODID, configToml.songholder.get(songEntry)));
             List<String> triggers = new ArrayList<>();
             for (Map.Entry<String, String[]> nestedStringListEntry : configToml.triggerholder.get(songEntry).entrySet()) {
                 String temp = ((Map.Entry) nestedStringListEntry).getKey().toString();
                 if(configToml.triggerholder.get(songEntry).get(temp)[6].matches("not")) {
                     antiSongs.computeIfAbsent(songEntry, k -> new ArrayList<>());
-                    if(configToml.triggerholder.get(songEntry).get(temp)[10].matches("_")) {
-                        antiSongs.get(songEntry).add(temp);
-                    }
-                    else {
-                        antiSongs.get(songEntry).add(temp+"-"+configToml.triggerholder.get(songEntry).get(temp)[10]);
-                    }
+                    if(configToml.triggerholder.get(songEntry).get(temp)[10].matches("_")) antiSongs.get(songEntry).add(temp);
+                    else antiSongs.get(songEntry).add(temp+"-"+configToml.triggerholder.get(songEntry).get(temp)[10]);
                 }
-                else {
-                    triggers.add(temp);
+                if(Boolean.parseBoolean(configToml.triggerholder.get(songEntry).get(temp)[32])) {
+                    instantiationCombos.computeIfAbsent(songEntry, k -> new ArrayList<>());
+                    if(configToml.triggerholder.get(songEntry).get(temp)[10].matches("_")) instantiationCombos.get(songEntry).add(temp);
+                    else instantiationCombos.get(songEntry).add(temp+"-"+configToml.triggerholder.get(songEntry).get(temp)[10]);
                 }
+                else triggers.add(temp);
             }
             if(triggers.size()==1) {
                 String trigger = triggers.get(0);

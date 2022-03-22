@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.widget.list.ExtendedList;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings("NullableProblems")
@@ -22,12 +23,11 @@ public class GuiScrollingInfo extends ExtendedList<GuiScrollingInfo.Entry> {
     }
 
     public void resetEntries(List<String> info) {
-        for(GuiScrollingInfo.Entry entry : this.children()) {
-            this.removeEntry(entry);
-        }
+        List<GuiScrollingInfo.Entry> newEntries = new ArrayList<>();
         for(int i=0;i<info.size();i++) {
-            this.addEntry(new GuiScrollingInfo.Entry(info.get(i), i));
+            newEntries.add(new GuiScrollingInfo.Entry(info.get(i), i));
         }
+        this.replaceEntries(newEntries);
     }
 
     @Override

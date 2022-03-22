@@ -13,7 +13,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.feature.structure.Structure;
 import net.minecraft.world.raid.Raid;
-import net.minecraft.world.server.ServerBossInfo;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
@@ -22,10 +21,12 @@ import java.util.*;
 
 public class calculateFeatures {
 
-    public static HashMap<Integer, Map<LivingEntity, Integer>> victoryMobs = new HashMap<>();
+    public static List<String> allTriggers = new ArrayList<>();
+
     private static boolean infernalLoaded = false;
-    public static HashMap<Integer, Map<ServerBossInfo, Integer>> victoryBosses = new HashMap<>();
-    public static List<ServerBossInfo> bossInfo = new ArrayList<>();
+    public static HashMap<String, Map<UUID, Integer>> victoryMobs = new HashMap<>();
+    public static HashMap<String, Map<String, Integer>> victoryBosses = new HashMap<>();
+    public static HashMap<String, Float> bossInfo = new HashMap<>();
 
     public static void calculateStructAndSend(String triggerID, String struct, BlockPos pos, UUID uuid) {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
@@ -49,13 +50,13 @@ public class calculateFeatures {
         }
     }
 
-    public static void calculateBiomeAndSend(String triggerID, String biome, BlockPos pos, UUID uuid, String category, String rainType, float temperature, boolean cold) {
+    public static void calculateBiomeAndSend(String triggerID, String biome, BlockPos pos, UUID uuid, String category, String rainType, float temperature, boolean cold, float rainfall, boolean togglerainfall) {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if(server.getPlayerList().getPlayer(uuid)!=null) {
             ServerWorld world = server.getLevel(Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)).level.dimension());
             if (world != null) {
                 Biome curBiome = world.getBiome(pos);
-                boolean pass = checkBiome(curBiome,biome,category,rainType,temperature,cold);
+                boolean pass = checkBiome(curBiome,biome,category,rainType,temperature,cold,rainfall,togglerainfall);
                 if (pass) {
                     PacketHandler.sendTo(new InfoFromBiome(true,triggerID, Objects.requireNonNull(curBiome.getRegistryName()).toString()), Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)));
                 } else {
@@ -116,14 +117,20 @@ public class calculateFeatures {
     }
 
 
-    public static boolean checkBiome(Biome b, String name, String category, String rainType, float temperature, boolean cold) {
+    public static boolean checkBiome(Biome b, String name, String category, String rainType, float temperature, boolean cold, float rainfall, boolean togglerainfall) {
         if(Objects.requireNonNull(b.getRegistryName()).toString().contains(name) || name.matches("minecraft")) {
             if(b.getBiomeCategory().getName().contains(category) || category.matches("nope")) {
                 if(b.getPrecipitation().getName().contains(rainType) || rainType.matches("nope")) {
-                    float bt = b.getBaseTemperature();
-                    if(temperature==-111) return true;
-                    else if(bt>=temperature && !cold) return true;
-                    else return bt <= temperature && cold;
+                    boolean pass = false;
+                    if(rainfall==-111f) pass = true;
+                    else if(b.getDownfall()>rainfall && togglerainfall) pass = true;
+                    else if(b.getDownfall()<rainfall && !togglerainfall) pass = true;
+                    if(pass) {
+                        float bt = b.getBaseTemperature();
+                        if (temperature == -111) return true;
+                        else if (bt >= temperature && !cold) return true;
+                        else return bt <= temperature && cold;
+                    }
                 }
             }
         }
@@ -170,61 +177,56 @@ public class calculateFeatures {
                         infernalDone = true;
                     }
                     if (victory) {
-                        victoryMobs.computeIfAbsent(victoryID, k -> new HashMap<>());
-                        if (!victoryMobs.get(victoryID).containsKey(e) && victoryMobs.get(victoryID).size() < num) {
-                            victoryMobs.get(victoryID).put(e, timeout);
-                        }
+                        victoryMobs.computeIfAbsent(triggerID, k -> new HashMap<>());
+                        if (victoryMobs.get(triggerID).size() < num) victoryMobs.get(triggerID).put(e.getUUID(), timeout);
                     }
                 }
             }
             if (mobList.size() >= num && ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) && infernalDone && (float) healthCounter / num >= healthpercentage / 100F)) {
                 pass = true;
             }
-            if(victoryMobs.get(victoryID).keySet().size()<num) {
+            if(victoryMobs.get(triggerID).keySet().size()<num) {
                 victoryMobs = new HashMap<>();
                 victoryRet = false;
             } else {
-                for(LivingEntity el : victoryMobs.get(victoryID).keySet()) {
-                    if (!el.isDeadOrDying()) {
+                for (UUID u : victoryMobs.get(triggerID).keySet()) {
+                    if (player.getLevel().getEntity(u)!=null && !Objects.requireNonNull((LivingEntity)player.getLevel().getEntity(u)).isDeadOrDying()) {
                         victoryRet = false;
                         break;
                     }
                 }
             }
         } else if (mobname.matches("BOSS")) {
-            List<ServerBossInfo> tempBoss = bossInfo;
-            for(ServerBossInfo b : tempBoss) {
-                if(b.getPercent()<=0f) {
-                    bossInfo.remove(b);
-                }
-            }
+            HashMap<String, Float> tempBoss = bossInfo;
             if(!bossInfo.isEmpty()) {
-                for (ServerBossInfo e : bossInfo) {
-                    if (e.getPlayers().contains(player)) {
-                        if (health / 100f >= e.getPercent()) {
-                            healthCounter++;
-                        }
-                        if (victory) {
-                            victoryBosses.computeIfAbsent(victoryID, k -> new HashMap<>());
-                            if(!victoryBosses.get(victoryID).containsKey(e) && victoryBosses.keySet().size()<num) {
-                                victoryBosses.get(victoryID).put(e,timeout);
+                for(String name : tempBoss.keySet()) {
+                    if (health / 100f >= bossInfo.get(name)) {
+                        healthCounter++;
+                    }
+                    if (victory) {
+                        victoryBosses.computeIfAbsent(triggerID, k -> new HashMap<>());
+                        if (victoryBosses.get(triggerID).keySet().size() < num) victoryBosses.get(triggerID).put(name, timeout);
+                    }
+                }
+                if(bossInfo.size()>=num && (float)healthCounter/bossInfo.size()<=100f/healthpercentage) {
+                    pass = true;
+                }
+                if(victoryBosses.get(triggerID)!=null) {
+                    if (victoryBosses.get(triggerID).keySet().size() < num) {
+                        victoryBosses = new HashMap<>();
+                        victoryRet = false;
+                    } else {
+                        for (String bis : victoryBosses.get(triggerID).keySet()) {
+                            if (bossInfo.get(bis) != 0) {
+                                victoryRet = false;
+                                break;
                             }
                         }
                     }
                 }
-                if(bossInfo.size()>=num && (float)healthCounter/bossInfo.size()<=1f/healthpercentage) {
-                    pass = true;
-                }
-                if(victoryBosses.get(victoryID).keySet().size()<num) {
-                    victoryBosses = new HashMap<>();
-                    victoryRet = false;
-                } else {
-                    for(ServerBossInfo bis : victoryBosses.get(victoryID).keySet()) {
-                        if(bis.getPercent()!=0) {
-                            victoryRet = false;
-                            break;
-                        }
-                    }
+                else victoryRet = false;
+                for(String name : tempBoss.keySet()) {
+                    if(tempBoss.get(name)<=0f) bossInfo.remove(name);
                 }
             }
         } else {
@@ -254,30 +256,30 @@ public class calculateFeatures {
                     infernalDone = true;
                 }
                 if (victory) {
-                    victoryMobs.computeIfAbsent(victoryID, k -> new HashMap<>());
-                    if (!victoryMobs.get(victoryID).containsKey(e) && victoryMobs.get(victoryID).size() < num) {
-                        victoryMobs.get(victoryID).put(e, timeout);
+                    victoryMobs.computeIfAbsent(triggerID, k -> new HashMap<>());
+                    if (victoryMobs.get(triggerID).size() < num) {
+                        victoryMobs.get(triggerID).put(e.getUUID(), timeout);
                     }
                 }
             }
             if (mobCounter >= num && ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) && infernalDone && (float) healthCounter / num >= healthpercentage / 100F)) {
                 pass = true;
             }
-            if(victoryMobs.get(victoryID).keySet().size()<num) {
-                victoryMobs = new HashMap<>();
-                victoryRet = false;
-            } else {
-                for(LivingEntity el : victoryMobs.get(victoryID).keySet()) {
-                    if (!el.isDeadOrDying()) {
-                        victoryRet = false;
-                        break;
+            if(victoryMobs.get(triggerID)!=null) {
+                if (victoryMobs.get(triggerID).keySet().size() < num) {
+                    victoryMobs = new HashMap<>();
+                    victoryRet = false;
+                } else {
+                    for (UUID u : victoryMobs.get(triggerID).keySet()) {
+                        if (player.getLevel().getEntity(u)!=null && !Objects.requireNonNull((LivingEntity)player.getLevel().getEntity(u)).isDeadOrDying()) {
+                            victoryRet = false;
+                            break;
+                        }
                     }
                 }
-            }
+            } else victoryRet = false;
         }
-        if (persistence > 0) {
-            pass = true;
-        }
+        if (persistence > 0) pass = true;
         if(pass) victoryRet = false;
         PacketHandler.sendTo(new InfoFromMob(triggerID,pass,victoryID,victoryRet),player);
     }
@@ -285,10 +287,10 @@ public class calculateFeatures {
     private static boolean infernalChecker(LivingEntity m, String s) {
         if (ModList.get().isLoaded("infernalmobs")) {
             infernalLoaded = true;
-            if (s == null) {
+            if (s == null || s.matches("minecraft")) {
                 return true;
             }
-            return InfernalMobsCore.getMobModifiers(m).getModName().matches(s);
+            if(InfernalMobsCore.getMobModifiers(m)!=null) return InfernalMobsCore.getMobModifiers(m).getModName().matches(s);
         }
         return false;
     }
