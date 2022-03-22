@@ -622,8 +622,8 @@ public class MusicPicker {
             if (triggerPersistence.get("home") != null && !configRegistry.clientSideOnly) {
                 crashHelper = "home";
                 PacketHandler.sendToServer(new InfoForHome("home", roundedPos(player), player.getUUID(), SoundHandler.TriggerInfoMap.get("home")[11]));
-                fromServer.inSnow.putIfAbsent("home", false);
-                if (fromServer.inSnow.get("snowing")) {
+                fromServer.inHomeRange.putIfAbsent("home", false);
+                if (fromServer.inHomeRange.get("home")) {
                     events.add("home");
                     dynamicSongs.put("home", new ArrayList<>(SoundHandler.TriggerSongMap.get("home").keySet()));
                     dynamicPriorities.put("home", Integer.parseInt(SoundHandler.TriggerInfoMap.get("home")[0]));
