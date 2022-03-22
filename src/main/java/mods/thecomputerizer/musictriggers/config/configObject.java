@@ -804,7 +804,7 @@ public class configObject {
     }
 
     private String formatImageBrackets() {
-        if (this.titlecards.size()>1) return "[[image]]\n";
+        if (this.imagecards.size()>1) return "[[image]]\n";
         else return "[image]\n";
     }
 

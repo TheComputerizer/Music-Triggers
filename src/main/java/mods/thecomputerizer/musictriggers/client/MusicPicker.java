@@ -1167,6 +1167,7 @@ public class MusicPicker {
             dynamicFade.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[1]));
             dynamicDelay.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[4]));
             triggerPersistence.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[3]));
+            if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("bloodmoon")[33])) timeSwitch.add("bloodmoon");
             return true;
         }
         else if (triggerPersistence.get("bloodmoon")!=null && triggerPersistence.get("bloodmoon") > 0) {
@@ -1174,6 +1175,7 @@ public class MusicPicker {
             dynamicPriorities.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[0]));
             dynamicFade.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[1]));
             dynamicDelay.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[4]));
+            if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("bloodmoon")[33])) timeSwitch.add("bloodmoon");
             return true;
         }
         return false;
@@ -1187,6 +1189,7 @@ public class MusicPicker {
             dynamicFade.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[1]));
             dynamicDelay.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[4]));
             triggerPersistence.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[3]));
+            if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("bloodmoon")[33])) timeSwitch.add("bloodmoon");
             return true;
         }
         else if (triggerPersistence.get("bloodmoon")!=null && triggerPersistence.get("bloodmoon") > 0) {
@@ -1194,6 +1197,7 @@ public class MusicPicker {
             dynamicPriorities.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[0]));
             dynamicFade.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[1]));
             dynamicDelay.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[4]));
+            if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("bloodmoon")[33])) timeSwitch.add("bloodmoon");
             return true;
         }
         return false;
@@ -1207,6 +1211,7 @@ public class MusicPicker {
             dynamicFade.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[1]));
             dynamicDelay.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[4]));
             triggerPersistence.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[3]));
+            if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("harvestmoon")[33])) timeSwitch.add("harvestmoon");
             return true;
         }
         else if (triggerPersistence.get("harvestmoon")!=null && triggerPersistence.get("harvestmoon") > 0) {
@@ -1214,6 +1219,7 @@ public class MusicPicker {
             dynamicPriorities.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[0]));
             dynamicFade.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[1]));
             dynamicDelay.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[4]));
+            if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("harvestmoon")[33])) timeSwitch.add("harvestmoon");
             return true;
         }
         return false;
@@ -1227,6 +1233,7 @@ public class MusicPicker {
             dynamicFade.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[1]));
             dynamicDelay.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[4]));
             triggerPersistence.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[3]));
+            if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("fallingstars")[33])) timeSwitch.add("fallingstars");
             return true;
         }
         else if (triggerPersistence.get("fallingstars")!=null && triggerPersistence.get("fallingstars") > 0) {
@@ -1234,6 +1241,7 @@ public class MusicPicker {
             dynamicPriorities.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[0]));
             dynamicFade.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[1]));
             dynamicDelay.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[4]));
+            if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("fallingstars")[33])) timeSwitch.add("fallingstars");
             return true;
         }
         return false;
@@ -1315,12 +1323,14 @@ public class MusicPicker {
                 dynamicFade.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[1]));
                 dynamicDelay.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[4]));
                 triggerPersistence.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[3]));
+                if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("hurricane")[33])) timeSwitch.add("hurricane");
                 return true;
             } else if (triggerPersistence.get("hurricane")!=null && triggerPersistence.get("hurricane") > 0) {
                 dynamicSongs.put("hurricane", new ArrayList<>(SoundHandler.TriggerSongMap.get("hurricane").keySet()));
                 dynamicPriorities.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[0]));
                 dynamicFade.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[1]));
                 dynamicDelay.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[4]));
+                if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("hurricane")[33])) timeSwitch.add("hurricane");
                 return true;
             }
         }
@@ -1337,12 +1347,14 @@ public class MusicPicker {
                 dynamicFade.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[1]));
                 dynamicDelay.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[4]));
                 triggerPersistence.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[3]));
+                if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("sandstorm")[33])) timeSwitch.add("sandstorm");
                 return true;
             } else if (triggerPersistence.get("sandstorm")!=null && triggerPersistence.get("sandstorm") > 0) {
                 dynamicSongs.put("sandstorm", new ArrayList<>(SoundHandler.TriggerSongMap.get("sandstorm").keySet()));
                 dynamicPriorities.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[0]));
                 dynamicFade.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[1]));
                 dynamicDelay.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[4]));
+                if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("sandstorm")[33])) timeSwitch.add("sandstorm");
                 return true;
             }
         }
