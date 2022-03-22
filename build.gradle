@@ -9,11 +9,9 @@ buildscript {
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
         classpath group: 'gradle.plugin.com.github.johnrengelman', name: 'shadow', version: '7.1.2'
-        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
 apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'maven-publish'
 
@@ -22,11 +20,6 @@ group = 'mods.thecomputerizer.musictriggers'
 archivesBaseName = 'musictriggers'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
-
-mixin {
-    add sourceSets.main, "musictriggers.refmap.json"
-    config "musictriggers.mixins.json"
-}
 
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 minecraft {
@@ -93,8 +86,6 @@ dependencies {
     shade ("org.jcodec:jcodec:0.2.5")
     shade ("org.jcodec:jcodec-javase:0.2.5")
     shade("io.github.kostaskougios:cloning:1.10.3")
-
-    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     implementation fg.deobf("curse.maven:enhanced-celestials-438447:3544493")
     implementation fg.deobf("curse.maven:serene-seasons-291874:3599020")

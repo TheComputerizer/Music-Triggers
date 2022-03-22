@@ -120,6 +120,9 @@ public class configTitleCards {
                         if(image.contains("scale_y")) {
                             imagecards.get(imageCounter).setScaleY(Integer.parseInt(image.getString("scale_y")));
                         }
+                        if(image.contains("time")) {
+                            imagecards.get(imageCounter).setTime(Integer.parseInt(image.getString("time")));
+                        }
                         if(image.contains("triggers")) {
                             imagecards.get(imageCounter).addTriggers(new ArrayList<>(image.getList("triggers")));
                         }
