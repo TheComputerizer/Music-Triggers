@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
 import io.netty.buffer.ByteBuf;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.fromServer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -17,7 +18,7 @@ public class packetGetMobInfo  implements IMessageHandler<packetGetMobInfo.packe
             return null;
         }
         fromServer.clientSyncMob(message.getMobName(), message.getPassBoolean(),
-                message.getVictoryID(), message.getPassBoolean());
+                message.getVictoryID(), message.getVictoryBoolean());
         return null;
     }
 

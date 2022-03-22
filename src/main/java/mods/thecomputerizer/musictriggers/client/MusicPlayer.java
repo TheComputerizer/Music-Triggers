@@ -63,12 +63,14 @@ public class MusicPlayer {
     public static HashMap<String, setVolumeSound> musicLinker = new HashMap<>();
     public static HashMap<String, String[]> triggerLinker = new HashMap<>();
     public static HashMap<String, Float> volumeLinker = new HashMap<>();
+    public static List<String> oncePerTrigger = new ArrayList<>();
+    public static List<String> onceUntilEmpty = new ArrayList<>();
 
     @SuppressWarnings("rawtypes")
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onTick(TickEvent.ClientTickEvent event) {
-        if(!reloading) {
-            if(MusicPicker.fishBool) {
+        if(!reloading && tickCounter % 2 == 0) {
+            if (MusicPicker.fishBool) {
                 MusicPicker.fishingStart++;
             }
             for (Map.Entry<String, Integer> stringListEntry : MusicPicker.triggerPersistence.entrySet()) {
@@ -153,7 +155,7 @@ public class MusicPlayer {
                             delayTime = MusicPicker.curDelay;
                         }
                     }
-                    if(!finish) {
+                    if (!finish) {
                         if (MusicPicker.shouldChange || !Arrays.equals(curTrackList, holder)) {
                             eventsClient.GuiCounter = 1;
                             String songNum = null;
@@ -167,6 +169,8 @@ public class MusicPlayer {
                                 }
                             }
                             if (songNum == null) {
+                                oncePerTrigger = new ArrayList<>();
+                                onceUntilEmpty = new ArrayList<>();
                                 triggerLinker = new HashMap<>();
                                 musicLinker = new HashMap<>();
                                 if (MusicPicker.curFade == 0) {
@@ -215,33 +219,35 @@ public class MusicPlayer {
                             triggerLinker = new HashMap<>();
                             musicLinker = new HashMap<>();
                             eventsClient.GuiCounter = 0;
+                            curTrackList = Arrays.stream(curTrackList).filter(track -> !oncePerTrigger.contains(track)).toArray(String[]::new);
+                            curTrackList = Arrays.stream(curTrackList).filter(track -> !onceUntilEmpty.contains(track)).toArray(String[]::new);
                             if (curTrackList.length >= 1) {
-                                int i = ThreadLocalRandom.current().nextInt(0,curTrackList.length);
+                                int i = ThreadLocalRandom.current().nextInt(0, curTrackList.length);
                                 if (curTrackList.length > 1 && curTrack != null) {
                                     int total = Arrays.stream(curTrackList).mapToInt(s -> Integer.parseInt(configToml.otherinfo.get(s)[3])).sum();
                                     int j;
-                                    for(j=0;j<1000;j++) {
-                                        int r = ThreadLocalRandom.current().nextInt(1,total+1);
-                                        MusicTriggers.logger.debug("Random was between 1 and "+(total+1)+" "+r+" was chosen");
+                                    for (j = 0; j < 1000; j++) {
+                                        int r = ThreadLocalRandom.current().nextInt(1, total + 1);
+                                        MusicTriggers.logger.debug("Random was between 1 and " + (total + 1) + " " + r + " was chosen");
                                         String temp = " ";
                                         for (String s : curTrackList) {
                                             if (r < Integer.parseInt(configToml.otherinfo.get(s)[3])) {
                                                 temp = s;
                                                 break;
                                             }
-                                            r-=Integer.parseInt(configToml.otherinfo.get(s)[3]);
+                                            r -= Integer.parseInt(configToml.otherinfo.get(s)[3]);
                                         }
-                                        if(!temp.matches(curTrack) && !temp.matches(" ")) {
+                                        if (!temp.matches(curTrack) && !temp.matches(" ")) {
                                             curTrack = temp;
                                             break;
                                         }
                                     }
-                                    if(j>=1000) MusicTriggers.logger.warn("Attempt to get non duplicate song passed 1000 tries! Forcing current song " + configToml.songholder.get(curTrack) + " to play.");
-                                }
-                                else {
+                                    if (j >= 1000)
+                                        MusicTriggers.logger.warn("Attempt to get non duplicate song passed 1000 tries! Forcing current song " + configToml.songholder.get(curTrack) + " to play.");
+                                } else {
                                     curTrack = curTrackList[i];
                                 }
-                                MusicTriggers.logger.debug(curTrack+" was chosen");
+                                MusicTriggers.logger.debug(curTrack + " was chosen");
                                 if (curTrack != null) {
                                     finish = Boolean.parseBoolean(configToml.otherinfo.get(curTrack)[2]);
                                     curTrackHolder = configToml.songholder.get(curTrack);
@@ -279,13 +285,15 @@ public class MusicPlayer {
                                         }
                                         mc.getSoundHandler().playSound(musicLinker.get(checkThis));
                                     }
-                                    if (Boolean.parseBoolean(configToml.otherinfo.get(curTrack)[1])) {
+                                    if (Integer.parseInt(configToml.otherinfo.get(curTrack)[1])==1) onceUntilEmpty.add(curTrack);
+                                    if (Integer.parseInt(configToml.otherinfo.get(curTrack)[1])==2) oncePerTrigger.add(curTrack);
+                                    else if (Integer.parseInt(configToml.otherinfo.get(curTrack)[1])==3) {
                                         configToml.songholder.remove(curTrack);
                                         configToml.triggerlinking.remove(curTrack);
                                         configToml.triggerholder.remove(curTrack);
                                         configToml.otherinfo.remove(curTrack);
                                         configToml.otherlinkinginfo.remove(curTrack);
-                                        curTrackList = ArrayUtils.remove(curTrackList,i);
+                                        curTrackList = ArrayUtils.remove(curTrackList, i);
                                         for (String ev : MusicPicker.titleCardEvents) {
                                             SoundHandler.TriggerSongMap.get(StringUtils.substringBefore(ev, "-")).remove(curTrack);
                                         }
@@ -294,9 +302,10 @@ public class MusicPlayer {
                                     curTrackList = null;
                                 }
                             }
+                            else onceUntilEmpty = new ArrayList<>();
                         }
                     }
-                } else if(!finish || playing) {
+                } else if (!finish || playing) {
                     curTrack = null;
                     curTrackHolder = null;
                     eventsClient.IMAGE_CARD = null;
@@ -306,15 +315,15 @@ public class MusicPlayer {
                     eventsClient.ismoving = false;
                     cards = true;
                     if (curMusic != null) {
-                        for(String is : musicLinker.keySet()) {
+                        for (String is : musicLinker.keySet()) {
                             mc.getSoundHandler().stopSound(musicLinker.get(is));
                         }
                         curMusic = null;
                     }
                 }
             }
-            tickCounter++;
         }
+        tickCounter++;
     }
 
     @SuppressWarnings("ConstantConditions")

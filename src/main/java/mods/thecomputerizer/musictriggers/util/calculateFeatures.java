@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.util;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.util.packets.packetGetMobInfo;
 import mods.thecomputerizer.musictriggers.util.packets.packetToClient;
 import net.minecraft.entity.EntityList;
@@ -11,7 +12,6 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.BossInfoServer;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Optional;
@@ -20,9 +20,11 @@ import java.util.*;
 
 public class calculateFeatures {
 
-    public static HashMap<Integer, Map<EntityLiving, Integer>> victoryMobs = new HashMap<>();
-    public static HashMap<Integer, Map<BossInfoServer, Integer>> victoryBosses = new HashMap<>();
-    public static List<BossInfoServer> bossInfo = new ArrayList<>();
+    public static List<String> allTriggers = new ArrayList<>();
+
+    public static HashMap<String, Map<UUID, Integer>> victoryMobs = new HashMap<>();
+    public static HashMap<String, Map<String, Integer>> victoryBosses = new HashMap<>();
+    public static HashMap<String, Float> bossInfo = new HashMap<>();
 
     public static void calculateStructAndSend(String triggerID, String struct, BlockPos pos, Integer dimID, UUID uuid) {
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
@@ -47,6 +49,7 @@ public class calculateFeatures {
         for (EntityLiving e : mobTempList) {
             if ((e instanceof EntityMob || e instanceof EntityDragon) && (e.serializeNBT().hasKey(nbtKey) || nbtKey.matches("_"))) {
                 mobList.add(e);
+                MusicTriggers.logger.info("Bounding Box: "+e.getName());
             }
         }
         boolean victoryRet = true;
@@ -56,11 +59,15 @@ public class calculateFeatures {
         boolean infernalChecked = false;
         boolean infernalDone = false;
         if (mobname.matches("MOB")) {
+            MusicTriggers.logger.info("MOB match");
             for (EntityLiving e : mobList) {
+                MusicTriggers.logger.info("Now checking "+e.getName());
                 if (e.getAttackTarget()==player) {
+                    MusicTriggers.logger.info("Correct attack target");
                     trackingCounter++;
                 }
                 if (e.getHealth() / e.getMaxHealth() <= (float)health / 100F) {
+                    MusicTriggers.logger.info("Correct health");
                     healthCounter++;
                 }
                 try {
@@ -69,79 +76,99 @@ public class calculateFeatures {
                     infernal = false;
                 }
                 if (!infernal || infernalChecked) {
+                    MusicTriggers.logger.info("Correct infernal");
                     infernalDone = true;
                 }
                 if (victory) {
-                    victoryMobs.computeIfAbsent(victoryID, k -> new HashMap<>());
-                    if (!victoryMobs.get(victoryID).containsKey(e) && victoryMobs.get(victoryID).size() < num) {
-                        victoryMobs.get(victoryID).put(e, timeout);
-                    }
+                    MusicTriggers.logger.info("Checking victory");
+                    victoryMobs.computeIfAbsent(triggerID, k -> new HashMap<>());
+                    if (victoryMobs.get(triggerID).size() < num) victoryMobs.get(triggerID).put(e.getUniqueID(), timeout);
                 }
             }
-            if (mobList.size() >= num && ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) && infernalDone && (float) healthCounter / num >= healthpercentage / 100F)) {
+            if (mobList.size() >= num) MusicTriggers.logger.info("NUM PASS");
+            if (!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) MusicTriggers.logger.info("TARGETTING PASS");
+            if (infernalDone) MusicTriggers.logger.info("INFERNAL PASS");
+            if ((float) healthCounter / num >= healthpercentage / 100F) MusicTriggers.logger.info("HEALTH PASS");
+            if (mobList.size() >= num &&
+                    ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) &&
+                            infernalDone &&
+                            (float) healthCounter / num >= healthpercentage / 100F)) {
                 pass = true;
+                MusicTriggers.logger.info("ALL PASS");
             }
-            if(victoryMobs.get(victoryID).keySet().size()<num) {
-                victoryMobs = new HashMap<>();
-                victoryRet = false;
-            } else {
-                for(EntityLiving el : victoryMobs.get(victoryID).keySet()) {
-                    if (!el.isDead) {
-                        victoryRet = false;
-                        break;
-                    }
-                }
-            }
-        } else if (mobname.matches("BOSS")) {
-            List<BossInfoServer> tempBoss = bossInfo;
-            for(BossInfoServer b : tempBoss) {
-                if(b.getPercent()<=0f) {
-                    bossInfo.remove(b);
-                }
-            }
-            if(!bossInfo.isEmpty()) {
-                for (BossInfoServer e : bossInfo) {
-                    if (e.getPlayers().contains(player)) {
-                        if (health / 100f >= e.getPercent()) {
-                            healthCounter++;
-                        }
-                        if (victory) {
-                            victoryBosses.computeIfAbsent(victoryID, k -> new HashMap<>());
-                            if(!victoryBosses.get(victoryID).containsKey(e) && victoryBosses.keySet().size()<num) {
-                                victoryBosses.get(victoryID).put(e,timeout);
-                            }
-                        }
-                    }
-                }
-                if(bossInfo.size()>=num && (float)healthCounter/bossInfo.size()<=1f/healthpercentage) {
-                    pass = true;
-                }
-                if(victoryBosses.get(victoryID).keySet().size()<num) {
-                    victoryBosses = new HashMap<>();
+            if(victoryMobs.get(triggerID)!=null) {
+                MusicTriggers.logger.info("Victory mobs not null");
+                if (victoryMobs.get(triggerID).keySet().size() < num) {
+                    victoryMobs = new HashMap<>();
                     victoryRet = false;
                 } else {
-                    for(BossInfoServer bis : victoryBosses.get(victoryID).keySet()) {
-                        if(bis.getPercent()!=0) {
+                    for (UUID u : victoryMobs.get(triggerID).keySet()) {
+                        if (!Objects.requireNonNull(server.getEntityFromUuid(u)).isDead) {
                             victoryRet = false;
                             break;
                         }
                     }
                 }
             }
+            else victoryRet = false;
+        } else if (mobname.matches("BOSS")) {
+            MusicTriggers.logger.info("Checking BOSS");
+            HashMap<String, Float> tempBoss = bossInfo;
+            if(!bossInfo.isEmpty()) {
+                MusicTriggers.logger.info("NOT EMPTY");
+                for(String name : tempBoss.keySet()) {
+                    MusicTriggers.logger.info("loop: " + name);
+                    if (health / 100f >= bossInfo.get(name)) {
+                        healthCounter++;
+                        MusicTriggers.logger.info("Correct health: "+bossInfo.get(name));
+                    }
+                    if (victory) {
+                        victoryBosses.computeIfAbsent(triggerID, k -> new HashMap<>());
+                        if (victoryBosses.get(triggerID).keySet().size() < num) victoryBosses.get(triggerID).put(name, timeout);
+                    }
+                }
+                if (bossInfo.size()>=num) MusicTriggers.logger.info("NUM PASS");
+                if ((float)healthCounter/bossInfo.size()<=100f/healthpercentage) MusicTriggers.logger.info("HEALTH PASS");
+                if(bossInfo.size()>=num && (float)healthCounter/bossInfo.size()<=100f/healthpercentage) {
+                    pass = true;
+                    MusicTriggers.logger.info("ALL PASS");
+                }
+                if(victoryBosses.get(triggerID)!=null) {
+                    if (victoryBosses.get(triggerID).keySet().size() < num) {
+                        victoryBosses = new HashMap<>();
+                        victoryRet = false;
+                    } else {
+                        for (String bis : victoryBosses.get(triggerID).keySet()) {
+                            if (bossInfo.get(bis) != 0) {
+                                victoryRet = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+                else victoryRet = false;
+                for(String name : tempBoss.keySet()) {
+                    if(tempBoss.get(name)<=0f) bossInfo.remove(name);
+                }
+            }
         } else {
             int mobCounter = 0;
             List<EntityLiving> mobListSpecific = new ArrayList<>();
             for (EntityLiving e : mobTempList) {
-                if ((e.getName().matches(mobname) || Objects.requireNonNull(EntityList.getKey(e)).toString().matches(mobname)) && (e.serializeNBT().hasKey(nbtKey) || nbtKey.matches(""))) {
+                if ((e.getName().matches(mobname) || Objects.requireNonNull(EntityList.getKey(e)).toString().matches(mobname)) && (e.serializeNBT().hasKey(nbtKey) || nbtKey.matches("_"))) {
                     mobCounter++;
                     mobListSpecific.add(e);
+                    MusicTriggers.logger.info("Found name match "+e.getName());
                 }
             }
             for (EntityLiving e : mobListSpecific) {
+                MusicTriggers.logger.info("Now checking "+e.getName());
                 if (e.getAttackTarget()==player) {
+                    MusicTriggers.logger.info("Correct attack target");
                     trackingCounter++;
                 }
                 if (e.getHealth() / e.getMaxHealth() <= health / 100F) {
+                    MusicTriggers.logger.info("Correct health");
                     healthCounter++;
                 }
                 try {
@@ -150,44 +177,54 @@ public class calculateFeatures {
                     infernal = false;
                 }
                 if (!infernal || infernalChecked) {
+                    MusicTriggers.logger.info("Correct infernal");
                     infernalDone = true;
                 }
                 if (victory) {
-                    victoryMobs.computeIfAbsent(victoryID, k -> new HashMap<>());
-                    if (!victoryMobs.get(victoryID).containsKey(e) && victoryMobs.get(victoryID).size() < num) {
-                        victoryMobs.get(victoryID).put(e, timeout);
+                    MusicTriggers.logger.info("Checking victory");
+                    victoryMobs.computeIfAbsent(triggerID, k -> new HashMap<>());
+                    if (victoryMobs.get(triggerID).size() < num) {
+                        MusicTriggers.logger.info("Victory Size");
+                        victoryMobs.get(triggerID).put(e.getUniqueID(), timeout);
                     }
                 }
             }
+            if (mobList.size() >= num) MusicTriggers.logger.info("NUM PASS");
+            if (!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) MusicTriggers.logger.info("TARGETTING PASS");
+            if (infernalDone) MusicTriggers.logger.info("INFERNAL PASS");
+            if ((float) healthCounter / num >= healthpercentage / 100F) MusicTriggers.logger.info("HEALTH PASS");
             if (mobCounter >= num && ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) && infernalDone && (float) healthCounter / num >= healthpercentage / 100F)) {
                 pass = true;
             }
-            if(victoryMobs.get(victoryID).keySet().size()<num) {
-                victoryMobs = new HashMap<>();
-                victoryRet = false;
-            } else {
-                for(EntityLiving el : victoryMobs.get(victoryID).keySet()) {
-                    if (!el.isDead) {
-                        victoryRet = false;
-                        break;
+            if(victoryMobs.get(triggerID)!=null) {
+                if (victoryMobs.get(triggerID).keySet().size() < num) {
+                    MusicTriggers.logger.info("Remove bad maps");
+                    victoryMobs = new HashMap<>();
+                    victoryRet = false;
+                } else {
+                    MusicTriggers.logger.info("Checking good maps");
+                    for (UUID u : victoryMobs.get(triggerID).keySet()) {
+                        if ((server.getEntityFromUuid(u)!=null && !Objects.requireNonNull(server.getEntityFromUuid(u)).isDead)) {
+                            victoryRet = false;
+                            break;
+                        }
                     }
                 }
             }
+            else victoryRet = false;
         }
-        if (persistence > 0) {
-            pass = true;
-        }
-        if(pass) {
-            victoryRet = false;
-        }
+        if (persistence > 0) pass = true;
+        if(pass) victoryRet = false;
+        MusicTriggers.logger.info("Sending packet to with trigger ID: "+triggerID+" PASS: "+pass+" Victory ID: "+victoryID+" and Victory Ret: "+victoryRet+" to player: "+player.getName());
         RegistryHandler.network.sendTo(new packetGetMobInfo.packetGetMobInfoMessage(triggerID,pass,victoryID,victoryRet),player);
     }
 
     @Optional.Method(modid = "infernalmobs")
     private static boolean infernalChecker(EntityLiving m, String s) {
-        if (s == null) {
+        if (s == null || s.matches("minecraft")) {
             return true;
         }
-        return InfernalMobsCore.getMobModifiers(m).getModName().matches(s);
+        if(InfernalMobsCore.getMobModifiers(m)!=null) return InfernalMobsCore.getMobModifiers(m).getModName().matches(s);
+        return false;
     }
 }

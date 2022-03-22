@@ -9,13 +9,11 @@ buildscript {
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:4.1.10'
         classpath 'com.github.jengelman.gradle.plugins:shadow:6.1.0'
-        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
 
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'com.github.johnrengelman.shadow'
-apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'maven-publish'
 
 version = '1.12.2-5.0-EX'
@@ -24,12 +22,6 @@ archivesBaseName = 'musictriggers'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
-
-mixin {
-    add sourceSets.main, "musictriggers.refmap.json"
-
-    config "mixins.musictriggers.json"
-}
 
 minecraft {
     mappings channel: 'snapshot', version: '20171003-1.12'
@@ -92,17 +84,6 @@ dependencies {
 
     //libraries that may or may not be included by forge/minecraft and need to be relocated
     //theres nothing here...
-
-    implementation("org.spongepowered:mixin:0.8") {
-        exclude module: "asm-commons"
-        exclude module: "asm-tree"
-        exclude module: "launchwrapper"
-        exclude module: "guava"
-        exclude module: "log4j-core"
-        exclude module: "gson"
-        exclude module: "commons-io"
-    }
-    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     implementation fg.deobf("curse.maven:codechicken-lib-242818:2779848")
     implementation fg.deobf("curse.maven:bloodmoon-226321:2537917")

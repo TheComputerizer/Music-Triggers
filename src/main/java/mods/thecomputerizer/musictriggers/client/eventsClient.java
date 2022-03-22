@@ -8,10 +8,11 @@ import mods.thecomputerizer.musictriggers.config.configDebug;
 import mods.thecomputerizer.musictriggers.config.configObject;
 import mods.thecomputerizer.musictriggers.config.configTitleCards;
 import mods.thecomputerizer.musictriggers.util.CustomTick;
+import mods.thecomputerizer.musictriggers.util.RegistryHandler;
+import mods.thecomputerizer.musictriggers.util.packets.packetBossInfo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.PositionedSoundRecord;
-import net.minecraft.client.audio.Sound;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiWinGame;
 import net.minecraft.client.gui.ScaledResolution;
@@ -22,7 +23,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.EnumSkyBlock;
@@ -314,6 +314,11 @@ public class eventsClient {
                 }
             }
         }
+    }
+
+    @SubscribeEvent
+    public static void renderBoss(RenderGameOverlayEvent.BossInfo e) {
+        RegistryHandler.network.sendToServer(new packetBossInfo.packetBossInfoMessage(e.getBossInfo().getName().getUnformattedText(), e.getBossInfo().getPercent()));
     }
 
     @Optional.Method(modid = "infernalmobs")

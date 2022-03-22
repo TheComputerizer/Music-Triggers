@@ -83,5 +83,7 @@ public final class RegistryHandler {
         network.registerMessage(packetCurSong.class, packetCurSong.packetCurSongMessage.class, 2, Side.SERVER);
         network.registerMessage(packetSendMobInfo.class, packetSendMobInfo.packetSendMobInfoMessage.class, 3, Side.SERVER);
         network.registerMessage(packetGetMobInfo.class, packetGetMobInfo.packetGetMobInfoMessage.class, 4, Side.CLIENT);
+        network.registerMessage(packetBossInfo.class, packetBossInfo.packetBossInfoMessage.class, 5, Side.SERVER);
+        network.registerMessage(packetAllTriggers.class, packetAllTriggers.packetAllTriggersMessage.class, 6, Side.SERVER);
     }
 }
