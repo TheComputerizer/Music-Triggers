@@ -25,6 +25,7 @@ targetCompatibility = 1.8
 
 minecraft {
     mappings channel: 'snapshot', version: '20171003-1.12'
+    accessTransformer = file('src/main/resources/musictriggers_at.cfg')
     runs {
         client {
             workingDirectory project.file('run')
@@ -130,6 +131,7 @@ processResources {
 jar {
     manifest {
         attributes([
+            "FMLAT": "musictriggers_at.cfg",
             "Specification-Title": "musictriggers",
             "Specification-Vendor": "musictriggerssareus",
             "Specification-Version": "1.12.2-5.0-EX",
