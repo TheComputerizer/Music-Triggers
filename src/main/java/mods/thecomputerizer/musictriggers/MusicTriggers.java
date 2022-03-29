@@ -174,8 +174,7 @@ public class MusicTriggers {
             pack = new File("config/MusicTriggers/songs/");
             if (pack.exists()) {
                 try {
-                    List<IResourcePack> defaultResourcePacks = ReflectionHelper.getPrivateValue(Minecraft.class, Minecraft.getMinecraft(), "defaultResourcePacks", "field_110449_ao", "ap");
-                    defaultResourcePacks.add(new FolderResourcePack(pack));
+                    Minecraft.getMinecraft().defaultResourcePacks.add(new FolderResourcePack(pack));
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }

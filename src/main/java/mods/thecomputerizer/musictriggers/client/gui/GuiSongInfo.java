@@ -67,6 +67,7 @@ public class GuiSongInfo extends GuiScreen {
         this.addScrollable();
         this.addAddTriggerButton();
         this.addLinkingButton();
+        this.addLoopsButton();
         this.addDeleteButton();
         eventsClient.renderDebug = false;
     }
@@ -88,11 +89,15 @@ public class GuiSongInfo extends GuiScreen {
     }
 
     private void addAddTriggerButton() {
-        this.buttonList.add(new GuiButton(3, this.width/2-114, this.height-24, 96, 16, "Add Trigger"));
+        this.buttonList.add(new GuiButton(3, this.width/2-48, this.height-24, 96, 16, "Add Trigger"));
     }
 
     private void addLinkingButton() {
-        this.buttonList.add(new GuiButton(4, this.width/2+16, this.height-24, 96, 16, "Trigger Linking"));
+        this.buttonList.add(new GuiButton(4, this.width/2+64, this.height-24, 96, 16, "Trigger Linking"));
+    }
+
+    private void addLoopsButton() {
+        this.buttonList.add(new GuiButton(5, this.width/2-160, this.height-24, 96, 16, "Loops"));
     }
 
     @Override
@@ -122,6 +127,9 @@ public class GuiSongInfo extends GuiScreen {
         }
         if (button.id == 4) {
             this.mc.displayGuiScreen(new GuiLinking(this, this.songCode, this.holder));
+        }
+        if (button.id == 5) {
+            this.mc.displayGuiScreen(new GuiLoops(this, this.holder, this.songCode, null, false));
         }
     }
 

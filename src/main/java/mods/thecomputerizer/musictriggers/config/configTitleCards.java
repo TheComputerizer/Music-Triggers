@@ -62,6 +62,9 @@ public class configTitleCards {
                         if(title.contains("subtitle_color")) {
                             titlecards.get(titleCounter).setSubtitlecolor(title.getString("subtitle_color"));
                         }
+                        if(title.contains("vague")) {
+                            titlecards.get(titleCounter).setVague(Boolean.parseBoolean(title.getString("vague")));
+                        }
                         titleCounter++;
                     }
                 }
@@ -86,6 +89,9 @@ public class configTitleCards {
                     }
                     if(title.contains("subtitle_color")) {
                         titlecards.get(titleCounter).setSubtitlecolor(title.getString("subtitle_color"));
+                    }
+                    if(title.contains("vague")) {
+                        titlecards.get(titleCounter).setVague(Boolean.parseBoolean(title.getString("vague")));
                     }
                 }
                 if(toml.containsTableArray("image")) {
@@ -135,6 +141,9 @@ public class configTitleCards {
                         }
                         if(image.contains("fade_out")) {
                             imagecards.get(imageCounter).setFadeOut(Integer.parseInt(image.getString("fade_out")));
+                        }
+                        if(image.contains("vague")) {
+                            imagecards.get(imageCounter).setVague(Boolean.parseBoolean(image.getString("vague")));
                         }
                         imageCounter++;
                     }
@@ -186,6 +195,9 @@ public class configTitleCards {
                     }
                     if(image.contains("fade_out")) {
                         imagecards.get(imageCounter).setFadeOut(Integer.parseInt(image.getString("fade_out")));
+                    }
+                    if(image.contains("vague")) {
+                        imagecards.get(imageCounter).setVague(Boolean.parseBoolean(image.getString("vague")));
                     }
                 }
             } catch (Exception e) {
@@ -280,6 +292,7 @@ public class configTitleCards {
         private Boolean playonce;
         private String titlecolor;
         private String subtitlecolor;
+        private boolean vague;
         private final List<String> triggers;
 
         public Title() {
@@ -288,6 +301,7 @@ public class configTitleCards {
             this.playonce = false;
             this.titlecolor = "red";
             this.subtitlecolor = "white";
+            this.vague = false;
             this.triggers = new ArrayList<>();
         }
 
@@ -331,6 +345,14 @@ public class configTitleCards {
             this.subtitlecolor = c;
         }
 
+        public void setVague(Boolean b) {
+            this.vague = b;
+        }
+
+        public Boolean getVague() {
+            return this.vague;
+        }
+
         public void addTriggers(ArrayList<String> t) {
             this.triggers.addAll(t);
         }
@@ -352,7 +374,8 @@ public class configTitleCards {
         private int skip;
         private int fadeIn;
         private int fadeOut;
-        private Boolean playonce;
+        private boolean playonce;
+        private boolean vague;
         private final List<String> triggers;
 
         public Image() {
@@ -368,6 +391,7 @@ public class configTitleCards {
             this.fadeIn = 10;
             this.fadeOut = 10;
             this.playonce = false;
+            this.vague = false;
             this.triggers = new ArrayList<>();
         }
 
@@ -465,6 +489,14 @@ public class configTitleCards {
 
         public Boolean getPlayonce() {
             return this.playonce;
+        }
+
+        public void setVague(Boolean b) {
+            this.vague = b;
+        }
+
+        public Boolean getVague() {
+            return this.vague;
         }
 
         public void addTriggers(ArrayList<String> t) {

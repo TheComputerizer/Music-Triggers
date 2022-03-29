@@ -1,18 +1,19 @@
 package mods.thecomputerizer.musictriggers.client;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.client.gui.GuiCurPlaying;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
 import mods.thecomputerizer.musictriggers.config.configRegistry;
 import mods.thecomputerizer.musictriggers.config.configTitleCards;
 import mods.thecomputerizer.musictriggers.config.configToml;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
+import mods.thecomputerizer.musictriggers.util.audio.SoundManipulator;
 import mods.thecomputerizer.musictriggers.util.audio.setVolumeSound;
 import mods.thecomputerizer.musictriggers.util.packets.packetCurSong;
 import net.minecraft.block.BlockJukebox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
-import net.minecraft.client.audio.SoundManager;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
@@ -21,7 +22,6 @@ import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -48,6 +48,7 @@ public class MusicPlayer {
     public static ISound curMusic;
     public static Random rand = new Random();
     public static Minecraft mc = Minecraft.getMinecraft();
+    public static net.minecraft.client.audio.SoundHandler sh = Minecraft.getMinecraft().getSoundHandler();
     public static int tickCounter = 0;
     public static boolean fading = false;
     public static boolean reverseFade = false;
@@ -63,29 +64,53 @@ public class MusicPlayer {
     public static HashMap<String, setVolumeSound> musicLinker = new HashMap<>();
     public static HashMap<String, String[]> triggerLinker = new HashMap<>();
     public static HashMap<String, Float> volumeLinker = new HashMap<>();
+    public static HashMap<String, Map<Integer, String[]>> loopLinker = new HashMap<>();
+    public static HashMap<String, Map<Integer, Integer>> loopLinkerCounter = new HashMap<>();
     public static List<String> oncePerTrigger = new ArrayList<>();
     public static List<String> onceUntilEmpty = new ArrayList<>();
+    private static String trackToDelete;
+    private static int indexToDelete;
+    private static List<String> playedEvents = new ArrayList<>();
+    private static ISound playedMusic;
 
     @SuppressWarnings("rawtypes")
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onTick(TickEvent.ClientTickEvent event) {
         if(!reloading && tickCounter % 2 == 0) {
-            if (MusicPicker.fishBool) {
-                MusicPicker.fishingStart++;
-            }
+            if (MusicPicker.fishBool) MusicPicker.fishingStart++;
+            if (MusicPicker.waterBool) MusicPicker.waterStart++;
             for (Map.Entry<String, Integer> stringListEntry : MusicPicker.triggerPersistence.entrySet()) {
                 String eventID = ((Map.Entry) stringListEntry).getKey().toString();
                 MusicPicker.triggerPersistence.putIfAbsent(eventID, 0);
-                if (MusicPicker.triggerPersistence.get(eventID) > 0) {
-                    MusicPicker.triggerPersistence.put(eventID, MusicPicker.triggerPersistence.get(eventID) - 1);
+                if (MusicPicker.triggerPersistence.get(eventID) > 0) MusicPicker.triggerPersistence.put(eventID, MusicPicker.triggerPersistence.get(eventID) - 1);
+            }
+            if(curTrack!=null && sh.isSoundPlaying(curMusic) && configToml.loopPoints.containsKey(curTrack)) {
+                for(String key : musicLinker.keySet()) {
+                    if(loopLinker.get(key)!=null) {
+                        for (int i : loopLinker.get(key).keySet()) {
+                            try {
+                                if (loopLinkerCounter.get(key).get(i) < Integer.parseInt(loopLinker.get(key).get(i)[0]) && Integer.parseInt(loopLinker.get(key).get(i)[2]) <= SoundManipulator.getMillisecondTimeForSource(sh.sndManager.sndSystem, sh.sndManager.invPlayingSounds.get(musicLinker.get(key)))) {
+                                    MusicTriggers.logger.info("Loop boundary passed");
+                                    SoundManipulator.setMillisecondTimeForSource(sh.sndManager.sndSystem, sh.sndManager.invPlayingSounds.get(musicLinker.get(key)), Integer.parseInt(loopLinker.get(key).get(i)[1]));
+                                    loopLinkerCounter.get(key).put(i, loopLinkerCounter.get(key).get(i) + 1);
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                throw new RuntimeException("There was a problem while trying to loop - Check the log for details");
+                            }
+                        }
+                    }
                 }
+            }
+            if(curTrack!=null && sh.isSoundPlaying(curMusic) && mc.currentScreen instanceof GuiCurPlaying) {
+                ((GuiCurPlaying)mc.currentScreen).setSlider(GuiCurPlaying.getSongPosInSeconds(curMusic));
             }
             if (fading && !reverseFade) {
                 if (tempFade == 0) {
                     fading = false;
                     curTrackList = null;
-                    mc.getSoundHandler().stopSound(curMusic);
-                    mc.getSoundHandler().setSoundLevel(SoundCategory.MASTER, saveVol);
+                    sh.stopSound(curMusic);
+                    sh.setSoundLevel(SoundCategory.MASTER, saveVol);
                     eventsClient.IMAGE_CARD = null;
                     eventsClient.fadeCount = 1000;
                     eventsClient.timer = 0;
@@ -99,31 +124,26 @@ public class MusicPlayer {
                 //}
                 //}
                 else {
-                    mc.getSoundHandler().setSoundLevel(SoundCategory.MASTER, saveVol * (float) (((double) tempFade) / ((double) MusicPicker.curFade)));
+                    sh.setSoundLevel(SoundCategory.MASTER, saveVol * (float) (((double) tempFade) / ((double) MusicPicker.curFade)));
                     tempFade -= 1;
                 }
             } else if (reverseFade) {
                 if (tempFade >= MusicPicker.curFade) {
                     fading = false;
                     reverseFade = false;
-                    mc.getSoundHandler().setSoundLevel(SoundCategory.MASTER, saveVol);
+                    sh.setSoundLevel(SoundCategory.MASTER, saveVol);
                 } else {
-                    mc.getSoundHandler().setSoundLevel(SoundCategory.MASTER, saveVol * (float) (((double) tempFade) / ((double) MusicPicker.curFade)));
+                    sh.setSoundLevel(SoundCategory.MASTER, saveVol * (float) (((double) tempFade) / ((double) MusicPicker.curFade)));
                     tempFade += 1;
                 }
             }
             if (delay) {
                 delayTime -= 1;
-                if (delayTime <= 0) {
-                    delay = false;
-                }
+                if (delayTime <= 0) delay = false;
             }
             if (tickCounter % 10 == 0 && !fading && !delay) {
-                if (MusicPicker.player != null && (MusicPicker.player.getHeldItemMainhand().getItem() instanceof MusicTriggersRecord)) {
-                    fromRecord = ((MusicTriggersRecord) MusicPicker.player.getHeldItemMainhand().getItem()).getSound();
-                } else {
-                    fromRecord = null;
-                }
+                if (MusicPicker.player != null && (MusicPicker.player.getHeldItemMainhand().getItem() instanceof MusicTriggersRecord)) fromRecord = ((MusicTriggersRecord) MusicPicker.player.getHeldItemMainhand().getItem()).getSound();
+                else fromRecord = null;
                 playing = false;
                 if (MusicPicker.player != null) {
                     for (int x = MusicPicker.player.chunkCoordX - 3; x <= MusicPicker.player.chunkCoordX + 3; x++) {
@@ -132,9 +152,7 @@ public class MusicPlayer {
                             for (TileEntity te : currentChunkTE.values()) {
                                 if (te != null) {
                                     if (te instanceof BlockJukebox.TileEntityJukebox) {
-                                        if (te.getBlockMetadata() != 0) {
-                                            playing = true;
-                                        }
+                                        if (te.getBlockMetadata() != 0) playing = true;
                                     }
                                 }
                             }
@@ -143,78 +161,33 @@ public class MusicPlayer {
                 }
                 holder = MusicPicker.playThese();
                 if (holder != null && !Arrays.asList(holder).isEmpty() && !playing) {
-                    if (curTrackList == null && !finish) {
-                        curTrackList = holder;
+                    for(String playable : MusicPicker.playableList) {
+                        if(!MusicPicker.titleCardEvents.contains(playable)) {
+                            if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get(playable)[34])) {
+                                if(!SoundHandler.TriggerInfoMap.get(playable)[10].matches("_")) {
+                                    String[] trigger = playable.split("-");
+                                    SoundHandler.TriggerSongMap.get(trigger[0]).entrySet().removeIf(stringStringEntry -> stringStringEntry.getValue().matches(trigger[1]));
+                                } else SoundHandler.TriggerSongMap.remove(playable);
+                                SoundHandler.TriggerInfoMap.remove(playable);
+                            }
+                        }
                     }
+                    if (curTrackList == null && !finish) curTrackList = holder;
                     if (curMusic != null) {
-                        if (!mc.getSoundHandler().isSoundPlaying(curMusic) || mc.gameSettings.getSoundLevel(SoundCategory.MUSIC) == 0 || mc.gameSettings.getSoundLevel(SoundCategory.MASTER) == 0) {
+                        if (!sh.isSoundPlaying(curMusic) || mc.gameSettings.getSoundLevel(SoundCategory.MUSIC) == 0 || mc.gameSettings.getSoundLevel(SoundCategory.MASTER) == 0) {
                             finish = false;
-                            mc.getSoundHandler().stopSounds();
+                            sh.stopSounds();
                             curMusic = null;
                             delay = true;
                             delayTime = MusicPicker.curDelay;
+                            removeTrack(trackToDelete,indexToDelete,playedEvents,playedMusic);
                         }
                     }
                     if (!finish) {
                         if (MusicPicker.shouldChange || !Arrays.equals(curTrackList, holder)) {
-                            eventsClient.GuiCounter = 1;
-                            String songNum = null;
-                            for (Map.Entry<String, setVolumeSound> stringListEntry : musicLinker.entrySet()) {
-                                String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
-                                if (triggerLinker.get(checkThis) != null) {
-                                    if (theDecidingFactor(MusicPicker.playableList, MusicPicker.titleCardEvents, triggerLinker.get(checkThis)) && mc.player != null) {
-                                        songNum = checkThis;
-                                        break;
-                                    }
-                                }
-                            }
-                            if (songNum == null) {
-                                oncePerTrigger = new ArrayList<>();
-                                onceUntilEmpty = new ArrayList<>();
-                                triggerLinker = new HashMap<>();
-                                musicLinker = new HashMap<>();
-                                if (MusicPicker.curFade == 0) {
-                                    curTrackList = null;
-                                    mc.getSoundHandler().stopSound(curMusic);
-                                    eventsClient.IMAGE_CARD = null;
-                                    eventsClient.fadeCount = 1000;
-                                    eventsClient.timer = 0;
-                                    eventsClient.activated = false;
-                                    eventsClient.ismoving = false;
-                                    cards = true;
-                                } else {
-                                    fading = true;
-                                    tempFade = MusicPicker.curFade;
-                                    saveVol = mc.gameSettings.getSoundLevel(SoundCategory.MASTER);
-                                }
-                            } else {
-                                curTrackList = null;
-                                eventsClient.IMAGE_CARD = null;
-                                eventsClient.fadeCount = 1000;
-                                eventsClient.timer = 0;
-                                eventsClient.activated = false;
-                                eventsClient.ismoving = false;
-                                cards = true;
-                                Map<String, ISound> curplaying = ObfuscationReflectionHelper.getPrivateValue(SoundManager.class, ObfuscationReflectionHelper.getPrivateValue(net.minecraft.client.audio.SoundHandler.class, mc.getSoundHandler(), "field_147694_f"), "field_148629_h");
-                                SoundSystem sndSys = ObfuscationReflectionHelper.getPrivateValue(SoundManager.class, ObfuscationReflectionHelper.getPrivateValue(net.minecraft.client.audio.SoundHandler.class, Minecraft.getMinecraft().getSoundHandler(), "field_147694_f"), "field_148620_e");
-                                for (Map.Entry<String, setVolumeSound> stringListEntry : musicLinker.entrySet()) {
-                                    String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
-                                    String temp = curplaying.entrySet().stream().filter(entry -> entry.getValue() == musicLinker.get(checkThis)).map(Map.Entry::getKey).findFirst().orElse(null);
-                                    if (checkThis.matches(songNum)) {
-                                        musicLinker.get(checkThis).setVolume(volumeLinker.get(songNum));
-                                        sndSys.setVolume(temp, volumeLinker.get(songNum));
-                                        curMusic = musicLinker.get(checkThis);
-                                        curTrackHolder = musicLinker.get(checkThis).getSoundLocation().toString().replaceAll("music.", "").replaceAll("riggers:", "");
-                                        if (configRegistry.registerDiscs && MusicPicker.player != null) {
-                                            RegistryHandler.network.sendToServer(new packetCurSong.packetCurSongMessage(curTrack, MusicPicker.player.getUniqueID()));
-                                        }
-                                    } else {
-                                        musicLinker.get(checkThis).setVolume(Float.MIN_VALUE);
-                                        sndSys.setVolume(temp, Float.MIN_VALUE);
-                                    }
-                                }
-                            }
-                            MusicPicker.shouldChange = false;
+                            removeTrack(trackToDelete,indexToDelete,playedEvents,playedMusic);
+                            if(curTrackList.length!=0) changeTrack();
+                            else curTrackList = null;
                         } else if (curMusic == null && mc.gameSettings.getSoundLevel(SoundCategory.MUSIC) > 0 && mc.gameSettings.getSoundLevel(SoundCategory.MASTER) > 0) {
                             triggerLinker = new HashMap<>();
                             musicLinker = new HashMap<>();
@@ -242,8 +215,7 @@ public class MusicPlayer {
                                             break;
                                         }
                                     }
-                                    if (j >= 1000)
-                                        MusicTriggers.logger.warn("Attempt to get non duplicate song passed 1000 tries! Forcing current song " + configToml.songholder.get(curTrack) + " to play.");
+                                    if (j >= 1000) MusicTriggers.logger.warn("Attempt to get non duplicate song passed 1000 tries! Forcing current song " + configToml.songholder.get(curTrack) + " to play.");
                                 } else {
                                     curTrack = curTrackList[i];
                                 }
@@ -256,6 +228,12 @@ public class MusicPlayer {
                                         triggerLinker.put("song-" + 0, configToml.triggerlinking.get(curTrack).get(curTrack));
                                         musicLinker.put("song-" + 0, new setVolumeSound(new ResourceLocation(MusicTriggers.MODID, "music." + curTrackHolder), SoundCategory.MUSIC, Float.parseFloat(configToml.otherinfo.get(curTrack)[4]), Float.parseFloat(configToml.otherinfo.get(curTrack)[0]), false, 1, ISound.AttenuationType.NONE, 0F, 0F, 0F));
                                         volumeLinker.put("song-" + 0, Float.parseFloat(configToml.otherinfo.get(curTrack)[4]));
+                                        for(int l : configToml.loopPoints.get(curTrack).keySet()) {
+                                            loopLinker.putIfAbsent("song-" + 0, new HashMap<>());
+                                            loopLinker.get("song-" + 0).put(l, configToml.loopPoints.get(curTrack).get(l));
+                                            loopLinkerCounter.putIfAbsent("song-" + 0, new HashMap<>());
+                                            loopLinkerCounter.get("song-" + 0).put(l, 0);
+                                        }
                                         int linkcounter = 0;
                                         for (String song : configToml.triggerlinking.get(curTrack).keySet()) {
                                             if (!song.matches(curTrack)) {
@@ -263,6 +241,14 @@ public class MusicPlayer {
                                                 musicLinker.put("song-" + linkcounter, new setVolumeSound(new ResourceLocation(MusicTriggers.MODID, "music." + song), SoundCategory.MUSIC, Float.parseFloat(configToml.otherlinkinginfo.get(curTrack).get(song)[1]),
                                                         Float.parseFloat(configToml.otherlinkinginfo.get(curTrack).get(song)[0]), false, 1, ISound.AttenuationType.NONE, 0F, 0F, 0F));
                                                 volumeLinker.put("song-" + linkcounter, Float.parseFloat(configToml.otherlinkinginfo.get(curTrack).get(song)[1]));
+                                                if(configToml.linkingLoopPoints.get(curTrack)!=null && configToml.linkingLoopPoints.get(curTrack).get(song)!=null) {
+                                                    for (int l : configToml.linkingLoopPoints.get(curTrack).get(song).keySet()) {
+                                                        loopLinker.putIfAbsent("song-" + linkcounter, new HashMap<>());
+                                                        loopLinker.get("song-" + linkcounter).put(l, configToml.linkingLoopPoints.get(curTrack).get(song).get(l));
+                                                        loopLinkerCounter.putIfAbsent("song-" + linkcounter, new HashMap<>());
+                                                        loopLinkerCounter.get("song-" + linkcounter).put(l, 0);
+                                                    }
+                                                }
                                             }
                                             linkcounter++;
                                         }
@@ -272,35 +258,23 @@ public class MusicPlayer {
                                     if (configRegistry.registerDiscs && MusicPicker.player != null) {
                                         RegistryHandler.network.sendToServer(new packetCurSong.packetCurSongMessage(curTrackHolder, MusicPicker.player.getUniqueID()));
                                     }
-                                    mc.getSoundHandler().stopSounds();
-                                    if (cards) {
-                                        renderCards();
-                                    }
+                                    sh.stopSounds();
+                                    if (cards) renderCards();
                                     for (Map.Entry<String, setVolumeSound> stringListEntry : musicLinker.entrySet()) {
                                         String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
-                                        if (!checkThis.matches("song-0")) {
-                                            musicLinker.get(checkThis).setVolume(Float.MIN_VALUE);
-                                        } else {
-                                            curMusic = musicLinker.get(checkThis);
-                                        }
-                                        mc.getSoundHandler().playSound(musicLinker.get(checkThis));
+                                        if (!checkThis.matches("song-0")) musicLinker.get(checkThis).setVolume(Float.MIN_VALUE);
+                                        else curMusic = musicLinker.get(checkThis);
+                                        sh.playSound(musicLinker.get(checkThis));
                                     }
                                     if (Integer.parseInt(configToml.otherinfo.get(curTrack)[1])==1) onceUntilEmpty.add(curTrack);
                                     if (Integer.parseInt(configToml.otherinfo.get(curTrack)[1])==2) oncePerTrigger.add(curTrack);
                                     else if (Integer.parseInt(configToml.otherinfo.get(curTrack)[1])==3) {
-                                        configToml.songholder.remove(curTrack);
-                                        configToml.triggerlinking.remove(curTrack);
-                                        configToml.triggerholder.remove(curTrack);
-                                        configToml.otherinfo.remove(curTrack);
-                                        configToml.otherlinkinginfo.remove(curTrack);
-                                        curTrackList = ArrayUtils.remove(curTrackList, i);
-                                        for (String ev : MusicPicker.titleCardEvents) {
-                                            SoundHandler.TriggerSongMap.get(StringUtils.substringBefore(ev, "-")).remove(curTrack);
-                                        }
+                                        trackToDelete = curTrack;
+                                        indexToDelete = i;
+                                        playedEvents = MusicPicker.titleCardEvents;
+                                        playedMusic = curMusic;
                                     }
-                                } else {
-                                    curTrackList = null;
-                                }
+                                } else curTrackList = null;
                             }
                             else onceUntilEmpty = new ArrayList<>();
                         }
@@ -316,9 +290,10 @@ public class MusicPlayer {
                     cards = true;
                     if (curMusic != null) {
                         for (String is : musicLinker.keySet()) {
-                            mc.getSoundHandler().stopSound(musicLinker.get(is));
+                            sh.stopSound(musicLinker.get(is));
                         }
                         curMusic = null;
+                        removeTrack(trackToDelete,indexToDelete,playedEvents,playedMusic);
                     }
                 }
             }
@@ -331,7 +306,10 @@ public class MusicPlayer {
         MusicTriggers.logger.info("Finding cards to render");
         int markForDeletion = -1;
         for (int i : configTitleCards.titlecards.keySet()) {
-            if (MusicPicker.titleCardEvents.containsAll(configTitleCards.titlecards.get(i).getTriggers()) && configTitleCards.titlecards.get(i).getTriggers().containsAll(MusicPicker.titleCardEvents) && mc.player != null) {
+            boolean pass = false;
+            if(MusicPicker.titleCardEvents.containsAll(configTitleCards.titlecards.get(i).getTriggers()) && configTitleCards.titlecards.get(i).getTriggers().containsAll(MusicPicker.titleCardEvents)) pass=true;
+            else if(configTitleCards.titlecards.get(i).getVague() && MusicPicker.playableList.containsAll(configTitleCards.titlecards.get(i).getTriggers())) pass=true;
+            if (pass && mc.player != null) {
                 MusicTriggers.logger.info("displaying title card "+i);
                 if(!configTitleCards.titlecards.get(i).getTitles().isEmpty()) mc.ingameGUI.displayTitle(TextFormatting.getValueByName(configTitleCards.titlecards.get(i).getTitlecolor()).toString()+configTitleCards.titlecards.get(i).getTitles().get(ThreadLocalRandom.current().nextInt(0, configTitleCards.titlecards.get(i).getTitles().size())), null, 5, 20, 20);
                 if(!configTitleCards.titlecards.get(i).getSubTitles().isEmpty()) mc.ingameGUI.displayTitle(null, TextFormatting.getValueByName(configTitleCards.titlecards.get(i).getSubtitlecolor()).toString()+configTitleCards.titlecards.get(i).getSubTitles().get(ThreadLocalRandom.current().nextInt(0, configTitleCards.titlecards.get(i).getSubTitles().size())), 5, 20, 20);
@@ -344,7 +322,10 @@ public class MusicPlayer {
             markForDeletion = -1;
         }
         for (int i : configTitleCards.imagecards.keySet()) {
-            if (MusicPicker.titleCardEvents.containsAll(configTitleCards.imagecards.get(i).getTriggers()) && configTitleCards.imagecards.get(i).getTriggers().containsAll(MusicPicker.titleCardEvents) && mc.player != null) {
+            boolean pass = false;
+            if(MusicPicker.titleCardEvents.containsAll(configTitleCards.imagecards.get(i).getTriggers()) && configTitleCards.imagecards.get(i).getTriggers().containsAll(MusicPicker.titleCardEvents)) pass=true;
+            else if(configTitleCards.imagecards.get(i).getVague() && MusicPicker.playableList.containsAll(configTitleCards.imagecards.get(i).getTriggers())) pass=true;
+            if (pass && mc.player != null) {
                 if(configTitleCards.imagecards.get(i).getName()!=null) {
                     MusicTriggers.logger.info("displaying image card " + configTitleCards.imagecards.get(i).getName());
                     if (!configTitleCards.ismoving.get(i)) {
@@ -406,5 +387,110 @@ public class MusicPlayer {
         }
         if(cont) return all.containsAll(updatedComparison);
         return false;
+    }
+
+    public static String formatSongTime() {
+        String ret = "No song playing";
+        if(curMusic!=null && ((SoundSystem) sh.sndManager.sndSystem).playing(sh.sndManager.invPlayingSounds.get(curMusic))) {
+            try {
+                float milliseconds = SoundManipulator.getMillisecondTimeForSource(sh.sndManager.sndSystem, sh.sndManager.invPlayingSounds.get(curMusic));
+                if(milliseconds!=Integer.MAX_VALUE) {
+                    if (milliseconds == -1) milliseconds = 0;
+                    float seconds = milliseconds / 1000f;
+                    if (seconds % 60 < 10)
+                        ret = (int) (seconds / 60) + ":0" + (int) (seconds % 60) + formatMilliseconds(milliseconds);
+                    else ret = (int) (seconds / 60) + ":" + (int) (seconds % 60) + formatMilliseconds(milliseconds);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return ret;
+    }
+
+    private static String formatMilliseconds(float milliseconds) {
+        if(milliseconds%1000<10) return ":00"+(int)(milliseconds%1000);
+        else if(milliseconds%1000<100) return ":0"+(int)(milliseconds%1000);
+        else return ":"+(int)(milliseconds%1000);
+    }
+
+    private static void removeTrack(String track, int index, List<String> events, ISound playing) {
+        if(track!=null) {
+            mc.getSoundHandler().stopSound(playing);
+            curTrackList = ArrayUtils.remove(curTrackList, index);
+            for (String ev : events) {
+                String trigger = StringUtils.substringBefore(ev, "-");
+                SoundHandler.TriggerSongMap.get(trigger).remove(track);
+                if(SoundHandler.TriggerSongMap.get(trigger).isEmpty()) SoundHandler.TriggerSongMap.remove(trigger);
+            }
+            trackToDelete=null;
+            playedEvents = new ArrayList<>();
+        }
+    }
+
+    private static void changeTrack() {
+        eventsClient.GuiCounter = 1;
+        String songNum = null;
+        for (Map.Entry<String, setVolumeSound> stringListEntry : musicLinker.entrySet()) {
+            String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
+            if (triggerLinker.get(checkThis) != null) {
+                if (theDecidingFactor(MusicPicker.playableList, MusicPicker.titleCardEvents, triggerLinker.get(checkThis)) && mc.player != null) {
+                    songNum = checkThis;
+                    break;
+                }
+            }
+        }
+        if (songNum == null) {
+            oncePerTrigger = new ArrayList<>();
+            onceUntilEmpty = new ArrayList<>();
+            triggerLinker = new HashMap<>();
+            musicLinker = new HashMap<>();
+            loopLinker = new HashMap<>();
+            loopLinkerCounter = new HashMap<>();
+            if (MusicPicker.curFade == 0) {
+                curTrackList = null;
+                if(curMusic!=null) sh.stopSound(curMusic);
+                eventsClient.IMAGE_CARD = null;
+                eventsClient.fadeCount = 1000;
+                eventsClient.timer = 0;
+                eventsClient.activated = false;
+                eventsClient.ismoving = false;
+                cards = true;
+            } else {
+                fading = true;
+                tempFade = MusicPicker.curFade;
+                saveVol = mc.gameSettings.getSoundLevel(SoundCategory.MASTER);
+            }
+        } else {
+            curTrackList = null;
+            eventsClient.IMAGE_CARD = null;
+            eventsClient.fadeCount = 1000;
+            eventsClient.timer = 0;
+            eventsClient.activated = false;
+            eventsClient.ismoving = false;
+            cards = true;
+            for (Map.Entry<String, setVolumeSound> stringListEntry : musicLinker.entrySet()) {
+                String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
+                if(loopLinkerCounter.get(checkThis)!=null) {
+                    for (int l : loopLinkerCounter.get(checkThis).keySet()) {
+                        loopLinkerCounter.get(checkThis).put(l, 0);
+                    }
+                }
+                String temp = sh.sndManager.playingSounds.entrySet().stream().filter(entry -> entry.getValue() == musicLinker.get(checkThis)).map(Map.Entry::getKey).findFirst().orElse(null);
+                if (checkThis.matches(songNum)) {
+                    musicLinker.get(checkThis).setVolume(volumeLinker.get(songNum));
+                    ((SoundSystem)sh.sndManager.sndSystem).setVolume(temp, volumeLinker.get(songNum));
+                    curMusic = musicLinker.get(checkThis);
+                    curTrackHolder = musicLinker.get(checkThis).getSoundLocation().toString().replaceAll("music.", "").replaceAll("riggers:", "");
+                    if (configRegistry.registerDiscs && MusicPicker.player != null) {
+                        RegistryHandler.network.sendToServer(new packetCurSong.packetCurSongMessage(curTrack, MusicPicker.player.getUniqueID()));
+                    }
+                } else {
+                    musicLinker.get(checkThis).setVolume(Float.MIN_VALUE);
+                    ((SoundSystem)sh.sndManager.sndSystem).setVolume(temp, Float.MIN_VALUE);
+                }
+            }
+        }
+        MusicPicker.shouldChange = false;
     }
 }

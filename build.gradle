@@ -25,7 +25,7 @@ targetCompatibility = 1.8
 
 minecraft {
     mappings channel: 'snapshot', version: '20171003-1.12'
-    accessTransformer = file('src/main/resources/musictriggers_at.cfg')
+    accessTransformer = file('src/main/resources/META-INF/musictriggers_at.cfg')
     runs {
         client {
             workingDirectory project.file('run')

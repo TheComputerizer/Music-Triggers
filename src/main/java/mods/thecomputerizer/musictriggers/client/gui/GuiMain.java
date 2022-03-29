@@ -53,7 +53,7 @@ public class GuiMain extends GuiScreen {
         this.addEditTriggersButton();
         this.addTransitionsButton();
         this.addDebugButton();
-        this.addSkipSongButton();
+        this.addCurrentSongButton();
         eventsClient.renderDebug = false;
     }
 
@@ -89,8 +89,8 @@ public class GuiMain extends GuiScreen {
         this.buttonList.add(new GuiButton(6, this.width/2 + 25, this.height/2 + 30, 150, 20, "Other"));
     }
 
-    private void addSkipSongButton() {
-        this.buttonList.add(new GuiButton(7, this.width-80, 8, 64, 16, "\u00A74Skip Song"));
+    private void addCurrentSongButton() {
+        this.buttonList.add(new GuiButton(7, this.width-80, 8, 64, 16, "Playback"));
     }
 
     @Override
@@ -124,7 +124,7 @@ public class GuiMain extends GuiScreen {
             this.mc.displayGuiScreen(new GuiOther(this, holder));
         }
         if(button.id==7) {
-            if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing && !MusicPlayer.fading) this.mc.getSoundHandler().stopSound(MusicPlayer.curMusic);
+            if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing && !MusicPlayer.fading) this.mc.displayGuiScreen(new GuiCurPlaying(this, this.holder));
         }
     }
 

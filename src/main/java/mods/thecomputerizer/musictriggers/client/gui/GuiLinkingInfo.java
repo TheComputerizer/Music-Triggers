@@ -1,6 +1,5 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.eventsClient;
 import mods.thecomputerizer.musictriggers.config.configObject;
 import net.minecraft.client.gui.GuiButton;
@@ -66,7 +65,8 @@ public class GuiLinkingInfo extends GuiScreen {
     public void initGui() {
         this.addBackButton();
         this.addScrollable();
-        addAddTriggerButton();
+        this.addAddTriggerButton();
+        this.addLoopsButton();
         this.addDeleteButton();
         eventsClient.renderDebug = false;
     }
@@ -85,7 +85,11 @@ public class GuiLinkingInfo extends GuiScreen {
     }
 
     private void addAddTriggerButton() {
-        this.buttonList.add(new GuiButton(3, this.width/2-64, this.height-24, 128, 16, "Add Trigger"));
+        this.buttonList.add(new GuiButton(3, this.width/2-114, this.height-24, 96, 16, "Add Trigger"));
+    }
+
+    private void addLoopsButton() {
+        this.buttonList.add(new GuiButton(4, this.width/2+16, this.height-24, 96, 16, "Loops"));
     }
 
     @Override
@@ -107,6 +111,9 @@ public class GuiLinkingInfo extends GuiScreen {
             this.holder.addLinkingTrigger(this.songCode, this.song, "trigger");
             this.info = this.holder.getAllLinkingInfo(this.songCode, this.song);
             this.scrollingSongs.refreshList(this.holder.getAllLinkingInfo(this.songCode, this.song));
+        }
+        if (button.id == 4) {
+            this.mc.displayGuiScreen(new GuiLoops(this, this.holder, this.songCode, this.song, true));
         }
     }
 
