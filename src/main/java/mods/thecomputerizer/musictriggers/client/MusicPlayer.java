@@ -81,6 +81,8 @@ public class MusicPlayer {
     public static long curMusicTimer = 0;
     public static SoundSource curMusicSource;
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
+    public static Map<Integer, Boolean> canPlayTitle = new HashMap<>();
+    public static Map<Integer, Boolean> canPlayImage = new HashMap<>();
 
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onTick(TickEvent.ClientTickEvent event) {
@@ -160,6 +162,12 @@ public class MusicPlayer {
                 }
                 holder = MusicPicker.playThese();
                 if (holder != null && !holder.isEmpty() && !playing) {
+                    for(int i : canPlayTitle.keySet()) {
+                        if(!canPlayTitle.get(i) && !MusicPicker.playableList.containsAll(configTitleCards.titlecards.get(i).getTriggers())) canPlayTitle.put(i, true);
+                    }
+                    for(int i : canPlayImage.keySet()) {
+                        if(!canPlayImage.get(i) && !MusicPicker.playableList.containsAll(configTitleCards.imagecards.get(i).getTriggers())) canPlayImage.put(i, true);
+                    }
                     for(String playable : MusicPicker.playableList) {
                         if(!MusicPicker.titleCardEvents.contains(playable)) {
                             if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get(playable)[34])) {
@@ -318,7 +326,10 @@ public class MusicPlayer {
         for (int i : configTitleCards.titlecards.keySet()) {
             boolean pass = false;
             if(MusicPicker.titleCardEvents.containsAll(configTitleCards.titlecards.get(i).getTriggers()) && configTitleCards.titlecards.get(i).getTriggers().containsAll(MusicPicker.titleCardEvents)) pass=true;
-            else if(configTitleCards.titlecards.get(i).getVague() && MusicPicker.playableList.containsAll(configTitleCards.titlecards.get(i).getTriggers())) pass=true;
+            else if(configTitleCards.titlecards.get(i).getVague() && MusicPicker.playableList.containsAll(configTitleCards.titlecards.get(i).getTriggers()) && canPlayTitle.get(i)) {
+                pass=true;
+                canPlayTitle.put(i, false);
+            }
             if (pass && mc.player != null) {
                 MusicTriggers.logger.info("displaying title card "+i);
                 if(!configTitleCards.titlecards.get(i).getTitles().isEmpty()) mc.gui.setTitles(ITextComponent.nullToEmpty(Objects.requireNonNull(TextFormatting.getByName(configTitleCards.titlecards.get(i).getTitlecolor()))+configTitleCards.titlecards.get(i).getTitles().get(ThreadLocalRandom.current().nextInt(0, configTitleCards.titlecards.get(i).getTitles().size()))), null, 5, 20, 20);
@@ -336,7 +347,10 @@ public class MusicPlayer {
         for (int i : configTitleCards.imagecards.keySet()) {
             boolean pass = false;
             if(MusicPicker.titleCardEvents.containsAll(configTitleCards.imagecards.get(i).getTriggers()) && configTitleCards.imagecards.get(i).getTriggers().containsAll(MusicPicker.titleCardEvents)) pass=true;
-            else if(configTitleCards.imagecards.get(i).getVague() && MusicPicker.playableList.containsAll(configTitleCards.imagecards.get(i).getTriggers())) pass=true;
+            else if(configTitleCards.imagecards.get(i).getVague() && MusicPicker.playableList.containsAll(configTitleCards.imagecards.get(i).getTriggers()) && canPlayImage.get(i)) {
+                pass=true;
+                canPlayImage.put(i, false);
+            }
             if (pass && mc.player != null) {
                 if(configTitleCards.imagecards.get(i).getName()!=null) {
                     MusicTriggers.logger.info("displaying image card " + configTitleCards.imagecards.get(i).getName());
