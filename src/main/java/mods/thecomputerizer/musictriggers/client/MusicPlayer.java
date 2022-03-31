@@ -163,13 +163,13 @@ public class MusicPlayer {
                 }
                 holder = MusicPicker.playThese();
                 if (holder != null && !Arrays.asList(holder).isEmpty() && !playing) {
+                    for(int i : canPlayTitle.keySet()) {
+                        if(!canPlayTitle.get(i) && !MusicPicker.playableList.containsAll(configTitleCards.titlecards.get(i).getTriggers())) canPlayTitle.put(i, true);
+                    }
+                    for(int i : canPlayImage.keySet()) {
+                        if(!canPlayImage.get(i) && !MusicPicker.playableList.containsAll(configTitleCards.imagecards.get(i).getTriggers())) canPlayImage.put(i, true);
+                    }
                     for(String playable : MusicPicker.playableList) {
-                        for(int i : canPlayTitle.keySet()) {
-                            if(!canPlayTitle.get(i) && !MusicPicker.playableList.containsAll(configTitleCards.titlecards.get(i).getTriggers())) canPlayTitle.put(i, true);
-                        }
-                        for(int i : canPlayImage.keySet()) {
-                            if(!canPlayImage.get(i) && !MusicPicker.playableList.containsAll(configTitleCards.imagecards.get(i).getTriggers())) canPlayImage.put(i, true);
-                        }
                         if(!MusicPicker.titleCardEvents.contains(playable)) {
                             if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get(playable)[34])) {
                                 if(!SoundHandler.TriggerInfoMap.get(playable)[10].matches("_")) {
