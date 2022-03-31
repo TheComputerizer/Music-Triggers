@@ -107,6 +107,7 @@ public class MusicPicker {
         dynamicPriorities = new HashMap<>();
         dynamicFade = new HashMap<>();
         if(SoundHandler.TriggerInfoMap.get("generic") != null) {
+            playableList.add("generic");
             titleCardEvents.add("generic");
             curFade = Integer.parseInt(SoundHandler.TriggerInfoMap.get("generic")[1]);
             return SoundHandler.TriggerSongMap.get("generic").keySet().toArray(new String[0]);

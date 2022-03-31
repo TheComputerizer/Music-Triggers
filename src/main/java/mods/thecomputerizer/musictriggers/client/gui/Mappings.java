@@ -187,7 +187,6 @@ public class Mappings {
                 case "creative":
                 case "spectator":
                 case "pet":
-                case "underwater":
                 case "bloodmoon":
                 case "harvestmoon":
                 case "fallingstars":
@@ -230,6 +229,7 @@ public class Mappings {
                     return ret;
                 case "elytra":
                 case "fishing":
+                case "underwater":
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -431,7 +431,7 @@ public class Mappings {
     }
 
     private static void buildIndividualStaticImageOutputForGuiFromIndex(configTitleCards.Image image, StringBuilder builder, int index) {
-        if(index<=8) {
+        if(index<=9) {
             switch (index) {
                 case 0:
                     builder.append("\tname = \"").append(image.getName()).append("\"\n");
@@ -467,15 +467,15 @@ public class Mappings {
     }
 
     private static void buildIndividualMovingImageOutputForGuiFromIndex(configTitleCards.Image image, StringBuilder builder, int index) {
-        if(index>8) {
+        if(index>9) {
             switch (index) {
-                case 9:
+                case 10:
                     builder.append("\t\tdelay = \"").append(image.getDelay()).append("\"\n");
                     return;
-                case 10:
+                case 11:
                     builder.append("\t\tsplit = \"").append(image.getSplit()).append("\"\n");
                     return;
-                case 11:
+                case 12:
                     builder.append("\t\tframes_skipped = \"").append(image.getSkip()).append("\"\n");
             }
         }
