@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.util;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.util.packets.*;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MobEntity;
@@ -178,24 +179,31 @@ public class calculateFeatures {
                     }
                     if (victory) {
                         victoryMobs.computeIfAbsent(triggerID, k -> new HashMap<>());
-                        if (victoryMobs.get(triggerID).size() < num) victoryMobs.get(triggerID).put(e.getUUID(), timeout);
+                        if (victoryMobs.get(triggerID).size() < num) {
+                            victoryMobs.get(triggerID).put(e.getUUID(), timeout);
+                        }
                     }
                 }
             }
-            if (mobList.size() >= num && ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) && infernalDone && (float) healthCounter / num >= healthpercentage / 100F)) {
+            if (mobList.size() >= num &&
+                    ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) &&
+                            infernalDone &&
+                            (float) healthCounter / num >= healthpercentage / 100F)) {
                 pass = true;
             }
-            if(victoryMobs.get(triggerID).keySet().size()<num) {
-                victoryMobs = new HashMap<>();
-                victoryRet = false;
-            } else {
-                for (UUID u : victoryMobs.get(triggerID).keySet()) {
-                    if (player.getLevel().getEntity(u)!=null && !Objects.requireNonNull((LivingEntity)player.getLevel().getEntity(u)).isDeadOrDying()) {
-                        victoryRet = false;
-                        break;
+            if(victoryMobs.get(triggerID)!=null) {
+                if (victoryMobs.get(triggerID).keySet().size() < num) {
+                    victoryMobs = new HashMap<>();
+                    victoryRet = false;
+                } else {
+                    for (UUID u : victoryMobs.get(triggerID).keySet()) {
+                        if (player.getLevel().getEntity(u) != null && !Objects.requireNonNull((LivingEntity) player.getLevel().getEntity(u)).isDeadOrDying()) {
+                            victoryRet = false;
+                            break;
+                        }
                     }
                 }
-            }
+            } else victoryRet = false;
         } else if (mobname.matches("BOSS")) {
             HashMap<String, Float> tempBoss = bossInfo;
             if(!bossInfo.isEmpty()) {
@@ -247,12 +255,8 @@ public class calculateFeatures {
                 if (e.getHealth() / e.getMaxHealth() <= health / 100F) {
                     healthCounter++;
                 }
-                try {
-                    infernalChecked = infernalChecker(e, i);
-                } catch (NoSuchMethodError ignored) {
-                    infernal = false;
-                }
-                if (!infernal || infernalChecked) {
+                infernalChecked = infernalChecker(e, i);
+                if (!infernalLoaded || (infernalLoaded && infernalChecked)) {
                     infernalDone = true;
                 }
                 if (victory) {
@@ -262,7 +266,10 @@ public class calculateFeatures {
                     }
                 }
             }
-            if (mobCounter >= num && ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) && infernalDone && (float) healthCounter / num >= healthpercentage / 100F)) {
+            if (mobCounter >= num &&
+                    ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) &&
+                            infernalDone &&
+                            (float) healthCounter / num >= healthpercentage / 100F)) {
                 pass = true;
             }
             if(victoryMobs.get(triggerID)!=null) {

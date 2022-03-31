@@ -79,7 +79,8 @@ public class GuiLinkingInfo extends Screen {
     public void init() {
         this.addBackButton();
         this.addScrollable();
-        addAddTriggerButton();
+        this.addAddTriggerButton();
+        this.addAddLoopsButton();
         this.addDeleteButton();
         eventsClient.renderDebug = false;
     }
@@ -115,11 +116,19 @@ public class GuiLinkingInfo extends Screen {
     }
 
     private void addAddTriggerButton() {
-        this.addButton(new Button(this.width/2-64, this.height-24, 128, 16, new TranslationTextComponent("screen.musictriggers.button.add_trigger"),
+        this.addButton(new Button(this.width/2-114, this.height-24, 96, 16, new TranslationTextComponent("screen.musictriggers.button.add_trigger"),
                 (button) -> {
                     this.holder.addLinkingTrigger(this.songCode, this.song, "trigger");
                     this.info = this.holder.getAllLinkingInfo(this.songCode, this.song);
                     this.scrollingSongs.refreshList(this.info);
+                }));
+    }
+
+    private void addAddLoopsButton() {
+        this.addButton(new Button(this.width/2+16, this.height-24, 96, 16, new TranslationTextComponent("screen.musictriggers.button.addloop"),
+                (button) -> {
+                    assert this.minecraft != null;
+                    this.minecraft.setScreen(new GuiLoops(this,this.holder,this.songCode,this.song,true));
                 }));
     }
 

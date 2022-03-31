@@ -28,7 +28,7 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(8) // Mojang ships Java 
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 minecraft {
     mappings channel: 'official', version: '1.16.5'
-    accessTransformer = file('src/main/resources/META-INF/musictriggers_at.cfg')
+    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
     runs {
         client {
             workingDirectory project.file('run')
@@ -142,7 +142,6 @@ mixin {
 jar {
     manifest {
         attributes([
-            "FMLAT": "musictriggers_at.cfg",
             "Specification-Title": "musictriggers",
             "Specification-Vendor": "musictriggerssareus",
             "Specification-Version": "5.0-EX",

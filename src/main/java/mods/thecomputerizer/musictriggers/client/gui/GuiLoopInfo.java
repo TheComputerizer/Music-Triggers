@@ -17,31 +17,29 @@ import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class GuiSongInfo extends Screen {
+public class GuiLoopInfo extends Screen {
 
-    public String song;
-    public String songCode;
     public List<String> info;
-    public List<String> triggers;
     public Screen parentScreen;
-    public GuiScrollingInfo scrollingSongs;
-    public List<String> parameters;
+    public GuiScrollingLoopsInfo scrollingSongs;
     public configObject holder;
+    public int loopIndex;
+    public String code;
+    public String song;
+    public boolean linked;
     private final ResourceLocation background;
 
-    public GuiSongInfo(Screen parentScreen, String song, String songCode, configObject holder) {
-        super(new TranslationTextComponent("screen.musictriggers.song_info"));
+    public GuiLoopInfo(Screen parentScreen, configObject holder, int loopIndex, String code, String song, boolean linked) {
+        super(new TranslationTextComponent("screen.musictriggers.loop_info"));
         this.parentScreen = parentScreen;
-        this.song = song;
-        this.songCode = songCode;
-        this.parameters = Arrays.stream(new String[]{"pitch","play_once","must_finish","chance","volume"}).collect(Collectors.toList());
         this.holder = holder;
-        this.triggers = this.holder.getAllTriggersForCode(this.songCode);
+        this.loopIndex = loopIndex;
+        this.code = code;
+        this.song = song;
+        this.linked = linked;
+        this.info = this.holder.getAllLoopInfo();
         this.background = new ResourceLocation(MusicTriggers.MODID,"textures/block/recorder_side_active.png");
     }
 
@@ -52,15 +50,17 @@ public class GuiSongInfo extends Screen {
         this.renderBorders(0, 32);
         this.renderBorders(this.height-32, this.height);
         super.render(matrix, i, j, f);
-        String curInfo = this.song;
-        if(this.scrollingSongs.getSelected()!=null) curInfo = this.holder.getSongInfoAtIndex(this.songCode, this.scrollingSongs.index);
+        String curInfo;
+        if(!linked) curInfo = "Loop Info";
+        else curInfo = "Linked Loop Info";
+        if(this.scrollingSongs.getSelected()!=null) curInfo = this.holder.getLoopParameter(this.code,this.song,this.linked,this.loopIndex,this.scrollingSongs.index);
         drawCenteredString(matrix, this.font, curInfo, width/2, 8, 10526880);
     }
 
     @Override
     public boolean keyPressed(int keyCode, int i, int j) {
-        if(keyCode==259 && !this.holder.getSongInfoAtIndex(this.songCode, this.scrollingSongs.index).matches("")) {
-            this.holder.editOtherInfoParameter(this.songCode, this.scrollingSongs.index, StringUtils.chop(this.holder.getSongInfoAtIndex(this.songCode, this.scrollingSongs.index)));
+        if(keyCode==259 && !this.holder.getLoopParameter(this.code,this.song,this.linked,this.loopIndex,this.scrollingSongs.index).matches("")) {
+            this.holder.editLoopInfoAtIndex(this.code,this.song,this.linked,this.loopIndex,this.scrollingSongs.index, StringUtils.chop(this.holder.getLoopParameter(this.code,this.song,this.linked,this.loopIndex,this.scrollingSongs.index)));
             return true;
         }
         return super.keyPressed(keyCode, i, j);
@@ -69,7 +69,7 @@ public class GuiSongInfo extends Screen {
     @Override
     public boolean charTyped(char typedChar, int keyCode) {
         if(this.scrollingSongs.getSelected()!=null) {
-            this.holder.editOtherInfoParameter(this.songCode, this.scrollingSongs.index, this.holder.getSongInfoAtIndex(this.songCode, this.scrollingSongs.index) + typedChar);
+            this.holder.editLoopInfoAtIndex(this.code,this.song,this.linked,this.loopIndex,this.scrollingSongs.index, this.holder.getLoopParameter(this.code,this.song,this.linked,this.loopIndex,this.scrollingSongs.index)+typedChar);
             return true;
         }
         return super.charTyped(typedChar, keyCode);
@@ -78,19 +78,13 @@ public class GuiSongInfo extends Screen {
     @Override
     public void init() {
         this.addBackButton();
-        this.addScrollable();
-        this.addAddTriggerButton();
-        this.addLinkingButton();
-        this.addLoopsButton();
         this.addDeleteButton();
+        this.addScrollable();
         eventsClient.renderDebug = false;
     }
 
     private void addScrollable() {
-        List<String> everything = new ArrayList<>();
-        everything.addAll(this.parameters);
-        everything.addAll(this.triggers);
-        this.scrollingSongs = new GuiScrollingInfo(this.minecraft, this.width, this.height,32,this.height-32, everything,this);
+        this.scrollingSongs = new GuiScrollingLoopsInfo(this.minecraft, this.width, this.height,32,this.height-32, this.info,this);
         this.scrollingSongs.setRenderBackground(false);
         this.scrollingSongs.setRenderTopAndBottom(false);
         this.children.add(this.scrollingSongs);
@@ -100,8 +94,7 @@ public class GuiSongInfo extends Screen {
         this.addButton(new Button(16, 8, 64, 16, new TranslationTextComponent("screen.musictriggers.button.back"),
                 (button) -> {
                     assert this.minecraft != null;
-                    if(this.parentScreen instanceof GuiAddSongs) ((GuiAddSongs)this.parentScreen).holder = this.holder;
-                    else ((GuiEditSongs)this.parentScreen).holder = this.holder;
+                    ((GuiLoops)this.parentScreen).holder = this.holder;
                     this.minecraft.setScreen(this.parentScreen);
                 }));
     }
@@ -110,40 +103,11 @@ public class GuiSongInfo extends Screen {
         this.addButton(new Button(this.width - 80, 8, 64, 16, new TranslationTextComponent("screen.musictriggers.button.delete").withStyle(TextFormatting.RED),
                 (button) -> {
                     assert this.minecraft != null;
-                    if(this.parentScreen instanceof GuiAddSongs) {
-                        GuiAddSongs parent = (GuiAddSongs)this.parentScreen;
-                        parent.holder.removeSong(this.songCode);
-                    } else {
-                        GuiEditSongs parent = ((GuiEditSongs)this.parentScreen);
-                        parent.holder.removeSong(this.songCode);
-                        parent.songs = parent.holder.getAllSongs();
-                        parent.codes = parent.holder.getAllCodes();
-                    }
+                    this.holder.removeLoop(this.code,this.song,this.linked,this.loopIndex);
+                    ((GuiLoops)this.parentScreen).holder = this.holder;
+                    ((GuiLoops)this.parentScreen).info = this.holder.getAllLoops(this.code,this.song,this.linked);
+                    ((GuiLoops)this.parentScreen).scrollingSongs.resetEntries(((GuiLoops)this.parentScreen).info);
                     this.minecraft.setScreen(this.parentScreen);
-                }));
-    }
-
-    private void addAddTriggerButton() {
-        this.addButton(new Button(this.width/2-48, this.height-24, 96, 16, new TranslationTextComponent("screen.musictriggers.button.add_trigger"),
-                (button) -> {
-                    assert this.minecraft != null;
-                    this.minecraft.setScreen(new GuiTriggers(this, this.holder, this.songCode));
-                }));
-    }
-
-    private void addLinkingButton() {
-        this.addButton(new Button(this.width/2+64, this.height-24, 96, 16, new TranslationTextComponent("screen.musictriggers.button.linking"),
-                (button) -> {
-                    assert this.minecraft != null;
-                    this.minecraft.setScreen(new GuiLinking(this, this.songCode, this.holder));
-                }));
-    }
-
-    private void addLoopsButton() {
-        this.addButton(new Button(this.width/2-160, this.height-24, 96, 16, new TranslationTextComponent("screen.musictriggers.button.loops"),
-                (button) -> {
-                    assert this.minecraft != null;
-                    this.minecraft.setScreen(new GuiLoops(this, this.holder, this.songCode, null, false));
                 }));
     }
 
