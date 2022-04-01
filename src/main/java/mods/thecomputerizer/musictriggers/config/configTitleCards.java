@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.config;
 
 import com.moandjiezana.toml.Toml;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.util.image.GIFHandler;
 import mods.thecomputerizer.musictriggers.util.image.MP4Handler;
 import mods.thecomputerizer.musictriggers.util.image.PNGMcMetaHandler;
@@ -62,7 +63,9 @@ public class configTitleCards {
                             titlecards.get(titleCounter).setSubtitlecolor(title.getString("subtitle_color"));
                         }
                         if(title.contains("vague")) {
-                            titlecards.get(titleCounter).setVague(Boolean.parseBoolean(title.getString("vague")));
+                            boolean parsedVague = Boolean.parseBoolean(title.getString("vague"));
+                            titlecards.get(titleCounter).setVague(parsedVague);
+                            if(parsedVague) MusicPlayer.canPlayTitle.put(titleCounter, true);
                         }
                         titleCounter++;
                     }
@@ -90,7 +93,9 @@ public class configTitleCards {
                         titlecards.get(titleCounter).setSubtitlecolor(title.getString("subtitle_color"));
                     }
                     if(title.contains("vague")) {
-                        titlecards.get(titleCounter).setVague(Boolean.parseBoolean(title.getString("vague")));
+                        boolean parsedVague = Boolean.parseBoolean(title.getString("vague"));
+                        titlecards.get(titleCounter).setVague(parsedVague);
+                        if(parsedVague) MusicPlayer.canPlayTitle.put(titleCounter, true);
                     }
                 }
                 if(toml.containsTableArray("image")) {
@@ -142,7 +147,9 @@ public class configTitleCards {
                             imagecards.get(imageCounter).setFadeOut(Integer.parseInt(image.getString("fade_out")));
                         }
                         if(image.contains("vague")) {
-                            imagecards.get(imageCounter).setVague(Boolean.parseBoolean(image.getString("vague")));
+                            boolean parsedVague = Boolean.parseBoolean(image.getString("vague"));
+                            imagecards.get(imageCounter).setVague(parsedVague);
+                            if(parsedVague) MusicPlayer.canPlayImage.put(imageCounter, true);
                         }
                         imageCounter++;
                     }
@@ -196,7 +203,9 @@ public class configTitleCards {
                         imagecards.get(imageCounter).setFadeOut(Integer.parseInt(image.getString("fade_out")));
                     }
                     if(image.contains("vague")) {
-                        imagecards.get(imageCounter).setVague(Boolean.parseBoolean(image.getString("vague")));
+                        boolean parsedVague = Boolean.parseBoolean(image.getString("vague"));
+                        imagecards.get(imageCounter).setVague(parsedVague);
+                        if(parsedVague) MusicPlayer.canPlayImage.put(imageCounter, true);
                     }
                 }
             } catch (Exception e) {
