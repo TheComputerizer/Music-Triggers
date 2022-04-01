@@ -29,10 +29,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.LightType;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class eventsClient {
 
@@ -101,6 +98,11 @@ public class eventsClient {
     }
 
     public static void onCustomTick() {
+        if(MusicPlayer.curMusic!=null
+                && MinecraftClient.getInstance().getSoundManager().soundSystem.sources.get(MusicPlayer.curMusic)!=null
+                && MinecraftClient.getInstance().getSoundManager().soundSystem.sources.get(MusicPlayer.curMusic).source!=null
+                && Objects.requireNonNull(MinecraftClient.getInstance().getSoundManager().soundSystem.sources.get(MusicPlayer.curMusic).source).getSourceState()!=0x1013)
+            MusicPlayer.curMusicTimer+=20;
         if(configTitleCards.imagecards.get(curImageIndex)!=null) {
             if (timer > configTitleCards.imagecards.get(curImageIndex).getTime()) {
                 activated = false;
@@ -188,6 +190,22 @@ public class eventsClient {
                 x2 = pos.getX();
                 y2 = pos.getY();
                 z2 = pos.getZ();
+                int temp;
+                if(x1>x2) {
+                    temp=x1;
+                    x1=x2;
+                    x2=temp;
+                }
+                if(y1>y2) {
+                    temp=y1;
+                    y1=y2;
+                    y2=temp;
+                }
+                if(z1>z2) {
+                    temp=z1;
+                    z1=z2;
+                    z2=temp;
+                }
                 firstPass = false;
                 zone = false;
                 MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.ambient(SoundEvents.BLOCK_ANVIL_BREAK));
@@ -224,19 +242,41 @@ public class eventsClient {
                 left.add("Music Triggers Current song: "+MusicPlayer.curTrackHolder);
             }
             if (!configDebug.ShowJustCurSong) {
-                if (MusicPicker.playableList != null && !MusicPicker.playableList.isEmpty()) {
+                int displayCount = 0;
+                if(!MusicPlayer.formatSongTime().matches("No song playing")) left.add("Music Triggers Current Song Time: " + MusicPlayer.formatSongTime());
+                if(MusicPicker.playableList!=null && !MusicPicker.playableList.isEmpty()) {
                     StringBuilder s = new StringBuilder();
                     for (String ev : MusicPicker.playableList) {
+                        if(MinecraftClient.getInstance().textRenderer.getWidth(s+" "+ev)>0.75f*MinecraftClient.getInstance().getWindow().getScaledWidth()) {
+                            if(displayCount==0) {
+                                left.add("Music Triggers Playable Events: " + s);
+                                displayCount++;
+                            } else left.add(s.toString());
+                            s = new StringBuilder();
+                        }
                         s.append(" ").append(ev);
                     }
-                    left.add("Music Triggers Playable Triggers:"+s);
+                    if(displayCount==0) {
+                        left.add("Music Triggers Playable Events: " + s);
+                    } else left.add(s.toString());
                 }
+                displayCount=0;
                 StringBuilder sm = new StringBuilder();
                 sm.append("minecraft");
                 for (String ev : configDebug.blockedmods) {
+                    if(MinecraftClient.getInstance().textRenderer.getWidth(sm+" "+ev)>0.75f*MinecraftClient.getInstance().getWindow().getScaledWidth()) {
+                        if(displayCount==0) {
+                            left.add("Music Triggers Blocked Mods: " + sm);
+                            displayCount++;
+                        } else left.add(sm.toString());
+                        sm = new StringBuilder();
+                    }
                     sm.append(" ").append(ev);
                 }
-                left.add("Music Triggers Current Blocked Mods: "+sm);
+                if(displayCount==0) {
+                    left.add("Music Triggers Blocked Mods: " + sm);
+                } else left.add(sm.toString());
+                displayCount=0;
                 if (MusicPicker.player != null && MusicPicker.world != null) {
                     if (fromServer.curStruct != null) {
                         left.add("Music Triggers Current Structure: "+fromServer.curStruct);
@@ -248,9 +288,18 @@ public class eventsClient {
                     if (MusicPicker.effectList != null && !MusicPicker.effectList.isEmpty()) {
                         StringBuilder se = new StringBuilder();
                         for (String ev : MusicPicker.effectList) {
+                            if(MinecraftClient.getInstance().textRenderer.getWidth(se+" "+ev)>0.75f*MinecraftClient.getInstance().getWindow().getScaledWidth()) {
+                                if(displayCount==0) {
+                                    left.add("Music Triggers Effect List: " + se);
+                                    displayCount++;
+                                } else left.add(se.toString());
+                                se = new StringBuilder();
+                            }
                             se.append(" ").append(ev);
                         }
-                        left.add("Music Triggers Current Effect List:"+se);
+                        if(displayCount==0) {
+                            left.add("Music Triggers Effect List: " + se);
+                        } else left.add(se.toString());
                     }
                     if (getLivingFromEntity(MinecraftClient.getInstance().targetedEntity) != null) {
                         left.add("Music Triggers Current Entity Name: "+getLivingFromEntity(MinecraftClient.getInstance().targetedEntity).getName().getString());

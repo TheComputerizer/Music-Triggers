@@ -12,9 +12,7 @@ public class CustomTick {
     public CustomTick(){}
 
     public static void setUp() {
-        Runnable tickTimer = () ->  {
-            CustomTickEvent.EVENT.register(client -> eventsClient.onCustomTick());
-        };
+        Runnable tickTimer = eventsClient::onCustomTick;
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         executor.scheduleAtFixedRate(tickTimer, 0, 20, TimeUnit.MILLISECONDS);
     }

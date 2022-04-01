@@ -107,6 +107,7 @@ public class MusicTriggersClient implements ClientModInitializer {
             return ActionResult.PASS;
         }));
 
+        MusicTriggersCommon.logger.info("Setting up custom tick");
         CustomTick.setUp();
     }
 }

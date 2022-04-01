@@ -17,23 +17,27 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class GuiLinkingInfo extends Screen {
+public class GuiLoopInfo extends Screen {
 
-    public String song;
-    public String songCode;
     public List<String> info;
     public Screen parentScreen;
-    public GuiScrollingLinkingInfo scrollingSongs;
+    public GuiScrollingLoopsInfo scrollingSongs;
     public configObject holder;
+    public int loopIndex;
+    public String code;
+    public String song;
+    public boolean linked;
     private final Identifier background;
 
-    public GuiLinkingInfo(Screen parentScreen, String song, String songCode, configObject holder) {
-        super(new TranslatableText("screen.musictriggers.linking_info"));
+    public GuiLoopInfo(Screen parentScreen, configObject holder, int loopIndex, String code, String song, boolean linked) {
+        super(new TranslatableText("screen.musictriggers.loop_info"));
         this.parentScreen = parentScreen;
-        this.song = song;
-        this.songCode = songCode;
         this.holder = holder;
-        this.info = this.holder.getAllLinkingInfo(this.songCode, this.song);
+        this.loopIndex = loopIndex;
+        this.code = code;
+        this.song = song;
+        this.linked = linked;
+        this.info = this.holder.getAllLoopInfo();
         this.background = new Identifier(MusicTriggersCommon.MODID,"textures/block/recorder_side_active.png");
     }
 
@@ -44,22 +48,18 @@ public class GuiLinkingInfo extends Screen {
         this.renderBorders(0, 32);
         this.renderBorders(this.height-32, this.height);
         super.render(matrix, i, j, f);
-        String curInfo = new TranslatableText("screen.musictriggers.text.edit_song").getString();
-        if(this.scrollingSongs.getSelectedOrNull()!=null) curInfo = this.holder.getLinkingInfoAtIndex(this.songCode, this.song, this.scrollingSongs.index);
+        String curInfo;
+        if(!linked) curInfo = "Loop Info";
+        else curInfo = "Linked Loop Info";
+        if(this.scrollingSongs.getSelectedOrNull()!=null) curInfo = this.holder.getLoopParameter(this.code,this.song,this.linked,this.loopIndex,this.scrollingSongs.index);
         drawCenteredText(matrix, this.textRenderer, curInfo, width/2, 8, 10526880);
     }
 
     @Override
     public boolean keyPressed(int keyCode, int i, int j) {
-        if(keyCode==259) {
-            if(!this.holder.getLinkingInfoAtIndex(this.songCode, this.song, this.scrollingSongs.index).matches("")) {
-                this.holder.editLinkingInfoParameter(this.songCode, this.song, this.scrollingSongs.index, StringUtils.chop(this.holder.getLinkingInfoAtIndex(this.songCode, this.song, this.scrollingSongs.index)));
-                return true;
-            } else if(this.holder.isLinkingInfoTrigger(this.songCode, this.song, this.scrollingSongs.index)) {
-                this.holder.removeLinkingTrigger(this.songCode, this.song, this.scrollingSongs.index);
-                this.scrollingSongs.refreshList(this.holder.getAllLinkingInfo(this.songCode, this.song));
-                return true;
-            }
+        if(keyCode==259 && !this.holder.getLoopParameter(this.code,this.song,this.linked,this.loopIndex,this.scrollingSongs.index).matches("")) {
+            this.holder.editLoopInfoAtIndex(this.code,this.song,this.linked,this.loopIndex,this.scrollingSongs.index, StringUtils.chop(this.holder.getLoopParameter(this.code,this.song,this.linked,this.loopIndex,this.scrollingSongs.index)));
+            return true;
         }
         return super.keyPressed(keyCode, i, j);
     }
@@ -67,7 +67,7 @@ public class GuiLinkingInfo extends Screen {
     @Override
     public boolean charTyped(char typedChar, int keyCode) {
         if(this.scrollingSongs.getSelectedOrNull()!=null) {
-            this.holder.editLinkingInfoParameter(this.songCode, this.song, this.scrollingSongs.index, this.holder.getLinkingInfoAtIndex(this.songCode, this.song, this.scrollingSongs.index) + typedChar);
+            this.holder.editLoopInfoAtIndex(this.code,this.song,this.linked,this.loopIndex,this.scrollingSongs.index, this.holder.getLoopParameter(this.code,this.song,this.linked,this.loopIndex,this.scrollingSongs.index)+typedChar);
             return true;
         }
         return super.charTyped(typedChar, keyCode);
@@ -76,15 +76,13 @@ public class GuiLinkingInfo extends Screen {
     @Override
     public void init() {
         this.addBackButton();
-        this.addScrollable();
-        this.addAddTriggerButton();
-        this.addAddLoopsButton();
         this.addDeleteButton();
+        this.addScrollable();
         eventsClient.renderDebug = false;
     }
 
     private void addScrollable() {
-        this.scrollingSongs = new GuiScrollingLinkingInfo(this.client, this.width, this.height,32,this.height-32, this.info,this);
+        this.scrollingSongs = new GuiScrollingLoopsInfo(this.client, this.width, this.height,32,this.height-32, this.info,this);
         this.scrollingSongs.setRenderBackground(false);
         this.scrollingSongs.setRenderHorizontalShadows(false);
         this.addSelectableChild(this.scrollingSongs);
@@ -94,8 +92,7 @@ public class GuiLinkingInfo extends Screen {
         this.addDrawableChild(new ButtonWidget(16, 8, 64, 16, new TranslatableText("screen.musictriggers.button.back"),
                 (button) -> {
                     assert this.client != null;
-                    if(this.parentScreen instanceof GuiLinking) ((GuiLinking) this.parentScreen).holder = this.holder;
-                    else ((GuiAddSongs) this.parentScreen).holder = this.holder;
+                    ((GuiLoops)this.parentScreen).holder = this.holder;
                     this.client.setScreen(this.parentScreen);
                 }));
     }
@@ -104,28 +101,11 @@ public class GuiLinkingInfo extends Screen {
         this.addDrawableChild(new ButtonWidget(this.width - 80, 8, 64, 16, new TranslatableText("screen.musictriggers.button.delete").setStyle(Style.EMPTY.withFormatting(Formatting.RED)),
                 (button) -> {
                     assert this.client != null;
-                    if (this.parentScreen instanceof GuiLinking parent) {
-                        parent.holder.removeLinkingSong(this.songCode, this.song);
-                        parent.songs = parent.holder.getAllSongsForLinking(this.songCode);
-                    } else ((GuiAddSongs) this.parentScreen).holder = this.holder;
+                    this.holder.removeLoop(this.code,this.song,this.linked,this.loopIndex);
+                    ((GuiLoops)this.parentScreen).holder = this.holder;
+                    ((GuiLoops)this.parentScreen).info = this.holder.getAllLoops(this.code,this.song,this.linked);
+                    ((GuiLoops)this.parentScreen).scrollingSongs.resetEntries(((GuiLoops)this.parentScreen).info);
                     this.client.setScreen(this.parentScreen);
-                }));
-    }
-
-    private void addAddTriggerButton() {
-        this.addDrawableChild(new ButtonWidget(this.width/2-114, this.height-24, 96, 16, new TranslatableText("screen.musictriggers.button.add_trigger"),
-                (button) -> {
-                    this.holder.addLinkingTrigger(this.songCode, this.song, "trigger");
-                    this.info = this.holder.getAllLinkingInfo(this.songCode, this.song);
-                    this.scrollingSongs.refreshList(this.info);
-                }));
-    }
-
-    private void addAddLoopsButton() {
-        this.addDrawableChild(new ButtonWidget(this.width/2+16, this.height-24, 96, 16, new TranslatableText("screen.musictriggers.button.addloop"),
-                (button) -> {
-                    assert this.client != null;
-                    this.client.setScreen(new GuiLoops(this,this.holder,this.songCode,this.song,true));
                 }));
     }
 

@@ -79,6 +79,7 @@ public class GuiSongInfo extends Screen {
         this.addScrollable();
         this.addAddTriggerButton();
         this.addLinkingButton();
+        this.addLoopsButton();
         this.addDeleteButton();
         eventsClient.renderDebug = false;
     }
@@ -120,7 +121,7 @@ public class GuiSongInfo extends Screen {
     }
 
     private void addAddTriggerButton() {
-        this.addDrawableChild(new ButtonWidget(this.width/2-114, this.height-24, 96, 16, new TranslatableText("screen.musictriggers.button.add_trigger"),
+        this.addDrawableChild(new ButtonWidget(this.width/2-48, this.height-24, 96, 16, new TranslatableText("screen.musictriggers.button.add_trigger"),
                 (button) -> {
                     assert this.client != null;
                     this.client.setScreen(new GuiTriggers(this, this.holder, this.songCode));
@@ -128,10 +129,18 @@ public class GuiSongInfo extends Screen {
     }
 
     private void addLinkingButton() {
-        this.addDrawableChild(new ButtonWidget(this.width/2+16, this.height-24, 96, 16, new TranslatableText("screen.musictriggers.button.linking"),
+        this.addDrawableChild(new ButtonWidget(this.width/2+64, this.height-24, 96, 16, new TranslatableText("screen.musictriggers.button.linking"),
                 (button) -> {
                     assert this.client != null;
                     this.client.setScreen(new GuiLinking(this, this.songCode, this.holder));
+                }));
+    }
+
+    private void addLoopsButton() {
+        this.addDrawableChild(new ButtonWidget(this.width/2-160, this.height-24, 96, 16, new TranslatableText("screen.musictriggers.button.loops"),
+                (button) -> {
+                    assert this.client != null;
+                    this.client.setScreen(new GuiLoops(this, this.holder, this.songCode, null, false));
                 }));
     }
 

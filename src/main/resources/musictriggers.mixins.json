@@ -9,7 +9,8 @@
     "MixinAdvancementEvent",
     "MixinLivingDamageEvent",
     "MixinPlaySoundEvent",
-    "MixinSoundSystem"
+    "MixinSoundSystem",
+    "MixinSource"
   ],
   "client": [
     "MixinResourcePack"

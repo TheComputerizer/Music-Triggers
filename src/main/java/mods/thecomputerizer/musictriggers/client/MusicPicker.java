@@ -38,6 +38,8 @@ public class MusicPicker {
     public static int elytraStart = 0;
     public static boolean setPVP = false;
     public static int pvpVictoryID = 0;
+    public static boolean waterBool = false;
+    public static int waterStart = 0;
 
     public static HashMap<String, List<String>> dynamicSongs = new HashMap<>();
     public static HashMap<String, Integer> dynamicPriorities = new HashMap<>();
@@ -85,7 +87,9 @@ public class MusicPicker {
         dynamicFade = new HashMap<>();
         if(SoundHandler.TriggerInfoMap.get("generic") != null) {
             curFade = Integer.parseInt(SoundHandler.TriggerInfoMap.get("generic")[1]);
+            curFade = Integer.parseInt(SoundHandler.TriggerInfoMap.get("generic")[1]);
             playableList.add("generic");
+            titleCardEvents.add("generic");
             return new ArrayList<>(SoundHandler.TriggerSongMap.get("generic").keySet());
         }
         return null;
@@ -106,17 +110,6 @@ public class MusicPicker {
                 }
             }
             if(!skip) {
-                for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.instantiationCombos.entrySet()) {
-                    String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
-                    if (s.startsWith("$") && s.replaceAll("\\$","").matches(checkThis)) {
-                        if (playableList.containsAll(SoundHandler.instantiationCombos.get(s.replaceAll("\\$", ""))) && SoundHandler.instantiationCombos.get(s.replaceAll("\\$", "")).size() != 1) {
-                            playableSongs.add(s.substring(1));
-                            if (!titleCardEvents.contains(st)) {
-                                titleCardEvents.addAll(SoundHandler.instantiationCombos.get(s.replaceAll("\\$", "")));
-                            }
-                        }
-                    }
-                }
                 for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.songCombos.entrySet()) {
                     String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
                     if (s.startsWith("@") && s.replaceAll("@", "").matches(checkThis)) {
@@ -132,7 +125,7 @@ public class MusicPicker {
         }
         if (playableSongs.isEmpty() && !skip) {
             for (String s : dynamicSongs.get(st)) {
-                if (!s.startsWith("@") && !s.startsWith("$")) {
+                if (!s.startsWith("@")) {
                     playableSongs.add(s);
                     if (!titleCardEvents.contains(st)) {
                         titleCardEvents.add(st);
@@ -517,7 +510,7 @@ public class MusicPicker {
                     if (Objects.requireNonNull(player.getVehicle()).getName().getString().matches(ridingName) || Objects.requireNonNull(EntityType.getId(player.getVehicle().getType())).toString().matches(ridingName) || ridingName.matches("minecraft")) {
                         if (!events.contains("riding-" + identifier)) {
                             events.add("riding-" + identifier);
-                            dynamicSongs.put("riding-" + identifier, new ArrayList<>(SoundHandler.TriggerSongMap.get("riding-" + identifier).keySet()));
+                            dynamicSongs.put("riding-" + identifier, buildSongsFromIdentifier(SoundHandler.TriggerSongMap.get("riding"), identifier));
                             dynamicPriorities.put("riding-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("riding-" + identifier)[0]));
                             dynamicFade.put("riding-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("riding-" + identifier)[1]));
                             dynamicDelay.put("riding-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("riding-" + identifier)[4]));
@@ -527,7 +520,7 @@ public class MusicPicker {
                     } else if (triggerPersistence.get("riding-" + identifier) != null && triggerPersistence.get("riding-" + identifier) > 0) {
                         if (!events.contains("riding-" + identifier)) {
                             events.add("riding-" + identifier);
-                            dynamicSongs.put("riding-" + identifier, new ArrayList<>(SoundHandler.TriggerSongMap.get("riding-" + identifier).keySet()));
+                            dynamicSongs.put("riding-" + identifier, buildSongsFromIdentifier(SoundHandler.TriggerSongMap.get("riding"), identifier));
                             dynamicPriorities.put("riding-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("riding-" + identifier)[0]));
                             dynamicFade.put("riding-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("riding-" + identifier)[1]));
                             dynamicDelay.put("riding-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("riding-" + identifier)[4]));
@@ -536,7 +529,10 @@ public class MusicPicker {
                     }
                 }
             }
-            if (SoundHandler.TriggerSongMap.get("underwater") != null && ((world.getBlockState(roundedPos(player)).getMaterial() == Material.WATER || world.getBlockState(roundedPos(player)).getMaterial() == Material.UNDERWATER_PLANT || world.getBlockState(roundedPos(player)).getMaterial() == Material.REPLACEABLE_UNDERWATER_PLANT) && (world.getBlockState(roundedPos(player).up()).getMaterial() == Material.WATER || world.getBlockState(roundedPos(player).up()).getMaterial() == Material.UNDERWATER_PLANT || world.getBlockState(roundedPos(player).up()).getMaterial() == Material.REPLACEABLE_PLANT))) {
+            if(SoundHandler.TriggerSongMap.get("underwater") != null && ((world.getBlockState(roundedPos(player)).getMaterial() == Material.WATER || world.getBlockState(roundedPos(player)).getMaterial() == Material.UNDERWATER_PLANT || world.getBlockState(roundedPos(player)).getMaterial() == Material.REPLACEABLE_UNDERWATER_PLANT) && (world.getBlockState(roundedPos(player).up()).getMaterial() == Material.WATER || world.getBlockState(roundedPos(player).up()).getMaterial() == Material.UNDERWATER_PLANT || world.getBlockState(roundedPos(player).up()).getMaterial() == Material.REPLACEABLE_PLANT))) {
+                waterBool = true;
+            } else waterStart = 0;
+            if (SoundHandler.TriggerSongMap.get("underwater") != null && waterStart > Integer.parseInt(SoundHandler.TriggerInfoMap.get("underwater")[8])) {
                 crashHelper = "underwater";
                 events.add("underwater");
                 dynamicSongs.put("underwater", new ArrayList<>(SoundHandler.TriggerSongMap.get("underwater").keySet()));

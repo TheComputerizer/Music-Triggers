@@ -63,7 +63,7 @@ public class GuiMain extends Screen {
         this.addEditSongsButton();
         this.addTransitionsButton();
         this.addDebugButton();
-        this.addSkipSongButton();
+        this.addCurrentSongButton();
         eventsClient.renderDebug = false;
     }
 
@@ -121,12 +121,12 @@ public class GuiMain extends Screen {
                 }));
     }
 
-    private void addSkipSongButton() {
-        this.addDrawableChild(new ButtonWidget(this.width - 80, 8, 64, 16, new TranslatableText("screen.musictriggers.button.skip_song").setStyle(Style.EMPTY.withFormatting(Formatting.RED)),
+    private void addCurrentSongButton() {
+        this.addDrawableChild(new ButtonWidget(this.width - 80, 8, 64, 16, new TranslatableText("screen.musictriggers.button.playback"),
                 (button) -> {
                     if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing && !MusicPlayer.fading) {
                         assert this.client != null;
-                        this.client.getSoundManager().stop(MusicPlayer.curMusic);
+                        this.client.setScreen(new GuiCurPlaying(this,this.holder));
                     }
                 }));
     }
