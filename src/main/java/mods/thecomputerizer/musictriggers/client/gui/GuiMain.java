@@ -64,7 +64,7 @@ public class GuiMain extends Screen {
         this.addEditSongsButton();
         this.addTransitionsButton();
         this.addDebugButton();
-        this.addSkipSongButton();
+        this.addCurrentSongButton();
         eventsClient.renderDebug = false;
     }
 
@@ -122,12 +122,12 @@ public class GuiMain extends Screen {
                 }));
     }
 
-    private void addSkipSongButton() {
-        this.addRenderableWidget(new Button(this.width - 80, 8, 64, 16, new TranslatableComponent("screen.musictriggers.button.skip_song").withStyle(ChatFormatting.RED),
+    private void addCurrentSongButton() {
+        this.addRenderableWidget(new Button(this.width - 80, 8, 64, 16, new TranslatableComponent("screen.musictriggers.button.playback"),
                 (button) -> {
                     if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing && !MusicPlayer.fading) {
                         assert this.minecraft != null;
-                        this.minecraft.getSoundManager().stop(MusicPlayer.curMusic);
+                        this.minecraft.setScreen(new GuiCurPlaying(this,this.holder));
                     }
                 }));
     }

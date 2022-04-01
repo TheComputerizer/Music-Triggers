@@ -80,6 +80,7 @@ public class GuiSongInfo extends Screen {
         this.addScrollable();
         this.addAddTriggerButton();
         this.addLinkingButton();
+        this.addLoopsButton();
         this.addDeleteButton();
         eventsClient.renderDebug = false;
     }
@@ -121,7 +122,7 @@ public class GuiSongInfo extends Screen {
     }
 
     private void addAddTriggerButton() {
-        this.addRenderableWidget(new Button(this.width/2-114, this.height-24, 96, 16, new TranslatableComponent("screen.musictriggers.button.add_trigger"),
+        this.addRenderableWidget(new Button(this.width/2-48, this.height-24, 96, 16, new TranslatableComponent("screen.musictriggers.button.add_trigger"),
                 (button) -> {
                     assert this.minecraft != null;
                     this.minecraft.setScreen(new GuiTriggers(this, this.holder, this.songCode));
@@ -129,10 +130,18 @@ public class GuiSongInfo extends Screen {
     }
 
     private void addLinkingButton() {
-        this.addRenderableWidget(new Button(this.width/2+16, this.height-24, 96, 16, new TranslatableComponent("screen.musictriggers.button.linking"),
+        this.addRenderableWidget(new Button(this.width/2+64, this.height-24, 96, 16, new TranslatableComponent("screen.musictriggers.button.linking"),
                 (button) -> {
                     assert this.minecraft != null;
                     this.minecraft.setScreen(new GuiLinking(this, this.songCode, this.holder));
+                }));
+    }
+
+    private void addLoopsButton() {
+        this.addRenderableWidget(new Button(this.width/2-160, this.height-24, 96, 16, new TranslatableComponent("screen.musictriggers.button.loops"),
+                (button) -> {
+                    assert this.minecraft != null;
+                    this.minecraft.setScreen(new GuiLoops(this, this.holder, this.songCode, null, false));
                 }));
     }
 

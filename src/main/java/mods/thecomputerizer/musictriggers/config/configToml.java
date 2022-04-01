@@ -2,7 +2,6 @@ package mods.thecomputerizer.musictriggers.config;
 
 import com.moandjiezana.toml.Toml;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.util.json;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -18,6 +17,8 @@ public class configToml {
     public static Map<String, String[]> otherinfo = new HashMap<>();
     public static Map<String, Map<String, String[]>> otherlinkinginfo = new HashMap<>();
     public static Map<String, Map<String, String[]>> triggerlinking = new HashMap<>();
+    public static Map<String, Map<Integer, String[]>> loopPoints = new HashMap<>();
+    public static Map<String, Map<String, Map<Integer, String[]>>> linkingLoopPoints = new HashMap<>();
 
     public static final String[] triggers = new String[]
             {"menu","generic","difficulty","time","light","height","raining","storming","snowing","lowhp","dead",
@@ -29,7 +30,7 @@ public class configToml {
     //priority,fade,level,time,delay,advancement,operator,zone,start,
     //resourcename,identifier,range,mobtargetting,hordetargetpercentage,health,hordehealthpercentage,
     //victory,victoryID,infernalmob,gamestagewhitelist,skylight,phase,victory_timeout,biome_category,rain_type,
-    //    //biome_temperature,biome_cold,mob_nbt,underground,end,rainfall,higher_rainfall,instance,time_switch
+    //biome_temperature,biome_cold,mob_nbt,underground,end,rainfall,higher_rainfall,instance,time_switch,inactiveplayable
 
     //pitch,one time,must finish,chance
 
@@ -61,7 +62,7 @@ public class configToml {
                                                     "minecraft", "_", "16", "false", "100", "100", "100",
                                                     "false", "0", "minecraft", "true", "true", "0", "0", "nope",
                                                     "nope", "-111", "false","_", "true", "-1", "-111", "true",
-                                                    "false", "false"});
+                                                    "false", "false", "false"});
                                             if (trigger.contains("priority")) {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                             }
@@ -184,6 +185,9 @@ public class configToml {
                                             if (trigger.contains("time_switch")) {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[33] = trigger.getString("time_switch");
                                             }
+                                            if (trigger.contains("remove_inactive_playable")) {
+                                                triggerholder.get("song" + songCounter).get(triggerID)[34] = trigger.getString("remove_inactive_playable");
+                                            }
                                         } else {
                                             MusicTriggers.logger.warn("Could not find trigger with name " + triggerID);
                                         }
@@ -203,7 +207,7 @@ public class configToml {
                                                 "minecraft", "_", "16", "false", "100", "100", "100",
                                                 "false", "0", "minecraft", "true", "true", "0", "0", "nope",
                                                 "nope", "-111", "false","_", "true", "-1", "-111", "true",
-                                                "false", "false"});
+                                                "false", "false", "false"});
                                         if (trigger.contains("priority")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                         }
@@ -325,6 +329,9 @@ public class configToml {
                                         }
                                         if (trigger.contains("time_switch")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[33] = trigger.getString("time_switch");
+                                        }
+                                        if (trigger.contains("remove_inactive_playable")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[34] = trigger.getString("remove_inactive_playable");
                                         }
                                     } else {
                                         MusicTriggers.logger.warn("Could not find trigger with name " + triggerID);
@@ -370,6 +377,36 @@ public class configToml {
                                                 if (trigger.contains("volume")) {
                                                     otherlinkinginfo.get("song" + songCounter).get(trigger.getString("song"))[1] = trigger.getString("volume");
                                                 }
+                                                int loopIndex = 0;
+                                                linkingLoopPoints.putIfAbsent("song" + songCounter, new HashMap<>());
+                                                linkingLoopPoints.get("song" + songCounter).putIfAbsent(trigger.getString("song"), new HashMap<>());
+                                                if (trigger.containsTable("loop")) {
+                                                    Toml loop = trigger.getTable("loop");
+                                                    linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).putIfAbsent(loopIndex, new String[]{"0", "0", "0"});
+                                                    if (loop.contains("amount")) {
+                                                        linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[0] = loop.getString("amount");
+                                                    }
+                                                    if (loop.contains("min")) {
+                                                        linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[1] = loop.getString("min");
+                                                    }
+                                                    if (loop.contains("max")) {
+                                                        linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[2] = loop.getString("max");
+                                                    }
+                                                } else if (trigger.containsTableArray("loop")) {
+                                                    for (Toml loop : trigger.getTables("loop")) {
+                                                        linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).putIfAbsent(loopIndex, new String[]{"0", "0", "0"});
+                                                        if (loop.contains("amount")) {
+                                                            linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[0] = loop.getString("amount");
+                                                        }
+                                                        if (loop.contains("min")) {
+                                                            linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[1] = loop.getString("min");
+                                                        }
+                                                        if (loop.contains("max")) {
+                                                            linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[2] = loop.getString("max");
+                                                        }
+                                                        loopIndex++;
+                                                    }
+                                                }
                                             }
                                         }
 
@@ -389,12 +426,71 @@ public class configToml {
                                             if (trigger.contains("volume")) {
                                                 otherlinkinginfo.get("song" + songCounter).get(trigger.getString("song"))[1] = trigger.getString("volume");
                                             }
+                                            int loopIndex = 0;
+                                            linkingLoopPoints.putIfAbsent("song" + songCounter, new HashMap<>());
+                                            linkingLoopPoints.get("song" + songCounter).putIfAbsent(trigger.getString("song"), new HashMap<>());
+                                            if (trigger.containsTable("loop")) {
+                                                Toml loop = trigger.getTable("loop");
+                                                linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).putIfAbsent(loopIndex, new String[]{"0", "0", "0"});
+                                                if (loop.contains("amount")) {
+                                                    linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[0] = loop.getString("amount");
+                                                }
+                                                if (loop.contains("min")) {
+                                                    linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[1] = loop.getString("min");
+                                                }
+                                                if (loop.contains("max")) {
+                                                    linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[2] = loop.getString("max");
+                                                }
+                                            } else if (trigger.containsTableArray("loop")) {
+                                                for (Toml loop : trigger.getTables("loop")) {
+                                                    linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).putIfAbsent(loopIndex, new String[]{"0", "0", "0"});
+                                                    if (loop.contains("amount")) {
+                                                        linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[0] = loop.getString("amount");
+                                                    }
+                                                    if (loop.contains("min")) {
+                                                        linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[1] = loop.getString("min");
+                                                    }
+                                                    if (loop.contains("max")) {
+                                                        linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[2] = loop.getString("max");
+                                                    }
+                                                    loopIndex++;
+                                                }
+                                            }
                                         }
                                     } else {
                                         MusicTriggers.logger.warn("Song " + s + " was set up for music linking, but is not linked to anything!");
                                     }
                                 } else {
                                     MusicTriggers.logger.warn("Skipping music linking for song " + s + " as there was no default trigger set!");
+                                }
+                            }
+                            int loopIndex = 0;
+                            loopPoints.putIfAbsent("song" + songCounter, new HashMap<>());
+                            if (song.containsTable("loop")) {
+                                Toml loop = song.getTable("loop");
+                                loopPoints.get("song" + songCounter).putIfAbsent(loopIndex, new String[]{"0", "0", "0"});
+                                if (loop.contains("amount")) {
+                                    loopPoints.get("song" + songCounter).get(loopIndex)[0] = loop.getString("amount");
+                                }
+                                if (loop.contains("min")) {
+                                    loopPoints.get("song" + songCounter).get(loopIndex)[1] = loop.getString("min");
+                                }
+                                if (loop.contains("max")) {
+                                    loopPoints.get("song" + songCounter).get(loopIndex)[2] = loop.getString("max");
+                                }
+                            } else if(song.containsTableArray("loop")) {
+                                for (Toml loop : song.getTables("loop")) {
+                                    loopPoints.get("song" + songCounter).putIfAbsent(loopIndex, new String[]{"0", "0", "0"});
+                                    if (loop.contains("amount")) {
+                                        loopPoints.get("song" + songCounter).get(loopIndex)[0] = loop.getString("amount");
+                                    }
+                                    if (loop.contains("min")) {
+                                        loopPoints.get("song" + songCounter).get(loopIndex)[1] = loop.getString("min");
+                                    }
+                                    if (loop.contains("max")) {
+                                        loopPoints.get("song" + songCounter).get(loopIndex)[2] = loop.getString("max");
+                                    }
+                                    loopIndex++;
                                 }
                             }
                             songCounter++;
@@ -417,7 +513,7 @@ public class configToml {
                                                 "minecraft", "_", "16", "false", "100", "100", "100",
                                                 "false", "0", "minecraft", "true", "true", "0", "0", "nope",
                                                 "nope", "-111", "false","_", "true", "-1", "-111", "true",
-                                                "false", "false"});
+                                                "false", "false", "false"});
                                         if (trigger.contains("priority")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                         }
@@ -540,6 +636,9 @@ public class configToml {
                                         if (trigger.contains("time_switch")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[33] = trigger.getString("time_switch");
                                         }
+                                        if (trigger.contains("remove_inactive_playable")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[34] = trigger.getString("remove_inactive_playable");
+                                        }
                                     } else {
                                         MusicTriggers.logger.warn("Could not find trigger with name " + triggerID);
                                     }
@@ -559,7 +658,7 @@ public class configToml {
                                             "minecraft", "_", "16", "false", "100", "100", "100",
                                             "false", "0", "minecraft", "true", "true", "0", "0", "nope",
                                             "nope", "-111", "false","_", "true", "-1", "-111", "true",
-                                            "false", "false"});
+                                            "false", "false", "false"});
                                     if (trigger.contains("priority")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                     }
@@ -682,6 +781,9 @@ public class configToml {
                                     if (trigger.contains("time_switch")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[33] = trigger.getString("time_switch");
                                     }
+                                    if (trigger.contains("remove_inactive_playable")) {
+                                        triggerholder.get("song" + songCounter).get(triggerID)[34] = trigger.getString("remove_inactive_playable");
+                                    }
                                 } else {
                                     MusicTriggers.logger.warn("Could not find trigger with name " + triggerID);
                                 }
@@ -726,6 +828,36 @@ public class configToml {
                                             if (trigger.contains("volume")) {
                                                 otherlinkinginfo.get("song" + songCounter).get(trigger.getString("song"))[1] = trigger.getString("volume");
                                             }
+                                            int loopIndex = 0;
+                                            linkingLoopPoints.putIfAbsent("song" + songCounter, new HashMap<>());
+                                            linkingLoopPoints.get("song" + songCounter).putIfAbsent(trigger.getString("song"), new HashMap<>());
+                                            if (trigger.containsTable("loop")) {
+                                                Toml loop = trigger.getTable("loop");
+                                                linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).putIfAbsent(loopIndex, new String[]{"0", "0", "0"});
+                                                if (loop.contains("amount")) {
+                                                    linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[0] = loop.getString("amount");
+                                                }
+                                                if (loop.contains("min")) {
+                                                    linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[1] = loop.getString("min");
+                                                }
+                                                if (loop.contains("max")) {
+                                                    linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[2] = loop.getString("max");
+                                                }
+                                            } else if (trigger.containsTableArray("loop")) {
+                                                for (Toml loop : trigger.getTables("loop")) {
+                                                    linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).putIfAbsent(loopIndex, new String[]{"0", "0", "0"});
+                                                    if (loop.contains("amount")) {
+                                                        linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[0] = loop.getString("amount");
+                                                    }
+                                                    if (loop.contains("min")) {
+                                                        linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[1] = loop.getString("min");
+                                                    }
+                                                    if (loop.contains("max")) {
+                                                        linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[2] = loop.getString("max");
+                                                    }
+                                                    loopIndex++;
+                                                }
+                                            }
                                         }
                                     }
 
@@ -745,12 +877,71 @@ public class configToml {
                                         if (trigger.contains("volume")) {
                                             otherlinkinginfo.get("song" + songCounter).get(trigger.getString("song"))[1] = trigger.getString("volume");
                                         }
+                                        int loopIndex = 0;
+                                        linkingLoopPoints.putIfAbsent("song" + songCounter, new HashMap<>());
+                                        linkingLoopPoints.get("song" + songCounter).putIfAbsent(trigger.getString("song"), new HashMap<>());
+                                        if (trigger.containsTable("loop")) {
+                                            Toml loop = trigger.getTable("loop");
+                                            linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).putIfAbsent(loopIndex, new String[]{"0", "0", "0"});
+                                            if (loop.contains("amount")) {
+                                                linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[0] = loop.getString("amount");
+                                            }
+                                            if (loop.contains("min")) {
+                                                linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[1] = loop.getString("min");
+                                            }
+                                            if (loop.contains("max")) {
+                                                linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[2] = loop.getString("max");
+                                            }
+                                        } else if (trigger.containsTableArray("loop")) {
+                                            for (Toml loop : trigger.getTables("loop")) {
+                                                linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).putIfAbsent(loopIndex, new String[]{"0", "0", "0"});
+                                                if (loop.contains("amount")) {
+                                                    linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[0] = loop.getString("amount");
+                                                }
+                                                if (loop.contains("min")) {
+                                                    linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[1] = loop.getString("min");
+                                                }
+                                                if (loop.contains("max")) {
+                                                    linkingLoopPoints.get("song" + songCounter).get(trigger.getString("song")).get(loopIndex)[2] = loop.getString("max");
+                                                }
+                                                loopIndex++;
+                                            }
+                                        }
                                     }
                                 } else {
                                     MusicTriggers.logger.warn("Song " + s + " was set up for music linking, but is not linked to anything!");
                                 }
                             } else {
                                 MusicTriggers.logger.warn("Skipping music linking for song " + s + " as there was no default trigger set!");
+                            }
+                        }
+                        int loopIndex = 0;
+                        loopPoints.putIfAbsent("song" + songCounter, new HashMap<>());
+                        if (song.containsTable("loop")) {
+                            Toml loop = song.getTable("loop");
+                            loopPoints.get("song" + songCounter).putIfAbsent(loopIndex, new String[]{"0", "0", "0"});
+                            if (loop.contains("amount")) {
+                                loopPoints.get("song" + songCounter).get(loopIndex)[0] = loop.getString("amount");
+                            }
+                            if (loop.contains("min")) {
+                                loopPoints.get("song" + songCounter).get(loopIndex)[1] = loop.getString("min");
+                            }
+                            if (loop.contains("max")) {
+                                loopPoints.get("song" + songCounter).get(loopIndex)[2] = loop.getString("max");
+                            }
+                        } else if(song.containsTableArray("loop")) {
+                            for (Toml loop : song.getTables("loop")) {
+                                loopPoints.get("song" + songCounter).putIfAbsent(loopIndex, new String[]{"0", "0", "0"});
+                                if (loop.contains("amount")) {
+                                    loopPoints.get("song" + songCounter).get(loopIndex)[0] = loop.getString("amount");
+                                }
+                                if (loop.contains("min")) {
+                                    loopPoints.get("song" + songCounter).get(loopIndex)[1] = loop.getString("min");
+                                }
+                                if (loop.contains("max")) {
+                                    loopPoints.get("song" + songCounter).get(loopIndex)[2] = loop.getString("max");
+                                }
+                                loopIndex++;
                             }
                         }
                         songCounter++;

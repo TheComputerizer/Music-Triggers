@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.config;
 
 import com.moandjiezana.toml.Toml;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.util.image.GIFHandler;
 import mods.thecomputerizer.musictriggers.util.image.MP4Handler;
 import mods.thecomputerizer.musictriggers.util.image.PNGMcMetaHandler;
@@ -61,6 +62,11 @@ public class configTitleCards {
                         if(title.contains("subtitle_color")) {
                             titlecards.get(titleCounter).setSubtitlecolor(title.getString("subtitle_color"));
                         }
+                        if(title.contains("vague")) {
+                            boolean parsedVague = Boolean.parseBoolean(title.getString("vague"));
+                            titlecards.get(imageCounter).setVague(parsedVague);
+                            if(parsedVague) MusicPlayer.canPlayTitle.put(titleCounter, true);
+                        }
                         titleCounter++;
                     }
                 }
@@ -85,6 +91,11 @@ public class configTitleCards {
                     }
                     if(title.contains("subtitle_color")) {
                         titlecards.get(titleCounter).setSubtitlecolor(title.getString("subtitle_color"));
+                    }
+                    if(title.contains("vague")) {
+                        boolean parsedVague = Boolean.parseBoolean(title.getString("vague"));
+                        titlecards.get(imageCounter).setVague(parsedVague);
+                        if(parsedVague) MusicPlayer.canPlayTitle.put(titleCounter, true);
                     }
                 }
                 if(toml.containsTableArray("image")) {
@@ -134,6 +145,11 @@ public class configTitleCards {
                         }
                         if(image.contains("fade_out")) {
                             imagecards.get(imageCounter).setFadeOut(Integer.parseInt(image.getString("fade_out")));
+                        }
+                        if(image.contains("vague")) {
+                            boolean parsedVague = Boolean.parseBoolean(image.getString("vague"));
+                            imagecards.get(imageCounter).setVague(parsedVague);
+                            if(parsedVague) MusicPlayer.canPlayImage.put(imageCounter, true);
                         }
                         imageCounter++;
                     }
@@ -185,6 +201,11 @@ public class configTitleCards {
                     }
                     if(image.contains("fade_out")) {
                         imagecards.get(imageCounter).setFadeOut(Integer.parseInt(image.getString("fade_out")));
+                    }
+                    if(image.contains("vague")) {
+                        boolean parsedVague = Boolean.parseBoolean(image.getString("vague"));
+                        imagecards.get(imageCounter).setVague(parsedVague);
+                        if(parsedVague) MusicPlayer.canPlayImage.put(imageCounter, true);
                     }
                 }
             } catch (Exception e) {
@@ -279,6 +300,7 @@ public class configTitleCards {
         private Boolean playonce;
         private String titlecolor;
         private String subtitlecolor;
+        private boolean vague;
         private final List<String> triggers;
 
         public Title() {
@@ -287,6 +309,7 @@ public class configTitleCards {
             this.playonce = false;
             this.titlecolor = "red";
             this.subtitlecolor = "white";
+            this.vague = false;
             this.triggers = new ArrayList<>();
         }
 
@@ -330,6 +353,14 @@ public class configTitleCards {
             this.subtitlecolor = c;
         }
 
+        public void setVague(Boolean b) {
+            this.vague = b;
+        }
+
+        public Boolean getVague() {
+            return this.vague;
+        }
+
         public void addTriggers(ArrayList<String> t) {
             this.triggers.addAll(t);
         }
@@ -351,7 +382,8 @@ public class configTitleCards {
         private int skip;
         private int fadeIn;
         private int fadeOut;
-        private Boolean playonce;
+        private boolean playonce;
+        private boolean vague;
         private final List<String> triggers;
 
         public Image() {
@@ -367,6 +399,7 @@ public class configTitleCards {
             this.fadeIn = 10;
             this.fadeOut = 10;
             this.playonce = false;
+            this.vague = false;
             this.triggers = new ArrayList<>();
         }
 
@@ -442,6 +475,10 @@ public class configTitleCards {
             this.skip = s;
         }
 
+        public void setPlayonce(Boolean b) {
+            this.playonce = b;
+        }
+
         public int getFadeIn() {
             return this.fadeIn;
         }
@@ -458,12 +495,16 @@ public class configTitleCards {
             this.fadeOut = f;
         }
 
-        public void setPlayonce(Boolean b) {
-            this.playonce = b;
-        }
-
         public Boolean getPlayonce() {
             return this.playonce;
+        }
+
+        public void setVague(Boolean b) {
+            this.vague = b;
+        }
+
+        public Boolean getVague() {
+            return this.vague;
         }
 
         public void addTriggers(ArrayList<String> t) {

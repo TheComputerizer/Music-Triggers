@@ -16,6 +16,8 @@ public class configObject {
     private final Map<String, String[]> otherinfo;
     private final Map<String, Map<String, String[]>> otherlinkinginfo;
     private final Map<String, Map<String, String[]>> triggerlinking;
+    private final Map<String, Map<Integer, String[]>> loopPoints;
+    private final Map<String, Map<String, Map<Integer, String[]>>> linkingLoopPoints;
     private final Map<Integer, configTitleCards.Title> titlecards;
     private final Map<Integer, configTitleCards.Image> imagecards;
     private final Map<Integer, Boolean> ismoving;
@@ -38,19 +40,22 @@ public class configObject {
             "minecraft", "_", "16", "false", "100", "100", "100",
             "false", "0", "minecraft", "true", "true", "0", "0", "nope",
             "nope", "-111", "false","_", "true", "-1", "-111", "true",
-            "false", "false"};
+            "false", "false", "false"};
     public static final String[] linkingInfoDefaults = new String[]{"1", "1"};
-    public static final String[] titleInfoDefaults = new String[]{"false", "red", "white"};
-    public static final String[] imageInfoDefaults = new String[]{"name", "750","0", "0", "100", "100", "false", "10", "10", "10", "0", "4"};
+    public static final String[] titleInfoDefaults = new String[]{"false", "red", "white", "false"};
+    public static final String[] imageInfoDefaults = new String[]{"name", "750","0", "0", "100", "100", "false", "10", "10", "false", "10", "0", "4"};
 
     private configObject(Map<String, String> songholder, Map<String, Map<String, String[]>> triggerholder, Map<String, String[]> otherinfo,
-                         Map<String, Map<String, String[]>> otherlinkinginfo, Map<String, Map<String, String[]>> triggerlinking, Map<Integer, configTitleCards.Title> titlecards,
+                         Map<String, Map<String, String[]>> otherlinkinginfo, Map<String, Map<String, String[]>> triggerlinking, Map<String, Map<Integer, String[]>> loopPoints,
+                         Map<String, Map<String, Map<Integer, String[]>>> linkingLoopPoints, Map<Integer, configTitleCards.Title> titlecards,
                          Map<Integer, configTitleCards.Image> imagecards, Map<Integer, Boolean> ismoving, List<String> blockedmods, List<String> debugStuff) {
         this.songholder = songholder;
         this.triggerholder = triggerholder;
         this.otherinfo = otherinfo;
         this.otherlinkinginfo = otherlinkinginfo;
         this.triggerlinking = triggerlinking;
+        this.loopPoints = loopPoints;
+        this.linkingLoopPoints = linkingLoopPoints;
         this.titlecards = titlecards;
         this.imagecards = fixNullImageCards(imagecards);
         this.ismoving = ismoving;
@@ -89,11 +94,9 @@ public class configObject {
         List<String> blocked = new ArrayList<>();
         blocked.addAll(Arrays.asList(configDebug.blockedmods));
         return new configObject(cloner.deepClone(configToml.songholder),cloner.deepClone(configToml.triggerholder),cloner.deepClone(configToml.otherinfo),
-                cloner.deepClone(configToml.otherlinkinginfo),cloner.deepClone(configToml.triggerlinking),cloner.deepClone(configTitleCards.titlecards),
-                cloner.deepClone(configTitleCards.imagecards),
-                cloner.deepClone(configTitleCards.ismoving),
-                cloner.deepClone(blocked),
-                cloner.deepClone(compileDebugStuff()));
+                cloner.deepClone(configToml.otherlinkinginfo),cloner.deepClone(configToml.triggerlinking),cloner.deepClone(configToml.loopPoints),
+                cloner.deepClone(configToml.linkingLoopPoints),cloner.deepClone(configTitleCards.titlecards),cloner.deepClone(configTitleCards.imagecards),
+                cloner.deepClone(configTitleCards.ismoving),cloner.deepClone(blocked),cloner.deepClone(compileDebugStuff()));
     }
 
     public List<String> getAllDebugStuff() {
@@ -180,6 +183,7 @@ public class configObject {
             ret.add("play_once");
             ret.add("title_color");
             ret.add("subtitle_color");
+            ret.add("vague");
         } else {
             i=i-this.titlecards.size();
             if(this.imagecards.get(i).getTriggers()==null) this.imagecards.get(i).addTriggers(new ArrayList<>());
@@ -219,6 +223,30 @@ public class configObject {
         return ret;
     }
 
+    public List<String> getAllLoops(String code, String song, boolean linked) {
+        List<String> ret = new ArrayList<>();
+        if(!linked) {
+            if(this.loopPoints.get(code)!=null) {
+                for (int ignored : this.loopPoints.get(code).keySet()) {
+                    ret.add("Loop");
+                }
+            }
+        } else if(this.linkingLoopPoints.get(code)!=null && this.linkingLoopPoints.get(code).get(song)!=null) {
+            for(int ignored : this.linkingLoopPoints.get(code).get(song).keySet()) {
+                ret.add("Loop");
+            }
+        }
+        return ret;
+    }
+
+    public List<String> getAllLoopInfo() {
+        List<String> ret = new ArrayList<>();
+        ret.add("amount");
+        ret.add("min");
+        ret.add("max");
+        return ret;
+    }
+
     public List<String> extractStringListFromMapKeys(Map<String, ?> map) {
         List<String> ret = new ArrayList<>();
         for(Map.Entry<String, ?> stringEntry : map.entrySet()) {
@@ -250,7 +278,7 @@ public class configObject {
                 "minecraft", "_", "16", "false", "100", "100", "100",
                 "false", "0", "minecraft", "true", "true", "0", "0", "nope",
                 "nope", "-111", "false","_", "true", "-1", "-111", "true",
-                "false", "false"});
+                "false", "false", "false"});
     }
 
     public void removeTrigger(String code, String trigger) {
@@ -291,6 +319,11 @@ public class configObject {
             index+=this.titlecards.size();
         }
         return index;
+    }
+
+    public void addLoop(String code, String song, boolean linked) {
+        if(!linked) this.loopPoints.get(code).put(this.loopPoints.get(code).size(), new String[]{"0","0","0"});
+        else this.linkingLoopPoints.get(code).get(song).put(this.linkingLoopPoints.get(code).get(song).size(), new String[]{"0","0","0"});
     }
 
     public boolean isLinkingInfoTrigger(String code, String song, int index) {
@@ -367,6 +400,11 @@ public class configObject {
         }
     }
 
+    public void removeLoop(String code, String song, boolean linked, int loopIndex) {
+        if(!linked) this.loopPoints.get(code).remove(loopIndex);
+        else this.linkingLoopPoints.get(code).get(song).remove(loopIndex);
+    }
+
     public String getSongInfoAtIndex(String code, int index) {
         if(index<5) return this.otherinfo.get(code)[index];
         else return "Trigger";
@@ -400,6 +438,8 @@ public class configObject {
                     return this.titlecards.get(transitionIndex).getTitlecolor();
                 case 2 :
                     return this.titlecards.get(transitionIndex).getSubtitlecolor();
+                case 3 :
+                    return this.titlecards.get(transitionIndex).getVague().toString();
             }
         } else {
             transitionIndex-=this.titlecards.size();
@@ -428,10 +468,12 @@ public class configObject {
                 case 8 :
                     return this.imagecards.get(transitionIndex).getFadeOut()+"";
                 case 9 :
-                    return this.imagecards.get(transitionIndex).getDelay()+"";
+                    return this.imagecards.get(transitionIndex).getVague().toString();
                 case 10 :
-                    return this.imagecards.get(transitionIndex).getSplit()+"";
+                    return this.imagecards.get(transitionIndex).getDelay()+"";
                 case 11 :
+                    return this.imagecards.get(transitionIndex).getSplit()+"";
+                case 12 :
                     return this.imagecards.get(transitionIndex).getSkip()+"";
             }
         }
@@ -460,6 +502,31 @@ public class configObject {
             }
         }
         return builder.toString();
+    }
+
+    public String buildLoopTitle(String code, String song, boolean linked, int index) {
+        StringBuilder ret = new StringBuilder();
+        if(!linked) {
+            if(loopPoints!=null && loopPoints.get(code)!=null && loopPoints.get(code).get(index)!=null) {
+                for (String l : loopPoints.get(code).get(index)) {
+                    ret.append(l).append(" ");
+                }
+            }
+        } else {
+            if(linkingLoopPoints!=null && linkingLoopPoints.get(code)!=null && linkingLoopPoints.get(code).get(song)!=null && linkingLoopPoints.get(code).get(song).get(index)!=null) {
+                for (String l : linkingLoopPoints.get(code).get(song).get(index)) {
+                    ret.append(l).append(" ");
+                }
+            }
+        }
+        return ret.toString();
+    }
+
+    public String getLoopParameter(String code, String song, boolean linked, int loopIndex, int index) {
+        String ret;
+        if(!linked) ret = loopPoints.get(code).get(loopIndex)[index];
+        else ret = linkingLoopPoints.get(code).get(song).get(loopIndex)[index];
+        return ret;
     }
 
     public void editOtherInfoParameter(String code, int index, String newVal) {
@@ -514,8 +581,8 @@ public class configObject {
     }
 
     private void addExistingEditedLinkingInfoParameters(String code, String song) {
-        this.markTriggerInfoForWriting.putIfAbsent(code, new HashMap<>());
-        this.markTriggerInfoForWriting.get(code).putIfAbsent(song, new ArrayList<>());
+        this.markLinkingInfoForWriting.putIfAbsent(code, new HashMap<>());
+        this.markLinkingInfoForWriting.get(code).putIfAbsent(song, new ArrayList<>());
         for(int i=0;i<this.otherlinkinginfo.get(code).get(song).length;i++) {
             if(!this.otherlinkinginfo.get(code).get(song)[i].matches(linkingInfoDefaults[i])) {
                 if(!this.markLinkingInfoForWriting.get(code).get(song).contains(i)) {
@@ -554,6 +621,7 @@ public class configObject {
         ret.add(title.getPlayonce().toString());
         ret.add(title.getTitlecolor());
         ret.add(title.getSubtitlecolor());
+        ret.add(title.getVague().toString());
         return ret.toArray(new String[0]);
     }
 
@@ -568,6 +636,7 @@ public class configObject {
         ret.add(image.getPlayonce().toString());
         ret.add(image.getFadeIn()+"");
         ret.add(image.getFadeOut()+"");
+        ret.add(image.getVague().toString());
         ret.add(image.getDelay()+"");
         ret.add(image.getSplit()+"");
         ret.add(image.getSkip()+"");
@@ -626,6 +695,10 @@ public class configObject {
                     this.titlecards.get(transitionIndex).setSubtitlecolor(newVal);
                     if (!this.markTitleInfoForWriting.get(transitionIndex).contains(index)) this.markTitleInfoForWriting.get(transitionIndex).add(index);
                 }
+                case 3 -> {
+                    this.titlecards.get(transitionIndex).setVague(!this.titlecards.get(transitionIndex).getVague());
+                    if (!this.markTitleInfoForWriting.get(transitionIndex).contains(index)) this.markTitleInfoForWriting.get(transitionIndex).add(index);
+                }
             }
         } else {
             transitionIndex-=this.titlecards.size();
@@ -674,14 +747,19 @@ public class configObject {
                     if (!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
                 }
                 case 9 -> {
+                    this.imagecards.get(transitionIndex).setVague(!this.imagecards.get(transitionIndex).getVague());
+                    if (!this.markImageInfoForWriting.get(transitionIndex).contains(index))
+                        this.markImageInfoForWriting.get(transitionIndex).add(index);
+                }
+                case 10 -> {
                     this.imagecards.get(transitionIndex).setDelay(this.imagecards.get(transitionIndex).getDelay() + change);
                     if (!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
                 }
-                case 10 -> {
+                case 11 -> {
                     this.imagecards.get(transitionIndex).setSplit(this.imagecards.get(transitionIndex).getSplit() + change);
                     if (!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
                 }
-                case 11 -> {
+                case 12 -> {
                     this.imagecards.get(transitionIndex).setSkip(this.imagecards.get(transitionIndex).getSkip() + change);
                     if (!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
                 }
@@ -695,6 +773,11 @@ public class configObject {
             index-=this.blockedmods.size();
             this.debugStuff.set(index, newVal);
         }
+    }
+
+    public void editLoopInfoAtIndex(String code, String song, boolean linked, int loopIndex, int index, String newVal) {
+        if(!linked) this.loopPoints.get(code).get(loopIndex)[index] = newVal;
+        else this.linkingLoopPoints.get(code).get(song).get(loopIndex)[index] = newVal;
     }
 
     public void write() throws IOException {
@@ -739,7 +822,23 @@ public class configObject {
                             }
                         }
                         mainBuilder.append(this.formatLinkingTriggers(code, song)).append("\n");
+                        if(this.linkingLoopPoints.get(code)!=null && this.linkingLoopPoints.get(code).get(song)!=null) {
+                            for (int l : this.linkingLoopPoints.get(code).get(song).keySet()) {
+                                mainBuilder.append(this.formatLinkingLoopPointsBrackets(code,this.songholder.get(code),song));
+                                mainBuilder.append("\t\t\t\tamount = \"").append(this.linkingLoopPoints.get(code).get(song).get(l)[0]).append("\"\n");
+                                mainBuilder.append("\t\t\t\tmin = \"").append(this.linkingLoopPoints.get(code).get(song).get(l)[1]).append("\"\n");
+                                mainBuilder.append("\t\t\t\tmax = \"").append(this.linkingLoopPoints.get(code).get(song).get(l)[2]).append("\"\n");
+                            }
+                        }
                     }
+                }
+            }
+            if(this.loopPoints.get(code)!=null) {
+                for (int l : this.loopPoints.get(code).keySet()) {
+                    mainBuilder.append(this.formatLoopPointsBrackets(code, this.songholder.get(code)));
+                    mainBuilder.append("\t\tamount = \"").append(this.loopPoints.get(code).get(l)[0]).append("\"\n");
+                    mainBuilder.append("\t\tmin = \"").append(this.loopPoints.get(code).get(l)[1]).append("\"\n");
+                    mainBuilder.append("\t\tmax = \"").append(this.loopPoints.get(code).get(l)[2]).append("\"\n");
                 }
             }
             mainBuilder.append("\n");
@@ -795,7 +894,7 @@ public class configObject {
     }
 
     private String formatLinkingBrackets(String code, String song) {
-        if (this.triggerlinking.get(code).entrySet().size()>1) return "\t\t[["+song+".link.trigger]]";
+        if (this.triggerlinking.get(code).keySet().size()>1) return "\t\t[["+song+".link.trigger]]";
         else return "\t\t["+song+".link.trigger]";
     }
 
@@ -807,6 +906,16 @@ public class configObject {
     private String formatImageBrackets() {
         if (this.imagecards.size()>1) return "[[image]]\n";
         else return "[image]\n";
+    }
+
+    private String formatLoopPointsBrackets(String code, String song) {
+        if (this.loopPoints.get(code).size()>1) return "\t[["+song+".loop]]\n";
+        else return "\t["+song+".loop]\n";
+    }
+
+    private String formatLinkingLoopPointsBrackets(String code, String song, String linkedSong) {
+        if (this.linkingLoopPoints.get(code).get(linkedSong).size()>1) return "\t\t\t[["+song+".link.trigger.loop]]\n";
+        else return "\t\t\t["+song+".link.trigger.loop]\n";
     }
 
     private String formatLinkingDefaults(String code) {
