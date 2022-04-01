@@ -86,6 +86,7 @@ public class GuiLoops extends Screen {
                 (button) -> {
                     this.holder.addLoop(this.code,this.song,this.linked);
                     this.info = this.holder.getAllLoops(this.code,this.song,this.linked);
+                    this.scrollingSongs.resetEntries(this.info);
                 }));
     }
 

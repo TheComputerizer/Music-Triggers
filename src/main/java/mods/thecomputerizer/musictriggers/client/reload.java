@@ -14,6 +14,7 @@ import java.io.File;
 public class reload {
 
     public static void readAndReload() {
+        MusicPlayer.curMusicTimer = 0;
         MusicPicker.emptyMapsAndLists();
         configToml.emptyMaps();
         configTitleCards.emptyMaps();

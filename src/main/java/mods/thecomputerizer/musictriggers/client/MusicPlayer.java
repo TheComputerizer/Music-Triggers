@@ -426,7 +426,7 @@ public class MusicPlayer {
         String ret = "No song playing";
         if(curMusic!=null && sh.soundEngine.instanceToChannel.get(curMusic)!=null) {
             try {
-                float milliseconds = curMusicTimer;
+                float milliseconds = curMusicTimer*curMusic.getPitch();
                 if(milliseconds!=Integer.MAX_VALUE) {
                     if (milliseconds == -1) milliseconds = 0;
                     float seconds = milliseconds / 1000f;
