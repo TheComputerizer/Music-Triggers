@@ -199,6 +199,7 @@ public class configObject {
             ret.add("play_once");
             ret.add("fade_in");
             ret.add("fade_out");
+            ret.add("vague");
             if(this.ismoving.get(i)){
                 ret.add("delay");
                 ret.add("split");
