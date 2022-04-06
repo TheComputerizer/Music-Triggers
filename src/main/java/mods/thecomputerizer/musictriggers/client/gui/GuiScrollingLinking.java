@@ -37,9 +37,7 @@ public class GuiScrollingLinking extends GuiSlot {
     public void elementClicked(int slotIndex, boolean isDoubleClick, int mouseX, int mouseY) {
         this.index = getIndex(this.songs.get(slotIndex));
         this.curSelected = this.songs.get(slotIndex)+"-"+slotIndex;
-        if(isDoubleClick) {
-            this.mc.displayGuiScreen(new GuiLinkingInfo(this.IN, this.songs.get(slotIndex), this.IN.songCode, this.IN.holder));
-        }
+        this.mc.displayGuiScreen(new GuiLinkingInfo(this.IN, this.songs.get(slotIndex), this.IN.songCode, this.IN.holder));
     }
 
     @Override protected boolean isSelected(int index) {

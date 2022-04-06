@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.eventsClient;
 import mods.thecomputerizer.musictriggers.config.configObject;
 import net.minecraft.client.gui.GuiButton;
@@ -27,7 +28,8 @@ public class GuiTriggerInfo extends GuiScreen {
         if(create) {
             this.holder.addTrigger(songCode,trigger);
         }
-        this.parameters = Mappings.convertList(Mappings.buildGuiParameters(trigger));
+        MusicTriggers.logger.info("Building parameter list: "+this.songCode+" + "+this.trigger);
+        this.parameters = Mappings.convertList(Mappings.buildGuiParameters(this.holder.translateCodedTrigger(this.songCode,this.trigger)));
     }
 
     @Override
@@ -38,7 +40,7 @@ public class GuiTriggerInfo extends GuiScreen {
         if(this.scrollingSongs.curSelected!=null && this.scrollingSongs.index!=-1) {
             String curInfo = this.holder.getTriggerInfoAtIndex(this.songCode, this.trigger, this.scrollingSongs.index);
             this.drawCenteredString(this.fontRenderer, curInfo, this.width / 2, 8, 10526880);
-        } else this.drawCenteredString(this.fontRenderer, this.trigger, this.width/2, 8, 10526880);
+        } else this.drawCenteredString(this.fontRenderer, this.holder.translateCodedTrigger(this.songCode,this.trigger), this.width/2, 8, 10526880);
     }
 
     @Override
@@ -98,7 +100,7 @@ public class GuiTriggerInfo extends GuiScreen {
                 GuiSongInfo parent = ((GuiSongInfo)this.parentScreen);
                 this.holder.removeTrigger(this.songCode,this.trigger);
                 parent.holder = this.holder;
-                parent.triggers = this.holder.getAllTriggersForCode(this.songCode);
+                parent.triggersCodes = this.holder.getAllTriggersForCode(this.songCode);
             } else {
                 GuiTriggers parent = ((GuiTriggers)this.parentScreen);
                 this.holder.removeTrigger(this.songCode,this.trigger);

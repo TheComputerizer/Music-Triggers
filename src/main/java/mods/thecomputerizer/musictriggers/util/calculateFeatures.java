@@ -8,6 +8,7 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.boss.EntityDragon;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -16,6 +17,8 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Optional;
 
 import java.util.*;
+
+import static mods.thecomputerizer.musictriggers.client.MusicPicker.stringBreaker;
 
 public class calculateFeatures {
 
@@ -37,7 +40,7 @@ public class calculateFeatures {
         }
     }
 
-    public static void calculateMobAndSend(String triggerID, UUID uuid, String mobname, int detectionrange, boolean targetting, int targettingpercentage, int health, int healthpercentage, boolean victory, int victoryID, String i, int num, int persistence, int timeout, String nbtKey) {
+    public static void calculateMobAndSend(String triggerID, UUID uuid, String mobname, int detectionrange, boolean targetting, int targettingpercentage, int health, int healthpercentage, boolean victory, int victoryID, String i, int num, int timeout, String nbtKey) {
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
         EntityPlayerMP player = (EntityPlayerMP)server.getEntityFromUuid(uuid);
         assert player != null;
@@ -46,7 +49,7 @@ public class calculateFeatures {
         List<EntityLiving> mobTempList = world.getEntitiesWithinAABB(EntityLiving.class, new AxisAlignedBB(player.posX - (double) detectionrange, player.posY - ((double) detectionrange / 2), player.posZ - (double) detectionrange, player.posX + (double) detectionrange, player.posY + ((double) detectionrange / 2), player.posZ + (double) detectionrange));
         List<EntityLiving> mobList = new ArrayList<>();
         for (EntityLiving e : mobTempList) {
-            if ((e instanceof EntityMob || e instanceof EntityDragon) && (e.serializeNBT().hasKey(nbtKey) || nbtKey.matches("_"))) {
+            if ((e instanceof EntityMob || e instanceof EntityDragon) && nbtChecker(e, nbtKey)) {
                 mobList.add(e);
             }
         }
@@ -134,7 +137,7 @@ public class calculateFeatures {
             int mobCounter = 0;
             List<EntityLiving> mobListSpecific = new ArrayList<>();
             for (EntityLiving e : mobTempList) {
-                if ((e.getName().matches(mobname) || Objects.requireNonNull(EntityList.getKey(e)).toString().matches(mobname)) && (e.serializeNBT().hasKey(nbtKey) || nbtKey.matches("_"))) {
+                if ((checkResourceList(e.getName(),mobname,true)|| checkResourceList(Objects.requireNonNull(EntityList.getKey(e)).toString(),mobname,true)) && nbtChecker(e, nbtKey)) {
                     mobCounter++;
                     mobListSpecific.add(e);
                 }
@@ -179,7 +182,6 @@ public class calculateFeatures {
             }
             else victoryRet = false;
         }
-        if (persistence > 0) pass = true;
         if(pass) victoryRet = false;
         RegistryHandler.network.sendTo(new packetGetMobInfo.packetGetMobInfoMessage(triggerID,pass,victoryID,victoryRet),player);
     }
@@ -190,6 +192,32 @@ public class calculateFeatures {
             return true;
         }
         if(InfernalMobsCore.getMobModifiers(m)!=null) return InfernalMobsCore.getMobModifiers(m).getModName().matches(s);
+        return false;
+    }
+
+    private static boolean nbtChecker(EntityLiving e, String nbt) {
+        String[] splitNBT = nbt.split(":");
+        if(splitNBT.length==1) return e.serializeNBT().hasKey(nbt) || nbt.matches("_");
+        else {
+            if(e.serializeNBT().hasKey(splitNBT[0])) {
+                NBTTagCompound compound = e.serializeNBT().getCompoundTag(splitNBT[0]);
+                if(splitNBT.length==2) return e.serializeNBT().getTag(splitNBT[0]).toString().matches(splitNBT[1]);
+                else {
+                    for (int i = 1; i < splitNBT.length - 2; i++) {
+                        if (compound.hasKey(splitNBT[i])) compound = compound.getCompoundTag(splitNBT[i]);
+                    }
+                    return compound.getTag(splitNBT[splitNBT.length-2]).toString().matches(splitNBT[splitNBT.length-1]);
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean checkResourceList(String type, String resourceList, boolean match) {
+        for(String resource : stringBreaker(resourceList,";")) {
+            if(match && type.matches(resource)) return true;
+            else if(!match && type.contains(resource)) return true;
+        }
         return false;
     }
 }

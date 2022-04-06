@@ -1,6 +1,5 @@
 package mods.thecomputerizer.musictriggers.common.objects;
 
-import net.minecraft.block.BlockJukebox;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumRarity;
@@ -25,7 +24,7 @@ public class BlankRecord extends Item {
         if (iblockstate.getBlock() instanceof MusicRecorder)
         {
             MusicRecorder mr = (MusicRecorder) iblockstate.getBlock();
-            if(!worldIn.isRemote && !iblockstate.getValue(BlockJukebox.HAS_RECORD)) {
+            if(!worldIn.isRemote && !iblockstate.getValue(MusicRecorder.HAS_RECORD)) {
                 ItemStack itemstack = player.getHeldItem(hand);
                 mr.insertRecord(worldIn,pos,iblockstate,itemstack,player.getUniqueID());
                 itemstack.shrink(1);

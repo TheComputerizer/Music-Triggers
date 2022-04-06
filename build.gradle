@@ -9,10 +9,12 @@ buildscript {
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:4.1.10'
         classpath 'com.github.jengelman.gradle.plugins:shadow:6.1.0'
+        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
 
 apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'maven-publish'
 
@@ -65,7 +67,15 @@ repositories {
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
+sourceSets {
+    main {
+        ext.refMap = "mixins.musictriggers.refmap.json"
+    }
+}
+
 configurations {
+    embed
+    compile.extendsFrom(embed)
     shade
     implementation.extendsFrom(shade)
     shadow.extendsFrom shade
@@ -85,6 +95,13 @@ dependencies {
 
     //libraries that may or may not be included by forge/minecraft and need to be relocated
     //theres nothing here...
+
+    embed('org.spongepowered:mixin:0.8.3') {
+        exclude module: 'guava'
+        exclude module: 'commons-io'
+        exclude module: 'gson'
+    }
+    annotationProcessor('org.spongepowered:mixin:0.8.3:processor')
 
     implementation fg.deobf("curse.maven:codechicken-lib-242818:2779848")
     implementation fg.deobf("curse.maven:bloodmoon-226321:2537917")
@@ -112,7 +129,6 @@ shadowJar {
     classifier ''
 }
 
-
 reobf {
     shadowJar {
         dependsOn createMcpToSrg
@@ -128,17 +144,28 @@ processResources {
     inputs.property "mcversion", "1.12.2"
 }
 
+mixin {
+    add sourceSets.main, "musictriggers.refmap.json"
+}
+
 jar {
+    from {
+        configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
+    } {
+        exclude "LICENSE.txt", "META-INF/MANIFSET.MF", "META-INF/maven/**", "META-INF/*.RSA", "META-INF/*.SF"
+    }
     manifest {
         attributes([
             "FMLAT": "musictriggers_at.cfg",
+            "FMLCorePlugin": "mods.thecomputerizer.musictriggers.core.LoadingPlugin",
+            "FMLCorePluginContainsFMLMod": "true",
             "Specification-Title": "musictriggers",
             "Specification-Vendor": "musictriggerssareus",
             "Specification-Version": "1.12.2-5.0-EX",
             "Implementation-Title": project.name,
             "Implementation-Version": "1.12.2-5.0-EX",
             "Implementation-Vendor" :"musictriggers",
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
         ])
     }
 }

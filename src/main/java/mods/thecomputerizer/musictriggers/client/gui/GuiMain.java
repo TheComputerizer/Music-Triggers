@@ -14,6 +14,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.text.TextComponentString;
 
 import java.io.IOException;
@@ -124,7 +125,7 @@ public class GuiMain extends GuiScreen {
             this.mc.displayGuiScreen(new GuiOther(this, holder));
         }
         if(button.id==7) {
-            if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing && !MusicPlayer.fading) this.mc.displayGuiScreen(new GuiCurPlaying(this, this.holder));
+            if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing) this.mc.displayGuiScreen(new GuiCurPlaying(this, this.holder));
         }
     }
 

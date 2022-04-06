@@ -20,7 +20,7 @@ public class packetSendMobInfo implements IMessageHandler<packetSendMobInfo.pack
         calculateFeatures.calculateMobAndSend(message.getDataTriggerName(), message.getDataUUID(), message.getMobName(), message.getDetectionRange(),
                 message.getTargettingBoolean(), message.getHordeTargettingPercentage(), message.getHealth(),
                 message.getHealthTargettingPercentage(), message.getVictoryBoolean(), message.getVictoryID(), message.getInfernalID(),
-                message.getMobNumber(), message.getTime(), message.getTimeOut(), message.getNBT());
+                message.getMobNumber(), message.getTimeOut(), message.getNBT());
         return null;
     }
 
@@ -29,9 +29,9 @@ public class packetSendMobInfo implements IMessageHandler<packetSendMobInfo.pack
 
         public packetSendMobInfoMessage() {}
 
-        public packetSendMobInfoMessage(String trigger, UUID u, String n, String r, String t, String tp, String h, String hp, String v, String vi, String i, String num, int time, int to, String nbt)
+        public packetSendMobInfoMessage(String trigger, UUID u, String n, String r, String t, String tp, String h, String hp, String v, String vi, String i, String num, int to, String nbt)
         {
-            this.s = trigger+","+u.toString()+","+n+","+r+","+t+","+tp+","+h+","+hp+","+v+","+vi+","+i+","+num+","+time+","+to+","+nbt;
+            this.s = trigger+","+u.toString()+","+n+","+r+","+t+","+tp+","+h+","+hp+","+v+","+vi+","+i+","+num+","+to+","+nbt;
         }
 
         @Override
@@ -84,14 +84,11 @@ public class packetSendMobInfo implements IMessageHandler<packetSendMobInfo.pack
         public Integer getMobNumber() {
             return Integer.parseInt(stringBreaker(s)[11]);
         }
-        public Integer getTime() {
+        public Integer getTimeOut() {
             return Integer.parseInt(stringBreaker(s)[12]);
         }
-        public Integer getTimeOut() {
-            return Integer.parseInt(stringBreaker(s)[13]);
-        }
         public String getNBT() {
-            return stringBreaker(s)[14];
+            return stringBreaker(s)[13];
         }
 
         public static String[] stringBreaker(String s) {

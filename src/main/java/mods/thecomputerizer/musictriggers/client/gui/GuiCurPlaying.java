@@ -57,7 +57,7 @@ public class GuiCurPlaying extends GuiScreen implements GuiSlider.FormatHelper, 
             CustomSlider slider = (CustomSlider) this.selectedButton;
             if(slider.isMouseDown) {
                 synchronized (SoundSystemConfig.THREAD_SYNC) {
-                    if (MusicPlayer.curMusic != null && !MusicPlayer.reloading && !MusicPlayer.playing && !MusicPlayer.fading) {
+                    if (MusicPlayer.curMusic != null && !MusicPlayer.reloading && !MusicPlayer.playing) {
                         float seconds = ((float) (mouseX - (slider.x + 4)) / (float) (slider.width - 8)) * slider.getMax();
                         if (seconds < 0) seconds = 0;
                         if (seconds > slider.getMax()) seconds = slider.getMax();
@@ -104,7 +104,7 @@ public class GuiCurPlaying extends GuiScreen implements GuiSlider.FormatHelper, 
     public void actionPerformed(GuiButton button) {
         if (button.id == 0) this.mc.displayGuiScreen(this.parentScreen);
         if(button.id==1) {
-            if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing && !MusicPlayer.fading) this.mc.getSoundHandler().stopSound(MusicPlayer.curMusic);
+            if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing) this.mc.getSoundHandler().stopSound(MusicPlayer.curMusic);
         }
     }
 

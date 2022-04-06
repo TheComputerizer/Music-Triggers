@@ -40,9 +40,7 @@ public class GuiScrollingTrigger extends GuiSlot {
     @Override
     public void elementClicked(int slotIndex, boolean isDoubleClick, int mouseX, int mouseY) {
         this.curSelected = this.triggers.get(slotIndex)+"-"+slotIndex;
-        if(isDoubleClick) {
-            this.mc.displayGuiScreen(new GuiTriggerInfo(this.IN, this.triggers.get(slotIndex), this.songCode, this.holder, true));
-        }
+        this.mc.displayGuiScreen(new GuiTriggerInfo(this.IN, this.triggers.get(slotIndex), this.songCode, this.holder, true));
     }
 
     @Override protected boolean isSelected(int index) {

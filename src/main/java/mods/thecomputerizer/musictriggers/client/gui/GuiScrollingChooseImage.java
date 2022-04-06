@@ -39,9 +39,7 @@ public class GuiScrollingChooseImage extends GuiSlot {
     public void elementClicked(int slotIndex, boolean isDoubleClick, int mouseX, int mouseY) {
         this.index = slotIndex;
         this.curSelected = this.info.get(slotIndex)+"-"+slotIndex;
-        if(isDoubleClick) {
-            this.IN.mc.displayGuiScreen(new GuiTransitionInfo(this.IN, this.IN.holder, 0, true, false, this.imageMap.get(this.info.get(slotIndex)), this.info.get(slotIndex).split("\\.")[0]));
-        }
+        this.IN.mc.displayGuiScreen(new GuiTransitionInfo(this.IN, this.IN.holder, 0, true, false, this.imageMap.get(this.info.get(slotIndex)), this.info.get(slotIndex).split("\\.")[0]));
     }
 
     @Override protected boolean isSelected(int index) {

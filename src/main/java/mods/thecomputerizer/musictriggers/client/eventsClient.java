@@ -43,6 +43,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import javax.annotation.Nullable;
 import javax.vecmath.Vector4f;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Mod.EventBusSubscriber(modid = MusicTriggers.MODID, value = Side.CLIENT)
@@ -77,8 +78,9 @@ public class eventsClient {
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
 
-        PositionedSoundRecord silenced = new PositionedSoundRecord(e.getSound().getSoundLocation(), SoundCategory.MUSIC, Float.MIN_VALUE, 1F, false, 1, ISound.AttenuationType.LINEAR, 0F, 0F, 0F);
+        PositionedSoundRecord silenced = new PositionedSoundRecord(e.getSound().getSoundLocation(), SoundCategory.MUSIC, Float.MIN_VALUE*1000, 1F, false, 1, ISound.AttenuationType.LINEAR, 0F, 0F, 0F);
         if(e.getSound().getSoundLocation().getResourceDomain().matches(MusicTriggers.MODID) && ((e.getManager().isSoundPlaying(MusicPlayer.curMusic) && MusicPlayer.fromRecord==null) || MusicPlayer.playing)) {
+            MusicTriggers.logger.info("Silenced Music Triggers song");
             e.setResultSound(silenced);
         }
         for(String s : configDebug.blockedmods) {
@@ -136,6 +138,10 @@ public class eventsClient {
     @SubscribeEvent
     public static void clientDisconnected(FMLNetworkEvent.ClientDisconnectionFromServerEvent e) {
         MusicPicker.mc.getSoundHandler().stopSounds();
+        MusicPlayer.fadingOut = false;
+        MusicPlayer.fadingIn = false;
+        MusicPlayer.linkedFadingIn = new HashMap<>();
+        MusicPlayer.linkedFadingOut = new HashMap<>();
         isWorldRendered=false;
         MusicPicker.player=null;
     }
@@ -277,6 +283,11 @@ public class eventsClient {
                 timer = 0;
                 activated = false;
                 ismoving = false;
+                MusicPlayer.fadingIn=false;
+                MusicPlayer.fadingOut = false;
+                MusicPlayer.curMusic = null;
+                MusicPlayer.curTrack = null;
+                MusicPlayer.curTrackList = null;
                 MusicPlayer.cards = true;
                 MusicPlayer.reloading = false;
             }
@@ -292,6 +303,8 @@ public class eventsClient {
             if(!configDebug.ShowJustCurSong) {
                 int displayCount = 0;
                 if(!MusicPlayer.formatSongTime().matches("No song playing")) e.getLeft().add("Music Triggers Current Song Time: " + MusicPlayer.formatSongTime());
+                if(MusicPlayer.fadingOut) e.getLeft().add("Music Triggers Fading Out: "+MusicPlayer.formattedTimeFromMilliseconds(MusicPlayer.tempFadeOut*50));
+                if(MusicPlayer.fadingIn) e.getLeft().add("Music Triggers Fading In: "+MusicPlayer.formattedTimeFromMilliseconds(MusicPlayer.tempFadeIn*50));
                 if(MusicPicker.playableList!=null && !MusicPicker.playableList.isEmpty()) {
                     StringBuilder s = new StringBuilder();
                     for (String ev : MusicPicker.playableList) {

@@ -4,16 +4,12 @@ import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.client.eventsClient;
 import mods.thecomputerizer.musictriggers.client.gui.Mappings;
 import mods.thecomputerizer.musictriggers.common.eventsCommon;
-import mods.thecomputerizer.musictriggers.config.configDebug;
-import mods.thecomputerizer.musictriggers.config.configRegistry;
-import mods.thecomputerizer.musictriggers.config.configTitleCards;
-import mods.thecomputerizer.musictriggers.config.configToml;
+import mods.thecomputerizer.musictriggers.config.*;
 import mods.thecomputerizer.musictriggers.util.CustomTick;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.json;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.FolderResourcePack;
-import net.minecraft.client.resources.IResourcePack;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
@@ -21,7 +17,6 @@ import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.thread.SidedThreadGroups;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -168,6 +163,7 @@ public class MusicTriggers {
             }
         }
         configToml.parse();
+        configCommands.parse();
         Mappings.init();
         if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
             configTitleCards.parse();

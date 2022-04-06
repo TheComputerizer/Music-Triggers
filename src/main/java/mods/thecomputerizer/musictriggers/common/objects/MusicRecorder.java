@@ -22,11 +22,12 @@ import java.util.UUID;
 public class MusicRecorder extends Block {
 
     public static final PropertyBool HAS_RECORD = PropertyBool.create("has_record");
+    public static final PropertyBool HAS_DISC = PropertyBool.create("has_disc");
 
     public MusicRecorder() {
         super(Material.WOOD, MapColor.DIRT);
         setHardness(1F);
-        this.setDefaultState(this.blockState.getBaseState().withProperty(HAS_RECORD, false));
+        this.setDefaultState(this.blockState.getBaseState().withProperty(HAS_RECORD, false).withProperty(HAS_DISC, false));
         setHarvestLevel("axe", 3);
         setResistance(1F);
     }
@@ -36,6 +37,11 @@ public class MusicRecorder extends Block {
         if (state.getValue(HAS_RECORD)) {
             this.dropRecord(worldIn, pos);
             state = state.withProperty(HAS_RECORD, false);
+            worldIn.setBlockState(pos, state, 2);
+            return true;
+        } else if(state.getValue(HAS_DISC)) {
+            this.dropRecord(worldIn, pos);
+            state = state.withProperty(HAS_DISC, false);
             worldIn.setBlockState(pos, state, 2);
             return true;
         } else {
@@ -48,7 +54,8 @@ public class MusicRecorder extends Block {
         eventsCommon.recordHolder.put(pos, recordStack.copy());
         eventsCommon.recordUUID.put(pos, uuid);
         eventsCommon.tickCounter.put(pos, 0);
-        worldIn.setBlockState(pos, state.withProperty(HAS_RECORD, Boolean.TRUE), 2);
+        if(recordStack.getItem() instanceof BlankRecord) worldIn.setBlockState(pos, state.withProperty(HAS_RECORD, Boolean.TRUE), 2);
+        else worldIn.setBlockState(pos, state.withProperty(HAS_DISC, Boolean.TRUE), 2);
     }
 
     private void dropRecord(World worldIn, BlockPos pos) {
@@ -116,6 +123,6 @@ public class MusicRecorder extends Block {
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, HAS_RECORD);
+        return new BlockStateContainer(this, HAS_RECORD, HAS_DISC);
     }
 }

@@ -66,7 +66,7 @@ public class GuiTriggers extends GuiScreen {
         if (button.id == 1) {
             GuiSongInfo parent = ((GuiSongInfo)this.parentScreen);
             parent.holder = this.holder;
-            parent.triggers = this.holder.getAllTriggersForCode(this.songCode);
+            parent.triggersCodes = this.holder.getAllTriggersForCode(this.songCode);
             this.mc.displayGuiScreen(this.parentScreen);
         }
     }

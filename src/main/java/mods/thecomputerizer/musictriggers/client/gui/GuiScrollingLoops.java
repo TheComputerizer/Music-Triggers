@@ -42,9 +42,7 @@ public class GuiScrollingLoops extends GuiSlot {
     public void elementClicked(int slotIndex, boolean isDoubleClick, int mouseX, int mouseY) {
         this.index = slotIndex;
         this.curSelected = this.info.get(slotIndex)+"-"+slotIndex;
-        if(isDoubleClick) {
-            this.mc.displayGuiScreen(new GuiLoopInfo(this.IN, this.IN.holder, slotIndex, this.code, this.song, this.linked));
-        }
+        this.mc.displayGuiScreen(new GuiLoopInfo(this.IN, this.IN.holder, slotIndex, this.code, this.song, this.linked));
     }
 
     @Override protected boolean isSelected(int index) {

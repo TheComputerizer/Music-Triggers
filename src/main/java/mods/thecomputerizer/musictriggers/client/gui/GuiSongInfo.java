@@ -17,7 +17,7 @@ public class GuiSongInfo extends GuiScreen {
     public String song;
     public String songCode;
     public List<String> info;
-    public List<String> triggers;
+    public List<String> triggersCodes;
     public GuiScreen parentScreen;
     public GuiScrollingInfo scrollingSongs;
     public List<String> parameters;
@@ -29,7 +29,7 @@ public class GuiSongInfo extends GuiScreen {
         this.songCode = songCode;
         this.parameters = Arrays.stream(new String[]{"pitch","play_once","must_finish","chance","volume"}).collect(Collectors.toList());
         this.holder = holder;
-        this.triggers = this.holder.getAllTriggersForCode(this.songCode);
+        this.triggersCodes = this.holder.getAllTriggersForCode(this.songCode);
     }
 
     @Override
@@ -75,8 +75,8 @@ public class GuiSongInfo extends GuiScreen {
     private void addScrollable() {
         List<String> everything = new ArrayList<>();
         everything.addAll(this.parameters);
-        everything.addAll(this.triggers);
-        this.scrollingSongs = new GuiScrollingInfo(this.mc, this.width, this.height,32,this.height-32, everything,this);
+        everything.addAll(this.triggersCodes);
+        this.scrollingSongs = new GuiScrollingInfo(this.mc, this.width, this.height,32,this.height-32, everything,this, this.holder);
         this.scrollingSongs.registerScrollButtons(7, 8);
     }
 

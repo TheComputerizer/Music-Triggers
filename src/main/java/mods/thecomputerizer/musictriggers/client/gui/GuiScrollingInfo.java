@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.config.configObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiSlot;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -20,12 +21,14 @@ public class GuiScrollingInfo extends GuiSlot {
     public String curSelected;
     private final ResourceLocation background;
     public int index;
+    public configObject holder;
 
-    public GuiScrollingInfo(Minecraft client, int width, int height, int top, int bottom, List<String> info, GuiSongInfo IN) {
+    public GuiScrollingInfo(Minecraft client, int width, int height, int top, int bottom, List<String> info, GuiSongInfo IN, configObject holder) {
         super(client, width, height, top, bottom, 32);
         this.size = info.size();
         this.info = info;
         this.IN = IN;
+        this.holder = holder;
         this.background = new ResourceLocation(MusicTriggers.MODID,"textures/block/recorder_side_active.png");
     }
 
@@ -37,7 +40,7 @@ public class GuiScrollingInfo extends GuiSlot {
     public void elementClicked(int slotIndex, boolean isDoubleClick, int mouseX, int mouseY) {
         this.index = getIndex(this.info.get(slotIndex));
         this.curSelected = this.info.get(slotIndex)+"-"+slotIndex;
-        if(isDoubleClick && slotIndex>=5) {
+        if(slotIndex>=5) {
             this.mc.displayGuiScreen(new GuiTriggerInfo(this.IN, this.info.get(slotIndex), this.IN.songCode, this.IN.holder,false));
         }
     }
@@ -53,7 +56,10 @@ public class GuiScrollingInfo extends GuiSlot {
 
     @Override
     public void drawSlot(int slotIndex, int xPos, int yPos, int heightIn, int mouseXIn, int mouseYIn, float partialTicks) {
-        this.IN.drawCenteredString(this.mc.fontRenderer, this.info.get(slotIndex), this.width / 2, yPos + 1, 16777215);
+        String render;
+        if(slotIndex>=5) render = this.holder.translateCodedTrigger(this.IN.songCode,this.info.get(slotIndex));
+        else render = this.info.get(slotIndex);
+        this.IN.drawCenteredString(this.mc.fontRenderer, render, this.width / 2, yPos + 1, 16777215);
     }
 
     @Override protected void drawBackground() {}

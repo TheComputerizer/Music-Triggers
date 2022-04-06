@@ -45,19 +45,16 @@ public class GuiScrollingSong extends GuiSlot {
     @Override
     public void elementClicked(int slotIndex, boolean isDoubleClick, int mouseX, int mouseY) {
         this.curSelected = this.songs.get(slotIndex)+"-"+slotIndex;
-        if(isDoubleClick) {
-            if(this.linking==null) {
-                if (this.codes != null) {
-                    String code = this.codes.get(slotIndex);
-                    this.mc.displayGuiScreen(new GuiSongInfo(this.IN, this.songs.get(slotIndex), code, this.holder));
-                } else {
-                    this.mc.displayGuiScreen(new GuiSongInfo(this.IN, this.songs.get(slotIndex), this.holder.addSong(this.songs.get(slotIndex)), this.holder));
-                }
+        if(this.linking==null) {
+            if (this.codes != null) {
+                String code = this.codes.get(slotIndex);
+                this.mc.displayGuiScreen(new GuiSongInfo(this.IN, this.songs.get(slotIndex), code, this.holder));
+            } else {
+                this.mc.displayGuiScreen(new GuiSongInfo(this.IN, this.songs.get(slotIndex), this.holder.addSong(this.songs.get(slotIndex)), this.holder));
             }
-            else {
-                this.holder.addLinkingSong(this.linking.songCode, this.songs.get(slotIndex));
-                this.mc.displayGuiScreen(new GuiLinkingInfo(this.IN, this.songs.get(slotIndex), this.linking.songCode, this.holder));
-            }
+        } else {
+            this.holder.addLinkingSong(this.linking.songCode, this.songs.get(slotIndex));
+            this.mc.displayGuiScreen(new GuiLinkingInfo(this.IN, this.songs.get(slotIndex), this.linking.songCode, this.holder));
         }
     }
 

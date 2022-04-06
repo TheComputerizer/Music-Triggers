@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.config;
 
 import com.rits.cloning.Cloner;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.client.MusicPicker;
 import mods.thecomputerizer.musictriggers.client.gui.Mappings;
 
 import java.io.File;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 public class configObject {
     private final Map<String, String> songholder;
     private final Map<String, Map<String, String[]>> triggerholder;
+    private final Map<String, Map<String, String>> triggerMapper;
     private final Map<String, String[]> otherinfo;
     private final Map<String, Map<String, String[]>> otherlinkinginfo;
     private final Map<String, Map<String, String[]>> triggerlinking;
@@ -35,22 +37,23 @@ public class configObject {
     private final File debugConfig;
     private final File registrationConfig;
 
-    public static final String[] otherInfoDefaults = new String[]{"1", "0", "false", "100", "1"};
+    public static final String[] otherInfoDefaults = new String[]{"1", "0", "false", "100", "1", "0", "0"};
     public static final String[] triggerInfoDefaults = new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
             "minecraft", "_", "16", "false", "100", "100", "100",
             "false", "0", "minecraft", "true", "true", "0", "0", "nope",
             "nope", "-111", "false","_", "true", "-1", "-111", "true",
-            "false", "false", "false"};
-    public static final String[] linkingInfoDefaults = new String[]{"1", "1"};
+            "false", "false", "false", "0"};
+    public static final String[] linkingInfoDefaults = new String[]{"1", "1", "0", "0"};
     public static final String[] titleInfoDefaults = new String[]{"false", "red", "white", "false"};
     public static final String[] imageInfoDefaults = new String[]{"name", "750","0", "0", "100", "100", "false", "10", "10", "false", "10", "0", "4"};
 
-    private configObject(Map<String, String> songholder, Map<String, Map<String, String[]>> triggerholder, Map<String, String[]> otherinfo,
+    private configObject(Map<String, String> songholder, Map<String, Map<String, String[]>> triggerholder, Map<String, Map<String, String>> triggerMapper, Map<String, String[]> otherinfo,
                          Map<String, Map<String, String[]>> otherlinkinginfo, Map<String, Map<String, String[]>> triggerlinking, Map<String, Map<Integer, String[]>> loopPoints,
                          Map<String, Map<String, Map<Integer, String[]>>> linkingLoopPoints, Map<Integer, configTitleCards.Title> titlecards,
                          Map<Integer, configTitleCards.Image> imagecards, Map<Integer, Boolean> ismoving, List<String> blockedmods, List<String> debugStuff) {
         this.songholder = songholder;
         this.triggerholder = triggerholder;
+        this.triggerMapper = triggerMapper;
         this.otherinfo = otherinfo;
         this.otherlinkinginfo = otherlinkinginfo;
         this.triggerlinking = triggerlinking;
@@ -91,7 +94,7 @@ public class configObject {
 
     public static configObject createFromCurrent() {
         Cloner cloner=new Cloner();
-        return new configObject(cloner.deepClone(configToml.songholder),cloner.deepClone(configToml.triggerholder),cloner.deepClone(configToml.otherinfo),
+        return new configObject(cloner.deepClone(configToml.songholder),cloner.deepClone(configToml.triggerholder),cloner.deepClone(configToml.triggerMapper),cloner.deepClone(configToml.otherinfo),
                 cloner.deepClone(configToml.otherlinkinginfo),cloner.deepClone(configToml.triggerlinking),cloner.deepClone(configToml.loopPoints),
                 cloner.deepClone(configToml.linkingLoopPoints),cloner.deepClone(configTitleCards.titlecards),cloner.deepClone(configTitleCards.imagecards),
                 cloner.deepClone(configTitleCards.ismoving),cloner.deepClone(Arrays.asList(configDebug.blockedmods)),cloner.deepClone(compileDebugStuff()));
@@ -133,6 +136,10 @@ public class configObject {
             ret.add(stringEntry.getKey());
         }
         return ret;
+    }
+
+    public String translateCodedTrigger(String code, String trigger) {
+        return this.triggerMapper.get(code).get(trigger);
     }
 
     public List<String> getAllSongsForLinking(String code) {
@@ -262,7 +269,7 @@ public class configObject {
         String code = "song" + this.songholder.keySet().size();
         this.songholder.put(code, name);
         this.triggerholder.put(code, new HashMap<>());
-        this.otherinfo.put(code, new String[]{"1", "0", "false", "100", "1"});
+        this.otherinfo.put(code, new String[]{"1", "0", "false", "100", "1", "0", "0"});
         return code;
     }
 
@@ -273,11 +280,12 @@ public class configObject {
     }
 
     public void addTrigger(String code, String trigger) {
-        this.triggerholder.get(code).put(trigger, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
+        this.triggerMapper.get(code).put("trigger-"+triggerholder.get(code).keySet().size(),trigger);
+        this.triggerholder.get(code).put("trigger-"+triggerholder.get(code).keySet().size(), new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
                 "minecraft", "_", "16", "false", "100", "100", "100",
                 "false", "0", "minecraft", "true", "true", "0", "0", "nope",
                 "nope", "-111", "false","_", "true", "-1", "-111", "true",
-                "false", "false", "false"});
+                "false", "false", "false", "0"});
     }
 
     public void removeTrigger(String code, String trigger) {
@@ -780,66 +788,71 @@ public class configObject {
 
     public void write() throws IOException {
         StringBuilder mainBuilder = new StringBuilder();
+        this.writeUniversal(mainBuilder);
         for(int j=0;j<this.songholder.entrySet().size();j++) {
             String code = "song"+j;
             MusicTriggers.logger.info("writing code: "+code);
-            mainBuilder.append(formatSongBrackets(this.songholder.get(code))).append("\n");
-            if(this.markSongInfoForWriting.get(code)!=null) {
-                for (int i : this.markSongInfoForWriting.get(code)) {
-                    mainBuilder.append("\t").append(Mappings.songparameters.get(i)).append(" = \"").append(this.otherinfo.get(code)[i]).append("\"\n");
-                }
-            }
-            for(Map.Entry<String, String[]> stringEntry : this.triggerholder.get(code).entrySet()) {
-                String trigger = stringEntry.getKey();
-                mainBuilder.append("\t").append(formatTriggerBrackets(code, this.songholder.get(code))).append("\n");
-                mainBuilder.append("\t\tname = \"").append(trigger).append("\"\n");
-                if(this.markTriggerInfoForWriting.get(code)!=null && this.markTriggerInfoForWriting.get(code).get(trigger)!=null) {
-                    boolean zone = false;
-                    for (int i : this.markTriggerInfoForWriting.get(code).get(trigger)) {
-                        if(!Mappings.parameters.get(i).matches("zone")) {
-                            mainBuilder.append("\t\t").append(Mappings.parameters.get(i)).append(" = \"").append(this.triggerholder.get(code).get(trigger)[i]).append("\"\n");
-                        } else zone = true;
-                    }
-                    if(zone) {
-                        mainBuilder.append("\t\t").append("[").append(this.songholder.get(code)).append(".trigger.zone]\n");
-                        formatZoneParameter(mainBuilder, this.triggerholder.get(code).get(trigger)[7]);
+            if(this.triggerholder.get(code)!=null && !this.triggerholder.get(code).entrySet().isEmpty()) {
+                mainBuilder.append(formatSongBrackets(this.songholder.get(code))).append("\n");
+                if (this.markSongInfoForWriting.get(code) != null) {
+                    for (int i : this.markSongInfoForWriting.get(code)) {
+                        if(i<5) mainBuilder.append("\t").append(Mappings.songparameters.get(i)).append(" = \"").append(this.otherinfo.get(code)[i]).append("\"\n");
                     }
                 }
-            }
-            if(this.triggerlinking.get(code)!=null && !getAllSongsForLinking(code).isEmpty()) {
-                mainBuilder.append("\t[").append(this.songholder.get(code)).append(".link]\n");
-                mainBuilder.append(this.formatLinkingDefaults(code)).append("\n");
-                for (Map.Entry<String, String[]> stringEntry : this.triggerlinking.get(code).entrySet()) {
-                    String song = stringEntry.getKey();
-                    if(!song.matches(code)) {
-                        mainBuilder.append(this.formatLinkingBrackets(code, this.songholder.get(code))).append("\n");
-                        mainBuilder.append("\t\t\tsong = \"").append(song).append("\"\n");
-                        if (this.markLinkingInfoForWriting.get(code) != null && this.markLinkingInfoForWriting.get(code).get(song) != null) {
-                            for (int i : this.markLinkingInfoForWriting.get(code).get(song)) {
-                                mainBuilder.append("\t\t\t").append(Mappings.linkingparameters.get(i)).append(" = \"").append(this.otherlinkinginfo.get(code).get(song)[i]).append("\"\n");
-                            }
+                for (Map.Entry<String, String[]> stringEntry : this.triggerholder.get(code).entrySet()) {
+                    String trigger = stringEntry.getKey();
+                    mainBuilder.append("\t").append(formatTriggerBrackets(code, this.songholder.get(code))).append("\n");
+                    mainBuilder.append("\t\tname = \"").append(translateCodedTrigger(code,trigger)).append("\"\n");
+                    if (this.markTriggerInfoForWriting.get(code) != null && this.markTriggerInfoForWriting.get(code).get(trigger) != null) {
+                        boolean zone = false;
+                        for (int i : this.markTriggerInfoForWriting.get(code).get(trigger)) {
+                            if (!Mappings.parameters.get(i).matches("zone")) {
+                                mainBuilder.append("\t\t").append(Mappings.parameters.get(i)).append(" = \"").append(this.triggerholder.get(code).get(trigger)[i]).append("\"\n");
+                            } else zone = true;
                         }
-                        mainBuilder.append(this.formatLinkingTriggers(code, song)).append("\n");
-                        if(this.linkingLoopPoints.get(code)!=null && this.linkingLoopPoints.get(code).get(song)!=null) {
-                            for (int l : this.linkingLoopPoints.get(code).get(song).keySet()) {
-                                mainBuilder.append(this.formatLinkingLoopPointsBrackets(code,this.songholder.get(code),song));
-                                mainBuilder.append("\t\t\t\tamount = \"").append(this.linkingLoopPoints.get(code).get(song).get(l)[0]).append("\"\n");
-                                mainBuilder.append("\t\t\t\tmin = \"").append(this.linkingLoopPoints.get(code).get(song).get(l)[1]).append("\"\n");
-                                mainBuilder.append("\t\t\t\tmax = \"").append(this.linkingLoopPoints.get(code).get(song).get(l)[2]).append("\"\n");
-                            }
+                        if (zone) {
+                            mainBuilder.append("\t\t").append("[").append(this.songholder.get(code)).append(".trigger.zone]\n");
+                            formatZoneParameter(mainBuilder, this.triggerholder.get(code).get(trigger)[7]);
                         }
                     }
                 }
-            }
-            if(this.loopPoints.get(code)!=null) {
-                for (int l : this.loopPoints.get(code).keySet()) {
-                    mainBuilder.append(this.formatLoopPointsBrackets(code, this.songholder.get(code)));
-                    mainBuilder.append("\t\tamount = \"").append(this.loopPoints.get(code).get(l)[0]).append("\"\n");
-                    mainBuilder.append("\t\tmin = \"").append(this.loopPoints.get(code).get(l)[1]).append("\"\n");
-                    mainBuilder.append("\t\tmax = \"").append(this.loopPoints.get(code).get(l)[2]).append("\"\n");
+                if (this.triggerlinking.get(code) != null && !getAllSongsForLinking(code).isEmpty()) {
+                    mainBuilder.append("\t[").append(this.songholder.get(code)).append(".link]\n");
+                    mainBuilder.append(this.formatLinkingDefaults(code)).append("\n");
+                    if(Integer.parseInt(this.otherinfo.get(code)[5])!=0) mainBuilder.append("\t\tfade_in = \"").append(this.otherinfo.get(code)[5]).append("\"\n");
+                    if(Integer.parseInt(this.otherinfo.get(code)[6])!=0) mainBuilder.append("\t\tfade_out = \"").append(this.otherinfo.get(code)[6]).append("\"\n");
+                    for (Map.Entry<String, String[]> stringEntry : this.triggerlinking.get(code).entrySet()) {
+                        String song = stringEntry.getKey();
+                        if (!song.matches(code)) {
+                            mainBuilder.append(this.formatLinkingBrackets(code, this.songholder.get(code))).append("\n");
+                            mainBuilder.append("\t\t\tsong = \"").append(song).append("\"\n");
+                            if (this.markLinkingInfoForWriting.get(code) != null && this.markLinkingInfoForWriting.get(code).get(song) != null) {
+                                for (int i : this.markLinkingInfoForWriting.get(code).get(song)) {
+                                    mainBuilder.append("\t\t\t").append(Mappings.linkingparameters.get(i)).append(" = \"").append(this.otherlinkinginfo.get(code).get(song)[i]).append("\"\n");
+                                }
+                            }
+                            mainBuilder.append(this.formatLinkingTriggers(code, song)).append("\n");
+                            if (this.linkingLoopPoints.get(code) != null && this.linkingLoopPoints.get(code).get(song) != null) {
+                                for (int l : this.linkingLoopPoints.get(code).get(song).keySet()) {
+                                    mainBuilder.append(this.formatLinkingLoopPointsBrackets(code, this.songholder.get(code), song));
+                                    mainBuilder.append("\t\t\t\tamount = \"").append(this.linkingLoopPoints.get(code).get(song).get(l)[0]).append("\"\n");
+                                    mainBuilder.append("\t\t\t\tmin = \"").append(this.linkingLoopPoints.get(code).get(song).get(l)[1]).append("\"\n");
+                                    mainBuilder.append("\t\t\t\tmax = \"").append(this.linkingLoopPoints.get(code).get(song).get(l)[2]).append("\"\n");
+                                }
+                            }
+                        }
+                    }
                 }
+                if (this.loopPoints.get(code) != null) {
+                    for (int l : this.loopPoints.get(code).keySet()) {
+                        mainBuilder.append(this.formatLoopPointsBrackets(code, this.songholder.get(code)));
+                        mainBuilder.append("\t\tamount = \"").append(this.loopPoints.get(code).get(l)[0]).append("\"\n");
+                        mainBuilder.append("\t\tmin = \"").append(this.loopPoints.get(code).get(l)[1]).append("\"\n");
+                        mainBuilder.append("\t\tmax = \"").append(this.loopPoints.get(code).get(l)[2]).append("\"\n");
+                    }
+                }
+                mainBuilder.append("\n");
             }
-            mainBuilder.append("\n");
         }
         FileWriter writeMain = new FileWriter(this.mainConfig);
         writeMain.write(mainBuilder.toString());
@@ -976,6 +989,15 @@ public class configObject {
         builder.append("\t\t\tx_max = \"").append(broken[3]).append("\"\n");
         builder.append("\t\t\ty_max = \"").append(broken[4]).append("\"\n");
         builder.append("\t\t\tz_max = \"").append(broken[5]).append("\"\n");
+    }
+
+    private void writeUniversal(StringBuilder builder) {
+        if(MusicPicker.universalDelay!=0 || MusicPicker.universalFadeIn!=0 || MusicPicker.universalFadeOut!=0) {
+            builder.append("[universal]\n");
+            if(MusicPicker.universalDelay!=0) builder.append("\ndelay = \"").append(MusicPicker.universalDelay).append("\"\n");
+            if(MusicPicker.universalFadeIn!=0) builder.append("\nfade_in = \"").append(MusicPicker.universalFadeIn).append("\"\n");
+            if(MusicPicker.universalFadeOut!=0) builder.append("\nfade_out = \"").append(MusicPicker.universalFadeOut).append("\"\n");
+        }
     }
 
     public static String[] stringBreaker(String s, String regex) {

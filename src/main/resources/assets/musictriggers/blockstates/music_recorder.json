@@ -3,10 +3,16 @@
         "normal": [
              { "model": "musictriggers:music_recorder" }
         ],
-        "has_record=true": [
+		"has_disc=true,has_record=true": [
+                     { "model": "musictriggers:music_recorder_inverted" }
+        ],
+		"has_disc=true,has_record=false": [
+                     { "model": "musictriggers:music_recorder_inverted" }
+        ],
+        "has_disc=false,has_record=true": [
                      { "model": "musictriggers:music_recorder_active" }
         ],
-        "has_record=false": [
+        "has_disc=false,has_record=false": [
                      { "model": "musictriggers:music_recorder" }
         ]
     }

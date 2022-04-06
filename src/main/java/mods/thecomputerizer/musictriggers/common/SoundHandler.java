@@ -14,11 +14,12 @@ public class SoundHandler {
     public static List<SoundEvent> allSoundEvents = new ArrayList<>();
     public static HashMap<SoundEvent,String> allSoundEventsTriggers = new HashMap<>();
 
-    public static Map<String, Map<String, String>> TriggerSongMap = new HashMap<>();
+    public static Map<String, Map<String, List<String>>> TriggerIdentifierMap = new HashMap<>();
     public static Map<String, String[]> TriggerInfoMap = new HashMap<>();
 
     public static HashMap<String, List<String>> songCombos = new HashMap<>();
     public static HashMap<String, List<String>> antiSongs = new HashMap<>();
+    public static HashMap<List<String>, List<String>> instantiatedCombos = new HashMap<>();
 
     public static void registerSounds() {
 
@@ -26,64 +27,79 @@ public class SoundHandler {
             String songEntry = "song"+i;
             SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." +configToml.songholder.get(songEntry))).setRegistryName(new ResourceLocation(MusicTriggers.MODID, configToml.songholder.get(songEntry)));
             List<String> triggers = new ArrayList<>();
-            for (Map.Entry<String, String[]> nestedStringListEntry : configToml.triggerholder.get(songEntry).entrySet()) {
-                String temp = ((Map.Entry) nestedStringListEntry).getKey().toString();
-                if(configToml.triggerholder.get(songEntry).get(temp)[6].matches("not")) {
+            for (String trigger : configToml.triggerholder.get(songEntry).keySet()) {
+                String decoded = decode(songEntry,trigger);
+                if(configToml.triggerholder.get(songEntry).get(trigger)[6].matches("not")) {
                     antiSongs.computeIfAbsent(songEntry, k -> new ArrayList<>());
-                    if(configToml.triggerholder.get(songEntry).get(temp)[10].matches("_")) antiSongs.get(songEntry).add(temp);
-                    else antiSongs.get(songEntry).add(temp+"-"+configToml.triggerholder.get(songEntry).get(temp)[10]);
+                    if(configToml.triggerholder.get(songEntry).get(trigger)[10].matches("_")) antiSongs.get(songEntry).add(decoded);
+                    else antiSongs.get(songEntry).add(decoded+"-"+configToml.triggerholder.get(songEntry).get(trigger)[10]);
                 }
-                triggers.add(temp);
+                triggers.add(trigger);
             }
             if(triggers.size()==1) {
                 String trigger = triggers.get(0);
-                TriggerSongMap.putIfAbsent(trigger, new HashMap<>());
-                TriggerSongMap.get(trigger).putIfAbsent(songEntry,configToml.triggerholder.get(songEntry).get(trigger)[10]);
-                TriggerInfoMap.putIfAbsent(trigger, configToml.triggerholder.get(songEntry).get(trigger));
+                String decoded = decode(songEntry,trigger);
+                TriggerIdentifierMap.putIfAbsent(decoded, new HashMap<>());
+                TriggerIdentifierMap.get(decoded).putIfAbsent(configToml.triggerholder.get(songEntry).get(trigger)[10], new ArrayList<>());
+                TriggerIdentifierMap.get(decoded).get(configToml.triggerholder.get(songEntry).get(trigger)[10]).add(songEntry);
+                TriggerInfoMap.putIfAbsent(decoded, configToml.triggerholder.get(songEntry).get(trigger));
                 if(!configToml.triggerholder.get(songEntry).get(trigger)[10].matches("") || configToml.triggerholder.get(songEntry).get(trigger)[10].matches("_")) {
-                    if (!TriggerInfoMap.containsKey(trigger + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10])) {
-                        TriggerInfoMap.put(trigger + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10], configToml.triggerholder.get(songEntry).get(trigger));
+                    if (!TriggerInfoMap.containsKey(decoded + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10])) {
+                        TriggerInfoMap.put(decoded + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10], configToml.triggerholder.get(songEntry).get(trigger));
                     }
                 }
                 if(checkResourceLocation(sound)) {
                     allSoundEvents.add(sound);
-                    allSoundEventsTriggers.put(sound, trigger);
+                    allSoundEventsTriggers.put(sound, decoded);
                     if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) EnumHelperClient.addMusicType(songEntry, sound, 0, 0);
                 }
             }
             else {
+                List<String> values = new ArrayList<>();
                 for(String trigger : triggers) {
+                    String decoded = decode(songEntry,trigger);
                     if(configToml.triggerholder.get(songEntry).get(trigger)[6].matches("and")) {
                         songCombos.computeIfAbsent(songEntry, k -> new ArrayList<>());
-                        if(configToml.triggerholder.get(songEntry).get(trigger)[10].matches("") || configToml.triggerholder.get(songEntry).get(trigger)[10].matches("_")) songCombos.get(songEntry).add(trigger);
-                        else songCombos.get(songEntry).add(trigger+"-"+configToml.triggerholder.get(songEntry).get(trigger)[10]);
+                        if(configToml.triggerholder.get(songEntry).get(trigger)[10].matches("") || configToml.triggerholder.get(songEntry).get(trigger)[10].matches("_")) {
+                            songCombos.get(songEntry).add(decoded);
+                        }
+                        else songCombos.get(songEntry).add(decoded+"-"+configToml.triggerholder.get(songEntry).get(trigger)[10]);
                         if(!Boolean.parseBoolean(configToml.triggerholder.get(songEntry).get(trigger)[32])) {
-                            TriggerSongMap.putIfAbsent(trigger, new HashMap<>());
-                            TriggerSongMap.get(trigger).putIfAbsent("@" + songEntry, configToml.triggerholder.get(songEntry).get(trigger)[10]);
-                            TriggerInfoMap.putIfAbsent(trigger, configToml.triggerholder.get(songEntry).get(trigger));
+                            TriggerIdentifierMap.putIfAbsent(decoded, new HashMap<>());
+                            TriggerIdentifierMap.get(decoded).putIfAbsent(configToml.triggerholder.get(songEntry).get(trigger)[10], new ArrayList<>());
+                            TriggerIdentifierMap.get(decoded).get(configToml.triggerholder.get(songEntry).get(trigger)[10]).add("@"+songEntry);
+                            TriggerInfoMap.putIfAbsent(decoded, configToml.triggerholder.get(songEntry).get(trigger));
                             if (!configToml.triggerholder.get(songEntry).get(trigger)[10].matches("") || configToml.triggerholder.get(songEntry).get(trigger)[10].matches("_")) {
-                                if (!TriggerInfoMap.containsKey(trigger + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10]))
-                                    TriggerInfoMap.put(trigger + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10], configToml.triggerholder.get(songEntry).get(trigger));
+                                if (!TriggerInfoMap.containsKey(decoded + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10]))
+                                    TriggerInfoMap.put(decoded + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10], configToml.triggerholder.get(songEntry).get(trigger));
                             }
                         }
                     }
                     else if(configToml.triggerholder.get(songEntry).get(trigger)[6].matches("not")) {
                         if(!Boolean.parseBoolean(configToml.triggerholder.get(songEntry).get(trigger)[32])) {
-                            TriggerSongMap.putIfAbsent(trigger, new HashMap<>());
-                            TriggerSongMap.get(trigger).putIfAbsent("#" + songEntry, configToml.triggerholder.get(songEntry).get(trigger)[10]);
-                            TriggerInfoMap.putIfAbsent(trigger, configToml.triggerholder.get(songEntry).get(trigger));
+                            TriggerIdentifierMap.putIfAbsent(decoded, new HashMap<>());
+                            TriggerIdentifierMap.get(decoded).putIfAbsent(configToml.triggerholder.get(songEntry).get(trigger)[10], new ArrayList<>());
+                            TriggerIdentifierMap.get(decoded).get(configToml.triggerholder.get(songEntry).get(trigger)[10]).add("#"+songEntry);
+                            TriggerInfoMap.putIfAbsent(decoded, configToml.triggerholder.get(songEntry).get(trigger));
                             if (!configToml.triggerholder.get(songEntry).get(trigger)[10].matches("") || configToml.triggerholder.get(songEntry).get(trigger)[10].matches("_")) {
-                                if (!TriggerInfoMap.containsKey(trigger + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10]))
-                                    TriggerInfoMap.put(trigger + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10], configToml.triggerholder.get(songEntry).get(trigger));
+                                if (!TriggerInfoMap.containsKey(decoded + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10]))
+                                    TriggerInfoMap.put(decoded + "-" + configToml.triggerholder.get(songEntry).get(trigger)[10], configToml.triggerholder.get(songEntry).get(trigger));
                             }
                         }
                     }
+                    else if(configToml.triggerholder.get(songEntry).get(trigger)[6].matches("instantiated")) {
+                        if(configToml.triggerholder.get(songEntry).get(trigger)[10].matches("") || configToml.triggerholder.get(songEntry).get(trigger)[10].matches("_")) {
+                            values.add(decoded);
+                        }
+                        else values.add(decoded+"-"+configToml.triggerholder.get(songEntry).get(trigger)[10]);
+                    }
                     if(checkResourceLocation(sound)) {
                         allSoundEvents.add(sound);
-                        allSoundEventsTriggers.put(sound, trigger);
+                        allSoundEventsTriggers.put(sound, decoded);
                         if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) EnumHelperClient.addMusicType(songEntry, sound, 0, 0);
                     }
                 }
+                instantiatedCombos.put(songCombos.get(songEntry),values);
             }
             if(configToml.triggerlinking.get(songEntry) !=null) {
                 int triggerCounter=0;
@@ -108,11 +124,13 @@ public class SoundHandler {
                 }
             }
         }
-        for(String t : TriggerSongMap.keySet()) {
+        for(String t : TriggerIdentifierMap.keySet()) {
             StringBuilder triggerChecker = new StringBuilder();
             triggerChecker.append("Final song check for trigger ").append(t).append(": ");
-            for(String s : TriggerSongMap.get(t).keySet()) {
-                triggerChecker.append(s).append("(").append(configToml.songholder.get(s.replaceAll("@",""))).append(") ");
+            for(String i : TriggerIdentifierMap.get(t).keySet()) {
+                for(String s : TriggerIdentifierMap.get(t).get(i)) {
+                    triggerChecker.append(s).append("(").append(configToml.songholder.get(s.replaceAll("@", ""))).append(") ");
+                }
             }
             MusicTriggers.logger.info(triggerChecker.toString());
         }
@@ -123,10 +141,14 @@ public class SoundHandler {
         return true;
     }
 
+    public static String decode(String code, String triggerID) {
+        return configToml.triggerMapper.get(code).get(triggerID);
+    }
+
     public static void emptyListsAndMaps() {
         allSoundEvents = new ArrayList<>();
         allSoundEventsTriggers = new HashMap<>();
-        TriggerSongMap = new HashMap<>();
+        TriggerIdentifierMap = new HashMap<>();
         TriggerInfoMap = new HashMap<>();
         songCombos = new HashMap<>();
         antiSongs = new HashMap<>();

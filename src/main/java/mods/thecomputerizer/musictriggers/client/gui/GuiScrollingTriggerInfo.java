@@ -39,9 +39,9 @@ public class GuiScrollingTriggerInfo extends GuiSlot {
 
     @Override
     public void elementClicked(int slotIndex, boolean isDoubleClick, int mouseX, int mouseY) {
-        this.index = getIndex(this.parameters.get(slotIndex));
+        this.index = Mappings.reverseparameters.get(this.parameters.get(slotIndex));
         this.curSelected = this.parameters.get(slotIndex)+"-"+slotIndex;
-        if(isDoubleClick && this.parameters.get(slotIndex).matches("zone")) {
+        if(this.parameters.get(slotIndex).matches("zone")) {
             eventsClient.parentScreen = this.IN;
             eventsClient.zone = true;
             this.mc.displayGuiScreen(null);
@@ -80,9 +80,5 @@ public class GuiScrollingTriggerInfo extends GuiSlot {
         bufferbuilder.pos(this.left + this.width, startY, 0.0D).tex((float)this.width / 32.0F, (float)startY / 32.0F).color(64, 64, 64, startAlpha).endVertex();
         bufferbuilder.pos(this.left, startY, 0.0D).tex(0.0D, (float)startY / 32.0F).color(64, 64, 64, startAlpha).endVertex();
         tessellator.draw();
-    }
-
-    public int getIndex(String s){
-        return Mappings.reverseparameters.get(s);
     }
 }
