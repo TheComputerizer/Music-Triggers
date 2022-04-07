@@ -22,7 +22,7 @@ public class BlankRecord extends Item {
         if (blockstate.getBlock() instanceof MusicRecorder)
         {
             MusicRecorder mr = (MusicRecorder) blockstate.getBlock();
-            if(!ctx.getLevel().isClientSide() && !blockstate.getValue(MusicRecorder.HAS_RECORD)) {
+            if(!ctx.getLevel().isClientSide() && !blockstate.getValue(MusicRecorder.HAS_RECORD) && !blockstate.getValue(MusicRecorder.HAS_DISC)) {
                 ItemStack itemstack = Objects.requireNonNull(ctx.getPlayer()).getItemInHand(ctx.getHand());
                 mr.insertRecord(ctx.getLevel(),ctx.getClickedPos(),blockstate,itemstack,ctx.getPlayer().getUUID());
                 itemstack.shrink(1);

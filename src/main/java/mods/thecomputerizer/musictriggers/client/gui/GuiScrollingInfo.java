@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
+import mods.thecomputerizer.musictriggers.config.configObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.widget.list.ExtendedList;
 
@@ -13,10 +14,12 @@ public class GuiScrollingInfo extends ExtendedList<GuiScrollingInfo.Entry> {
 
     private final GuiSongInfo IN;
     public int index;
+    public configObject holder;
 
-    public GuiScrollingInfo(Minecraft client, int width, int height, int top, int bottom, List<String> info, GuiSongInfo IN) {
+    public GuiScrollingInfo(Minecraft client, int width, int height, int top, int bottom, List<String> info, GuiSongInfo IN, configObject holder) {
         super(client, width, height, top, bottom, 32);
         this.IN = IN;
+        this.holder = holder;
         for(int i=0;i<info.size();i++) {
             this.addEntry(new GuiScrollingInfo.Entry(info.get(i), i));
         }
@@ -83,7 +86,10 @@ public class GuiScrollingInfo extends ExtendedList<GuiScrollingInfo.Entry> {
         }
 
         public void render(MatrixStack matrix, int i, int j, int k, int l, int m, int n, int o, boolean b, float f) {
-            GuiScrollingInfo.this.IN.getMinecraft().font.drawShadow(matrix, this.info, (float)(GuiScrollingInfo.this.width / 2 - GuiScrollingInfo.this.IN.getMinecraft().font.width(this.info) / 2), (float)(j + 1), 16777215, true);
+            String render;
+            if(this.index>=5) render = GuiScrollingInfo.this.holder.translateCodedTrigger(GuiScrollingInfo.this.IN.songCode,this.info);
+            else render = this.info;
+            GuiScrollingInfo.this.IN.getMinecraft().font.drawShadow(matrix, render, (float)(GuiScrollingInfo.this.width / 2 - GuiScrollingInfo.this.IN.getMinecraft().font.width(render) / 2), (float)(j + 1), 16777215, true);
         }
     }
 }

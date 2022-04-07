@@ -14,6 +14,7 @@ import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -58,6 +59,8 @@ public class GuiMain extends Screen {
 
     @Override
     public void init() {
+        assert this.minecraft != null;
+        this.minecraft.getSoundManager().stop(null, SoundCategory.MUSIC);
         this.addApplyButton();
         this.addReloadButton();
         this.addAddSongsButton();
@@ -125,7 +128,7 @@ public class GuiMain extends Screen {
     private void addCurrentSongButton() {
         this.addButton(new Button(this.width - 80, 8, 64, 16, new TranslationTextComponent("screen.musictriggers.button.playback"),
                 (button) -> {
-                    if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing && !MusicPlayer.fading) {
+                    if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing) {
                         assert this.minecraft != null;
                         this.minecraft.setScreen(new GuiCurPlaying(this,this.holder));
                     }

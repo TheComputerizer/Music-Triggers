@@ -72,7 +72,7 @@ public class GuiTriggers extends Screen {
                     assert this.minecraft != null;
                     GuiSongInfo parent = ((GuiSongInfo)this.parentScreen);
                     parent.holder = this.holder;
-                    parent.triggers = this.holder.getAllTriggersForCode(this.songCode);
+                    parent.triggersCodes = this.holder.getAllTriggersForCode(this.songCode);
                     this.minecraft.setScreen(this.parentScreen);
                 }));
     }

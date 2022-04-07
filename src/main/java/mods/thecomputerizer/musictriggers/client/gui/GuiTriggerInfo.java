@@ -37,7 +37,7 @@ public class GuiTriggerInfo extends Screen {
         this.songCode = songCode;
         this.holder = holder;
         if(create) this.holder.addTrigger(songCode,trigger);
-        this.parameters = Mappings.convertList(Mappings.buildGuiParameters(trigger));
+        this.parameters = Mappings.convertList(Mappings.buildGuiParameters(this.holder.translateCodedTrigger(this.songCode,this.trigger)));
         this.background = new ResourceLocation(MusicTriggers.MODID,"textures/block/recorder_side_active.png");
     }
 
@@ -48,7 +48,7 @@ public class GuiTriggerInfo extends Screen {
         this.renderBorders(0, 32);
         this.renderBorders(this.height-32, this.height);
         super.render(matrix, i, j, f);
-        String curInfo = this.trigger;
+        String curInfo = this.holder.translateCodedTrigger(this.songCode,this.trigger);
         if(this.scrollingSongs.getSelected()!=null) curInfo = this.holder.getTriggerInfoAtIndex(this.songCode, this.trigger, this.scrollingSongs.index);
         drawCenteredString(matrix, this.font, curInfo, width/2, 8, 10526880);
     }
@@ -104,8 +104,8 @@ public class GuiTriggerInfo extends Screen {
                         GuiSongInfo parent = ((GuiSongInfo)this.parentScreen);
                         this.holder.removeTrigger(this.songCode,this.trigger);
                         parent.holder = this.holder;
-                        parent.triggers = this.holder.getAllTriggersForCode(this.songCode);
-                        parent.scrollingSongs.resetEntries(parent.triggers);
+                        parent.triggersCodes = this.holder.getAllTriggersForCode(this.songCode);
+                        parent.scrollingSongs.resetEntries(parent.triggersCodes);
                     } else {
                         GuiTriggers parent = ((GuiTriggers)this.parentScreen);
                         this.holder.removeTrigger(this.songCode,this.trigger);

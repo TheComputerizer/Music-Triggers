@@ -27,7 +27,7 @@ public class GuiSongInfo extends Screen {
     public String song;
     public String songCode;
     public List<String> info;
-    public List<String> triggers;
+    public List<String> triggersCodes;
     public Screen parentScreen;
     public GuiScrollingInfo scrollingSongs;
     public List<String> parameters;
@@ -41,7 +41,7 @@ public class GuiSongInfo extends Screen {
         this.songCode = songCode;
         this.parameters = Arrays.stream(new String[]{"pitch","play_once","must_finish","chance","volume"}).collect(Collectors.toList());
         this.holder = holder;
-        this.triggers = this.holder.getAllTriggersForCode(this.songCode);
+        this.triggersCodes = this.holder.getAllTriggersForCode(this.songCode);
         this.background = new ResourceLocation(MusicTriggers.MODID,"textures/block/recorder_side_active.png");
     }
 
@@ -89,8 +89,8 @@ public class GuiSongInfo extends Screen {
     private void addScrollable() {
         List<String> everything = new ArrayList<>();
         everything.addAll(this.parameters);
-        everything.addAll(this.triggers);
-        this.scrollingSongs = new GuiScrollingInfo(this.minecraft, this.width, this.height,32,this.height-32, everything,this);
+        everything.addAll(this.triggersCodes);
+        this.scrollingSongs = new GuiScrollingInfo(this.minecraft, this.width, this.height,32,this.height-32, everything,this, this.holder);
         this.scrollingSongs.setRenderBackground(false);
         this.scrollingSongs.setRenderTopAndBottom(false);
         this.children.add(this.scrollingSongs);

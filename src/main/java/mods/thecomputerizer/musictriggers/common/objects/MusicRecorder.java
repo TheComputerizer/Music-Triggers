@@ -1,10 +1,10 @@
 package mods.thecomputerizer.musictriggers.common.objects;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.eventsCommon;
-import net.minecraft.block.*;
-import net.minecraft.data.DataGenerator;
-import net.minecraft.data.LootTableProvider;
+import net.minecraft.block.AbstractBlock;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockRenderType;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -13,7 +13,6 @@ import net.minecraft.state.StateContainer;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.World;
@@ -24,10 +23,11 @@ import java.util.UUID;
 public class MusicRecorder extends Block {
 
     public static final BooleanProperty HAS_RECORD = BlockStateProperties.HAS_RECORD;
+    public static final BooleanProperty HAS_DISC = BooleanProperty.create("has_disc");
 
     public MusicRecorder(AbstractBlock.Properties p) {
         super(p);
-        this.registerDefaultState(this.stateDefinition.any().setValue(HAS_RECORD, Boolean.FALSE));
+        this.registerDefaultState(this.stateDefinition.any().setValue(HAS_RECORD, Boolean.FALSE).setValue(HAS_DISC, Boolean.FALSE));
     }
 
     @Override
@@ -35,6 +35,11 @@ public class MusicRecorder extends Block {
         if (state.getValue(HAS_RECORD)) {
             this.dropRecord(worldIn, pos);
             state = state.setValue(HAS_RECORD, false);
+            worldIn.setBlock(pos, state, 2);
+            return ActionResultType.sidedSuccess(worldIn.isClientSide);
+        } else if(state.getValue(HAS_DISC)) {
+            this.dropRecord(worldIn, pos);
+            state = state.setValue(HAS_DISC, false);
             worldIn.setBlock(pos, state, 2);
             return ActionResultType.sidedSuccess(worldIn.isClientSide);
         } else {
@@ -47,7 +52,8 @@ public class MusicRecorder extends Block {
         eventsCommon.recordHolder.put(pos, recordStack.copy());
         eventsCommon.recordUUID.put(pos, uuid);
         eventsCommon.tickCounter.put(pos, 0);
-        worldIn.setBlock(pos, state.setValue(HAS_RECORD, Boolean.TRUE), 2);
+        if(recordStack.getItem() instanceof BlankRecord) worldIn.setBlock(pos, state.setValue(HAS_RECORD, Boolean.TRUE), 2);
+        else worldIn.setBlock(pos, state.setValue(HAS_DISC, Boolean.TRUE), 2);
     }
 
     private void dropRecord(World worldIn, BlockPos pos) {
@@ -97,6 +103,6 @@ public class MusicRecorder extends Block {
 
     @Override
     protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> stateBuilder) {
-        stateBuilder.add(HAS_RECORD);
+        stateBuilder.add(HAS_RECORD).add(HAS_DISC);
     }
 }

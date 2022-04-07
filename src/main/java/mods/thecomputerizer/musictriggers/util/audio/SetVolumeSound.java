@@ -14,7 +14,7 @@ import javax.annotation.Nullable;
 
 @SuppressWarnings("ALL")
 @Mod.EventBusSubscriber(modid = MusicTriggers.MODID, value = Dist.CLIENT)
-public class setVolumeSound implements ISound {
+public class SetVolumeSound implements ISound {
 
     protected Sound sound;
     @Nullable
@@ -30,7 +30,7 @@ public class setVolumeSound implements ISound {
     protected int repeatDelay;
     protected ISound.AttenuationType attenuationType;
 
-    public setVolumeSound(ResourceLocation soundId, SoundCategory categoryIn, float volume, float pitch, boolean repeat, int repeatDelay, ISound.AttenuationType soundAttenuation, float xPosF, float yPosF, float zPosF)
+    public SetVolumeSound(ResourceLocation soundId, SoundCategory categoryIn, float volume, float pitch, boolean repeat, int repeatDelay, ISound.AttenuationType soundAttenuation, float xPosF, float yPosF, float zPosF)
     {
         this.positionedSoundLocation = soundId;
         this.category = categoryIn;
@@ -86,8 +86,7 @@ public class setVolumeSound implements ISound {
         return this.repeatDelay;
     }
 
-    public float getVolume()
-    {
+    public float getVolume() {
         return this.volume * this.sound.getVolume();
     }
 
