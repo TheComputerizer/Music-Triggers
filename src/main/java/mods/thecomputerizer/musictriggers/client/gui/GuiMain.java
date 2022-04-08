@@ -59,8 +59,6 @@ public class GuiMain extends Screen {
 
     @Override
     public void init() {
-        assert this.minecraft != null;
-        this.minecraft.getSoundManager().stop(null, SoundCategory.MUSIC);
         this.addApplyButton();
         this.addReloadButton();
         this.addAddSongsButton();

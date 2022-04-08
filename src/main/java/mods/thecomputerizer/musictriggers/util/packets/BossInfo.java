@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
+import mods.thecomputerizer.musictriggers.common.eventsCommon;
 import mods.thecomputerizer.musictriggers.util.calculateFeatures;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
@@ -29,6 +30,7 @@ public class BossInfo {
         });
 
         calculateFeatures.bossInfo.put(packet.getBossName(), packet.getDataHealth());
+        eventsCommon.bossTimer = 40;
 
         ctx.setPacketHandled(true);
     }
