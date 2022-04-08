@@ -124,7 +124,7 @@ public class GuiMain extends Screen {
     private void addCurrentSongButton() {
         this.addDrawableChild(new ButtonWidget(this.width - 80, 8, 64, 16, new TranslatableText("screen.musictriggers.button.playback"),
                 (button) -> {
-                    if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing && !MusicPlayer.fading) {
+                    if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing) {
                         assert this.client != null;
                         this.client.setScreen(new GuiCurPlaying(this,this.holder));
                     }

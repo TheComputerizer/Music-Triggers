@@ -97,6 +97,15 @@ public class eventsClient {
         advancement = true;
     }
 
+    public static void onDisconnect() {
+        MusicPicker.mc.getSoundManager().stopAll();
+        MusicPlayer.fadingOut = false;
+        MusicPlayer.fadingIn = false;
+        MusicPlayer.linkedFadingIn = new HashMap<>();
+        MusicPlayer.linkedFadingOut = new HashMap<>();
+        MusicPlayer.curMusic = null;
+    }
+
     public static void onCustomTick() {
         if(MusicPlayer.curMusic!=null
                 && MinecraftClient.getInstance().getSoundManager().soundSystem.sources.get(MusicPlayer.curMusic)!=null
@@ -229,6 +238,11 @@ public class eventsClient {
                 timer = 0;
                 activated = false;
                 ismoving = false;
+                MusicPlayer.fadingIn=false;
+                MusicPlayer.fadingOut = false;
+                MusicPlayer.curMusic = null;
+                MusicPlayer.curTrack = null;
+                MusicPlayer.curTrackList = null;
                 MusicPlayer.cards = true;
                 MusicPlayer.reloading = false;
             }
@@ -244,6 +258,8 @@ public class eventsClient {
             if (!configDebug.ShowJustCurSong) {
                 int displayCount = 0;
                 if(!MusicPlayer.formatSongTime().matches("No song playing")) left.add("Music Triggers Current Song Time: " + MusicPlayer.formatSongTime());
+                if(MusicPlayer.fadingOut) left.add("Music Triggers Fading Out: "+MusicPlayer.formattedTimeFromMilliseconds(MusicPlayer.tempFadeOut*50));
+                if(MusicPlayer.fadingIn) left.add("Music Triggers Fading In: "+MusicPlayer.formattedTimeFromMilliseconds(MusicPlayer.tempFadeIn*50));
                 if(MusicPicker.playableList!=null && !MusicPicker.playableList.isEmpty()) {
                     StringBuilder s = new StringBuilder();
                     for (String ev : MusicPicker.playableList) {

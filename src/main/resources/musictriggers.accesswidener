@@ -3,6 +3,7 @@ accessible field net/minecraft/client/sound/SoundManager soundSystem Lnet/minecr
 accessible field net/minecraft/client/sound/SoundSystem sources Ljava/util/Map;
 accessible field net/minecraft/client/sound/SoundSystem channel Lnet/minecraft/client/sound/Channel;
 accessible field net/minecraft/client/sound/SoundSystem soundLoader Lnet/minecraft/client/sound/SoundLoader;
+accessible field net/minecraft/client/sound/SoundSystem sources Ljava/util/Map;
 accessible field net/minecraft/client/sound/Source pointer I
 accessible field net/minecraft/client/sound/Source stream Lnet/minecraft/client/sound/AudioStream;
 accessible method net/minecraft/client/sound/Source getSourceState ()I

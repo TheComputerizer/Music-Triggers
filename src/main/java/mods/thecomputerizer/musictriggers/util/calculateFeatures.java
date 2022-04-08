@@ -20,6 +20,8 @@ import net.minecraft.world.gen.feature.StructureFeature;
 
 import java.util.*;
 
+import static mods.thecomputerizer.musictriggers.client.MusicPicker.stringBreaker;
+
 @SuppressWarnings("OptionalGetWithoutIsPresent")
 public class calculateFeatures {
 
@@ -42,9 +44,10 @@ public class calculateFeatures {
                 for (StructureFeature<?> structureFeature : FabricStructureImpl.STRUCTURE_TO_CONFIG_MAP.keySet()) {
                     if(world.getStructureAccessor().getStructureAt(pos, structureFeature).isInExistingChunk()) {
                         if(structureFeature.getName()!=null) {
-                            curStruct = structureFeature.getName().replace("minecraft:", "");
-                            if(curStruct.matches(struct)) {
+                            curStruct = structureFeature.getName();
+                            if(checkResourceList(curStruct,struct,false)) {
                                 good = true;
+                                break;
                             }
                         }
                     }
@@ -60,11 +63,8 @@ public class calculateFeatures {
             RegistryWorldView world = curServer.getWorld(player.getWorld().getRegistryKey());
             if (world != null) {
                 Biome biome = world.getBiome(pos);
-                if (!biome.doesNotSnow(pos)) {
-                    PacketHandler.sendTo(InfoFromSnow.id, InfoFromSnow.encode(true, triggerID), player);
-                } else {
-                    PacketHandler.sendTo(InfoFromSnow.id, InfoFromSnow.encode(false, triggerID), player);
-                }
+                if (!biome.doesNotSnow(pos)) PacketHandler.sendTo(InfoFromSnow.id, InfoFromSnow.encode(true, triggerID), player);
+                else PacketHandler.sendTo(InfoFromSnow.id, InfoFromSnow.encode(false, triggerID), player);
             }
         }
     }
@@ -74,11 +74,9 @@ public class calculateFeatures {
         if(player!=null) {
             ServerWorld world = curServer.getWorld(player.getWorld().getRegistryKey());
             if (world != null) {
-                if (Objects.requireNonNull(player.getSpawnPointPosition()).isWithinDistance(pos,range) && player.getSpawnPointDimension()==world.getRegistryKey() && !world.getSpawnPos().isWithinDistance(pos,range)) {
+                if (Objects.requireNonNull(player.getSpawnPointPosition()).isWithinDistance(pos,range) && player.getSpawnPointDimension()==world.getRegistryKey() && !world.getSpawnPos().isWithinDistance(pos,range))
                     PacketHandler.sendTo(InfoFromHome.id, InfoFromHome.encode(true, triggerID), player);
-                } else {
-                    PacketHandler.sendTo(InfoFromHome.id, InfoFromHome.encode(false, triggerID), player);
-                }
+                else PacketHandler.sendTo(InfoFromHome.id, InfoFromHome.encode(false, triggerID), player);
             }
         }
     }
@@ -90,11 +88,8 @@ public class calculateFeatures {
             if (world != null) {
                 String curBiome = world.getBiomeKey(pos).get().getValue().toString();
                 boolean pass = checkBiome(world.getBiome(pos), curBiome,biome,category,rainType,temperature,cold,rainfall,togglerainfall);
-                if (pass) {
-                    PacketHandler.sendTo(InfoFromBiome.id, InfoFromBiome.encode(true,triggerID, curBiome), player);
-                } else {
-                    PacketHandler.sendTo(InfoFromBiome.id, InfoFromBiome.encode(false,triggerID, curBiome), player);
-                }
+                if (pass) PacketHandler.sendTo(InfoFromBiome.id, InfoFromBiome.encode(true,triggerID, curBiome), player);
+                else PacketHandler.sendTo(InfoFromBiome.id, InfoFromBiome.encode(false,triggerID, curBiome), player);
             }
         }
     }
@@ -105,18 +100,15 @@ public class calculateFeatures {
             ServerWorld world = curServer.getWorld(player.getWorld().getRegistryKey());
             if (world != null) {
                 Raid raid = world.getRaidAt(pos);
-                if (raid!=null && raid.getGroupsSpawned()>=wave) {
-                    PacketHandler.sendTo(InfoFromRaid.id, InfoFromRaid.encode(triggerID,true),player);
-                } else {
-                    PacketHandler.sendTo(InfoFromRaid.id, InfoFromRaid.encode(triggerID,false),player);
-                }
+                if (raid!=null && raid.getGroupsSpawned()>=wave) PacketHandler.sendTo(InfoFromRaid.id, InfoFromRaid.encode(triggerID,true),player);
+                else PacketHandler.sendTo(InfoFromRaid.id, InfoFromRaid.encode(triggerID,false),player);
             }
         }
     }
 
     public static boolean checkBiome(Biome b, String biome, String name, String category, String rainType, float temperature, boolean cold, float rainfall, boolean togglerainfall) {
-        if(biome.contains(name) || name.matches("minecraft")) {
-            if(b.getCategory().getName().contains(category) || category.matches("nope")) {
+        if(checkResourceList(biome, name, false) || name.matches("minecraft")) {
+            if(checkResourceList(b.getCategory().getName(), category, false) || category.matches("nope")) {
                 if(b.getPrecipitation().getName().contains(rainType) || rainType.matches("nope")) {
                     boolean pass = false;
                     if(rainfall==-111f) pass = true;
@@ -133,7 +125,7 @@ public class calculateFeatures {
         }
         return false;
     }
-    public static void calculateMobAndSend(String triggerID, UUID uuid, String mobname, int detectionrange, boolean targetting, int targettingpercentage, int health, int healthpercentage, boolean victory, int victoryID, int num, int persistence, int timeout, String nbtKey) {
+    public static void calculateMobAndSend(String triggerID, UUID uuid, String mobname, int detectionrange, boolean targetting, int targettingpercentage, int health, int healthpercentage, boolean victory, int victoryID, int num, int timeout, String nbtKey) {
         ServerPlayerEntity player = curServer.getPlayerManager().getPlayer(uuid);
         assert player != null;
         ServerWorld world = curServer.getWorld(player.getWorld().getRegistryKey());
@@ -142,7 +134,7 @@ public class calculateFeatures {
         List<LivingEntity> mobTempList = world.getEntitiesByClass(LivingEntity.class, new Box(player.getX() - detectionrange, player.getY() - (detectionrange / 2f), player.getZ() - detectionrange, player.getX() + detectionrange, player.getY() + (detectionrange / 2f), player.getZ() + detectionrange), EntityPredicates.VALID_LIVING_ENTITY);
         List<MobEntity> mobList = new ArrayList<>();
         for (LivingEntity e : mobTempList) {
-            if (e instanceof MobEntity) {
+            if (e instanceof MobEntity && nbtChecker(e, nbtKey)) {
                 mobList.add((MobEntity) e);
             }
         }
@@ -153,17 +145,13 @@ public class calculateFeatures {
             for (Iterator<MobEntity> it = mobList.iterator(); it.hasNext(); ) {
                 MobEntity e = it.next();
                 boolean isMonster = true;
-                if (e instanceof AnimalEntity || !(e.writeNbt(new NbtCompound()).contains(nbtKey) || nbtKey.matches("_"))) {
+                if (e instanceof AnimalEntity) {
                     it.remove();
                     isMonster = false;
                 }
                 if (isMonster) {
-                    if (e.getTarget() instanceof PlayerEntity) {
-                        trackingCounter++;
-                    }
-                    if (e.getHealth() / e.getMaxHealth() <= health / 100F) {
-                        healthCounter++;
-                    }
+                    if (e.getTarget() instanceof PlayerEntity) trackingCounter++;
+                    if (e.getHealth() / e.getMaxHealth() <= health / 100F) healthCounter++;
                     if (victory) {
                         victoryMobs.computeIfAbsent(triggerID, k -> new HashMap<>());
                         if (victoryMobs.get(triggerID).size() < num) victoryMobs.get(triggerID).put(e.getUuid(), timeout);
@@ -190,9 +178,7 @@ public class calculateFeatures {
             HashMap<String, Float> tempBoss = bossInfo;
             if(!bossInfo.isEmpty()) {
                 for(String name : tempBoss.keySet()) {
-                    if (health / 100f >= bossInfo.get(name)) {
-                        healthCounter++;
-                    }
+                    if (health / 100f >= bossInfo.get(name)) healthCounter++;
                     if (victory) {
                         victoryBosses.computeIfAbsent(triggerID, k -> new HashMap<>());
                         if (victoryBosses.get(triggerID).keySet().size() < num) victoryBosses.get(triggerID).put(name, timeout);
@@ -223,28 +209,23 @@ public class calculateFeatures {
             int mobCounter = 0;
             List<MobEntity> mobListSpecific = new ArrayList<>();
             for (LivingEntity e : mobTempList) {
-                if (e.getDisplayName().getString().matches(mobname) || Objects.requireNonNull(e.getType().getName()).asString().matches(mobname)) {
-                    if(e instanceof  MobEntity && (e.writeNbt(new NbtCompound()).contains(nbtKey) || nbtKey.matches("_"))) {
+                if ((checkResourceList(e.getDisplayName().getString(),mobname,true) || checkResourceList(Objects.requireNonNull(e.getType().getName()).toString(),mobname,true)) && nbtChecker(e, nbtKey)) {
+                    if(e instanceof  MobEntity) {
                         mobCounter++;
                         mobListSpecific.add((MobEntity) e);
                     }
                 }
             }
             for (MobEntity e : mobListSpecific) {
-                if (e.getTarget() instanceof PlayerEntity) {
-                    trackingCounter++;
-                }
-                if (e.getHealth() / e.getMaxHealth() <= health / 100F) {
-                    healthCounter++;
-                }
+                if (e.getTarget() instanceof PlayerEntity) trackingCounter++;
+                if (e.getHealth() / e.getMaxHealth() <= health / 100F) healthCounter++;
                 if (victory) {
                     victoryMobs.computeIfAbsent(triggerID, k -> new HashMap<>());
                     if (victoryMobs.get(triggerID).size() < num) victoryMobs.get(triggerID).put(e.getUuid(), timeout);
                 }
             }
-            if (mobCounter >= num && ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) && (float) healthCounter / num >= healthpercentage / 100F)) {
+            if (mobCounter >= num && ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) && (float) healthCounter / num >= healthpercentage / 100F))
                 pass = true;
-            }
             if(victoryMobs.get(triggerID)!=null) {
                 if (victoryMobs.get(triggerID).keySet().size() < num) {
                     victoryMobs = new HashMap<>();
@@ -259,10 +240,33 @@ public class calculateFeatures {
                 }
             }
         }
-        if (persistence > 0) {
-            pass = true;
-        }
         if(pass) victoryRet = false;
         PacketHandler.sendTo(InfoFromMob.id, InfoFromMob.encode(triggerID,pass,victoryID,victoryRet),player);
+    }
+
+    private static boolean nbtChecker(LivingEntity e, String nbt) {
+        String[] splitNBT = nbt.split(":");
+        if(splitNBT.length==1) return e.writeNbt(new NbtCompound()).contains(nbt) || nbt.matches("_");
+        else {
+            if(e.writeNbt(new NbtCompound()).contains(splitNBT[0])) {
+                NbtCompound compound = e.writeNbt(new NbtCompound()).getCompound(splitNBT[0]);
+                if(splitNBT.length==2) return e.writeNbt(new NbtCompound()).getString(splitNBT[0]).matches(splitNBT[1]);
+                else {
+                    for (int i = 1; i < splitNBT.length - 2; i++) {
+                        if (compound.contains(splitNBT[i])) compound = compound.getCompound(splitNBT[i]);
+                    }
+                    return compound.getString(splitNBT[splitNBT.length-2]).matches(splitNBT[splitNBT.length-1]);
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean checkResourceList(String type, String resourceList, boolean match) {
+        for(String resource : stringBreaker(resourceList,";")) {
+            if(match && type.matches(resource)) return true;
+            else if(!match && type.contains(resource)) return true;
+        }
+        return false;
     }
 }

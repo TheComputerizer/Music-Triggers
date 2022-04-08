@@ -9,7 +9,7 @@ import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("ALL")
-public class setVolumeSound implements SoundInstance {
+public class SetVolumeSound implements SoundInstance {
 
     protected Sound sound;
     @Nullable
@@ -25,7 +25,7 @@ public class setVolumeSound implements SoundInstance {
     protected int repeatDelay;
     protected SoundInstance.AttenuationType attenuationType;
 
-    public setVolumeSound(Identifier soundId, SoundCategory categoryIn, float volume, float pitch, boolean repeat, int repeatDelay, SoundInstance.AttenuationType soundAttenuation, float xPosF, float yPosF, float zPosF)
+    public SetVolumeSound(Identifier soundId, SoundCategory categoryIn, float volume, float pitch, boolean repeat, int repeatDelay, SoundInstance.AttenuationType soundAttenuation, float xPosF, float yPosF, float zPosF)
     {
         this.positionedSoundLocation = soundId;
         this.category = categoryIn;

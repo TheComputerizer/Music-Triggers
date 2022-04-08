@@ -101,8 +101,8 @@ public class GuiTriggerInfo extends Screen {
                     if(this.parentScreen instanceof GuiSongInfo parent) {
                         this.holder.removeTrigger(this.songCode,this.trigger);
                         parent.holder = this.holder;
-                        parent.triggers = this.holder.getAllTriggersForCode(this.songCode);
-                        parent.scrollingSongs.resetEntries(parent.triggers);
+                        parent.triggersCodes = this.holder.getAllTriggersForCode(this.songCode);
+                        parent.scrollingSongs.resetEntries(parent.triggersCodes);
                     } else {
                         GuiTriggers parent = ((GuiTriggers)this.parentScreen);
                         this.holder.removeTrigger(this.songCode,this.trigger);

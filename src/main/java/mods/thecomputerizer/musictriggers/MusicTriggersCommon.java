@@ -2,10 +2,7 @@ package mods.thecomputerizer.musictriggers;
 
 import mods.thecomputerizer.musictriggers.client.gui.Mappings;
 import mods.thecomputerizer.musictriggers.common.eventsCommon;
-import mods.thecomputerizer.musictriggers.config.configDebug;
-import mods.thecomputerizer.musictriggers.config.configRegistry;
-import mods.thecomputerizer.musictriggers.config.configTitleCards;
-import mods.thecomputerizer.musictriggers.config.configToml;
+import mods.thecomputerizer.musictriggers.config.*;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.json;
@@ -70,6 +67,7 @@ public class MusicTriggersCommon implements ModInitializer {
             }
         }
         configDebug.parse(debugConfig);
+        configCommands.parse();
         File registrationConfig = new File("config/MusicTriggers/registration.toml");
         if(!registrationConfig.exists()) {
             try {

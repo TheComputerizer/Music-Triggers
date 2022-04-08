@@ -23,16 +23,22 @@ import java.util.UUID;
 public class MusicRecorder extends Block {
 
     public static final BooleanProperty HAS_RECORD = Properties.HAS_RECORD;
+    public static final BooleanProperty HAS_DISC = BooleanProperty.of("has_disc");
 
     public MusicRecorder(AbstractBlock.Settings s) {
         super(s);
-        this.setDefaultState(this.stateManager.getDefaultState().with(HAS_RECORD, false));
+        this.setDefaultState(this.stateManager.getDefaultState().with(HAS_RECORD, false).with(HAS_DISC, Boolean.FALSE));
     }
 
     public ActionResult onUse(BlockState state, World worldIn, BlockPos pos, PlayerEntity playerIn, Hand hand, BlockHitResult res) {
         if (state.get(HAS_RECORD)) {
             this.dropRecord(worldIn, pos);
             state = state.with(HAS_RECORD, false);
+            worldIn.setBlockState(pos, state, Block.NOTIFY_LISTENERS);
+            return ActionResult.success(worldIn.isClient);
+        } else if(state.get(HAS_DISC)) {
+            this.dropRecord(worldIn, pos);
+            state = state.with(HAS_DISC, false);
             worldIn.setBlockState(pos, state, Block.NOTIFY_LISTENERS);
             return ActionResult.success(worldIn.isClient);
         } else {
@@ -45,7 +51,8 @@ public class MusicRecorder extends Block {
         eventsCommon.recordHolder.put(pos, recordStack.copy());
         eventsCommon.recordUUID.put(pos, uuid);
         eventsCommon.tickCounter.put(pos, 0);
-        worldIn.setBlockState(pos, state.with(HAS_RECORD, true), Block.NOTIFY_LISTENERS);
+        if(recordStack.getItem() instanceof BlankRecord) worldIn.setBlockState(pos, state.with(HAS_RECORD, true), Block.NOTIFY_LISTENERS);
+        else worldIn.setBlockState(pos, state.with(HAS_DISC, Boolean.TRUE), Block.NOTIFY_LISTENERS);
     }
 
     private void dropRecord(World worldIn, BlockPos pos) {
@@ -99,6 +106,6 @@ public class MusicRecorder extends Block {
 
     @Override
     protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
-        builder.add(HAS_RECORD);
+        builder.add(HAS_RECORD).add(HAS_DISC);
     }
 }

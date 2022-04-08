@@ -14,7 +14,6 @@ public class MixinAdvancementEvent {
 
     @Inject(method = "grantCriterion(Lnet/minecraft/advancement/Advancement;Ljava/lang/String;)Z", at = @At(value = "HEAD", target = "Lnet/minecraft/advancement/PlayerAdvancementTracker;grantCriterion(Lnet/minecraft/advancement/Advancement;Ljava/lang/String;)Z"))
     private void grantCriterion(Advancement advancement, String criterionName, CallbackInfoReturnable<Boolean> cir) {
-        MusicTriggersCommon.logger.info("testing advancement event");
         if(((PlayerAdvancementTracker)(Object)this).getProgress(advancement).isDone()) {
             AdvancementEvent.EVENT.invoker().interact(advancement);
         }

@@ -14,21 +14,16 @@ public class BlankRecord extends Item {
     }
 
     @Override
-    public @NotNull ActionResult useOnBlock(ItemUsageContext ctx)
-    {
+    public @NotNull ActionResult useOnBlock(ItemUsageContext ctx) {
         BlockState blockstate = ctx.getWorld().getBlockState(ctx.getBlockPos());
-        if (blockstate.getBlock() instanceof MusicRecorder mr)
-        {
-            if(!ctx.getWorld().isClient() && !blockstate.get(MusicRecorder.HAS_RECORD)) {
+        if (blockstate.getBlock() instanceof MusicRecorder mr) {
+            if(!ctx.getWorld().isClient() && !blockstate.get(MusicRecorder.HAS_RECORD) && !blockstate.get(MusicRecorder.HAS_DISC)) {
                 ItemStack itemstack = ctx.getStack();
                 mr.insertRecord(ctx.getWorld(),ctx.getBlockPos(),blockstate,itemstack, Objects.requireNonNull(ctx.getPlayer()).getUuid());
                 itemstack.decrement(1);
             }
             return ActionResult.SUCCESS;
         }
-        else
-        {
-            return ActionResult.PASS;
-        }
+        else return ActionResult.PASS;
     }
 }

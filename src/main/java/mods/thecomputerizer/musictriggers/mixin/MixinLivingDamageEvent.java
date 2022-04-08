@@ -13,7 +13,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinLivingDamageEvent {
     @Inject(method = "applyDamage(Lnet/minecraft/entity/damage/DamageSource;F)V", at = @At(value = "HEAD", target = "Lnet/minecraft/entity/LivingEntity;applyDamage(Lnet/minecraft/entity/damage/DamageSource;F)V"))
     private void applyDamage(DamageSource source, float amount, CallbackInfo info) {
-        MusicTriggersCommon.logger.info("testing damage event");
         LivingDamageEvent.EVENT.invoker().interact((LivingEntity)(Object)this,source);
     }
 }

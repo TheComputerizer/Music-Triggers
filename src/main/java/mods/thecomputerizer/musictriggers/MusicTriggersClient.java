@@ -10,7 +10,9 @@ import mods.thecomputerizer.musictriggers.util.json;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.networking.v1.ClientLoginConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.impl.event.lifecycle.ClientLifecycleEventsImpl;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
@@ -84,6 +86,8 @@ public class MusicTriggersClient implements ClientModInitializer {
     }
 
     private static void setUpClientEvents() {
+
+        ClientLoginConnectionEvents.DISCONNECT.register((handler, client) -> eventsClient.onDisconnect());
 
         HudRenderCallback.EVENT.register((matrixStack, tickDelta) -> {
             eventsClient.imageCards(matrixStack);

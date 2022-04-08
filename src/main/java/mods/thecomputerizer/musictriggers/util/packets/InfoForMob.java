@@ -17,8 +17,8 @@ public class InfoForMob {
         return ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
     }
 
-    public static PacketByteBuf encode(String trigger, UUID u, String n, String r, String t, String tp, String h, String hp, String v, String vi, String num, int time, int to, String nbt) {
-        String send = trigger+","+u.toString()+","+n+","+r+","+t+","+tp+","+h+","+hp+","+v+","+vi+","+num+","+time+","+to+","+nbt;
+    public static PacketByteBuf encode(String trigger, UUID u, String n, String r, String t, String tp, String h, String hp, String v, String vi, String num, int to, String nbt) {
+        String send = trigger+"$"+u.toString()+"$"+n+"$"+r+"$"+t+"$"+tp+"$"+h+"$"+hp+"$"+v+"$"+vi+"$"+num+"$"+to+"$"+nbt;
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeCharSequence(send, StandardCharsets.UTF_8);
         return buf;
@@ -30,7 +30,7 @@ public class InfoForMob {
             String s = decode(buf);
             calculateFeatures.calculateMobAndSend(getDataTriggerName(s), getDataUUID(s), getMobName(s), getDetectionRange(s),
                     getTargettingBoolean(s), getHordeTargettingPercentage(s), getHealth(s), getHealthTargettingPercentage(s),
-                    getVictoryBoolean(s), getVictoryID(s), getMobNumber(s), getTime(s), getTimeOut(s), getNBT(s));
+                    getVictoryBoolean(s), getVictoryID(s), getMobNumber(s), getTimeOut(s), getNBT(s));
         });
     }
 
@@ -67,17 +67,14 @@ public class InfoForMob {
     public static Integer getMobNumber(String s) {
         return Integer.parseInt(stringBreaker(s)[10]);
     }
-    public static Integer getTime(String s) {
+    public static Integer getTimeOut(String s) {
         return Integer.parseInt(stringBreaker(s)[11]);
     }
-    public static Integer getTimeOut(String s) {
-        return Integer.parseInt(stringBreaker(s)[12]);
-    }
     public static String getNBT(String s) {
-        return stringBreaker(s)[13];
+        return stringBreaker(s)[12];
     }
 
     public static String[] stringBreaker(String s) {
-        return s.split(",");
+        return s.split("\\$");
     }
 }

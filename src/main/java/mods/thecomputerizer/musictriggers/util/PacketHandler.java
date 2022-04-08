@@ -23,11 +23,13 @@ public class PacketHandler {
         InfoFromBiome.register();
         InfoFromHome.register();
         InfoFromMob.register();
-        InfoFromHome.register();
-        InfoFromHome.register();
+        InfoFromRaid.register();
+        InfoFromSnow.register();
         InfoFromStructure.register();
         BossInfo.register();
         AllTriggers.register();
+        MenuSongs.register();
+        ExecuteCommand.register();
     }
 
     public static void sendTo(Identifier id, PacketByteBuf buf, ServerPlayerEntity player) {
