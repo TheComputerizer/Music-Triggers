@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
 import io.netty.buffer.ByteBuf;
+import net.minecraft.command.CommandBase;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -18,7 +19,13 @@ public class packetExecuteCommand implements IMessageHandler<packetExecuteComman
 
         if(ctx.side.isServer()) {
             MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-            server.commandManager.executeCommand(server, message.getLiteralCommand());
+            for(String command : server.getCommandManager().getCommands().keySet()) {
+                if(server.getCommandManager().getCommands().get(command).getAliases().contains(message.getCommandName())) {
+                    if(((CommandBase)server.getCommandManager().getCommands().get(command)).getRequiredPermissionLevel()<=message.getOpLevel()) {
+                        server.commandManager.executeCommand(server, message.getLiteralCommand());
+                    }
+                }
+            }
         }
         return null;
     }
@@ -28,8 +35,8 @@ public class packetExecuteCommand implements IMessageHandler<packetExecuteComman
 
         public packetExecuteCommandMessage() {}
 
-        public packetExecuteCommandMessage(String cmd) {
-            this.s = cmd;
+        public packetExecuteCommandMessage(String cmd, int level) {
+            this.s = cmd+","+level;
         }
 
         @Override
@@ -46,7 +53,15 @@ public class packetExecuteCommand implements IMessageHandler<packetExecuteComman
             if(s==null) {
                 return null;
             }
-            return s;
+            return stringBreaker(s)[0];
+        }
+
+        public int getOpLevel() {
+            return Integer.parseInt(stringBreaker(s)[1]);
+        }
+
+        public String getCommandName() {
+            return stringBreaker(s)[0].split(" ")[0].replaceAll("/","");
         }
 
         public static String[] stringBreaker(String s) {

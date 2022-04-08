@@ -213,7 +213,7 @@ public class MusicPlayer {
                     curTrackList = null;
                     reverseTrackList = null;
                     for(String sound : musicLinker.keySet()) sh.stopSound(musicLinker.get(sound));
-                    ((SoundSystem)sh.sndManager.sndSystem).stop(temp);
+                    musicLinker = new HashMap<>();
                     eventsClient.IMAGE_CARD = null;
                     eventsClient.fadeCount = 1000;
                     eventsClient.timer = 0;
@@ -300,7 +300,7 @@ public class MusicPlayer {
                         savedFadeOut = MusicPicker.curFadeOut;
                         for(String command : configCommands.commandMap.keySet()) {
                             if(Arrays.asList(curTrackList).containsAll(configCommands.commandMap.get(command)) && configCommands.commandMap.get(command).containsAll(Arrays.asList(curTrackList))) {
-                                RegistryHandler.network.sendToServer(new packetExecuteCommand.packetExecuteCommandMessage(command));
+                                RegistryHandler.network.sendToServer(new packetExecuteCommand.packetExecuteCommandMessage(command, mc.player.getPermissionLevel()));
                             }
                         }
                     }
@@ -626,7 +626,6 @@ public class MusicPlayer {
             oncePerTrigger = new ArrayList<>();
             onceUntilEmpty = new ArrayList<>();
             triggerLinker = new HashMap<>();
-            musicLinker = new HashMap<>();
             loopLinker = new HashMap<>();
             loopLinkerCounter = new HashMap<>();
             if(!fadingOut) {

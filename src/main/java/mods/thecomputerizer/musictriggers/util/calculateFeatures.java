@@ -13,6 +13,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.gen.structure.StructureMineshaftStart;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Optional;
 
@@ -32,7 +33,12 @@ public class calculateFeatures {
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
         WorldServer world = server.getWorld(dimID);
         if(world!=null) {
-            if (world.getChunkProvider().isInsideStructure(world, struct, pos)) {
+            boolean pass = false;
+            for(String actualStructure : stringBreaker(struct,";")) {
+                pass = world.getChunkProvider().isInsideStructure(world, actualStructure, pos);
+                if(pass) break;
+            }
+            if (pass) {
                 RegistryHandler.network.sendTo(new packetToClient.packetToClientMessage(true +","+triggerID), server.getPlayerList().getPlayerByUUID(uuid));
             } else {
                 RegistryHandler.network.sendTo(new packetToClient.packetToClientMessage(false +","+triggerID), server.getPlayerList().getPlayerByUUID(uuid));

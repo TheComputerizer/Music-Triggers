@@ -24,7 +24,7 @@ public class BlankRecord extends Item {
         if (iblockstate.getBlock() instanceof MusicRecorder)
         {
             MusicRecorder mr = (MusicRecorder) iblockstate.getBlock();
-            if(!worldIn.isRemote && !iblockstate.getValue(MusicRecorder.HAS_RECORD)) {
+            if(!worldIn.isRemote && !iblockstate.getValue(MusicRecorder.HAS_RECORD) && !iblockstate.getValue(MusicRecorder.HAS_DISC)) {
                 ItemStack itemstack = player.getHeldItem(hand);
                 mr.insertRecord(worldIn,pos,iblockstate,itemstack,player.getUniqueID());
                 itemstack.shrink(1);

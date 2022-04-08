@@ -32,13 +32,15 @@ public class eventsCommon {
     @SubscribeEvent
     public static void serverTick(TickEvent.ServerTickEvent e) {
         if(bossTimer>1) bossTimer-=1;
-        else if(bossTimer==1) calculateFeatures.bossInfo = new HashMap<>();
+        else if(bossTimer==1) {
+            calculateFeatures.bossInfo = new HashMap<>();
+            bossTimer-=1;
+        }
         for (String trigger : calculateFeatures.victoryMobs.keySet()) {
             if(!calculateFeatures.allTriggers.contains(trigger)) {
                 Map<UUID, Integer> tempMap = calculateFeatures.victoryMobs.get(trigger);
                 for (UUID u : tempMap.keySet()) {
                     int temp = tempMap.get(u);
-                    MusicTriggers.logger.info("Entity timer: " + temp);
                     if (temp > 0) calculateFeatures.victoryMobs.get(trigger).put(u, temp - 1);
                     else calculateFeatures.victoryMobs.put(trigger, new HashMap<>());
                 }

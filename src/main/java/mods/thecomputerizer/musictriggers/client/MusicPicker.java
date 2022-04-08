@@ -623,7 +623,7 @@ public class MusicPicker {
                 dynamicDelay.put("pet", Integer.parseInt(SoundHandler.TriggerInfoMap.get("pet")[4]));
                 if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("pet")[33])) timeSwitch.add("pet");
             }
-            if (triggerPersistence.get("drowning") != null && player.getAir() < Integer.parseInt(SoundHandler.TriggerInfoMap.get("drowning")[2])) {
+            if (SoundHandler.TriggerIdentifierMap.get("drowning") != null && player.getAir() < Integer.parseInt(SoundHandler.TriggerInfoMap.get("drowning")[2])) {
                 crashHelper = "drowning";
                 events.add("drowning");
                 dynamicSongs.put("drowning", SoundHandler.TriggerIdentifierMap.get("drowning").get("_"));
@@ -643,7 +643,7 @@ public class MusicPicker {
                 dynamicDelay.put("drowning", Integer.parseInt(SoundHandler.TriggerInfoMap.get("drowning")[4]));
                 if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("drowning")[33])) timeSwitch.add("drowning");
             }
-            if (triggerPersistence.get("pvp") != null && setPVP) {
+            if (SoundHandler.TriggerIdentifierMap.get("pvp") != null && setPVP) {
                 crashHelper = "pvp";
                 events.add("pvp");
                 dynamicSongs.put("pvp", SoundHandler.TriggerIdentifierMap.get("pvp").get("_"));
@@ -674,7 +674,7 @@ public class MusicPicker {
                 victory.put(pvpVictoryID, true);
                 eventsClient.PVPTracker = null;
             }
-            if (triggerPersistence.get("home") != null && player.getBedLocation(player.dimension).getDistance(roundedPos(player).getX(), roundedPos(player).getY(), roundedPos(player).getZ()) < Integer.parseInt(SoundHandler.TriggerInfoMap.get("home")[11])) {
+            if (SoundHandler.TriggerIdentifierMap.get("home") != null && player.getBedLocation(player.dimension).getDistance(roundedPos(player).getX(), roundedPos(player).getY(), roundedPos(player).getZ()) < Integer.parseInt(SoundHandler.TriggerInfoMap.get("home")[11])) {
                 crashHelper = "home";
                 events.add("home");
                 dynamicSongs.put("home", SoundHandler.TriggerIdentifierMap.get("home").get("_"));
@@ -1123,7 +1123,6 @@ public class MusicPicker {
                         }
                     }
                 }
-                eventsClient.advancement = false;
             }
             try {
                 List<String> stages = gamestages();
@@ -1546,7 +1545,7 @@ public class MusicPicker {
 
     public static boolean checkBiome(Biome b, String name, String category, String rainType, float temperature, boolean cold, float rainfall, boolean togglerainfall) {
         if(checkResourceList(Objects.requireNonNull(b.getRegistryName()).toString(),name, false) || name.matches("minecraft")) {
-            if(b.getTempCategory().toString().contains(category) || category.matches("nope")) {
+            if(checkResourceList(b.getTempCategory().toString(),category,false) || category.matches("nope")) {
                 boolean pass = false;
                 if(rainfall==-111f) pass = true;
                 else if(b.getRainfall()>rainfall && togglerainfall) pass = true;
