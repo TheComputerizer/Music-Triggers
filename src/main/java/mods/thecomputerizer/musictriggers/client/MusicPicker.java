@@ -610,7 +610,7 @@ public class MusicPicker {
                 dynamicDelay.put("pet", Integer.parseInt(SoundHandler.TriggerInfoMap.get("pet")[4]));
                 if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("pet")[33])) timeSwitch.add("pet");
             }
-            if (triggerPersistence.get("drowning") != null && player.getAirSupply() < Integer.parseInt(SoundHandler.TriggerInfoMap.get("drowning")[2])) {
+            if (SoundHandler.TriggerIdentifierMap.get("drowning") != null && player.getAirSupply() < Integer.parseInt(SoundHandler.TriggerInfoMap.get("drowning")[2])) {
                 crashHelper = "drowning";
                 events.add("drowning");
                 dynamicSongs.put("drowning", SoundHandler.TriggerIdentifierMap.get("drowning").get("_"));
@@ -630,7 +630,7 @@ public class MusicPicker {
                 dynamicDelay.put("drowning", Integer.parseInt(SoundHandler.TriggerInfoMap.get("drowning")[4]));
                 if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("drowning")[33])) timeSwitch.add("drowning");
             }
-            if (triggerPersistence.get("pvp") != null && setPVP) {
+            if (SoundHandler.TriggerIdentifierMap.get("pvp") != null && setPVP) {
                 crashHelper = "pvp";
                 events.add("pvp");
                 dynamicSongs.put("pvp", SoundHandler.TriggerIdentifierMap.get("pvp").get("_"));
@@ -661,7 +661,7 @@ public class MusicPicker {
                 victory.put(pvpVictoryID, true);
                 eventsClient.PVPTracker = null;
             }
-            if (triggerPersistence.get("home") != null && !configRegistry.clientSideOnly) {
+            if (SoundHandler.TriggerIdentifierMap.get("home") != null && !configRegistry.clientSideOnly) {
                 crashHelper = "home";
                 PacketHandler.sendToServer(new InfoForHome("home", roundedPos(player), player.getUUID(), SoundHandler.TriggerInfoMap.get("home")[11]));
                 fromServer.inHomeRange.putIfAbsent("home", false);
@@ -1137,7 +1137,6 @@ public class MusicPicker {
                         }
                     }
                 }
-                eventsClient.advancement = false;
             }
             boolean bloodmoon = bloodmoon();
             if (bloodmoon) {

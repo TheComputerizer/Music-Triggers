@@ -30,7 +30,10 @@ public class eventsCommon {
     @SubscribeEvent
     public static void serverTick(TickEvent.ServerTickEvent e) {
         if (bossTimer > 1) bossTimer -= 1;
-        else if (bossTimer == 1) calculateFeatures.bossInfo = new HashMap<>();
+        else if(bossTimer==1) {
+            calculateFeatures.bossInfo = new HashMap<>();
+            bossTimer-=1;
+        }
         for (String trigger : calculateFeatures.victoryMobs.keySet()) {
             if (!calculateFeatures.allTriggers.contains(trigger)) {
                 Map<UUID, Integer> tempMap = calculateFeatures.victoryMobs.get(trigger);

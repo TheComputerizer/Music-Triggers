@@ -200,6 +200,7 @@ public class configToml {
                                     } else {
                                         MusicTriggers.logger.warn("Skipping trigger block because there was no name!");
                                     }
+                                    triggerMapCounter++;
                                 }
                             } else if (song.containsTable("trigger")) {
                                 Toml trigger = song.getTable("trigger");
@@ -661,6 +662,7 @@ public class configToml {
                                 } else {
                                     MusicTriggers.logger.warn("Skipping trigger block because there was no name!");
                                 }
+                                triggerMapCounter++;
                             }
                         } else if (song.containsTable("trigger")) {
                             Toml trigger = song.getTable("trigger");
