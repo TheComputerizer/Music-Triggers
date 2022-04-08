@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
 import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
+import mods.thecomputerizer.musictriggers.common.eventsCommon;
 import mods.thecomputerizer.musictriggers.util.calculateFeatures;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -29,6 +30,7 @@ public class BossInfo {
             calculateFeatures.curServer = server;
             String s = decode(buf);
             calculateFeatures.bossInfo.put(getDataName(s), getDataPercent(s));
+            eventsCommon.bossTimer = 40;
         });
     }
 
