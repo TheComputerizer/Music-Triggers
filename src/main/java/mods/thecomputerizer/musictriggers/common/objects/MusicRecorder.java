@@ -23,16 +23,22 @@ import java.util.UUID;
 public class MusicRecorder extends Block {
 
     public static final BooleanProperty HAS_RECORD = BlockStateProperties.HAS_RECORD;
+    public static final BooleanProperty HAS_DISC = BooleanProperty.create("has_disc");
 
     public MusicRecorder(BlockBehaviour.Properties p) {
         super(p);
-        this.registerDefaultState(this.stateDefinition.any().setValue(HAS_RECORD, Boolean.FALSE));
+        this.registerDefaultState(this.stateDefinition.any().setValue(HAS_RECORD, Boolean.FALSE).setValue(HAS_DISC, Boolean.FALSE));
     }
 
     public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player playerIn, InteractionHand hand, BlockHitResult res) {
         if (state.getValue(HAS_RECORD)) {
             this.dropRecord(worldIn, pos);
             state = state.setValue(HAS_RECORD, false);
+            worldIn.setBlock(pos, state, 2);
+            return InteractionResult.sidedSuccess(worldIn.isClientSide);
+        } else if(state.getValue(HAS_DISC)) {
+            this.dropRecord(worldIn, pos);
+            state = state.setValue(HAS_DISC, false);
             worldIn.setBlock(pos, state, 2);
             return InteractionResult.sidedSuccess(worldIn.isClientSide);
         } else {
@@ -45,7 +51,8 @@ public class MusicRecorder extends Block {
         eventsCommon.recordHolder.put(pos, recordStack.copy());
         eventsCommon.recordUUID.put(pos, uuid);
         eventsCommon.tickCounter.put(pos, 0);
-        worldIn.setBlock(pos, state.setValue(HAS_RECORD, Boolean.TRUE), 2);
+        if(recordStack.getItem() instanceof BlankRecord) worldIn.setBlock(pos, state.setValue(HAS_RECORD, Boolean.TRUE), 2);
+        else worldIn.setBlock(pos, state.setValue(HAS_DISC, Boolean.TRUE), 2);
     }
 
     private void dropRecord(Level worldIn, BlockPos pos) {
@@ -94,6 +101,6 @@ public class MusicRecorder extends Block {
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> stateBuilder) {
-        stateBuilder.add(HAS_RECORD);
+        stateBuilder.add(HAS_RECORD).add(HAS_DISC);
     }
 }

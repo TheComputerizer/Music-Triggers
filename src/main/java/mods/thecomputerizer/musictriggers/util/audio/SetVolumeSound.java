@@ -14,7 +14,7 @@ import javax.annotation.Nullable;
 
 @SuppressWarnings("ALL")
 @Mod.EventBusSubscriber(modid = MusicTriggers.MODID, value = Dist.CLIENT)
-public class setVolumeSound implements SoundInstance {
+public class SetVolumeSound implements SoundInstance {
 
     protected Sound sound;
     @Nullable
@@ -30,7 +30,7 @@ public class setVolumeSound implements SoundInstance {
     protected int repeatDelay;
     protected SoundInstance.Attenuation attenuationType;
 
-    public setVolumeSound(ResourceLocation soundId, SoundSource categoryIn, float volume, float pitch, boolean repeat, int repeatDelay, SoundInstance.Attenuation soundAttenuation, float xPosF, float yPosF, float zPosF)
+    public SetVolumeSound(ResourceLocation soundId, SoundSource categoryIn, float volume, float pitch, boolean repeat, int repeatDelay, SoundInstance.Attenuation soundAttenuation, float xPosF, float yPosF, float zPosF)
     {
         this.positionedSoundLocation = soundId;
         this.category = categoryIn;

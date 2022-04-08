@@ -15,8 +15,8 @@ public class InfoForMob {
         this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
     }
 
-    public InfoForMob(String trigger, UUID u, String n, String r, String t, String tp, String h, String hp, String v, String vi, String i, String num, int time, int to, String nbt) {
-        this.s = trigger+","+u.toString()+","+n+","+r+","+t+","+tp+","+h+","+hp+","+v+","+vi+","+i+","+num+","+time+","+to+","+nbt;
+    public InfoForMob(String trigger, UUID u, String n, String r, String t, String tp, String h, String hp, String v, String vi, String i, String num, int to, String nbt) {
+        this.s = trigger+"$"+u.toString()+"$"+n+"$"+r+"$"+t+"$"+tp+"$"+h+"$"+hp+"$"+v+"$"+vi+"$"+i+"$"+num+"$"+to+"$"+nbt;
     }
 
     public static void encode(InfoForMob packet, FriendlyByteBuf buf) {
@@ -31,7 +31,7 @@ public class InfoForMob {
         calculateFeatures.calculateMobAndSend(packet.getDataTriggerName(), packet.getDataUUID(), packet.getMobName(), packet.getDetectionRange(),
                 packet.getTargettingBoolean(), packet.getHordeTargettingPercentage(), packet.getHealth(),
                 packet.getHealthTargettingPercentage(), packet.getVictoryBoolean(), packet.getVictoryID(), packet.getInfernalID(),
-                packet.getMobNumber(), packet.getTime(), packet.getTimeOut(), packet.getNBT());
+                packet.getMobNumber(), packet.getTimeOut(), packet.getNBT());
 
         ctx.setPacketHandled(true);
     }
@@ -75,17 +75,14 @@ public class InfoForMob {
     public Integer getMobNumber() {
         return Integer.parseInt(stringBreaker(s)[11]);
     }
-    public Integer getTime() {
+    public Integer getTimeOut() {
         return Integer.parseInt(stringBreaker(s)[12]);
     }
-    public Integer getTimeOut() {
-        return Integer.parseInt(stringBreaker(s)[13]);
-    }
     public String getNBT() {
-        return stringBreaker(s)[14];
+        return stringBreaker(s)[13];
     }
 
     public static String[] stringBreaker(String s) {
-        return s.split(",");
+        return s.split("\\$");
     }
 }

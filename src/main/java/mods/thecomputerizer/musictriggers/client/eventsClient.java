@@ -38,6 +38,7 @@ import net.minecraftforge.fml.ModList;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
@@ -121,6 +122,11 @@ public class eventsClient {
     @SubscribeEvent
     public static void clientDisconnected(PlayerEvent.PlayerLoggedOutEvent e) {
         MusicPicker.mc.getSoundManager().stop();
+        MusicPlayer.fadingOut = false;
+        MusicPlayer.fadingIn = false;
+        MusicPlayer.linkedFadingIn = new HashMap<>();
+        MusicPlayer.linkedFadingOut = new HashMap<>();
+        MusicPlayer.curMusic = null;
         isWorldRendered = false;
         MusicPicker.player = null;
     }
@@ -269,6 +275,11 @@ public class eventsClient {
                 timer = 0;
                 activated = false;
                 ismoving = false;
+                MusicPlayer.fadingIn=false;
+                MusicPlayer.fadingOut = false;
+                MusicPlayer.curMusic = null;
+                MusicPlayer.curTrack = null;
+                MusicPlayer.curTrackList = null;
                 MusicPlayer.cards = true;
                 MusicPlayer.reloading = false;
             }
@@ -285,6 +296,8 @@ public class eventsClient {
             if (!configDebug.ShowJustCurSong) {
                 int displayCount = 0;
                 if(!MusicPlayer.formatSongTime().matches("No song playing")) e.getLeft().add("Music Triggers Current Song Time: " + MusicPlayer.formatSongTime());
+                if(MusicPlayer.fadingOut) e.getLeft().add("Music Triggers Fading Out: "+MusicPlayer.formattedTimeFromMilliseconds(MusicPlayer.tempFadeOut*50));
+                if(MusicPlayer.fadingIn) e.getLeft().add("Music Triggers Fading In: "+MusicPlayer.formattedTimeFromMilliseconds(MusicPlayer.tempFadeIn*50));
                 if(MusicPicker.playableList!=null && !MusicPicker.playableList.isEmpty()) {
                     StringBuilder s = new StringBuilder();
                     for (String ev : MusicPicker.playableList) {

@@ -39,6 +39,8 @@ public class PacketHandler {
         HANDLER.registerMessage(disc++, InfoFromSnow.class, InfoFromSnow::encode, InfoFromSnow::new, InfoFromSnow::handle);
         HANDLER.registerMessage(disc++, BossInfo.class, BossInfo::encode, BossInfo::new, BossInfo::handle);
         HANDLER.registerMessage(disc++, AllTriggers.class, AllTriggers::encode, AllTriggers::new, AllTriggers::handle);
+        HANDLER.registerMessage(disc++, ExecuteCommand.class, ExecuteCommand::encode, ExecuteCommand::new, ExecuteCommand::handle);
+        HANDLER.registerMessage(disc++, MenuSongs.class, MenuSongs::encode, MenuSongs::new, MenuSongs::handle);
     }
 
     public static void sendTo(Object message, ServerPlayer player) {

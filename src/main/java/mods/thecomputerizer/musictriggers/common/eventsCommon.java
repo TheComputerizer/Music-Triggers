@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.common;
 
 import mods.thecomputerizer.musictriggers.common.objects.BlankRecord;
+import mods.thecomputerizer.musictriggers.common.objects.MusicRecorder;
 import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
 import mods.thecomputerizer.musictriggers.util.calculateFeatures;
 import mods.thecomputerizer.musictriggers.util.packets.CurSong;
@@ -22,15 +23,16 @@ public class eventsCommon {
     public static HashMap<BlockPos, ItemStack> recordHolder = new HashMap<>();
     public static HashMap<BlockPos, UUID> recordUUID = new HashMap<>();
     public static HashMap<BlockPos, Level> recordWorld = new HashMap<>();
+    public static HashMap<UUID, List<String>> recordMenu = new HashMap<>();
 
     public static int bossTimer = 0;
 
     @SubscribeEvent
     public static void serverTick(TickEvent.ServerTickEvent e) {
-        if(bossTimer>1) bossTimer-=1;
-        else if(bossTimer==1) calculateFeatures.bossInfo = new HashMap<>();
+        if (bossTimer > 1) bossTimer -= 1;
+        else if (bossTimer == 1) calculateFeatures.bossInfo = new HashMap<>();
         for (String trigger : calculateFeatures.victoryMobs.keySet()) {
-            if(!calculateFeatures.allTriggers.contains(trigger)) {
+            if (!calculateFeatures.allTriggers.contains(trigger)) {
                 Map<UUID, Integer> tempMap = calculateFeatures.victoryMobs.get(trigger);
                 for (UUID u : tempMap.keySet()) {
                     int temp = tempMap.get(u);
@@ -40,11 +42,12 @@ public class eventsCommon {
             }
         }
         for (String trigger : calculateFeatures.victoryBosses.keySet()) {
-            if(!calculateFeatures.allTriggers.contains(trigger)) {
+            if (!calculateFeatures.allTriggers.contains(trigger)) {
                 Map<String, Integer> tempMap = calculateFeatures.victoryBosses.get(trigger);
                 for (int j = 0; j < tempMap.keySet().size(); j++) {
                     int temp = tempMap.get(j);
-                    if (temp > 0) calculateFeatures.victoryBosses.get(trigger).put(new ArrayList<>(tempMap.keySet()).get(j), temp - 1);
+                    if (temp > 0)
+                        calculateFeatures.victoryBosses.get(trigger).put(new ArrayList<>(tempMap.keySet()).get(j), temp - 1);
                     else calculateFeatures.victoryBosses.put(trigger, new HashMap<>());
                 }
             }
@@ -52,22 +55,27 @@ public class eventsCommon {
         int randomNum = ThreadLocalRandom.current().nextInt(0, 5600);
         for (Map.Entry<BlockPos, ItemStack> blockPosItemStackEntry : recordHolder.entrySet()) {
             BlockPos blockPos = blockPosItemStackEntry.getKey();
-            if(recordHolder.get(blockPos)!=null && !recordHolder.get(blockPos).isEmpty() && recordHolder.get(blockPos).getItem() instanceof BlankRecord) {
-                tickCounter.put(blockPos,tickCounter.get(blockPos)+1);
-                if(randomNum+tickCounter.get(blockPos)>=6000) {
-                    recordWorld.get(blockPos).playSound(null,blockPos, new SoundEvent(new ResourceLocation("minecraft","item.trident.thunder")), SoundSource.MASTER,1F,1F);
-                    tickCounter.put(blockPos,0);
+            if (recordHolder.get(blockPos) != null && !recordHolder.get(blockPos).isEmpty() && (recordHolder.get(blockPos).getItem() instanceof BlankRecord || (recordHolder.get(blockPos).getItem() instanceof MusicTriggersRecord && recordWorld.get(blockPos).getBlockState(blockPos).getValue(MusicRecorder.HAS_DISC)))) {
+                tickCounter.put(blockPos, tickCounter.get(blockPos) + 1);
+                if (randomNum + tickCounter.get(blockPos) >= 6000) {
+                    recordWorld.get(blockPos).playSound(null, blockPos, new SoundEvent(new ResourceLocation("minecraft", "item.trident.thunder")), SoundSource.MASTER, 1F, 1F);
+                    tickCounter.put(blockPos, 0);
+                    String randomMenuSong = recordMenu.get(recordUUID.get(blockPos)).get(new Random().nextInt(recordMenu.get(recordUUID.get(blockPos)).size()));
                     for (SoundEvent s : SoundHandler.allSoundEvents) {
-                        String songName = Objects.requireNonNull(s.getRegistryName()).toString().replaceAll("musictriggers:","");
-                        if(songName.matches(CurSong.curSong.get(recordUUID.get(blockPos)))) {
-                            recordHolder.put(blockPos, Objects.requireNonNull(MusicTriggersRecord.getBySound(s)).getDefaultInstance());
+                        if (recordHolder.get(blockPos).getItem() instanceof BlankRecord) {
+                            String songName = Objects.requireNonNull(s.getRegistryName()).toString().replaceAll("musictriggers:", "");
+                            if (songName.matches(CurSong.curSong.get(recordUUID.get(blockPos)))) {
+                                recordHolder.put(blockPos, Objects.requireNonNull(MusicTriggersRecord.getBySound(s)).getDefaultInstance());
+                            }
+                        } else if (recordMenu.get(recordUUID.get(blockPos)) != null && !recordMenu.get(recordUUID.get(blockPos)).isEmpty() && recordWorld.get(blockPos).getBlockState(blockPos).getValue(MusicRecorder.HAS_DISC)) {
+                            String songName = Objects.requireNonNull(s.getRegistryName()).toString().replaceAll("musictriggers:", "");
+                            if (songName.matches(randomMenuSong))
+                                recordHolder.put(blockPos, Objects.requireNonNull(MusicTriggersRecord.getBySound(s)).getDefaultInstance());
+
                         }
                     }
                 }
-            }
-            else {
-                tickCounter.put(blockPos,0);
-            }
+            } else tickCounter.put(blockPos, 0);
         }
     }
 }

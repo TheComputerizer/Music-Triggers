@@ -16,21 +16,17 @@ public class BlankRecord extends Item {
     }
 
     @Override
-    public @NotNull InteractionResult useOn(UseOnContext ctx)
-    {
+    public @NotNull InteractionResult useOn(UseOnContext ctx) {
         BlockState blockstate = ctx.getLevel().getBlockState(ctx.getClickedPos());
-
-        if (blockstate.getBlock() instanceof MusicRecorder mr)
-        {
-            if(!ctx.getLevel().isClientSide() && !blockstate.getValue(MusicRecorder.HAS_RECORD)) {
+        if (blockstate.getBlock() instanceof MusicRecorder mr) {
+            if(!ctx.getLevel().isClientSide() && !blockstate.getValue(MusicRecorder.HAS_RECORD) && !blockstate.getValue(MusicRecorder.HAS_DISC)) {
                 ItemStack itemstack = Objects.requireNonNull(ctx.getPlayer()).getItemInHand(ctx.getHand());
                 mr.insertRecord(ctx.getLevel(),ctx.getClickedPos(),blockstate,itemstack,ctx.getPlayer().getUUID());
                 itemstack.shrink(1);
             }
             return InteractionResult.SUCCESS;
         }
-        else
-        {
+        else {
             return InteractionResult.PASS;
         }
     }

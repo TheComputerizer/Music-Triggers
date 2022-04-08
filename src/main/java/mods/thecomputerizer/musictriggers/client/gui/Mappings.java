@@ -19,12 +19,12 @@ public class Mappings {
             "minecraft", "_", "16", "false", "100", "100", "100",
             "false", "0", "minecraft", "true", "true", "0", "0", "nope",
             "nope", "-111", "false","_", "true", "-1", "-111", "true",
-            "false", "false", "false"};
+            "false", "false", "false", "0"};
     public static Map<Integer, String> defparameters = new HashMap<>();
 
     public static void init() {
         parameters.put(0, "priority");
-        parameters.put(1, "fade");
+        parameters.put(1, "fade_in");
         parameters.put(2, "level");
         parameters.put(3, "time");
         parameters.put(4, "delay");
@@ -58,15 +58,20 @@ public class Mappings {
         parameters.put(32, "is_instantiated");
         parameters.put(33, "time_switch");
         parameters.put(34, "remove_inactive_playable");
+        parameters.put(35, "fade_out");
         songparameters.put(0, "pitch");
         songparameters.put(1, "play_once");
         songparameters.put(2, "must_finish");
         songparameters.put(3, "chance");
         songparameters.put(4, "volume");
+        songparameters.put(5, "fade_in");
+        songparameters.put(6, "fade_out");
         linkingparameters.put(0, "pitch");
         linkingparameters.put(1, "volume");
+        linkingparameters.put(2, "fade_in");
+        linkingparameters.put(3, "fade_out");
         reverseparameters.put("priority", 0);
-        reverseparameters.put("fade", 1);
+        reverseparameters.put("fade_in", 1);
         reverseparameters.put("level", 2);
         reverseparameters.put("time", 3);
         reverseparameters.put("delay", 4);
@@ -100,13 +105,18 @@ public class Mappings {
         reverseparameters.put("is_instantiated", 32);
         reverseparameters.put("time_switch", 33);
         reverseparameters.put("remove_inactive_playable", 34);
+        reverseparameters.put("fade_out", 35);
         reversesongparameters.put("pitch", 0);
         reversesongparameters.put("play_once", 1);
         reversesongparameters.put("must_finish", 2);
         reversesongparameters.put("chance", 3);
         reversesongparameters.put("volume", 4);
+        reversesongparameters.put("fade_in", 5);
+        reversesongparameters.put("fade_out", 6);
         reverselinkingparameters.put("pitch", 0);
         reverselinkingparameters.put("volume", 1);
+        reverselinkingparameters.put("fade_in", 2);
+        reverselinkingparameters.put("fade_out", 3);
         for(int i=0;i<def.length;i++) {
             defparameters.put(i,def[i]);
         }
@@ -129,9 +139,10 @@ public class Mappings {
                     ret.add(1);
                     ret.add(4);
                     ret.add(34);
+                    ret.add(35);
                     return ret;
                 }
-                case "difficulty", "raid" -> {
+                case "difficulty", "raid", "season"-> {
                     ret.add(0);
                     ret.add(1);
                     ret.add(2);
@@ -142,6 +153,7 @@ public class Mappings {
                     ret.add(32);
                     ret.add(33);
                     ret.add(34);
+                    ret.add(35);
                     return ret;
                 }
                 case "time" -> {
@@ -157,6 +169,7 @@ public class Mappings {
                     ret.add(32);
                     ret.add(33);
                     ret.add(34);
+                    ret.add(35);
                     return ret;
                 }
                 case "light" -> {
@@ -171,6 +184,7 @@ public class Mappings {
                     ret.add(32);
                     ret.add(33);
                     ret.add(34);
+                    ret.add(35);
                     return ret;
                 }
                 case "height" -> {
@@ -185,6 +199,7 @@ public class Mappings {
                     ret.add(32);
                     ret.add(33);
                     ret.add(34);
+                    ret.add(35);
                     return ret;
                 }
                 case "raining", "storming", "snowing", "dead", "creative", "spectator", "pet", "bloodmoon", "harvestmoon", "bluemoon" -> {
@@ -196,6 +211,7 @@ public class Mappings {
                     ret.add(32);
                     ret.add(33);
                     ret.add(34);
+                    ret.add(35);
                     return ret;
                 }
                 case "lowhp", "drowning" -> {
@@ -208,6 +224,7 @@ public class Mappings {
                     ret.add(32);
                     ret.add(33);
                     ret.add(34);
+                    ret.add(35);
                     return ret;
                 }
                 case "riding", "dimension", "structure", "gui", "effect", "moon" -> {
@@ -221,6 +238,7 @@ public class Mappings {
                     ret.add(32);
                     ret.add(33);
                     ret.add(34);
+                    ret.add(35);
                     return ret;
                 }
                 case "elytra", "fishing", "underwater" -> {
@@ -233,6 +251,7 @@ public class Mappings {
                     ret.add(32);
                     ret.add(33);
                     ret.add(34);
+                    ret.add(35);
                     return ret;
                 }
                 case "home" -> {
@@ -245,6 +264,7 @@ public class Mappings {
                     ret.add(32);
                     ret.add(33);
                     ret.add(34);
+                    ret.add(35);
                     return ret;
                 }
                 case "biome" -> {
@@ -264,6 +284,7 @@ public class Mappings {
                     ret.add(32);
                     ret.add(33);
                     ret.add(34);
+                    ret.add(35);
                     return ret;
                 }
                 case "mob" -> {
@@ -288,6 +309,7 @@ public class Mappings {
                     ret.add(32);
                     ret.add(33);
                     ret.add(34);
+                    ret.add(35);
                     return ret;
                 }
                 case "victory" -> {
@@ -301,6 +323,7 @@ public class Mappings {
                     ret.add(32);
                     ret.add(33);
                     ret.add(34);
+                    ret.add(35);
                     return ret;
                 }
                 case "zones" -> {
@@ -314,6 +337,7 @@ public class Mappings {
                     ret.add(32);
                     ret.add(33);
                     ret.add(34);
+                    ret.add(35);
                     return ret;
                 }
                 case "pvp" -> {
@@ -328,6 +352,7 @@ public class Mappings {
                     ret.add(32);
                     ret.add(33);
                     ret.add(34);
+                    ret.add(35);
                     return ret;
                 }
                 case "advancement" -> {
@@ -341,33 +366,22 @@ public class Mappings {
                     ret.add(32);
                     ret.add(33);
                     ret.add(34);
+                    ret.add(35);
                     return ret;
                 }
-                case "tornado" -> {
+                case "statistic" -> {
                     ret.add(0);
                     ret.add(1);
                     ret.add(2);
                     ret.add(3);
                     ret.add(4);
                     ret.add(6);
-                    ret.add(10);
-                    ret.add(11);
-                    ret.add(32);
-                    ret.add(33);
-                    ret.add(34);
-                    return ret;
-                }
-                case "season" -> {
-                    ret.add(0);
-                    ret.add(1);
-                    ret.add(3);
-                    ret.add(4);
-                    ret.add(6);
-                    ret.add(8);
+                    ret.add(9);
                     ret.add(10);
                     ret.add(32);
                     ret.add(33);
                     ret.add(34);
+                    ret.add(35);
                     return ret;
                 }
             }

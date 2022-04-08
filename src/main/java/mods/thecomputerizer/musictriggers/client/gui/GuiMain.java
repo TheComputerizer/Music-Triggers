@@ -125,7 +125,7 @@ public class GuiMain extends Screen {
     private void addCurrentSongButton() {
         this.addRenderableWidget(new Button(this.width - 80, 8, 64, 16, new TranslatableComponent("screen.musictriggers.button.playback"),
                 (button) -> {
-                    if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing && !MusicPlayer.fading) {
+                    if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing) {
                         assert this.minecraft != null;
                         this.minecraft.setScreen(new GuiCurPlaying(this,this.holder));
                     }

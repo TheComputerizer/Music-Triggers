@@ -65,7 +65,7 @@ public class GuiCurPlaying extends Screen {
     private void addSkipSongButton() {
         this.addRenderableWidget(new Button(this.width - 80, 8, 64, 16, new TranslatableComponent("screen.musictriggers.button.skip_song").withStyle(ChatFormatting.RED),
                 (button) -> {
-                    if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing && !MusicPlayer.fading) {
+                    if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing) {
                         assert this.minecraft != null;
                         this.minecraft.getSoundManager().stop(MusicPlayer.curMusic);
                     }

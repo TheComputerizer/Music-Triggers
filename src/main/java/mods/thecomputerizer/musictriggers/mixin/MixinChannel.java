@@ -14,7 +14,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = Channel.class)
 public abstract class MixinChannel{
 
-
     @Inject(at = @At("HEAD"), method = "m_83658_(Lnet/minecraft/client/sounds/AudioStream;)V")
     private void attachBufferStream(AudioStream stream, CallbackInfo info) {
         if (MusicPlayer.curMusic != null && ((Channel) (Object) this).source == MusicPlayer.curMusicSource.source) {
