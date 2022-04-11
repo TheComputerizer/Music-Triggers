@@ -1,2 +1,2 @@
 # Music-Triggers
-1.18.1 Branch
+1.18.2 Branch
