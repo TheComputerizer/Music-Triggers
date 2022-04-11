@@ -32,7 +32,6 @@ public class MusicTriggersCommon implements ModInitializer {
     public static File songsDir;
     public static File texturesDir;
 
-    @SuppressWarnings("InstantiationOfUtilityClass")
     @Override
     public void onInitialize() {
         Mappings.init();

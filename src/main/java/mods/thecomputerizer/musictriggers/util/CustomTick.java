@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.util;
 
 import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.util.events.CustomTickEvent;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;

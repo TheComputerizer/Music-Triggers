@@ -92,9 +92,8 @@ public class GuiLinking extends Screen {
     }
 
     @Override
-    public void onClose() {
+    public void close() {
         eventsClient.renderDebug = true;
-        super.onClose();
+        super.close();
     }
-
 }

@@ -85,7 +85,7 @@ public class GuiScrollingTriggerInfo extends AlwaysSelectedEntryListWidget<GuiSc
             if(this.info.matches("zone")) {
                 eventsClient.parentScreen = GuiScrollingTriggerInfo.this.IN;
                 eventsClient.zone = true;
-                GuiScrollingTriggerInfo.this.IN.onClose();
+                GuiScrollingTriggerInfo.this.IN.close();
             }
         }
 

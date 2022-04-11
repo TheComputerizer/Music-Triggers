@@ -93,7 +93,7 @@ public class GuiOther extends Screen {
                     try {
                         this.holder.writeOther();
                         configDebug.parse(new File("config/MusicTriggers/debug.toml"));
-                        this.onClose();
+                        this.close();
                     } catch(Exception e) {
                         e.printStackTrace();
                     }
@@ -118,8 +118,8 @@ public class GuiOther extends Screen {
     }
 
     @Override
-    public void onClose() {
+    public void close() {
         eventsClient.renderDebug = true;
-        super.onClose();
+        super.close();
     }
 }

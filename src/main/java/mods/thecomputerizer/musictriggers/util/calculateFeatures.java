@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.util;
 
 import mods.thecomputerizer.musictriggers.util.packets.*;
-import net.fabricmc.fabric.impl.structure.FabricStructureImpl;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.passive.AnimalEntity;
@@ -11,12 +10,15 @@ import net.minecraft.predicate.entity.EntityPredicates;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.registry.BuiltinRegistries;
+import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.village.raid.Raid;
 import net.minecraft.world.RegistryWorldView;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.gen.feature.StructureFeature;
+import net.minecraft.world.gen.feature.ConfiguredStructureFeature;
 
 import java.util.*;
 
@@ -41,14 +43,13 @@ public class calculateFeatures {
             if (world != null) {
                 boolean good = false;
                 String curStruct = null;
-                for (StructureFeature<?> structureFeature : FabricStructureImpl.STRUCTURE_TO_CONFIG_MAP.keySet()) {
-                    if(world.getStructureAccessor().getStructureAt(pos, structureFeature).isInExistingChunk()) {
-                        if(structureFeature.getName()!=null) {
-                            curStruct = structureFeature.getName();
-                            if(checkResourceList(curStruct,struct,false)) {
-                                good = true;
-                                break;
-                            }
+                for (Identifier structureLocation : BuiltinRegistries.CONFIGURED_STRUCTURE_FEATURE.getIds()) {
+                    ConfiguredStructureFeature<?,?> feature = BuiltinRegistries.CONFIGURED_STRUCTURE_FEATURE.get(structureLocation);
+                    if(world.getStructureAccessor().getStructureAt(pos, feature).isInExistingChunk()) {
+                        curStruct = structureLocation.toString();
+                        if (checkResourceList(curStruct, struct, false)) {
+                            good = true;
+                            break;
                         }
                     }
                 }
@@ -62,7 +63,7 @@ public class calculateFeatures {
         if(player!=null) {
             RegistryWorldView world = curServer.getWorld(player.getWorld().getRegistryKey());
             if (world != null) {
-                Biome biome = world.getBiome(pos);
+                Biome biome = world.getBiome(pos).value();
                 PacketHandler.sendTo(InfoFromSnow.id, InfoFromSnow.encode(!biome.doesNotSnow(pos), triggerID), player);
             }
         }
@@ -85,7 +86,7 @@ public class calculateFeatures {
         if(player!=null) {
             RegistryWorldView world = curServer.getWorld(player.getWorld().getRegistryKey());
             if (world != null) {
-                String curBiome = world.getBiomeKey(pos).get().getValue().toString();
+                String curBiome = world.getBiome(pos).getKey().get().toString();
                 boolean pass = checkBiome(world.getBiome(pos), curBiome,biome,category,rainType,temperature,cold,rainfall,togglerainfall);
                 if (pass) PacketHandler.sendTo(InfoFromBiome.id, InfoFromBiome.encode(true,triggerID, curBiome), player);
                 else PacketHandler.sendTo(InfoFromBiome.id, InfoFromBiome.encode(false,triggerID, curBiome), player);
@@ -105,9 +106,11 @@ public class calculateFeatures {
         }
     }
 
-    public static boolean checkBiome(Biome b, String biome, String name, String category, String rainType, float temperature, boolean cold, float rainfall, boolean togglerainfall) {
+    @SuppressWarnings("deprecation")
+    public static boolean checkBiome(RegistryEntry<Biome> reg, String biome, String name, String category, String rainType, float temperature, boolean cold, float rainfall, boolean togglerainfall) {
+        Biome b = reg.value();
         if(checkResourceList(biome, name, false) || name.matches("minecraft")) {
-            if(checkResourceList(b.getCategory().getName(), category, false) || category.matches("nope")) {
+            if(checkResourceList(Biome.getCategory(reg).getName(), category, false) || category.matches("nope")) {
                 if(b.getPrecipitation().getName().contains(rainType) || rainType.matches("nope")) {
                     boolean pass = false;
                     if(rainfall==-111f) pass = true;

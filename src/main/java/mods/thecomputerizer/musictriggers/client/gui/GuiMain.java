@@ -77,7 +77,7 @@ public class GuiMain extends Screen {
                         throw new RuntimeException("Could not write new configuration to file! Check the log for the actual stacktrace");
                     }
                     this.reload = true;
-                    this.onClose();
+                    this.close();
                 }));
     }
 
@@ -85,7 +85,7 @@ public class GuiMain extends Screen {
         this.addDrawableChild(new ButtonWidget(this.width / 2 - 175, this.height / 2 - 50, 150, 20, new TranslatableText("screen.musictriggers.button.reload"),
                 (button) -> {
                     this.reload = true;
-                    this.onClose();
+                    this.close();
                 }));
     }
 
@@ -132,7 +132,7 @@ public class GuiMain extends Screen {
     }
 
     @Override
-    public void onClose() {
+    public void close() {
         eventsClient.renderDebug = true;
         if(this.reload) {
             assert this.client != null;
@@ -143,7 +143,7 @@ public class GuiMain extends Screen {
                 eventsClient.reloadCounter = 5;
             }
         }
-        super.onClose();
+        super.close();
     }
 
     @Override

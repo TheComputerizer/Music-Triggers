@@ -94,9 +94,9 @@ public class GuiCurPlaying extends Screen {
     }
 
     @Override
-    public void onClose() {
+    public void close() {
         eventsClient.renderDebug = true;
-        super.onClose();
+        super.close();
     }
 
     public void setSlider(double value) {
