@@ -100,7 +100,7 @@ public class MusicPlayer {
                     ((SoundSystem)sh.sndManager.sndSystem).pause(sh.sndManager.invPlayingSounds.get(musicLinker.get(is)));
                 }
                 paused = true;
-            } else if (paused && Display.isActive() && !playing) {
+            } else if (paused && Display.isActive() && !playing && !mc.isGamePaused()) {
                 for (String is : musicLinker.keySet()) {
                     ((SoundSystem)sh.sndManager.sndSystem).play(sh.sndManager.invPlayingSounds.get(musicLinker.get(is)));
                 }
@@ -169,6 +169,7 @@ public class MusicPlayer {
                         ((SoundSystem)sh.sndManager.sndSystem).setVolume(temp, volumeLinker.get(key));
                     } else {
                         float calculatedVolume = volumeLinker.get(key)*(((float)(fadeInLinkerMax.get(key)-fadeInLinker.get(key)))/((float)fadeInLinkerMax.get(key)));
+                        calculatedVolume = calculatedVolume*mc.gameSettings.getSoundLevel(SoundCategory.MUSIC);
                         musicLinker.get(key).setVolume(calculatedVolume);
                         ((SoundSystem)sh.sndManager.sndSystem).setVolume(temp, calculatedVolume);
                         fadeInLinker.put(key, fadeInLinker.get(key)-1);
@@ -185,6 +186,7 @@ public class MusicPlayer {
                         ((SoundSystem)sh.sndManager.sndSystem).setVolume(temp, Float.MIN_VALUE*1000);
                     } else {
                         float calculatedVolume = volumeLinker.get(key)*(((float)fadeOutLinker.get(key))/((float)fadeOutLinkerMax.get(key)));
+                        calculatedVolume = calculatedVolume*mc.gameSettings.getSoundLevel(SoundCategory.MUSIC);
                         musicLinker.get(key).setVolume(calculatedVolume);
                         ((SoundSystem)sh.sndManager.sndSystem).setVolume(temp, calculatedVolume);
                         fadeOutLinker.put(key, fadeOutLinker.get(key)-1);
@@ -200,6 +202,7 @@ public class MusicPlayer {
                 }
                 else {
                     float calculatedVolume = saveVolIn*(float) (((double)(MusicPicker.curFadeIn-tempFadeIn))/((double)MusicPicker.curFadeIn));
+                    calculatedVolume = calculatedVolume*mc.gameSettings.getSoundLevel(SoundCategory.MUSIC);
                     curMusic.setVolume(calculatedVolume);
                     ((SoundSystem)sh.sndManager.sndSystem).setVolume(temp,calculatedVolume);
                     tempFadeIn-=1;
@@ -207,6 +210,8 @@ public class MusicPlayer {
             }
             if (fadingOut && !reverseFade) {
                 String temp = sh.sndManager.invPlayingSounds.get(curMusic);
+                tempFadeIn = 0;
+                fadingIn = false;
                 if (tempFadeOut == 0) {
                     removeTrack(trackToDelete,indexToDelete,playedEvents,playedMusic);
                     fadingOut = false;
@@ -229,6 +234,7 @@ public class MusicPlayer {
                     if(curMusic==null) tempFadeOut = 0;
                     else {
                         float calculatedVolume = saveVolOut * (float)(((double)tempFadeOut)/((double)savedFadeOut));
+                        calculatedVolume = calculatedVolume*mc.gameSettings.getSoundLevel(SoundCategory.MUSIC);
                         curMusic.setVolume(calculatedVolume);
                         ((SoundSystem) sh.sndManager.sndSystem).setVolume(temp, calculatedVolume);
                         tempFadeOut -= 1;
@@ -249,6 +255,7 @@ public class MusicPlayer {
                     tempFadeOut = 0;
                 } else {
                     float calculatedVolume = saveVolOut * (float)(((double)tempFadeOut)/((double)savedFadeOut));
+                    calculatedVolume = calculatedVolume*mc.gameSettings.getSoundLevel(SoundCategory.MUSIC);
                     curMusic.setVolume(calculatedVolume);
                     ((SoundSystem)sh.sndManager.sndSystem).setVolume(temp, calculatedVolume);
                     tempFadeOut += 1;
@@ -287,8 +294,14 @@ public class MusicPlayer {
                     }
                     for(String playable : MusicPicker.playableList) {
                         if(!MusicPicker.titleCardEvents.contains(playable)) {
-                            if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get(playable)[34]))
+                            if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get(playable)[34])) {
                                 SoundHandler.TriggerIdentifierMap.get(playable.split("-")[0]).remove(SoundHandler.TriggerInfoMap.get(playable)[10]);
+                                SoundHandler.TriggerInfoMap.remove(playable);
+                                if(SoundHandler.TriggerIdentifierMap.get(playable.split("-")[0]).isEmpty()) {
+                                    SoundHandler.TriggerIdentifierMap.remove(playable.split("-")[0]);
+                                    SoundHandler.TriggerInfoMap.remove(playable.split("-")[0]);
+                                }
+                            }
                         }
                     }
                     if (curTrackList == null && !finish) {
@@ -596,14 +609,21 @@ public class MusicPlayer {
 
     private static void removeTrack(String track, int index, List<String> events, ISound playing) {
         if(track!=null) {
+            curTrack = null;
             mc.getSoundHandler().stopSound(playing);
             curTrackList = ArrayUtils.remove(curTrackList, index);
             for (String ev : events) {
                 String[] trigger = ev.split("-");
                 if (trigger.length==1) trigger = (ev+"-_").split("-");
                 SoundHandler.TriggerIdentifierMap.get(trigger[0]).get(trigger[1]).remove(track);
-                if(SoundHandler.TriggerIdentifierMap.get(trigger[0]).get(trigger[1]).isEmpty()) SoundHandler.TriggerIdentifierMap.get(trigger[0]).remove(trigger[1]);
-                if(SoundHandler.TriggerIdentifierMap.get(trigger[0]).isEmpty()) SoundHandler.TriggerIdentifierMap.remove(trigger[0]);
+                if(SoundHandler.TriggerIdentifierMap.get(trigger[0]).get(trigger[1]).isEmpty()) {
+                    SoundHandler.TriggerIdentifierMap.get(trigger[0]).remove(trigger[1]);
+                    SoundHandler.TriggerInfoMap.remove(trigger[0]+"-"+trigger[1]);
+                }
+                if(SoundHandler.TriggerIdentifierMap.get(trigger[0]).isEmpty()) {
+                    SoundHandler.TriggerIdentifierMap.remove(trigger[0]);
+                    SoundHandler.TriggerInfoMap.remove(trigger[0]);
+                }
             }
             trackToDelete=null;
             playedEvents = new ArrayList<>();

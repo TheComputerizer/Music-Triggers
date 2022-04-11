@@ -27,17 +27,17 @@ public class SoundManipulator {
 
     public static void setMillisecondTimeForSource(SoundSystem soundSystem, String sourceName, float milliseconds)
     {
-        try
-        {
-            Field libraryField = SoundSystem.class.getDeclaredField("soundLibrary");
-            libraryField.setAccessible(true);
-            Library library = (Library) libraryField.get(soundSystem);
-            MusicTriggers.logger.info("Starting to set loop point");
-            CommandSetTime.setMillisecondTime(soundSystem,(LibraryLWJGLOpenAL)library,sourceName,milliseconds);
-        }
-        catch (Exception e) {
-            MusicTriggers.logger.fatal("Unable to set loop position!");
-            e.printStackTrace();
-        }
+        if(sourceName!=null) {
+            try {
+                Field libraryField = SoundSystem.class.getDeclaredField("soundLibrary");
+                libraryField.setAccessible(true);
+                Library library = (Library) libraryField.get(soundSystem);
+                MusicTriggers.logger.info("Starting to set loop point");
+                CommandSetTime.setMillisecondTime(soundSystem, (LibraryLWJGLOpenAL) library, sourceName, milliseconds);
+            } catch (Exception e) {
+                MusicTriggers.logger.fatal("Unable to set loop position!");
+                e.printStackTrace();
+            }
+        } else MusicTriggers.logger.info("null source");
     }
 }

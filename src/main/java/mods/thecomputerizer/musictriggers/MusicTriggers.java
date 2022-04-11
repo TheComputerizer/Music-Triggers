@@ -116,15 +116,6 @@ public class MusicTriggers {
         }
         readFrom = new File("config/MusicTriggers/songs/");
         if (readFrom.exists() && Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-            File redir = new File("config/MusicTriggers/redirect.txt");
-            if (!redir.exists()) {
-                try {
-                    Files.createFile(Paths.get(redir.getPath()));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            new readRedirect(redir);
             File sj = new File("config/MusicTriggers/songs/assets/musictriggers/sounds.json");
             if (sj.exists()) {
                 sj.delete();

@@ -25,10 +25,7 @@ public class GuiTriggerInfo extends GuiScreen {
         this.trigger = trigger;
         this.songCode = songCode;
         this.holder = holder;
-        if(create) {
-            this.holder.addTrigger(songCode,trigger);
-        }
-        MusicTriggers.logger.info("Building parameter list: "+this.songCode+" + "+this.trigger);
+        if(create) this.trigger = this.holder.addTrigger(songCode,trigger);
         this.parameters = Mappings.convertList(Mappings.buildGuiParameters(this.holder.translateCodedTrigger(this.songCode,this.trigger)));
     }
 

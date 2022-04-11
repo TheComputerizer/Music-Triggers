@@ -1,19 +1,21 @@
 package mods.thecomputerizer.musictriggers.util;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.util.packets.packetGetHome;
 import mods.thecomputerizer.musictriggers.util.packets.packetGetMobInfo;
 import mods.thecomputerizer.musictriggers.util.packets.packetToClient;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.boss.EntityDragon;
 import net.minecraft.entity.monster.EntityMob;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.gen.structure.StructureMineshaftStart;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Optional;
 
@@ -32,18 +34,17 @@ public class calculateFeatures {
     public static void calculateStructAndSend(String triggerID, String struct, BlockPos pos, Integer dimID, UUID uuid) {
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
         WorldServer world = server.getWorld(dimID);
-        if(world!=null) {
-            boolean pass = false;
-            for(String actualStructure : stringBreaker(struct,";")) {
-                pass = world.getChunkProvider().isInsideStructure(world, actualStructure, pos);
-                if(pass) break;
-            }
-            if (pass) {
-                RegistryHandler.network.sendTo(new packetToClient.packetToClientMessage(true +","+triggerID), server.getPlayerList().getPlayerByUUID(uuid));
-            } else {
-                RegistryHandler.network.sendTo(new packetToClient.packetToClientMessage(false +","+triggerID), server.getPlayerList().getPlayerByUUID(uuid));
-            }
+        boolean pass = false;
+        for(String actualStructure : stringBreaker(struct,";")) {
+            pass = world.getChunkProvider().isInsideStructure(world, actualStructure, pos);
+            if(pass) break;
         }
+        RegistryHandler.network.sendTo(new packetToClient.packetToClientMessage(pass +","+triggerID), server.getPlayerList().getPlayerByUUID(uuid));
+    }
+
+    public static void calculateHomeAndSend(String triggerID, Integer range, UUID uuid) {
+        EntityPlayerMP player = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUUID(uuid);
+        RegistryHandler.network.sendTo(new packetGetHome.packetGetHomeMessage(triggerID, player.getBedLocation(player.dimension).getDistance(roundedPos(player).getX(), roundedPos(player).getY(), roundedPos(player).getZ())<=range),player);
     }
 
     public static void calculateMobAndSend(String triggerID, UUID uuid, String mobname, int detectionrange, boolean targetting, int targettingpercentage, int health, int healthpercentage, boolean victory, int victoryID, String i, int num, int timeout, String nbtKey) {
@@ -65,28 +66,33 @@ public class calculateFeatures {
         boolean infernal = true;
         boolean infernalChecked = false;
         boolean infernalDone = false;
-        if (mobname.matches("MOB")) {
+        if (mobname.matches("MOB") || stringBreaker(mobname, ";")[0].matches("MOB")) {
+            List<EntityLiving> mobsWithBlacklist = new ArrayList<>();
             for (EntityLiving e : mobList) {
-                if (e.getAttackTarget()==player) {
-                    trackingCounter++;
-                }
-                if (e.getHealth() / e.getMaxHealth() <= (float)health / 100F) {
-                    healthCounter++;
-                }
-                try {
-                    infernalChecked = infernalChecker(e, i);
-                } catch (NoSuchMethodError ignored) {
-                    infernal = false;
-                }
-                if (!infernal || infernalChecked) {
-                    infernalDone = true;
-                }
-                if (victory) {
-                    victoryMobs.computeIfAbsent(triggerID, k -> new HashMap<>());
-                    if (victoryMobs.get(triggerID).size() < num) victoryMobs.get(triggerID).put(e.getUniqueID(), timeout);
+                if(checkMobBlacklist(e,mobname)) {
+                    mobsWithBlacklist.add(e);
+                    if (e.getAttackTarget() == player) {
+                        trackingCounter++;
+                    }
+                    if (e.getHealth() / e.getMaxHealth() <= (float) health / 100F) {
+                        healthCounter++;
+                    }
+                    try {
+                        infernalChecked = infernalChecker(e, i);
+                    } catch (NoSuchMethodError ignored) {
+                        infernal = false;
+                    }
+                    if (!infernal || infernalChecked) {
+                        infernalDone = true;
+                    }
+                    if (victory) {
+                        victoryMobs.computeIfAbsent(triggerID, k -> new HashMap<>());
+                        if (victoryMobs.get(triggerID).size() < num)
+                            victoryMobs.get(triggerID).put(e.getUniqueID(), timeout);
+                    }
                 }
             }
-            if (mobList.size() >= num &&
+            if (mobsWithBlacklist.size() >= num &&
                     ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) &&
                             infernalDone &&
                             (float) healthCounter / num >= healthpercentage / 100F)) {
@@ -106,19 +112,24 @@ public class calculateFeatures {
                 }
             }
             else victoryRet = false;
-        } else if (mobname.matches("BOSS")) {
+        } else if (mobname.matches("BOSS") || stringBreaker(mobname, ";")[0].matches("BOSS")) {
             HashMap<String, Float> tempBoss = bossInfo;
             if(!bossInfo.isEmpty()) {
+                List<String> correctBosses = new ArrayList<>();
                 for(String name : tempBoss.keySet()) {
-                    if (health / 100f >= bossInfo.get(name)) {
-                        healthCounter++;
-                    }
-                    if (victory) {
-                        victoryBosses.computeIfAbsent(triggerID, k -> new HashMap<>());
-                        if (victoryBosses.get(triggerID).keySet().size() < num) victoryBosses.get(triggerID).put(name, timeout);
+                    if(checkResourceList(name, mobname, true)) {
+                        correctBosses.add(name);
+                        if (health / 100f >= bossInfo.get(name)) {
+                            healthCounter++;
+                        }
+                        if (victory) {
+                            victoryBosses.computeIfAbsent(triggerID, k -> new HashMap<>());
+                            if (victoryBosses.get(triggerID).keySet().size() < num)
+                                victoryBosses.get(triggerID).put(name, timeout);
+                        }
                     }
                 }
-                if(bossInfo.size()>=num && (float)healthCounter/bossInfo.size()<=100f/healthpercentage) {
+                if(correctBosses.size()>=num && (float)healthCounter/bossInfo.size()<=100f/healthpercentage) {
                     pass = true;
                 }
                 if(victoryBosses.get(triggerID)!=null) {
@@ -188,7 +199,9 @@ public class calculateFeatures {
             }
             else victoryRet = false;
         }
-        if(pass) victoryRet = false;
+        if(pass) {
+            victoryRet = false;
+        }
         RegistryHandler.network.sendTo(new packetGetMobInfo.packetGetMobInfoMessage(triggerID,pass,victoryID,victoryRet),player);
     }
 
@@ -221,9 +234,25 @@ public class calculateFeatures {
 
     public static boolean checkResourceList(String type, String resourceList, boolean match) {
         for(String resource : stringBreaker(resourceList,";")) {
-            if(match && type.matches(resource)) return true;
-            else if(!match && type.contains(resource)) return true;
+            if(!resource.matches("BOSS")) {
+                if (match && type.matches(resource)) return true;
+                else if (!match && type.contains(resource)) return true;
+            }
         }
         return false;
+    }
+
+    public static boolean checkMobBlacklist(EntityLiving e, String resourceList) {
+        for(String resource : stringBreaker(resourceList,";")) {
+            if(!resource.matches("MOB")) {
+                if (e.getName().matches(resource)) return false;
+                else if (Objects.requireNonNull(EntityList.getKey(e)).toString().matches(resource)) return false;
+            }
+        }
+        return true;
+    }
+
+    public static BlockPos roundedPos(EntityPlayer p) {
+        return new BlockPos((Math.round(p.posX * 2) / 2.0), (Math.round(p.posY * 2) / 2.0), (Math.round(p.posZ * 2) / 2.0));
     }
 }

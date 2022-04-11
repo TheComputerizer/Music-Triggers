@@ -116,9 +116,7 @@ public class eventsClient {
         if(!(e.getGui() instanceof GuiWinGame)) {
             GUIName = e.getGui().toString();
         }
-        else {
-            GUIName = "CREDITS";
-        }
+        else GUIName = "CREDITS";
         if (configDebug.ShowGUIName) {
             e.getGui().drawHoveringText(e.getGui().toString(), 0, 0);
         }

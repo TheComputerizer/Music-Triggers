@@ -24,13 +24,17 @@ public class CommandSetTime {
             sourceMapField.setAccessible(true);
             HashMap<String, Source> sourceMap = (HashMap<String, Source>) sourceMapField.get(library);
             Source src = sourceMap.get(sourcename);
-            ChannelLWJGLOpenAL channel = (ChannelLWJGLOpenAL)src.channel;
-            library.stop(sourcename);
-            if(!(src instanceof SourceLWJGLOpenALExtension)) upcastSource((SourceLWJGLOpenAL)src,sourcename,sourceMap,milliseconds,src.sourceVolume,src.getPitch());
-            else ((SourceLWJGLOpenALExtension)src).milliseconds = milliseconds;
-            library.play(sourcename);
-            if (AL10.alGetError() == AL10.AL_NO_ERROR) channel.millisPreviouslyPlayed=(milliseconds/src.getPitch());
-            MusicTriggers.logger.debug("Attempted to set track to "+milliseconds+" milliseconds");
+            if(src!=null) {
+                ChannelLWJGLOpenAL channel = (ChannelLWJGLOpenAL) src.channel;
+                library.stop(sourcename);
+                if (!(src instanceof SourceLWJGLOpenALExtension))
+                    upcastSource((SourceLWJGLOpenAL) src, sourcename, sourceMap, milliseconds, src.sourceVolume, src.getPitch());
+                else ((SourceLWJGLOpenALExtension) src).milliseconds = milliseconds;
+                library.play(sourcename);
+                if (AL10.alGetError() == AL10.AL_NO_ERROR)
+                    channel.millisPreviouslyPlayed = (milliseconds / src.getPitch());
+                MusicTriggers.logger.debug("Attempted to set track to " + milliseconds + " milliseconds");
+            } else MusicTriggers.logger.warn("Tried to set the time for a null source!");
         }
     }
 

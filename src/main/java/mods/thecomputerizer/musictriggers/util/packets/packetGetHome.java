@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
 import io.netty.buffer.ByteBuf;
-import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.fromServer;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -9,27 +8,26 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 import java.nio.charset.StandardCharsets;
 
-public class packetGetMobInfo implements IMessageHandler<packetGetMobInfo.packetGetMobInfoMessage, IMessage> {
+public class packetGetHome implements IMessageHandler<packetGetHome.packetGetHomeMessage, IMessage> {
 
     @Override
-    public IMessage onMessage(packetGetMobInfo.packetGetMobInfoMessage message, MessageContext ctx)
+    public IMessage onMessage(packetGetHome.packetGetHomeMessage message, MessageContext ctx)
     {
-        if(message.getMobName()==null) {
+        if(message.triggerName()==null) {
             return null;
         }
-        fromServer.clientSyncMob(message.getMobName(), message.getPassBoolean(),
-                message.getVictoryID(), message.getVictoryBoolean());
+        fromServer.clientSyncHome(message.getPassBoolean());
         return null;
     }
 
-    public static class packetGetMobInfoMessage implements IMessage {
+    public static class packetGetHomeMessage implements IMessage {
         String s;
 
-        public packetGetMobInfoMessage() {}
+        public packetGetHomeMessage() {}
 
-        public packetGetMobInfoMessage(String s, boolean b, int i, boolean v)
+        public packetGetHomeMessage(String s, boolean b)
         {
-            this.s = s+","+b+","+i+","+v;
+            this.s = s+","+b;
         }
 
         @Override
@@ -43,7 +41,7 @@ public class packetGetMobInfo implements IMessageHandler<packetGetMobInfo.packet
         {
             buf.writeCharSequence(s, StandardCharsets.UTF_8);
         }
-        public String getMobName() {
+        public String triggerName() {
             if(s==null) {
                 return null;
             }
@@ -51,13 +49,6 @@ public class packetGetMobInfo implements IMessageHandler<packetGetMobInfo.packet
         }
         public Boolean getPassBoolean() {
             return Boolean.parseBoolean(stringBreaker(s)[1]);
-        }
-
-        public int getVictoryID() {
-            return Integer.parseInt(stringBreaker(s)[2]);
-        }
-        public Boolean getVictoryBoolean() {
-            return Boolean.parseBoolean(stringBreaker(s)[3]);
         }
 
         public static String[] stringBreaker(String s) {
