@@ -6,7 +6,7 @@ public class fromServer {
     public static HashMap<String, Boolean> inStructure = new HashMap<>();
     public static HashMap<String, Boolean> inBiome = new HashMap<>();
     public static HashMap<String, Boolean> inSnow = new HashMap<>();
-    public static HashMap<String, Boolean> inHomeRange = new HashMap<>();
+    public static boolean inHomeRange = false;
     public static HashMap<String, Boolean> mob = new HashMap<>();
     public static HashMap<Integer, Boolean> mobVictory = new HashMap<>();
     public static HashMap<String, Boolean> isRaid = new HashMap<>();
@@ -24,8 +24,8 @@ public class fromServer {
     public static void clientSyncSnow(boolean b,String s) {
         inSnow.put(s,b);
     }
-    public static void clientSyncHome(boolean b,String s) {
-        inHomeRange.put(s,b);
+    public static void clientSyncHome(boolean b) {
+        inHomeRange = b;
     }
     public static void clientSyncMob(String s,boolean b, int i, boolean v) {
         mob.put(s,b);

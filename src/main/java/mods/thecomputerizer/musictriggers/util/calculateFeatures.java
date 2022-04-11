@@ -95,11 +95,7 @@ public class calculateFeatures {
             assert player != null;
             ServerWorld world = server.getLevel(player.level.dimension());
             if (world != null) {
-                if (Objects.requireNonNull(player.getRespawnPosition()).closerThan(pos,range) && player.getRespawnDimension()==world.dimension() && !world.getSharedSpawnPos().closerThan(pos,range)) {
-                    PacketHandler.sendTo(new InfoFromHome(true, triggerID), player);
-                } else {
-                    PacketHandler.sendTo(new InfoFromHome(false, triggerID), player);
-                }
+                PacketHandler.sendTo(new InfoFromHome(Objects.requireNonNull(player.getRespawnPosition()).closerThan(pos,range) && player.getRespawnDimension()==world.dimension() && !world.getSharedSpawnPos().closerThan(pos,range), triggerID), player);
             }
         }
     }
@@ -161,7 +157,8 @@ public class calculateFeatures {
         int healthCounter = 0;
         boolean infernalChecked;
         boolean infernalDone = false;
-        if (mobname.matches("MOB")) {
+        if (mobname.matches("MOB") || stringBreaker(mobname, ";")[0].matches("MOB")) {
+            List<MobEntity> mobsWithBlacklist = new ArrayList<>();
             for (Iterator<MobEntity> it = mobList.iterator(); it.hasNext(); ) {
                 MobEntity e = it.next();
                 boolean isMonster = true;
@@ -169,7 +166,8 @@ public class calculateFeatures {
                     it.remove();
                     isMonster = false;
                 }
-                if (isMonster) {
+                if (isMonster && checkMobBlacklist(e,mobname)) {
+                    mobsWithBlacklist.add(e);
                     if (e.getTarget() instanceof PlayerEntity) {
                         trackingCounter++;
                     }
@@ -188,7 +186,7 @@ public class calculateFeatures {
                     }
                 }
             }
-            if (mobList.size() >= num &&
+            if (mobsWithBlacklist.size() >= num &&
                     ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) &&
                             infernalDone &&
                             (float) healthCounter / num >= healthpercentage / 100F)) {
@@ -207,19 +205,24 @@ public class calculateFeatures {
                     }
                 }
             } else victoryRet = false;
-        } else if (mobname.matches("BOSS")) {
+        } else if (mobname.matches("BOSS") || stringBreaker(mobname, ";")[0].matches("BOSS")) {
             HashMap<String, Float> tempBoss = bossInfo;
             if(!bossInfo.isEmpty()) {
+                List<String> correctBosses = new ArrayList<>();
                 for(String name : tempBoss.keySet()) {
-                    if (health / 100f >= bossInfo.get(name)) {
-                        healthCounter++;
-                    }
-                    if (victory) {
-                        victoryBosses.computeIfAbsent(triggerID, k -> new HashMap<>());
-                        if (victoryBosses.get(triggerID).keySet().size() < num) victoryBosses.get(triggerID).put(name, timeout);
+                    if(checkResourceList(name, mobname, true)) {
+                        correctBosses.add(name);
+                        if (health / 100f >= bossInfo.get(name)) {
+                            healthCounter++;
+                        }
+                        if (victory) {
+                            victoryBosses.computeIfAbsent(triggerID, k -> new HashMap<>());
+                            if (victoryBosses.get(triggerID).keySet().size() < num)
+                                victoryBosses.get(triggerID).put(name, timeout);
+                        }
                     }
                 }
-                if(bossInfo.size()>=num && (float)healthCounter/bossInfo.size()<=100f/healthpercentage) {
+                if(correctBosses.size()>=num && (float)healthCounter/bossInfo.size()<=100f/healthpercentage) {
                     pass = true;
                 }
                 if(victoryBosses.get(triggerID)!=null) {
@@ -324,9 +327,21 @@ public class calculateFeatures {
 
     public static boolean checkResourceList(String type, String resourceList, boolean match) {
         for(String resource : stringBreaker(resourceList,";")) {
-            if(match && type.matches(resource)) return true;
-            else if(!match && type.contains(resource)) return true;
+            if(!resource.matches("BOSS")) {
+                if (match && type.matches(resource)) return true;
+                else if (!match && type.contains(resource)) return true;
+            }
         }
         return false;
+    }
+
+    public static boolean checkMobBlacklist(MobEntity e, String resourceList) {
+        for(String resource : stringBreaker(resourceList,";")) {
+            if(!resource.matches("MOB")) {
+                if (e.getName().getString().matches(resource)) return false;
+                else if (Objects.requireNonNull(e.getType().getRegistryName()).toString().matches(resource)) return false;
+            }
+        }
+        return true;
     }
 }

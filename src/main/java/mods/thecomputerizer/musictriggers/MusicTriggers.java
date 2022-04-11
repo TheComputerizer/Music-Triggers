@@ -56,15 +56,6 @@ public class MusicTriggers {
         if (!configDir.exists()) {
             configDir.mkdir();
         }
-        File redir = new File("config/MusicTriggers/redirect.txt");
-        if(!redir.exists()) {
-            try {
-                Files.createFile(Paths.get(redir.getPath()));
-            } catch(Exception e) {
-                e.printStackTrace();
-            }
-        }
-        new readRedirect(redir);
         if (FMLEnvironment.dist == Dist.CLIENT) {
             songsDir = new File(configDir.getPath(), "songs");
             if (!songsDir.exists()) {
