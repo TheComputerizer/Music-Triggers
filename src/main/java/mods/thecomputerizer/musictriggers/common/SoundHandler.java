@@ -7,7 +7,6 @@ import net.minecraft.sounds.SoundEvent;
 
 import java.util.*;
 
-@SuppressWarnings("rawtypes")
 public class SoundHandler {
 
     public static List<SoundEvent> allSoundEvents = new ArrayList<>();

@@ -46,7 +46,6 @@ public class MusicTriggers {
 
     public static final Logger logger = LogManager.getLogger();
 
-    @SuppressWarnings("InstantiationOfUtilityClass")
     public MusicTriggers() {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::commonsetup);
