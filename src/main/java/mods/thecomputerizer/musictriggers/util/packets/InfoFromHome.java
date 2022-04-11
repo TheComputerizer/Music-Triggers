@@ -27,7 +27,7 @@ public class InfoFromHome {
         ctx.enqueueWork(() -> {
         });
 
-        fromServer.clientSyncHome(packet.getDataBool(), packet.getDataTrigger());
+        fromServer.clientSyncHome(packet.getDataBool());
 
         ctx.setPacketHandled(true);
     }

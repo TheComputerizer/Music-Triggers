@@ -59,6 +59,7 @@ public class MusicPicker {
     public static HashMap<String, Integer> dynamicDelay = new HashMap<>();
 
     public static List<String> playableList = new ArrayList<>();
+    public static List<String> savePlayable = new ArrayList<>();
     public static List<String> titleCardEvents = new ArrayList<>();
     public static List<String> timeSwitch = new ArrayList<>();
 
@@ -89,6 +90,7 @@ public class MusicPicker {
         String menuPacket = allMenuSongsAsSingleString();
         if(menuPacket!=null) PacketHandler.sendToServer(new MenuSongs(menuPacket));
         List<String> res = comboChecker(priorityHandler(playableEvents()));
+        playableList = savePlayable;
         for(String event : timeSwitch) {
             if(!titleCardEvents.contains(event) && triggerPersistence.get(event) > 0) triggerPersistence.put(event, 0);
         }
@@ -664,8 +666,7 @@ public class MusicPicker {
             if (SoundHandler.TriggerIdentifierMap.get("home") != null && !configRegistry.clientSideOnly) {
                 crashHelper = "home";
                 PacketHandler.sendToServer(new InfoForHome("home", roundedPos(player), player.getUUID(), SoundHandler.TriggerInfoMap.get("home")[11]));
-                fromServer.inHomeRange.putIfAbsent("home", false);
-                if (fromServer.inHomeRange.get("home")) {
+                if (fromServer.inHomeRange) {
                     events.add("home");
                     dynamicSongs.put("home", SoundHandler.TriggerIdentifierMap.get("home").get("_"));
                     dynamicPriorities.put("home", Integer.parseInt(SoundHandler.TriggerInfoMap.get("home")[0]));
@@ -674,7 +675,7 @@ public class MusicPicker {
                     dynamicDelay.put("home", Integer.parseInt(SoundHandler.TriggerInfoMap.get("home")[4]));
                     triggerPersistence.put("home", Integer.parseInt(SoundHandler.TriggerInfoMap.get("home")[3]));
                     if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("home")[33])) timeSwitch.add("home");
-                } else if (triggerPersistence.get("home") > 0) {
+                } else if (triggerPersistence.get("home")!=null && triggerPersistence.get("home") > 0) {
                     events.add("home");
                     dynamicSongs.put("home", SoundHandler.TriggerIdentifierMap.get("home").get("_"));
                     dynamicPriorities.put("home", Integer.parseInt(SoundHandler.TriggerInfoMap.get("home")[0]));
@@ -1163,6 +1164,7 @@ public class MusicPicker {
             throw new RuntimeException("There was a problem with your "+crashHelper+" trigger! See the log for the full stack trace");
         }
         playableList = events;
+        savePlayable = events;
         String triggersPacket = allTriggersAsSingleString();
         if(triggersPacket!=null) PacketHandler.sendToServer(new AllTriggers(triggersPacket));
         return events;

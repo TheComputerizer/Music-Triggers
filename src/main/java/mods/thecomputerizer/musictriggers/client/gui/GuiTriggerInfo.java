@@ -35,7 +35,7 @@ public class GuiTriggerInfo extends Screen {
         this.trigger = trigger;
         this.songCode = songCode;
         this.holder = holder;
-        if(create) this.holder.addTrigger(songCode,trigger);
+        if(create) this.trigger = this.holder.addTrigger(songCode,trigger);
         this.parameters = Mappings.convertList(Mappings.buildGuiParameters(this.holder.translateCodedTrigger(this.songCode,this.trigger)));
         this.background = new ResourceLocation(MusicTriggers.MODID,"textures/block/recorder_side_active.png");
     }

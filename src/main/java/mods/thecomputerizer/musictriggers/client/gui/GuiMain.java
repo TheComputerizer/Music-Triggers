@@ -46,13 +46,11 @@ public class GuiMain extends Screen {
 
     @Override
     public boolean charTyped(char typedChar, int keyCode) {
-        MusicTriggers.logger.info("Char: "+typedChar+" Code: "+keyCode);
         return super.charTyped(typedChar, keyCode);
     }
 
     @Override
     public boolean keyPressed(int keyCode, int i, int j) {
-        MusicTriggers.logger.info("Key Pressed "+keyCode);
         return super.keyPressed(keyCode, i, j);
     }
 
