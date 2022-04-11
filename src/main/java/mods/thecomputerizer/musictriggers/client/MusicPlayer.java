@@ -168,6 +168,7 @@ public class MusicPlayer {
                             entry.source.setVolume(volumeLinker.get(key));
                         } else {
                             float calculatedVolume = volumeLinker.get(key) * (((float) (fadeInLinkerMax.get(key) - fadeInLinker.get(key))) / ((float) fadeInLinkerMax.get(key)));
+                            calculatedVolume = calculatedVolume*mc.options.getSoundVolume(SoundCategory.MUSIC);
                             musicLinker.get(key).setVolume(calculatedVolume);
                             entry.source.setVolume(calculatedVolume);
                             fadeInLinker.put(key, fadeInLinker.get(key) - 1);
@@ -186,6 +187,7 @@ public class MusicPlayer {
                             entry.source.setVolume(Float.MIN_VALUE * 1000);
                         } else {
                             float calculatedVolume = volumeLinker.get(key) * (((float) fadeOutLinker.get(key)) / ((float) fadeOutLinkerMax.get(key)));
+                            calculatedVolume = calculatedVolume*mc.options.getSoundVolume(SoundCategory.MUSIC);
                             musicLinker.get(key).setVolume(calculatedVolume);
                             entry.source.setVolume(calculatedVolume);
                             fadeOutLinker.put(key, fadeOutLinker.get(key) - 1);
@@ -202,6 +204,7 @@ public class MusicPlayer {
                         entry.source.setVolume(saveVolIn);
                     } else {
                         float calculatedVolume = saveVolIn * (float) (((double) (MusicPicker.curFadeIn - tempFadeIn)) / ((double) MusicPicker.curFadeIn));
+                        calculatedVolume = calculatedVolume*mc.options.getSoundVolume(SoundCategory.MUSIC);
                         curMusic.setVolume(calculatedVolume);
                         entry.source.setVolume(calculatedVolume);
                         tempFadeIn -= 1;
@@ -210,6 +213,8 @@ public class MusicPlayer {
             }
             if (fadingOut && !reverseFade) {
                 Channel.SourceManager entry = sh.soundSystem.sources.get(curMusic);
+                tempFadeIn = 0;
+                fadingIn = false;
                 if(entry!=null && entry.source!=null) {
                     if (tempFadeOut == 0) {
                         removeTrack(trackToDelete, indexToDelete, playedEvents, playedMusic);
@@ -232,6 +237,7 @@ public class MusicPlayer {
                         if (curMusic == null) tempFadeOut = 0;
                         else {
                             float calculatedVolume = saveVolOut * (float) (((double) tempFadeOut) / ((double) savedFadeOut));
+                            calculatedVolume = calculatedVolume*mc.options.getSoundVolume(SoundCategory.MUSIC);
                             curMusic.setVolume(calculatedVolume);
                             entry.source.setVolume(calculatedVolume);
                             tempFadeOut -= 1;
@@ -254,6 +260,7 @@ public class MusicPlayer {
                     tempFadeOut = 0;
                 } else {
                     float calculatedVolume = saveVolOut * (float)(((double)tempFadeOut)/((double)savedFadeOut));
+                    calculatedVolume = calculatedVolume*mc.options.getSoundVolume(SoundCategory.MUSIC);
                     curMusic.setVolume(calculatedVolume);
                     entry.source.setVolume(calculatedVolume);
                     tempFadeOut += 1;
@@ -294,8 +301,14 @@ public class MusicPlayer {
                     for(String playable : MusicPicker.playableList) {
                         if(!MusicPicker.titleCardEvents.contains(playable)) {
                             if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get(playable)[34])) {
-                                if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get(playable)[34]))
+                                if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get(playable)[34])) {
                                     SoundHandler.TriggerIdentifierMap.get(playable.split("-")[0]).remove(SoundHandler.TriggerInfoMap.get(playable)[10]);
+                                    SoundHandler.TriggerInfoMap.remove(playable);
+                                    if (SoundHandler.TriggerIdentifierMap.get(playable.split("-")[0]).isEmpty()) {
+                                        SoundHandler.TriggerIdentifierMap.remove(playable.split("-")[0]);
+                                        SoundHandler.TriggerInfoMap.remove(playable.split("-")[0]);
+                                    }
+                                }
                             }
                         }
                     }
@@ -616,6 +629,7 @@ public class MusicPlayer {
 
     private static void removeTrack(String track, int index, List<String> events, SoundInstance playing) {
         if(track!=null) {
+            curTrack = null;
             sh.stop(playing);
             curMusicSource=null;
             curTrackList.remove(index);
@@ -623,8 +637,14 @@ public class MusicPlayer {
                 String[] trigger = ev.split("-");
                 if (trigger.length==1) trigger = (ev+"-_").split("-");
                 SoundHandler.TriggerIdentifierMap.get(trigger[0]).get(trigger[1]).remove(track);
-                if(SoundHandler.TriggerIdentifierMap.get(trigger[0]).get(trigger[1]).isEmpty()) SoundHandler.TriggerIdentifierMap.get(trigger[0]).remove(trigger[1]);
-                if(SoundHandler.TriggerIdentifierMap.get(trigger[0]).isEmpty()) SoundHandler.TriggerIdentifierMap.remove(trigger[0]);
+                if(SoundHandler.TriggerIdentifierMap.get(trigger[0]).get(trigger[1]).isEmpty()) {
+                    SoundHandler.TriggerIdentifierMap.get(trigger[0]).remove(trigger[1]);
+                    SoundHandler.TriggerInfoMap.remove(trigger[0]+"-"+trigger[1]);
+                }
+                if(SoundHandler.TriggerIdentifierMap.get(trigger[0]).isEmpty()) {
+                    SoundHandler.TriggerIdentifierMap.remove(trigger[0]);
+                    SoundHandler.TriggerInfoMap.remove(trigger[0]);
+                }
             }
             trackToDelete=null;
             playedEvents = new ArrayList<>();

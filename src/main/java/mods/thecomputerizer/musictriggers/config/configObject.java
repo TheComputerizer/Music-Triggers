@@ -281,13 +281,16 @@ public class configObject {
         this.otherinfo.remove(code);
     }
 
-    public void addTrigger(String code, String trigger) {
-        this.triggerMapper.get(code).put("trigger-"+triggerholder.get(code).keySet().size(),trigger);
-        this.triggerholder.get(code).put("trigger-"+triggerholder.get(code).keySet().size(), new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
+    public String addTrigger(String code, String trigger) {
+        this.triggerMapper.putIfAbsent(code, new HashMap<>());
+        String codedTrigger = "trigger-"+triggerholder.get(code).keySet().size();
+        this.triggerMapper.get(code).put(codedTrigger,trigger);
+        this.triggerholder.get(code).put(codedTrigger, new String[]{"0", "0", "0", "0", "0", "YouWillNeverGuessThis", "and", "0,0,0,0,0,0", "60",
                 "minecraft", "_", "16", "false", "100", "100", "100",
                 "false", "0", "minecraft", "true", "true", "0", "0", "nope",
                 "nope", "-111", "false","_", "true", "-1", "-111", "true",
                 "false", "false", "false", "0"});
+        return codedTrigger;
     }
 
     public void removeTrigger(String code, String trigger) {

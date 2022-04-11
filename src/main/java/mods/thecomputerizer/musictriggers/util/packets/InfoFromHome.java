@@ -26,13 +26,10 @@ public class InfoFromHome {
     public static void register() {
         ClientPlayNetworking.registerGlobalReceiver(id,(client, handler, buf, responseSender) -> {
             String s = decode(buf);
-            fromServer.clientSyncHome(getDataBool(s), getDataTrigger(s));
+            fromServer.clientSyncHome(getDataBool(s));
         });
     }
 
-    public static String getDataTrigger(String s) {
-        return stringBreaker(s)[1];
-    }
     public static boolean getDataBool(String s) {
         return Boolean.parseBoolean(stringBreaker(s)[0]);
     }

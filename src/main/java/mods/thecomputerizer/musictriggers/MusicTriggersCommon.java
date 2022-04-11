@@ -44,15 +44,6 @@ public class MusicTriggersCommon implements ModInitializer {
             setUpClientPt1();
         }
         configToml.parse();
-        File redir = new File(FabricLoaderImpl.INSTANCE.getConfigDir().toString(),"MusicTriggers/redirect.txt");
-        if(!redir.exists()) {
-            try {
-                Files.createFile(Paths.get(redir.getPath()));
-            } catch(Exception e) {
-                e.printStackTrace();
-            }
-        }
-        new readRedirect(redir);
         if(FabricLoaderImpl.INSTANCE.getEnvironmentType()== EnvType.CLIENT) {
             setUpClientPt2();
         }
