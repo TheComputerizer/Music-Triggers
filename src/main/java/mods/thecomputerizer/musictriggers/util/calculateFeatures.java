@@ -41,7 +41,7 @@ public class calculateFeatures {
             if (world != null) {
                 boolean good = false;
                 String curStruct = null;
-                for (StructureFeature<?> structureFeature : FabricStructureImpl.STRUCTURE_TO_CONFIG_MAP.keySet()) {
+                for (StructureFeature<?> structureFeature : world.getChunk(pos).getStructureReferences().keySet()) {
                     if(world.getStructureAccessor().getStructureAt(pos, structureFeature).isInExistingChunk()) {
                         if(structureFeature.getName()!=null) {
                             curStruct = structureFeature.getName();
@@ -72,7 +72,7 @@ public class calculateFeatures {
         ServerPlayerEntity player = curServer.getPlayerManager().getPlayer(uuid);
         if(player!=null) {
             ServerWorld world = curServer.getWorld(player.getWorld().getRegistryKey());
-            if (world != null) {
+            if (world != null && player.getSpawnPointPosition()!=null) {
                 if (Objects.requireNonNull(player.getSpawnPointPosition()).isWithinDistance(pos,range) && player.getSpawnPointDimension()==world.getRegistryKey() && !world.getSpawnPos().isWithinDistance(pos,range))
                     PacketHandler.sendTo(InfoFromHome.id, InfoFromHome.encode(true, triggerID), player);
                 else PacketHandler.sendTo(InfoFromHome.id, InfoFromHome.encode(false, triggerID), player);
@@ -86,9 +86,7 @@ public class calculateFeatures {
             RegistryWorldView world = curServer.getWorld(player.getWorld().getRegistryKey());
             if (world != null) {
                 String curBiome = world.getBiomeKey(pos).get().getValue().toString();
-                boolean pass = checkBiome(world.getBiome(pos), curBiome,biome,category,rainType,temperature,cold,rainfall,togglerainfall);
-                if (pass) PacketHandler.sendTo(InfoFromBiome.id, InfoFromBiome.encode(true,triggerID, curBiome), player);
-                else PacketHandler.sendTo(InfoFromBiome.id, InfoFromBiome.encode(false,triggerID, curBiome), player);
+                PacketHandler.sendTo(InfoFromBiome.id, InfoFromBiome.encode(checkBiome(world.getBiome(pos), curBiome,biome,category,rainType,temperature,cold,rainfall,togglerainfall),triggerID, curBiome), player);
             }
         }
     }
@@ -99,8 +97,7 @@ public class calculateFeatures {
             ServerWorld world = curServer.getWorld(player.getWorld().getRegistryKey());
             if (world != null) {
                 Raid raid = world.getRaidAt(pos);
-                if (raid!=null && raid.getGroupsSpawned()>=wave) PacketHandler.sendTo(InfoFromRaid.id, InfoFromRaid.encode(triggerID,true),player);
-                else PacketHandler.sendTo(InfoFromRaid.id, InfoFromRaid.encode(triggerID,false),player);
+                PacketHandler.sendTo(InfoFromRaid.id, InfoFromRaid.encode(triggerID,raid!=null && raid.getGroupsSpawned()>=wave),player);
             }
         }
     }
