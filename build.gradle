@@ -17,7 +17,7 @@ apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'maven-publish'
 
-version = '1.18.1-5.0'
+version = '1.18.1-5.1'
 group = 'mods.thecomputerizer.musictriggers'
 archivesBaseName = 'musictriggers'
 
@@ -126,7 +126,7 @@ jar {
         attributes([
                 "Specification-Title"     : "musictriggers",
                 "Specification-Vendor"    : "The_Computerizer",
-                "Specification-Version"   : "5.0-EX",
+                "Specification-Version"   : "5.1",
                 "Implementation-Title"    : project.name,
                 "Implementation-Version"  : project.jar.archiveVersion,
                 "Implementation-Vendor"   : "The_Computerizer",

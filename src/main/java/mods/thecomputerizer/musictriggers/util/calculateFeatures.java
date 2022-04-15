@@ -73,12 +73,8 @@ public class calculateFeatures {
         if(server.getPlayerList().getPlayer(uuid)!=null) {
             assert player != null;
             ServerLevel world = server.getLevel(player.level.dimension());
-            if (world != null) {
-                if (Objects.requireNonNull(player.getRespawnPosition()).closerThan(pos,range) && player.getRespawnDimension()==world.dimension() && !world.getSharedSpawnPos().closerThan(pos,range)) {
-                    PacketHandler.sendTo(new InfoFromHome(true, triggerID), player);
-                } else {
-                    PacketHandler.sendTo(new InfoFromHome(false, triggerID), player);
-                }
+            if (world != null && player.getRespawnPosition()!=null) {
+                PacketHandler.sendTo(new InfoFromHome(Objects.requireNonNull(player.getRespawnPosition()).closerThan(pos,range) && player.getRespawnDimension()==world.dimension() && !world.getSharedSpawnPos().closerThan(pos,range), triggerID), player);
             }
         }
     }
@@ -89,12 +85,7 @@ public class calculateFeatures {
             ServerLevel world = server.getLevel(Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)).level.dimension());
             if (world != null) {
                 Biome curBiome = world.getBiome(pos);
-                boolean pass = checkBiome(curBiome,biome,category,rainType,temperature,cold,rainfall,togglerainfall);
-                if (pass) {
-                    PacketHandler.sendTo(new InfoFromBiome(true,triggerID, Objects.requireNonNull(curBiome.getRegistryName()).toString()), Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)));
-                } else {
-                    PacketHandler.sendTo(new InfoFromBiome(false,triggerID, Objects.requireNonNull(curBiome.getRegistryName()).toString()), Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)));
-                }
+                PacketHandler.sendTo(new InfoFromBiome(checkBiome(curBiome,biome,category,rainType,temperature,cold,rainfall,togglerainfall),triggerID, Objects.requireNonNull(curBiome.getRegistryName()).toString()), Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)));
             }
         }
     }
