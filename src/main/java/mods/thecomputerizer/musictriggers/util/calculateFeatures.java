@@ -14,6 +14,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.registry.BuiltinRegistries;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.RegistryEntry;
 import net.minecraft.village.raid.Raid;
 import net.minecraft.world.RegistryWorldView;
@@ -43,13 +44,14 @@ public class calculateFeatures {
             if (world != null) {
                 boolean good = false;
                 String curStruct = null;
-                for (Identifier structureLocation : BuiltinRegistries.CONFIGURED_STRUCTURE_FEATURE.getIds()) {
-                    ConfiguredStructureFeature<?,?> feature = BuiltinRegistries.CONFIGURED_STRUCTURE_FEATURE.get(structureLocation);
-                    if(world.getStructureAccessor().getStructureAt(pos, feature).isInExistingChunk()) {
-                        curStruct = structureLocation.toString();
-                        if (checkResourceList(curStruct, struct, false)) {
-                            good = true;
-                            break;
+                for (ConfiguredStructureFeature<?,?> feature : world.getChunk(pos).getStructureReferences().keySet()) {
+                    if (world.getStructureAccessor().getStructureAt(pos, feature).isInExistingChunk()) {
+                        if(Registry.STRUCTURE_FEATURE.getId(feature.feature)!=null) {
+                            curStruct = Objects.requireNonNull(Registry.STRUCTURE_FEATURE.getId(feature.feature)).toString();
+                            if (checkResourceList(curStruct, struct, false)) {
+                                good = true;
+                                break;
+                            }
                         }
                     }
                 }
@@ -73,7 +75,7 @@ public class calculateFeatures {
         ServerPlayerEntity player = curServer.getPlayerManager().getPlayer(uuid);
         if(player!=null) {
             ServerWorld world = curServer.getWorld(player.getWorld().getRegistryKey());
-            if (world != null) {
+            if (world != null && player.getSpawnPointPosition()!=null) {
                 if (Objects.requireNonNull(player.getSpawnPointPosition()).isWithinDistance(pos,range) && player.getSpawnPointDimension()==world.getRegistryKey() && !world.getSpawnPos().isWithinDistance(pos,range))
                     PacketHandler.sendTo(InfoFromHome.id, InfoFromHome.encode(true, triggerID), player);
                 else PacketHandler.sendTo(InfoFromHome.id, InfoFromHome.encode(false, triggerID), player);
@@ -86,10 +88,8 @@ public class calculateFeatures {
         if(player!=null) {
             RegistryWorldView world = curServer.getWorld(player.getWorld().getRegistryKey());
             if (world != null) {
-                String curBiome = world.getBiome(pos).getKey().get().toString();
-                boolean pass = checkBiome(world.getBiome(pos), curBiome,biome,category,rainType,temperature,cold,rainfall,togglerainfall);
-                if (pass) PacketHandler.sendTo(InfoFromBiome.id, InfoFromBiome.encode(true,triggerID, curBiome), player);
-                else PacketHandler.sendTo(InfoFromBiome.id, InfoFromBiome.encode(false,triggerID, curBiome), player);
+                String curBiome = world.getBiome(pos).getKey().get().getValue().toString();
+                PacketHandler.sendTo(InfoFromBiome.id, InfoFromBiome.encode(checkBiome(world.getBiome(pos), curBiome,biome,category,rainType,temperature,cold,rainfall,togglerainfall),triggerID, curBiome), player);
             }
         }
     }
@@ -100,8 +100,7 @@ public class calculateFeatures {
             ServerWorld world = curServer.getWorld(player.getWorld().getRegistryKey());
             if (world != null) {
                 Raid raid = world.getRaidAt(pos);
-                if (raid!=null && raid.getGroupsSpawned()>=wave) PacketHandler.sendTo(InfoFromRaid.id, InfoFromRaid.encode(triggerID,true),player);
-                else PacketHandler.sendTo(InfoFromRaid.id, InfoFromRaid.encode(triggerID,false),player);
+                PacketHandler.sendTo(InfoFromRaid.id, InfoFromRaid.encode(triggerID,raid!=null && raid.getGroupsSpawned()>=wave),player);
             }
         }
     }

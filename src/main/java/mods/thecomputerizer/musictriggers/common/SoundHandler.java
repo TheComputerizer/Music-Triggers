@@ -101,7 +101,7 @@ public class SoundHandler {
                 int triggerCounter=0;
                 for(String song : configToml.triggerlinking.get(songEntry).keySet()) {
                     if(triggerCounter!=0) {
-                        SoundEvent soundLink = new SoundEvent(new Identifier(MusicTriggersCommon.MODID, configToml.songholder.get(song)));
+                        SoundEvent soundLink = new SoundEvent(new Identifier(MusicTriggersCommon.MODID, song));
                         boolean shouldBeAdded = true;
                         for(SoundEvent s : allSoundEvents) {
                             if(Objects.requireNonNull(soundLink.getId()).toString().matches(Objects.requireNonNull(s.getId()).toString())) {
