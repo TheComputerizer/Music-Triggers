@@ -94,20 +94,23 @@ public class MusicPlayer {
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onTick(TickEvent.ClientTickEvent event) {
         sh = Minecraft.getMinecraft().getSoundHandler();
-        if(curMusic!=null) {
+        if(curMusic!=null && sh.sndManager.invPlayingSounds.get(curMusic)!=null) {
             if (!Display.isActive() && ((SoundSystem) sh.sndManager.sndSystem).playing(sh.sndManager.invPlayingSounds.get(curMusic))) {
                 for (String is : musicLinker.keySet()) {
-                    ((SoundSystem)sh.sndManager.sndSystem).pause(sh.sndManager.invPlayingSounds.get(musicLinker.get(is)));
+                    if(sh.sndManager.invPlayingSounds.get(musicLinker.get(is))!=null)
+                        ((SoundSystem)sh.sndManager.sndSystem).pause(sh.sndManager.invPlayingSounds.get(musicLinker.get(is)));
                 }
                 paused = true;
             } else if (paused && Display.isActive() && !playing && !mc.isGamePaused()) {
                 for (String is : musicLinker.keySet()) {
-                    ((SoundSystem)sh.sndManager.sndSystem).play(sh.sndManager.invPlayingSounds.get(musicLinker.get(is)));
+                    if(sh.sndManager.invPlayingSounds.get(musicLinker.get(is))!=null)
+                        ((SoundSystem)sh.sndManager.sndSystem).play(sh.sndManager.invPlayingSounds.get(musicLinker.get(is)));
                 }
                 paused = false;
             } else if (paused && playing && ((SoundSystem)sh.sndManager.sndSystem).playing(sh.sndManager.invPlayingSounds.get(curMusic))) {
                 for (String is : musicLinker.keySet()) {
-                    ((SoundSystem) sh.sndManager.sndSystem).pause(sh.sndManager.invPlayingSounds.get(musicLinker.get(is)));
+                    if(sh.sndManager.invPlayingSounds.get(musicLinker.get(is))!=null)
+                        ((SoundSystem) sh.sndManager.sndSystem).pause(sh.sndManager.invPlayingSounds.get(musicLinker.get(is)));
                 }
             }
         }
@@ -166,11 +169,11 @@ public class MusicPlayer {
                         linkedFadingIn.put(key, false);
                         fadeInLinker.put(key, fadeInLinkerMax.get(key));
                         musicLinker.get(key).setVolume(volumeLinker.get(key));
-                        ((SoundSystem)sh.sndManager.sndSystem).setVolume(temp, volumeLinker.get(key));
+                        ((SoundSystem)sh.sndManager.sndSystem).setVolume(temp, volumeLinker.get(key)*mc.gameSettings.getSoundLevel(SoundCategory.MUSIC));
                     } else {
                         float calculatedVolume = volumeLinker.get(key)*(((float)(fadeInLinkerMax.get(key)-fadeInLinker.get(key)))/((float)fadeInLinkerMax.get(key)));
-                        calculatedVolume = calculatedVolume*mc.gameSettings.getSoundLevel(SoundCategory.MUSIC);
                         musicLinker.get(key).setVolume(calculatedVolume);
+                        calculatedVolume = calculatedVolume*mc.gameSettings.getSoundLevel(SoundCategory.MUSIC);
                         ((SoundSystem)sh.sndManager.sndSystem).setVolume(temp, calculatedVolume);
                         fadeInLinker.put(key, fadeInLinker.get(key)-1);
                     }
@@ -186,8 +189,8 @@ public class MusicPlayer {
                         ((SoundSystem)sh.sndManager.sndSystem).setVolume(temp, Float.MIN_VALUE*1000);
                     } else {
                         float calculatedVolume = volumeLinker.get(key)*(((float)fadeOutLinker.get(key))/((float)fadeOutLinkerMax.get(key)));
-                        calculatedVolume = calculatedVolume*mc.gameSettings.getSoundLevel(SoundCategory.MUSIC);
                         musicLinker.get(key).setVolume(calculatedVolume);
+                        calculatedVolume = calculatedVolume*mc.gameSettings.getSoundLevel(SoundCategory.MUSIC);
                         ((SoundSystem)sh.sndManager.sndSystem).setVolume(temp, calculatedVolume);
                         fadeOutLinker.put(key, fadeOutLinker.get(key)-1);
                     }
@@ -198,12 +201,12 @@ public class MusicPlayer {
                 if(tempFadeIn==0) {
                     fadingIn = false;
                     curMusic.setVolume(saveVolIn);
-                    ((SoundSystem)sh.sndManager.sndSystem).setVolume(temp, saveVolIn);
+                    ((SoundSystem)sh.sndManager.sndSystem).setVolume(temp, saveVolIn*mc.gameSettings.getSoundLevel(SoundCategory.MUSIC));
                 }
                 else {
                     float calculatedVolume = saveVolIn*(float) (((double)(MusicPicker.curFadeIn-tempFadeIn))/((double)MusicPicker.curFadeIn));
-                    calculatedVolume = calculatedVolume*mc.gameSettings.getSoundLevel(SoundCategory.MUSIC);
                     curMusic.setVolume(calculatedVolume);
+                    calculatedVolume = calculatedVolume*mc.gameSettings.getSoundLevel(SoundCategory.MUSIC);
                     ((SoundSystem)sh.sndManager.sndSystem).setVolume(temp,calculatedVolume);
                     tempFadeIn-=1;
                 }
@@ -234,11 +237,11 @@ public class MusicPlayer {
                     if(curMusic==null) tempFadeOut = 0;
                     else {
                         float calculatedVolume = saveVolOut * (float)(((double)tempFadeOut)/((double)savedFadeOut));
-                        calculatedVolume = calculatedVolume*mc.gameSettings.getSoundLevel(SoundCategory.MUSIC);
                         curMusic.setVolume(calculatedVolume);
+                        calculatedVolume = calculatedVolume*mc.gameSettings.getSoundLevel(SoundCategory.MUSIC);
                         ((SoundSystem) sh.sndManager.sndSystem).setVolume(temp, calculatedVolume);
                         tempFadeOut -= 1;
-                        if(Arrays.equals(holder, reverseTrackList)) {
+                        if(holder!=null && reverseTrackList!=null && Arrays.equals(holder, reverseTrackList)) {
                             reverseFade = true;
                             reverseTrackList = null;
                         }
@@ -250,13 +253,12 @@ public class MusicPlayer {
                     reverseTrackList = null;
                     fadingOut = false;
                     reverseFade = false;
-                    curMusic.setVolume(saveVolOut);
+                    curMusic.setVolume(saveVolOut/mc.gameSettings.getSoundLevel(SoundCategory.MUSIC));
                     ((SoundSystem)sh.sndManager.sndSystem).setVolume(temp, saveVolOut);
                     tempFadeOut = 0;
                 } else {
                     float calculatedVolume = saveVolOut * (float)(((double)tempFadeOut)/((double)savedFadeOut));
-                    calculatedVolume = calculatedVolume*mc.gameSettings.getSoundLevel(SoundCategory.MUSIC);
-                    curMusic.setVolume(calculatedVolume);
+                    curMusic.setVolume(calculatedVolume/mc.gameSettings.getSoundLevel(SoundCategory.MUSIC));
                     ((SoundSystem)sh.sndManager.sndSystem).setVolume(temp, calculatedVolume);
                     tempFadeOut += 1;
                 }

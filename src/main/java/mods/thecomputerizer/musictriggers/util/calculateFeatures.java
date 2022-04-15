@@ -44,7 +44,8 @@ public class calculateFeatures {
 
     public static void calculateHomeAndSend(String triggerID, Integer range, UUID uuid) {
         EntityPlayerMP player = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUUID(uuid);
-        RegistryHandler.network.sendTo(new packetGetHome.packetGetHomeMessage(triggerID, player.getBedLocation(player.dimension).getDistance(roundedPos(player).getX(), roundedPos(player).getY(), roundedPos(player).getZ())<=range),player);
+        if(player.getBedLocation(player.dimension)!=null)
+            RegistryHandler.network.sendTo(new packetGetHome.packetGetHomeMessage(triggerID, player.getBedLocation(player.dimension).getDistance(roundedPos(player).getX(), roundedPos(player).getY(), roundedPos(player).getZ())<=range),player);
     }
 
     public static void calculateMobAndSend(String triggerID, UUID uuid, String mobname, int detectionrange, boolean targetting, int targettingpercentage, int health, int healthpercentage, boolean victory, int victoryID, String i, int num, int timeout, String nbtKey) {

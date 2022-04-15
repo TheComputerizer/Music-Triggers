@@ -25,6 +25,7 @@ public class SoundHandler {
 
         for(int i=0;i<configToml.songholder.entrySet().size();i++) {
             String songEntry = "song"+i;
+            MusicTriggers.logger.info("Registering sound: "+configToml.songholder.get(songEntry));
             SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." +configToml.songholder.get(songEntry))).setRegistryName(new ResourceLocation(MusicTriggers.MODID, configToml.songholder.get(songEntry)));
             List<String> triggers = new ArrayList<>();
             for (String trigger : configToml.triggerholder.get(songEntry).keySet()) {

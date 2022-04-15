@@ -65,7 +65,8 @@ public class eventsCommon {
                     EntityLightningBolt lightning = new EntityLightningBolt(recordWorld.get(blockPos), blockPos.getX(),blockPos.getY(),blockPos.getZ(),true);
                     recordWorld.get(blockPos).spawnEntity(lightning);
                     tickCounter.put(blockPos,0);
-                    String randomMenuSong = recordMenu.get(recordUUID.get(blockPos)).get(new Random().nextInt(recordMenu.get(recordUUID.get(blockPos)).size()));
+                    String randomMenuSong = "theSongWill_NOTbetHisVALUE";
+                    if(recordMenu.get(recordUUID.get(blockPos))!=null) randomMenuSong = recordMenu.get(recordUUID.get(blockPos)).get(new Random().nextInt(recordMenu.get(recordUUID.get(blockPos)).size()));
                     for (Item i : MusicTriggersItems.allItems) {
                         if(recordHolder.get(blockPos).getItem() instanceof BlankRecord) {
                             String itemName = Objects.requireNonNull(i.getRegistryName()).toString().replaceAll("musictriggers:", "");
