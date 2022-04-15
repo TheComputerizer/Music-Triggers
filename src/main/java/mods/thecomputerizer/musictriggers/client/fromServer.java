@@ -1,5 +1,7 @@
 package mods.thecomputerizer.musictriggers.client;
 
+import mods.thecomputerizer.musictriggers.MusicTriggers;
+
 import java.util.HashMap;
 
 public class fromServer {

@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.util;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.util.packets.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -41,11 +42,10 @@ public class calculateFeatures {
             if (world != null && world.structureFeatureManager().hasAnyStructureAt(pos)) {
                 boolean good = false;
                 String curStruct = null;
-                for (ResourceLocation structureLocation : BuiltinRegistries.CONFIGURED_STRUCTURE_FEATURE.keySet()) {
-                    ConfiguredStructureFeature<?, ?> feature = BuiltinRegistries.CONFIGURED_STRUCTURE_FEATURE.get(structureLocation);
-                    if(feature!=null) {
-                        if (world.structureFeatureManager().getStructureAt(pos, feature).isValid()) {
-                            curStruct = structureLocation.toString();
+                for (ConfiguredStructureFeature<?, ?> feature : world.getChunkAt(pos).getAllReferences().keySet()) {
+                    if (world.structureFeatureManager().getStructureAt(pos, feature).isValid()) {
+                        if(feature.feature.getRegistryName()!=null) {
+                            curStruct = feature.feature.getRegistryName().toString();
                             if (checkResourceList(curStruct, struct, false)) {
                                 good = true;
                                 break;
@@ -64,13 +64,8 @@ public class calculateFeatures {
         if(server.getPlayerList().getPlayer(uuid)!=null) {
             assert player != null;
             ServerLevel world = server.getLevel(player.level.dimension());
-            if (world != null) {
-                Optional<Biome> optional = world.getBiome(pos).unwrap().right();
-                if(optional.isPresent()) {
-                    Biome biome = optional.get();
-                    PacketHandler.sendTo(new InfoFromSnow(biome.coldEnoughToSnow(pos), triggerID), player);
-                }
-            }
+            if (world != null)
+                PacketHandler.sendTo(new InfoFromSnow(world.getBiome(pos).value().coldEnoughToSnow(pos), triggerID), player);
         }
     }
 
@@ -80,12 +75,8 @@ public class calculateFeatures {
         if(server.getPlayerList().getPlayer(uuid)!=null) {
             assert player != null;
             ServerLevel world = server.getLevel(player.level.dimension());
-            if (world != null) {
-                if (Objects.requireNonNull(player.getRespawnPosition()).closerThan(pos,range) && player.getRespawnDimension()==world.dimension() && !world.getSharedSpawnPos().closerThan(pos,range)) {
-                    PacketHandler.sendTo(new InfoFromHome(true, triggerID), player);
-                } else {
-                    PacketHandler.sendTo(new InfoFromHome(false, triggerID), player);
-                }
+            if (world != null && player.getRespawnPosition()!=null) {
+                PacketHandler.sendTo(new InfoFromHome(Objects.requireNonNull(player.getRespawnPosition()).closerThan(pos,range) && player.getRespawnDimension()==world.dimension() && !world.getSharedSpawnPos().closerThan(pos,range), triggerID), player);
             }
         }
     }
@@ -96,15 +87,7 @@ public class calculateFeatures {
             ServerLevel world = server.getLevel(Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)).level.dimension());
             if (world != null) {
                 Holder<Biome> curBiome = world.getBiome(pos);
-                Optional<Biome> optional = curBiome.unwrap().right();
-                if(optional.isPresent()) {
-                    boolean pass = checkBiome(curBiome, biome, category, rainType, temperature, cold, rainfall, togglerainfall);
-                    if (pass) {
-                        PacketHandler.sendTo(new InfoFromBiome(true, triggerID, Objects.requireNonNull(optional.get().getRegistryName()).toString()), Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)));
-                    } else {
-                        PacketHandler.sendTo(new InfoFromBiome(false, triggerID, Objects.requireNonNull(optional.get().getRegistryName()).toString()), Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)));
-                    }
-                }
+                PacketHandler.sendTo(new InfoFromBiome(checkBiome(curBiome, biome, category, rainType, temperature, cold, rainfall, togglerainfall), triggerID, Objects.requireNonNull(curBiome.value().getRegistryName()).toString()), Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)));
             }
         }
     }
@@ -117,33 +100,26 @@ public class calculateFeatures {
             ServerLevel world = server.getLevel(player.level.dimension());
             if (world != null) {
                 Raid raid = world.getRaidAt(pos);
-                if (raid!=null && raid.getGroupsSpawned()>=wave) {
-                    PacketHandler.sendTo(new InfoFromRaid(triggerID,true),player);
-                } else {
-                    PacketHandler.sendTo(new InfoFromRaid(triggerID,false),player);
-                }
+                PacketHandler.sendTo(new InfoFromRaid(triggerID,raid!=null && raid.getGroupsSpawned()>=wave),player);
             }
         }
     }
 
     @SuppressWarnings("deprecation")
     public static boolean checkBiome(Holder<Biome> b, String name, String category, String rainType, float temperature, boolean cold, float rainfall, boolean togglerainfall) {
-        Optional<Biome> optional = b.unwrap().right();
-        if(optional.isPresent()) {
-            Biome biome = optional.get();
-            if (checkResourceList(Objects.requireNonNull(biome.getRegistryName()).toString(), name, false) || name.matches("minecraft")) {
-                if (checkResourceList(Biome.getBiomeCategory(b).getName(), category, false) || category.matches("nope")) {
-                    if (biome.getPrecipitation().getName().contains(rainType) || rainType.matches("nope")) {
-                        boolean pass = false;
-                        if (rainfall == -111f) pass = true;
-                        else if (biome.getDownfall() > rainfall && togglerainfall) pass = true;
-                        else if (biome.getDownfall() < rainfall && !togglerainfall) pass = true;
-                        if (pass) {
-                            float bt = biome.getBaseTemperature();
-                            if (temperature == -111) return true;
-                            else if (bt >= temperature && !cold) return true;
-                            else return bt <= temperature && cold;
-                        }
+        Biome biome = b.value();
+        if (checkResourceList(Objects.requireNonNull(biome.getRegistryName()).toString(), name, false) || name.matches("minecraft")) {
+            if (checkResourceList(Biome.getBiomeCategory(b).getName(), category, false) || category.matches("nope")) {
+                if (biome.getPrecipitation().getName().contains(rainType) || rainType.matches("nope")) {
+                    boolean pass = false;
+                    if (rainfall == -111f) pass = true;
+                    else if (biome.getDownfall() > rainfall && togglerainfall) pass = true;
+                    else if (biome.getDownfall() < rainfall && !togglerainfall) pass = true;
+                    if (pass) {
+                        float bt = biome.getBaseTemperature();
+                        if (temperature == -111) return true;
+                        else if (bt >= temperature && !cold) return true;
+                        else return bt <= temperature && cold;
                     }
                 }
             }

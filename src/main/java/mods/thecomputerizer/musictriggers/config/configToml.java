@@ -28,7 +28,7 @@ public class configToml {
                     "dimension","biome", "structure","mob","victory","gui","effect","zones","pvp","advancement",
                     "raid", "statistic"};
     public static final String[] modtriggers = new String[]
-            {"bloodmoon","harvestmoon","bluemoon","moon","season"};
+            {""};
 
     //priority,fade,level,time,delay,advancement,operator,zone,start,
     //resourcename,identifier,range,mobtargetting,hordetargetpercentage,health,hordehealthpercentage,
@@ -220,7 +220,7 @@ public class configToml {
                                             triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                         }
                                         if (trigger.contains("fade_in")) {
-                                            triggerholder.get("song" + songCounter).get(triggerID)[1] = trigger.getString("fade");
+                                            triggerholder.get("song" + songCounter).get(triggerID)[1] = trigger.getString("fade_in");
                                         }
                                         if (trigger.contains("level")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[2] = trigger.getString("level");
@@ -541,7 +541,7 @@ public class configToml {
                                             triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                         }
                                         if (trigger.contains("fade_in")) {
-                                            triggerholder.get("song" + songCounter).get(triggerID)[1] = trigger.getString("fade");
+                                            triggerholder.get("song" + songCounter).get(triggerID)[1] = trigger.getString("fade_in");
                                         }
                                         if (trigger.contains("level")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[2] = trigger.getString("level");
@@ -682,7 +682,7 @@ public class configToml {
                                         triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                     }
                                     if (trigger.contains("fade_in")) {
-                                        triggerholder.get("song" + songCounter).get(triggerID)[1] = trigger.getString("fade");
+                                        triggerholder.get("song" + songCounter).get(triggerID)[1] = trigger.getString("fade_in");
                                     }
                                     if (trigger.contains("level")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[2] = trigger.getString("level");

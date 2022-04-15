@@ -154,7 +154,7 @@ public class MusicTriggers {
         configRegistry.parse(registrationConfig);
         RegistryHandler.init(eventBus);
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
-        MinecraftForge.EVENT_BUS.register(eventsClient.class);
+        if (FMLEnvironment.dist == Dist.CLIENT) MinecraftForge.EVENT_BUS.register(eventsClient.class);
         MinecraftForge.EVENT_BUS.register(eventsCommon.class);
         CustomTick.setUp();
     }
