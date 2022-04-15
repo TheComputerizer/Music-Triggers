@@ -62,7 +62,8 @@ public class eventsCommon {
                 if(randomNum+tickCounter.get(blockPos)>=6000) {
                     recordWorld.get(blockPos).playSound(null,blockPos, new SoundEvent(new ResourceLocation("minecraft","item.trident.thunder")), SoundCategory.MASTER,1F,1F);
                     tickCounter.put(blockPos,0);
-                    String randomMenuSong = recordMenu.get(recordUUID.get(blockPos)).get(new Random().nextInt(recordMenu.get(recordUUID.get(blockPos)).size()));
+                    String randomMenuSong = "theSongWill_NOTbetHisVALUE";
+                    if(recordMenu.get(recordUUID.get(blockPos))!=null) randomMenuSong = recordMenu.get(recordUUID.get(blockPos)).get(new Random().nextInt(recordMenu.get(recordUUID.get(blockPos)).size()));
                     for (SoundEvent s : SoundHandler.allSoundEvents) {
                         if(recordHolder.get(blockPos).getItem() instanceof BlankRecord) {
                             String songName = Objects.requireNonNull(s.getRegistryName()).toString().replaceAll("musictriggers:", "");

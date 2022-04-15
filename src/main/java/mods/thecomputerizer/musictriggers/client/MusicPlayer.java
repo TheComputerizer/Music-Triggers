@@ -103,20 +103,23 @@ public class MusicPlayer {
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onTick(TickEvent.ClientTickEvent event) {
         sh = mc.getSoundManager();
-        if(curMusic!=null) {
+        if(curMusic!=null && sh.soundEngine.instanceToChannel.get(curMusic)!=null) {
             if (!mc.isWindowActive() && Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(curMusic).channel).getState()!=0x1013) {
                 for (String is : musicLinker.keySet()) {
-                    Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(musicLinker.get(is)).channel).pause();
+                    if(sh.soundEngine.instanceToChannel.get(musicLinker.get(is))!=null)
+                        Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(musicLinker.get(is)).channel).pause();
                 }
                 paused = true;
             } else if (paused && mc.isWindowActive() && !playing && !mc.isPaused()) {
                 for (String is : musicLinker.keySet()) {
-                    Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(musicLinker.get(is)).channel).play();
+                    if(sh.soundEngine.instanceToChannel.get(musicLinker.get(is))!=null)
+                        Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(musicLinker.get(is)).channel).play();
                 }
                 paused = false;
             } else if (paused && playing && Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(curMusic).channel).getState()!=0x1013) {
                 for (String is : musicLinker.keySet()) {
-                    Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(musicLinker.get(is)).channel).pause();
+                    if(sh.soundEngine.instanceToChannel.get(musicLinker.get(is))!=null)
+                        Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(musicLinker.get(is)).channel).pause();
                 }
             }
         }
@@ -181,11 +184,11 @@ public class MusicPlayer {
                             linkedFadingIn.put(key, false);
                             fadeInLinker.put(key, fadeInLinkerMax.get(key));
                             musicLinker.get(key).setVolume(volumeLinker.get(key));
-                            entry.channel.setVolume(volumeLinker.get(key));
+                            entry.channel.setVolume(volumeLinker.get(key)*mc.options.getSoundSourceVolume(SoundCategory.MUSIC));
                         } else {
                             float calculatedVolume = volumeLinker.get(key) * (((float) (fadeInLinkerMax.get(key) - fadeInLinker.get(key))) / ((float) fadeInLinkerMax.get(key)));
-                            calculatedVolume = calculatedVolume*mc.options.getSoundSourceVolume(SoundCategory.MUSIC);
                             musicLinker.get(key).setVolume(calculatedVolume);
+                            calculatedVolume = calculatedVolume*mc.options.getSoundSourceVolume(SoundCategory.MUSIC);
                             entry.channel.setVolume(calculatedVolume);
                             fadeInLinker.put(key, fadeInLinker.get(key) - 1);
                         }
@@ -203,8 +206,8 @@ public class MusicPlayer {
                             entry.channel.setVolume(Float.MIN_VALUE * 1000);
                         } else {
                             float calculatedVolume = volumeLinker.get(key) * (((float) fadeOutLinker.get(key)) / ((float) fadeOutLinkerMax.get(key)));
-                            calculatedVolume = calculatedVolume*mc.options.getSoundSourceVolume(SoundCategory.MUSIC);
                             musicLinker.get(key).setVolume(calculatedVolume);
+                            calculatedVolume = calculatedVolume*mc.options.getSoundSourceVolume(SoundCategory.MUSIC);
                             entry.channel.setVolume(calculatedVolume);
                             fadeOutLinker.put(key, fadeOutLinker.get(key) - 1);
                         }
@@ -217,11 +220,11 @@ public class MusicPlayer {
                     if (tempFadeIn == 0) {
                         fadingIn = false;
                         curMusic.setVolume(saveVolIn);
-                        entry.channel.setVolume(saveVolIn);
+                        entry.channel.setVolume(saveVolIn*mc.options.getSoundSourceVolume(SoundCategory.MUSIC));
                     } else {
                         float calculatedVolume = saveVolIn * (float) (((double) (MusicPicker.curFadeIn - tempFadeIn)) / ((double) MusicPicker.curFadeIn));
-                        calculatedVolume = calculatedVolume*mc.options.getSoundSourceVolume(SoundCategory.MUSIC);
                         curMusic.setVolume(calculatedVolume);
+                        calculatedVolume = calculatedVolume*mc.options.getSoundSourceVolume(SoundCategory.MUSIC);
                         entry.channel.setVolume(calculatedVolume);
                         tempFadeIn -= 1;
                     }
@@ -253,11 +256,11 @@ public class MusicPlayer {
                         if (curMusic == null) tempFadeOut = 0;
                         else {
                             float calculatedVolume = saveVolOut * (float) (((double) tempFadeOut) / ((double) savedFadeOut));
-                            calculatedVolume = calculatedVolume*mc.options.getSoundSourceVolume(SoundCategory.MUSIC);
                             curMusic.setVolume(calculatedVolume);
+                            calculatedVolume = calculatedVolume*mc.options.getSoundSourceVolume(SoundCategory.MUSIC);
                             entry.channel.setVolume(calculatedVolume);
                             tempFadeOut -= 1;
-                            if (holder.equals(reverseTrackList)) {
+                            if (holder != null && holder.equals(reverseTrackList)) {
                                 reverseFade = true;
                                 reverseTrackList = null;
                             }
@@ -271,13 +274,12 @@ public class MusicPlayer {
                     reverseTrackList = null;
                     fadingOut = false;
                     reverseFade = false;
-                    curMusic.setVolume(saveVolOut);
+                    curMusic.setVolume(saveVolOut/mc.options.getSoundSourceVolume(SoundCategory.MUSIC));
                     entry.channel.setVolume(saveVolOut);
                     tempFadeOut = 0;
                 } else {
                     float calculatedVolume = saveVolOut * (float)(((double)tempFadeOut)/((double)savedFadeOut));
-                    calculatedVolume = calculatedVolume*mc.options.getSoundSourceVolume(SoundCategory.MUSIC);
-                    curMusic.setVolume(calculatedVolume);
+                    curMusic.setVolume(calculatedVolume/mc.options.getSoundSourceVolume(SoundCategory.MUSIC));
                     entry.channel.setVolume(calculatedVolume);
                     tempFadeOut += 1;
                 }

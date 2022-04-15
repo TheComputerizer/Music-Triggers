@@ -79,11 +79,7 @@ public class calculateFeatures {
             ServerWorld world = server.getLevel(player.level.dimension());
             if (world != null) {
                 Biome biome = world.getBiome(pos);
-                if (biome.getTemperature(pos)<0.2f) {
-                    PacketHandler.sendTo(new InfoFromSnow(true, triggerID), player);
-                } else {
-                    PacketHandler.sendTo(new InfoFromSnow(false, triggerID), player);
-                }
+                PacketHandler.sendTo(new InfoFromSnow(biome.getTemperature(pos)<0.2f, triggerID), player);
             }
         }
     }
@@ -94,9 +90,8 @@ public class calculateFeatures {
         if(server.getPlayerList().getPlayer(uuid)!=null) {
             assert player != null;
             ServerWorld world = server.getLevel(player.level.dimension());
-            if (world != null) {
+            if (world != null && player.getRespawnPosition()!=null)
                 PacketHandler.sendTo(new InfoFromHome(Objects.requireNonNull(player.getRespawnPosition()).closerThan(pos,range) && player.getRespawnDimension()==world.dimension() && !world.getSharedSpawnPos().closerThan(pos,range), triggerID), player);
-            }
         }
     }
 
@@ -108,11 +103,7 @@ public class calculateFeatures {
             ServerWorld world = server.getLevel(player.level.dimension());
             if (world != null) {
                 Raid raid = world.getRaidAt(pos);
-                if (raid!=null && raid.getGroupsSpawned()>=wave) {
-                    PacketHandler.sendTo(new InfoFromRaid(triggerID,true),player);
-                } else {
-                    PacketHandler.sendTo(new InfoFromRaid(triggerID,false),player);
-                }
+                PacketHandler.sendTo(new InfoFromRaid(triggerID,raid!=null && raid.getGroupsSpawned()>=wave),player);
             }
         }
     }
