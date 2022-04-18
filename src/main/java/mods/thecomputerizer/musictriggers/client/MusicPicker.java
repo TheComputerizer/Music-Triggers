@@ -700,7 +700,7 @@ public class MusicPicker {
             if (SoundHandler.TriggerIdentifierMap.get("dimension") != null) {
                 crashHelper = "dimension";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("dimension").keySet()) {
-                    if (Integer.parseInt(SoundHandler.TriggerInfoMap.get("dimension-" + identifier)[9]) == player.dimension) {
+                    if (checkDimensionList(player.dimension,SoundHandler.TriggerInfoMap.get("dimension-" + identifier)[9])) {
                         if (!events.contains("dimension-" + identifier)) {
                             events.add("dimension-" + identifier);
                             dynamicSongs.put("dimension-" + identifier, SoundHandler.TriggerIdentifierMap.get("dimension").get(identifier));
@@ -1575,6 +1575,11 @@ public class MusicPicker {
             if(match && type.matches(resource)) return true;
             else if(!match && type.contains(resource)) return true;
         }
+        return false;
+    }
+
+    public static boolean checkDimensionList(int playerDim, String resourceList) {
+        for(String resource : stringBreaker(resourceList,";")) if(playerDim==Integer.parseInt(resource)) return true;
         return false;
     }
 
