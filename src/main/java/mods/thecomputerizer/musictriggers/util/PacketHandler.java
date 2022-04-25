@@ -22,21 +22,11 @@ public class PacketHandler {
             .simpleChannel ();
 
     public static void register() {
-        HANDLER.registerMessage(disc++, InfoForStructure.class, InfoForStructure::encode, InfoForStructure::new, InfoForStructure::handle);
-        HANDLER.registerMessage(disc++, InfoFromStructure.class, InfoFromStructure::encode, InfoFromStructure::new, InfoFromStructure::handle);
-        HANDLER.registerMessage(disc++, InfoForBiome.class, InfoForBiome::encode, InfoForBiome::new, InfoForBiome::handle);
-        HANDLER.registerMessage(disc++, InfoFromBiome.class, InfoFromBiome::encode, InfoFromBiome::new, InfoFromBiome::handle);
-        HANDLER.registerMessage(disc++, CurSong.class, CurSong::encode, CurSong::new, CurSong::handle);
-        HANDLER.registerMessage(disc++, InfoForMob.class, InfoForMob::encode, InfoForMob::new, InfoForMob::handle);
-        HANDLER.registerMessage(disc++, InfoFromMob.class, InfoFromMob::encode, InfoFromMob::new, InfoFromMob::handle);
-        HANDLER.registerMessage(disc++, InfoForRaid.class, InfoForRaid::encode, InfoForRaid::new, InfoForRaid::handle);
-        HANDLER.registerMessage(disc++, InfoFromRaid.class, InfoFromRaid::encode, InfoFromRaid::new, InfoFromRaid::handle);
-        HANDLER.registerMessage(disc++, InfoForHome.class, InfoForHome::encode, InfoForHome::new, InfoForHome::handle);
-        HANDLER.registerMessage(disc++, InfoFromHome.class, InfoFromHome::encode, InfoFromHome::new, InfoFromHome::handle);
-        HANDLER.registerMessage(disc++, InfoForSnow.class, InfoForSnow::encode, InfoForSnow::new, InfoForSnow::handle);
-        HANDLER.registerMessage(disc++, InfoFromSnow.class, InfoFromSnow::encode, InfoFromSnow::new, InfoFromSnow::handle);
+        HANDLER.registerMessage(disc++, SendTriggerData.class, SendTriggerData::encode, SendTriggerData::new, SendTriggerData::handle);
         HANDLER.registerMessage(disc++, BossInfo.class, BossInfo::encode, BossInfo::new, BossInfo::handle);
-        HANDLER.registerMessage(disc++, AllTriggers.class, AllTriggers::encode, AllTriggers::new, AllTriggers::handle);
+        HANDLER.registerMessage(disc++, CurSong.class, CurSong::encode, CurSong::new, CurSong::handle);
+        HANDLER.registerMessage(disc++, SendTriggerData.class, SendTriggerData::encode, SendTriggerData::new, SendTriggerData::handle);
+        HANDLER.registerMessage(disc++, ReturnTriggerData.class, ReturnTriggerData::encode, ReturnTriggerData::new, ReturnTriggerData::handle);
         HANDLER.registerMessage(disc++, ExecuteCommand.class, ExecuteCommand::encode, ExecuteCommand::new, ExecuteCommand::handle);
         HANDLER.registerMessage(disc++, MenuSongs.class, MenuSongs::encode, MenuSongs::new, MenuSongs::handle);
     }

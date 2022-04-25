@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.common;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.config.configRegistry;
+import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.SimpleSound;
 import net.minecraft.util.ResourceLocation;
@@ -26,7 +26,7 @@ public class ModSounds {
         List<SoundEvent> sounds = SoundHandler.allSoundEvents;
         for(SoundEvent s: sounds) {
             String songName = Objects.requireNonNull(s.getRegistryName()).toString().replaceAll("musictriggers:","");
-            if(configRegistry.registerDiscs) {
+            if(ConfigRegistry.registerDiscs) {
                 SOUNDS.register(songName, () -> new SoundEvent(new ResourceLocation(MusicTriggers.MODID + ":music." + songName)));
                 MusicTriggers.logger.info(songName+" is being initialized at resource location "+new ResourceLocation(MusicTriggers.MODID+":music." + songName));
             }

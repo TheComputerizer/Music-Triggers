@@ -3,8 +3,8 @@ package mods.thecomputerizer.musictriggers.client.gui;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configObject;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -26,10 +26,10 @@ public class GuiLinkingInfo extends Screen {
     public List<String> info;
     public Screen parentScreen;
     public GuiScrollingLinkingInfo scrollingSongs;
-    public configObject holder;
+    public ConfigObject holder;
     private final ResourceLocation background;
 
-    public GuiLinkingInfo(Screen parentScreen, String song, String songCode, configObject holder) {
+    public GuiLinkingInfo(Screen parentScreen, String song, String songCode, ConfigObject holder) {
         super(new TranslationTextComponent("screen.musictriggers.linking_info"));
         this.parentScreen = parentScreen;
         this.song = song;
@@ -82,7 +82,7 @@ public class GuiLinkingInfo extends Screen {
         this.addAddTriggerButton();
         this.addAddLoopsButton();
         this.addDeleteButton();
-        eventsClient.renderDebug = false;
+        EventsClient.renderDebug = false;
     }
 
     private void addScrollable() {
@@ -152,7 +152,7 @@ public class GuiLinkingInfo extends Screen {
 
     @Override
     public void onClose() {
-        eventsClient.renderDebug = true;
+        EventsClient.renderDebug = true;
         super.onClose();
     }
 }

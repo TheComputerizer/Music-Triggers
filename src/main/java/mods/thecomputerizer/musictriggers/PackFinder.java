@@ -8,10 +8,10 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 
-public class packFinder implements IPackFinder {
+public class PackFinder implements IPackFinder {
     private File pack;
 
-    packFinder(File p) {
+    PackFinder(File p) {
         pack = p;
     }
 

@@ -4,8 +4,8 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configObject;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.button.Button;
@@ -25,11 +25,11 @@ public class GuiCurPlaying extends Screen {
 
     public Screen parentScreen;
     public List<String> parameters;
-    public configObject holder;
+    public ConfigObject holder;
     private final ResourceLocation background;
     public CustomSlider slider;
 
-    public GuiCurPlaying(Screen parentScreen, configObject holder) {
+    public GuiCurPlaying(Screen parentScreen, ConfigObject holder) {
         super(new TranslationTextComponent("screen.musictriggers.curplaying"));
         this.parentScreen = parentScreen;
         this.holder = holder;
@@ -50,7 +50,7 @@ public class GuiCurPlaying extends Screen {
         this.addBackButton();
         this.addSkipSongButton();
         this.addSongSlider();
-        eventsClient.renderDebug = false;
+        EventsClient.renderDebug = false;
     }
 
 
@@ -99,7 +99,7 @@ public class GuiCurPlaying extends Screen {
 
     @Override
     public void onClose() {
-        eventsClient.renderDebug = true;
+        EventsClient.renderDebug = true;
         super.onClose();
     }
 

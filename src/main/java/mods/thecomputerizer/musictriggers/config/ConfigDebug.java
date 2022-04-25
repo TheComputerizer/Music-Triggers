@@ -6,7 +6,7 @@ import java.io.File;
 import java.io.FileWriter;
 
 
-public class configDebug {
+public class ConfigDebug {
 
     public static boolean ShowDebugInfo = false;
     public static boolean ShowJustCurSong = false;

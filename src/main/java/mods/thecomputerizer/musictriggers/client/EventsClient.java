@@ -5,9 +5,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.gui.GuiMain;
 import mods.thecomputerizer.musictriggers.client.gui.GuiTriggerInfo;
-import mods.thecomputerizer.musictriggers.config.configDebug;
-import mods.thecomputerizer.musictriggers.config.configObject;
-import mods.thecomputerizer.musictriggers.config.configTitleCards;
+import mods.thecomputerizer.musictriggers.config.ConfigDebug;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
+import mods.thecomputerizer.musictriggers.config.ConfigTitleCards;
 import mods.thecomputerizer.musictriggers.util.CustomTick;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.packets.BossInfo;
@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.Objects;
 
 @OnlyIn(Dist.CLIENT)
-public class eventsClient {
+public class EventsClient {
 
     public static ResourceLocation IMAGE_CARD = null;
     public static int curImageIndex;
@@ -71,6 +71,7 @@ public class eventsClient {
     public static int x2 = 0;
     public static int y2 = 0;
     public static int z2 = 0;
+    private static int bossBarCounter = 0;
 
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
@@ -80,15 +81,15 @@ public class eventsClient {
                 MusicTriggers.logger.info("Silenced internal music");
                 e.setResultSound(silenced);
             }
-            for (String s : configDebug.blockedmods) {
+            for (String s : ConfigDebug.blockedmods) {
                 if (e.getSound().getLocation().getNamespace().contains(s) && e.getSound().getSource() == SoundCategory.MUSIC) {
-                    if (!(MusicPlayer.curMusic == null && configDebug.SilenceIsBad)) {
+                    if (!(MusicPlayer.curMusic == null && ConfigDebug.SilenceIsBad)) {
                         e.setResultSound(silenced);
                     }
                 }
             }
             if (e.getSound().getLocation().getNamespace().contains("minecraft") && e.getSound().getSource() == SoundCategory.MUSIC) {
-                if (!(MusicPlayer.curMusic == null && configDebug.SilenceIsBad)) {
+                if (!(MusicPlayer.curMusic == null && ConfigDebug.SilenceIsBad)) {
                     e.setResultSound(silenced);
                 }
             }
@@ -127,6 +128,7 @@ public class eventsClient {
         MusicPlayer.fadingIn = false;
         MusicPlayer.linkedFadingIn = new HashMap<>();
         MusicPlayer.linkedFadingOut = new HashMap<>();
+        MusicPlayer.fadeOutList = null;
         isWorldRendered = false;
         MusicPicker.player = null;
     }
@@ -147,15 +149,15 @@ public class eventsClient {
                 && Minecraft.getInstance().getSoundManager().soundEngine.instanceToChannel.get(MusicPlayer.curMusic).channel!=null
                 && Objects.requireNonNull(Minecraft.getInstance().getSoundManager().soundEngine.instanceToChannel.get(MusicPlayer.curMusic).channel).getState()!=0x1013)
             MusicPlayer.curMusicTimer+=20;
-        if(configTitleCards.imagecards.get(curImageIndex)!=null) {
-            if (timer > configTitleCards.imagecards.get(curImageIndex).getTime()) {
+        if(ConfigTitleCards.imagecards.get(curImageIndex)!=null) {
+            if (timer > ConfigTitleCards.imagecards.get(curImageIndex).getTime()) {
                 activated = false;
                 timer = 0;
                 ismoving = false;
                 movingcounter = 0;
             }
             if (ismoving) {
-                if (timer % configTitleCards.imagecards.get(curImageIndex).getDelay() == 0) {
+                if (timer % ConfigTitleCards.imagecards.get(curImageIndex).getDelay() == 0) {
                     movingcounter++;
                     if (movingcounter >= pngs.size()) {
                         movingcounter = 0;
@@ -168,7 +170,7 @@ public class eventsClient {
                 startDelayCount++;
                 if (startDelayCount > 0) {
                     if (fadeCount > 1) {
-                        fadeCount -= configTitleCards.imagecards.get(curImageIndex).getFadeIn();
+                        fadeCount -= ConfigTitleCards.imagecards.get(curImageIndex).getFadeIn();
                         if (fadeCount < 1) {
                             fadeCount = 1;
                         }
@@ -176,7 +178,7 @@ public class eventsClient {
                 }
             } else {
                 if (fadeCount < 1000) {
-                    fadeCount += configTitleCards.imagecards.get(curImageIndex).getFadeOut();
+                    fadeCount += ConfigTitleCards.imagecards.get(curImageIndex).getFadeOut();
                     if (fadeCount > 1000) {
                         fadeCount = 1000;
                         ismoving = false;
@@ -192,7 +194,7 @@ public class eventsClient {
         Minecraft mc = Minecraft.getInstance();
         PlayerEntity player = mc.player;
         if (e.getType() == RenderGameOverlayEvent.ElementType.ALL) {
-            if (player != null && configTitleCards.imagecards.get(curImageIndex)!=null) {
+            if (player != null && ConfigTitleCards.imagecards.get(curImageIndex)!=null) {
                 int x = mc.getWindow().getScreenWidth();
                 int y = mc.getWindow().getScreenHeight();
                 if (fadeCount != 1000 && IMAGE_CARD!=null) {
@@ -205,16 +207,16 @@ public class eventsClient {
                     opacity = (opacity * 1.15f) / 15;
                     RenderSystem.color4f(1F, 1F, 1F, Math.max(0, Math.min(0.95f, opacity)));
 
-                    int sizeX = configTitleCards.imageDimensions.get(IMAGE_CARD).getWidth();
-                    int sizeY = configTitleCards.imageDimensions.get(IMAGE_CARD).getHeight();
+                    int sizeX = ConfigTitleCards.imageDimensions.get(IMAGE_CARD).getWidth();
+                    int sizeY = ConfigTitleCards.imageDimensions.get(IMAGE_CARD).getHeight();
 
-                    float scaleY = (0.25f*(configTitleCards.imagecards.get(curImageIndex).getScaleY()/100f));
-                    float scaleX = (0.25f*(configTitleCards.imagecards.get(curImageIndex).getScaleX()/100f));
+                    float scaleY = (0.25f*(ConfigTitleCards.imagecards.get(curImageIndex).getScaleY()/100f));
+                    float scaleX = (0.25f*(ConfigTitleCards.imagecards.get(curImageIndex).getScaleX()/100f));
                     RenderSystem.scalef(scaleX,scaleY,1F);
 
                     mc.getTextureManager().bind(IMAGE_CARD);
-                    float posY = (y/(4f*(configTitleCards.imagecards.get(curImageIndex).getScaleY()/100f)))+configTitleCards.imagecards.get(curImageIndex).getVertical();
-                    float posX = (x/(configTitleCards.imagecards.get(curImageIndex).getScaleX()/100f))-(sizeX/2f)+configTitleCards.imagecards.get(curImageIndex).getHorizontal();
+                    float posY = (y/(4f*(ConfigTitleCards.imagecards.get(curImageIndex).getScaleY()/100f)))+ ConfigTitleCards.imagecards.get(curImageIndex).getVertical();
+                    float posX = (x/(ConfigTitleCards.imagecards.get(curImageIndex).getScaleX()/100f))-(sizeX/2f)+ ConfigTitleCards.imagecards.get(curImageIndex).getHorizontal();
                     mc.gui.blit(e.getMatrixStack(),(int)posX, (int)posY, 0, 0, sizeX, sizeY, sizeX, sizeY);
 
                     RenderSystem.popAttributes();
@@ -228,7 +230,7 @@ public class eventsClient {
     public static void onKeyInput(InputEvent.KeyInputEvent e) {
         if(MusicPlayer.RELOAD.isDown() && Minecraft.getInstance().player!=null) {
             BlockPos pos = MusicPicker.roundedPos(Minecraft.getInstance().player);
-            if(!zone) Minecraft.getInstance().setScreen(new GuiMain(configObject.createFromCurrent()));
+            if(!zone) Minecraft.getInstance().setScreen(new GuiMain(ConfigObject.createFromCurrent()));
             else if(!firstPass) {
                 x1 = pos.getX();
                 y1 = pos.getY();
@@ -270,7 +272,7 @@ public class eventsClient {
         if(reloadCounter>0) {
             reloadCounter-=1;
             if(reloadCounter==1) {
-                reload.readAndReload();
+                Reload.readAndReload();
                 ITextComponent msg = new StringTextComponent("\u00A7a\u00A7oFinished!");
                 MusicPicker.player.sendMessage(msg,MusicPicker.player.getUUID());
                 IMAGE_CARD = null;
@@ -285,17 +287,18 @@ public class eventsClient {
                 MusicPlayer.curTrackList = null;
                 MusicPlayer.cards = true;
                 MusicPlayer.reloading = false;
+                MusicPlayer.fadeOutList = null;
             }
         }
     }
 
     @SubscribeEvent
     public static void debugInfo(RenderGameOverlayEvent.Text e) {
-        if (configDebug.ShowDebugInfo && isWorldRendered) {
+        if (ConfigDebug.ShowDebugInfo && isWorldRendered) {
             if (MusicPlayer.curTrack != null) {
                 e.getLeft().add("Music Triggers Current song: " + MusicPlayer.curTrackHolder);
             }
-            if (!configDebug.ShowJustCurSong) {
+            if (!ConfigDebug.ShowJustCurSong) {
                 int displayCount = 0;
                 if(!MusicPlayer.formatSongTime().matches("No song playing")) e.getLeft().add("Music Triggers Current Song Time: " + MusicPlayer.formatSongTime());
                 if(MusicPlayer.fadingOut) e.getLeft().add("Music Triggers Fading Out: "+MusicPlayer.formattedTimeFromMilliseconds(MusicPlayer.tempFadeOut*50));
@@ -319,7 +322,7 @@ public class eventsClient {
                 displayCount=0;
                 StringBuilder sm = new StringBuilder();
                 sm.append("minecraft");
-                for (String ev : configDebug.blockedmods) {
+                for (String ev : ConfigDebug.blockedmods) {
                     if(Minecraft.getInstance().font.width(sm+" "+ev)>0.75f*Minecraft.getInstance().getWindow().getScreenWidth()) {
                         if(displayCount==0) {
                             e.getLeft().add("Music Triggers Blocked Mods: " + sm);
@@ -334,10 +337,10 @@ public class eventsClient {
                 } else e.getLeft().add(sm.toString());
                 displayCount=0;
                 if (MusicPicker.player != null && MusicPicker.world != null) {
-                    if (fromServer.curStruct != null) {
-                        e.getLeft().add("Music Triggers Current Structure: " + fromServer.curStruct);
+                    if (FromServer.curStruct != null) {
+                        e.getLeft().add("Music Triggers Current Structure: " + FromServer.curStruct);
                     }
-                    e.getLeft().add("Music Triggers Current Biome: " + fromServer.curBiome);
+                    e.getLeft().add("Music Triggers Current Biome: " + FromServer.curBiome);
                     e.getLeft().add("Music Triggers Current Dimension: " + MusicPicker.player.level.dimension().location());
                     e.getLeft().add("Music Triggers Current Total Light: " + MusicPicker.world.getRawBrightness(MusicPicker.roundedPos(MusicPicker.player), 0));
                     e.getLeft().add("Music Triggers Current Block Light: " + MusicPicker.world.getBrightness(LightType.BLOCK, MusicPicker.roundedPos(MusicPicker.player)));
@@ -376,22 +379,21 @@ public class eventsClient {
 
     @SubscribeEvent
     public static void renderBoss(RenderGameOverlayEvent.BossInfo e) {
-        PacketHandler.sendToServer(new BossInfo(e.getBossInfo().getName().getString(), e.getBossInfo().getPercent()));
+        if (bossBarCounter % 11 == 0) {
+            PacketHandler.sendToServer(new BossInfo(e.getBossInfo().getName().getString(), e.getBossInfo().getPercent()));
+            bossBarCounter = 0;
+        }
+        bossBarCounter++;
     }
 
     private static String infernalChecker(@Nullable LivingEntity m) {
-        if (ModList.get().isLoaded("infernalmobs")) {
-            if (m == null) {
-                return null;
-            }
+        if (ModList.get().isLoaded("infernalmobs") && m != null)
             return InfernalMobsCore.getMobModifiers(m) == null ? null : InfernalMobsCore.getMobModifiers(m).getModName();
-        }
         return null;
     }
 
     private static LivingEntity getLivingFromEntity(Entity e) {
-        if (e instanceof LivingEntity) {
-            return (LivingEntity) e;
-        } else return null;
+        if (e instanceof LivingEntity) return (LivingEntity) e;
+        return null;
     }
 }

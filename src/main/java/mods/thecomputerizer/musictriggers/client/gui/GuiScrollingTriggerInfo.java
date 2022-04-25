@@ -1,8 +1,8 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configObject;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.widget.list.ExtendedList;
 
@@ -14,9 +14,9 @@ public class GuiScrollingTriggerInfo extends ExtendedList<GuiScrollingTriggerInf
 
     private final GuiTriggerInfo IN;
     public int index;
-    public configObject holder;
+    public ConfigObject holder;
 
-    public GuiScrollingTriggerInfo(Minecraft client, int width, int height, int top, int bottom, List<String> parameters, GuiTriggerInfo IN, configObject holder) {
+    public GuiScrollingTriggerInfo(Minecraft client, int width, int height, int top, int bottom, List<String> parameters, GuiTriggerInfo IN, ConfigObject holder) {
         super(client, width, height, top, bottom, 32);
         this.IN = IN;
         this.holder = holder;
@@ -73,8 +73,8 @@ public class GuiScrollingTriggerInfo extends ExtendedList<GuiScrollingTriggerInf
             GuiScrollingTriggerInfo.this.index = this.getIndex(this.info);
             GuiScrollingTriggerInfo.this.setSelected(this);
             if(this.info.matches("zone")) {
-                eventsClient.parentScreen = GuiScrollingTriggerInfo.this.IN;
-                eventsClient.zone = true;
+                EventsClient.parentScreen = GuiScrollingTriggerInfo.this.IN;
+                EventsClient.zone = true;
                 GuiScrollingTriggerInfo.this.IN.onClose();
             }
         }

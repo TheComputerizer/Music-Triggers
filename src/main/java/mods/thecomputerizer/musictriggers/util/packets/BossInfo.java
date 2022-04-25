@@ -1,12 +1,14 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
-import mods.thecomputerizer.musictriggers.common.eventsCommon;
-import mods.thecomputerizer.musictriggers.util.calculateFeatures;
+import mods.thecomputerizer.musictriggers.common.EventsCommon;
+import mods.thecomputerizer.musictriggers.util.CalculateFeatures;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 import java.nio.charset.StandardCharsets;
 import java.util.function.Supplier;
+
+import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
 
 public class BossInfo {
 
@@ -29,24 +31,18 @@ public class BossInfo {
         ctx.enqueueWork(() -> {
         });
 
-        calculateFeatures.bossInfo.put(packet.getBossName(), packet.getDataHealth());
-        eventsCommon.bossTimer = 40;
+        CalculateFeatures.bossInfo.put(packet.getBossName(), packet.getDataHealth());
+        EventsCommon.bossTimer = 40;
 
         ctx.setPacketHandled(true);
     }
 
     public String getBossName() {
-        if(s==null) {
-            return null;
-        }
-        return stringBreaker(s)[0];
+        if(s==null) return null;
+        return stringBreaker(s,",")[0];
     }
 
     public float getDataHealth() {
-        return Float.parseFloat(stringBreaker(s)[1]);
-    }
-
-    public static String[] stringBreaker(String s) {
-        return s.split(",");
+        return Float.parseFloat(stringBreaker(s,",")[1]);
     }
 }

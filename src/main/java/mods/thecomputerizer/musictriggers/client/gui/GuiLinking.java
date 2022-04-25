@@ -3,9 +3,9 @@ package mods.thecomputerizer.musictriggers.client.gui;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configObject;
-import mods.thecomputerizer.musictriggers.util.json;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
+import mods.thecomputerizer.musictriggers.util.Json;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -23,10 +23,10 @@ public class GuiLinking extends Screen {
     public String songCode;
     public Screen parentScreen;
     public GuiScrollingLinking scrollingSongs;
-    public configObject holder;
+    public ConfigObject holder;
     private final ResourceLocation background;
 
-    public GuiLinking(Screen parentScreen, String songCode, configObject holder) {
+    public GuiLinking(Screen parentScreen, String songCode, ConfigObject holder) {
         super(new TranslationTextComponent("screen.musictriggers.linking"));
         this.parentScreen = parentScreen;
         this.songCode = songCode;
@@ -50,7 +50,7 @@ public class GuiLinking extends Screen {
         this.addBackButton();
         this.addAddSongButton();
         this.addSongs();
-        eventsClient.renderDebug = false;
+        EventsClient.renderDebug = false;
     }
 
     private void addSongs() {
@@ -73,7 +73,7 @@ public class GuiLinking extends Screen {
         this.addButton(new Button(this.width/2-64, this.height-24, 128, 16, new TranslationTextComponent("screen.musictriggers.button.add_song"),
                 (button) -> {
                     assert this.minecraft != null;
-                    this.minecraft.setScreen(new GuiAddSongs(this, json.allSongs, this.holder, this));
+                    this.minecraft.setScreen(new GuiAddSongs(this, Json.allSongs, this.holder, this));
                 }));
     }
 
@@ -97,7 +97,7 @@ public class GuiLinking extends Screen {
 
     @Override
     public void onClose() {
-        eventsClient.renderDebug = true;
+        EventsClient.renderDebug = true;
         super.onClose();
     }
 

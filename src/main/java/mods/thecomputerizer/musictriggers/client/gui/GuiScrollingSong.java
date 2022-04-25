@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import mods.thecomputerizer.musictriggers.config.configObject;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.list.ExtendedList;
@@ -14,10 +14,10 @@ public class GuiScrollingSong extends ExtendedList<GuiScrollingSong.Entry> {
 
     private final List<String> codes;
     private final Screen IN;
-    private final configObject holder;
+    private final ConfigObject holder;
     private GuiLinking linking = null;
 
-    public GuiScrollingSong(Minecraft client, int width, int height, int top, int bottom, List<String> songs, List<String> codes, Screen IN, configObject holder, GuiLinking linking) {
+    public GuiScrollingSong(Minecraft client, int width, int height, int top, int bottom, List<String> songs, List<String> codes, Screen IN, ConfigObject holder, GuiLinking linking) {
         super(client, width, height, top, bottom, 32);
         this.codes = codes;
         this.IN = IN;

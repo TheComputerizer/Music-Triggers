@@ -1,15 +1,14 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
-import mods.thecomputerizer.musictriggers.common.eventsCommon;
+import mods.thecomputerizer.musictriggers.common.EventsCommon;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Supplier;
+
+import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
 
 public class MenuSongs {
 
@@ -32,7 +31,7 @@ public class MenuSongs {
         ctx.enqueueWork(() -> {
         });
 
-        eventsCommon.recordMenu = packet.getSongsWithUUIDAttached();
+        EventsCommon.recordMenu = packet.getSongsWithUUIDAttached();
 
         ctx.setPacketHandled(true);
     }
@@ -41,17 +40,10 @@ public class MenuSongs {
         if(s==null) {
             return null;
         }
-        String[] broken = stringBreaker(s);
-        ArrayList<String> ret = new ArrayList<>();
-        for(int i=1;i<broken.length;i++) {
-            ret.add(broken[i]);
-        }
+        String[] broken = stringBreaker(s,",");
+        ArrayList<String> ret = new ArrayList<>(Arrays.asList(broken).subList(1, broken.length));
         HashMap<UUID, List<String>> builtMap = new HashMap<>();
         builtMap.put(UUID.fromString(broken[0]),ret);
         return builtMap;
-    }
-
-    public static String[] stringBreaker(String s) {
-        return s.split(",");
     }
 }
