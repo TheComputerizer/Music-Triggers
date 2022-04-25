@@ -1,8 +1,8 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configObject;
-import mods.thecomputerizer.musictriggers.util.json;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
+import mods.thecomputerizer.musictriggers.util.Json;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 
@@ -14,9 +14,9 @@ public class GuiLinking extends GuiScreen {
     public String songCode;
     public GuiScreen parentScreen;
     public GuiScrollingLinking scrollingSongs;
-    public configObject holder;
+    public ConfigObject holder;
 
-    public GuiLinking(GuiScreen parentScreen, String songCode, configObject holder) {
+    public GuiLinking(GuiScreen parentScreen, String songCode, ConfigObject holder) {
         this.parentScreen = parentScreen;
         this.songCode = songCode;
         this.holder = holder;
@@ -42,7 +42,7 @@ public class GuiLinking extends GuiScreen {
         this.addBackButton();
         this.addAddSongButton();
         this.addSongs();
-        eventsClient.renderDebug = false;
+        EventsClient.renderDebug = false;
     }
 
     private void addSongs() {
@@ -65,13 +65,13 @@ public class GuiLinking extends GuiScreen {
             this.mc.displayGuiScreen(this.parentScreen);
         }
         if (button.id == 2) {
-            this.mc.displayGuiScreen(new GuiAddSongs(this, json.allSongs, this.holder, this));
+            this.mc.displayGuiScreen(new GuiAddSongs(this, Json.allSongs, this.holder, this));
         }
     }
 
     @Override
     public void onGuiClosed() {
-        eventsClient.renderDebug = true;
+        EventsClient.renderDebug = true;
     }
 
 }

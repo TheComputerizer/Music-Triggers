@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.config.configObject;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiSlot;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -21,9 +21,9 @@ public class GuiScrollingInfo extends GuiSlot {
     public String curSelected;
     private final ResourceLocation background;
     public int index;
-    public configObject holder;
+    public ConfigObject holder;
 
-    public GuiScrollingInfo(Minecraft client, int width, int height, int top, int bottom, List<String> info, GuiSongInfo IN, configObject holder) {
+    public GuiScrollingInfo(Minecraft client, int width, int height, int top, int bottom, List<String> info, GuiSongInfo IN, ConfigObject holder) {
         super(client, width, height, top, bottom, 32);
         this.size = info.size();
         this.info = info;

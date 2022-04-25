@@ -4,8 +4,9 @@
   "refmap": "mixins.musictriggers.refmap.json",
   "minVersion": "0.8",
   "compatibilityLevel": "JAVA_8",
-  "mixins": [ ],
+  "mixins": [],
   "client": [
-    "MixinSoundManager"
+    "MixinSoundManager",
+    "MixinMusicTicker"
   ]
 }

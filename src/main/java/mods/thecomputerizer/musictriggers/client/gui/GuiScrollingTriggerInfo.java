@@ -1,8 +1,8 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configObject;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiSlot;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -21,10 +21,10 @@ public class GuiScrollingTriggerInfo extends GuiSlot {
     private final GuiTriggerInfo IN;
     public String curSelected;
     public int index;
-    public configObject holder;
+    public ConfigObject holder;
     private final ResourceLocation background;
 
-    public GuiScrollingTriggerInfo(Minecraft client, int width, int height, int top, int bottom, List<String> parameters, GuiTriggerInfo IN, configObject holder) {
+    public GuiScrollingTriggerInfo(Minecraft client, int width, int height, int top, int bottom, List<String> parameters, GuiTriggerInfo IN, ConfigObject holder) {
         super(client, width, height, top, bottom, 32);
         this.size = parameters.size();
         this.parameters = parameters;
@@ -42,8 +42,8 @@ public class GuiScrollingTriggerInfo extends GuiSlot {
         this.index = Mappings.reverseparameters.get(this.parameters.get(slotIndex));
         this.curSelected = this.parameters.get(slotIndex)+"-"+slotIndex;
         if(this.parameters.get(slotIndex).matches("zone")) {
-            eventsClient.parentScreen = this.IN;
-            eventsClient.zone = true;
+            EventsClient.parentScreen = this.IN;
+            EventsClient.zone = true;
             this.mc.displayGuiScreen(null);
         }
     }

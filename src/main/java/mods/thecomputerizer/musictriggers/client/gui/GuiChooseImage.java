@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configObject;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 
@@ -16,9 +16,9 @@ public class GuiChooseImage extends GuiScreen {
     public GuiScreen parentScreen;
     public GuiScrollingChooseImage scrollingSongs;
     public String curInfo = "";
-    public configObject holder;
+    public ConfigObject holder;
 
-    public GuiChooseImage(GuiScreen parentScreen, configObject holder) {
+    public GuiChooseImage(GuiScreen parentScreen, ConfigObject holder) {
         this.parentScreen = parentScreen;
         this.holder = holder;
         this.imageMap = this.holder.getAllImages();
@@ -45,7 +45,7 @@ public class GuiChooseImage extends GuiScreen {
     public void initGui() {
         this.addBackButton();
         this.addSongs();
-        eventsClient.renderDebug = false;
+        EventsClient.renderDebug = false;
     }
 
     private void addSongs() {
@@ -67,6 +67,6 @@ public class GuiChooseImage extends GuiScreen {
 
     @Override
     public void onGuiClosed() {
-        eventsClient.renderDebug = true;
+        EventsClient.renderDebug = true;
     }
 }

@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
 import io.netty.buffer.ByteBuf;
-import mods.thecomputerizer.musictriggers.common.eventsCommon;
+import mods.thecomputerizer.musictriggers.common.EventsCommon;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -9,15 +9,15 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class packetMenuSongs implements IMessageHandler<packetMenuSongs.packetMenuSongsMessage, IMessage> {
+public class PacketMenuSongs implements IMessageHandler<PacketMenuSongs.packetMenuSongsMessage, IMessage> {
 
     @Override
-    public IMessage onMessage(packetMenuSongs.packetMenuSongsMessage message, MessageContext ctx)
+    public IMessage onMessage(PacketMenuSongs.packetMenuSongsMessage message, MessageContext ctx)
     {
         if(message.getSongsWithUUIDAttached()==null || message.getSongsWithUUIDAttached().isEmpty()) {
             return null;
         }
-        eventsCommon.recordMenu = message.getSongsWithUUIDAttached();
+        EventsCommon.recordMenu = message.getSongsWithUUIDAttached();
         return null;
     }
 

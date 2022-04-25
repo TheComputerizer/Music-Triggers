@@ -1,8 +1,8 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configDebug;
-import mods.thecomputerizer.musictriggers.config.configObject;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigDebug;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import org.apache.commons.lang3.StringUtils;
@@ -18,9 +18,9 @@ public class GuiOther extends GuiScreen {
     public List<String> info;
     public GuiScreen parentScreen;
     public GuiScrollingOther scrollingSongs;
-    public configObject holder;
+    public ConfigObject holder;
 
-    public GuiOther(GuiScreen parentScreen, configObject holder) {
+    public GuiOther(GuiScreen parentScreen, ConfigObject holder) {
         this.parentScreen = parentScreen;
         this.holder = holder;
         this.info = this.holder.getAllDebugStuff();
@@ -59,7 +59,7 @@ public class GuiOther extends GuiScreen {
         this.addBackButton();
         addRefreshDebugButton();
         this.addScrollable();
-        eventsClient.renderDebug = false;
+        EventsClient.renderDebug = false;
     }
 
     private void addScrollable() {
@@ -84,7 +84,7 @@ public class GuiOther extends GuiScreen {
         if (button.id == 2) {
             try {
                 this.holder.writeOther();
-                configDebug.parse(new File("config/MusicTriggers/debug.toml"));
+                ConfigDebug.parse(new File("config/MusicTriggers/debug.toml"));
                 this.mc.displayGuiScreen(null);
             } catch(Exception e) {
                 e.printStackTrace();
@@ -94,6 +94,6 @@ public class GuiOther extends GuiScreen {
 
     @Override
     public void onGuiClosed() {
-        eventsClient.renderDebug = true;
+        EventsClient.renderDebug = true;
     }
 }

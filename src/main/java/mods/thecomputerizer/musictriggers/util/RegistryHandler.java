@@ -4,7 +4,7 @@ import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.ModSounds;
 import mods.thecomputerizer.musictriggers.common.MusicTriggersBlocks;
 import mods.thecomputerizer.musictriggers.common.MusicTriggersItems;
-import mods.thecomputerizer.musictriggers.config.configRegistry;
+import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import mods.thecomputerizer.musictriggers.util.packets.*;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -34,10 +34,9 @@ public final class RegistryHandler {
     public static SimpleNetworkWrapper network;
 
     @SubscribeEvent
-    public static void onRegisterItems(RegistryEvent.Register<Item> e)
-    {
+    public static void onRegisterItems(RegistryEvent.Register<Item> e) {
         MusicTriggersItems.INSTANCE.init();
-        if(configRegistry.registerDiscs) {
+        if(ConfigRegistry.registerDiscs) {
             e.getRegistry().registerAll(MusicTriggersItems.INSTANCE.getItems().toArray(new Item[0]));
             e.getRegistry().register(BLANK_RECORD);
             e.getRegistry().register(MUSIC_RECORDER);
@@ -46,14 +45,13 @@ public final class RegistryHandler {
 
     @SubscribeEvent
     public static void registerBlocks(RegistryEvent.Register<Block> e) {
-        if(configRegistry.registerDiscs) {
+        if(ConfigRegistry.registerDiscs) {
             e.getRegistry().register(MusicTriggersBlocks.MUSIC_RECORDER);
         }
     }
 
     @SubscribeEvent
-    public static void onRegisterSoundEvents(RegistryEvent.Register<SoundEvent> e)
-    {
+    public static void onRegisterSoundEvents(RegistryEvent.Register<SoundEvent> e) {
         ModSounds.INSTANCE.init();
         e.getRegistry().registerAll(ModSounds.INSTANCE.getSounds().toArray(new SoundEvent[0]));
     }
@@ -62,7 +60,7 @@ public final class RegistryHandler {
     @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public static void onModelRegister(ModelRegistryEvent event) {
-        if(configRegistry.registerDiscs) {
+        if(ConfigRegistry.registerDiscs) {
             for (Map.Entry<Item, String> itemStringEntry : MusicTriggersItems.allItemsWithTrigger.entrySet()) {
                 Item record = itemStringEntry.getKey();
                 ModelLoader.setCustomModelResourceLocation(record, 0, new ModelResourceLocation("musictriggers:record_"+MusicTriggersItems.allItemsWithTrigger.get(record), "inventory"));
@@ -78,16 +76,12 @@ public final class RegistryHandler {
     }
 
     private static void registerPackets() {
-        network.registerMessage(packetToClient.class, packetToClient.packetToClientMessage.class, 0, Side.CLIENT);
-        network.registerMessage(packet.class, packet.packetMessage.class, 1, Side.SERVER);
-        network.registerMessage(packetCurSong.class, packetCurSong.packetCurSongMessage.class, 2, Side.SERVER);
-        network.registerMessage(packetSendMobInfo.class, packetSendMobInfo.packetSendMobInfoMessage.class, 3, Side.SERVER);
-        network.registerMessage(packetGetMobInfo.class, packetGetMobInfo.packetGetMobInfoMessage.class, 4, Side.CLIENT);
-        network.registerMessage(packetBossInfo.class, packetBossInfo.packetBossInfoMessage.class, 5, Side.SERVER);
-        network.registerMessage(packetAllTriggers.class, packetAllTriggers.packetAllTriggersMessage.class, 6, Side.SERVER);
-        network.registerMessage(packetMenuSongs.class, packetMenuSongs.packetMenuSongsMessage.class, 7, Side.SERVER);
-        network.registerMessage(packetExecuteCommand.class, packetExecuteCommand.packetExecuteCommandMessage.class, 8, Side.SERVER);
-        network.registerMessage(packetSendHome.class, packetSendHome.packetSendHomeMessage.class, 9, Side.SERVER);
-        network.registerMessage(packetGetHome.class, packetGetHome.packetGetHomeMessage.class, 10, Side.CLIENT);
+        int id = 0;
+        network.registerMessage(PacketCurSong.class, PacketCurSong.packetCurSongMessage.class, id++, Side.SERVER);
+        network.registerMessage(PacketBossInfo.class, PacketBossInfo.packetBossInfoMessage.class, id++, Side.SERVER);
+        network.registerMessage(PacketMenuSongs.class, PacketMenuSongs.packetMenuSongsMessage.class, id++, Side.SERVER);
+        network.registerMessage(PacketExecuteCommand.class, PacketExecuteCommand.packetExecuteCommandMessage.class, id++, Side.SERVER);
+        network.registerMessage(PacketSendTriggers.class, PacketSendTriggers.PacketSendTriggersMessage.class, id++, Side.SERVER);
+        network.registerMessage(PacketReturnTriggers.class, PacketReturnTriggers.PacketReturnTriggersMessage.class, id, Side.CLIENT);
     }
 }

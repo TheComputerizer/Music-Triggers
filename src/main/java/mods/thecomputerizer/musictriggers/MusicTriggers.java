@@ -1,13 +1,13 @@
 package mods.thecomputerizer.musictriggers;
 
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
-import mods.thecomputerizer.musictriggers.client.eventsClient;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.client.gui.Mappings;
-import mods.thecomputerizer.musictriggers.common.eventsCommon;
+import mods.thecomputerizer.musictriggers.common.EventsCommon;
 import mods.thecomputerizer.musictriggers.config.*;
 import mods.thecomputerizer.musictriggers.util.CustomTick;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
-import mods.thecomputerizer.musictriggers.util.json;
+import mods.thecomputerizer.musictriggers.util.Json;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.FolderResourcePack;
 import net.minecraftforge.common.MinecraftForge;
@@ -36,7 +36,7 @@ import java.util.List;
 public class MusicTriggers {
     public static final String MODID = "musictriggers";
     public static final String NAME = "Music Triggers";
-    public static final String VERSION = "1.12.2-5.1";
+    public static final String VERSION = "1.12.2-5.2";
 
     public static File songsDir;
     public static File texturesDir;
@@ -120,7 +120,7 @@ public class MusicTriggers {
             if (sj.exists()) {
                 sj.delete();
             }
-            List<String> writeThis = json.create();
+            List<String> writeThis = Json.create();
             if (writeThis != null) {
                 try {
                     sj.createNewFile();
@@ -139,7 +139,7 @@ public class MusicTriggers {
             }
             assert writeThis != null;
             writeThis.clear();
-            writeThis = json.lang();
+            writeThis = Json.lang();
             if (writeThis != null) {
                 try {
                     sj.createNewFile();
@@ -153,11 +153,11 @@ public class MusicTriggers {
                 }
             }
         }
-        configToml.parse();
-        configCommands.parse();
+        ConfigToml.parse();
+        ConfigCommands.parse();
         Mappings.init();
         if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
-            configTitleCards.parse();
+            ConfigTitleCards.parse();
             pack = new File("config/MusicTriggers/songs/");
             if (pack.exists()) {
                 try {
@@ -171,36 +171,36 @@ public class MusicTriggers {
         if(!debugConfig.exists()) {
             try {
                 debugConfig.createNewFile();
-                configDebug.create(debugConfig);
+                ConfigDebug.create(debugConfig);
             }
             catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        configDebug.parse(debugConfig);
+        ConfigDebug.parse(debugConfig);
         File registrationConfig = new File("config/MusicTriggers/registration.toml");
         if(!registrationConfig.exists()) {
             try {
                 registrationConfig.createNewFile();
-                configRegistry.create(registrationConfig);
+                ConfigRegistry.create(registrationConfig);
             }
             catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        configRegistry.parse(registrationConfig);
+        ConfigRegistry.parse(registrationConfig);
     }
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        if(!configRegistry.clientSideOnly) {
+        if(!ConfigRegistry.clientSideOnly) {
             RegistryHandler.init();
         }
         MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
         if(event.getSide()==Side.CLIENT) {
-            MinecraftForge.EVENT_BUS.register(eventsClient.class);
+            MinecraftForge.EVENT_BUS.register(EventsClient.class);
         }
-        MinecraftForge.EVENT_BUS.register(eventsCommon.class);
+        MinecraftForge.EVENT_BUS.register(EventsCommon.class);
     }
 
     @EventHandler
@@ -209,5 +209,9 @@ public class MusicTriggers {
             ClientRegistry.registerKeyBinding(MusicPlayer.RELOAD);
             CustomTick.setUp();
         }
+    }
+
+    public static String[] stringBreaker(String s, String regex) {
+        return s.split(regex);
     }
 }

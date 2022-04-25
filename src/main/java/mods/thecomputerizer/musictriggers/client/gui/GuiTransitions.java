@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configObject;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 
@@ -13,9 +13,9 @@ public class GuiTransitions extends GuiScreen {
     public List<String> info;
     public GuiScreen parentScreen;
     public GuiScrollingTransitions scrollingSongs;
-    public configObject holder;
+    public ConfigObject holder;
 
-    public GuiTransitions(GuiScreen parentScreen, configObject holder) {
+    public GuiTransitions(GuiScreen parentScreen, ConfigObject holder) {
         this.parentScreen = parentScreen;
         this.holder = holder;
         this.info = this.holder.getAllTransitions();
@@ -43,7 +43,7 @@ public class GuiTransitions extends GuiScreen {
         this.addBackButton();
         this.addScrollable();
         this.addAddTransitionButton();
-        eventsClient.renderDebug = false;
+        EventsClient.renderDebug = false;
     }
 
     private void addScrollable() {
@@ -72,6 +72,6 @@ public class GuiTransitions extends GuiScreen {
 
     @Override
     public void onGuiClosed() {
-        eventsClient.renderDebug = true;
+        EventsClient.renderDebug = true;
     }
 }

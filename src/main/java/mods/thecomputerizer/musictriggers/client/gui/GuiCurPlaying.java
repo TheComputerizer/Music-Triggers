@@ -2,9 +2,9 @@ package mods.thecomputerizer.musictriggers.client.gui;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configObject;
-import mods.thecomputerizer.musictriggers.config.configToml;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
+import mods.thecomputerizer.musictriggers.config.ConfigToml;
 import mods.thecomputerizer.musictriggers.util.audio.SoundManipulator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
@@ -17,7 +17,6 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
-import paulscode.sound.SoundSystem;
 import paulscode.sound.SoundSystemConfig;
 
 import java.io.IOException;
@@ -28,10 +27,10 @@ public class GuiCurPlaying extends GuiScreen implements GuiSlider.FormatHelper, 
 
     public GuiScreen parentScreen;
     public List<String> parameters;
-    public configObject holder;
+    public ConfigObject holder;
     private final ResourceLocation background;
 
-    public GuiCurPlaying(GuiScreen parentScreen, configObject holder) {
+    public GuiCurPlaying(GuiScreen parentScreen, ConfigObject holder) {
         this.parentScreen = parentScreen;
         this.holder = holder;
         this.background = new ResourceLocation(MusicTriggers.MODID,"textures/block/recorder_side_active.png");
@@ -80,7 +79,7 @@ public class GuiCurPlaying extends GuiScreen implements GuiSlider.FormatHelper, 
         this.addBackButton();
         this.addSkipSongButton();
         this.addSongSlider();
-        eventsClient.renderDebug = false;
+        EventsClient.renderDebug = false;
     }
 
 
@@ -95,7 +94,7 @@ public class GuiCurPlaying extends GuiScreen implements GuiSlider.FormatHelper, 
     private void addSongSlider() {
         float max = 1f;
         if(MusicPlayer.curMusic!=null) max = this.getMaxSongSeconds(MusicPlayer.curMusic);
-        CustomSlider slider = new CustomSlider(this,2,this.width/2-80,this.height/2-10, configToml.songholder.get(MusicPlayer.curTrack),0f, max, getSongPosInSeconds(MusicPlayer.curMusic),this);
+        CustomSlider slider = new CustomSlider(this,2,this.width/2-80,this.height/2-10, ConfigToml.songholder.get(MusicPlayer.curTrack),0f, max, getSongPosInSeconds(MusicPlayer.curMusic),this);
         slider.setWidth(160);
         this.buttonList.add(slider);
     }
@@ -110,7 +109,7 @@ public class GuiCurPlaying extends GuiScreen implements GuiSlider.FormatHelper, 
 
     @Override
     public void onGuiClosed() {
-        eventsClient.renderDebug = true;
+        EventsClient.renderDebug = true;
     }
 
     protected void overlayBackground(int startY, int endY, int startAlpha, int endAlpha)

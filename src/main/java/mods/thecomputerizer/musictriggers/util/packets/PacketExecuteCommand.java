@@ -10,10 +10,10 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 import java.nio.charset.StandardCharsets;
 
-public class packetExecuteCommand implements IMessageHandler<packetExecuteCommand.packetExecuteCommandMessage, IMessage> {
+public class PacketExecuteCommand implements IMessageHandler<PacketExecuteCommand.packetExecuteCommandMessage, IMessage> {
 
     @Override
-    public IMessage onMessage(packetExecuteCommand.packetExecuteCommandMessage message, MessageContext ctx)
+    public IMessage onMessage(PacketExecuteCommand.packetExecuteCommandMessage message, MessageContext ctx)
     {
         if(message.getLiteralCommand()==null) return null;
 

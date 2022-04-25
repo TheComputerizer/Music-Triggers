@@ -1,34 +1,35 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
 import io.netty.buffer.ByteBuf;
-import mods.thecomputerizer.musictriggers.util.calculateFeatures;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.UUID;
 
-public class packetSendHome implements IMessageHandler<packetSendHome.packetSendHomeMessage, IMessage> {
+public class PacketCurSong implements IMessageHandler<PacketCurSong.packetCurSongMessage, IMessage> {
+    public static HashMap<UUID,String> curSong = new HashMap<>();
 
     @Override
-    public IMessage onMessage(packetSendHome.packetSendHomeMessage message, MessageContext ctx)
+    public IMessage onMessage(PacketCurSong.packetCurSongMessage message, MessageContext ctx)
     {
-        if(message.getDataTriggerName()==null) return null;
-
-        calculateFeatures.calculateHomeAndSend(message.getDataTriggerName(), message.getDataInt(), message.getDataUUID());
-
+        if(message.getSongName()==null) {
+            return null;
+        }
+        curSong.put(message.getDataUUID(),message.getSongName());
         return null;
     }
 
-    public static class packetSendHomeMessage implements IMessage {
+    public static class packetCurSongMessage implements IMessage {
         String s;
 
-        public packetSendHomeMessage() {}
+        public packetCurSongMessage() {}
 
-        public packetSendHomeMessage(String trigger, int d, UUID u)
+        public packetCurSongMessage(String s,UUID u)
         {
-            this.s = trigger+","+d+","+u.toString();
+            this.s = s+","+u.toString();
         }
 
         @Override
@@ -42,17 +43,14 @@ public class packetSendHome implements IMessageHandler<packetSendHome.packetSend
         {
             buf.writeCharSequence(s, StandardCharsets.UTF_8);
         }
-        public String getDataTriggerName() {
+        public String getSongName() {
             if(s==null) {
                 return null;
             }
             return stringBreaker(s)[0];
         }
-        public Integer getDataInt() {
-            return Integer.parseInt(stringBreaker(s)[1]);
-        }
         public UUID getDataUUID() {
-            return UUID.fromString(stringBreaker(s)[2]);
+            return UUID.fromString(stringBreaker(s)[1]);
         }
 
         public static String[] stringBreaker(String s) {
@@ -60,3 +58,4 @@ public class packetSendHome implements IMessageHandler<packetSendHome.packetSend
         }
     }
 }
+

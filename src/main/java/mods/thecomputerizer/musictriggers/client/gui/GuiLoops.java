@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configObject;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 
@@ -13,12 +13,12 @@ public class GuiLoops extends GuiScreen {
     public List<String> info;
     public GuiScreen parentScreen;
     public GuiScrollingLoops scrollingSongs;
-    public configObject holder;
+    public ConfigObject holder;
     public String code;
     public String song;
     public boolean linked;
 
-    public GuiLoops(GuiScreen parentScreen, configObject holder, String code, String song, boolean linked) {
+    public GuiLoops(GuiScreen parentScreen, ConfigObject holder, String code, String song, boolean linked) {
         this.parentScreen = parentScreen;
         this.holder = holder;
         this.code = code;
@@ -50,7 +50,7 @@ public class GuiLoops extends GuiScreen {
         this.addBackButton();
         this.addScrollable();
         this.addAddLoopButton();
-        eventsClient.renderDebug = false;
+        EventsClient.renderDebug = false;
     }
 
     private void addScrollable() {
@@ -81,6 +81,6 @@ public class GuiLoops extends GuiScreen {
 
     @Override
     public void onGuiClosed() {
-        eventsClient.renderDebug = true;
+        EventsClient.renderDebug = true;
     }
 }

@@ -18,7 +18,7 @@ apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'maven-publish'
 
-version = '1.12.2-5.1'
+version = '1.12.2-5.2'
 group = 'mods.thecomputerizer.musictriggers'
 archivesBaseName = 'musictriggers'
 
@@ -111,6 +111,7 @@ dependencies {
     implementation fg.deobf("curse.maven:dynamic-surroundings-238891:3497269")
     implementation fg.deobf("curse.maven:coroutil-237749:2902920")
     implementation fg.deobf("curse.maven:serene-seasons-291874:2799213")
+    implementation fg.deobf("curse.maven:champions-307152:3177947")
     implementation fg.deobf("curse.maven:jei-238222:3488178")
     implementation fg.deobf("net.darkhax.gamestages:GameStages-1.12.2:2.0.98")
 }
@@ -161,9 +162,9 @@ jar {
             "FMLCorePluginContainsFMLMod": "true",
             "Specification-Title": "musictriggers",
             "Specification-Vendor": "musictriggerssareus",
-            "Specification-Version": "1.12.2-5.1",
+            "Specification-Version": "1.12.2-5.2",
             "Implementation-Title": project.name,
-            "Implementation-Version": "1.12.2-5.1",
+            "Implementation-Version": "1.12.2-5.2",
             "Implementation-Vendor" :"musictriggers",
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
         ])

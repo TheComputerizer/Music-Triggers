@@ -1,8 +1,8 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configObject;
-import mods.thecomputerizer.musictriggers.config.configToml;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
+import mods.thecomputerizer.musictriggers.config.ConfigToml;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 
@@ -19,15 +19,15 @@ public class GuiTriggers extends GuiScreen {
     public GuiScrollingTrigger scrollingSongs;
     public String curInfo = "";
     public String songCode;
-    public configObject holder;
+    public ConfigObject holder;
 
-    public GuiTriggers(GuiScreen parentScreen, configObject holder, String songCode) {
+    public GuiTriggers(GuiScreen parentScreen, ConfigObject holder, String songCode) {
         this.parentScreen = parentScreen;
         this.songCode = songCode;
         this.holder = holder;
         this.triggers = new ArrayList<>();
-        this.triggers.addAll(Arrays.stream(configToml.triggers).collect(Collectors.toList()));
-        this.triggers.addAll(Arrays.stream(configToml.modtriggers).collect(Collectors.toList()));
+        this.triggers.addAll(Arrays.stream(ConfigToml.triggers).collect(Collectors.toList()));
+        this.triggers.addAll(Arrays.stream(ConfigToml.modtriggers).collect(Collectors.toList()));
     }
 
     @Override
@@ -49,7 +49,7 @@ public class GuiTriggers extends GuiScreen {
     public void initGui() {
         this.addBackButton();
         this.addScrollable();
-        eventsClient.renderDebug = false;
+        EventsClient.renderDebug = false;
     }
 
     private void addScrollable() {
@@ -73,6 +73,6 @@ public class GuiTriggers extends GuiScreen {
 
     @Override
     public void onGuiClosed() {
-        eventsClient.renderDebug = true;
+        EventsClient.renderDebug = true;
     }
 }

@@ -1,8 +1,8 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configObject;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -15,9 +15,9 @@ public class GuiAddTransition extends GuiScreen {
 
     public GuiScreen parentScreen;
     private final ResourceLocation background;
-    public configObject holder;
+    public ConfigObject holder;
 
-    public GuiAddTransition(GuiScreen parentScreen, configObject holder) {
+    public GuiAddTransition(GuiScreen parentScreen, ConfigObject holder) {
         this.parentScreen = parentScreen;
         this.holder = holder;
         this.background = new ResourceLocation(MusicTriggers.MODID,"textures/block/recorder_side_active.png");
@@ -37,7 +37,7 @@ public class GuiAddTransition extends GuiScreen {
         this.addBackButton();
         this.addTitleCardButton();
         this.addImageCardButton();
-        eventsClient.renderDebug = false;
+        EventsClient.renderDebug = false;
     }
 
     private void addBackButton() {
@@ -82,6 +82,6 @@ public class GuiAddTransition extends GuiScreen {
 
     @Override
     public void onGuiClosed() {
-        eventsClient.renderDebug = true;
+        EventsClient.renderDebug = true;
     }
 }

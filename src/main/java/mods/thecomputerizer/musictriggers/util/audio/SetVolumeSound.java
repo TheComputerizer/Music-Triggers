@@ -29,8 +29,7 @@ public class SetVolumeSound implements ISound {
     protected int repeatDelay;
     protected ISound.AttenuationType attenuationType;
 
-    public SetVolumeSound(ResourceLocation soundId, SoundCategory categoryIn, float volume, float pitch, boolean repeat, int repeatDelay, ISound.AttenuationType soundAttenuation, float xPosF, float yPosF, float zPosF)
-    {
+    public SetVolumeSound(ResourceLocation soundId, SoundCategory categoryIn, float volume, float pitch, boolean repeat, int repeatDelay, ISound.AttenuationType soundAttenuation, float xPosF, float yPosF, float zPosF) {
         this.positionedSoundLocation = soundId;
         this.category = categoryIn;
         this.volume = volume;
@@ -43,13 +42,11 @@ public class SetVolumeSound implements ISound {
         this.zPosF = zPosF;
     }
 
-    public ResourceLocation getSoundLocation()
-    {
+    public ResourceLocation getSoundLocation() {
         return this.positionedSoundLocation;
     }
 
-    public SoundEventAccessor createAccessor(SoundHandler handler)
-    {
+    public SoundEventAccessor createAccessor(SoundHandler handler) {
         this.soundEvent = handler.getAccessor(this.positionedSoundLocation);
 
         if (this.soundEvent == null)
@@ -64,55 +61,47 @@ public class SetVolumeSound implements ISound {
         return this.soundEvent;
     }
 
-    public Sound getSound()
-    {
+    public Sound getSound() {
         return this.sound;
     }
 
-    public SoundCategory getCategory()
-    {
+    public SoundCategory getCategory() {
         return this.category;
     }
 
-    public boolean canRepeat()
-    {
+    public boolean canRepeat() {
         return this.repeat;
     }
 
-    public int getRepeatDelay()
-    {
+    public int getRepeatDelay() {
         return this.repeatDelay;
     }
 
-    public float getVolume()
-    {
+    public float getVolume() {
         return this.volume * this.sound.getVolume();
     }
 
-    public float getPitch()
-    {
+    public float getPitch() {
         return this.pitch * this.sound.getPitch();
     }
 
-    public float getXPosF()
-    {
+    public float getXPosF() {
         return this.xPosF;
     }
 
-    public float getYPosF()
-    {
+    public float getYPosF() {
         return this.yPosF;
     }
 
-    public float getZPosF()
-    {
+    public float getZPosF() {
         return this.zPosF;
     }
 
-    public ISound.AttenuationType getAttenuationType()
-    {
+    public ISound.AttenuationType getAttenuationType() {
         return this.attenuationType;
     }
 
-    public void setVolume(float vol) { this.volume = vol;}
+    public void setVolume(float vol) {
+        this.volume = vol;
+    }
 }

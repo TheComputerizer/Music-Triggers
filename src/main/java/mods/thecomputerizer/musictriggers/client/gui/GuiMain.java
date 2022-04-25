@@ -3,9 +3,9 @@ package mods.thecomputerizer.musictriggers.client.gui;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.MusicPicker;
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configObject;
-import mods.thecomputerizer.musictriggers.util.json;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
+import mods.thecomputerizer.musictriggers.util.Json;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -14,7 +14,6 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundCategory;
 import net.minecraft.util.text.TextComponentString;
 
 import java.io.IOException;
@@ -23,9 +22,9 @@ public class GuiMain extends GuiScreen {
 
     public boolean reload;
     private final ResourceLocation background;
-    public configObject holder;
+    public ConfigObject holder;
 
-    public GuiMain(configObject holder) {
+    public GuiMain(ConfigObject holder) {
         this.reload = false;
         this.background = new ResourceLocation(MusicTriggers.MODID,"textures/block/recorder_side_active.png");
         this.holder = holder;
@@ -55,7 +54,7 @@ public class GuiMain extends GuiScreen {
         this.addTransitionsButton();
         this.addDebugButton();
         this.addCurrentSongButton();
-        eventsClient.renderDebug = false;
+        EventsClient.renderDebug = false;
     }
 
     private void addApplyButton() {
@@ -113,7 +112,7 @@ public class GuiMain extends GuiScreen {
             this.mc.setIngameFocus();
         }
         if(button.id==3) {
-            this.mc.displayGuiScreen(new GuiAddSongs(this, json.allSongs, holder, null));
+            this.mc.displayGuiScreen(new GuiAddSongs(this, Json.allSongs, holder, null));
         }
         if(button.id==4) {
             this.mc.displayGuiScreen(new GuiEditSongs(this, holder));
@@ -131,12 +130,12 @@ public class GuiMain extends GuiScreen {
 
     @Override
     public void onGuiClosed() {
-        eventsClient.renderDebug = true;
+        EventsClient.renderDebug = true;
         if(this.reload && this.mc.player!=null) {
             Minecraft.getMinecraft().getSoundHandler().stopSounds();
             MusicPicker.player.sendMessage(new TextComponentString("\u00A74\u00A7oReloading Music... This may take a while!"));
             MusicPlayer.reloading = true;
-            eventsClient.reloadCounter = 5;
+            EventsClient.reloadCounter = 5;
         }
     }
 

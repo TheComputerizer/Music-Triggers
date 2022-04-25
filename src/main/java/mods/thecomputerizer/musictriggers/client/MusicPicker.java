@@ -8,12 +8,14 @@ import de.ellpeck.nyx.lunarevents.StarShower;
 import lumien.bloodmoon.Bloodmoon;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
-import mods.thecomputerizer.musictriggers.config.configRegistry;
-import mods.thecomputerizer.musictriggers.config.configToml;
+import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
+import mods.thecomputerizer.musictriggers.config.ConfigToml;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
-import mods.thecomputerizer.musictriggers.util.packets.*;
+import mods.thecomputerizer.musictriggers.util.packets.PacketSendTriggers;
+import mods.thecomputerizer.musictriggers.util.packets.PacketMenuSongs;
 import net.darkhax.gamestages.GameStageHelper;
 import net.minecraft.block.material.Material;
+import net.minecraft.client.LoadingScreenRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiWinGame;
 import net.minecraft.entity.EntityList;
@@ -23,15 +25,13 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.stats.StatBase;
 import net.minecraft.stats.StatList;
-import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
-import net.minecraftforge.fml.common.Optional;
+import net.minecraftforge.fml.common.Loader;
 import org.orecruncher.dsurround.client.weather.Weather;
 import sereneseasons.api.season.ISeasonState;
 import sereneseasons.api.season.Season;
@@ -40,6 +40,8 @@ import weather2.api.WeatherDataHelper;
 import weather2.weathersystem.storm.StormObject;
 
 import java.util.*;
+
+import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
 
 public class MusicPicker {
     public static Minecraft mc;
@@ -76,9 +78,7 @@ public class MusicPicker {
     public static int universalFadeIn = 0;
     public static int universalFadeOut = 0;
     public static int universalDelay = 0;
-
-    public static float musicVolSave;
-    public static float masterVolSave;
+    public static String crashHelper;
 
     public static String[] playThese() {
         if (!MusicPlayer.fadingOut) titleCardEvents = new ArrayList<>();
@@ -88,42 +88,41 @@ public class MusicPicker {
         if(SoundHandler.TriggerIdentifierMap.isEmpty()) return null;
 
         if(player == null) {
-            if (SoundHandler.TriggerIdentifierMap.get("menu") != null) {
-                musicVolSave = mc.gameSettings.getSoundLevel(SoundCategory.MUSIC);
-                masterVolSave = mc.gameSettings.getSoundLevel(SoundCategory.MASTER);
+            if (SoundHandler.TriggerIdentifierMap.get("menu") != null && mc.currentScreen!=null)
                 return SoundHandler.TriggerIdentifierMap.get("menu").get("_").toArray(new String[0]);
+        } else {
+            String builtMenuSongs = allMenuSongsAsSingleString();
+            if (builtMenuSongs != null)
+                RegistryHandler.network.sendToServer(new PacketMenuSongs.packetMenuSongsMessage(builtMenuSongs));
+            List<String> res = comboChecker(priorityHandler(playableEvents()));
+            playableList = savePlayable;
+            for (String event : timeSwitch) {
+                if (!titleCardEvents.contains(event) && triggerPersistence.get(event) > 0)
+                    triggerPersistence.put(event, 0);
             }
-            else return null;
-        }
-        String builtMenuSongs = allMenuSongsAsSingleString();
-        if(builtMenuSongs!=null) RegistryHandler.network.sendToServer(new packetMenuSongs.packetMenuSongsMessage());
-        List<String> res = comboChecker(priorityHandler(playableEvents()));
-        playableList = savePlayable;
-        for(String event : timeSwitch) {
-            if(!titleCardEvents.contains(event) && triggerPersistence.get(event) > 0) triggerPersistence.put(event, 0);
-        }
-        timeSwitch = new ArrayList<>();
-        if (res != null && !res.isEmpty()) {
+            timeSwitch = new ArrayList<>();
+            if (res != null && !res.isEmpty()) {
+                dynamicSongs = new HashMap<>();
+                dynamicPriorities = new HashMap<>();
+                dynamicFadeIn = new HashMap<>();
+                dynamicFadeOut = new HashMap<>();
+                return res.toArray(new String[0]);
+            }
             dynamicSongs = new HashMap<>();
             dynamicPriorities = new HashMap<>();
             dynamicFadeIn = new HashMap<>();
             dynamicFadeOut = new HashMap<>();
-            return res.toArray(new String[0]);
-        }
-        dynamicSongs = new HashMap<>();
-        dynamicPriorities = new HashMap<>();
-        dynamicFadeIn = new HashMap<>();
-        dynamicFadeOut = new HashMap<>();
-        if(SoundHandler.TriggerIdentifierMap.get("generic") != null) {
-            playableList.add("generic");
-            titleCardEvents.add("generic");
-            curDelay = Integer.parseInt(SoundHandler.TriggerInfoMap.get("generic")[4]);
-            if(curDelay==0) curDelay = universalDelay;
-            curFadeIn = Integer.parseInt(SoundHandler.TriggerInfoMap.get("generic")[1]);
-            if(curFadeIn==0) curFadeIn = universalFadeIn;
-            curFadeOut = Integer.parseInt(SoundHandler.TriggerInfoMap.get("generic")[35]);
-            if(curFadeOut==0) curFadeOut = universalFadeOut;
-            return SoundHandler.TriggerIdentifierMap.get("generic").get("_").toArray(new String[0]);
+            if (SoundHandler.TriggerIdentifierMap.get("generic") != null) {
+                playableList.add("generic");
+                titleCardEvents.add("generic");
+                curDelay = Integer.parseInt(SoundHandler.TriggerInfoMap.get("generic")[4]);
+                if (curDelay == 0) curDelay = universalDelay;
+                curFadeIn = Integer.parseInt(SoundHandler.TriggerInfoMap.get("generic")[1]);
+                if (curFadeIn == 0) curFadeIn = universalFadeIn;
+                curFadeOut = Integer.parseInt(SoundHandler.TriggerInfoMap.get("generic")[35]);
+                if (curFadeOut == 0) curFadeOut = universalFadeOut;
+                return SoundHandler.TriggerIdentifierMap.get("generic").get("_").toArray(new String[0]);
+            }
         }
         return null;
     }
@@ -183,7 +182,7 @@ public class MusicPicker {
         if (sta == null) {
             return null;
         }
-        int highest = -100;
+        int highest = Integer.MIN_VALUE;
         String trueHighest = "";
         for (String list : sta) {
             if (dynamicPriorities.get(list) > highest && !dynamicSongs.get(list).isEmpty()) {
@@ -223,7 +222,8 @@ public class MusicPicker {
 
     @SuppressWarnings("rawtypes")
     public static List<String> playableEvents() {
-        String crashHelper = "";
+        crashHelper = "";
+        StringBuilder packetBuilder = new StringBuilder();
         List<String> events = new ArrayList<>();
         try {
             double time = (double) world.getWorldTime() / 24000.0;
@@ -233,6 +233,7 @@ public class MusicPicker {
             if (SoundHandler.TriggerIdentifierMap.get("time") != null) {
                 crashHelper = "time";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("time").keySet()) {
+                    crashHelper = "time-" + identifier;
                     String selectedStartTime = SoundHandler.TriggerInfoMap.get("time-" + identifier)[8];
                     String selectedEndTime = SoundHandler.TriggerInfoMap.get("time-" + identifier)[29];
                     double transformedTimeMin;
@@ -302,6 +303,7 @@ public class MusicPicker {
             if (SoundHandler.TriggerIdentifierMap.get("light") != null) {
                 crashHelper = "light";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("light").keySet()) {
+                    crashHelper = "light-" + identifier;
                     if (averageLight(roundedPos(player), Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("light-" + identifier)[20])) <= Integer.parseInt(SoundHandler.TriggerInfoMap.get("light-" + identifier)[2])) {
                         if (!events.contains("light-" + identifier)) {
                             events.add("light-" + identifier);
@@ -329,6 +331,7 @@ public class MusicPicker {
             if (SoundHandler.TriggerIdentifierMap.get("height") != null) {
                 crashHelper = "height";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("height").keySet()) {
+                    crashHelper = "height-" + identifier;
                     boolean pass;
                     if (Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("height-" + identifier)[28]))
                         pass = player.posY < Integer.parseInt(SoundHandler.TriggerInfoMap.get("height-" + identifier)[2]) && !world.canSeeSky(roundedPos(player));
@@ -550,7 +553,7 @@ public class MusicPicker {
             if (SoundHandler.TriggerIdentifierMap.get("riding") != null && player.isRiding()) {
                 crashHelper = "riding";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("riding").keySet()) {
-                    
+                    crashHelper = "riding-" + identifier;
                     String ridingName = SoundHandler.TriggerInfoMap.get("riding-" + identifier)[9];
                     if (ridingName.matches("minecraft") || checkResourceList(Objects.requireNonNull(player.getRidingEntity()).getName(),ridingName,true) || checkResourceList(Objects.requireNonNull(EntityList.getKey(player.getRidingEntity())).toString(),ridingName,true)) {
                         if (!events.contains("riding-" + identifier)) {
@@ -667,17 +670,17 @@ public class MusicPicker {
                 dynamicDelay.put("pvp", Integer.parseInt(SoundHandler.TriggerInfoMap.get("pvp")[4]));
                 if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("pvp")[33])) timeSwitch.add("pvp");
             }
-            if (triggerPersistence.get("pvp") != null && eventsClient.PVPTracker != null && triggerPersistence.get("victory_timeout") <= 0) {
-                eventsClient.PVPTracker = null;
+            if (triggerPersistence.get("pvp") != null && EventsClient.PVPTracker != null && triggerPersistence.get("victory_timeout") <= 0) {
+                EventsClient.PVPTracker = null;
             }
-            if (eventsClient.PVPTracker != null && eventsClient.PVPTracker.isDead) {
+            if (EventsClient.PVPTracker != null && EventsClient.PVPTracker.isDead) {
                 victory.put(pvpVictoryID, true);
-                eventsClient.PVPTracker = null;
+                EventsClient.PVPTracker = null;
             }
             if(SoundHandler.TriggerIdentifierMap.get("home") != null) {
                 crashHelper = "home";
-                RegistryHandler.network.sendToServer(new packetSendHome.packetSendHomeMessage("home",Integer.parseInt(SoundHandler.TriggerInfoMap.get("home")[11]),player.getUniqueID()));
-                if (fromServer.home){
+                packetBuilder.append(Integer.parseInt(SoundHandler.TriggerInfoMap.get("home")[11]));
+                if (FromServer.home){
                     events.add("home");
                     dynamicSongs.put("home", SoundHandler.TriggerIdentifierMap.get("home").get("_"));
                     dynamicPriorities.put("home", Integer.parseInt(SoundHandler.TriggerInfoMap.get("home")[0]));
@@ -697,9 +700,11 @@ public class MusicPicker {
                     if (Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("home")[33])) timeSwitch.add("home");
                 }
             }
+            packetBuilder.append("&#");
             if (SoundHandler.TriggerIdentifierMap.get("dimension") != null) {
                 crashHelper = "dimension";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("dimension").keySet()) {
+                    crashHelper = "dimension-" + identifier;
                     if (checkDimensionList(player.dimension,SoundHandler.TriggerInfoMap.get("dimension-" + identifier)[9])) {
                         if (!events.contains("dimension-" + identifier)) {
                             events.add("dimension-" + identifier);
@@ -727,7 +732,7 @@ public class MusicPicker {
             if (SoundHandler.TriggerIdentifierMap.get("biome") != null) {
                 crashHelper = "biome";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("biome").keySet()) {
-                    
+                    crashHelper = "biome-" + identifier;
                     boolean pass = checkBiome(world.getBiome(roundedPos(player)), SoundHandler.TriggerInfoMap.get("biome-" + identifier)[9],
                             SoundHandler.TriggerInfoMap.get("biome-" + identifier)[23], SoundHandler.TriggerInfoMap.get("biome-" + identifier)[24],
                             Float.parseFloat(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[25]), Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[26]),
@@ -756,12 +761,13 @@ public class MusicPicker {
                     }
                 }
             }
-            if (mc.isSingleplayer() && SoundHandler.TriggerIdentifierMap.get("structure") != null) {
+            if (!ConfigRegistry.clientSideOnly && SoundHandler.TriggerIdentifierMap.get("structure") != null) {
                 crashHelper = "structure";
-                WorldServer nworld = Objects.requireNonNull(mc.getIntegratedServer()).getWorld(player.dimension);
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("structure").keySet()) {
-                    
-                    if (nworld.getChunkProvider().isInsideStructure(world, SoundHandler.TriggerInfoMap.get("structure-" + identifier)[9], player.getPosition())) {
+                    crashHelper = "structure-" + identifier;
+                    packetBuilder.append("structure-").append(identifier).append("@").append(SoundHandler.TriggerInfoMap.get("structure-" + identifier)[9]).append("@").append(player.getPosition().toLong()).append("@").append(player.dimension).append("$");
+                    FromServer.inStructure.putIfAbsent("structure-" + identifier, false);
+                    if (FromServer.inStructure.get("structure-" + identifier)) {
                         if (!events.contains("structure-" + identifier)) {
                             events.add("structure-" + identifier);
                             dynamicSongs.put("structure-" + identifier, SoundHandler.TriggerIdentifierMap.get("structure").get(identifier));
@@ -772,36 +778,7 @@ public class MusicPicker {
                             triggerPersistence.put("structure-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("structure-" + identifier)[3]));
                             if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("structure-" + identifier)[33])) timeSwitch.add("structure-" + identifier);
                         }
-                    } else if (triggerPersistence.get("structure-" + identifier) != null && triggerPersistence.get("structure-" + identifier) > 0) {
-                        if (!events.contains("structure-" + identifier)) {
-                            events.add("structure-" + identifier);
-                            dynamicSongs.put("structure-" + identifier, SoundHandler.TriggerIdentifierMap.get("structure").get(identifier));
-                            dynamicPriorities.put("structure-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("structure-" + identifier)[0]));
-                            dynamicFadeIn.put("structure-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("structure-" + identifier)[1]));
-                            dynamicFadeOut.put("structure-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("structure-" + identifier)[35]));
-                            dynamicDelay.put("structure-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("structure-" + identifier)[4]));
-                            if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("structure-" + identifier)[33])) timeSwitch.add("structure-" + identifier);
-                        }
-                    }
-                }
-            } else if (!configRegistry.clientSideOnly && SoundHandler.TriggerIdentifierMap.get("structure") != null) {
-                crashHelper = "structure";
-                for (String identifier : SoundHandler.TriggerIdentifierMap.get("structure").keySet()) {
-                    
-                    RegistryHandler.network.sendToServer(new packet.packetMessage("structure-" + identifier, SoundHandler.TriggerInfoMap.get("structure-" + identifier)[9], player.getPosition(), player.dimension, player.getUniqueID()));
-                    fromServer.inStructure.putIfAbsent("structure-" + identifier, false);
-                    if (fromServer.inStructure.get("structure-" + identifier)) {
-                        if (!events.contains("structure-" + identifier)) {
-                            events.add("structure-" + identifier);
-                            dynamicSongs.put("structure-" + identifier, SoundHandler.TriggerIdentifierMap.get("structure").get(identifier));
-                            dynamicPriorities.put("structure-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("structure-" + identifier)[0]));
-                            dynamicFadeIn.put("structure-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("structure-" + identifier)[1]));
-                            dynamicFadeOut.put("structure-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("structure-" + identifier)[35]));
-                            dynamicDelay.put("structure-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("structure-" + identifier)[4]));
-                            triggerPersistence.put("structure-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("structure-" + identifier)[3]));
-                            if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("structure-" + identifier)[33])) timeSwitch.add("structure-" + identifier);
-                        }
-                        fromServer.curStruct = SoundHandler.TriggerInfoMap.get("structure-" + identifier)[9];
+                        FromServer.curStruct = SoundHandler.TriggerInfoMap.get("structure-" + identifier)[9];
                     } else if (triggerPersistence.get("structure-" + identifier) != null && triggerPersistence.get("structure-" + identifier) > 0) {
                         if (!events.contains("structure-" + identifier)) {
                             events.add("structure-" + identifier);
@@ -813,22 +790,25 @@ public class MusicPicker {
                             if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("structure-" + identifier)[33])) timeSwitch.add("structure-" + identifier);
                         }
                     } else {
-                        fromServer.curStruct = null;
+                        FromServer.curStruct = null;
                     }
                 }
+                packetBuilder = new StringBuilder(packetBuilder.substring(0, packetBuilder.length() - 1));
             }
-            if (SoundHandler.TriggerIdentifierMap.get("mob") != null && !configRegistry.clientSideOnly) {
+            packetBuilder.append("&#");
+            if (SoundHandler.TriggerIdentifierMap.get("mob") != null && !ConfigRegistry.clientSideOnly) {
                 crashHelper = "mob";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("mob").keySet()) {
-                    RegistryHandler.network.sendToServer(new packetSendMobInfo.packetSendMobInfoMessage("mob-" + identifier, player.getUniqueID(),
-                            SoundHandler.TriggerInfoMap.get("mob-" + identifier)[9], SoundHandler.TriggerInfoMap.get("mob-" + identifier)[11],
-                            SoundHandler.TriggerInfoMap.get("mob-" + identifier)[12], SoundHandler.TriggerInfoMap.get("mob-" + identifier)[13],
-                            SoundHandler.TriggerInfoMap.get("mob-" + identifier)[14], SoundHandler.TriggerInfoMap.get("mob-" + identifier)[15],
-                            SoundHandler.TriggerInfoMap.get("mob-" + identifier)[16], SoundHandler.TriggerInfoMap.get("mob-" + identifier)[17],
-                            SoundHandler.TriggerInfoMap.get("mob-" + identifier)[18], SoundHandler.TriggerInfoMap.get("mob-" + identifier)[2],
-                            Integer.parseInt(SoundHandler.TriggerInfoMap.get("mob-" + identifier)[22]), SoundHandler.TriggerInfoMap.get("mob-" + identifier)[27]));
-                    fromServer.mob.putIfAbsent("mob-" + identifier, false);
-                    if (fromServer.mob.get("mob-" + identifier)) {
+                    crashHelper = "mob-" + identifier;
+                    packetBuilder.append("mob-").append(identifier).append("@").append(SoundHandler.TriggerInfoMap.get("mob-" + identifier)[9]).append("@")
+                            .append(SoundHandler.TriggerInfoMap.get("mob-" + identifier)[11]).append("@").append(SoundHandler.TriggerInfoMap.get("mob-" + identifier)[12])
+                            .append("@").append(SoundHandler.TriggerInfoMap.get("mob-" + identifier)[13]).append("@").append(SoundHandler.TriggerInfoMap.get("mob-" + identifier)[14])
+                            .append("@").append(SoundHandler.TriggerInfoMap.get("mob-" + identifier)[15]).append("@").append(SoundHandler.TriggerInfoMap.get("mob-" + identifier)[16])
+                            .append("@").append(SoundHandler.TriggerInfoMap.get("mob-" + identifier)[17]).append("@").append(SoundHandler.TriggerInfoMap.get("mob-" + identifier)[18])
+                            .append("@").append(SoundHandler.TriggerInfoMap.get("mob-" + identifier)[2]).append("@").append(Integer.parseInt(SoundHandler.TriggerInfoMap.get("mob-" + identifier)[22]))
+                            .append("@").append(SoundHandler.TriggerInfoMap.get("mob-" + identifier)[27]).append("@").append(SoundHandler.TriggerInfoMap.get("mob-" + identifier)[36]).append("$");
+                    FromServer.mob.putIfAbsent("mob-" + identifier, false);
+                    if (FromServer.mob.get("mob-" + identifier)) {
                         if (!events.contains("mob-" + identifier)) {
                             events.add("mob-" + identifier);
                             dynamicSongs.put("mob-" + identifier, SoundHandler.TriggerIdentifierMap.get("mob").get(identifier));
@@ -851,14 +831,16 @@ public class MusicPicker {
                         }
                     }
                 }
-                for (int i : fromServer.mobVictory.keySet()) {
-                    victory.put(i, fromServer.mobVictory.get(i));
+                packetBuilder = new StringBuilder(packetBuilder.substring(0, packetBuilder.length() - 1));
+                for (int i : FromServer.mobVictory.keySet()) {
+                    victory.put(i, FromServer.mobVictory.get(i));
                 }
             }
+            packetBuilder.append("&");
             if (SoundHandler.TriggerIdentifierMap.get("zones") != null) {
                 crashHelper = "zones";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("zones").keySet()) {
-                    
+                    crashHelper = "zones-" + identifier;
                     String[] broken = stringBreaker(SoundHandler.TriggerInfoMap.get("zones-" + identifier)[7], ",");
                     BlockPos bp = player.getPosition();
                     int x1 = Integer.parseInt(broken[0]);
@@ -894,7 +876,7 @@ public class MusicPicker {
             if (SoundHandler.TriggerIdentifierMap.get("effect") != null) {
                 crashHelper = "effect";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("effect").keySet()) {
-                    
+                    crashHelper = "effect-" + identifier;
                     effectList = new ArrayList<>();
                     for (PotionEffect p : player.getActivePotionEffects()) {
                         effectList.add(p.getEffectName());
@@ -926,6 +908,7 @@ public class MusicPicker {
             if (SoundHandler.TriggerIdentifierMap.get("victory") != null) {
                 crashHelper = "victory";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("victory").keySet()) {
+                    crashHelper = "victory-" + identifier;
                     int id = Integer.parseInt(SoundHandler.TriggerInfoMap.get("victory-" + identifier)[17]);
                     if (victory.get(id)!=null && victory.get(id)) {
                         if (!events.contains("victory-" + identifier)) {
@@ -955,7 +938,8 @@ public class MusicPicker {
             if (!mc.inGameHasFocus && SoundHandler.TriggerIdentifierMap.get("gui") != null) {
                 crashHelper = "gui";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("gui").keySet()) {
-                    if (checkResourceList(eventsClient.GUIName,SoundHandler.TriggerInfoMap.get("gui-" + identifier)[9],false)) {
+                    crashHelper = "gui-" + identifier;
+                    if (checkResourceList(EventsClient.GUIName,SoundHandler.TriggerInfoMap.get("gui-" + identifier)[9],false)) {
                         if (!events.contains("gui-" + identifier)) {
                             events.add("gui-" + identifier);
                             dynamicSongs.put("gui-" + identifier, SoundHandler.TriggerIdentifierMap.get("gui").get(identifier));
@@ -989,13 +973,11 @@ public class MusicPicker {
                         }
                     }
                 }
-            } else {
-                musicVolSave = mc.gameSettings.getSoundLevel(SoundCategory.MUSIC);
-                masterVolSave = mc.gameSettings.getSoundLevel(SoundCategory.MASTER);
             }
             if (SoundHandler.TriggerIdentifierMap.get("difficulty") != null) {
                 crashHelper = "difficulty";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("difficulty").keySet()) {
+                    crashHelper = "difficulty-" + identifier;
                     int diffID = Integer.parseInt(SoundHandler.TriggerInfoMap.get("difficulty-" + identifier)[2]);
                     if (diffID == 4 && mc.world.getWorldInfo().isHardcoreModeEnabled()) {
                         if (!events.contains("difficulty-" + identifier)) {
@@ -1068,7 +1050,8 @@ public class MusicPicker {
             if (SoundHandler.TriggerIdentifierMap.get("advancement") != null) {
                 crashHelper = "advancement";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("advancement").keySet()) {
-                    if (eventsClient.advancement && (eventsClient.lastAdvancement.contains(SoundHandler.TriggerInfoMap.get("advancement-" + identifier)[5]) || SoundHandler.TriggerInfoMap.get("advancement-" + identifier)[5].matches("YouWillNeverGuessThis"))) {
+                    crashHelper = "advancement-" + identifier;
+                    if (EventsClient.advancement && (EventsClient.lastAdvancement.contains(SoundHandler.TriggerInfoMap.get("advancement-" + identifier)[5]) || SoundHandler.TriggerInfoMap.get("advancement-" + identifier)[5].matches("YouWillNeverGuessThis"))) {
                         if (!events.contains("advancement-" + identifier)) {
                             events.add("advancement-" + identifier);
                             dynamicSongs.put("advancement-" + identifier, SoundHandler.TriggerIdentifierMap.get("advancement").get(identifier));
@@ -1091,11 +1074,12 @@ public class MusicPicker {
                         }
                     }
                 }
-                eventsClient.advancement = false;
+                EventsClient.advancement = false;
             }
             if (SoundHandler.TriggerIdentifierMap.get("statistic") != null) {
                 crashHelper = "statistic";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("statistic").keySet()) {
+                    crashHelper = "statistic-" + identifier;
                     if (checkStat(SoundHandler.TriggerInfoMap.get("statistic-" + identifier)[9], Integer.parseInt(SoundHandler.TriggerInfoMap.get("statistic-" + identifier)[9]))) {
                         if (!events.contains("statistic-" + identifier)) {
                             events.add("statistic-" + identifier);
@@ -1120,83 +1104,38 @@ public class MusicPicker {
                     }
                 }
             }
-            try {
-                List<String> stages = gamestages();
-                if (!stages.isEmpty()) {
-                    events.addAll(stages);
-                }
-            } catch (NoSuchMethodError ignored) {
-            }
-            try {
-                boolean bloodmoon = bloodmoon();
-                if (bloodmoon) {
-                    events.add("bloodmoon");
-                }
-            } catch (NoSuchMethodError ignored) {
-            }
-            try {
-                boolean nyxbloodmoon = nyxbloodmoon();
-                if (nyxbloodmoon) {
-                    events.add("bloodmoon");
-                }
-            } catch (NoSuchMethodError ignored) {
-            }
-            try {
-                boolean nyxharvestmoon = nyxharvestmoon();
-                if (nyxharvestmoon) {
-                    events.add("harvestmoon");
-                }
-            } catch (NoSuchMethodError ignored) {
-            }
-            try {
-                boolean nyxfallingstars = nyxfallingstars();
-                if (nyxfallingstars) {
-                    events.add("fallingstars");
-                }
-            } catch (NoSuchMethodError ignored) {
-            }
-            try {
-                if (dynamicrain(events) != null) {
-                    String rainIntensity = dynamicrain(events);
-                    if(!events.contains(rainIntensity)) events.add(rainIntensity);
-                }
-            } catch (NoSuchMethodError ignored) {
-            }
-            try {
-                List<String> tornado = weatherTornado();
-                if (!tornado.isEmpty()) {
-                    events.addAll(tornado);
-                }
-                if (weatherHurricane()) {
-                    events.add("hurricane");
-                }
-                if (weatherSandstorm()) {
-                    events.add("sandstorm");
-                }
-            } catch (NoSuchMethodError ignored) {
-            }
-            try {
-                List<String> seasons = seasons();
-                if (!seasons.isEmpty()) {
-                    events.addAll(seasons);
-                }
-            } catch (NoSuchMethodError ignored) {
-            }
+            List<String> stages = gamestages();
+            if (!stages.isEmpty()) events.addAll(stages);
+            if (bloodmoon()) events.add("bloodmoon");
+            if (nyxbloodmoon()) events.add("bloodmoon");
+            if (nyxharvestmoon()) events.add("harvestmoon");
+            if (nyxfallingstars()) events.add("fallingstars");
+            String rainIntensity = dynamicrain(events);
+            if (rainIntensity != null && !events.contains(rainIntensity)) events.add(rainIntensity);
+            List<String> tornado = weatherTornado();
+            if (!tornado.isEmpty()) events.addAll(tornado);
+            if (weatherHurricane()) events.add("hurricane");
+            if (weatherSandstorm()) events.add("sandstorm");
+            List<String> seasons = seasons();
+            if (!seasons.isEmpty()) events.addAll(seasons);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("There was a problem with your "+crashHelper+" trigger! See the log for the full stack trace");
+            throw new RuntimeException("There was a problem with your "+crashHelper+" trigger! The error was "+e.getMessage()+" and was caught on line "+e.getStackTrace()[0].getLineNumber()+" in the class "+e.getStackTrace()[0]);
         }
         playableList = events;
         savePlayable = events;
-        RegistryHandler.network.sendToServer(new packetAllTriggers.packetAllTriggersMessage(allTriggersAsSingleString()));
+        if(!ConfigRegistry.clientSideOnly && !events.isEmpty()) {
+            packetBuilder.insert(0, allTriggersAsSingleString() + "#");
+            RegistryHandler.network.sendToServer(new PacketSendTriggers.PacketSendTriggersMessage(packetBuilder.toString(), player.getUniqueID()));
+        }
         return events;
     }
 
     @SuppressWarnings("rawtypes")
-    @Optional.Method(modid = "gamestages")
     private static List<String> gamestages() {
         List<String> events = new ArrayList<>();
-        if(SoundHandler.TriggerIdentifierMap.get("gamestage")!=null) {
+        if(Loader.isModLoaded("gamestages") && SoundHandler.TriggerIdentifierMap.get("gamestage")!=null) {
+            crashHelper = "gamestages";
             for (String identifier : SoundHandler.TriggerIdentifierMap.get("gamestage").keySet()) {
                 if (Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("gamestage-" + identifier)[9])) {
                     if (GameStageHelper.clientHasStage(player, SoundHandler.TriggerInfoMap.get("gamestage-" + identifier)[19])) {
@@ -1250,106 +1189,115 @@ public class MusicPicker {
         return events;
     }
 
-    @Optional.Method(modid = "bloodmoon")
     private static boolean bloodmoon() {
-        if (Bloodmoon.proxy.isBloodmoon() && SoundHandler.TriggerIdentifierMap.get("bloodmoon")!=null) {
-            dynamicSongs.put("bloodmoon", SoundHandler.TriggerIdentifierMap.get("bloodmoon").get("_"));
-            dynamicPriorities.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[0]));
-            dynamicFadeIn.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[1]));
-            dynamicFadeOut.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[35]));
-            dynamicDelay.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[4]));
-            triggerPersistence.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[3]));
-            if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("bloodmoon")[33])) timeSwitch.add("bloodmoon");
-            return true;
-        }
-        else if (triggerPersistence.get("bloodmoon")!=null && triggerPersistence.get("bloodmoon") > 0) {
-            dynamicSongs.put("bloodmoon", SoundHandler.TriggerIdentifierMap.get("bloodmoon").get("_"));
-            dynamicPriorities.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[0]));
-            dynamicFadeIn.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[1]));
-            dynamicFadeOut.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[35]));
-            dynamicDelay.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[4]));
-            if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("bloodmoon")[33])) timeSwitch.add("bloodmoon");
-            return true;
+        if(Loader.isModLoaded("gamestages")) {
+            crashHelper = "bloodmoon";
+            if (Bloodmoon.proxy.isBloodmoon() && SoundHandler.TriggerIdentifierMap.get("bloodmoon") != null) {
+                dynamicSongs.put("bloodmoon", SoundHandler.TriggerIdentifierMap.get("bloodmoon").get("_"));
+                dynamicPriorities.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[0]));
+                dynamicFadeIn.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[1]));
+                dynamicFadeOut.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[35]));
+                dynamicDelay.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[4]));
+                triggerPersistence.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[3]));
+                if (Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("bloodmoon")[33])) timeSwitch.add("bloodmoon");
+                return true;
+            } else if (triggerPersistence.get("bloodmoon") != null && triggerPersistence.get("bloodmoon") > 0) {
+                dynamicSongs.put("bloodmoon", SoundHandler.TriggerIdentifierMap.get("bloodmoon").get("_"));
+                dynamicPriorities.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[0]));
+                dynamicFadeIn.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[1]));
+                dynamicFadeOut.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[35]));
+                dynamicDelay.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[4]));
+                if (Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("bloodmoon")[33])) timeSwitch.add("bloodmoon");
+                return true;
+            }
         }
         return false;
     }
 
-    @Optional.Method(modid = "nyx")
     private static boolean nyxbloodmoon() {
-        if (NyxWorld.get(player.getEntityWorld()).currentEvent instanceof BloodMoon && SoundHandler.TriggerIdentifierMap.get("bloodmoon")!=null) {
-            dynamicSongs.put("bloodmoon", SoundHandler.TriggerIdentifierMap.get("bloodmoon").get("_"));
-            dynamicPriorities.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[0]));
-            dynamicFadeIn.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[1]));
-            dynamicFadeOut.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[35]));
-            dynamicDelay.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[4]));
-            triggerPersistence.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[3]));
-            if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("bloodmoon")[33])) timeSwitch.add("bloodmoon");
-            return true;
-        }
-        else if (triggerPersistence.get("bloodmoon")!=null && triggerPersistence.get("bloodmoon") > 0) {
-            dynamicSongs.put("bloodmoon", SoundHandler.TriggerIdentifierMap.get("bloodmoon").get("_"));
-            dynamicPriorities.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[0]));
-            dynamicFadeIn.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[1]));
-            dynamicFadeOut.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[35]));
-            dynamicDelay.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[4]));
-            if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("bloodmoon")[33])) timeSwitch.add("bloodmoon");
-            return true;
+        if(Loader.isModLoaded("nyx")) {
+            crashHelper = "bloodmoon";
+            if (NyxWorld.get(player.getEntityWorld()).currentEvent instanceof BloodMoon && SoundHandler.TriggerIdentifierMap.get("bloodmoon") != null) {
+                dynamicSongs.put("bloodmoon", SoundHandler.TriggerIdentifierMap.get("bloodmoon").get("_"));
+                dynamicPriorities.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[0]));
+                dynamicFadeIn.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[1]));
+                dynamicFadeOut.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[35]));
+                dynamicDelay.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[4]));
+                triggerPersistence.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[3]));
+                if (Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("bloodmoon")[33])) timeSwitch.add("bloodmoon");
+                return true;
+            } else if (triggerPersistence.get("bloodmoon") != null && triggerPersistence.get("bloodmoon") > 0) {
+                dynamicSongs.put("bloodmoon", SoundHandler.TriggerIdentifierMap.get("bloodmoon").get("_"));
+                dynamicPriorities.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[0]));
+                dynamicFadeIn.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[1]));
+                dynamicFadeOut.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[35]));
+                dynamicDelay.put("bloodmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("bloodmoon")[4]));
+                if (Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("bloodmoon")[33])) timeSwitch.add("bloodmoon");
+                return true;
+            }
         }
         return false;
     }
 
-    @Optional.Method(modid = "nyx")
     private static boolean nyxharvestmoon() {
-        if (NyxWorld.get(player.getEntityWorld()).currentEvent instanceof HarvestMoon && SoundHandler.TriggerIdentifierMap.get("harvestmoon")!=null) {
-            dynamicSongs.put("harvestmoon", SoundHandler.TriggerIdentifierMap.get("harvestmoon").get("_"));
-            dynamicPriorities.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[0]));
-            dynamicFadeIn.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[1]));
-            dynamicFadeOut.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[35]));
-            dynamicDelay.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[4]));
-            triggerPersistence.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[3]));
-            if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("harvestmoon")[33])) timeSwitch.add("harvestmoon");
-            return true;
-        }
-        else if (triggerPersistence.get("harvestmoon")!=null && triggerPersistence.get("harvestmoon") > 0) {
-            dynamicSongs.put("harvestmoon", SoundHandler.TriggerIdentifierMap.get("harvestmoon").get("_"));
-            dynamicPriorities.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[0]));
-            dynamicFadeIn.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[1]));
-            dynamicFadeOut.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[35]));
-            dynamicDelay.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[4]));
-            if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("harvestmoon")[33])) timeSwitch.add("harvestmoon");
-            return true;
+        if(Loader.isModLoaded("nyx")) {
+            crashHelper = "harvestmoon";
+            if (NyxWorld.get(player.getEntityWorld()).currentEvent instanceof HarvestMoon && SoundHandler.TriggerIdentifierMap.get("harvestmoon") != null) {
+                dynamicSongs.put("harvestmoon", SoundHandler.TriggerIdentifierMap.get("harvestmoon").get("_"));
+                dynamicPriorities.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[0]));
+                dynamicFadeIn.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[1]));
+                dynamicFadeOut.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[35]));
+                dynamicDelay.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[4]));
+                triggerPersistence.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[3]));
+                if (Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("harvestmoon")[33]))
+                    timeSwitch.add("harvestmoon");
+                return true;
+            } else if (triggerPersistence.get("harvestmoon") != null && triggerPersistence.get("harvestmoon") > 0) {
+                dynamicSongs.put("harvestmoon", SoundHandler.TriggerIdentifierMap.get("harvestmoon").get("_"));
+                dynamicPriorities.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[0]));
+                dynamicFadeIn.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[1]));
+                dynamicFadeOut.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[35]));
+                dynamicDelay.put("harvestmoon", Integer.parseInt(SoundHandler.TriggerInfoMap.get("harvestmoon")[4]));
+                if (Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("harvestmoon")[33]))
+                    timeSwitch.add("harvestmoon");
+                return true;
+            }
         }
         return false;
     }
 
-    @Optional.Method(modid = "nyx")
     private static boolean nyxfallingstars() {
-        if (NyxWorld.get(player.getEntityWorld()).currentEvent instanceof StarShower && SoundHandler.TriggerIdentifierMap.get("fallingstars")!=null) {
-            dynamicSongs.put("fallingstars", SoundHandler.TriggerIdentifierMap.get("fallingstars").get("_"));
-            dynamicPriorities.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[0]));
-            dynamicFadeIn.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[1]));
-            dynamicFadeOut.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[35]));
-            dynamicDelay.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[4]));
-            triggerPersistence.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[3]));
-            if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("fallingstars")[33])) timeSwitch.add("fallingstars");
-            return true;
-        }
-        else if (triggerPersistence.get("fallingstars")!=null && triggerPersistence.get("fallingstars") > 0) {
-            dynamicSongs.put("fallingstars", SoundHandler.TriggerIdentifierMap.get("fallingstars").get("_"));
-            dynamicPriorities.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[0]));
-            dynamicFadeIn.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[1]));
-            dynamicFadeOut.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[35]));
-            dynamicDelay.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[4]));
-            if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("fallingstars")[33])) timeSwitch.add("fallingstars");
-            return true;
+        if(Loader.isModLoaded("nyx")) {
+            crashHelper = "fallingstars";
+            if (NyxWorld.get(player.getEntityWorld()).currentEvent instanceof StarShower && SoundHandler.TriggerIdentifierMap.get("fallingstars") != null) {
+                dynamicSongs.put("fallingstars", SoundHandler.TriggerIdentifierMap.get("fallingstars").get("_"));
+                dynamicPriorities.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[0]));
+                dynamicFadeIn.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[1]));
+                dynamicFadeOut.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[35]));
+                dynamicDelay.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[4]));
+                triggerPersistence.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[3]));
+                if (Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("fallingstars")[33]))
+                    timeSwitch.add("fallingstars");
+                return true;
+            } else if (triggerPersistence.get("fallingstars") != null && triggerPersistence.get("fallingstars") > 0) {
+                dynamicSongs.put("fallingstars", SoundHandler.TriggerIdentifierMap.get("fallingstars").get("_"));
+                dynamicPriorities.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[0]));
+                dynamicFadeIn.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[1]));
+                dynamicFadeOut.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[35]));
+                dynamicDelay.put("fallingstars", Integer.parseInt(SoundHandler.TriggerInfoMap.get("fallingstars")[4]));
+                if (Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("fallingstars")[33]))
+                    timeSwitch.add("fallingstars");
+                return true;
+            }
         }
         return false;
     }
 
-    @Optional.Method(modid = "dsurround")
     private static String dynamicrain(List<String> events) {
-        if(SoundHandler.TriggerIdentifierMap.get("rainintensity")!=null) {
+        if(Loader.isModLoaded("dsurround") && SoundHandler.TriggerIdentifierMap.get("rainintensity")!=null) {
+            crashHelper = "rainintensity";
             for (String identifier : SoundHandler.TriggerIdentifierMap.get("rainintensity").keySet()) {
+                crashHelper = "rainintensity-" + identifier;
                 if (Weather.getIntensityLevel() > Float.parseFloat(SoundHandler.TriggerInfoMap.get("rainintensity-" + identifier)[2]) / 100F) {
                     if(!events.contains("rainintensity-" + identifier)) {
                         dynamicSongs.put("rainintensity-" + identifier, SoundHandler.TriggerIdentifierMap.get("rainintensity").get(identifier));
@@ -1377,11 +1325,12 @@ public class MusicPicker {
         return null;
     }
 
-    @Optional.Method(modid = "weather2")
     private static List<String> weatherTornado() {
         List<String> tempList = new ArrayList<>();
-        if(SoundHandler.TriggerIdentifierMap.get("tornado")!=null) {
+        if(Loader.isModLoaded("weather2") && SoundHandler.TriggerIdentifierMap.get("tornado")!=null) {
+            crashHelper = "tornado";
             for (String identifier : SoundHandler.TriggerIdentifierMap.get("tornado").keySet()) {
+                crashHelper = "tornado-" + identifier;
                 if (WeatherDataHelper.getWeatherManagerForClient() != null && WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition()), Integer.parseInt(SoundHandler.TriggerInfoMap.get("tornado-" + identifier)[11])) != null) {
                     StormObject storm = WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition()), Integer.parseInt(SoundHandler.TriggerInfoMap.get("tornado-" + identifier)[11]));
                     if (storm.levelCurIntensityStage >= Integer.parseInt(SoundHandler.TriggerInfoMap.get("tornado-" + identifier)[2])) {
@@ -1412,68 +1361,77 @@ public class MusicPicker {
         return tempList;
     }
 
-    @Optional.Method(modid = "weather2")
     private static boolean weatherHurricane() {
-        if (WeatherDataHelper.getWeatherManagerForClient() != null && WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition()), Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[11])) != null) {
-            StormObject storm = WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition()), Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[11]));
-            if (storm.isHurricane() && SoundHandler.TriggerIdentifierMap.get("hurricane")!=null) {
-                dynamicSongs.put("hurricane", SoundHandler.TriggerIdentifierMap.get("hurricane").get("_"));
-                dynamicPriorities.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[0]));
-                dynamicFadeIn.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[1]));
-                dynamicFadeOut.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[35]));
-                dynamicDelay.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[4]));
-                triggerPersistence.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[3]));
-                if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("hurricane")[33])) timeSwitch.add("hurricane");
-                return true;
-            } else if (triggerPersistence.get("hurricane")!=null && triggerPersistence.get("hurricane") > 0) {
-                dynamicSongs.put("hurricane", SoundHandler.TriggerIdentifierMap.get("hurricane").get("_"));
-                dynamicPriorities.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[0]));
-                dynamicFadeIn.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[1]));
-                dynamicFadeOut.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[35]));
-                dynamicDelay.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[4]));
-                if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("hurricane")[33])) timeSwitch.add("hurricane");
-                return true;
+        if(Loader.isModLoaded("weather2")) {
+            crashHelper = "hurricane";
+            if (WeatherDataHelper.getWeatherManagerForClient() != null && WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition()), Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[11])) != null) {
+                StormObject storm = WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition()), Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[11]));
+                if (storm.isHurricane() && SoundHandler.TriggerIdentifierMap.get("hurricane") != null) {
+                    dynamicSongs.put("hurricane", SoundHandler.TriggerIdentifierMap.get("hurricane").get("_"));
+                    dynamicPriorities.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[0]));
+                    dynamicFadeIn.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[1]));
+                    dynamicFadeOut.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[35]));
+                    dynamicDelay.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[4]));
+                    triggerPersistence.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[3]));
+                    if (Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("hurricane")[33]))
+                        timeSwitch.add("hurricane");
+                    return true;
+                } else if (triggerPersistence.get("hurricane") != null && triggerPersistence.get("hurricane") > 0) {
+                    dynamicSongs.put("hurricane", SoundHandler.TriggerIdentifierMap.get("hurricane").get("_"));
+                    dynamicPriorities.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[0]));
+                    dynamicFadeIn.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[1]));
+                    dynamicFadeOut.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[35]));
+                    dynamicDelay.put("hurricane", Integer.parseInt(SoundHandler.TriggerInfoMap.get("hurricane")[4]));
+                    if (Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("hurricane")[33]))
+                        timeSwitch.add("hurricane");
+                    return true;
+                }
             }
         }
         return false;
     }
 
-    @Optional.Method(modid = "weather2")
     private static boolean weatherSandstorm() {
-        if (WeatherDataHelper.getWeatherManagerForClient() != null && WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition()), Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[11])) != null) {
-            StormObject storm = WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition()), Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[11]));
-            if (storm.isHurricane() && SoundHandler.TriggerIdentifierMap.get("sandstorm")!=null) {
-                dynamicSongs.put("sandstorm", SoundHandler.TriggerIdentifierMap.get("sandstorm").get("_"));
-                dynamicPriorities.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[0]));
-                dynamicFadeIn.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[1]));
-                dynamicFadeOut.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[35]));
-                dynamicDelay.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[4]));
-                triggerPersistence.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[3]));
-                if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("sandstorm")[33])) timeSwitch.add("sandstorm");
-                return true;
-            } else if (triggerPersistence.get("sandstorm")!=null && triggerPersistence.get("sandstorm") > 0) {
-                dynamicSongs.put("sandstorm", SoundHandler.TriggerIdentifierMap.get("sandstorm").get("_"));
-                dynamicPriorities.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[0]));
-                dynamicFadeIn.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[1]));
-                dynamicFadeOut.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[35]));
-                dynamicDelay.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[4]));
-                if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("sandstorm")[33])) timeSwitch.add("sandstorm");
-                return true;
+        if(Loader.isModLoaded("weather2")) {
+            crashHelper = "sandstorm";
+            if (WeatherDataHelper.getWeatherManagerForClient() != null && WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition()), Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[11])) != null) {
+                StormObject storm = WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition()), Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[11]));
+                if (storm.isHurricane() && SoundHandler.TriggerIdentifierMap.get("sandstorm") != null) {
+                    dynamicSongs.put("sandstorm", SoundHandler.TriggerIdentifierMap.get("sandstorm").get("_"));
+                    dynamicPriorities.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[0]));
+                    dynamicFadeIn.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[1]));
+                    dynamicFadeOut.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[35]));
+                    dynamicDelay.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[4]));
+                    triggerPersistence.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[3]));
+                    if (Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("sandstorm")[33]))
+                        timeSwitch.add("sandstorm");
+                    return true;
+                } else if (triggerPersistence.get("sandstorm") != null && triggerPersistence.get("sandstorm") > 0) {
+                    dynamicSongs.put("sandstorm", SoundHandler.TriggerIdentifierMap.get("sandstorm").get("_"));
+                    dynamicPriorities.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[0]));
+                    dynamicFadeIn.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[1]));
+                    dynamicFadeOut.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[35]));
+                    dynamicDelay.put("sandstorm", Integer.parseInt(SoundHandler.TriggerInfoMap.get("sandstorm")[4]));
+                    if (Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("sandstorm")[33]))
+                        timeSwitch.add("sandstorm");
+                    return true;
+                }
             }
         }
         return false;
     }
 
-    @Optional.Method(modid = "sereneseasons")
     private static List<String> seasons() {
         List<String> tempList = new ArrayList<>();
-        if(SoundHandler.TriggerIdentifierMap.get("season")!=null) {
+        if(Loader.isModLoaded("sereneseasons") && SoundHandler.TriggerIdentifierMap.get("season")!=null) {
+            crashHelper = "season";
             for (String identifier : SoundHandler.TriggerIdentifierMap.get("season").keySet()) {
+                crashHelper = "season-" + identifier;
                 int seasonID = Integer.parseInt(SoundHandler.TriggerInfoMap.get("season-" + identifier)[2]);
                 ISeasonState curSeason = SeasonHelper.getSeasonState(world);
                 if (seasonID == 0 && curSeason.getSeason() == Season.SPRING) {
-                    if (!tempList.contains("season:" + seasonID)) {
-                        tempList.add("season:" + seasonID);
+                    if (!tempList.contains("season-" + seasonID)) {
+                        tempList.add("season-" + seasonID);
                         dynamicSongs.put("season-" + identifier, SoundHandler.TriggerIdentifierMap.get("season").get(identifier));
                         dynamicPriorities.put("season-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("season-" + identifier)[0]));
                         dynamicFadeIn.put("season-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("season-" + identifier)[1]));
@@ -1483,8 +1441,8 @@ public class MusicPicker {
                         if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("season-" + identifier)[33])) timeSwitch.add("season-" + identifier);
                     }
                 } else if (seasonID == 1 && curSeason.getSeason() == Season.SUMMER) {
-                    if (!tempList.contains("season:" + seasonID)) {
-                        tempList.add("season:" + seasonID);
+                    if (!tempList.contains("season-" + seasonID)) {
+                        tempList.add("season-" + seasonID);
                         dynamicSongs.put("season-" + identifier, SoundHandler.TriggerIdentifierMap.get("season").get(identifier));
                         dynamicPriorities.put("season-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("season-" + identifier)[0]));
                         dynamicFadeIn.put("season-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("season-" + identifier)[1]));
@@ -1494,8 +1452,8 @@ public class MusicPicker {
                         if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("season-" + identifier)[33])) timeSwitch.add("season-" + identifier);
                     }
                 } else if (seasonID == 2 && curSeason.getSeason() == Season.AUTUMN) {
-                    if (!tempList.contains("season:" + seasonID)) {
-                        tempList.add("season:" + seasonID);
+                    if (!tempList.contains("season-" + seasonID)) {
+                        tempList.add("season-" + seasonID);
                         dynamicSongs.put("season-" + identifier, SoundHandler.TriggerIdentifierMap.get("season").get(identifier));
                         dynamicPriorities.put("season-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("season-" + identifier)[0]));
                         dynamicFadeIn.put("season-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("season-" + identifier)[1]));
@@ -1505,8 +1463,8 @@ public class MusicPicker {
                         if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("season-" + identifier)[33])) timeSwitch.add("season-" + identifier);
                     }
                 } else if (seasonID == 3 && curSeason.getSeason() == Season.WINTER) {
-                    if (!tempList.contains("season:" + seasonID)) {
-                        tempList.add("season:" + seasonID);
+                    if (!tempList.contains("season-" + seasonID)) {
+                        tempList.add("season-" + seasonID);
                         dynamicSongs.put("season-" + identifier, SoundHandler.TriggerIdentifierMap.get("season").get(identifier));
                         dynamicPriorities.put("season-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("season-" + identifier)[0]));
                         dynamicFadeIn.put("season-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("season-" + identifier)[1]));
@@ -1516,8 +1474,8 @@ public class MusicPicker {
                         if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("season-" + identifier)[33])) timeSwitch.add("season-" + identifier);
                     }
                 } else if (triggerPersistence.get("season-" + identifier) != null && triggerPersistence.get("season-" + identifier) > 0) {
-                    if (!tempList.contains("season:" + seasonID)) {
-                        tempList.add("season:" + seasonID);
+                    if (!tempList.contains("season-" + seasonID)) {
+                        tempList.add("season-" + seasonID);
                         dynamicSongs.put("season-" + identifier, SoundHandler.TriggerIdentifierMap.get("season").get(identifier));
                         dynamicPriorities.put("season-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("season-" + identifier)[0]));
                         dynamicFadeIn.put("season-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("season-" + identifier)[1]));
@@ -1587,10 +1545,6 @@ public class MusicPicker {
         return mc.player.getStatFileWriter().readStat((StatBase) StatList.class.getField(stat.toUpperCase()).get(null))>level;
     }
 
-    public static String[] stringBreaker(String s, String regex) {
-        return s.split(regex);
-    }
-
     public static String allTriggersAsSingleString() {
         StringBuilder ret = new StringBuilder();
         for(String trigger : playableList) {
@@ -1604,7 +1558,7 @@ public class MusicPicker {
         StringBuilder ret = new StringBuilder();
         if (SoundHandler.TriggerIdentifierMap.get("menu") != null) {
             for (String song : SoundHandler.TriggerIdentifierMap.get("menu").get("_")) {
-                ret.append(configToml.songholder.get(song)).append(",");
+                ret.append(ConfigToml.songholder.get(song)).append(",");
             }
             if (ret.length() != 0) {
                 return player.getUniqueID()+","+ret.substring(0, ret.length() - 1);

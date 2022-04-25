@@ -3,7 +3,7 @@ package mods.thecomputerizer.musictriggers.common;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.objects.BlankRecord;
 import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
-import mods.thecomputerizer.musictriggers.config.configRegistry;
+import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
@@ -26,7 +26,7 @@ public class MusicTriggersItems {
 
     public void init() {
         SoundHandler.registerSounds();
-        if(configRegistry.registerDiscs) {
+        if(ConfigRegistry.registerDiscs) {
             allItemsWithTrigger = new HashMap<>();
             allItems = new ArrayList<>();
             for (SoundEvent s : SoundHandler.allSoundEvents) {

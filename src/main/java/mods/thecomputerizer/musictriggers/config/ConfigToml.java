@@ -10,7 +10,7 @@ import java.io.FileReader;
 import java.util.*;
 
 @SuppressWarnings({"ResultOfMethodCallIgnored", "ExplicitArgumentCanBeLambda"})
-public class configToml {
+public class ConfigToml {
     public static String CrashHelper;
 
     public static Map<String, String> songholder = new HashMap<>();
@@ -74,7 +74,7 @@ public class configToml {
                                                     "minecraft", "_", "16", "false", "100", "100", "100",
                                                     "false", "0", "minecraft", "true", "true", "0", "0", "nope",
                                                     "nope", "-111", "false","_", "true", "-1", "-111", "true",
-                                                    "false", "false", "false", "0"});
+                                                    "false", "false", "false", "0", "minecraft"});
                                             if (trigger.contains("priority")) {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                             }
@@ -194,6 +194,9 @@ public class configToml {
                                             if (trigger.contains("fade_out")) {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[35] = trigger.getString("fade_out");
                                             }
+                                            if (trigger.contains("mob_champion")) {
+                                                triggerholder.get("song" + songCounter).get(triggerID)[36] = trigger.getString("mob_champion");
+                                            }
                                         } else {
                                             MusicTriggers.logger.warn("Could not find trigger with name " + triggerID);
                                         }
@@ -215,7 +218,7 @@ public class configToml {
                                                 "minecraft", "_", "16", "false", "100", "100", "100",
                                                 "false", "0", "minecraft", "true", "true", "0", "0", "nope",
                                                 "nope", "-111", "false","_", "true", "-1", "-111", "true",
-                                                "false", "false", "false", "0"});
+                                                "false", "false", "false", "0", "minecraft"});
                                         if (trigger.contains("priority")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                         }
@@ -335,6 +338,9 @@ public class configToml {
                                         if (trigger.contains("fade_out")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[35] = trigger.getString("fade_out");
                                         }
+                                        if (trigger.contains("mob_champion")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[36] = trigger.getString("mob_champion");
+                                        }
                                     } else {
                                         MusicTriggers.logger.warn("Could not find trigger with name " + triggerID);
                                     }
@@ -364,10 +370,10 @@ public class configToml {
                                 Toml link = song.getTable("link");
                                 if (link.contains("default")) {
                                     if (link.contains("fade_in")) {
-                                        otherinfo.get("song" + songCounter)[5] = song.getString("fade_in");
+                                        otherinfo.get("song" + songCounter)[5] = link.getString("fade_in");
                                     }
                                     if (link.contains("fade_out")) {
-                                        otherinfo.get("song" + songCounter)[6] = song.getString("fade_out");
+                                        otherinfo.get("song" + songCounter)[6] = link.getString("fade_out");
                                     }
                                     if (link.containsTableArray("trigger")) {
                                         for (Toml trigger : link.getTables("trigger")) {
@@ -537,7 +543,7 @@ public class configToml {
                                                 "minecraft", "_", "16", "false", "100", "100", "100",
                                                 "false", "0", "minecraft", "true", "true", "0", "0", "nope",
                                                 "nope", "-111", "false","_", "true", "-1", "-111", "true",
-                                                "false", "false", "false", "0"});
+                                                "false", "false", "false", "0", "minecraft"});
                                         if (trigger.contains("priority")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                         }
@@ -657,6 +663,9 @@ public class configToml {
                                         if (trigger.contains("fade_out")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[35] = trigger.getString("fade_out");
                                         }
+                                        if (trigger.contains("mob_champion")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[36] = trigger.getString("mob_champion");
+                                        }
                                     } else {
                                         MusicTriggers.logger.warn("Could not find trigger with name " + triggerID);
                                     }
@@ -678,7 +687,7 @@ public class configToml {
                                             "minecraft", "_", "16", "false", "100", "100", "100",
                                             "false", "0", "minecraft", "true", "true", "0", "0", "nope",
                                             "nope", "-111", "false","_", "true", "-1", "-111", "true",
-                                            "false", "false", "false", "0"});
+                                            "false", "false", "false", "0", "minecraft"});
                                     if (trigger.contains("priority")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                     }
@@ -798,6 +807,9 @@ public class configToml {
                                     if (trigger.contains("fade_out")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[35] = trigger.getString("fade_out");
                                     }
+                                    if (trigger.contains("mob_champion")) {
+                                        triggerholder.get("song" + songCounter).get(triggerID)[36] = trigger.getString("mob_champion");
+                                    }
                                 } else {
                                     MusicTriggers.logger.warn("Could not find trigger with name " + triggerID);
                                 }
@@ -827,10 +839,10 @@ public class configToml {
                             Toml link = song.getTable("link");
                             if (link.contains("default")) {
                                 if (link.contains("fade_in")) {
-                                    otherinfo.get("song" + songCounter)[5] = song.getString("fade_in");
+                                    otherinfo.get("song" + songCounter)[5] = link.getString("fade_in");
                                 }
                                 if (link.contains("fade_out")) {
-                                    otherinfo.get("song" + songCounter)[6] = song.getString("fade_out");
+                                    otherinfo.get("song" + songCounter)[6] = link.getString("fade_out");
                                 }
                                 if (link.containsTableArray("trigger")) {
                                     for (Toml trigger : link.getTables("trigger")) {
@@ -849,6 +861,7 @@ public class configToml {
                                                 otherlinkinginfo.get("song" + songCounter).get(trigger.getString("song"))[1] = trigger.getString("volume");
                                             }
                                             if (trigger.contains("fade_in")) {
+                                                MusicTriggers.logger.warn("linked fading in not null!");
                                                 otherlinkinginfo.get("song" + songCounter).get(trigger.getString("song"))[2] = trigger.getString("fade_in");
                                             }
                                             if (trigger.contains("fade_out")) {

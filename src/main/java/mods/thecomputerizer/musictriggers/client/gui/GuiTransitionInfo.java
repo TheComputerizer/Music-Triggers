@@ -1,8 +1,8 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configObject;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import org.apache.commons.lang3.StringUtils;
@@ -18,9 +18,9 @@ public class GuiTransitionInfo extends GuiScreen {
     public boolean title;
     public GuiScreen parentScreen;
     public GuiScrollingTransitionsInfo scrollingSongs;
-    public configObject holder;
+    public ConfigObject holder;
 
-    public GuiTransitionInfo(GuiScreen parentScreen, configObject holder, int index, boolean create, boolean title, boolean ismoving, String name) {
+    public GuiTransitionInfo(GuiScreen parentScreen, ConfigObject holder, int index, boolean create, boolean title, boolean ismoving, String name) {
         this.parentScreen = parentScreen;
         this.index = index;
         this.holder = holder;
@@ -76,7 +76,7 @@ public class GuiTransitionInfo extends GuiScreen {
             this.addAddTitleButton();
             this.addAddSubtitleButton();
         }
-        eventsClient.renderDebug = false;
+        EventsClient.renderDebug = false;
     }
 
     private void addScrollable() {
@@ -174,6 +174,6 @@ public class GuiTransitionInfo extends GuiScreen {
 
     @Override
     public void onGuiClosed() {
-        eventsClient.renderDebug = true;
+        EventsClient.renderDebug = true;
     }
 }
