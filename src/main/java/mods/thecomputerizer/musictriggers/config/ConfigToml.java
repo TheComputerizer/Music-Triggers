@@ -119,6 +119,9 @@ public class ConfigToml {
                                             if (trigger.contains("identifier")) {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[10] = trigger.getString("identifier");
                                             }
+                                            else if (trigger.contains("id")) {
+                                                triggerholder.get("song" + songCounter).get(triggerID)[10] = trigger.getString("id");
+                                            }
                                             if (trigger.contains("detection_range")) {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[11] = trigger.getString("detection_range");
                                             }
@@ -262,6 +265,9 @@ public class ConfigToml {
                                         }
                                         if (trigger.contains("identifier")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[10] = trigger.getString("identifier");
+                                        }
+                                        else if (trigger.contains("id")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[10] = trigger.getString("id");
                                         }
                                         if (trigger.contains("detection_range")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[11] = trigger.getString("detection_range");
@@ -588,6 +594,9 @@ public class ConfigToml {
                                         if (trigger.contains("identifier")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[10] = trigger.getString("identifier");
                                         }
+                                        else if (trigger.contains("id")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[10] = trigger.getString("id");
+                                        }
                                         if (trigger.contains("detection_range")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[11] = trigger.getString("detection_range");
                                         }
@@ -731,6 +740,9 @@ public class ConfigToml {
                                     }
                                     if (trigger.contains("identifier")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[10] = trigger.getString("identifier");
+                                    }
+                                    else if (trigger.contains("id")) {
+                                        triggerholder.get("song" + songCounter).get(triggerID)[10] = trigger.getString("id");
                                     }
                                     if (trigger.contains("detection_range")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[11] = trigger.getString("detection_range");

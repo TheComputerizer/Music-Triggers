@@ -168,12 +168,9 @@ public class CalculateFeatures {
                     if (e.getHealth() / e.getMaxHealth() <= health / 100F) healthCounter++;
                     infernal = infernalChecker(e,i);
                     champion = championChecker(e,c);
-                    MusicTriggers.logger.info("victory: "+victory);
                     if (victory) {
-                        MusicTriggers.logger.info("victory moment");
                         victoryMobs.computeIfAbsent(triggerID, k -> new HashMap<>());
                         if (victoryMobs.get(triggerID).size() < num) {
-                            MusicTriggers.logger.info("Added victory mob");
                             victoryMobs.get(triggerID).put(e, timeout);
                         }
                     }
@@ -182,15 +179,11 @@ public class CalculateFeatures {
                     pass = true;
                 }
                 if (victoryMobs.get(triggerID) != null) {
-                    MusicTriggers.logger.info("victory mobs not null");
                     if (victoryMobs.get(triggerID).keySet().size() < num) {
                         victoryMobs = new HashMap<>();
-                        MusicTriggers.logger.info("victory mobs wrong number");
                     } else {
                         for (EntityLiving e : victoryMobs.get(triggerID).keySet()) {
-                            MusicTriggers.logger.info("check ded");
                             if (e.isDead || e.getHealth()==0) {
-                                MusicTriggers.logger.info("ded");
                                 victoryRet = true;
                                 break;
                             }
@@ -199,7 +192,6 @@ public class CalculateFeatures {
                 }
             }
         }
-        MusicTriggers.logger.info("victory: "+victoryRet);
         return triggerID+"@"+pass+"@"+victoryID+"@"+victoryRet+"$";
     }
 

@@ -217,7 +217,6 @@ public class MusicPlayer {
                 }
             }
             if (fadingOut && !reverseFade) {
-                fadeOutList = curTrackList;
                 String temp = sh.sndManager.invPlayingSounds.get(curMusic);
                 tempFadeIn = 0;
                 fadingIn = false;
@@ -256,7 +255,6 @@ public class MusicPlayer {
             } else if(fadingOut) {
                 String temp = sh.sndManager.invPlayingSounds.get(curMusic);
                 if (tempFadeOut >= savedFadeOut) {
-                    fadeOutList = null;
                     fadingOut = false;
                     reverseFade = false;
                     curMusic.setVolume(saveVolOut);
@@ -315,6 +313,7 @@ public class MusicPlayer {
                     }
                     if (curTrackList == null && !finish) {
                         curTrackList = holder;
+                        if(fadeOutList==null) fadeOutList = holder;
                         if(!nullFromLink) {
                             fadingIn = true;
                             startQuiet = true;
@@ -412,7 +411,6 @@ public class MusicPlayer {
                                                 fadeInLinkerMax.put("song-" + linkcounter,Integer.parseInt(ConfigToml.otherlinkinginfo.get(curTrack).get(song)[2]));
                                                 fadeOutLinker.put("song-" + linkcounter,Integer.parseInt(ConfigToml.otherlinkinginfo.get(curTrack).get(song)[3]));
                                                 fadeOutLinkerMax.put("song-" + linkcounter,Integer.parseInt(ConfigToml.otherlinkinginfo.get(curTrack).get(song)[3]));
-                                                MusicTriggers.logger.info("Fade out ticks for linked song: "+linkcounter+": "+ConfigToml.otherlinkinginfo.get(curTrack).get(song)[3]);
                                                 if(ConfigToml.linkingLoopPoints.get(curTrack)!=null && ConfigToml.linkingLoopPoints.get(curTrack).get(song)!=null) {
                                                     for (int l : ConfigToml.linkingLoopPoints.get(curTrack).get(song).keySet()) {
                                                         loopLinker.putIfAbsent("song-" + linkcounter, new HashMap<>());
