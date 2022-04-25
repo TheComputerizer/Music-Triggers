@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
-import mods.thecomputerizer.musictriggers.config.configObject;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.ObjectSelectionList;
@@ -15,7 +15,7 @@ public class GuiScrollingLinking extends ObjectSelectionList<GuiScrollingLinking
 
     private final GuiLinking IN;
     public int index;
-    public configObject holder;
+    public ConfigObject holder;
 
     public GuiScrollingLinking(Minecraft client, int width, int height, int top, int bottom, List<String> songs, GuiLinking IN) {
         super(client, width, height, top, bottom, 32);

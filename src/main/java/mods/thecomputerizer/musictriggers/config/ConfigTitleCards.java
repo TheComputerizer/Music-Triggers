@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
-public class configTitleCards {
+public class ConfigTitleCards {
 
     public static String CrashHelper;
     public static HashMap<Integer, Title> titlecards = new HashMap<>();
@@ -216,10 +216,10 @@ public class configTitleCards {
     }
 
     private static void formatImages() {
-        for (int i : configTitleCards.imagecards.keySet()) {
+        for (int i : ConfigTitleCards.imagecards.keySet()) {
             ResourceLocation rl;
             if(ismoving.get(i)) {
-                if (configTitleCards.imagecards.get(i).getName() != null) {
+                if (ConfigTitleCards.imagecards.get(i).getName() != null) {
                     String path = "." + "/config/MusicTriggers/songs/assets/musictriggers/textures/" + imagecards.get(i).getName();
                     File folder = new File(path);
                     File findMP4 = new File(path + ".mp4");
@@ -229,7 +229,7 @@ public class configTitleCards {
                     if (findMP4.exists()) {
                         try {
                             folder.mkdir();
-                            MP4Handler.splitMP4(findMP4, folder, configTitleCards.imagecards.get(i).getSkip());
+                            MP4Handler.splitMP4(findMP4, folder, ConfigTitleCards.imagecards.get(i).getSkip());
                             if(!findMP4.delete()) {
                                 FileDeleteStrategy.FORCE.delete(findMP4);
                             }
@@ -266,7 +266,7 @@ public class configTitleCards {
                             File[] listOfPNG = folder.listFiles();
                             assert listOfPNG != null;
                             for (File f : listOfPNG) {
-                                rl = new ResourceLocation(MusicTriggers.MODID, "textures/" + configTitleCards.imagecards.get(i).getName() + "/" + f.getName());
+                                rl = new ResourceLocation(MusicTriggers.MODID, "textures/" + ConfigTitleCards.imagecards.get(i).getName() + "/" + f.getName());
                                 try {
                                     BufferedImage image = ImageIO.read(new File("." + "/config/MusicTriggers/songs/assets/musictriggers/textures/" + imagecards.get(i).getName() + "/" + f.getName()));
                                     imageDimensions.put(rl, new ImageDimensions());

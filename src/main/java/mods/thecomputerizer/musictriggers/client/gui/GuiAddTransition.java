@@ -3,8 +3,8 @@ package mods.thecomputerizer.musictriggers.client.gui;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configObject;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
@@ -18,9 +18,9 @@ public class GuiAddTransition extends Screen {
 
     public Screen parentScreen;
     private final ResourceLocation background;
-    public configObject holder;
+    public ConfigObject holder;
 
-    public GuiAddTransition(Screen parentScreen, configObject holder) {
+    public GuiAddTransition(Screen parentScreen, ConfigObject holder) {
         super(new TranslatableComponent("screen.musictriggers.add_transition"));
         this.parentScreen = parentScreen;
         this.holder = holder;
@@ -41,7 +41,7 @@ public class GuiAddTransition extends Screen {
         this.addBackButton();
         this.addTitleCardButton();
         this.addImageCardButton();
-        eventsClient.renderDebug = false;
+        EventsClient.renderDebug = false;
     }
 
     private void addBackButton() {
@@ -89,7 +89,7 @@ public class GuiAddTransition extends Screen {
 
     @Override
     public void onClose() {
-        eventsClient.renderDebug = true;
+        EventsClient.renderDebug = true;
         super.onClose();
     }
 }

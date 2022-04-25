@@ -6,9 +6,9 @@ import com.mojang.blaze3d.vertex.*;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.MusicPicker;
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configObject;
-import mods.thecomputerizer.musictriggers.util.json;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
+import mods.thecomputerizer.musictriggers.util.Json;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -25,9 +25,9 @@ public class GuiMain extends Screen {
 
     public boolean reload;
     private final ResourceLocation background;
-    public configObject holder;
+    public ConfigObject holder;
 
-    public GuiMain(configObject holder) {
+    public GuiMain(ConfigObject holder) {
         super(new TranslatableComponent("screen.musictriggers.main"));
         this.reload = false;
         this.background = new ResourceLocation(MusicTriggers.MODID,"textures/block/recorder_side_active.png");
@@ -63,7 +63,7 @@ public class GuiMain extends Screen {
         this.addTransitionsButton();
         this.addDebugButton();
         this.addCurrentSongButton();
-        eventsClient.renderDebug = false;
+        EventsClient.renderDebug = false;
     }
 
     private void addApplyButton() {
@@ -92,7 +92,7 @@ public class GuiMain extends Screen {
         this.addRenderableWidget(new Button(this.width / 2 - 175, this.height / 2 - 10, 150, 20, new TranslatableComponent("screen.musictriggers.button.add_songs"),
                 (button) -> {
                     assert this.minecraft != null;
-                    this.minecraft.setScreen(new GuiAddSongs(this, json.allSongs, holder, null));
+                    this.minecraft.setScreen(new GuiAddSongs(this, Json.allSongs, holder, null));
                 }));
     }
 
@@ -132,14 +132,14 @@ public class GuiMain extends Screen {
 
     @Override
     public void onClose() {
-        eventsClient.renderDebug = true;
+        EventsClient.renderDebug = true;
         if(this.reload) {
             assert this.minecraft != null;
             if (this.minecraft.player!=null) {
                 this.minecraft.getSoundManager().stop();
                 MusicPicker.player.sendMessage(new TranslatableComponent("musictriggers.reloading").withStyle(ChatFormatting.RED).withStyle(ChatFormatting.ITALIC), MusicPicker.player.getUUID());
                 MusicPlayer.reloading = true;
-                eventsClient.reloadCounter = 5;
+                EventsClient.reloadCounter = 5;
             }
         }
         super.onClose();

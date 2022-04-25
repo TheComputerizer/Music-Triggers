@@ -17,7 +17,7 @@ apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'maven-publish'
 
-version = '1.18.1-5.1'
+version = '1.18.1-5.2'
 group = 'mods.thecomputerizer.musictriggers'
 archivesBaseName = 'musictriggers'
 
@@ -93,6 +93,7 @@ dependencies {
     implementation fg.deobf("curse.maven:enhanced-celestials-438447:3544493")
     implementation fg.deobf("curse.maven:serene-seasons-291874:3599020")
     implementation fg.deobf("curse.maven:atomicstrykers-infernal-mobs-227875:3556335")
+    implementation fg.deobf("curse.maven:champions-307152:3765992")
 }
 
 shadowJar {
@@ -126,9 +127,9 @@ jar {
         attributes([
                 "Specification-Title"     : "musictriggers",
                 "Specification-Vendor"    : "The_Computerizer",
-                "Specification-Version"   : "5.1",
+                "Specification-Version"   : "5.2",
                 "Implementation-Title"    : project.name,
-                "Implementation-Version"  : project.jar.archiveVersion,
+                "Implementation-Version"  : "5.2",
                 "Implementation-Vendor"   : "The_Computerizer",
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
                 "TweakClass": "org.spongepowered.asm.launch.MixinTweaker",

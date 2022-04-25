@@ -5,7 +5,7 @@ import javazoom.jl.converter.Converter;
 import java.io.File;
 import java.io.FileInputStream;
 
-public class audioConverter {
+public class AudioConverter {
 
     public static void mp3ToOgg(File source, File folder, String name){
         File target = new File(folder,name);

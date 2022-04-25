@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
+
 public class CurSong {
     public static HashMap<UUID,String> curSong = new HashMap<>();
     private String s;
@@ -38,15 +40,11 @@ public class CurSong {
         if(s==null) {
             return null;
         }
-        return stringBreaker(s)[0];
+        return stringBreaker(s,",")[0];
     }
 
     public UUID getDataUUID() {
-        return UUID.fromString(stringBreaker(s)[1]);
-    }
-
-    public static String[] stringBreaker(String s) {
-        return s.split(",");
+        return UUID.fromString(stringBreaker(s,",")[1]);
     }
 }
 

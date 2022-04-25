@@ -30,8 +30,7 @@ public class SetVolumeSound implements SoundInstance {
     protected int repeatDelay;
     protected SoundInstance.Attenuation attenuationType;
 
-    public SetVolumeSound(ResourceLocation soundId, SoundSource categoryIn, float volume, float pitch, boolean repeat, int repeatDelay, SoundInstance.Attenuation soundAttenuation, float xPosF, float yPosF, float zPosF)
-    {
+    public SetVolumeSound(ResourceLocation soundId, SoundSource categoryIn, float volume, float pitch, boolean repeat, int repeatDelay, SoundInstance.Attenuation soundAttenuation, float xPosF, float yPosF, float zPosF) {
         this.positionedSoundLocation = soundId;
         this.category = categoryIn;
         this.volume = volume;
@@ -44,13 +43,11 @@ public class SetVolumeSound implements SoundInstance {
         this.zPosF = zPosF;
     }
 
-    public ResourceLocation getLocation()
-    {
+    public ResourceLocation getLocation() {
         return this.positionedSoundLocation;
     }
 
-    public WeighedSoundEvents resolve(SoundManager handler)
-    {
+    public WeighedSoundEvents resolve(SoundManager handler) {
         WeighedSoundEvents soundeventaccessor = handler.getSoundEvent(this.positionedSoundLocation);
         if (soundeventaccessor == null) {
             this.sound = SoundManager.EMPTY_SOUND;
@@ -61,60 +58,51 @@ public class SetVolumeSound implements SoundInstance {
         return soundeventaccessor;
     }
 
-    public Sound getSound()
-    {
+    public Sound getSound() {
         return this.sound;
     }
 
-    public SoundSource getSource()
-    {
+    public SoundSource getSource() {
         return this.category;
     }
 
-    public boolean isLooping()
-    {
+    public boolean isLooping() {
         return this.repeat;
     }
 
-    public boolean isRelative()
-    {
+    public boolean isRelative() {
         return false;
     }
 
-    public int getDelay()
-    {
+    public int getDelay() {
         return this.repeatDelay;
     }
 
-    public float getVolume()
-    {
+    public float getVolume() {
         return this.volume * this.sound.getVolume();
     }
 
-    public float getPitch()
-    {
+    public float getPitch() {
         return this.pitch * this.sound.getPitch();
     }
 
-    public double getX()
-    {
+    public double getX() {
         return this.xPosF;
     }
 
-    public double getY()
-    {
+    public double getY() {
         return this.yPosF;
     }
 
-    public double getZ()
-    {
+    public double getZ() {
         return this.zPosF;
     }
 
-    public SoundInstance.Attenuation getAttenuation()
-    {
+    public SoundInstance.Attenuation getAttenuation() {
         return this.attenuationType;
     }
 
-    public void setVolume(float vol) { this.volume = vol;}
+    public void setVolume(float vol) {
+        this.volume = vol;
+    }
 }

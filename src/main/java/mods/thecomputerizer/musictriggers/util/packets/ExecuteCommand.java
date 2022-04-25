@@ -38,9 +38,6 @@ public class ExecuteCommand {
     }
 
     public String getLiteralCommand() {
-        if(s==null) {
-            return null;
-        }
         return s;
     }
 }
