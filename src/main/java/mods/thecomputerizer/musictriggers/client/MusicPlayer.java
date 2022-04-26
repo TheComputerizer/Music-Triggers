@@ -241,6 +241,8 @@ public class MusicPlayer {
                 fadingIn = false;
                 if(entry!=null && entry.channel!=null) {
                     if (tempFadeOut == 0) {
+                        oncePerTrigger = new ArrayList<>();
+                        onceUntilEmpty = new ArrayList<>();
                         fadeOutList = null;
                         removeTrack(trackToDelete, indexToDelete, playedEvents, playedMusic);
                         fadingOut = false;
@@ -368,7 +370,6 @@ public class MusicPlayer {
                     }
                     if(!finish) {
                         if (MusicPicker.shouldChange || !curTrackList.equals(holder)) {
-                            removeTrack(trackToDelete,indexToDelete,playedEvents,playedMusic);
                             if(curTrackList.size()!=0) changeTrack();
                             else curTrackList = null;
                         } else if (curMusic == null && mc.options.getSoundSourceVolume(SoundCategory.MASTER) > 0 && mc.options.getSoundSourceVolume(SoundCategory.MUSIC) > 0) {
@@ -476,14 +477,22 @@ public class MusicPlayer {
                                         }
                                         sh.play(musicLinker.get(checkThis));
                                     }
-                                    curMusicSource = sh.soundEngine.instanceToChannel.get(curMusic).channel;
-                                    if (Integer.parseInt(ConfigToml.otherinfo.get(curTrack)[1])==1) onceUntilEmpty.add(curTrack);
-                                    if (Integer.parseInt(ConfigToml.otherinfo.get(curTrack)[1])==2) oncePerTrigger.add(curTrack);
-                                    else if (Integer.parseInt(ConfigToml.otherinfo.get(curTrack)[1])==3) {
-                                        trackToDelete = curTrack;
-                                        indexToDelete = i;
-                                        playedEvents = MusicPicker.titleCardEvents;
-                                        playedMusic = curMusic;
+                                    if(sh.soundEngine.instanceToChannel.get(curMusic)!=null) {
+                                        curMusicSource = sh.soundEngine.instanceToChannel.get(curMusic).channel;
+                                        if (Integer.parseInt(ConfigToml.otherinfo.get(curTrack)[1]) == 1)
+                                            onceUntilEmpty.add(curTrack);
+                                        if (Integer.parseInt(ConfigToml.otherinfo.get(curTrack)[1]) == 2)
+                                            oncePerTrigger.add(curTrack);
+                                        else if (Integer.parseInt(ConfigToml.otherinfo.get(curTrack)[1]) == 3) {
+                                            trackToDelete = curTrack;
+                                            indexToDelete = i;
+                                            playedEvents = MusicPicker.titleCardEvents;
+                                            playedMusic = curMusic;
+                                        }
+                                    } else {
+                                        MusicTriggers.logger.debug("Music that tried to play was null! Resetting");
+                                        curMusic = null;
+                                        fadingIn = false;
                                     }
                                 } else curTrackList = null;
                             }
@@ -697,8 +706,6 @@ public class MusicPlayer {
                 MusicTriggers.logger.warn("Index of current music was null! Falling back to default fade out volume. You should report this");
                 curLinkNum = "song-"+0;
             }
-            oncePerTrigger = new ArrayList<>();
-            onceUntilEmpty = new ArrayList<>();
             triggerLinker = new HashMap<>();
             if(!fadingOut) {
                 fadingOut = true;
