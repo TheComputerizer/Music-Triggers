@@ -770,10 +770,10 @@ public class MusicPicker {
                     for (String identifier : SoundHandler.TriggerIdentifierMap.get("biome").keySet()) {
                         crashHelper = "biome-"+identifier;
                         packetBuilder.append("biome-").append(identifier).append("@").append(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[9]).append("@")
-                                .append(roundedPos(player).asLong()).append("@").append(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[23])
-                                .append(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[24]).append(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[25])
-                                .append(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[26]).append(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[30])
-                                .append(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[31]).append("$");
+                                .append(roundedPos(player).asLong()).append("@").append(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[23]).append("@")
+                                .append(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[24]).append("@").append(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[25])
+                                .append("@").append(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[26]).append("@").append(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[30])
+                                .append("@").append(SoundHandler.TriggerInfoMap.get("biome-" + identifier)[31]).append("$");
                         FromServer.inBiome.putIfAbsent("biome-" + identifier, false);
                         if (FromServer.inBiome.get("biome-" + identifier)) {
                             if (!events.contains("biome-" + identifier)) {
