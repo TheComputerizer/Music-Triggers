@@ -320,6 +320,7 @@ public class MusicPlayer {
                             }
                         }
                     }
+                    if(curMusic==null) finish = false;
                     if (curTrackList == null && !finish) {
                         curTrackList = holder;
                         if(fadeOutList==null) fadeOutList = holder;

@@ -31,7 +31,7 @@ public final class RegistryHandler {
         if(ConfigRegistry.registerDiscs) {
             registerBlocks();
             registerItems();
-            registerSoundEvents();
         }
+        registerSoundEvents();
     }
 }
