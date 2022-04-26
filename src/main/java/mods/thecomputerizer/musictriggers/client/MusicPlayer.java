@@ -348,6 +348,7 @@ public class MusicPlayer {
                             curMusicSource = null;
                             delay = true;
                             delayTime = MusicPicker.curDelay;
+                            removeTrack(trackToDelete,indexToDelete,playedEvents,playedMusic);
                         }
                     }
                     if(!finish) {
