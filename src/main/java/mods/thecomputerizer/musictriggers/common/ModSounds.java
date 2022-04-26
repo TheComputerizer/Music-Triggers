@@ -26,7 +26,7 @@ public class ModSounds {
         List<SoundEvent> sounds = SoundHandler.allSoundEvents;
         for(SoundEvent s: sounds) {
             String songName = Objects.requireNonNull(s.getRegistryName()).toString().replaceAll("musictriggers:","");
-            if(ConfigRegistry.registerDiscs) {
+            if(!ConfigRegistry.clientSideOnly) {
                 SOUNDS.register(songName, () -> new SoundEvent(new ResourceLocation(MusicTriggers.MODID + ":music." + songName)));
                 MusicTriggers.logger.info(songName+" is being initialized at resource location "+new ResourceLocation(MusicTriggers.MODID+":music." + songName));
             }
