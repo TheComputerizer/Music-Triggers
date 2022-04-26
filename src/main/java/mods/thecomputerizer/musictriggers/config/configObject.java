@@ -11,7 +11,9 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class configObject {
+import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
+
+public class ConfigObject {
     private final Map<String, String> songholder;
     private final Map<String, Map<String, String[]>> triggerholder;
     private final Map<String, Map<String, String>> triggerMapper;
@@ -20,8 +22,8 @@ public class configObject {
     private final Map<String, Map<String, String[]>> triggerlinking;
     private final Map<String, Map<Integer, String[]>> loopPoints;
     private final Map<String, Map<String, Map<Integer, String[]>>> linkingLoopPoints;
-    private final Map<Integer, configTitleCards.Title> titlecards;
-    private final Map<Integer, configTitleCards.Image> imagecards;
+    private final Map<Integer, ConfigTitleCards.Title> titlecards;
+    private final Map<Integer, ConfigTitleCards.Image> imagecards;
     private final Map<Integer, Boolean> ismoving;
     private final List<String> blockedmods;
     private final List<String> debugStuff;
@@ -42,15 +44,15 @@ public class configObject {
             "minecraft", "_", "16", "false", "100", "100", "100",
             "false", "0", "minecraft", "true", "true", "0", "0", "nope",
             "nope", "-111", "false","_", "true", "-1", "-111", "true",
-            "false", "false", "false", "0"};
+            "false", "false", "false", "0", "minecraft"};
     public static final String[] linkingInfoDefaults = new String[]{"1", "1", "0", "0"};
     public static final String[] titleInfoDefaults = new String[]{"false", "red", "white", "false"};
     public static final String[] imageInfoDefaults = new String[]{"name", "750","0", "0", "100", "100", "false", "10", "10", "false", "10", "0", "4"};
 
-    private configObject(Map<String, String> songholder, Map<String, Map<String, String[]>> triggerholder, Map<String, Map<String, String>> triggerMapper, Map<String, String[]> otherinfo,
+    private ConfigObject(Map<String, String> songholder, Map<String, Map<String, String[]>> triggerholder, Map<String, Map<String, String>> triggerMapper, Map<String, String[]> otherinfo,
                          Map<String, Map<String, String[]>> otherlinkinginfo, Map<String, Map<String, String[]>> triggerlinking, Map<String, Map<Integer, String[]>> loopPoints,
-                         Map<String, Map<String, Map<Integer, String[]>>> linkingLoopPoints, Map<Integer, configTitleCards.Title> titlecards,
-                         Map<Integer, configTitleCards.Image> imagecards, Map<Integer, Boolean> ismoving, List<String> blockedmods, List<String> debugStuff) {
+                         Map<String, Map<String, Map<Integer, String[]>>> linkingLoopPoints, Map<Integer, ConfigTitleCards.Title> titlecards,
+                         Map<Integer, ConfigTitleCards.Image> imagecards, Map<Integer, Boolean> ismoving, List<String> blockedmods, List<String> debugStuff) {
         this.songholder = songholder;
         this.triggerholder = triggerholder;
         this.triggerMapper = triggerMapper;
@@ -77,29 +79,29 @@ public class configObject {
         this.registrationConfig = new File("config/MusicTriggers/registration.toml");
     }
 
-    private static Map<Integer, configTitleCards.Image> fixNullImageCards(Map<Integer, configTitleCards.Image> input) {
+    private static Map<Integer, ConfigTitleCards.Image> fixNullImageCards(Map<Integer, ConfigTitleCards.Image> input) {
         return input.entrySet().stream().filter(entry -> entry.getValue().getName()!=null).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     private static List<String> compileDebugStuff() {
         List<String> ret = new ArrayList<>();
-        ret.add(configDebug.ShowDebugInfo+"");
-        ret.add(configDebug.ShowJustCurSong+"");
-        ret.add(configDebug.ShowGUIName+"");
-        ret.add(configDebug.SilenceIsBad+"");
-        ret.add(configRegistry.registerDiscs+"");
-        ret.add(configRegistry.clientSideOnly+"");
+        ret.add(ConfigDebug.ShowDebugInfo+"");
+        ret.add(ConfigDebug.ShowJustCurSong+"");
+        ret.add(ConfigDebug.ShowGUIName+"");
+        ret.add(ConfigDebug.SilenceIsBad+"");
+        ret.add(ConfigRegistry.registerDiscs+"");
+        ret.add(ConfigRegistry.clientSideOnly+"");
         return ret;
     }
 
-    public static configObject createFromCurrent() {
+    public static ConfigObject createFromCurrent() {
         Cloner cloner=new Cloner();
         List<String> blocked = new ArrayList<>();
-        blocked.addAll(Arrays.asList(configDebug.blockedmods));
-        return new configObject(cloner.deepClone(configToml.songholder),cloner.deepClone(configToml.triggerholder),cloner.deepClone(configToml.triggerMapper),cloner.deepClone(configToml.otherinfo),
-                cloner.deepClone(configToml.otherlinkinginfo),cloner.deepClone(configToml.triggerlinking),cloner.deepClone(configToml.loopPoints),
-                cloner.deepClone(configToml.linkingLoopPoints),cloner.deepClone(configTitleCards.titlecards),cloner.deepClone(configTitleCards.imagecards),
-                cloner.deepClone(configTitleCards.ismoving),cloner.deepClone(blocked),cloner.deepClone(compileDebugStuff()));
+        blocked.addAll(Arrays.asList(ConfigDebug.blockedmods));
+        return new ConfigObject(cloner.deepClone(ConfigToml.songholder),cloner.deepClone(ConfigToml.triggerholder),cloner.deepClone(ConfigToml.triggerMapper),cloner.deepClone(ConfigToml.otherinfo),
+                cloner.deepClone(ConfigToml.otherlinkinginfo),cloner.deepClone(ConfigToml.triggerlinking),cloner.deepClone(ConfigToml.loopPoints),
+                cloner.deepClone(ConfigToml.linkingLoopPoints),cloner.deepClone(ConfigTitleCards.titlecards),cloner.deepClone(ConfigTitleCards.imagecards),
+                cloner.deepClone(ConfigTitleCards.ismoving),cloner.deepClone(blocked),cloner.deepClone(compileDebugStuff()));
     }
 
     public List<String> getAllDebugStuff() {
@@ -289,7 +291,7 @@ public class configObject {
                 "minecraft", "_", "16", "false", "100", "100", "100",
                 "false", "0", "minecraft", "true", "true", "0", "0", "nope",
                 "nope", "-111", "false","_", "true", "-1", "-111", "true",
-                "false", "false", "false", "0"});
+                "false", "false", "false", "0", "minecraft"});
         return codedTrigger;
     }
 
@@ -319,11 +321,11 @@ public class configObject {
         int index;
         if(title) {
             index = this.titlecards.size();
-            this.titlecards.put(index, new configTitleCards.Title());
+            this.titlecards.put(index, new ConfigTitleCards.Title());
         } else {
             index = this.imagecards.size();
             MusicTriggers.logger.info(index);
-            this.imagecards.put(index, new configTitleCards.Image());
+            this.imagecards.put(index, new ConfigTitleCards.Image());
             this.imagecards.get(index).setName(name);
             this.ismoving.put(index, ismoving);
             this.markImageInfoForWriting.putIfAbsent(index, new ArrayList<>());
@@ -628,7 +630,7 @@ public class configObject {
         }
     }
 
-    private String[] titleInfoToArray(configTitleCards.Title title) {
+    private String[] titleInfoToArray(ConfigTitleCards.Title title) {
         List<String> ret = new ArrayList<>();
         ret.add(title.getPlayonce().toString());
         ret.add(title.getTitlecolor());
@@ -637,7 +639,7 @@ public class configObject {
         return ret.toArray(new String[0]);
     }
 
-    private String[] imageInfoToArray(configTitleCards.Image image) {
+    private String[] imageInfoToArray(ConfigTitleCards.Image image) {
         List<String> ret = new ArrayList<>();
         ret.add(image.getName());
         ret.add(image.getTime()+"");
@@ -1004,9 +1006,5 @@ public class configObject {
             if(MusicPicker.universalFadeIn!=0) builder.append("\nfade_in = \"").append(MusicPicker.universalFadeIn).append("\"\n");
             if(MusicPicker.universalFadeOut!=0) builder.append("\nfade_out = \"").append(MusicPicker.universalFadeOut).append("\"\n");
         }
-    }
-
-    public static String[] stringBreaker(String s, String regex) {
-        return s.split(regex);
     }
 }

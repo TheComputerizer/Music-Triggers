@@ -5,43 +5,39 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
 
-public class AllTriggers {
-
+public class SendTriggerData {
     private String s;
 
-    public AllTriggers(FriendlyByteBuf buf) {
+    public SendTriggerData(FriendlyByteBuf buf) {
         this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
     }
 
-    public AllTriggers(String name) {
-        this.s = name;
+    public SendTriggerData(String triggerData, UUID playerUUID) {
+        this.s = triggerData+"/"+playerUUID;
     }
 
-    public static void encode(AllTriggers packet, FriendlyByteBuf buf) {
+    public static void encode(SendTriggerData packet, FriendlyByteBuf buf) {
         buf.writeCharSequence(packet.s, StandardCharsets.UTF_8);
     }
 
-    public static void handle(final AllTriggers packet, Supplier<NetworkEvent.Context> context) {
+    public static void handle(final SendTriggerData packet, Supplier<NetworkEvent.Context> context) {
         NetworkEvent.Context ctx = context.get();
         ctx.enqueueWork(() -> {
         });
-
-        CalculateFeatures.allTriggers = packet.getTriggers();
-
+        CalculateFeatures.calculateServerTriggers(stringBreaker(packet.getTriggerData(),"#"), packet.getPlayerUUID());
         ctx.setPacketHandled(true);
     }
 
-    public List<String> getTriggers() {
-        if(s==null) {
-            return null;
-        }
-        return new ArrayList<>(Arrays.asList(stringBreaker(s,",")));
+    public String getTriggerData() {
+        return stringBreaker(this.s,"/")[0];
+    }
+
+    public UUID getPlayerUUID() {
+        return UUID.fromString(s.substring(s.lastIndexOf("/") + 1));
     }
 }

@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import mods.thecomputerizer.musictriggers.config.configObject;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.ObjectSelectionList;
 import net.minecraft.client.gui.screens.Screen;
@@ -16,9 +16,9 @@ public class GuiScrollingTrigger extends ObjectSelectionList<GuiScrollingTrigger
 
     private final Screen IN;
     private final String songCode;
-    private final configObject holder;
+    private final ConfigObject holder;
 
-    public GuiScrollingTrigger(Minecraft client, int width, int height, int top, int bottom, List<String> triggers, Screen IN, configObject holder, String songCode) {
+    public GuiScrollingTrigger(Minecraft client, int width, int height, int top, int bottom, List<String> triggers, Screen IN, ConfigObject holder, String songCode) {
         super(client, width, height, top, bottom, 32);
         this.IN = IN;
         this.songCode = songCode;

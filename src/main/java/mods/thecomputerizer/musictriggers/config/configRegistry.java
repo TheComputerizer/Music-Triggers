@@ -5,7 +5,7 @@ import com.moandjiezana.toml.Toml;
 import java.io.File;
 import java.io.FileWriter;
 
-public class configRegistry {
+public class ConfigRegistry {
     public static boolean registerDiscs = true;
     public static boolean clientSideOnly = false;
 

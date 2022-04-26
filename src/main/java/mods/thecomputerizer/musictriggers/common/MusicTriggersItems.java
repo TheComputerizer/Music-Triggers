@@ -3,7 +3,7 @@ package mods.thecomputerizer.musictriggers.common;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.objects.BlankRecord;
 import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
-import mods.thecomputerizer.musictriggers.config.configRegistry;
+import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
@@ -27,7 +27,7 @@ public class MusicTriggersItems {
 
     public void init() {
         SoundHandler.registerSounds();
-        if(configRegistry.registerDiscs) {
+        if(ConfigRegistry.registerDiscs) {
             for (SoundEvent s : SoundHandler.allSoundEvents) {
                 String name = Objects.requireNonNull(s.getRegistryName()).toString().replaceAll("musictriggers:", "");
                 ITEMS.register(name, () -> new MusicTriggersRecord(15, s, new Item.Properties().rarity(Rarity.EPIC).fireResistant()));

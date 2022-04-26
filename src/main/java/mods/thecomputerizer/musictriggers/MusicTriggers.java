@@ -1,14 +1,14 @@
 package mods.thecomputerizer.musictriggers;
 
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
-import mods.thecomputerizer.musictriggers.client.eventsClient;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.client.gui.Mappings;
-import mods.thecomputerizer.musictriggers.common.eventsCommon;
+import mods.thecomputerizer.musictriggers.common.EventsCommon;
 import mods.thecomputerizer.musictriggers.config.*;
 import mods.thecomputerizer.musictriggers.util.CustomTick;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
-import mods.thecomputerizer.musictriggers.util.json;
+import mods.thecomputerizer.musictriggers.util.Json;
 import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.server.packs.repository.RepositorySource;
 import net.minecraftforge.api.distmarker.Dist;
@@ -46,6 +46,7 @@ public class MusicTriggers {
 
     public static final Logger logger = LogManager.getLogger();
 
+    @SuppressWarnings("InstantiationOfUtilityClass")
     public MusicTriggers() {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::commonsetup);
@@ -97,7 +98,7 @@ public class MusicTriggers {
                 }
             }
             File jjson = new File(musictriggersDir.getPath() + "/sounds.json");
-            if (!jjson.exists() && json.collector()!=null) {
+            if (!jjson.exists() && Json.collector()!=null) {
                 try {
                     jjson.createNewFile();
                 } catch (IOException ex) {
@@ -119,14 +120,14 @@ public class MusicTriggers {
             Mappings.init();
             makeSoundsJson();
             makeDiscLang();
-            configToml.parse();
-            configCommands.parse();
-            configTitleCards.parse();
-            if(json.collector()!=null) {
+            ConfigToml.parse();
+            ConfigCommands.parse();
+            ConfigTitleCards.parse();
+            if(Json.collector()!=null) {
                 File pack = new File("config/MusicTriggers/");
                 if (pack.isDirectory()) {
                     MusicTriggers.logger.info("found pack :)");
-                    source = new packFolder(pack, PackSource.DEFAULT);
+                    source = new PackFolder(pack, PackSource.DEFAULT);
                 }
             }
         }
@@ -134,28 +135,30 @@ public class MusicTriggers {
         if(!debugConfig.exists()) {
             try {
                 debugConfig.createNewFile();
-                configDebug.create(debugConfig);
+                ConfigDebug.create(debugConfig);
             }
             catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        configDebug.parse(debugConfig);
+        ConfigDebug.parse(debugConfig);
         File registrationConfig = new File("config/MusicTriggers/registration.toml");
         if(!registrationConfig.exists()) {
             try {
                 registrationConfig.createNewFile();
-                configRegistry.create(registrationConfig);
+                ConfigRegistry.create(registrationConfig);
             }
             catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        configRegistry.parse(registrationConfig);
+        ConfigRegistry.parse(registrationConfig);
         RegistryHandler.init(eventBus);
-        MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
-        if (FMLEnvironment.dist == Dist.CLIENT) MinecraftForge.EVENT_BUS.register(eventsClient.class);
-        MinecraftForge.EVENT_BUS.register(eventsCommon.class);
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
+            MinecraftForge.EVENT_BUS.register(EventsClient.class);
+        }
+        MinecraftForge.EVENT_BUS.register(EventsCommon.class);
         CustomTick.setUp();
     }
 
@@ -164,15 +167,11 @@ public class MusicTriggers {
     }
 
     public void commonsetup(FMLCommonSetupEvent ev) {
-        if(!configRegistry.clientSideOnly) PacketHandler.register();
+        if(!ConfigRegistry.clientSideOnly) PacketHandler.register();
     }
 
     public void addPack(AddPackFindersEvent ev) {
-        MusicTriggers.logger.info("is this even being called");
-        if(source!=null) {
-            MusicTriggers.logger.info("source added?");
-            ev.addRepositorySource(source);
-        }
+        if(source!=null) ev.addRepositorySource(source);
     }
 
     public static void makeSoundsJson() {
@@ -180,7 +179,7 @@ public class MusicTriggers {
         if (sj.exists()) {
             sj.delete();
         }
-        List<String> writeThis = json.create();
+        List<String> writeThis = Json.create();
         if (writeThis != null) {
             try {
                 sj.createNewFile();
@@ -196,15 +195,15 @@ public class MusicTriggers {
     }
 
     public static void makeDiscLang() {
-        if(configRegistry.registerDiscs) {
+        if(ConfigRegistry.registerDiscs) {
             File sj = new File("config/MusicTriggers/songs/assets/musictriggers/lang/en_us.json");
             if (sj.exists()) {
                 sj.delete();
             }
-            List<String> writeThis = json.create();
+            List<String> writeThis = Json.create();
             assert writeThis != null;
             writeThis.clear();
-            writeThis = json.lang();
+            writeThis = Json.lang();
             if (writeThis != null) {
                 try {
                     sj.createNewFile();
@@ -218,5 +217,9 @@ public class MusicTriggers {
                 }
             }
         }
+    }
+
+    public static String[] stringBreaker(String s, String regex) {
+        return s.split(regex);
     }
 }

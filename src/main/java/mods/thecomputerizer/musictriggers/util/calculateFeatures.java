@@ -1,13 +1,10 @@
 package mods.thecomputerizer.musictriggers.util;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
-import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.util.packets.*;
+import mods.thecomputerizer.musictriggers.util.packets.ReturnTriggerData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.data.BuiltinRegistries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -21,92 +18,182 @@ import net.minecraft.world.level.levelgen.feature.ConfiguredStructureFeature;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.server.ServerLifecycleHooks;
+import top.theillusivec4.champions.api.IAffix;
+import top.theillusivec4.champions.common.capability.ChampionCapability;
 
 import java.util.*;
 
-import static mods.thecomputerizer.musictriggers.client.MusicPicker.stringBreaker;
+import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
 
-public class calculateFeatures {
+@SuppressWarnings("deprecation")
+public class CalculateFeatures {
 
     public static List<String> allTriggers = new ArrayList<>();
 
-    private static boolean infernalLoaded = false;
-    public static HashMap<String, Map<UUID, Integer>> victoryMobs = new HashMap<>();
-    public static HashMap<String, Map<String, Integer>> victoryBosses = new HashMap<>();
+    public static HashMap<String, Map<LivingEntity, Integer>> victoryMobs = new HashMap<>();
     public static HashMap<String, Float> bossInfo = new HashMap<>();
 
-    public static void calculateStructAndSend(String triggerID, String struct, BlockPos pos, UUID uuid) {
+    public static void calculateServerTriggers(String[] triggers, UUID playerUUID) {
+        allTriggers = getTriggers(triggers[0].replaceAll("&",""));
+        ServerPlayer player = ServerLifecycleHooks.getCurrentServer().getPlayerList().getPlayer(playerUUID);
+        if(player!=null) {
+            StringBuilder toSend = new StringBuilder();
+            String[] allSnowTriggers = stringBreaker(triggers[1], "\\$");
+            boolean removeLast = false;
+            for (String snow : allSnowTriggers) {
+                snow = snow.replaceAll("&", "");
+                if (!snow.isEmpty()) {
+                    removeLast = true;
+                    toSend.append(calculateSnow(toPos(snow), playerUUID));
+                }
+            }
+            if (removeLast) toSend = new StringBuilder(toSend.substring(0, toSend.length() - 1));
+            toSend.append("&#");
+            removeLast = false;
+            String[] allHomeTriggers = stringBreaker(triggers[2], "\\$");
+            for (String home : allHomeTriggers) {
+                home = home.replaceAll("&", "");
+                if (!home.isEmpty()) {
+                    removeLast = true;
+                    toSend.append(calculateHome(toInt(home), playerUUID));
+                }
+            }
+            if (removeLast) toSend = new StringBuilder(toSend.substring(0, toSend.length() - 1));
+            toSend.append("&#");
+            removeLast = false;
+            String[] allBiomeTriggers = stringBreaker(triggers[3], "\\$");
+            for (String biome : allBiomeTriggers) {
+                biome = biome.replaceAll("&", "");
+                if (!biome.isEmpty()) {
+                    removeLast = true;
+                    String[] biomeParameters = stringBreaker(biome, "@");
+                    toSend.append(calculateBiome(biomeParameters[0], biomeParameters[1], toPos(biomeParameters[2]), playerUUID, biomeParameters[3], biomeParameters[4], toFloat(biomeParameters[5]), toBool(biomeParameters[6]), toFloat(biomeParameters[7]), toBool(biomeParameters[8])));
+                }
+            }
+            if (removeLast) toSend = new StringBuilder(toSend.substring(0, toSend.length() - 1));
+            toSend.append("&#");
+            removeLast = false;
+            String[] allStructureTriggers = stringBreaker(triggers[4], "\\$");
+            for (String structure : allStructureTriggers) {
+                structure = structure.replaceAll("&", "");
+                if (!structure.isEmpty()) {
+                    removeLast = true;
+                    String[] structureParameters = stringBreaker(structure, "@");
+                    toSend.append(calculateStruct(structureParameters[0], structureParameters[1], toPos(structureParameters[2]), playerUUID));
+                }
+            }
+            if (removeLast) toSend = new StringBuilder(toSend.substring(0, toSend.length() - 1));
+            toSend.append("&#");
+            removeLast = false;
+            String[] allMobTriggers = stringBreaker(triggers[5], "\\$");
+            for (String mob : allMobTriggers) {
+                mob = mob.replaceAll("&", "");
+                if (!mob.isEmpty()) {
+                    removeLast = true;
+                    String[] mobParameters = stringBreaker(mob, "@");
+                    toSend.append(calculateMobs(mobParameters[0], playerUUID, mobParameters[1], toInt(mobParameters[2]), toBool(mobParameters[3]), toInt(mobParameters[4]), toInt(mobParameters[5]), toInt(mobParameters[6]), toBool(mobParameters[7]), toInt(mobParameters[8]), mobParameters[9], toInt(mobParameters[10]), toInt(mobParameters[11]), mobParameters[12], mobParameters[13]));
+                }
+            }
+            if (removeLast) toSend = new StringBuilder(toSend.substring(0, toSend.length() - 1));
+            toSend.append("&#");
+            removeLast = false;
+            String[] allRaidTriggers = stringBreaker(triggers[6], "\\$");
+            for (String raids : allRaidTriggers) {
+                raids = raids.replaceAll("&", "");
+                if (!raids.isEmpty()) {
+                    removeLast = true;
+                    String[] raidParameters = stringBreaker(raids, "@");
+                    toSend.append(calculateRaid(raidParameters[0], toInt(raidParameters[1]), toPos(raidParameters[2]), playerUUID));
+                }
+            }
+            toSend.append("&");
+            if (removeLast) toSend = new StringBuilder(toSend.substring(0, toSend.length() - 1));
+            PacketHandler.sendTo(new ReturnTriggerData(toSend.toString()), player);
+        }
+    }
+
+    private static String calculateStruct(String triggerID, String struct, BlockPos pos, UUID uuid) {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        String curStruct = null;
+        boolean pass = false;
         if(server.getPlayerList().getPlayer(uuid)!=null) {
             ServerLevel world = server.getLevel(Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)).level.dimension());
-            if (world != null && world.structureFeatureManager().hasAnyStructureAt(pos)) {
-                boolean good = false;
-                String curStruct = null;
+            if (world != null) {
                 for (ConfiguredStructureFeature<?, ?> feature : world.getChunkAt(pos).getAllReferences().keySet()) {
                     if (world.structureFeatureManager().getStructureAt(pos, feature).isValid()) {
                         if(feature.feature.getRegistryName()!=null) {
                             curStruct = feature.feature.getRegistryName().toString();
                             if (checkResourceList(curStruct, struct, false)) {
-                                good = true;
+                                pass = true;
                                 break;
                             }
                         }
                     }
                 }
-                PacketHandler.sendTo(new InfoFromStructure(good,triggerID,curStruct), Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)));
             }
         }
+        return triggerID+"@"+pass+"@"+curStruct+"$";
     }
 
-    public static void calculateSnowAndSend(String triggerID, BlockPos pos, UUID uuid) {
+    private static String calculateBiome(String triggerID, String biome, BlockPos pos, UUID uuid, String category, String rainType, float temperature, boolean cold, float rainfall, boolean togglerainfall) {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
-        ServerPlayer player = server.getPlayerList().getPlayer(uuid);
-        if(server.getPlayerList().getPlayer(uuid)!=null) {
-            assert player != null;
-            ServerLevel world = server.getLevel(player.level.dimension());
-            if (world != null)
-                PacketHandler.sendTo(new InfoFromSnow(world.getBiome(pos).value().coldEnoughToSnow(pos), triggerID), player);
-        }
-    }
-
-    public static void calculateHomeAndSend(String triggerID, BlockPos pos, UUID uuid, int range) {
-        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
-        ServerPlayer player = server.getPlayerList().getPlayer(uuid);
-        if(server.getPlayerList().getPlayer(uuid)!=null) {
-            assert player != null;
-            ServerLevel world = server.getLevel(player.level.dimension());
-            if (world != null && player.getRespawnPosition()!=null) {
-                PacketHandler.sendTo(new InfoFromHome(Objects.requireNonNull(player.getRespawnPosition()).closerThan(pos,range) && player.getRespawnDimension()==world.dimension() && !world.getSharedSpawnPos().closerThan(pos,range), triggerID), player);
-            }
-        }
-    }
-
-    public static void calculateBiomeAndSend(String triggerID, String biome, BlockPos pos, UUID uuid, String category, String rainType, float temperature, boolean cold, float rainfall, boolean togglerainfall) {
-        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        boolean pass = false;
+        String currentBiome = "";
         if(server.getPlayerList().getPlayer(uuid)!=null) {
             ServerLevel world = server.getLevel(Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)).level.dimension());
             if (world != null) {
                 Holder<Biome> curBiome = world.getBiome(pos);
-                PacketHandler.sendTo(new InfoFromBiome(checkBiome(curBiome, biome, category, rainType, temperature, cold, rainfall, togglerainfall), triggerID, Objects.requireNonNull(curBiome.value().getRegistryName()).toString()), Objects.requireNonNull(server.getPlayerList().getPlayer(uuid)));
+                pass = checkBiome(curBiome,biome,category,rainType,temperature,cold,rainfall,togglerainfall);
+                currentBiome = Objects.requireNonNull(curBiome.value().getRegistryName()).toString();
             }
         }
+        return triggerID+"@"+pass+"@"+currentBiome+"$";
     }
 
-    public static void calculateRaidAndSend(String triggerID, int wave, BlockPos pos, UUID uuid) {
+    private static String calculateSnow(BlockPos pos, UUID uuid) {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        ServerPlayer player = server.getPlayerList().getPlayer(uuid);
+        boolean pass = false;
+        if(server.getPlayerList().getPlayer(uuid)!=null) {
+            assert player != null;
+            ServerLevel world = server.getLevel(player.level.dimension());
+            if (world != null) {
+                pass = world.getBiome(pos).value().coldEnoughToSnow(pos);
+            }
+        }
+        return pass+"$";
+    }
+
+    private static String calculateHome(int range, UUID uuid) {
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        ServerPlayer player = server.getPlayerList().getPlayer(uuid);
+        boolean pass = false;
+        if(player!=null) {
+            ServerLevel world = server.getLevel(player.level.dimension());
+            BlockPos pos = player.blockPosition();
+            if (world != null && player.getRespawnPosition()!=null)
+                pass = Objects.requireNonNull(player.getRespawnPosition()).closerThan(pos,range) && player.getRespawnDimension()==world.dimension() && !world.getSharedSpawnPos().closerThan(pos,range);
+        }
+        return pass+"$";
+    }
+
+    private static String calculateRaid(String triggerID, int wave, BlockPos pos, UUID uuid) {
+        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+        boolean pass = false;
         if(server.getPlayerList().getPlayer(uuid)!=null) {
             ServerPlayer player = server.getPlayerList().getPlayer(uuid);
             assert player != null;
             ServerLevel world = server.getLevel(player.level.dimension());
             if (world != null) {
                 Raid raid = world.getRaidAt(pos);
-                PacketHandler.sendTo(new InfoFromRaid(triggerID,raid!=null && raid.getGroupsSpawned()>=wave),player);
+                pass = raid!=null && raid.getGroupsSpawned()>=wave;
             }
         }
+        return triggerID+"@"+pass+"$";
     }
 
-    @SuppressWarnings("deprecation")
-    public static boolean checkBiome(Holder<Biome> b, String name, String category, String rainType, float temperature, boolean cold, float rainfall, boolean togglerainfall) {
+
+    private static boolean checkBiome(Holder<Biome> b, String name, String category, String rainType, float temperature, boolean cold, float rainfall, boolean togglerainfall) {
         Biome biome = b.value();
         if (checkResourceList(Objects.requireNonNull(biome.getRegistryName()).toString(), name, false) || name.matches("minecraft")) {
             if (checkResourceList(Biome.getBiomeCategory(b).getName(), category, false) || category.matches("nope")) {
@@ -126,163 +213,150 @@ public class calculateFeatures {
         }
         return false;
     }
-    public static void calculateMobAndSend(String triggerID, UUID uuid, String mobname, int detectionrange, boolean targetting, int targettingpercentage, int health, int healthpercentage, boolean victory, int victoryID, String i, int num, int timeout, String nbtKey) {
+
+    private static String calculateMobs(String triggerID, UUID uuid, String mobname, int detectionrange, boolean targetting, int targettingpercentage, int health, int healthpercentage, boolean victory, int victoryID, String i, int num, int timeout, String nbtKey, String c) {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         ServerPlayer player = server.getPlayerList().getPlayer(uuid);
-        assert player != null;
-        ServerLevel world = server.getLevel(player.level.dimension());
+        boolean victoryRet = false;
         boolean pass = false;
-        assert world != null;
-        List<LivingEntity> mobTempList = world.getEntitiesOfClass(LivingEntity.class, new AABB(player.getX() - detectionrange, player.getY() - (detectionrange / 2f), player.getZ() - detectionrange, player.getX() + detectionrange, player.getY() + (detectionrange / 2f), player.getZ() + detectionrange));
-        List<Mob> mobList = new ArrayList<>();
-        for (LivingEntity e : mobTempList) {
-            if (e instanceof Mob && nbtChecker(e, nbtKey)) {
-                mobList.add((Mob) e);
+        if(player!=null) {
+            ServerLevel world = server.getLevel(player.level.dimension());
+            assert world != null;
+            List<LivingEntity> mobTempList = world.getEntitiesOfClass(LivingEntity.class, new AABB(player.getX() - detectionrange, player.getY() - (detectionrange / 2f), player.getZ() - detectionrange, player.getX() + detectionrange, player.getY() + (detectionrange / 2f), player.getZ() + detectionrange));
+            List<Mob> mobList = new ArrayList<>();
+            for (LivingEntity e : mobTempList) {
+                if (e instanceof Mob && nbtChecker(e, nbtKey)) mobList.add((Mob) e);
             }
-        }
-        boolean victoryRet = true;
-        int trackingCounter = 0;
-        int healthCounter = 0;
-        boolean infernalChecked;
-        boolean infernalDone = false;
-        if (mobname.matches("MOB") || stringBreaker(mobname, ";")[0].matches("MOB")) {
-            List<Mob> mobsWithBlacklist = new ArrayList<>();
-            for (Iterator<Mob> it = mobList.iterator(); it.hasNext(); ) {
-                Mob e = it.next();
-                boolean isMonster = true;
-                if (e instanceof Animal) {
-                    it.remove();
-                    isMonster = false;
-                }
-                if (isMonster && checkMobBlacklist(e,mobname)) {
-                    mobsWithBlacklist.add(e);
-                    if (e.getTarget() instanceof Player) {
-                        trackingCounter++;
+            int trackingCounter = 0;
+            int healthCounter = 0;
+            boolean infernal = true;
+            boolean champion = true;
+            if (mobname.matches("MOB") || stringBreaker(mobname, ";")[0].matches("MOB")) {
+                List<Mob> mobsWithBlacklist = new ArrayList<>();
+                for (Iterator<Mob> it = mobList.iterator(); it.hasNext(); ) {
+                    Mob e = it.next();
+                    boolean isMonster = true;
+                    if (e instanceof Animal) {
+                        it.remove();
+                        isMonster = false;
                     }
-                    if (e.getHealth() / e.getMaxHealth() <= health / 100F) {
-                        healthCounter++;
-                    }
-                    infernalChecked = infernalChecker(e, i);
-                    if (!infernalLoaded || (infernalLoaded && infernalChecked)) {
-                        infernalDone = true;
-                    }
-                    if (victory) {
-                        victoryMobs.computeIfAbsent(triggerID, k -> new HashMap<>());
-                        if (victoryMobs.get(triggerID).size() < num) victoryMobs.get(triggerID).put(e.getUUID(), timeout);
-                    }
-                }
-            }
-            if (mobsWithBlacklist.size() >= num && ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) && infernalDone && (float) healthCounter / num >= healthpercentage / 100F)) {
-                pass = true;
-            }
-            if(victoryMobs.get(triggerID)!=null) {
-                if (victoryMobs.get(triggerID).keySet().size() < num) {
-                    victoryMobs = new HashMap<>();
-                    victoryRet = false;
-                } else {
-                    for (UUID u : victoryMobs.get(triggerID).keySet()) {
-                        if (player.getLevel().getEntity(u) != null && !Objects.requireNonNull((LivingEntity) player.getLevel().getEntity(u)).isDeadOrDying()) {
-                            victoryRet = false;
-                            break;
-                        }
-                    }
-                }
-            } else victoryRet = false;
-        } else if (mobname.matches("BOSS") || stringBreaker(mobname, ";")[0].matches("BOSS")) {
-            HashMap<String, Float> tempBoss = bossInfo;
-            if(!bossInfo.isEmpty()) {
-                List<String> correctBosses = new ArrayList<>();
-                for(String name : tempBoss.keySet()) {
-                    if(checkResourceList(name, mobname, true)) {
-                        correctBosses.add(name);
-                        if (health / 100f >= bossInfo.get(name)) {
-                            healthCounter++;
-                        }
+                    if (isMonster && checkMobBlacklist(e, mobname)) {
+                        mobsWithBlacklist.add(e);
+                        if (e.getTarget() instanceof Player) trackingCounter++;
+                        if (e.getHealth() / e.getMaxHealth() <= health / 100F) healthCounter++;
+                        infernal = infernalChecker(e,i);
+                        champion = championChecker(e,c);
                         if (victory) {
-                            victoryBosses.computeIfAbsent(triggerID, k -> new HashMap<>());
-                            if (victoryBosses.get(triggerID).keySet().size() < num)
-                                victoryBosses.get(triggerID).put(name, timeout);
+                            victoryMobs.computeIfAbsent(triggerID, k -> new HashMap<>());
+                            if (victoryMobs.get(triggerID).size() < num) {
+                                victoryMobs.get(triggerID).put(e, timeout);
+                            }
                         }
                     }
                 }
-                if(correctBosses.size()>=num && (float)healthCounter/bossInfo.size()<=100f/healthpercentage) {
+                if (mobsWithBlacklist.size() >= num &&
+                        ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) &&
+                                infernal && champion &&
+                                (float) healthCounter / num >= healthpercentage / 100F)) {
                     pass = true;
                 }
-                if(victoryBosses.get(triggerID)!=null) {
-                    if (victoryBosses.get(triggerID).keySet().size() < num) {
-                        victoryBosses = new HashMap<>();
-                        victoryRet = false;
+                if (victoryMobs.get(triggerID) != null) {
+                    if (victoryMobs.get(triggerID).keySet().size() < num) {
+                        victoryMobs = new HashMap<>();
                     } else {
-                        for (String bis : victoryBosses.get(triggerID).keySet()) {
-                            if (bossInfo.get(bis) != 0) {
-                                victoryRet = false;
+                        for (LivingEntity en : victoryMobs.get(triggerID).keySet()) {
+                            if (en.isDeadOrDying() || en.getHealth()<=0) {
+                                victoryRet = true;
                                 break;
                             }
                         }
                     }
                 }
-                else victoryRet = false;
-                for(String name : tempBoss.keySet()) {
-                    if(tempBoss.get(name)<=0f) bossInfo.remove(name);
-                }
-            }
-        } else {
-            int mobCounter = 0;
-            List<Mob> mobListSpecific = new ArrayList<>();
-            for (LivingEntity e : mobTempList) {
-                if ((checkResourceList(e.getDisplayName().getString(),mobname,true) || checkResourceList(Objects.requireNonNull(e.getType().getRegistryName()).toString(),mobname,true)) && nbtChecker(e, nbtKey)) {
-                    if(e instanceof  Mob) {
-                        mobCounter++;
-                        mobListSpecific.add((Mob) e);
+            } else if (mobname.matches("BOSS") || stringBreaker(mobname, ";")[0].matches("BOSS")) {
+                HashMap<String, Float> tempBoss = bossInfo;
+                if (!bossInfo.isEmpty()) {
+                    List<String> correctBosses = new ArrayList<>();
+                    for (String name : tempBoss.keySet()) {
+                        if (checkResourceList(name, mobname, true)) {
+                            correctBosses.add(name);
+                            if (health / 100f >= bossInfo.get(name)) {
+                                healthCounter++;
+                            }
+                        }
+                    }
+                    if (correctBosses.size() >= num && (float) healthCounter / bossInfo.size() <= 100f / healthpercentage) {
+                        pass = true;
+                    }
+                    for (String name : tempBoss.keySet()) {
+                        if (tempBoss.get(name) <= 0f) bossInfo.remove(name);
                     }
                 }
-            }
-            for (Mob e : mobListSpecific) {
-                if (e.getTarget() instanceof Player) {
-                    trackingCounter++;
-                }
-                if (e.getHealth() / e.getMaxHealth() <= health / 100F) {
-                    healthCounter++;
-                }
-                infernalChecked = infernalChecker(e, i);
-                if (!infernalLoaded || (infernalLoaded && infernalChecked)) {
-                    infernalDone = true;
-                }
-                if (victory) {
-                    victoryMobs.computeIfAbsent(triggerID, k -> new HashMap<>());
-                    if (victoryMobs.get(triggerID).size() < num) victoryMobs.get(triggerID).put(e.getUUID(), timeout);
-                }
-            }
-            if (mobCounter >= num && ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) && infernalDone && (float) healthCounter / num >= healthpercentage / 100F)) {
-                pass = true;
-            }
-            if(victoryMobs.get(triggerID)!=null) {
-                if (victoryMobs.get(triggerID).keySet().size() < num) {
-                    victoryMobs = new HashMap<>();
-                    victoryRet = false;
-                } else {
-                    for (UUID u : victoryMobs.get(triggerID).keySet()) {
-                        if (player.getLevel().getEntity(u) != null && !Objects.requireNonNull((LivingEntity) player.getLevel().getEntity(u)).isDeadOrDying()) {
-                            victoryRet = false;
-                            break;
+            } else {
+                int mobCounter = 0;
+                List<Mob> mobListSpecific = new ArrayList<>();
+                for (LivingEntity e : mobTempList) {
+                    if ((checkResourceList(e.getDisplayName().getString(), mobname, true) || checkResourceList(Objects.requireNonNull(e.getType().getRegistryName()).toString(), mobname, true)) && nbtChecker(e, nbtKey)) {
+                        if (e instanceof Mob) {
+                            mobCounter++;
+                            mobListSpecific.add((Mob) e);
                         }
                     }
                 }
-            } else victoryRet = false;
+                for (Mob e : mobListSpecific) {
+                    if (e.getTarget() instanceof Player) trackingCounter++;
+                    if (e.getHealth() / e.getMaxHealth() <= health / 100F) healthCounter++;
+                    infernal = infernalChecker(e,i);
+                    champion = championChecker(e,c);
+                    if (victory) {
+                        victoryMobs.computeIfAbsent(triggerID, k -> new HashMap<>());
+                        if (victoryMobs.get(triggerID).size() < num) {
+                            victoryMobs.get(triggerID).put(e, timeout);
+                        }
+                    }
+                }
+                if (mobCounter >= num &&
+                        ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) &&
+                                infernal && champion &&
+                                (float) healthCounter / num >= healthpercentage / 100F)) {
+                    pass = true;
+                }
+                if (victoryMobs.get(triggerID) != null) {
+                    if (victoryMobs.get(triggerID).keySet().size() < num) {
+                        victoryMobs = new HashMap<>();
+                    } else {
+                        for (LivingEntity en : victoryMobs.get(triggerID).keySet()) {
+                            if (en.isDeadOrDying() || en.getHealth()<=0) {
+                                victoryRet = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
         }
-        if(pass) victoryRet = false;
-        PacketHandler.sendTo(new InfoFromMob(triggerID,pass,victoryID,victoryRet),player);
+        return triggerID+"@"+pass+"@"+victoryID+"@"+victoryRet+"$";
     }
 
     private static boolean infernalChecker(LivingEntity m, String s) {
         if (ModList.get().isLoaded("infernalmobs")) {
-            infernalLoaded = true;
-            if (s == null || s.matches("minecraft")) {
-                return true;
-            }
+            if (s == null || s.matches("minecraft")) return true;
             if(InfernalMobsCore.getMobModifiers(m)!=null) return InfernalMobsCore.getMobModifiers(m).getModName().matches(s);
+            return false;
         }
-        return false;
+        return true;
+    }
+
+    private static boolean championChecker(LivingEntity m, String s) {
+        if (ModList.get().isLoaded("champions")) {
+            if (s == null || s.matches("minecraft")) return true;
+            if(ChampionCapability.getCapability(m).isPresent() && ChampionCapability.getCapability(m).resolve().isPresent()) {
+                for(IAffix afix : ChampionCapability.getCapability(m).resolve().get().getServer().getAffixes()) {
+                    return afix.getIdentifier().matches(s);
+                }
+            }
+            return false;
+        }
+        return true;
     }
 
     private static boolean nbtChecker(LivingEntity e, String nbt) {
@@ -303,6 +377,7 @@ public class calculateFeatures {
         return false;
     }
 
+
     public static boolean checkResourceList(String type, String resourceList, boolean match) {
         for(String resource : stringBreaker(resourceList,";")) {
             if(!resource.matches("BOSS")) {
@@ -321,5 +396,25 @@ public class calculateFeatures {
             }
         }
         return true;
+    }
+
+    public static List<String> getTriggers(String triggers) {
+        return new ArrayList<>(Arrays.asList(stringBreaker(triggers,",")));
+    }
+
+    public static int toInt(String s) {
+        return Integer.parseInt(s);
+    }
+
+    public static BlockPos toPos(String s) {
+        return BlockPos.of(Long.parseLong(s));
+    }
+
+    public static boolean toBool(String s) {
+        return Boolean.parseBoolean(s);
+    }
+
+    public static float toFloat(String s) {
+        return Float.parseFloat(s);
     }
 }

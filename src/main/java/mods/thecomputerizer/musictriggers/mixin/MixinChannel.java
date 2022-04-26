@@ -16,7 +16,7 @@ public abstract class MixinChannel{
 
     @Inject(at = @At("HEAD"), method = "m_83658_(Lnet/minecraft/client/sounds/AudioStream;)V")
     private void attachBufferStream(AudioStream stream, CallbackInfo info) {
-        if (MusicPlayer.curMusic != null && ((Channel) (Object) this).source == MusicPlayer.curMusicSource.source) {
+        if (MusicPlayer.curMusic != null &&  MusicPlayer.curMusicSource!=null && ((Channel) (Object) this).source == MusicPlayer.curMusicSource.source) {
             if (!(((Channel) (Object) this).stream instanceof SkippableOggAudioStream))
                 MusicPlayer.curMusicTimer = 0;
         }

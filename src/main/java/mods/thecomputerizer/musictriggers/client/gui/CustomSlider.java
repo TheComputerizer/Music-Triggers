@@ -2,17 +2,17 @@ package mods.thecomputerizer.musictriggers.client.gui;
 
 
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
-import mods.thecomputerizer.musictriggers.config.configObject;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 
 public class CustomSlider extends AbstractSliderButton {
 
-    public configObject holder;
+    public ConfigObject holder;
     public float max;
 
-    public CustomSlider(int x, int y, int width, int height, Component component, double defaultValue, configObject holder, float max) {
+    public CustomSlider(int x, int y, int width, int height, Component component, double defaultValue, ConfigObject holder, float max) {
         super(x,y,width,height,component,defaultValue);
         this.holder=holder;
         this.max=max;
