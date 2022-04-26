@@ -18,7 +18,7 @@ apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'maven-publish'
 
-version = '1.12.2-5.2'
+version = '1.12.2-5.2-hf'
 group = 'mods.thecomputerizer.musictriggers'
 archivesBaseName = 'musictriggers'
 
@@ -162,9 +162,9 @@ jar {
             "FMLCorePluginContainsFMLMod": "true",
             "Specification-Title": "musictriggers",
             "Specification-Vendor": "musictriggerssareus",
-            "Specification-Version": "1.12.2-5.2",
+            "Specification-Version": "1.12.2-5.2-hf",
             "Implementation-Title": project.name,
-            "Implementation-Version": "1.12.2-5.2",
+            "Implementation-Version": "1.12.2-5.2-hf",
             "Implementation-Vendor" :"musictriggers",
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
         ])
