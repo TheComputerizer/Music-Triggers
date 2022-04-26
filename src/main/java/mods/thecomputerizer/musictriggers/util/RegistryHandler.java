@@ -24,7 +24,7 @@ public final class RegistryHandler {
     {
         MusicTriggers.logger.info("Loading Sounds from Music Triggers");
         ModSounds.INSTANCE.init();
-        if(ConfigRegistry.registerDiscs) {
+        if(!ConfigRegistry.clientSideOnly) {
             ModSounds.SOUNDS.register(eventBus);
         }
     }
