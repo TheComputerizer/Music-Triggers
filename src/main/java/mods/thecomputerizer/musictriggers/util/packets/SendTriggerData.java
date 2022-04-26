@@ -8,7 +8,6 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.UUID;
 
 import static mods.thecomputerizer.musictriggers.MusicTriggersCommon.stringBreaker;
@@ -31,6 +30,7 @@ public class SendTriggerData {
         ServerPlayNetworking.registerGlobalReceiver(id,(server, player, handler, buf, sender) -> {
             CalculateFeatures.curServer = server;
             String s = decode(buf);
+            MusicTriggersCommon.logger.info("Trigger data: "+getTriggerData(s));
             CalculateFeatures.calculateServerTriggers(stringBreaker(getTriggerData(s),"#"), getPlayerUUID(s));
         });
     }

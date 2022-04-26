@@ -22,7 +22,7 @@ public class ModSounds {
             String songName = Objects.requireNonNull(s.getId()).toString().replaceAll("musictriggers:","");
             Identifier soundID = new Identifier(MusicTriggersCommon.MODID + ":music." + songName);
             SoundEvent soundEvent = new SoundEvent(soundID);
-            if(ConfigRegistry.registerDiscs) {
+            if(!ConfigRegistry.clientSideOnly) {
                 Registry.register(Registry.SOUND_EVENT, soundID, soundEvent);
                 MusicTriggersCommon.logger.info(songName+" is being initialized at resource location "+new Identifier(MusicTriggersCommon.MODID+":music." + songName));
             }
