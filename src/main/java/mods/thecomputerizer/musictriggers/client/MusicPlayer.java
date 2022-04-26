@@ -221,6 +221,8 @@ public class MusicPlayer {
                 tempFadeIn = 0;
                 fadingIn = false;
                 if (tempFadeOut == 0) {
+                    oncePerTrigger = new ArrayList<>();
+                    onceUntilEmpty = new ArrayList<>();
                     fadeOutList = null;
                     removeTrack(trackToDelete,indexToDelete,playedEvents,playedMusic);
                     fadingOut = false;
@@ -344,7 +346,6 @@ public class MusicPlayer {
                     }
                     if (!finish) {
                         if (MusicPicker.shouldChange || !Arrays.equals(curTrackList, holder)) {
-                            removeTrack(trackToDelete,indexToDelete,playedEvents,playedMusic);
                             if(curTrackList.length!=0) changeTrack();
                             else curTrackList = null;
                         } else if (curMusic == null && mc.gameSettings.getSoundLevel(SoundCategory.MUSIC) > 0 && mc.gameSettings.getSoundLevel(SoundCategory.MASTER) > 0) {
@@ -446,9 +447,7 @@ public class MusicPlayer {
                                             curLinkNum = "song-" + 0;
                                             sh.playSound(curMusic);
                                         }
-                                        else {
-                                            sh.playSound(musicLinker.get(checkThis));
-                                        }
+                                        else sh.playSound(musicLinker.get(checkThis));
                                     }
                                     if (Integer.parseInt(ConfigToml.otherinfo.get(curTrack)[1])==1) onceUntilEmpty.add(curTrack);
                                     if (Integer.parseInt(ConfigToml.otherinfo.get(curTrack)[1])==2) oncePerTrigger.add(curTrack);
@@ -662,8 +661,6 @@ public class MusicPlayer {
                 MusicTriggers.logger.warn("Index of current music was null! Falling back to default fade out volume. You should report this");
                 curLinkNum = "song-"+0;
             }
-            oncePerTrigger = new ArrayList<>();
-            onceUntilEmpty = new ArrayList<>();
             triggerLinker = new HashMap<>();
             loopLinker = new HashMap<>();
             loopLinkerCounter = new HashMap<>();
