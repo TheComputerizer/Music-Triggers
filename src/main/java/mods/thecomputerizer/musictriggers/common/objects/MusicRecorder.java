@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.common.objects;
 
-import mods.thecomputerizer.musictriggers.common.eventsCommon;
+import mods.thecomputerizer.musictriggers.common.EventsCommon;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockRenderType;
@@ -47,20 +47,20 @@ public class MusicRecorder extends Block {
     }
 
     public void insertRecord(World worldIn, BlockPos pos, BlockState state, ItemStack recordStack, UUID uuid) {
-        eventsCommon.recordWorld.put(pos,worldIn);
-        eventsCommon.recordHolder.put(pos, recordStack.copy());
-        eventsCommon.recordUUID.put(pos, uuid);
-        eventsCommon.tickCounter.put(pos, 0);
+        EventsCommon.recordWorld.put(pos,worldIn);
+        EventsCommon.recordHolder.put(pos, recordStack.copy());
+        EventsCommon.recordUUID.put(pos, uuid);
+        EventsCommon.tickCounter.put(pos, 0);
         if(recordStack.getItem() instanceof BlankRecord) worldIn.setBlockState(pos, state.with(HAS_RECORD, true), Block.NOTIFY_LISTENERS);
         else worldIn.setBlockState(pos, state.with(HAS_DISC, Boolean.TRUE), Block.NOTIFY_LISTENERS);
     }
 
     private void dropRecord(World worldIn, BlockPos pos) {
         if (!worldIn.isClient) {
-            eventsCommon.recordHolder.putIfAbsent(pos,ItemStack.EMPTY);
-            ItemStack itemstack = eventsCommon.recordHolder.get(pos);
+            EventsCommon.recordHolder.putIfAbsent(pos,ItemStack.EMPTY);
+            ItemStack itemstack = EventsCommon.recordHolder.get(pos);
             if (!itemstack.isEmpty()) {
-                eventsCommon.recordHolder.put(pos,ItemStack.EMPTY);
+                EventsCommon.recordHolder.put(pos,ItemStack.EMPTY);
                 double d0 = (double) (worldIn.random.nextFloat() * 0.7F) + 0.15000000596046448D;
                 double d1 = (double) (worldIn.random.nextFloat() * 0.7F) + 0.06000000238418579D + 0.6D;
                 double d2 = (double) (worldIn.random.nextFloat() * 0.7F) + 0.15000000596046448D;

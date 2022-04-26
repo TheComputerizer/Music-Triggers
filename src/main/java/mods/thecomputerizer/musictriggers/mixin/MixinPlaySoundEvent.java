@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.mixin;
 
-import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
-import mods.thecomputerizer.musictriggers.client.eventsClient;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.client.sound.SoundSystem;
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,6 +12,6 @@ public class MixinPlaySoundEvent {
 
     @ModifyVariable(method = "play(Lnet/minecraft/client/sound/SoundInstance;)V", at = @At(value = "HEAD", target = "Lnet/minecraft/client/sound/SoundSystem;play(Lnet/minecraft/client/sound/SoundInstance;)V"), ordinal = 0, argsOnly = true)
     private SoundInstance play(SoundInstance sound2) {
-        return eventsClient.playSound(sound2);
+        return EventsClient.playSound(sound2);
     }
 }

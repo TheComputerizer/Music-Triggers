@@ -3,7 +3,6 @@ package mods.thecomputerizer.musictriggers.config;
 import com.moandjiezana.toml.Toml;
 import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
 import mods.thecomputerizer.musictriggers.client.MusicPicker;
-import net.fabricmc.loader.impl.FabricLoaderImpl;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -11,7 +10,7 @@ import java.io.FileReader;
 import java.util.*;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
-public class configToml {
+public class ConfigToml {
     public static String CrashHelper;
 
     public static Map<String, String> songholder = new HashMap<>();
@@ -28,17 +27,14 @@ public class configToml {
                     "creative","spectator","riding","pet","underwater","elytra","fishing","drowning","home",
                     "dimension","biome", "structure","mob","victory","gui","effect","zones","pvp","advancement",
                     "raid", "statistic"};
-    public static final String[] modtriggers = new String[]{"temp"};
+    public static final String[] modtriggers = new String[]{"empty"};
 
-    //priority,fade,level,time,delay,advancement,operator,zone,start,
-    //resourcename,identifier,range,mobtargetting,hordetargetpercentage,health,hordehealthpercentage,
-    //victory,victoryID,gamestagewhitelist,skylight,phase,victory_timeout,biome_category,rain_type,
-    //biome_temperature,biome_cold,mob_nbt,underground,end,rainfall,higher_rainfall,instance,time_switch,inactiveplayable
+    public static List<String> allSongs;
 
-    //pitch,one time,must finish,chance
+    //pitch,one time,must finish,chance,fade_in,fade_out
 
     public static void parse() {
-        File file = new File(FabricLoaderImpl.INSTANCE.getConfigDir().toString(),"MusicTriggers/musictriggers.toml");
+        File file = new File("config/MusicTriggers/musictriggers.toml");
         if(!file.exists()) {
             try {
                 file.createNewFile();
@@ -55,7 +51,8 @@ public class configToml {
                 if (universal.contains("fade_out")) MusicPicker.universalFadeOut = Integer.parseInt(universal.getString("fade_out"));
                 if (universal.contains("fade_delay")) MusicPicker.universalDelay = Integer.parseInt(universal.getString("fade_delay"));
             }
-            for (String s : songCollector(file)) {
+            allSongs = songCollector(file);
+            for (String s : allSongs) {
                 if (toml.containsTableArray(s)) {
                     try {
                         for (Toml song : toml.getTables(s)) {
@@ -74,12 +71,12 @@ public class configToml {
                                                     "minecraft", "_", "16", "false", "100", "100", "100",
                                                     "false", "0", "minecraft", "true", "true", "0", "0", "nope",
                                                     "nope", "-111", "false","_", "true", "-1", "-111", "true",
-                                                    "false", "false", "false", "0"});
+                                                    "false", "false", "false", "0", "minecraft"});
                                             if (trigger.contains("priority")) {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                             }
                                             if (trigger.contains("fade_in")) {
-                                                triggerholder.get("song" + songCounter).get(triggerID)[1] = trigger.getString("fade_in");
+                                                triggerholder.get("song" + songCounter).get(triggerID)[1] = trigger.getString("fadeIn");
                                             }
                                             if (trigger.contains("level")) {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[2] = trigger.getString("level");
@@ -119,6 +116,9 @@ public class configToml {
                                             if (trigger.contains("identifier")) {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[10] = trigger.getString("identifier");
                                             }
+                                            else if (trigger.contains("id")) {
+                                                triggerholder.get("song" + songCounter).get(triggerID)[10] = trigger.getString("id");
+                                            }
                                             if (trigger.contains("detection_range")) {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[11] = trigger.getString("detection_range");
                                             }
@@ -140,8 +140,8 @@ public class configToml {
                                             if (trigger.contains("victory_id")) {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[17] = trigger.getString("victory_id");
                                             }
-                                            if (trigger.contains("unused")) {
-                                                triggerholder.get("song" + songCounter).get(triggerID)[18] = trigger.getString("unused");
+                                            if (trigger.contains("infernal")) {
+                                                triggerholder.get("song" + songCounter).get(triggerID)[18] = trigger.getString("infernal");
                                             }
                                             if (trigger.contains("whitelist")) {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[19] = trigger.getString("whitelist");
@@ -194,6 +194,9 @@ public class configToml {
                                             if (trigger.contains("fade_out")) {
                                                 triggerholder.get("song" + songCounter).get(triggerID)[35] = trigger.getString("fade_out");
                                             }
+                                            if (trigger.contains("mob_champion")) {
+                                                triggerholder.get("song" + songCounter).get(triggerID)[36] = trigger.getString("mob_champion");
+                                            }
                                         } else {
                                             MusicTriggersCommon.logger.warn("Could not find trigger with name " + triggerID);
                                         }
@@ -215,7 +218,7 @@ public class configToml {
                                                 "minecraft", "_", "16", "false", "100", "100", "100",
                                                 "false", "0", "minecraft", "true", "true", "0", "0", "nope",
                                                 "nope", "-111", "false","_", "true", "-1", "-111", "true",
-                                                "false", "false", "false", "0"});
+                                                "false", "false", "false", "0", "minecraft"});
                                         if (trigger.contains("priority")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                         }
@@ -260,6 +263,9 @@ public class configToml {
                                         if (trigger.contains("identifier")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[10] = trigger.getString("identifier");
                                         }
+                                        else if (trigger.contains("id")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[10] = trigger.getString("id");
+                                        }
                                         if (trigger.contains("detection_range")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[11] = trigger.getString("detection_range");
                                         }
@@ -281,8 +287,8 @@ public class configToml {
                                         if (trigger.contains("victory_id")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[17] = trigger.getString("victory_id");
                                         }
-                                        if (trigger.contains("unused")) {
-                                            triggerholder.get("song" + songCounter).get(triggerID)[18] = trigger.getString("unused");
+                                        if (trigger.contains("infernal")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[18] = trigger.getString("infernal");
                                         }
                                         if (trigger.contains("whitelist")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[19] = trigger.getString("whitelist");
@@ -335,6 +341,9 @@ public class configToml {
                                         if (trigger.contains("fade_out")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[35] = trigger.getString("fade_out");
                                         }
+                                        if (trigger.contains("mob_champion")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[36] = trigger.getString("mob_champion");
+                                        }
                                     } else {
                                         MusicTriggersCommon.logger.warn("Could not find trigger with name " + triggerID);
                                     }
@@ -364,10 +373,10 @@ public class configToml {
                                 Toml link = song.getTable("link");
                                 if (link.contains("default")) {
                                     if (link.contains("fade_in")) {
-                                        otherinfo.get("song" + songCounter)[5] = song.getString("fade_in");
+                                        otherinfo.get("song" + songCounter)[5] = link.getString("fade_in");
                                     }
                                     if (link.contains("fade_out")) {
-                                        otherinfo.get("song" + songCounter)[6] = song.getString("fade_out");
+                                        otherinfo.get("song" + songCounter)[6] = link.getString("fade_out");
                                     }
                                     if (link.containsTableArray("trigger")) {
                                         for (Toml trigger : link.getTables("trigger")) {
@@ -423,6 +432,7 @@ public class configToml {
                                                 }
                                             }
                                         }
+
                                     } else if (link.containsTable("trigger")) {
                                         Toml trigger = link.getTable("trigger");
                                         if (!trigger.contains("song") || !trigger.contains("name")) {
@@ -515,6 +525,7 @@ public class configToml {
                             songCounter++;
                         }
                     } catch (Exception e) {
+                        e.printStackTrace();
                         throw new RuntimeException("Failed to initialize song block from song "+s+" at "+CrashHelper+" (Internally: File "+e.getStackTrace()[0].getFileName()+" at line "+e.getStackTrace()[0].getLineNumber()+")");
                     }
                 } else if (toml.containsTable(s)) {
@@ -535,7 +546,7 @@ public class configToml {
                                                 "minecraft", "_", "16", "false", "100", "100", "100",
                                                 "false", "0", "minecraft", "true", "true", "0", "0", "nope",
                                                 "nope", "-111", "false","_", "true", "-1", "-111", "true",
-                                                "false", "false", "false", "0"});
+                                                "false", "false", "false", "0", "minecraft"});
                                         if (trigger.contains("priority")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                         }
@@ -580,6 +591,9 @@ public class configToml {
                                         if (trigger.contains("identifier")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[10] = trigger.getString("identifier");
                                         }
+                                        else if (trigger.contains("id")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[10] = trigger.getString("id");
+                                        }
                                         if (trigger.contains("detection_range")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[11] = trigger.getString("detection_range");
                                         }
@@ -601,8 +615,8 @@ public class configToml {
                                         if (trigger.contains("victory_id")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[17] = trigger.getString("victory_id");
                                         }
-                                        if (trigger.contains("unused")) {
-                                            triggerholder.get("song" + songCounter).get(triggerID)[18] = trigger.getString("unused");
+                                        if (trigger.contains("infernal")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[18] = trigger.getString("infernal");
                                         }
                                         if (trigger.contains("whitelist")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[19] = trigger.getString("whitelist");
@@ -655,6 +669,9 @@ public class configToml {
                                         if (trigger.contains("fade_out")) {
                                             triggerholder.get("song" + songCounter).get(triggerID)[35] = trigger.getString("fade_out");
                                         }
+                                        if (trigger.contains("mob_champion")) {
+                                            triggerholder.get("song" + songCounter).get(triggerID)[36] = trigger.getString("mob_champion");
+                                        }
                                     } else {
                                         MusicTriggersCommon.logger.warn("Could not find trigger with name " + triggerID);
                                     }
@@ -676,7 +693,7 @@ public class configToml {
                                             "minecraft", "_", "16", "false", "100", "100", "100",
                                             "false", "0", "minecraft", "true", "true", "0", "0", "nope",
                                             "nope", "-111", "false","_", "true", "-1", "-111", "true",
-                                            "false", "false", "false", "0"});
+                                            "false", "false", "false", "0", "minecraft"});
                                     if (trigger.contains("priority")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                     }
@@ -721,6 +738,9 @@ public class configToml {
                                     if (trigger.contains("identifier")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[10] = trigger.getString("identifier");
                                     }
+                                    else if (trigger.contains("id")) {
+                                        triggerholder.get("song" + songCounter).get(triggerID)[10] = trigger.getString("id");
+                                    }
                                     if (trigger.contains("detection_range")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[11] = trigger.getString("detection_range");
                                     }
@@ -742,8 +762,8 @@ public class configToml {
                                     if (trigger.contains("victory_id")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[17] = trigger.getString("victory_id");
                                     }
-                                    if (trigger.contains("unused")) {
-                                        triggerholder.get("song" + songCounter).get(triggerID)[18] = trigger.getString("unused");
+                                    if (trigger.contains("infernal")) {
+                                        triggerholder.get("song" + songCounter).get(triggerID)[18] = trigger.getString("infernal");
                                     }
                                     if (trigger.contains("whitelist")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[19] = trigger.getString("whitelist");
@@ -796,6 +816,9 @@ public class configToml {
                                     if (trigger.contains("fade_out")) {
                                         triggerholder.get("song" + songCounter).get(triggerID)[35] = trigger.getString("fade_out");
                                     }
+                                    if (trigger.contains("mob_champion")) {
+                                        triggerholder.get("song" + songCounter).get(triggerID)[36] = trigger.getString("mob_champion");
+                                    }
                                 } else {
                                     MusicTriggersCommon.logger.warn("Could not find trigger with name " + triggerID);
                                 }
@@ -825,10 +848,10 @@ public class configToml {
                             Toml link = song.getTable("link");
                             if (link.contains("default")) {
                                 if (link.contains("fade_in")) {
-                                    otherinfo.get("song" + songCounter)[5] = song.getString("fade_in");
+                                    otherinfo.get("song" + songCounter)[5] = link.getString("fade_in");
                                 }
                                 if (link.contains("fade_out")) {
-                                    otherinfo.get("song" + songCounter)[6] = song.getString("fade_out");
+                                    otherinfo.get("song" + songCounter)[6] = link.getString("fade_out");
                                 }
                                 if (link.containsTableArray("trigger")) {
                                     for (Toml trigger : link.getTables("trigger")) {
@@ -948,8 +971,9 @@ public class configToml {
                         int loopIndex = 0;
                         loopPoints.putIfAbsent("song" + songCounter, new HashMap<>());
                         if (song.containsTable("loop")) {
+                            MusicTriggersCommon.logger.info("LOOP FOR SONG "+"song" + songCounter+" FOUND");
                             Toml loop = song.getTable("loop");
-                            loopPoints.get("song" + songCounter).putIfAbsent(loopIndex, new String[]{"0", "0", "0"});
+                            loopPoints.get("song" + songCounter).put(loopIndex, new String[]{"0", "0", "0"});
                             if (loop.contains("amount")) {
                                 loopPoints.get("song" + songCounter).get(loopIndex)[0] = loop.getString("amount");
                             }
@@ -961,7 +985,7 @@ public class configToml {
                             }
                         } else if(song.containsTableArray("loop")) {
                             for (Toml loop : song.getTables("loop")) {
-                                loopPoints.get("song" + songCounter).putIfAbsent(loopIndex, new String[]{"0", "0", "0"});
+                                loopPoints.get("song" + songCounter).put(loopIndex, new String[]{"0", "0", "0"});
                                 if (loop.contains("amount")) {
                                     loopPoints.get("song" + songCounter).get(loopIndex)[0] = loop.getString("amount");
                                 }
@@ -976,6 +1000,7 @@ public class configToml {
                         }
                         songCounter++;
                     } catch (Exception e) {
+                        e.printStackTrace();
                         throw new RuntimeException("Failed to initialize song block from song "+s+" at "+CrashHelper+" (Internally: File "+e.getStackTrace()[0].getFileName()+" at line "+e.getStackTrace()[0].getLineNumber()+")");
                     }
                 }
@@ -1007,8 +1032,11 @@ public class configToml {
     public static void emptyMaps() {
         songholder = new HashMap<>();
         triggerholder = new HashMap<>();
+        triggerMapper = new HashMap<>();
         otherinfo = new HashMap<>();
         otherlinkinginfo = new HashMap<>();
         triggerlinking = new HashMap<>();
+        loopPoints = new HashMap<>();
+        linkingLoopPoints = new HashMap<>();
     }
 }

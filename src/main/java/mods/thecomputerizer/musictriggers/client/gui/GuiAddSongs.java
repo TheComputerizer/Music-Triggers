@@ -2,8 +2,8 @@ package mods.thecomputerizer.musictriggers.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configObject;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.render.*;
@@ -19,11 +19,11 @@ public class GuiAddSongs extends Screen {
     public List<String> songs;
     public Screen parentScreen;
     public GuiScrollingSong scrollingSongs;
-    public configObject holder;
+    public ConfigObject holder;
     public GuiLinking linking = null;
     private final Identifier background;
 
-    public GuiAddSongs(Screen parentScreen, List<String> songs, configObject holder, GuiLinking linking) {
+    public GuiAddSongs(Screen parentScreen, List<String> songs, ConfigObject holder, GuiLinking linking) {
         super(new TranslatableText("screen.musictriggers.add_songs"));
         this.parentScreen = parentScreen;
         this.songs = songs;
@@ -46,7 +46,7 @@ public class GuiAddSongs extends Screen {
     public void init() {
         this.addBackButton();
         this.addSongs();
-        eventsClient.renderDebug = false;
+        EventsClient.renderDebug = false;
     }
 
     private void addSongs() {
@@ -89,7 +89,7 @@ public class GuiAddSongs extends Screen {
 
     @Override
     public void close() {
-        eventsClient.renderDebug = true;
+        EventsClient.renderDebug = true;
         super.close();
     }
 }

@@ -2,8 +2,8 @@ package mods.thecomputerizer.musictriggers.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configObject;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.render.*;
@@ -26,10 +26,10 @@ public class GuiTransitionInfo extends Screen {
     public boolean title;
     public Screen parentScreen;
     public GuiScrollingTransitionsInfo scrollingSongs;
-    public configObject holder;
+    public ConfigObject holder;
     private final Identifier background;
 
-    public GuiTransitionInfo(Screen parentScreen, configObject holder, int index, boolean create, boolean title, boolean ismoving, String name) {
+    public GuiTransitionInfo(Screen parentScreen, ConfigObject holder, int index, boolean create, boolean title, boolean ismoving, String name) {
         super(new TranslatableText("screen.musictriggers.transition_info"));
         this.parentScreen = parentScreen;
         this.index = index;
@@ -107,7 +107,7 @@ public class GuiTransitionInfo extends Screen {
             this.addAddTitleButton();
             this.addAddSubtitleButton();
         }
-        eventsClient.renderDebug = false;
+        EventsClient.renderDebug = false;
     }
 
     private void addScrollable() {
@@ -218,7 +218,7 @@ public class GuiTransitionInfo extends Screen {
 
     @Override
     public void close() {
-        eventsClient.renderDebug = true;
+        EventsClient.renderDebug = true;
         super.close();
     }
 }

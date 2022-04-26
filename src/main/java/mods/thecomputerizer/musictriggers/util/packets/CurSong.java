@@ -2,7 +2,7 @@ package mods.thecomputerizer.musictriggers.util.packets;
 
 
 import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
-import mods.thecomputerizer.musictriggers.util.calculateFeatures;
+import mods.thecomputerizer.musictriggers.util.CalculateFeatures;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.PacketByteBuf;
@@ -12,8 +12,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.UUID;
 
-public class CurSong {
+import static mods.thecomputerizer.musictriggers.MusicTriggersCommon.stringBreaker;
 
+public class CurSong {
     public static final Identifier id = new Identifier(MusicTriggersCommon.MODID, "cursong");
     public static HashMap<UUID,String> curSong = new HashMap<>();
 
@@ -30,22 +31,18 @@ public class CurSong {
 
     public static void register() {
         ServerPlayNetworking.registerGlobalReceiver(id,(server, player, handler, buf, sender) -> {
-            calculateFeatures.curServer = server;
+            CalculateFeatures.curServer = server;
             String s = decode(buf);
             curSong.put(getDataUUID(s),getSongName(s));
         });
     }
 
     public static String getSongName(String s) {
-        return stringBreaker(s)[0];
+        return stringBreaker(s,",")[0];
     }
 
     public static UUID getDataUUID(String s) {
-        return UUID.fromString(stringBreaker(s)[1]);
-    }
-
-    public static String[] stringBreaker(String s) {
-        return s.split(",");
+        return UUID.fromString(stringBreaker(s,",")[1]);
     }
 }
 

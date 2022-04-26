@@ -14,18 +14,8 @@ public class PacketHandler {
 
     public static void register() {
         CurSong.register();
-        InfoForBiome.register();
-        InfoForHome.register();
-        InfoForMob.register();
-        InfoForRaid.register();
-        InfoForSnow.register();
-        InfoForStructure.register();
-        InfoFromBiome.register();
-        InfoFromHome.register();
-        InfoFromMob.register();
-        InfoFromRaid.register();
-        InfoFromSnow.register();
-        InfoFromStructure.register();
+        SendTriggerData.register();
+        ReturnTriggerData.register();
         BossInfo.register();
         AllTriggers.register();
         MenuSongs.register();

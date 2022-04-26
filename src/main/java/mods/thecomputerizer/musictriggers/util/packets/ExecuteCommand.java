@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
 import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
-import mods.thecomputerizer.musictriggers.util.calculateFeatures;
+import mods.thecomputerizer.musictriggers.util.CalculateFeatures;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.PacketByteBuf;
@@ -25,7 +25,7 @@ public class ExecuteCommand {
 
     public static void register() {
         ServerPlayNetworking.registerGlobalReceiver(id,(server, player, handler, buf, sender) -> {
-            calculateFeatures.curServer = server;
+            CalculateFeatures.curServer = server;
             server.getCommandManager().execute(server.getCommandSource(), decode(buf));
         });
     }

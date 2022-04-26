@@ -1,13 +1,12 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
-import mods.thecomputerizer.musictriggers.config.configObject;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
@@ -16,10 +15,10 @@ public class GuiScrollingSong extends AlwaysSelectedEntryListWidget<GuiScrolling
 
     private final List<String> codes;
     private final Screen IN;
-    private final configObject holder;
+    private final ConfigObject holder;
     private GuiLinking linking = null;
 
-    public GuiScrollingSong(MinecraftClient client, int width, int height, int top, int bottom, List<String> songs, List<String> codes, Screen IN, configObject holder, GuiLinking linking) {
+    public GuiScrollingSong(MinecraftClient client, int width, int height, int top, int bottom, List<String> songs, List<String> codes, Screen IN, ConfigObject holder, GuiLinking linking) {
         super(client, width, height, top, bottom, 32);
         this.codes = codes;
         this.IN = IN;

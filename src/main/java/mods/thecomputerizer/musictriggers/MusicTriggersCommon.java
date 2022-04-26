@@ -1,11 +1,11 @@
 package mods.thecomputerizer.musictriggers;
 
 import mods.thecomputerizer.musictriggers.client.gui.Mappings;
-import mods.thecomputerizer.musictriggers.common.eventsCommon;
+import mods.thecomputerizer.musictriggers.common.EventsCommon;
 import mods.thecomputerizer.musictriggers.config.*;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
-import mods.thecomputerizer.musictriggers.util.json;
+import mods.thecomputerizer.musictriggers.util.Json;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -32,6 +32,7 @@ public class MusicTriggersCommon implements ModInitializer {
     public static File songsDir;
     public static File texturesDir;
 
+    @SuppressWarnings("InstantiationOfUtilityClass")
     @Override
     public void onInitialize() {
         Mappings.init();
@@ -42,7 +43,7 @@ public class MusicTriggersCommon implements ModInitializer {
         if(FabricLoaderImpl.INSTANCE.getEnvironmentType()== EnvType.CLIENT) {
             setUpClientPt1();
         }
-        configToml.parse();
+        ConfigToml.parse();
         if(FabricLoaderImpl.INSTANCE.getEnvironmentType()== EnvType.CLIENT) {
             setUpClientPt2();
         }
@@ -50,34 +51,34 @@ public class MusicTriggersCommon implements ModInitializer {
         if(!debugConfig.exists()) {
             try {
                 debugConfig.createNewFile();
-                configDebug.create(debugConfig);
+                ConfigDebug.create(debugConfig);
             }
             catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        configDebug.parse(debugConfig);
-        configCommands.parse();
+        ConfigDebug.parse(debugConfig);
+        ConfigCommands.parse();
         File registrationConfig = new File("config/MusicTriggers/registration.toml");
         if(!registrationConfig.exists()) {
             try {
                 registrationConfig.createNewFile();
-                configRegistry.create(registrationConfig);
+                ConfigRegistry.create(registrationConfig);
             }
             catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        configRegistry.parse(registrationConfig);
+        ConfigRegistry.parse(registrationConfig);
         RegistryHandler.init();
         setUpCommonEvents();
-        if(!configRegistry.clientSideOnly) {
+        if(!ConfigRegistry.clientSideOnly) {
             PacketHandler.register();
         }
     }
 
     private static void setUpCommonEvents() {
-        ServerTickEvents.END_SERVER_TICK.register( server -> eventsCommon.onTick());
+        ServerTickEvents.END_SERVER_TICK.register( server -> EventsCommon.onTick());
     }
 
     private static void setUpClientPt1() {
@@ -121,7 +122,7 @@ public class MusicTriggersCommon implements ModInitializer {
             }
         }
         File jjson = new File(musictriggersDir.getPath() + "/sounds.json");
-        if (!jjson.exists() && json.collector() != null) {
+        if (!jjson.exists() && Json.collector() != null) {
             try {
                 jjson.createNewFile();
             } catch (IOException ex) {
@@ -145,6 +146,10 @@ public class MusicTriggersCommon implements ModInitializer {
 
     private static void setUpClientPt2() {
         MusicTriggersClient.makeDiscLang();
-        configTitleCards.parse();
+        ConfigTitleCards.parse();
+    }
+
+    public static String[] stringBreaker(String s, String regex) {
+        return s.split(regex);
     }
 }

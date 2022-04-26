@@ -3,8 +3,9 @@ package mods.thecomputerizer.musictriggers.common;
 import mods.thecomputerizer.musictriggers.common.objects.BlankRecord;
 import mods.thecomputerizer.musictriggers.common.objects.MusicRecorder;
 import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
-import mods.thecomputerizer.musictriggers.util.calculateFeatures;
+import mods.thecomputerizer.musictriggers.util.CalculateFeatures;
 import mods.thecomputerizer.musictriggers.util.packets.CurSong;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
@@ -15,7 +16,7 @@ import net.minecraft.world.World;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class eventsCommon {
+public class EventsCommon {
 
     public static HashMap<BlockPos, Integer> tickCounter = new HashMap<>();
     public static HashMap<BlockPos, ItemStack> recordHolder = new HashMap<>();
@@ -28,27 +29,16 @@ public class eventsCommon {
     public static void onTick() {
         if (bossTimer > 1) bossTimer -= 1;
         else if(bossTimer==1) {
-            calculateFeatures.bossInfo = new HashMap<>();
+            CalculateFeatures.bossInfo = new HashMap<>();
             bossTimer-=1;
         }
-        for (String trigger : calculateFeatures.victoryMobs.keySet()) {
-            if (!calculateFeatures.allTriggers.contains(trigger)) {
-                Map<UUID, Integer> tempMap = calculateFeatures.victoryMobs.get(trigger);
-                for (UUID u : tempMap.keySet()) {
-                    int temp = tempMap.get(u);
-                    if (temp > 0) calculateFeatures.victoryMobs.get(trigger).put(u, temp - 1);
-                    else calculateFeatures.victoryMobs.put(trigger, new HashMap<>());
-                }
-            }
-        }
-        for (String trigger : calculateFeatures.victoryBosses.keySet()) {
-            if (!calculateFeatures.allTriggers.contains(trigger)) {
-                Map<String, Integer> tempMap = calculateFeatures.victoryBosses.get(trigger);
-                for (int j = 0; j < tempMap.keySet().size(); j++) {
-                    int temp = tempMap.get(j);
-                    if (temp > 0)
-                        calculateFeatures.victoryBosses.get(trigger).put(new ArrayList<>(tempMap.keySet()).get(j), temp - 1);
-                    else calculateFeatures.victoryBosses.put(trigger, new HashMap<>());
+        for (String trigger : CalculateFeatures.victoryMobs.keySet()) {
+            if(!CalculateFeatures.allTriggers.contains(trigger)) {
+                Map<LivingEntity, Integer> tempMap = CalculateFeatures.victoryMobs.get(trigger);
+                for (LivingEntity en : tempMap.keySet()) {
+                    int temp = tempMap.get(en);
+                    if (temp > 0) CalculateFeatures.victoryMobs.get(trigger).put(en, temp - 1);
+                    else CalculateFeatures.victoryMobs.put(trigger, new HashMap<>());
                 }
             }
         }

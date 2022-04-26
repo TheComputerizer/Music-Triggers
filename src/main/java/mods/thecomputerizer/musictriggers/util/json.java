@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.util;
 
 import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
-import mods.thecomputerizer.musictriggers.util.audio.audioConverter;
+import mods.thecomputerizer.musictriggers.util.audio.AudioConverter;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
 import org.apache.commons.io.FilenameUtils;
 
@@ -9,7 +9,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class json {
+public class Json {
     public static List<String> allSongs = new ArrayList<>();
     public static List<String> js = new ArrayList<>();
 
@@ -59,13 +59,13 @@ public class json {
         File[] listOfMP3 = folder.listFiles((dir, name) -> name.endsWith(".mp3"));
         if (listOfMP3 != null) {
             for (File mp3 : listOfMP3) {
-                audioConverter.mp3ToOgg(mp3, folder, mp3.getName().replaceAll(".mp3",".wav"));
+                AudioConverter.mp3ToOgg(mp3, folder, mp3.getName().replaceAll(".mp3",".wav"));
             }
         }
         File[] listOfWav = folder.listFiles((dir, name) -> name.endsWith(".wav"));
         if (listOfWav != null) {
             for (File wav : listOfWav) {
-                audioConverter.WavToOgg(wav.getPath(), wav.getPath().replaceAll(".wav",".ogg"), false);
+                AudioConverter.WavToOgg(wav.getPath(), wav.getPath().replaceAll(".wav",".ogg"), false);
             }
         }
         File[] listOfFiles = folder.listFiles((dir, name) -> name.endsWith(".ogg"));
@@ -103,9 +103,5 @@ public class json {
                 f.renameTo(new File(folder, f.getName().toLowerCase().replaceAll(" ","_").replaceAll("-","_")));
             }
         }
-    }
-
-    public static String[] stringBreaker(String s, String regex) {
-        return s.split(regex);
     }
 }
