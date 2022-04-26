@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = MusicTracker.class, remap = false)
 public class MixinMusicTracker {
 
-    @Inject(at = @At(value = "HEAD"), method = "tick()V", cancellable = true)
+    @Inject(at = @At(value = "HEAD"), method = "method_18669()V", cancellable = true)
     private void tick(CallbackInfo info) {
         if(!ConfigDebug.SilenceIsBad || MusicPlayer.curMusic!=null) info.cancel();
     }

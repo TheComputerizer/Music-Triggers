@@ -256,13 +256,13 @@ public class EventsClient {
         if (ConfigDebug.ShowDebugInfo && renderDebug) {
             List<String> left = new ArrayList<>();
             if (MusicPlayer.curTrack != null) {
-                left.add("Music Triggers Current song: "+MusicPlayer.curTrackHolder);
+                left.add("Music Triggers Current song: "+ MusicPlayer.curTrackHolder);
             }
             if (!ConfigDebug.ShowJustCurSong) {
                 int displayCount = 0;
                 if(!MusicPlayer.formatSongTime().matches("No song playing")) left.add("Music Triggers Current Song Time: " + MusicPlayer.formatSongTime());
-                if(MusicPlayer.fadingOut) left.add("Music Triggers Fading Out: "+MusicPlayer.formattedTimeFromMilliseconds(MusicPlayer.tempFadeOut*50));
-                if(MusicPlayer.fadingIn) left.add("Music Triggers Fading In: "+MusicPlayer.formattedTimeFromMilliseconds(MusicPlayer.tempFadeIn*50));
+                if(MusicPlayer.fadingOut) left.add("Music Triggers Fading Out: "+ MusicPlayer.formattedTimeFromMilliseconds(MusicPlayer.tempFadeOut*50));
+                if(MusicPlayer.fadingIn) left.add("Music Triggers Fading In: "+ MusicPlayer.formattedTimeFromMilliseconds(MusicPlayer.tempFadeIn*50));
                 if(MusicPicker.playableList!=null && !MusicPicker.playableList.isEmpty()) {
                     StringBuilder s = new StringBuilder();
                     for (String ev : MusicPicker.playableList) {

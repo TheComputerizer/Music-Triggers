@@ -13,7 +13,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = Source.class)
 public abstract class MixinSource{
 
-
     @Inject(at = @At("HEAD"), method = "setStream(Lnet/minecraft/client/sound/AudioStream;)V")
     private void setStream(AudioStream stream, CallbackInfo info) {
         if (MusicPlayer.curMusic != null && MusicPlayer.curMusicSource!=null && ((Source) (Object) this).pointer == MusicPlayer.curMusicSource.pointer) {

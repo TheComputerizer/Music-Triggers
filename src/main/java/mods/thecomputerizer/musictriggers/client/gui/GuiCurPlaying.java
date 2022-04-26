@@ -121,7 +121,7 @@ public class GuiCurPlaying extends Screen {
     public static double getSongPosInSeconds(SoundInstance sound) {
         double seconds = 0;
         try {
-            if(sound!=null) seconds = Math.floor((float)MusicPlayer.curMusicTimer/1000f);
+            if(sound!=null) seconds = Math.floor((float) MusicPlayer.curMusicTimer/1000f);
         } catch (Exception e) {
             MusicTriggersCommon.logger.error("Could not get current position of song");
             e.printStackTrace();

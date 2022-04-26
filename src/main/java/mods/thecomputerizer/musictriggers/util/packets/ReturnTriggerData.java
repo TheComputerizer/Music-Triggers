@@ -2,9 +2,8 @@ package mods.thecomputerizer.musictriggers.util.packets;
 
 import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
 import mods.thecomputerizer.musictriggers.client.FromServer;
-import mods.thecomputerizer.musictriggers.util.CalculateFeatures;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
 
@@ -24,9 +23,6 @@ public class ReturnTriggerData {
     }
 
     public static void register() {
-        ServerPlayNetworking.registerGlobalReceiver(id,(server, player, handler, buf, sender) -> {
-            CalculateFeatures.curServer = server;
-            FromServer.clientSync(decode(buf));
-        });
+        ClientPlayNetworking.registerGlobalReceiver(id,(client, handler, buf, responseSender) -> FromServer.clientSync(decode(buf)));
     }
 }
