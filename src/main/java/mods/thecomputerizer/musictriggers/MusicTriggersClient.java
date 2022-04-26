@@ -1,18 +1,17 @@
 package mods.thecomputerizer.musictriggers;
 
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configRegistry;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import mods.thecomputerizer.musictriggers.util.CustomTick;
 import mods.thecomputerizer.musictriggers.util.events.AdvancementEvent;
 import mods.thecomputerizer.musictriggers.util.events.LivingDamageEvent;
-import mods.thecomputerizer.musictriggers.util.json;
+import mods.thecomputerizer.musictriggers.util.Json;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientLoginConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-import net.fabricmc.fabric.impl.event.lifecycle.ClientLifecycleEventsImpl;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
@@ -45,7 +44,7 @@ public class MusicTriggersClient implements ClientModInitializer {
         if (sj.exists()) {
             sj.delete();
         }
-        List<String> writeThis = json.create();
+        List<String> writeThis = Json.create();
         if (writeThis != null) {
             try {
                 sj.createNewFile();
@@ -61,15 +60,15 @@ public class MusicTriggersClient implements ClientModInitializer {
     }
 
     public static void makeDiscLang() {
-        if(configRegistry.registerDiscs) {
+        if(ConfigRegistry.registerDiscs) {
             File sj = new File(FabricLoaderImpl.INSTANCE.getConfigDir().toString(),"MusicTriggers/songs/assets/musictriggers/lang/en_us.json");
             if (sj.exists()) {
                 sj.delete();
             }
-            List<String> writeThis = json.create();
+            List<String> writeThis = Json.create();
             assert writeThis != null;
             writeThis.clear();
-            writeThis = json.lang();
+            writeThis = Json.lang();
             if (writeThis != null) {
                 try {
                     sj.createNewFile();
@@ -87,31 +86,30 @@ public class MusicTriggersClient implements ClientModInitializer {
 
     private static void setUpClientEvents() {
 
-        ClientLoginConnectionEvents.DISCONNECT.register((handler, client) -> eventsClient.onDisconnect());
+        ClientLoginConnectionEvents.DISCONNECT.register((handler, client) -> EventsClient.onDisconnect());
 
         HudRenderCallback.EVENT.register((matrixStack, tickDelta) -> {
-            eventsClient.imageCards(matrixStack);
-            eventsClient.debugInfo(matrixStack);
-            eventsClient.renderBoss();
+            EventsClient.imageCards(matrixStack);
+            EventsClient.debugInfo(matrixStack);
+            EventsClient.renderBoss();
         });
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if(GUI.wasPressed()) eventsClient.onKeyInput();
+            if (GUI.wasPressed()) EventsClient.onKeyInput();
             MusicPlayer.onTick();
-            eventsClient.onTick();
+            EventsClient.onTick();
         });
 
         LivingDamageEvent.EVENT.register(((entity, damageSource) -> {
-            eventsClient.onDamage(entity,damageSource);
+            EventsClient.onDamage(entity, damageSource);
             return ActionResult.PASS;
         }));
 
         AdvancementEvent.EVENT.register(((advancement) -> {
-            eventsClient.onAdvancement(advancement);
+            EventsClient.onAdvancement(advancement);
             return ActionResult.PASS;
         }));
 
-        MusicTriggersCommon.logger.info("Setting up custom tick");
         CustomTick.setUp();
     }
 }

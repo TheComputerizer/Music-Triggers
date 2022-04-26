@@ -5,7 +5,7 @@ import mods.thecomputerizer.musictriggers.common.ModSounds;
 import mods.thecomputerizer.musictriggers.common.MusicTriggersBlocks;
 import mods.thecomputerizer.musictriggers.common.MusicTriggersItems;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
-import mods.thecomputerizer.musictriggers.config.configRegistry;
+import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 
 
 public final class RegistryHandler {
@@ -28,7 +28,7 @@ public final class RegistryHandler {
 
     public static void init() {
         SoundHandler.registerSounds();
-        if(configRegistry.registerDiscs) {
+        if(ConfigRegistry.registerDiscs) {
             registerBlocks();
             registerItems();
             registerSoundEvents();

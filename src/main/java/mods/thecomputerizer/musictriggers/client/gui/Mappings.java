@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
-import mods.thecomputerizer.musictriggers.config.configTitleCards;
+import mods.thecomputerizer.musictriggers.config.ConfigTitleCards;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,7 +18,7 @@ public class Mappings {
             "minecraft", "_", "16", "false", "100", "100", "100",
             "false", "0", "minecraft", "true", "true", "0", "0", "nope",
             "nope", "-111", "false","_", "true", "-1", "-111", "true",
-            "false", "false", "false", "0"};
+            "false", "false", "false", "0", "minecraft"};
     public static Map<Integer, String> defparameters = new HashMap<>();
 
     public static void init() {
@@ -58,6 +58,7 @@ public class Mappings {
         parameters.put(33, "time_switch");
         parameters.put(34, "remove_inactive_playable");
         parameters.put(35, "fade_out");
+        parameters.put(36, "mob_champion");
         songparameters.put(0, "pitch");
         songparameters.put(1, "play_once");
         songparameters.put(2, "must_finish");
@@ -105,6 +106,7 @@ public class Mappings {
         reverseparameters.put("time_switch", 33);
         reverseparameters.put("remove_inactive_playable", 34);
         reverseparameters.put("fade_out", 35);
+        reverseparameters.put("mob_champion", 36);
         reversesongparameters.put("pitch", 0);
         reversesongparameters.put("play_once", 1);
         reversesongparameters.put("must_finish", 2);
@@ -387,7 +389,7 @@ public class Mappings {
         return ret;
     }
 
-    public static void buildTitleOutputForGuiFromIndex(configTitleCards.Title title, StringBuilder builder, List<Integer> parameters) {
+    public static void buildTitleOutputForGuiFromIndex(ConfigTitleCards.Title title, StringBuilder builder, List<Integer> parameters) {
         builder.append("\ttitle = [ ");
         for(String t : title.getTitles()) {
             builder.append("\"").append(t).append("\" ");
@@ -403,7 +405,7 @@ public class Mappings {
         }
     }
 
-    private static void buildIndividualTitleOutputForGuiFromIndex(configTitleCards.Title title, StringBuilder builder, int index) {
+    private static void buildIndividualTitleOutputForGuiFromIndex(ConfigTitleCards.Title title, StringBuilder builder, int index) {
         switch (index) {
             case 0 -> builder.append("\tplay_once = \"").append(title.getPlayonce()).append("\"\n");
             case 1 -> builder.append("\ttitle_color = \"").append(title.getTitlecolor()).append("\"\n");
@@ -412,7 +414,7 @@ public class Mappings {
         }
     }
 
-    public static void buildImageOutputForGuiFromIndex(configTitleCards.Image image, StringBuilder builder, List<Integer> parameters, boolean ismoving) {
+    public static void buildImageOutputForGuiFromIndex(ConfigTitleCards.Image image, StringBuilder builder, List<Integer> parameters, boolean ismoving) {
         for(int i : parameters) {
             buildIndividualStaticImageOutputForGuiFromIndex(image,builder,i);
         }
@@ -424,7 +426,7 @@ public class Mappings {
         }
     }
 
-    private static void buildIndividualStaticImageOutputForGuiFromIndex(configTitleCards.Image image, StringBuilder builder, int index) {
+    private static void buildIndividualStaticImageOutputForGuiFromIndex(ConfigTitleCards.Image image, StringBuilder builder, int index) {
         if(index<=9) {
             switch (index) {
                 case 0 -> builder.append("\tname = \"").append(image.getName()).append("\"\n");
@@ -441,7 +443,7 @@ public class Mappings {
         }
     }
 
-    private static void buildIndividualMovingImageOutputForGuiFromIndex(configTitleCards.Image image, StringBuilder builder, int index) {
+    private static void buildIndividualMovingImageOutputForGuiFromIndex(ConfigTitleCards.Image image, StringBuilder builder, int index) {
         if(index>9) {
             switch (index) {
                 case 10 -> builder.append("\t\tdelay = \"").append(image.getDelay()).append("\"\n");

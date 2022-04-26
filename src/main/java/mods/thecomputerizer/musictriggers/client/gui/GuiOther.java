@@ -2,9 +2,9 @@ package mods.thecomputerizer.musictriggers.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configDebug;
-import mods.thecomputerizer.musictriggers.config.configObject;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigDebug;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.render.*;
@@ -22,10 +22,10 @@ public class GuiOther extends Screen {
     public List<String> info;
     public Screen parentScreen;
     public GuiScrollingOther scrollingSongs;
-    public configObject holder;
+    public ConfigObject holder;
     private final Identifier background;
 
-    public GuiOther(Screen parentScreen, configObject holder) {
+    public GuiOther(Screen parentScreen, ConfigObject holder) {
         super(new TranslatableText("screen.musictriggers.other"));
         this.parentScreen = parentScreen;
         this.holder = holder;
@@ -68,7 +68,7 @@ public class GuiOther extends Screen {
         this.addBackButton();
         addRefreshDebugButton();
         this.addScrollable();
-        eventsClient.renderDebug = false;
+        EventsClient.renderDebug = false;
     }
 
     private void addScrollable() {
@@ -92,7 +92,7 @@ public class GuiOther extends Screen {
                 (button) -> {
                     try {
                         this.holder.writeOther();
-                        configDebug.parse(new File("config/MusicTriggers/debug.toml"));
+                        ConfigDebug.parse(new File("config/MusicTriggers/debug.toml"));
                         this.onClose();
                     } catch(Exception e) {
                         e.printStackTrace();
@@ -119,7 +119,7 @@ public class GuiOther extends Screen {
 
     @Override
     public void onClose() {
-        eventsClient.renderDebug = true;
+        EventsClient.renderDebug = true;
         super.onClose();
     }
 }

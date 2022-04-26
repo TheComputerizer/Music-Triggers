@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configObject;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
 import net.minecraft.client.render.Tessellator;
@@ -16,9 +16,9 @@ public class GuiScrollingTriggerInfo extends AlwaysSelectedEntryListWidget<GuiSc
 
     private final GuiTriggerInfo IN;
     public int index;
-    public configObject holder;
+    public ConfigObject holder;
 
-    public GuiScrollingTriggerInfo(MinecraftClient client, int width, int height, int top, int bottom, List<String> parameters, GuiTriggerInfo IN, configObject holder) {
+    public GuiScrollingTriggerInfo(MinecraftClient client, int width, int height, int top, int bottom, List<String> parameters, GuiTriggerInfo IN, ConfigObject holder) {
         super(client, width, height, top, bottom, 32);
         this.IN = IN;
         this.holder = holder;
@@ -83,8 +83,8 @@ public class GuiScrollingTriggerInfo extends AlwaysSelectedEntryListWidget<GuiSc
             GuiScrollingTriggerInfo.this.index = this.getIndex(this.info);
             GuiScrollingTriggerInfo.this.setSelected(this);
             if(this.info.matches("zone")) {
-                eventsClient.parentScreen = GuiScrollingTriggerInfo.this.IN;
-                eventsClient.zone = true;
+                EventsClient.parentScreen = GuiScrollingTriggerInfo.this.IN;
+                EventsClient.zone = true;
                 GuiScrollingTriggerInfo.this.IN.onClose();
             }
         }

@@ -2,9 +2,9 @@ package mods.thecomputerizer.musictriggers.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
-import mods.thecomputerizer.musictriggers.client.eventsClient;
-import mods.thecomputerizer.musictriggers.config.configObject;
-import mods.thecomputerizer.musictriggers.config.configToml;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
+import mods.thecomputerizer.musictriggers.config.ConfigToml;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.render.*;
@@ -24,17 +24,17 @@ public class GuiTriggers extends Screen {
     public Screen parentScreen;
     public GuiScrollingTrigger scrollingSongs;
     public String songCode;
-    public configObject holder;
+    public ConfigObject holder;
     private final Identifier background;
 
-    public GuiTriggers(Screen parentScreen, configObject holder, String songCode) {
+    public GuiTriggers(Screen parentScreen, ConfigObject holder, String songCode) {
         super(new TranslatableText("screen.musictriggers.triggers"));
         this.parentScreen = parentScreen;
         this.songCode = songCode;
         this.holder = holder;
         this.triggers = new ArrayList<>();
-        this.triggers.addAll(Arrays.stream(configToml.triggers).collect(Collectors.toList()));
-        this.triggers.addAll(Arrays.stream(configToml.modtriggers).collect(Collectors.toList()));
+        this.triggers.addAll(Arrays.stream(ConfigToml.triggers).collect(Collectors.toList()));
+        this.triggers.addAll(Arrays.stream(ConfigToml.modtriggers).collect(Collectors.toList()));
         this.background = new Identifier(MusicTriggersCommon.MODID,"textures/block/recorder_side_active.png");
     }
 
@@ -53,7 +53,7 @@ public class GuiTriggers extends Screen {
     public void init() {
         this.addBackButton();
         this.addScrollable();
-        eventsClient.renderDebug = false;
+        EventsClient.renderDebug = false;
     }
 
     private void addScrollable() {
@@ -93,7 +93,7 @@ public class GuiTriggers extends Screen {
 
     @Override
     public void onClose() {
-        eventsClient.renderDebug = true;
+        EventsClient.renderDebug = true;
         super.onClose();
     }
 }

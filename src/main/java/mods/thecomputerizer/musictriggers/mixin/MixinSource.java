@@ -16,7 +16,7 @@ public abstract class MixinSource{
 
     @Inject(at = @At("HEAD"), method = "setStream(Lnet/minecraft/client/sound/AudioStream;)V")
     private void setStream(AudioStream stream, CallbackInfo info) {
-        if (MusicPlayer.curMusic != null && ((Source) (Object) this).pointer == MusicPlayer.curMusicSource.pointer) {
+        if (MusicPlayer.curMusic != null && MusicPlayer.curMusicSource!=null && ((Source) (Object) this).pointer == MusicPlayer.curMusicSource.pointer) {
             if (!(((Source) (Object) this).stream instanceof SkippableOggAudioStream))
                 MusicPlayer.curMusicTimer = 0;
         }

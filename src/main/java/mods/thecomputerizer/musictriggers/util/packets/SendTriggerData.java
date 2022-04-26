@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
 import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
-import mods.thecomputerizer.musictriggers.common.EventsCommon;
 import mods.thecomputerizer.musictriggers.util.CalculateFeatures;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -9,21 +8,22 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
 
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.HashMap;
+import java.util.UUID;
 
 import static mods.thecomputerizer.musictriggers.MusicTriggersCommon.stringBreaker;
 
-public class MenuSongs {
-
-    public static final Identifier id = new Identifier(MusicTriggersCommon.MODID, "menusongs");
+public class SendTriggerData {
+    public static final Identifier id = new Identifier(MusicTriggersCommon.MODID, "packet_send_trigger_data");
 
     public static String decode(PacketByteBuf buf) {
         return ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
     }
 
-    public static PacketByteBuf encode(String name) {
+    public static PacketByteBuf encode(String triggerData, UUID playerUUID) {
+        String send = triggerData+"/"+playerUUID;
         PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeCharSequence(name, StandardCharsets.UTF_8);
+        buf.writeCharSequence(send, StandardCharsets.UTF_8);
         return buf;
     }
 
@@ -31,16 +31,15 @@ public class MenuSongs {
         ServerPlayNetworking.registerGlobalReceiver(id,(server, player, handler, buf, sender) -> {
             CalculateFeatures.curServer = server;
             String s = decode(buf);
-            EventsCommon.recordMenu = getSongsWithUUIDAttached(s);
+            CalculateFeatures.calculateServerTriggers(stringBreaker(getTriggerData(s),"#"), getPlayerUUID(s));
         });
     }
 
-    public static HashMap<UUID, List<String>> getSongsWithUUIDAttached(String s) {
-        if(s==null) return null;
-        String[] broken = stringBreaker(s,",");
-        ArrayList<String> ret = new ArrayList<>(Arrays.asList(broken).subList(1, broken.length));
-        HashMap<UUID, List<String>> builtMap = new HashMap<>();
-        builtMap.put(UUID.fromString(broken[0]),ret);
-        return builtMap;
+    public static String getTriggerData(String s) {
+        return stringBreaker(s,"/")[0];
+    }
+
+    public static UUID getPlayerUUID(String s) {
+        return UUID.fromString(s.substring(s.lastIndexOf("/") + 1));
     }
 }
