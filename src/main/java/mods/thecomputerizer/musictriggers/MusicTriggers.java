@@ -196,8 +196,8 @@ public class MusicTriggers {
         if(!ConfigRegistry.clientSideOnly) {
             RegistryHandler.init();
         }
-        MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
         if(event.getSide()==Side.CLIENT) {
+            MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
             MinecraftForge.EVENT_BUS.register(EventsClient.class);
         }
         MinecraftForge.EVENT_BUS.register(EventsCommon.class);
