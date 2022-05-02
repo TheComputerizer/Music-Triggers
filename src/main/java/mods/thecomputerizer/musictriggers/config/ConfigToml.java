@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.config;
 import com.moandjiezana.toml.Toml;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.MusicPicker;
+import net.minecraftforge.fml.common.thread.SidedThreadGroups;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -49,7 +50,7 @@ public class ConfigToml {
         else {
             Toml toml = new Toml().read(file);
             int songCounter = 0;
-            if(toml.contains("universal")) {
+            if(toml.contains("universal") && Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
                 Toml universal = toml.getTable("universal");
                 if (universal.contains("fade_in")) MusicPicker.universalFadeIn = Integer.parseInt(universal.getString("fade_in"));
                 if (universal.contains("fade_out")) MusicPicker.universalFadeOut = Integer.parseInt(universal.getString("fade_out"));
