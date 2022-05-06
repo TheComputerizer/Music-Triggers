@@ -159,8 +159,6 @@ jar {
     manifest {
         attributes([
             "FMLAT": "musictriggers_at.cfg",
-            "FMLCorePlugin": "mods.thecomputerizer.musictriggers.core.LoadingPlugin",
-            "FMLCorePluginContainsFMLMod": "true",
             "Specification-Title": "musictriggers",
             "Specification-Vendor": "musictriggerssareus",
             "Specification-Version": "1.12.2-5.3",
@@ -168,6 +166,8 @@ jar {
             "Implementation-Version": "1.12.2-5.3",
             "Implementation-Vendor" :"musictriggers",
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+            "TweakClass": "org.spongepowered.asm.launch.MixinTweaker",
+            "MixinConfigs": "musictriggers.mixin.json"
         ])
     }
 }
