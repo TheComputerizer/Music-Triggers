@@ -159,6 +159,7 @@ jar {
     manifest {
         attributes([
             "FMLAT": "musictriggers_at.cfg",
+            "ForceLoadAsMod": true,
             "Specification-Title": "musictriggers",
             "Specification-Vendor": "musictriggerssareus",
             "Specification-Version": "1.12.2-5.3",
