@@ -246,6 +246,7 @@ public class EventsClient {
 
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent event) {
+        if(!Minecraft.getMinecraft().isGamePaused() && !renderDebug) renderDebug = true;
         if(reloadCounter>0) {
             reloadCounter-=1;
             if(reloadCounter==1) {
