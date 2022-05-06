@@ -555,7 +555,7 @@ public class MusicPicker {
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("riding").keySet()) {
                     crashHelper = "riding-" + identifier;
                     String ridingName = SoundHandler.TriggerInfoMap.get("riding-" + identifier)[9];
-                    if (ridingName.matches("minecraft") || checkResourceList(Objects.requireNonNull(player.getRidingEntity()).getName(),ridingName,true) || checkResourceList(Objects.requireNonNull(EntityList.getKey(player.getRidingEntity())).toString(),ridingName,true)) {
+                    if (ridingName.matches("minecraft") || (player.getRidingEntity()!=null && checkResourceList(Objects.requireNonNull(player.getRidingEntity()).getName(),ridingName,true)) || (EntityList.getKey(player.getRidingEntity())!=null && checkResourceList(Objects.requireNonNull(EntityList.getKey(player.getRidingEntity())).toString(),ridingName,true))) {
                         if (!events.contains("riding-" + identifier)) {
                             events.add("riding-" + identifier);
                             dynamicSongs.put("riding-" + identifier, SoundHandler.TriggerIdentifierMap.get("riding").get(identifier));
