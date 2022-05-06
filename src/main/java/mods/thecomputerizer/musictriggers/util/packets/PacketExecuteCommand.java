@@ -1,6 +1,8 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
+import com.ibm.icu.impl.ReplaceableUCharacterIterator;
 import io.netty.buffer.ByteBuf;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import net.minecraft.command.CommandBase;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -15,17 +17,11 @@ public class PacketExecuteCommand implements IMessageHandler<PacketExecuteComman
     @Override
     public IMessage onMessage(PacketExecuteCommand.packetExecuteCommandMessage message, MessageContext ctx)
     {
-        if(message.getLiteralCommand()==null) return null;
+        if(message.s==null) return null;
 
         if(ctx.side.isServer()) {
             MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-            for(String command : server.getCommandManager().getCommands().keySet()) {
-                if(server.getCommandManager().getCommands().get(command).getAliases().contains(message.getCommandName())) {
-                    if(((CommandBase)server.getCommandManager().getCommands().get(command)).getRequiredPermissionLevel()<=message.getOpLevel()) {
-                        server.commandManager.executeCommand(server, message.getLiteralCommand());
-                    }
-                }
-            }
+            FMLCommonHandler.instance().getMinecraftServerInstance().commandManager.executeCommand(server, message.s);
         }
         return null;
     }
@@ -35,8 +31,8 @@ public class PacketExecuteCommand implements IMessageHandler<PacketExecuteComman
 
         public packetExecuteCommandMessage() {}
 
-        public packetExecuteCommandMessage(String cmd, int level) {
-            this.s = cmd+","+level;
+        public packetExecuteCommandMessage(String cmd) {
+            this.s = cmd;
         }
 
         @Override
@@ -47,21 +43,6 @@ public class PacketExecuteCommand implements IMessageHandler<PacketExecuteComman
         @Override
         public void toBytes(ByteBuf buf) {
             buf.writeCharSequence(s, StandardCharsets.UTF_8);
-        }
-
-        public String getLiteralCommand() {
-            if(s==null) {
-                return null;
-            }
-            return stringBreaker(s)[0];
-        }
-
-        public int getOpLevel() {
-            return Integer.parseInt(stringBreaker(s)[1]);
-        }
-
-        public String getCommandName() {
-            return stringBreaker(s)[0].split(" ")[0].replaceAll("/","");
         }
 
         public static String[] stringBreaker(String s) {

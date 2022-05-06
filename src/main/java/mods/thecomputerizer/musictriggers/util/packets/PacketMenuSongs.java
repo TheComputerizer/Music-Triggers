@@ -45,10 +45,7 @@ public class PacketMenuSongs implements IMessageHandler<PacketMenuSongs.packetMe
                 return null;
             }
             String[] broken = stringBreaker(s);
-            ArrayList<String> ret = new ArrayList<>();
-            for(int i=1;i<broken.length;i++) {
-                ret.add(broken[i]);
-            }
+            ArrayList<String> ret = new ArrayList<>(Arrays.asList(broken).subList(1, broken.length));
             HashMap<UUID, List<String>> builtMap = new HashMap<>();
             builtMap.put(UUID.fromString(broken[0]),ret);
             return builtMap;

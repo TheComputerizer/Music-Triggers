@@ -153,7 +153,7 @@ public class MusicTriggers {
                 }
             }
         }
-        ConfigToml.parse();
+        ConfigToml.parse(Thread.currentThread().getThreadGroup() == SidedThreadGroups.CLIENT);
         ConfigCommands.parse();
         Mappings.init();
         if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
@@ -193,9 +193,7 @@ public class MusicTriggers {
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        if(!ConfigRegistry.clientSideOnly) {
-            RegistryHandler.init();
-        }
+        if(!ConfigRegistry.clientSideOnly) RegistryHandler.init();
         if(event.getSide()==Side.CLIENT) {
             MinecraftForge.EVENT_BUS.register(MusicPlayer.class);
             MinecraftForge.EVENT_BUS.register(EventsClient.class);

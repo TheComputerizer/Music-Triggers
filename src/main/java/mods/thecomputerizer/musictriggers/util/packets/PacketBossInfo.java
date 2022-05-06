@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
 import io.netty.buffer.ByteBuf;
-import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.EventsCommon;
 import mods.thecomputerizer.musictriggers.util.CalculateFeatures;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;

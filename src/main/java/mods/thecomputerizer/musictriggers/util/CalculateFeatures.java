@@ -66,13 +66,13 @@ public class CalculateFeatures {
             }
         }
         if(removeLast) toSend = new StringBuilder(toSend.substring(0, toSend.length() - 1));
+        toSend.append("&");
         RegistryHandler.network.sendTo(new PacketReturnTriggers.PacketReturnTriggersMessage(toSend.toString()),FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUUID(playerUUID));
     }
 
     public static String calculateHome(Integer range, UUID uuid) {
         EntityPlayerMP player = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUUID(uuid);
-        boolean pass = false;
-        if(player.getBedLocation(player.dimension)!=null) pass = player.getBedLocation(player.dimension).getDistance(roundedPos(player).getX(), roundedPos(player).getY(), roundedPos(player).getZ())<=range;
+        boolean pass = player.getBedLocation(player.dimension).getDistance(roundedPos(player).getX(), roundedPos(player).getY(), roundedPos(player).getZ())<=range;
         return pass+"$";
     }
 

@@ -13,8 +13,9 @@ public class Json {
     public static List<String> js = new ArrayList<>();
 
     public static List<String> create() {
+        MusicTriggers.logger.info("Creating sound.json");
         format();
-        allSongs = collector();
+        collector();
         if (allSongs != null && !allSongs.isEmpty()) {
             System.out.print(allSongs.size());
             js.add("{");
@@ -40,7 +41,8 @@ public class Json {
     }
 
     public static List<String> lang() {
-        allSongs = collector();
+        format();
+        collector();
         if (allSongs != null && !allSongs.isEmpty()) {
             System.out.print(allSongs.size());
             js.add("{");
@@ -53,7 +55,7 @@ public class Json {
         return js;
     }
 
-    public static List<String> collector() {
+    public static void collector() {
         File folder = new File("." + "/config/MusicTriggers/songs/assets/musictriggers/sounds/music/");
         File[] listOfMP3 = folder.listFiles((dir, name) -> name.endsWith(".mp3"));
         if (listOfMP3 != null) {
@@ -68,27 +70,19 @@ public class Json {
             }
         }
         File[] listOfFiles = folder.listFiles((dir, name) -> name.endsWith(".ogg"));
-        assert listOfFiles != null;
-        boolean matchCheck = false;
-        String curfile;
-        for (File f : listOfFiles) {
-            curfile = FilenameUtils.getBaseName(f.getName());
-            for (String checker : allSongs) {
-                if (checker.matches(curfile)) {
-                    matchCheck = true;
-                    break;
-                }
+        if(listOfFiles!=null) {
+            String curfile;
+            allSongs = new ArrayList<>();
+            for (File f : listOfFiles) {
+                curfile = FilenameUtils.getBaseName(f.getName());
+                if (!allSongs.contains(curfile)) allSongs.add(curfile);
             }
-            if (!matchCheck) {
-                allSongs.add(curfile);
-            }
-            matchCheck = false;
         }
-        return allSongs;
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void format() {
+        MusicTriggers.logger.info("Formatting songs");
         File folder = new File("." + "/config/MusicTriggers/songs/assets/musictriggers/sounds/music/");
         File[] music = folder.listFiles();
         if (music!=null) {

@@ -1,3 +1,4 @@
+//file:noinspection GroovyUnusedAssignment
 
 buildscript {
     repositories {
@@ -18,7 +19,7 @@ apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'maven-publish'
 
-version = '1.12.2-5.2-hf'
+version = '1.12.2-5.3'
 group = 'mods.thecomputerizer.musictriggers'
 archivesBaseName = 'musictriggers'
 
@@ -96,12 +97,12 @@ dependencies {
     //libraries that may or may not be included by forge/minecraft and need to be relocated
     //theres nothing here...
 
-    embed('org.spongepowered:mixin:0.8.3') {
+    embed('org.spongepowered:mixin:0.8.4') {
         exclude module: 'guava'
         exclude module: 'commons-io'
         exclude module: 'gson'
     }
-    annotationProcessor('org.spongepowered:mixin:0.8.3:processor')
+    annotationProcessor('org.spongepowered:mixin:0.8.4:processor')
 
     implementation fg.deobf("curse.maven:codechicken-lib-242818:2779848")
     implementation fg.deobf("curse.maven:bloodmoon-226321:2537917")
@@ -162,9 +163,9 @@ jar {
             "FMLCorePluginContainsFMLMod": "true",
             "Specification-Title": "musictriggers",
             "Specification-Vendor": "musictriggerssareus",
-            "Specification-Version": "1.12.2-5.2-hf",
+            "Specification-Version": "1.12.2-5.3",
             "Implementation-Title": project.name,
-            "Implementation-Version": "1.12.2-5.2-hf",
+            "Implementation-Version": "1.12.2-5.3",
             "Implementation-Vendor" :"musictriggers",
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
         ])

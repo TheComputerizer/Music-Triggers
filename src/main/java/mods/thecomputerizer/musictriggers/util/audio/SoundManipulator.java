@@ -8,6 +8,7 @@ import paulscode.sound.libraries.LibraryLWJGLOpenAL;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 
+@SuppressWarnings("unchecked")
 public class SoundManipulator {
 
     public static int getMillisecondTimeForSource(SoundSystem soundSystem, String sourceName) throws NoSuchFieldException, IllegalAccessException {

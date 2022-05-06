@@ -20,8 +20,7 @@ public class GuiScrollingLinking extends GuiSlot {
     public String curSelected;
     private final ResourceLocation background;
     public int index;
-    public ConfigObject holder;
-    public GuiScrollingLinking(Minecraft client, int width, int height, int top, int bottom, List<String> songs, GuiLinking IN, ConfigObject holder) {
+    public GuiScrollingLinking(Minecraft client, int width, int height, int top, int bottom, List<String> songs, GuiLinking IN) {
         super(client, width, height, top, bottom, 32);
         this.size = songs.size();
         this.songs = songs;

@@ -46,7 +46,7 @@ public class GuiLinking extends GuiScreen {
     }
 
     private void addSongs() {
-        this.scrollingSongs = new GuiScrollingLinking(this.mc, this.width, this.height,32,this.height-32, this.songs,this, this.holder);
+        this.scrollingSongs = new GuiScrollingLinking(this.mc, this.width, this.height,32,this.height-32, this.songs,this);
         this.scrollingSongs.registerScrollButtons(7, 8);
     }
 

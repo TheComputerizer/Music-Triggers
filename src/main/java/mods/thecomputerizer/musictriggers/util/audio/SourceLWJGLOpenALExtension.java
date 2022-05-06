@@ -56,74 +56,8 @@ public class SourceLWJGLOpenALExtension extends SourceLWJGLOpenAL {
 
     private byte[] copyByteArrayAfterIndex(byte[] byteArray, int index) {
         byte[] ret = new byte[byteArray.length-index];
-        for(int i=index;i< byteArray.length;i++) {
-            ret[i-index] = byteArray[i];
-        }
+        if (byteArray.length - index >= 0)
+            System.arraycopy(byteArray, index, ret, 0, byteArray.length - index);
         return byteArray;
     }
-
-    /*
-    @Override
-    public boolean stream() {
-        if(channel==null) return false;
-        if(preLoad) {
-            if(rawDataStream) preLoad = false;
-            else return preLoad();
-        }
-
-        if(rawDataStream) {
-            if(stopped() || paused()) return true;
-            if(channel.buffersProcessed() > 0) channel.processBuffer();
-            return true;
-        }
-        else {
-            if(codec==null) return false;
-            if(stopped()) return false;
-            if(paused()) return true;
-
-            int processed = channel.buffersProcessed();
-
-            SoundBuffer buffer;
-            for(int i=0;i < processed;i++) {
-                buffer = codec.read();
-                if(buffer!=null) {
-                    if(buffer.audioData!=null) channel.queueBuffer(buffer.audioData);
-                    buffer.cleanup();
-                    buffer = null;
-                    return true;
-                }
-                else if(codec.endOfStream()) {
-                    synchronized(soundSequenceLock) {
-                        if(SoundSystemConfig.getStreamQueueFormatsMatch()) {
-                            if(soundSequenceQueue!=null && soundSequenceQueue.size() > 0) {
-                                if( codec != null ) codec.cleanup();
-                                filenameURL = soundSequenceQueue.remove(0);
-                                codec = SoundSystemConfig.getCodec(filenameURL.getFilename());
-                                codec.initialize(filenameURL.getURL());
-                                buffer = codec.read();
-                                if(buffer != null) {
-                                    if(buffer.audioData!=null) channel.queueBuffer(buffer.audioData);
-                                    buffer.cleanup();
-                                    buffer = null;
-                                    return true;
-                                }
-                            }
-                            else if(toLoop) {
-                                codec.initialize(filenameURL.getURL());
-                                buffer = codec.read();
-                                if(buffer!=null) {
-                                    if(buffer.audioData!=null) channel.queueBuffer(buffer.audioData);
-                                    buffer.cleanup();
-                                    buffer = null;
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return false;
-    }
-     */
 }

@@ -14,7 +14,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.GuiWinGame;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
@@ -55,7 +54,6 @@ public class EventsClient {
     public static float startDelayCount = 0;
     public static Boolean activated = false;
     public static long timer=0;
-    public static String GUIName;
     public static int GuiCounter = 0;
     public static int reloadCounter = 0;
     public static boolean ismoving;
@@ -79,14 +77,9 @@ public class EventsClient {
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
         PositionedSoundRecord silenced = new PositionedSoundRecord(e.getSound().getSoundLocation(), SoundCategory.MUSIC, Float.MIN_VALUE*1000, 1F, false, 1, ISound.AttenuationType.LINEAR, 0F, 0F, 0F);
-        if(e.getSound().getSoundLocation().getResourceDomain().matches(MusicTriggers.MODID) && ((e.getManager().isSoundPlaying(MusicPlayer.curMusic) && MusicPlayer.fromRecord==null) || MusicPlayer.playing)) {
-            e.setResultSound(silenced);
-        }
         for(String s : ConfigDebug.blockedmods) {
             if(e.getSound().getSoundLocation().toString().contains(s) && e.getSound().getCategory()==SoundCategory.MUSIC) {
-                if(!(MusicPlayer.curMusic==null && ConfigDebug.SilenceIsBad)) {
-                    e.setResultSound(silenced);
-                }
+                if(!(MusicPlayer.curMusic==null && ConfigDebug.SilenceIsBad)) e.setResultSound(silenced);
             }
         }
     }
@@ -107,13 +100,7 @@ public class EventsClient {
 
     @SubscribeEvent
     public static void guiScreen(GuiScreenEvent e) {
-        if(!(e.getGui() instanceof GuiWinGame)) {
-            GUIName = e.getGui().toString();
-        }
-        else GUIName = "CREDITS";
-        if (ConfigDebug.ShowGUIName) {
-            e.getGui().drawHoveringText(e.getGui().toString(), 0, 0);
-        }
+        if (ConfigDebug.ShowGUIName) e.getGui().drawHoveringText(e.getGui().getClass().getName(), 0, 0);
     }
 
     @SubscribeEvent
@@ -140,9 +127,7 @@ public class EventsClient {
 
     @SubscribeEvent
     public static void cancelRenders(RenderGameOverlayEvent.Pre e) {
-        if(e.getType()==RenderGameOverlayEvent.ElementType.ALL && !renderDebug) {
-            e.setCanceled(true);
-        }
+        if(e.getType()==RenderGameOverlayEvent.ElementType.ALL && !renderDebug) e.setCanceled(true);
     }
 
     @SubscribeEvent
@@ -157,9 +142,7 @@ public class EventsClient {
             if (ismoving) {
                 if (timer % ConfigTitleCards.imagecards.get(curImageIndex).getDelay() == 0) {
                     movingcounter++;
-                    if (movingcounter >= pngs.size()) {
-                        movingcounter = 0;
-                    }
+                    if (movingcounter >= pngs.size()) movingcounter = 0;
                 }
                 IMAGE_CARD = pngs.get(movingcounter);
             }
@@ -169,9 +152,7 @@ public class EventsClient {
                 if (startDelayCount > 0) {
                     if (fadeCount > 1) {
                         fadeCount -= ConfigTitleCards.imagecards.get(curImageIndex).getFadeIn();
-                        if (fadeCount < 1) {
-                            fadeCount = 1;
-                        }
+                        if (fadeCount < 1) fadeCount = 1;
                     }
                 }
             } else {
@@ -289,9 +270,7 @@ public class EventsClient {
     @SubscribeEvent
     public static void debugInfo(RenderGameOverlayEvent.Text e) {
         if(ConfigDebug.ShowDebugInfo && isWorldRendered && renderDebug) {
-            if(MusicPlayer.curTrackHolder!=null) {
-                e.getLeft().add("Music Triggers Current Song: " + MusicPlayer.curTrackHolder);
-            }
+            if(MusicPlayer.curTrackHolder!=null) e.getLeft().add("Music Triggers Current Song: " + MusicPlayer.curTrackHolder);
             if(!ConfigDebug.ShowJustCurSong) {
                 int displayCount = 0;
                 if(!MusicPlayer.formatSongTime().matches("No song playing")) e.getLeft().add("Music Triggers Current Song Time: " + MusicPlayer.formatSongTime());
@@ -309,9 +288,8 @@ public class EventsClient {
                         }
                         s.append(" ").append(ev);
                     }
-                    if(displayCount==0) {
-                        e.getLeft().add("Music Triggers Playable Events: " + s);
-                    } else e.getLeft().add(s.toString());
+                    if(displayCount==0) e.getLeft().add("Music Triggers Playable Events: " + s);
+                    else e.getLeft().add(s.toString());
                 }
                 displayCount=0;
                 StringBuilder sm = new StringBuilder();
@@ -326,16 +304,14 @@ public class EventsClient {
                     }
                     sm.append(" ").append(ev);
                 }
-                if(displayCount==0) {
-                    e.getLeft().add("Music Triggers Blocked Mods: " + sm);
-                } else e.getLeft().add(sm.toString());
+                if(displayCount==0) e.getLeft().add("Music Triggers Blocked Mods: " + sm);
+                else e.getLeft().add(sm.toString());
                 displayCount=0;
                 if(MusicPicker.player!=null && MusicPicker.world!=null) {
                     e.getLeft().add("Music Triggers Current Biome: " + MusicPicker.world.getBiome(MusicPicker.player.getPosition()).getRegistryName());
                     e.getLeft().add("Music Triggers Current Dimension: " + MusicPicker.player.dimension);
                     e.getLeft().add("Music Triggers Current Total Light: " + MusicPicker.world.getLight(MusicPicker.roundedPos(MusicPicker.player), true));
                     e.getLeft().add("Music Triggers Current Block Light: " + MusicPicker.world.getLightFor(EnumSkyBlock.BLOCK, MusicPicker.roundedPos(MusicPicker.player)));
-
                     if (MusicPicker.effectList != null && !MusicPicker.effectList.isEmpty()) {
                         StringBuilder se = new StringBuilder();
                         for (String ev : MusicPicker.effectList) {
@@ -348,20 +324,16 @@ public class EventsClient {
                             }
                             se.append(" ").append(ev);
                         }
-                        if(displayCount==0) {
-                            e.getLeft().add("Music Triggers Effect List: " + se);
-                        } else e.getLeft().add(se.toString());
+                        if(displayCount==0) e.getLeft().add("Music Triggers Effect List: " + se);
+                        else e.getLeft().add(se.toString());
                     }
                     if(Minecraft.getMinecraft().objectMouseOver != null) {
-                        if (getLivingFromEntity(Minecraft.getMinecraft().objectMouseOver.entityHit) != null) {
+                        if (getLivingFromEntity(Minecraft.getMinecraft().objectMouseOver.entityHit) != null)
                             e.getLeft().add("Music Triggers Current Entity Name: " + getLivingFromEntity(Minecraft.getMinecraft().objectMouseOver.entityHit).getName());
-                        }
                         try {
-                            if (infernalChecker(getLivingFromEntity(Minecraft.getMinecraft().objectMouseOver.entityHit)) != null) {
+                            if (infernalChecker(getLivingFromEntity(Minecraft.getMinecraft().objectMouseOver.entityHit)) != null)
                                 e.getLeft().add("Music Triggers Infernal Mob Mod Name: " + infernalChecker(getLivingFromEntity(Minecraft.getMinecraft().objectMouseOver.entityHit)));
-                            }
-                        } catch (NoSuchMethodError ignored) {
-                        }
+                        } catch (NoSuchMethodError ignored) { }
                     }
                 }
             }

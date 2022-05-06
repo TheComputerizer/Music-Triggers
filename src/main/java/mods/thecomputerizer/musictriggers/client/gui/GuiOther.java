@@ -63,7 +63,7 @@ public class GuiOther extends GuiScreen {
     }
 
     private void addScrollable() {
-        this.scrollingSongs = new GuiScrollingOther(this.mc, this.width, this.height,32,this.height-32, this.info,this, this.holder);
+        this.scrollingSongs = new GuiScrollingOther(this.mc, this.width, this.height,32,this.height-32, this.info,this);
         this.scrollingSongs.registerScrollButtons(7, 8);
     }
 

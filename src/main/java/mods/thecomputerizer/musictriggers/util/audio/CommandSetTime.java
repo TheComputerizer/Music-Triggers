@@ -15,6 +15,7 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.HashMap;
 
+@SuppressWarnings("unchecked")
 public class CommandSetTime {
 
     public static void setMillisecondTime(SoundSystem soundSystem, LibraryLWJGLOpenAL library, String sourcename, float milliseconds) throws NoSuchFieldException, IllegalAccessException {

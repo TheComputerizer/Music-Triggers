@@ -22,7 +22,6 @@ public class GuiScrollingSong extends GuiSlot {
     private final GuiScreen IN;
     private String curSelected;
     private final ResourceLocation background;
-    private final ResourceLocation darken;
     private final ConfigObject holder;
     private GuiLinking linking = null;
 
@@ -33,7 +32,6 @@ public class GuiScrollingSong extends GuiSlot {
         this.codes = codes;
         this.IN = IN;
         this.background = new ResourceLocation(MusicTriggers.MODID,"textures/block/recorder_side_active.png");
-        this.darken = new ResourceLocation(MusicTriggers.MODID,"textures/gui/background.png");
         this.holder = holder;
         if(linking!=null) this.linking = linking;
     }
