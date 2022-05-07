@@ -27,7 +27,7 @@ public class ConfigToml {
                     "dimension","biome", "structure","mob","victory","gui","effect","zones","pvp","advancement",
                     "statistic", "raid"};
     public static final String[] modtriggers = new String[]
-            {"gamestage","bloodmoon","harvestmoon","bluemoon","moon","season"};
+            {"season"};
     public static final String[] allmodtriggers = new String[]
             {"gamestage","bloodmoon","harvestmoon","fallingstars","rainintensity","tornado","hurricane","sandstorm","acidrain","blizzard","cloudy","lightrain","season"};
 
