@@ -1004,9 +1004,10 @@ public class ConfigObject {
         String ret ="";
         if(MusicPicker.universalDelay!=0 || MusicPicker.universalFadeIn!=0 || MusicPicker.universalFadeOut!=0) {
             ret+="[universal]\n";
-            if(MusicPicker.universalDelay!=0) ret+="\ndelay = \""+MusicPicker.universalDelay+"\"\n";
-            if(MusicPicker.universalFadeIn!=0) ret+="\nfade_in = \""+MusicPicker.universalFadeIn+"\"\n";
-            if(MusicPicker.universalFadeOut!=0) ret+="\nfade_out = \""+MusicPicker.universalFadeOut+"\"\n";
+            if(MusicPicker.universalDelay!=0) ret+="\tdelay = \""+MusicPicker.universalDelay+"\"\n";
+            if(MusicPicker.universalFadeIn!=0) ret+="\tfade_in = \""+MusicPicker.universalFadeIn+"\"\n";
+            if(MusicPicker.universalFadeOut!=0) ret+="\tfade_out = \""+MusicPicker.universalFadeOut+"\"\n";
+            ret+="\n";
         }
         return ret;
     }

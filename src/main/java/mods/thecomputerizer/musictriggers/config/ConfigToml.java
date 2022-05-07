@@ -47,7 +47,7 @@ public class ConfigToml {
                 Toml universal = toml.getTable("universal");
                 if (universal.contains("fade_in")) MusicPicker.universalFadeIn = Integer.parseInt(universal.getString("fade_in"));
                 if (universal.contains("fade_out")) MusicPicker.universalFadeOut = Integer.parseInt(universal.getString("fade_out"));
-                if (universal.contains("fade_delay")) MusicPicker.universalDelay = Integer.parseInt(universal.getString("fade_delay"));
+                if (universal.contains("delay")) MusicPicker.universalDelay = Integer.parseInt(universal.getString("delay"));
             }
             for (String s : songCollector(file)) {
                 if (toml.containsTableArray(s)) {
