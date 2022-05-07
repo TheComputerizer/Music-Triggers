@@ -33,9 +33,7 @@ public class MusicTriggersRecord extends RecordItem {
             }
             return InteractionResult.SUCCESS;
         }
-        else {
-            return InteractionResult.PASS;
-        }
+        else return super.useOn(ctx);
     }
 
     @OnlyIn(Dist.CLIENT)

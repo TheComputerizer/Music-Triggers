@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("ResultOfMethodCallIgnored")
 public class ConfigCommands {
 
     public static Map<String, List<String>> commandMap = new HashMap<>();

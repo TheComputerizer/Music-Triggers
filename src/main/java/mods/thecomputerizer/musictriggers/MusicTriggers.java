@@ -46,7 +46,6 @@ public class MusicTriggers {
 
     public static final Logger logger = LogManager.getLogger();
 
-    @SuppressWarnings("InstantiationOfUtilityClass")
     public MusicTriggers() {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::commonsetup);
@@ -98,7 +97,7 @@ public class MusicTriggers {
                 }
             }
             File jjson = new File(musictriggersDir.getPath() + "/sounds.json");
-            if (!jjson.exists() && Json.collector()!=null) {
+            if (!jjson.exists() && Json.allSongs != null) {
                 try {
                     jjson.createNewFile();
                 } catch (IOException ex) {
@@ -120,10 +119,12 @@ public class MusicTriggers {
             Mappings.init();
             makeSoundsJson();
             makeDiscLang();
-            ConfigToml.parse();
+        }
+            ConfigToml.parse(FMLEnvironment.dist == Dist.CLIENT);
+        if(FMLEnvironment.dist == Dist.CLIENT) {
             ConfigCommands.parse();
             ConfigTitleCards.parse();
-            if(Json.collector()!=null) {
+            if(Json.allSongs!=null) {
                 File pack = new File("config/MusicTriggers/");
                 if (pack.isDirectory()) {
                     MusicTriggers.logger.info("found pack :)");

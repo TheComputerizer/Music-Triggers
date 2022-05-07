@@ -11,8 +11,12 @@ public class ConfigRegistry {
 
     public static void create(File f) {
         try {
-            String sb = "# Music Discs\n" + "registerdiscs = \"true\"\n" +
-                    "# Client Side Only (Some triggers will not be able to trigger)\n" + "clientsideonly = \"false\"\n";
+            String sb = """
+                    # Music Discs
+                    registerdiscs = "true"
+                    # Client Side Only (Some triggers will not be able to trigger)
+                    clientsideonly = "false"
+                    """;
             FileWriter writer = new FileWriter(f);
             writer.write(sb);
             writer.close();

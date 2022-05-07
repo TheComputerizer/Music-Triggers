@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 
 import static mods.thecomputerizer.musictriggers.util.packets.CurSong.curSong;
 
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({"rawtypes", "ConstantConditions"})
 @Mod.EventBusSubscriber(modid = MusicTriggers.MODID, value = Dist.CLIENT)
 public class MusicPlayer {
     public static final KeyMapping RELOAD = new KeyMapping("key.musictriggers.menu", KeyConflictContext.UNIVERSAL, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.categories.musictriggers");
@@ -54,7 +54,6 @@ public class MusicPlayer {
     public static String curTrack;
     public static String curTrackHolder;
     public static SetVolumeSound curMusic;
-    public static Random rand = new Random();
     public static Minecraft mc = Minecraft.getInstance();
     public static net.minecraft.client.sounds.SoundManager sh;
     public static int tickCounter = 0;
@@ -102,423 +101,396 @@ public class MusicPlayer {
 
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onTick(TickEvent.ClientTickEvent event) {
-        sh = mc.getSoundManager();
-        if(curMusic!=null && sh.soundEngine.instanceToChannel.get(curMusic)!=null && sh.soundEngine.instanceToChannel.get(curMusic).channel!=null) {
-            if (!mc.isWindowActive() && Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(curMusic).channel).getState()!=0x1013) {
-                for (String is : musicLinker.keySet()) {
-                    if(sh.soundEngine.instanceToChannel.get(musicLinker.get(is))!=null)
-                        Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(musicLinker.get(is)).channel).pause();
-                }
-                paused = true;
-            } else if (paused && mc.isWindowActive() && !playing && !mc.isPaused()) {
-                for (String is : musicLinker.keySet()) {
-                    if(sh.soundEngine.instanceToChannel.get(musicLinker.get(is))!=null)
-                        Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(musicLinker.get(is)).channel).play();
-                }
-                paused = false;
-            } else if (paused && playing && Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(curMusic).channel).getState()!=0x1013) {
-                for (String is : musicLinker.keySet()) {
-                    if(sh.soundEngine.instanceToChannel.get(musicLinker.get(is))!=null)
-                        Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(musicLinker.get(is)).channel).pause();
-                }
-            }
-        }
-        if(paused && mc.isWindowActive() && !playing && !mc.isPaused()) paused = false;
-        if(playing && tickCounter % 10 == 0) {
-            if (MusicPicker.player != null && (MusicPicker.player.getMainHandItem().getItem() instanceof MusicTriggersRecord)) fromRecord = ((MusicTriggersRecord) MusicPicker.player.getMainHandItem().getItem()).getSound();
-            else fromRecord = new SoundEvent(new ResourceLocation("nonsensicalresourcelocation"));
-            playing = false;
-            if (MusicPicker.player != null) {
-                for (int x = MusicPicker.player.chunkPosition().x - 3; x <= MusicPicker.player.chunkPosition().x  + 3; x++) {
-                    for (int z = MusicPicker.player.chunkPosition().z - 3; z <= MusicPicker.player.chunkPosition().z + 3; z++) {
-                        Set<BlockPos> currentChunkTEPos = MusicPicker.world.getChunk(x, z).getBlockEntitiesPos();
-                        for (BlockPos b : currentChunkTEPos) {
-                            if (MusicPicker.world.getChunk(x, z).getBlockEntity(b) instanceof JukeboxBlockEntity te) {
-                                if (te.getBlockState().getValue(JukeboxBlock.HAS_RECORD)) playing = true;
-                            }
-                        }
+        if(!reloading && !mc.isPaused()) {
+            sh = mc.getSoundManager();
+            if (curMusic != null && sh.soundEngine.instanceToChannel.get(curMusic) != null && sh.soundEngine.instanceToChannel.get(curMusic).channel != null) {
+                if (!mc.isWindowActive() && Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(curMusic).channel).getState() != 0x1013) {
+                    for (String is : musicLinker.keySet()) {
+                        if (sh.soundEngine.instanceToChannel.get(musicLinker.get(is)) != null)
+                            Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(musicLinker.get(is)).channel).pause();
+                    }
+                    paused = true;
+                } else if (paused && mc.isWindowActive() && !playing && !mc.isPaused()) {
+                    for (String is : musicLinker.keySet()) {
+                        if (sh.soundEngine.instanceToChannel.get(musicLinker.get(is)) != null)
+                            Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(musicLinker.get(is)).channel).play();
+                    }
+                    paused = false;
+                } else if (paused && playing && Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(curMusic).channel).getState() != 0x1013) {
+                    for (String is : musicLinker.keySet()) {
+                        if (sh.soundEngine.instanceToChannel.get(musicLinker.get(is)) != null)
+                            Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(musicLinker.get(is)).channel).pause();
                     }
                 }
             }
-        }
-        if(!reloading && tickCounter % 2 == 0 && !paused && mc.isWindowActive()) {
-            if (MusicPicker.fishBool) MusicPicker.fishingStart++;
-            if (MusicPicker.waterBool) MusicPicker.waterStart++;
-            for (Map.Entry<String, Integer> stringListEntry : MusicPicker.triggerPersistence.entrySet()) {
-                String eventID = ((Map.Entry) stringListEntry).getKey().toString();
-                MusicPicker.triggerPersistence.putIfAbsent(eventID, 0);
-                if (MusicPicker.triggerPersistence.get(eventID) > 0) {
-                    MusicPicker.triggerPersistence.put(eventID, MusicPicker.triggerPersistence.get(eventID) - 1);
-                }
-            }
-            if(curTrack!=null && sh.isActive(curMusic) && ConfigToml.loopPoints.containsKey(curTrack)) {
-                for(String key : musicLinker.keySet()) {
-                    if(loopLinker.get(key)!=null) {
-                        for (int i : loopLinker.get(key).keySet()) {
-                            try {
-                                if (loopLinkerCounter.get(key).get(i) < Integer.parseInt(loopLinker.get(key).get(i)[0]) && Integer.parseInt(loopLinker.get(key).get(i)[2]) <= curMusicTimer) {
-                                    MusicTriggers.logger.debug("Loop boundary passed");
-                                    SoundManipulator.setMillisecondTimeForSource(musicLinker.get(key), Integer.parseInt(loopLinker.get(key).get(i)[1]));
-                                    loopLinkerCounter.get(key).put(i, loopLinkerCounter.get(key).get(i) + 1);
-                                }
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                                throw new RuntimeException("There was a problem while trying to loop - Check the log for details");
-                            }
-                        }
-                    }
-                }
-            }
-            if(curTrack!=null && sh.isActive(curMusic) && mc.screen instanceof GuiCurPlaying) {
-                ((GuiCurPlaying)mc.screen).setSlider(GuiCurPlaying.getSongPosInSeconds(curMusic));
-            }
-            for(String key : linkedFadingIn.keySet()) {
-                ChannelAccess.ChannelHandle entry = sh.soundEngine.instanceToChannel.get(musicLinker.get(key));
-                if(entry!=null && entry.channel!=null) {
-                    if (linkedFadingIn.get(key) && entry.channel.getState() != 0x1013) {
-                        if (fadeInLinker.get(key) == 0) {
-                            linkedFadingIn.put(key, false);
-                            fadeInLinker.put(key, fadeInLinkerMax.get(key));
-                            musicLinker.get(key).setVolume(volumeLinker.get(key));
-                            entry.channel.setVolume(volumeLinker.get(key)*mc.options.getSoundSourceVolume(SoundSource.MUSIC));
-                        } else {
-                            float calculatedVolume = volumeLinker.get(key) * (((float) (fadeInLinkerMax.get(key) - fadeInLinker.get(key))) / ((float) fadeInLinkerMax.get(key)));
-                            musicLinker.get(key).setVolume(calculatedVolume);
-                            calculatedVolume = calculatedVolume*mc.options.getSoundSourceVolume(SoundSource.MUSIC);
-                            entry.channel.setVolume(calculatedVolume);
-                            fadeInLinker.put(key, fadeInLinker.get(key) - 1);
-                        }
-                    }
-                }
-            }
-            for(String key : linkedFadingOut.keySet()) {
-                ChannelAccess.ChannelHandle entry = sh.soundEngine.instanceToChannel.get(musicLinker.get(key));
-                if(entry!=null && entry.channel!=null) {
-                    if (linkedFadingOut.get(key) && entry.channel.getState() != 0x1013) {
-                        if (fadeOutLinker.get(key) == 0) {
-                            linkedFadingOut.put(key, false);
-                            fadeOutLinker.put(key, fadeOutLinkerMax.get(key));
-                            musicLinker.get(key).setVolume(Float.MIN_VALUE * 1000);
-                            entry.channel.setVolume(Float.MIN_VALUE * 1000);
-                        } else {
-                            float calculatedVolume = volumeLinker.get(key) * (((float) fadeOutLinker.get(key)) / ((float) fadeOutLinkerMax.get(key)));
-                            musicLinker.get(key).setVolume(calculatedVolume);
-                            calculatedVolume = calculatedVolume*mc.options.getSoundSourceVolume(SoundSource.MUSIC);
-                            entry.channel.setVolume(calculatedVolume);
-                            fadeOutLinker.put(key, fadeOutLinker.get(key) - 1);
-                        }
-                    }
-                }
-            }
-            if(fadingIn&&!fadingOut) {
-                reverseFade = false;
-                ChannelAccess.ChannelHandle entry = sh.soundEngine.instanceToChannel.get(curMusic);
-                if(entry!=null && entry.channel!=null) {
-                    if (tempFadeIn == 0) {
-                        fadingIn = false;
-                        curMusic.setVolume(saveVolIn);
-                        entry.channel.setVolume(saveVolIn*mc.options.getSoundSourceVolume(SoundSource.MUSIC));
-                    } else {
-                        float calculatedVolume = saveVolIn * (float) (((double) (MusicPicker.curFadeIn - tempFadeIn)) / ((double) MusicPicker.curFadeIn));
-                        curMusic.setVolume(calculatedVolume);
-                        calculatedVolume = calculatedVolume*mc.options.getSoundSourceVolume(SoundSource.MUSIC);
-                        entry.channel.setVolume(calculatedVolume);
-                        tempFadeIn -= 1;
-                    }
-                }
-            }
-            if (fadingOut && !reverseFade) {
-                ChannelAccess.ChannelHandle entry = sh.soundEngine.instanceToChannel.get(curMusic);
-                tempFadeIn = 0;
-                fadingIn = false;
-                if(entry!=null && entry.channel!=null) {
-                    if (tempFadeOut == 0) {
-                        oncePerTrigger = new ArrayList<>();
-                        onceUntilEmpty = new ArrayList<>();
-                        fadeOutList = null;
-                        removeTrack(trackToDelete, indexToDelete, playedEvents, playedMusic);
-                        fadingOut = false;
-                        curTrackList = null;
-                        reverseTrackList = null;
-                        for (String sound : musicLinker.keySet()) sh.stop(musicLinker.get(sound));
-                        musicLinker = new HashMap<>();
-                        EventsClient.IMAGE_CARD = null;
-                        EventsClient.fadeCount = 1000;
-                        EventsClient.timer = 0;
-                        EventsClient.activated = false;
-                        EventsClient.ismoving = false;
-                        curMusic = null;
-                        curTrack = null;
-                        curTrackHolder = null;
-                        cards = true;
-                        tempFadeIn = MusicPicker.curFadeIn;
-                    } else {
-                        if (curMusic == null) tempFadeOut = 0;
-                        else {
-                            float calculatedVolume = saveVolOut * (float) (((double) tempFadeOut) / ((double) savedFadeOut));
-                            curMusic.setVolume(calculatedVolume);
-                            calculatedVolume = calculatedVolume*mc.options.getSoundSourceVolume(SoundSource.MUSIC);
-                            entry.channel.setVolume(calculatedVolume);
-                            tempFadeOut -= 1;
-                            if (holder != null && holder.equals(fadeOutList)) {
-                                reverseFade = true;
-                            }
-                        }
-                    }
-                }
-            } else if(fadingOut) {
-                fadingIn = false;
-                ChannelAccess.ChannelHandle entry = sh.soundEngine.instanceToChannel.get(curMusic);
-                assert entry.channel!=null;
-                if (tempFadeOut >= savedFadeOut) {
-                    fadingOut = false;
-                    reverseFade = false;
-                    curMusic.setVolume(saveVolOut);
-                    entry.channel.setVolume(saveVolOut*mc.options.getSoundSourceVolume(SoundSource.MUSIC));
-                    tempFadeOut = 0;
-                } else {
-                    float calculatedVolume = saveVolOut * (float)(((double)tempFadeOut)/((double)savedFadeOut));
-                    curMusic.setVolume(calculatedVolume);
-                    calculatedVolume = calculatedVolume*mc.options.getSoundSourceVolume(SoundSource.MUSIC);
-                    entry.channel.setVolume(calculatedVolume);
-                    tempFadeOut += 1;
-                }
-            }
-            if (delay) {
-                delayTime -= 1;
-                if (delayTime <= 0) delay = false;
-            }
-            if (tickCounter % 10 == 0 && !delay) {
+            if (paused && mc.isWindowActive() && !playing && !mc.isPaused()) paused = false;
+            if (playing && tickCounter % 10 == 0) {
                 if (MusicPicker.player != null && (MusicPicker.player.getMainHandItem().getItem() instanceof MusicTriggersRecord))
                     fromRecord = ((MusicTriggersRecord) MusicPicker.player.getMainHandItem().getItem()).getSound();
                 else fromRecord = new SoundEvent(new ResourceLocation("nonsensicalresourcelocation"));
                 playing = false;
                 if (MusicPicker.player != null) {
-                    for (int x = MusicPicker.player.chunkPosition().x - 3; x <= MusicPicker.player.chunkPosition().x  + 3; x++) {
+                    for (int x = MusicPicker.player.chunkPosition().x - 3; x <= MusicPicker.player.chunkPosition().x + 3; x++) {
                         for (int z = MusicPicker.player.chunkPosition().z - 3; z <= MusicPicker.player.chunkPosition().z + 3; z++) {
                             Set<BlockPos> currentChunkTEPos = MusicPicker.world.getChunk(x, z).getBlockEntitiesPos();
                             for (BlockPos b : currentChunkTEPos) {
-                                if (MusicPicker.world.getChunk(x, z).getBlockEntity(b) instanceof JukeboxBlockEntity te) {
-                                    if (te.getBlockState().getValue(JukeboxBlock.HAS_RECORD)) playing = true;
-                                }
-                            }
-                        }
-                    }
-                }
-                holder = MusicPicker.playThese();
-                if (holder != null && !holder.isEmpty() && !playing) {
-                    boolean startQuiet = false;
-                    for(int i : canPlayTitle.keySet()) {
-                        if(!canPlayTitle.get(i) && !MusicPicker.playableList.containsAll(ConfigTitleCards.titlecards.get(i).getTriggers())) canPlayTitle.put(i, true);
-                    }
-                    for(int i : canPlayImage.keySet()) {
-                        if(!canPlayImage.get(i) && !MusicPicker.playableList.containsAll(ConfigTitleCards.imagecards.get(i).getTriggers())) canPlayImage.put(i, true);
-                    }
-                    for(String playable : MusicPicker.playableList) {
-                        if(!MusicPicker.titleCardEvents.contains(playable)) {
-                            if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get(playable)[34])) {
-                                SoundHandler.TriggerIdentifierMap.get(playable.split("-")[0]).remove(SoundHandler.TriggerInfoMap.get(playable)[10]);
-                                SoundHandler.TriggerInfoMap.remove(playable);
-                                if(SoundHandler.TriggerIdentifierMap.get(playable.split("-")[0]).isEmpty()) {
-                                    SoundHandler.TriggerIdentifierMap.remove(playable.split("-")[0]);
-                                    SoundHandler.TriggerInfoMap.remove(playable.split("-")[0]);
-                                }
-                            }
-                        }
-                    }
-                    if(curMusic==null) finish = false;
-                    if (curTrackList == null && !finish) {
-                        curTrackList = holder;
-                        if(fadeOutList==null) fadeOutList = holder;
-                        if(!nullFromLink) {
-                            fadingIn = true;
-                            startQuiet = true;
-                            tempFadeIn = MusicPicker.curFadeIn;
-                            savedFadeOut = MusicPicker.curFadeOut;
-                        }
-                        nullFromLink = false;
-                        for(String command : ConfigCommands.commandMap.keySet()) {
-                            if(curTrackList.containsAll(ConfigCommands.commandMap.get(command)) && ConfigCommands.commandMap.get(command).containsAll(curTrackList)) {
-                                PacketHandler.sendToServer(new ExecuteCommand(command));
-                            }
-                        }
-                    }
-                    if (curMusic != null) {
-                        if (!sh.isActive(curMusic) || mc.options.getSoundSourceVolume(SoundSource.MUSIC) == 0 || mc.options.getSoundSourceVolume(SoundSource.MASTER) == 0) {
-                            finish = false;
-                            for(String sound : musicLinker.keySet()) sh.stop(musicLinker.get(sound));
-                            if(fadingOut) {
-                                fadingOut = false;
-                                fadingIn = true;
-                                startQuiet = true;
-                            }
-                            curMusic = null;
-                            curMusicSource = null;
-                            delay = true;
-                            delayTime = MusicPicker.curDelay;
-                            removeTrack(trackToDelete,indexToDelete,playedEvents,playedMusic);
-                        }
-                    }
-                    if(!finish) {
-                        if (MusicPicker.shouldChange || !curTrackList.equals(holder)) {
-                            if(curTrackList.size()!=0) changeTrack();
-                            else curTrackList = null;
-                        } else if (curMusic == null && mc.options.getSoundSourceVolume(SoundSource.MASTER) > 0 && mc.options.getSoundSourceVolume(SoundSource.MUSIC) > 0) {
-                            triggerLinker = new HashMap<>();
-                            if(musicLinker!=null) for(String sound : musicLinker.keySet()) sh.stop(musicLinker.get(sound));
-                            musicLinker = new HashMap<>();
-                            EventsClient.GuiCounter = 0;
-                            curTrackList = curTrackList.stream().filter(track -> !oncePerTrigger.contains(track)).collect(Collectors.toList());
-                            curTrackList = curTrackList.stream().filter(track -> !onceUntilEmpty.contains(track)).collect(Collectors.toList());
-                            if (curTrackList.size() >= 1) {
-                                int i = ThreadLocalRandom.current().nextInt(0,curTrackList.size());
-                                if (curTrackList.size() > 1 && curTrack != null) {
-                                    int total = curTrackList.stream().mapToInt(s -> Integer.parseInt(ConfigToml.otherinfo.get(s)[3])).sum();
-                                    int j;
-                                    for(j=0;j<1000;j++) {
-                                        int r = ThreadLocalRandom.current().nextInt(1,total+1);
-                                        MusicTriggers.logger.debug("Random was between 1 and "+(total+1)+" "+r+" was chosen");
-                                        String temp = " ";
-                                        for (String s : curTrackList) {
-                                            if (r < Integer.parseInt(ConfigToml.otherinfo.get(s)[3])) {
-                                                temp = s;
-                                                break;
-                                            }
-                                            r-=Integer.parseInt(ConfigToml.otherinfo.get(s)[3]);
-                                        }
-                                        if(!temp.matches(curTrack) && !temp.matches(" ")) {
-                                            curTrack = temp;
-                                            break;
-                                        }
-                                    }
-                                    if(j>=1000) MusicTriggers.logger.warn("Attempt to get non duplicate song passed 1000 tries! Forcing current song " + ConfigToml.songholder.get(curTrack) + " to play.");
-                                }
-                                else {
-                                    curTrack = curTrackList.get(i);
-                                }
-                                if (curTrack != null) {
-                                    curTrack = curTrack.replaceAll("@","").replaceAll("#","");
-                                    MusicTriggers.logger.debug(curTrack + " was chosen");
-                                    finish = Boolean.parseBoolean(ConfigToml.otherinfo.get(curTrack)[2]);
-                                    curTrackHolder = ConfigToml.songholder.get(curTrack);
-                                    MusicTriggers.logger.info("Attempting to play track: " + curTrackHolder);
-                                    if (ConfigToml.triggerlinking.get(curTrack) != null) {
-                                        triggerLinker.put("song-" + 0, ConfigToml.triggerlinking.get(curTrack).get(curTrack));
-                                        musicLinker.put("song-" + 0, new SetVolumeSound(new ResourceLocation(MusicTriggers.MODID, "music." + curTrackHolder), SoundSource.MUSIC, Float.parseFloat(ConfigToml.otherinfo.get(curTrack)[4]), Float.parseFloat(ConfigToml.otherinfo.get(curTrack)[0]), false, 1, SoundInstance.Attenuation.NONE, 0F, 0F, 0F));
-                                        volumeLinker.put("song-" + 0, Float.parseFloat(ConfigToml.otherinfo.get(curTrack)[4]));
-                                        saveVolIn = Float.parseFloat(ConfigToml.otherinfo.get(curTrack)[4]);
-                                        fadeInLinker.put("song-" + 0,Integer.parseInt(ConfigToml.otherinfo.get(curTrack)[5]));
-                                        fadeInLinkerMax.put("song-" + 0,Integer.parseInt(ConfigToml.otherinfo.get(curTrack)[5]));
-                                        fadeOutLinker.put("song-" + 0,Integer.parseInt(ConfigToml.otherinfo.get(curTrack)[6]));
-                                        fadeOutLinkerMax.put("song-" + 0,Integer.parseInt(ConfigToml.otherinfo.get(curTrack)[6]));
-                                        for(int l : ConfigToml.loopPoints.get(curTrack).keySet()) {
-                                            loopLinker.putIfAbsent("song-" + 0, new HashMap<>());
-                                            loopLinker.get("song-" + 0).put(l, ConfigToml.loopPoints.get(curTrack).get(l));
-                                            loopLinkerCounter.putIfAbsent("song-" + 0, new HashMap<>());
-                                            loopLinkerCounter.get("song-" + 0).put(l, 0);
-                                        }
-                                        int linkcounter = 1;
-                                        for (String song : ConfigToml.triggerlinking.get(curTrack).keySet()) {
-                                            if (!song.matches(curTrack)) {
-                                                triggerLinker.put("song-" + linkcounter, ConfigToml.triggerlinking.get(curTrack).get(song));
-                                                musicLinker.put("song-" + linkcounter, new SetVolumeSound(new ResourceLocation(MusicTriggers.MODID, "music." + song), SoundSource.MUSIC, Float.parseFloat(ConfigToml.otherlinkinginfo.get(curTrack).get(song)[1]),
-                                                        Float.parseFloat(ConfigToml.otherlinkinginfo.get(curTrack).get(song)[0]), false, 1, SoundInstance.Attenuation.NONE, 0F, 0F, 0F));
-                                                volumeLinker.put("song-" + linkcounter, Float.parseFloat(ConfigToml.otherlinkinginfo.get(curTrack).get(song)[1]));
-                                                fadeInLinker.put("song-" + linkcounter,Integer.parseInt(ConfigToml.otherlinkinginfo.get(curTrack).get(song)[2]));
-                                                fadeInLinkerMax.put("song-" + linkcounter,Integer.parseInt(ConfigToml.otherlinkinginfo.get(curTrack).get(song)[2]));
-                                                fadeOutLinker.put("song-" + linkcounter,Integer.parseInt(ConfigToml.otherlinkinginfo.get(curTrack).get(song)[3]));
-                                                fadeOutLinkerMax.put("song-" + linkcounter,Integer.parseInt(ConfigToml.otherlinkinginfo.get(curTrack).get(song)[3]));
-                                                MusicTriggers.logger.info("Fade out ticks for linked song: "+linkcounter+": "+ConfigToml.otherlinkinginfo.get(curTrack).get(song)[3]);
-                                                if(ConfigToml.linkingLoopPoints.get(curTrack)!=null && ConfigToml.linkingLoopPoints.get(curTrack).get(song)!=null) {
-                                                    for (int l : ConfigToml.linkingLoopPoints.get(curTrack).get(song).keySet()) {
-                                                        loopLinker.putIfAbsent("song-" + linkcounter, new HashMap<>());
-                                                        loopLinker.get("song-" + linkcounter).put(l, ConfigToml.linkingLoopPoints.get(curTrack).get(song).get(l));
-                                                        loopLinkerCounter.putIfAbsent("song-" + linkcounter, new HashMap<>());
-                                                        loopLinkerCounter.get("song-" + linkcounter).put(l, 0);
-                                                    }
-                                                }
-                                            }
-                                            linkcounter++;
-                                        }
-                                    } else {
-                                        musicLinker.put("song-" + 0, new SetVolumeSound(new ResourceLocation(MusicTriggers.MODID, "music." + curTrackHolder), SoundSource.MUSIC, Float.parseFloat(ConfigToml.otherinfo.get(curTrack)[4]), Float.parseFloat(ConfigToml.otherinfo.get(curTrack)[0]), false, 1, SoundInstance.Attenuation.NONE, 0F, 0F, 0F));
-                                        saveVolIn = Float.parseFloat(ConfigToml.otherinfo.get(curTrack)[4]);
-                                        volumeLinker.put("song-" + 0, Float.parseFloat(ConfigToml.otherinfo.get(curTrack)[4]));
-                                        for(int l : ConfigToml.loopPoints.get(curTrack).keySet()) {
-                                            loopLinker.putIfAbsent("song-" + 0, new HashMap<>());
-                                            loopLinker.get("song-" + 0).put(l, ConfigToml.loopPoints.get(curTrack).get(l));
-                                            loopLinkerCounter.putIfAbsent("song-" + 0, new HashMap<>());
-                                            loopLinkerCounter.get("song-" + 0).put(l, 0);
-                                        }
-                                    }
-                                    if (MusicPicker.player != null) {
-                                        if (!ConfigRegistry.clientSideOnly) PacketHandler.sendToServer(new CurSong(curTrackHolder, MusicPicker.player.getUUID()));
-                                        else curSong.put(MusicPicker.player.getUUID(), curTrackHolder);
-                                    }
-                                    curMusicSource=null;
-                                    if (cards) renderCards();
-                                    for (Map.Entry<String, SetVolumeSound> stringListEntry : musicLinker.entrySet()) {
-                                        String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
-                                        musicLinker.get(checkThis).setVolume(Float.MIN_VALUE*1000);
-                                        if (checkThis.matches("song-0")) {
-                                            if(!startQuiet) musicLinker.get(checkThis).setVolume(saveVolIn);
-                                            curMusic = musicLinker.get(checkThis);
-                                            prevPlayingLink = "song-0";
-                                            curLinkNum = "song-" + 0;
-                                        }
-                                        sh.play(musicLinker.get(checkThis));
-                                    }
-                                    curMusicSource = sh.soundEngine.instanceToChannel.get(curMusic).channel;
-                                    if (Integer.parseInt(ConfigToml.otherinfo.get(curTrack)[1])==1) onceUntilEmpty.add(curTrack);
-                                    if (Integer.parseInt(ConfigToml.otherinfo.get(curTrack)[1])==2) oncePerTrigger.add(curTrack);
-                                    else if (Integer.parseInt(ConfigToml.otherinfo.get(curTrack)[1])==3) {
-                                        trackToDelete = curTrack;
-                                        indexToDelete = i;
-                                        playedEvents = MusicPicker.titleCardEvents;
-                                        playedMusic = curMusic;
-                                    }
-                                } else curTrackList = null;
-                            }
-                            else onceUntilEmpty = new ArrayList<>();
-                        }
-                    }
-                } else if (!finish) {
-                    if (!playing) {
-                        if (curMusic != null) {
-                            if (!fadingOut) {
-                                fadingOut = true;
-                                tempFadeOut = MusicPicker.curFadeOut;
-                                saveVolOut = volumeLinker.get(curLinkNum);
-                            }
-                        } else if (curTrack!=null) {
-                            curTrack = null;
-                            EventsClient.IMAGE_CARD = null;
-                            EventsClient.fadeCount = 1000;
-                            EventsClient.timer = 0;
-                            EventsClient.activated = false;
-                            EventsClient.ismoving = false;
-                            cards = true;
-                        }
-                    } else {
-                        EventsClient.IMAGE_CARD = null;
-                        EventsClient.fadeCount = 1000;
-                        EventsClient.timer = 0;
-                        EventsClient.activated = false;
-                        EventsClient.ismoving = false;
-                        if (curMusic != null) {
-                            if(Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(curMusic).channel).getState()!=0x1013) {
-                                for (String is : musicLinker.keySet()) {
-                                    Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(musicLinker.get(is)).channel).pause();
-                                }
-                                paused = true;
+                                if (MusicPicker.world.getChunk(x, z).getBlockEntity(b) instanceof JukeboxBlockEntity te && te.getBlockState().getValue(JukeboxBlock.HAS_RECORD)) playing = true;
                             }
                         }
                     }
                 }
             }
+            if (tickCounter % 2 == 0 && !paused && mc.isWindowActive()) {
+                if (curMusic!=null && sh.soundEngine.instanceToChannel.get(curMusic)!=null && sh.soundEngine.instanceToChannel.get(curMusic).channel!=null && !fadingIn && !fadingOut && !reverseFade && (linkedFadingOut.get(curLinkNum)==null || !linkedFadingOut.get(curLinkNum)) && (linkedFadingIn.get(curLinkNum)==null || !linkedFadingIn.get(curLinkNum)))
+                    Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(curMusic).channel).setVolume(mc.options.getSoundSourceVolume(SoundSource.MUSIC)*volumeLinker.get(curLinkNum));
+                if (MusicPicker.fishBool) MusicPicker.fishingStart++;
+                if (MusicPicker.waterBool) MusicPicker.waterStart++;
+                for (Map.Entry<String, Integer> stringListEntry : MusicPicker.triggerPersistence.entrySet()) {
+                    String eventID = ((Map.Entry) stringListEntry).getKey().toString();
+                    MusicPicker.triggerPersistence.putIfAbsent(eventID, 0);
+                    if (MusicPicker.triggerPersistence.get(eventID) > 0) {
+                        MusicPicker.triggerPersistence.put(eventID, MusicPicker.triggerPersistence.get(eventID) - 1);
+                    }
+                }
+                if (curTrack != null && sh.isActive(curMusic) && ConfigToml.loopPoints.containsKey(curTrack)) {
+                    for (String key : musicLinker.keySet()) {
+                        if (loopLinker.get(key) != null) {
+                            for (int i : loopLinker.get(key).keySet()) {
+                                try {
+                                    if (loopLinkerCounter.get(key).get(i) < Integer.parseInt(loopLinker.get(key).get(i)[0]) && Integer.parseInt(loopLinker.get(key).get(i)[2]) <= curMusicTimer) {
+                                        MusicTriggers.logger.debug("Loop boundary passed");
+                                        SoundManipulator.setMillisecondTimeForSource(musicLinker.get(key), Integer.parseInt(loopLinker.get(key).get(i)[1]));
+                                        loopLinkerCounter.get(key).put(i, loopLinkerCounter.get(key).get(i) + 1);
+                                    }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    throw new RuntimeException("There was a problem while trying to loop - Check the log for details");
+                                }
+                            }
+                        }
+                    }
+                }
+                if (curTrack != null && sh.isActive(curMusic) && mc.screen instanceof GuiCurPlaying) ((GuiCurPlaying) mc.screen).setSlider(GuiCurPlaying.getSongPosInSeconds(curMusic));
+                for (String key : linkedFadingIn.keySet()) {
+                    ChannelAccess.ChannelHandle entry = sh.soundEngine.instanceToChannel.get(musicLinker.get(key));
+                    if (entry != null && entry.channel != null) {
+                        if (linkedFadingIn.get(key) && entry.channel.getState() != 0x1013) {
+                            if (fadeInLinker.get(key) == 0) {
+                                linkedFadingIn.put(key, false);
+                                fadeInLinker.put(key, fadeInLinkerMax.get(key));
+                                entry.channel.setVolume(volumeLinker.get(key) * mc.options.getSoundSourceVolume(SoundSource.MUSIC));
+                            } else {
+                                float calculatedVolume = volumeLinker.get(key) * (((float) (fadeInLinkerMax.get(key) - fadeInLinker.get(key))) / ((float) fadeInLinkerMax.get(key)));
+                                calculatedVolume = calculatedVolume * mc.options.getSoundSourceVolume(SoundSource.MUSIC);
+                                entry.channel.setVolume(calculatedVolume);
+                                fadeInLinker.put(key, fadeInLinker.get(key) - 1);
+                            }
+                        }
+                    }
+                }
+                for (String key : linkedFadingOut.keySet()) {
+                    ChannelAccess.ChannelHandle entry = sh.soundEngine.instanceToChannel.get(musicLinker.get(key));
+                    if (entry != null && entry.channel != null) {
+                        if (linkedFadingOut.get(key) && entry.channel.getState() != 0x1013) {
+                            if (fadeOutLinker.get(key) == 0) {
+                                linkedFadingOut.put(key, false);
+                                fadeOutLinker.put(key, fadeOutLinkerMax.get(key));
+                                entry.channel.setVolume(Float.MIN_VALUE * 1000);
+                            } else {
+                                float calculatedVolume = volumeLinker.get(key) * (((float) fadeOutLinker.get(key)) / ((float) fadeOutLinkerMax.get(key)));
+                                calculatedVolume = calculatedVolume * mc.options.getSoundSourceVolume(SoundSource.MUSIC);
+                                entry.channel.setVolume(calculatedVolume);
+                                fadeOutLinker.put(key, fadeOutLinker.get(key) - 1);
+                            }
+                        }
+                    }
+                }
+                if (fadingIn && !fadingOut) {
+                    reverseFade = false;
+                    ChannelAccess.ChannelHandle entry = sh.soundEngine.instanceToChannel.get(curMusic);
+                    if (entry != null && entry.channel != null) {
+                        if (tempFadeIn == 0) {
+                            fadingIn = false;
+                            entry.channel.setVolume(saveVolIn * mc.options.getSoundSourceVolume(SoundSource.MUSIC));
+                        } else {
+                            float calculatedVolume = saveVolIn * (float) (((double) (MusicPicker.curFadeIn - tempFadeIn)) / ((double) MusicPicker.curFadeIn));
+                            calculatedVolume = calculatedVolume * mc.options.getSoundSourceVolume(SoundSource.MUSIC);
+                            entry.channel.setVolume(calculatedVolume);
+                            tempFadeIn -= 1;
+                        }
+                    } else clearSongs();
+                }
+                if (fadingOut && !reverseFade) {
+                    ChannelAccess.ChannelHandle entry = sh.soundEngine.instanceToChannel.get(curMusic);
+                    tempFadeIn = 0;
+                    fadingIn = false;
+                    if (entry != null && entry.channel != null) {
+                        if (tempFadeOut == 0) clearSongs();
+                        else {
+                            if (curMusic == null) tempFadeOut = 0;
+                            else {
+                                float calculatedVolume = saveVolOut * (float) (((double) tempFadeOut) / ((double) savedFadeOut));
+                                calculatedVolume = calculatedVolume * mc.options.getSoundSourceVolume(SoundSource.MUSIC);
+                                entry.channel.setVolume(calculatedVolume);
+                                tempFadeOut -= 1;
+                                if (holder != null && holder.equals(fadeOutList)) reverseFade = true;
+                            }
+                        }
+                    } else clearSongs();
+                } else if (fadingOut) {
+                    fadingIn = false;
+                    ChannelAccess.ChannelHandle entry = sh.soundEngine.instanceToChannel.get(curMusic);
+                    if(entry!=null && entry.channel!=null) {
+                        if (tempFadeOut >= savedFadeOut) {
+                            fadingOut = false;
+                            reverseFade = false;
+                            entry.channel.setVolume(saveVolOut * mc.options.getSoundSourceVolume(SoundSource.MUSIC));
+                            tempFadeOut = 0;
+                        } else {
+                            float calculatedVolume = saveVolOut * (float) (((double) tempFadeOut) / ((double) savedFadeOut));
+                            calculatedVolume = calculatedVolume * mc.options.getSoundSourceVolume(SoundSource.MUSIC);
+                            entry.channel.setVolume(calculatedVolume);
+                            tempFadeOut += 1;
+                        }
+                    } else clearSongs();
+                }
+                if (delay) {
+                    delayTime -= 1;
+                    if (delayTime <= 0) delay = false;
+                }
+                if (tickCounter % 10 == 0 && !delay) {
+                    if (MusicPicker.player != null && (MusicPicker.player.getMainHandItem().getItem() instanceof MusicTriggersRecord))
+                        fromRecord = ((MusicTriggersRecord) MusicPicker.player.getMainHandItem().getItem()).getSound();
+                    else fromRecord = new SoundEvent(new ResourceLocation("nonsensicalresourcelocation"));
+                    playing = false;
+                    if (MusicPicker.player != null) {
+                        for (int x = MusicPicker.player.chunkPosition().x - 3; x <= MusicPicker.player.chunkPosition().x + 3; x++) {
+                            for (int z = MusicPicker.player.chunkPosition().z - 3; z <= MusicPicker.player.chunkPosition().z + 3; z++) {
+                                Set<BlockPos> currentChunkTEPos = MusicPicker.world.getChunk(x, z).getBlockEntitiesPos();
+                                for (BlockPos b : currentChunkTEPos) {
+                                    if (MusicPicker.world.getChunk(x, z).getBlockEntity(b) instanceof JukeboxBlockEntity te && te.getBlockState().getValue(JukeboxBlock.HAS_RECORD)) playing = true;
+                                }
+                            }
+                        }
+                    }
+                    holder = MusicPicker.playThese();
+                    if (holder != null && !holder.isEmpty() && !playing) {
+                        boolean startQuiet = false;
+                        for (int i : canPlayTitle.keySet()) {
+                            if (!canPlayTitle.get(i) && !new HashSet<>(MusicPicker.playableList).containsAll(ConfigTitleCards.titlecards.get(i).getTriggers()))
+                                canPlayTitle.put(i, true);
+                        }
+                        for (int i : canPlayImage.keySet()) {
+                            if (!canPlayImage.get(i) && !new HashSet<>(MusicPicker.playableList).containsAll(ConfigTitleCards.imagecards.get(i).getTriggers()))
+                                canPlayImage.put(i, true);
+                        }
+                        for (String playable : MusicPicker.playableList) {
+                            if (!MusicPicker.titleCardEvents.contains(playable)) {
+                                if (Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get(playable)[34])) {
+                                    SoundHandler.TriggerIdentifierMap.get(playable.split("-")[0]).remove(SoundHandler.TriggerInfoMap.get(playable)[10]);
+                                    SoundHandler.TriggerInfoMap.remove(playable);
+                                    if (SoundHandler.TriggerIdentifierMap.get(playable.split("-")[0]).isEmpty()) {
+                                        SoundHandler.TriggerIdentifierMap.remove(playable.split("-")[0]);
+                                        SoundHandler.TriggerInfoMap.remove(playable.split("-")[0]);
+                                    }
+                                }
+                            }
+                        }
+                        if (curMusic == null) finish = false;
+                        if (curTrackList == null && !finish) {
+                            curTrackList = holder;
+                            if (fadeOutList == null) fadeOutList = holder;
+                            if (!nullFromLink) {
+                                fadingIn = true;
+                                startQuiet = true;
+                                tempFadeIn = MusicPicker.curFadeIn;
+                                savedFadeOut = MusicPicker.curFadeOut;
+                            }
+                            nullFromLink = false;
+                            for (String command : ConfigCommands.commandMap.keySet()) {
+                                if (ConfigCommands.commandMap.get(command).equals(MusicPicker.titleCardEvents)) PacketHandler.sendToServer(new ExecuteCommand(command));
+                            }
+                        }
+                        if (curMusic != null) {
+                            if (!sh.isActive(curMusic) || mc.options.getSoundSourceVolume(SoundSource.MUSIC) == 0 || mc.options.getSoundSourceVolume(SoundSource.MASTER) == 0) {
+                                finish = false;
+                                for (String sound : musicLinker.keySet()) sh.stop(musicLinker.get(sound));
+                                if (fadingOut) {
+                                    fadingOut = false;
+                                    fadingIn = true;
+                                    startQuiet = true;
+                                }
+                                curMusic = null;
+                                curMusicSource = null;
+                                delay = true;
+                                delayTime = MusicPicker.curDelay;
+                                removeTrack(trackToDelete, indexToDelete, playedEvents, playedMusic);
+                            }
+                        }
+                        if (!finish) {
+                            if (MusicPicker.shouldChange || !curTrackList.equals(holder)) {
+                                if (curTrackList.size() != 0) changeTrack();
+                                else curTrackList = null;
+                            } else if (curMusic == null && mc.options.getSoundSourceVolume(SoundSource.MASTER) > 0 && mc.options.getSoundSourceVolume(SoundSource.MUSIC) > 0) {
+                                triggerLinker = new HashMap<>();
+                                if (musicLinker != null)
+                                    for (String sound : musicLinker.keySet()) sh.stop(musicLinker.get(sound));
+                                musicLinker = new HashMap<>();
+                                EventsClient.GuiCounter = 0;
+                                curTrackList = curTrackList.stream().filter(track -> !oncePerTrigger.contains(track)).collect(Collectors.toList());
+                                curTrackList = curTrackList.stream().filter(track -> !onceUntilEmpty.contains(track)).collect(Collectors.toList());
+                                if (curTrackList.size() >= 1) {
+                                    int i = ThreadLocalRandom.current().nextInt(0, curTrackList.size());
+                                    if (curTrackList.size() > 1 && curTrack != null) {
+                                        int total = curTrackList.stream().mapToInt(s -> Integer.parseInt(ConfigToml.otherinfo.get(s)[3])).sum();
+                                        int j;
+                                        for (j = 0; j < 1000; j++) {
+                                            int r = ThreadLocalRandom.current().nextInt(1, total + 1);
+                                            MusicTriggers.logger.debug("Random was between 1 and " + (total + 1) + " " + r + " was chosen");
+                                            String temp = " ";
+                                            for (String s : curTrackList) {
+                                                if (r < Integer.parseInt(ConfigToml.otherinfo.get(s)[3])) {
+                                                    temp = s;
+                                                    break;
+                                                }
+                                                r -= Integer.parseInt(ConfigToml.otherinfo.get(s)[3]);
+                                            }
+                                            if (!temp.matches(curTrack) && !temp.matches(" ")) {
+                                                curTrack = temp;
+                                                break;
+                                            }
+                                        }
+                                        if (j >= 1000)
+                                            MusicTriggers.logger.warn("Attempt to get non duplicate song passed 1000 tries! Forcing current song " + ConfigToml.songholder.get(curTrack) + " to play.");
+                                    } else {
+                                        curTrack = curTrackList.get(i);
+                                    }
+                                    if (curTrack != null) {
+                                        curTrack = curTrack.replaceAll("@", "").replaceAll("#", "");
+                                        MusicTriggers.logger.debug(curTrack + " was chosen");
+                                        finish = Boolean.parseBoolean(ConfigToml.otherinfo.get(curTrack)[2]);
+                                        curTrackHolder = ConfigToml.songholder.get(curTrack);
+                                        MusicTriggers.logger.info("Attempting to play track: " + curTrackHolder);
+                                        if (ConfigToml.triggerlinking.get(curTrack) != null) {
+                                            triggerLinker.put("song-" + 0, ConfigToml.triggerlinking.get(curTrack).get(curTrack));
+                                            musicLinker.put("song-" + 0, new SetVolumeSound(new ResourceLocation(MusicTriggers.MODID, "music." + curTrackHolder), SoundSource.MUSIC, Float.parseFloat(ConfigToml.otherinfo.get(curTrack)[4]), Float.parseFloat(ConfigToml.otherinfo.get(curTrack)[0]), false, 1, SoundInstance.Attenuation.NONE, 0F, 0F, 0F));
+                                            volumeLinker.put("song-" + 0, Float.parseFloat(ConfigToml.otherinfo.get(curTrack)[4]));
+                                            saveVolIn = Float.parseFloat(ConfigToml.otherinfo.get(curTrack)[4]);
+                                            fadeInLinker.put("song-" + 0, Integer.parseInt(ConfigToml.otherinfo.get(curTrack)[5]));
+                                            fadeInLinkerMax.put("song-" + 0, Integer.parseInt(ConfigToml.otherinfo.get(curTrack)[5]));
+                                            fadeOutLinker.put("song-" + 0, Integer.parseInt(ConfigToml.otherinfo.get(curTrack)[6]));
+                                            fadeOutLinkerMax.put("song-" + 0, Integer.parseInt(ConfigToml.otherinfo.get(curTrack)[6]));
+                                            for (int l : ConfigToml.loopPoints.get(curTrack).keySet()) {
+                                                loopLinker.putIfAbsent("song-" + 0, new HashMap<>());
+                                                loopLinker.get("song-" + 0).put(l, ConfigToml.loopPoints.get(curTrack).get(l));
+                                                loopLinkerCounter.putIfAbsent("song-" + 0, new HashMap<>());
+                                                loopLinkerCounter.get("song-" + 0).put(l, 0);
+                                            }
+                                            int linkcounter = 1;
+                                            for (String song : ConfigToml.triggerlinking.get(curTrack).keySet()) {
+                                                if (!song.matches(curTrack)) {
+                                                    triggerLinker.put("song-" + linkcounter, ConfigToml.triggerlinking.get(curTrack).get(song));
+                                                    musicLinker.put("song-" + linkcounter, new SetVolumeSound(new ResourceLocation(MusicTriggers.MODID, "music." + song), SoundSource.MUSIC, Float.parseFloat(ConfigToml.otherlinkinginfo.get(curTrack).get(song)[1]),
+                                                            Float.parseFloat(ConfigToml.otherlinkinginfo.get(curTrack).get(song)[0]), false, 1, SoundInstance.Attenuation.NONE, 0F, 0F, 0F));
+                                                    volumeLinker.put("song-" + linkcounter, Float.parseFloat(ConfigToml.otherlinkinginfo.get(curTrack).get(song)[1]));
+                                                    fadeInLinker.put("song-" + linkcounter, Integer.parseInt(ConfigToml.otherlinkinginfo.get(curTrack).get(song)[2]));
+                                                    fadeInLinkerMax.put("song-" + linkcounter, Integer.parseInt(ConfigToml.otherlinkinginfo.get(curTrack).get(song)[2]));
+                                                    fadeOutLinker.put("song-" + linkcounter, Integer.parseInt(ConfigToml.otherlinkinginfo.get(curTrack).get(song)[3]));
+                                                    fadeOutLinkerMax.put("song-" + linkcounter, Integer.parseInt(ConfigToml.otherlinkinginfo.get(curTrack).get(song)[3]));
+                                                    MusicTriggers.logger.info("Fade out ticks for linked song: " + linkcounter + ": " + ConfigToml.otherlinkinginfo.get(curTrack).get(song)[3]);
+                                                    if (ConfigToml.linkingLoopPoints.get(curTrack) != null && ConfigToml.linkingLoopPoints.get(curTrack).get(song) != null) {
+                                                        for (int l : ConfigToml.linkingLoopPoints.get(curTrack).get(song).keySet()) {
+                                                            loopLinker.putIfAbsent("song-" + linkcounter, new HashMap<>());
+                                                            loopLinker.get("song-" + linkcounter).put(l, ConfigToml.linkingLoopPoints.get(curTrack).get(song).get(l));
+                                                            loopLinkerCounter.putIfAbsent("song-" + linkcounter, new HashMap<>());
+                                                            loopLinkerCounter.get("song-" + linkcounter).put(l, 0);
+                                                        }
+                                                    }
+                                                }
+                                                linkcounter++;
+                                            }
+                                        } else {
+                                            musicLinker.put("song-" + 0, new SetVolumeSound(new ResourceLocation(MusicTriggers.MODID, "music." + curTrackHolder), SoundSource.MUSIC, Float.parseFloat(ConfigToml.otherinfo.get(curTrack)[4]), Float.parseFloat(ConfigToml.otherinfo.get(curTrack)[0]), false, 1, SoundInstance.Attenuation.NONE, 0F, 0F, 0F));
+                                            saveVolIn = Float.parseFloat(ConfigToml.otherinfo.get(curTrack)[4]);
+                                            volumeLinker.put("song-" + 0, Float.parseFloat(ConfigToml.otherinfo.get(curTrack)[4]));
+                                            for (int l : ConfigToml.loopPoints.get(curTrack).keySet()) {
+                                                loopLinker.putIfAbsent("song-" + 0, new HashMap<>());
+                                                loopLinker.get("song-" + 0).put(l, ConfigToml.loopPoints.get(curTrack).get(l));
+                                                loopLinkerCounter.putIfAbsent("song-" + 0, new HashMap<>());
+                                                loopLinkerCounter.get("song-" + 0).put(l, 0);
+                                            }
+                                        }
+                                        if (MusicPicker.player != null) {
+                                            if (!ConfigRegistry.clientSideOnly)
+                                                PacketHandler.sendToServer(new CurSong(curTrackHolder, MusicPicker.player.getUUID()));
+                                            else curSong.put(MusicPicker.player.getUUID(), curTrackHolder);
+                                        }
+                                        curMusicSource = null;
+                                        if (cards) renderCards();
+                                        for (Map.Entry<String, SetVolumeSound> stringListEntry : musicLinker.entrySet()) {
+                                            String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
+                                            musicLinker.get(checkThis).setVolume(Float.MIN_VALUE * 1000);
+                                            if (checkThis.matches("song-0")) {
+                                                if (!startQuiet) musicLinker.get(checkThis).setVolume(saveVolIn);
+                                                curMusic = musicLinker.get(checkThis);
+                                                prevPlayingLink = "song-0";
+                                                curLinkNum = "song-" + 0;
+                                            }
+                                            sh.play(musicLinker.get(checkThis));
+                                        }
+                                        curMusicSource = sh.soundEngine.instanceToChannel.get(curMusic).channel;
+                                        if (Integer.parseInt(ConfigToml.otherinfo.get(curTrack)[1]) == 1)
+                                            onceUntilEmpty.add(curTrack);
+                                        if (Integer.parseInt(ConfigToml.otherinfo.get(curTrack)[1]) == 2)
+                                            oncePerTrigger.add(curTrack);
+                                        else if (Integer.parseInt(ConfigToml.otherinfo.get(curTrack)[1]) == 3) {
+                                            trackToDelete = curTrack;
+                                            indexToDelete = i;
+                                            playedEvents = MusicPicker.titleCardEvents;
+                                            playedMusic = curMusic;
+                                        }
+                                    } else curTrackList = null;
+                                } else onceUntilEmpty = new ArrayList<>();
+                            }
+                        }
+                    } else if (!finish) {
+                        if (!playing) {
+                            if (curMusic != null) {
+                                if (!fadingOut) {
+                                    fadingOut = true;
+                                    tempFadeOut = MusicPicker.curFadeOut;
+                                    saveVolOut = volumeLinker.get(curLinkNum);
+                                }
+                            } else if (curTrack != null) {
+                                curTrack = null;
+                                EventsClient.IMAGE_CARD = null;
+                                EventsClient.fadeCount = 1000;
+                                EventsClient.timer = 0;
+                                EventsClient.activated = false;
+                                EventsClient.ismoving = false;
+                                cards = true;
+                            }
+                        } else {
+                            EventsClient.IMAGE_CARD = null;
+                            EventsClient.fadeCount = 1000;
+                            EventsClient.timer = 0;
+                            EventsClient.activated = false;
+                            EventsClient.ismoving = false;
+                            if (curMusic != null) {
+                                if (Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(curMusic).channel).getState() != 0x1013) {
+                                    for (String is : musicLinker.keySet()) {
+                                        Objects.requireNonNull(sh.soundEngine.instanceToChannel.get(musicLinker.get(is)).channel).pause();
+                                    }
+                                    paused = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            tickCounter++;
+            if (tickCounter == 100) tickCounter = 10;
         }
-        tickCounter++;
-        if(tickCounter==100) tickCounter=10;
     }
 
     public static void renderCards() {
@@ -526,8 +498,8 @@ public class MusicPlayer {
         int markForDeletion = -1;
         for (int i : ConfigTitleCards.titlecards.keySet()) {
             boolean pass = false;
-            if(MusicPicker.titleCardEvents.containsAll(ConfigTitleCards.titlecards.get(i).getTriggers()) && ConfigTitleCards.titlecards.get(i).getTriggers().containsAll(MusicPicker.titleCardEvents)) pass=true;
-            else if(ConfigTitleCards.titlecards.get(i).getVague() && MusicPicker.playableList.containsAll(ConfigTitleCards.titlecards.get(i).getTriggers()) && canPlayTitle.get(i)) {
+            if(new HashSet<>(MusicPicker.titleCardEvents).containsAll(ConfigTitleCards.titlecards.get(i).getTriggers()) && new HashSet<>(ConfigTitleCards.titlecards.get(i).getTriggers()).containsAll(MusicPicker.titleCardEvents)) pass=true;
+            else if(ConfigTitleCards.titlecards.get(i).getVague() && new HashSet<>(MusicPicker.playableList).containsAll(ConfigTitleCards.titlecards.get(i).getTriggers()) && canPlayTitle.get(i)) {
                 pass=true;
                 canPlayTitle.put(i, false);
             }
@@ -547,8 +519,8 @@ public class MusicPlayer {
         }
         for (int i : ConfigTitleCards.imagecards.keySet()) {
             boolean pass = false;
-            if(MusicPicker.titleCardEvents.containsAll(ConfigTitleCards.imagecards.get(i).getTriggers()) && ConfigTitleCards.imagecards.get(i).getTriggers().containsAll(MusicPicker.titleCardEvents)) pass=true;
-            else if(ConfigTitleCards.imagecards.get(i).getVague() && MusicPicker.playableList.containsAll(ConfigTitleCards.imagecards.get(i).getTriggers()) && canPlayImage.get(i)) {
+            if(new HashSet<>(MusicPicker.titleCardEvents).containsAll(ConfigTitleCards.imagecards.get(i).getTriggers()) && new HashSet<>(ConfigTitleCards.imagecards.get(i).getTriggers()).containsAll(MusicPicker.titleCardEvents)) pass=true;
+            else if(ConfigTitleCards.imagecards.get(i).getVague() && new HashSet<>(MusicPicker.playableList).containsAll(ConfigTitleCards.imagecards.get(i).getTriggers()) && canPlayImage.get(i)) {
                 pass=true;
                 canPlayImage.put(i, false);
             }
@@ -614,7 +586,7 @@ public class MusicPlayer {
             }
         }
         if(cont) {
-            return all.containsAll(updatedComparison);
+            return new HashSet<>(all).containsAll(updatedComparison);
         }
         return false;
     }
@@ -729,5 +701,27 @@ public class MusicPlayer {
             if(prev!=null) prevPlayingLink = prev;
         }
         MusicPicker.shouldChange = false;
+    }
+
+    private static void clearSongs() {
+        oncePerTrigger = new ArrayList<>();
+        onceUntilEmpty = new ArrayList<>();
+        fadeOutList = null;
+        removeTrack(trackToDelete, indexToDelete, playedEvents, playedMusic);
+        fadingOut = false;
+        curTrackList = null;
+        reverseTrackList = null;
+        for (String sound : musicLinker.keySet()) sh.stop(musicLinker.get(sound));
+        musicLinker = new HashMap<>();
+        EventsClient.IMAGE_CARD = null;
+        EventsClient.fadeCount = 1000;
+        EventsClient.timer = 0;
+        EventsClient.activated = false;
+        EventsClient.ismoving = false;
+        curMusic = null;
+        curTrack = null;
+        curTrackHolder = null;
+        cards = true;
+        tempFadeIn = MusicPicker.curFadeIn;
     }
 }

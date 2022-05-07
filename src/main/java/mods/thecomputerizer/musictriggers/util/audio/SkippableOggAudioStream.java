@@ -1,8 +1,6 @@
 package mods.thecomputerizer.musictriggers.util.audio;
 
-import com.mojang.blaze3d.audio.Channel;
 import com.mojang.blaze3d.audio.OggAudioStream;
-import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.PointerBuffer;
@@ -58,7 +56,6 @@ public class SkippableOggAudioStream extends OggAudioStream {
                                 if(this.milliseconds!=0) {
                                     if (this.bytesRead+l <= this.bytesToSkip) {
                                         this.bytesRead+=l;
-                                        flag = true;
                                     } else {
                                         MusicPlayer.curMusicTimer = this.milliseconds;
                                         this.milliseconds=0;

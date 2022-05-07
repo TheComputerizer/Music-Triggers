@@ -28,7 +28,6 @@ public class PacketHandler {
         HANDLER.registerMessage(disc++, ReturnTriggerData.class, ReturnTriggerData::encode, ReturnTriggerData::new, ReturnTriggerData::handle);
         HANDLER.registerMessage(disc++, CurSong.class, CurSong::encode, CurSong::new, CurSong::handle);
         HANDLER.registerMessage(disc++, BossInfo.class, BossInfo::encode, BossInfo::new, BossInfo::handle);
-        HANDLER.registerMessage(disc++, AllTriggers.class, AllTriggers::encode, AllTriggers::new, AllTriggers::handle);
         HANDLER.registerMessage(disc++, ExecuteCommand.class, ExecuteCommand::encode, ExecuteCommand::new, ExecuteCommand::handle);
         HANDLER.registerMessage(disc++, MenuSongs.class, MenuSongs::encode, MenuSongs::new, MenuSongs::handle);
     }

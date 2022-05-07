@@ -26,8 +26,6 @@ public class BlankRecord extends Item {
             }
             return InteractionResult.SUCCESS;
         }
-        else {
-            return InteractionResult.PASS;
-        }
+        else return InteractionResult.PASS;
     }
 }
