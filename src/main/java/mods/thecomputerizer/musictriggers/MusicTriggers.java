@@ -36,7 +36,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
-@SuppressWarnings({"ResultOfMethodCallIgnored", "ConstantConditions"})
+@SuppressWarnings({"ResultOfMethodCallIgnored"})
 @Mod(MusicTriggers.MODID)
 public class MusicTriggers {
     public static final String MODID = "musictriggers";
@@ -69,7 +69,7 @@ public class MusicTriggers {
                 musictriggersDir.mkdir();
             }
             File jjson = new File(musictriggersDir.getPath() + "/sounds.json");
-            if (!jjson.exists() && Json.allSongs!=null) {
+            if (!jjson.exists() && Json.allSongs != null) {
                 try {
                     jjson.createNewFile();
                 } catch (IOException ex) {
@@ -117,7 +117,9 @@ public class MusicTriggers {
             }
             makeSoundsJson();
             makeDiscLang();
-            ConfigToml.parse(FMLEnvironment.dist == Dist.CLIENT);
+        }
+        ConfigToml.parse(FMLEnvironment.dist == Dist.CLIENT);
+        if(FMLEnvironment.dist == Dist.CLIENT) {
             ConfigCommands.parse();
             ConfigTitleCards.parse();
             Mappings.init();
