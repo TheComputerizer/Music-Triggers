@@ -1,6 +1,5 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.util.CalculateFeatures;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
@@ -12,7 +11,7 @@ import java.util.function.Supplier;
 import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
 
 public class SendTriggerData {
-    private String s;
+    private final String s;
 
     public SendTriggerData(PacketBuffer buf) {
         this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));

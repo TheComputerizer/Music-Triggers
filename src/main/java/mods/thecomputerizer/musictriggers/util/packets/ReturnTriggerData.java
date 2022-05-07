@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.function.Supplier;
 
 public class ReturnTriggerData {
-    private String s;
+    private final String s;
 
     public ReturnTriggerData(PacketBuffer buf) {
         this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));

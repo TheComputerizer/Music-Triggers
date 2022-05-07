@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileWriter;
 
 
+@SuppressWarnings("SuspiciousToArrayCall")
 public class ConfigDebug {
 
     public static boolean ShowDebugInfo = false;

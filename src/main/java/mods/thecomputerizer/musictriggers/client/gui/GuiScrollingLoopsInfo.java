@@ -12,7 +12,6 @@ public class GuiScrollingLoopsInfo extends ExtendedList<GuiScrollingLoopsInfo.En
     public int size;
     public List<String> info;
     private final GuiLoopInfo IN;
-    public String curSelected;
     public int index;
 
     public GuiScrollingLoopsInfo(Minecraft client, int width, int height, int top, int bottom, List<String> info, GuiLoopInfo IN) {

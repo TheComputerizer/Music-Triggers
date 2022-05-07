@@ -19,11 +19,11 @@ apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
-version = '1.16.5-5.2'
-group = 'mods.thecomputerizer.musictriggers' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+version = '1.16.5-5.3'
+group = 'mods.thecomputerizer.musictriggers'
 archivesBaseName = 'musictriggers'
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(8) // Mojang ships Java 8 to end users, so your mod should target Java 8.
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 minecraft {
@@ -77,9 +77,6 @@ repositories {
             includeGroup "curse.maven"
         }
     }
-    //maven {
-        //url = "https://www.beatunes.com/repo/maven2/"
-    //}
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
@@ -145,9 +142,9 @@ jar {
         attributes([
             "Specification-Title": "musictriggers",
             "Specification-Vendor": "musictriggerssareus",
-            "Specification-Version": "5.2",
+            "Specification-Version": "5.3",
             "Implementation-Title": project.name,
-            "Implementation-Version": "5.2",
+            "Implementation-Version": "5.3",
             "Implementation-Vendor" :"musictriggers",
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
             "TweakClass": "org.spongepowered.asm.launch.MixinTweaker",

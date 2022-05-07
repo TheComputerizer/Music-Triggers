@@ -36,7 +36,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
-@SuppressWarnings("ResultOfMethodCallIgnored")
+@SuppressWarnings({"ResultOfMethodCallIgnored", "ConstantConditions"})
 @Mod(MusicTriggers.MODID)
 public class MusicTriggers {
     public static final String MODID = "musictriggers";
@@ -46,7 +46,6 @@ public class MusicTriggers {
 
     public static final Logger logger = LogManager.getLogger();
 
-    @SuppressWarnings("InstantiationOfUtilityClass")
     public MusicTriggers() {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::commonsetup);
@@ -70,7 +69,7 @@ public class MusicTriggers {
                 musictriggersDir.mkdir();
             }
             File jjson = new File(musictriggersDir.getPath() + "/sounds.json");
-            if (!jjson.exists() && Json.collector()!=null) {
+            if (!jjson.exists() && Json.allSongs!=null) {
                 try {
                     jjson.createNewFile();
                 } catch (IOException ex) {
@@ -118,11 +117,11 @@ public class MusicTriggers {
             }
             makeSoundsJson();
             makeDiscLang();
-            ConfigToml.parse();
+            ConfigToml.parse(FMLEnvironment.dist == Dist.CLIENT);
             ConfigCommands.parse();
             ConfigTitleCards.parse();
             Mappings.init();
-            if(Json.collector()!=null) {
+            if(Json.allSongs!=null) {
                 File pack = new File("config/MusicTriggers/songs/");
                 if (pack.isDirectory() && new File(pack, "pack.mcmeta").isFile()) {
                     PackFinder p = new PackFinder(pack);

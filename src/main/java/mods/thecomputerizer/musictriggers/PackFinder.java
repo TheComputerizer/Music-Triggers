@@ -9,7 +9,7 @@ import java.util.function.Supplier;
 
 
 public class PackFinder implements IPackFinder {
-    private File pack;
+    private final File pack;
 
     PackFinder(File p) {
         pack = p;

@@ -12,7 +12,7 @@ import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
 
 public class CurSong {
     public static HashMap<UUID,String> curSong = new HashMap<>();
-    private String s;
+    private final String s;
 
     public CurSong(PacketBuffer buf) {
         this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));

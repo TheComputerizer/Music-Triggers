@@ -12,7 +12,7 @@ import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
 
 public class MenuSongs {
 
-    private String s;
+    private final String s;
 
     public MenuSongs(PacketBuffer buf) {
         this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));

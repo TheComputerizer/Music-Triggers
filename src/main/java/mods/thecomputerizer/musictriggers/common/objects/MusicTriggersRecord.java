@@ -21,9 +21,7 @@ public class MusicTriggersRecord extends MusicDiscItem {
     public ActionResultType useOn(ItemUseContext ctx)
     {
         BlockState blockstate = ctx.getLevel().getBlockState(ctx.getClickedPos());
-
-        if (blockstate.getBlock() instanceof MusicRecorder)
-        {
+        if (blockstate.getBlock() instanceof MusicRecorder) {
             MusicRecorder mr = (MusicRecorder) blockstate.getBlock();
             if(!ctx.getLevel().isClientSide() && !blockstate.getValue(MusicRecorder.HAS_RECORD) && !blockstate.getValue(MusicRecorder.HAS_DISC)) {
                 ItemStack itemstack = Objects.requireNonNull(ctx.getPlayer()).getItemInHand(ctx.getHand());
@@ -31,11 +29,7 @@ public class MusicTriggersRecord extends MusicDiscItem {
                 itemstack.shrink(1);
             }
             return ActionResultType.SUCCESS;
-        }
-        else
-        {
-            return ActionResultType.PASS;
-        }
+        } else return super.useOn(ctx);
     }
 
     @OnlyIn(Dist.CLIENT)

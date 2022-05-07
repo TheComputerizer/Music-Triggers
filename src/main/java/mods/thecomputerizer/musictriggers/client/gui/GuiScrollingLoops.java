@@ -1,10 +1,8 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import mods.thecomputerizer.musictriggers.MusicTriggers;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.widget.list.ExtendedList;
-import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -15,7 +13,6 @@ public class GuiScrollingLoops extends ExtendedList<GuiScrollingLoops.Entry> {
     public int size;
     public List<String> info;
     private final GuiLoops IN;
-    public String curSelected;
     public int index;
     public String code;
     public String song;

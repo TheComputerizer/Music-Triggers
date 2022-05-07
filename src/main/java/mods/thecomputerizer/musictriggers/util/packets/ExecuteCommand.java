@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 
 public class ExecuteCommand {
 
-    private String s;
+    private final String s;
 
     public ExecuteCommand(PacketBuffer buf) {
         this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
