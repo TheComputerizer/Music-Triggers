@@ -5,6 +5,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fabricmc.loader.impl.FabricLoaderImpl;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
@@ -12,12 +13,11 @@ import net.minecraft.util.Identifier;
 
 public class PacketHandler {
 
-    public static void register() {
+    public static void registerReceivers() {
         CurSong.register();
         SendTriggerData.register();
-        ReturnTriggerData.register();
+        if(FabricLoaderImpl.INSTANCE.getEnvironmentType()!=EnvType.SERVER) ReturnTriggerData.register();
         BossInfo.register();
-        AllTriggers.register();
         MenuSongs.register();
         ExecuteCommand.register();
     }

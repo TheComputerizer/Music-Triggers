@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.IntBuffer;
 
-@SuppressWarnings("ConstantConditions")
 public class SkippableOggAudioStream extends OggAudioStream {
 
     public long bytesToSkip;
@@ -66,18 +65,15 @@ public class SkippableOggAudioStream extends OggAudioStream {
                 PointerBuffer pointerBuffer2 = pointerBuffer.getPointerBuffer(l);
                 if (l == 1) {
                     this.readChannels(pointerBuffer2.getFloatBuffer(0, k), output);
-                    boolean bl = true;
-                    return bl;
+                    return true;
                 }
                 if (l == 2) {
                     this.readChannels(pointerBuffer2.getFloatBuffer(0, k), pointerBuffer2.getFloatBuffer(1, k), output);
-                    boolean bl = true;
-                    return bl;
+                    return true;
                 }
                 throw new IllegalStateException("Invalid number of channels: " + l);
             }
-            boolean bl = false;
-            return bl;
+            return false;
         }
     }
 }

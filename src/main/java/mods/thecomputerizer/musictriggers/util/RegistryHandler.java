@@ -15,8 +15,7 @@ public final class RegistryHandler {
         MusicTriggersItems.init();
     }
 
-    public static void registerSoundEvents()
-    {
+    public static void registerSoundEvents() {
         MusicTriggersCommon.logger.info("Loading Sounds from Music Triggers");
         ModSounds.init();
     }

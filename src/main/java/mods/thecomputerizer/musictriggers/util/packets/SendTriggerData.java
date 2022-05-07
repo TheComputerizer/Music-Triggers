@@ -8,7 +8,6 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.UUID;
 
 import static mods.thecomputerizer.musictriggers.MusicTriggersCommon.stringBreaker;

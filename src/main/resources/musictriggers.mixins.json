@@ -8,6 +8,7 @@
     "InGameHudAccessor",
     "MixinAdvancementEvent",
     "MixinLivingDamageEvent",
+    "MixinMusicTracker",
     "MixinPlaySoundEvent",
     "MixinSoundSystem",
     "MixinSource"
