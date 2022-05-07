@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
+@SuppressWarnings("deprecation")
 public class MusicTriggersRecord extends RecordItem {
 
     public MusicTriggersRecord(int i, SoundEvent soundIn, Item.Properties p) {
@@ -33,9 +34,7 @@ public class MusicTriggersRecord extends RecordItem {
             }
             return InteractionResult.SUCCESS;
         }
-        else {
-            return InteractionResult.PASS;
-        }
+        else return super.useOn(ctx);
     }
 
     @OnlyIn(Dist.CLIENT)

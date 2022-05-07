@@ -18,7 +18,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class GuiTriggers extends Screen {
 
@@ -35,8 +34,8 @@ public class GuiTriggers extends Screen {
         this.songCode = songCode;
         this.holder = holder;
         this.triggers = new ArrayList<>();
-        this.triggers.addAll(Arrays.stream(ConfigToml.triggers).collect(Collectors.toList()));
-        this.triggers.addAll(Arrays.stream(ConfigToml.modtriggers).collect(Collectors.toList()));
+        this.triggers.addAll(Arrays.stream(ConfigToml.triggers).toList());
+        this.triggers.addAll(Arrays.stream(ConfigToml.modtriggers).toList());
         this.background = new ResourceLocation(MusicTriggers.MODID,"textures/block/recorder_side_active.png");
     }
 

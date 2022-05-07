@@ -1,4 +1,5 @@
 //file:noinspection GroovyAssignabilityCheck
+//file:noinspection GrDeprecatedAPIUsage
 buildscript {
     repositories {
         maven { url = 'https://maven.minecraftforge.net' }
@@ -17,7 +18,7 @@ apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'maven-publish'
 
-version = '1.18.2-5.2-hf'
+version = '1.18.2-5.3'
 group = 'mods.thecomputerizer.musictriggers'
 archivesBaseName = 'musictriggers'
 
@@ -80,7 +81,7 @@ configurations {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.18.2-40.0.44'
+    minecraft 'net.minecraftforge:forge:1.18.2-40.1.16'
 
     shade ("com.moandjiezana.toml:toml4j:0.7.2"){
         exclude group: 'com.google.code.gson', module: 'gson' // Provided by Minecraft
@@ -126,7 +127,7 @@ jar {
         attributes([
                 "Specification-Title"     : "musictriggers",
                 "Specification-Vendor"    : "The_Computerizer",
-                "Specification-Version"   : "5.2-hf",
+                "Specification-Version"   : "5.3",
                 "Implementation-Title"    : project.name,
                 "Implementation-Version"  : project.jar.archiveVersion,
                 "Implementation-Vendor"   : "The_Computerizer",

@@ -2,7 +2,6 @@ package mods.thecomputerizer.musictriggers.client;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
 import com.mojang.blaze3d.systems.RenderSystem;
-import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.gui.GuiMain;
 import mods.thecomputerizer.musictriggers.client.gui.GuiTriggerInfo;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
@@ -12,6 +11,7 @@ import mods.thecomputerizer.musictriggers.util.CustomTick;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.packets.BossInfo;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.core.BlockPos;
@@ -75,20 +75,9 @@ public class EventsClient {
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
         if (e.getSound()!=null) {
-            if ((MusicPlayer.curMusic != null || MusicPlayer.curTrackList == null || MusicPlayer.curTrackList.isEmpty()) && e.getSound().getLocation().getNamespace().matches(MusicTriggers.MODID) && (((MusicPlayer.curMusic!=null && e.getEngine().isActive(MusicPlayer.curMusic)) && e.getSound().getLocation() != MusicPlayer.fromRecord.getLocation()) || MusicPlayer.playing)) {
-                e.setSound(new SimpleSoundInstance(e.getSound().getLocation(), SoundSource.MUSIC, Float.MIN_VALUE, 1F, false, 0, SoundInstance.Attenuation.LINEAR, 0,0,0, false));
-            }
             for (String s : ConfigDebug.blockedmods) {
-                if (e.getSound().getLocation().getNamespace().contains(s) && e.getSound().getSource() == SoundSource.MUSIC) {
-                    if (!(MusicPlayer.curMusic == null && ConfigDebug.SilenceIsBad)) {
+                if (e.getSound().getLocation().getNamespace().contains(s) && e.getSound().getSource() == SoundSource.MUSIC && !(MusicPlayer.curMusic == null && ConfigDebug.SilenceIsBad))
                         e.setSound(new SimpleSoundInstance(e.getSound().getLocation(), SoundSource.MUSIC, Float.MIN_VALUE, 1F, false, 0, SoundInstance.Attenuation.LINEAR, 0,0,0, false));
-                    }
-                }
-            }
-            if (e.getSound().getLocation().getNamespace().contains("minecraft") && e.getSound().getSource() == SoundSource.MUSIC) {
-                if (!(MusicPlayer.curMusic == null && ConfigDebug.SilenceIsBad)) {
-                    e.setSound(new SimpleSoundInstance(e.getSound().getLocation(), SoundSource.MUSIC, Float.MIN_VALUE, 1F, false, 0, SoundInstance.Attenuation.LINEAR, 0,0,0, false));
-                }
             }
         }
     }
@@ -135,9 +124,7 @@ public class EventsClient {
 
     @SubscribeEvent
     public static void cancelRenders(RenderGameOverlayEvent.Pre e) {
-        if(e.getType()==RenderGameOverlayEvent.ElementType.ALL && !renderDebug) {
-            e.setCanceled(true);
-        }
+        if(e.getType()==RenderGameOverlayEvent.ElementType.ALL && !renderDebug) e.setCanceled(true);
     }
 
     @SubscribeEvent
@@ -214,7 +201,7 @@ public class EventsClient {
 
                     RenderSystem.setShaderColor(1F, 1F, 1F, Math.max(0, Math.min(0.95f, opacity)));
                     RenderSystem.setShaderTexture(0, IMAGE_CARD);
-                    mc.gui.blit(e.getMatrixStack(), (int)posX, (int)posY, 0F, 0F, sizeX, sizeY, sizeX, sizeY);
+                    GuiComponent.blit(e.getMatrixStack(), (int)posX, (int)posY, 0F, 0F, sizeX, sizeY, sizeX, sizeY);
 
                     e.getMatrixStack().popPose();
                 }
@@ -266,6 +253,7 @@ public class EventsClient {
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent event) {
+        if(!Minecraft.getInstance().isPaused() && !renderDebug) renderDebug = true;
         if(reloadCounter>0) {
             reloadCounter-=1;
             if(reloadCounter==1) {
@@ -293,9 +281,7 @@ public class EventsClient {
     @SubscribeEvent
     public static void debugInfo(RenderGameOverlayEvent.Text e) {
         if (ConfigDebug.ShowDebugInfo && isWorldRendered) {
-            if (MusicPlayer.curTrack != null) {
-                e.getLeft().add("Music Triggers Current song: " + MusicPlayer.curTrackHolder);
-            }
+            if (MusicPlayer.curTrack != null) e.getLeft().add("Music Triggers Current song: " + MusicPlayer.curTrackHolder);
             if (!ConfigDebug.ShowJustCurSong) {
                 int displayCount = 0;
                 if(!MusicPlayer.formatSongTime().matches("No song playing")) e.getLeft().add("Music Triggers Current Song Time: " + MusicPlayer.formatSongTime());
@@ -313,9 +299,8 @@ public class EventsClient {
                         }
                         s.append(" ").append(ev);
                     }
-                    if(displayCount==0) {
-                        e.getLeft().add("Music Triggers Playable Events: " + s);
-                    } else e.getLeft().add(s.toString());
+                    if(displayCount==0) e.getLeft().add("Music Triggers Playable Events: " + s);
+                    else e.getLeft().add(s.toString());
                 }
                 displayCount=0;
                 StringBuilder sm = new StringBuilder();
@@ -330,14 +315,11 @@ public class EventsClient {
                     }
                     sm.append(" ").append(ev);
                 }
-                if(displayCount==0) {
-                    e.getLeft().add("Music Triggers Blocked Mods: " + sm);
-                } else e.getLeft().add(sm.toString());
+                if(displayCount==0) e.getLeft().add("Music Triggers Blocked Mods: " + sm);
+                else e.getLeft().add(sm.toString());
                 displayCount=0;
                 if (MusicPicker.player != null && MusicPicker.world != null) {
-                    if (FromServer.curStruct != null) {
-                        e.getLeft().add("Music Triggers Current Structure: " + FromServer.curStruct);
-                    }
+                    if (FromServer.curStruct != null) e.getLeft().add("Music Triggers Current Structure: " + FromServer.curStruct);
                     e.getLeft().add("Music Triggers Current Biome: " + FromServer.curBiome);
                     e.getLeft().add("Music Triggers Current Dimension: " + MusicPicker.player.level.dimension().location());
                     e.getLeft().add("Music Triggers Current Total Light: " + MusicPicker.world.getRawBrightness(MusicPicker.roundedPos(MusicPicker.player), 0));
@@ -354,20 +336,13 @@ public class EventsClient {
                             }
                             se.append(" ").append(ev);
                         }
-                        if(displayCount==0) {
-                            e.getLeft().add("Music Triggers Effect List: " + se);
-                        } else e.getLeft().add(se.toString());
+                        if(displayCount==0) e.getLeft().add("Music Triggers Effect List: " + se);
+                        else e.getLeft().add(se.toString());
                     }
-                    if (MusicPicker.mc.screen != null) {
-                        e.getLeft().add("Music Triggers current GUI: " + MusicPicker.mc.screen.toString());
-                    }
-                    if (getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity) != null) {
-                        e.getLeft().add("Music Triggers Current Entity Name: " + getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity).getName().getString());
-                    }
+                    if (MusicPicker.mc.screen != null) e.getLeft().add("Music Triggers current GUI: " + MusicPicker.mc.screen.toString());
+                    if (getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity) != null) e.getLeft().add("Music Triggers Current Entity Name: " + getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity).getName().getString());
                     try {
-                        if (infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)) != null) {
-                            e.getLeft().add("Music Triggers Infernal Mob Mod Name: " + infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)));
-                        }
+                        if (infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)) != null) e.getLeft().add("Music Triggers Infernal Mob Mod Name: " + infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)));
                     } catch (NoSuchMethodError ignored) {
                     }
                 }
@@ -385,8 +360,7 @@ public class EventsClient {
     }
 
     private static String infernalChecker(@Nullable LivingEntity m) {
-        if (ModList.get().isLoaded("infernalmobs") && m != null)
-            return InfernalMobsCore.getMobModifiers(m) == null ? null : InfernalMobsCore.getMobModifiers(m).getModName();
+        if (ModList.get().isLoaded("infernalmobs") && m != null) return InfernalMobsCore.getMobModifiers(m) == null ? null : InfernalMobsCore.getMobModifiers(m).getModName();
         return null;
     }
 

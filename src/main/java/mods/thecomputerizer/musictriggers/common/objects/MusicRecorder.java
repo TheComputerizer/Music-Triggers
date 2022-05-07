@@ -19,7 +19,7 @@ import net.minecraft.world.phys.BlockHitResult;
 
 import java.util.UUID;
 
-@SuppressWarnings("NullableProblems")
+@SuppressWarnings({"NullableProblems", "deprecation"})
 public class MusicRecorder extends Block {
 
     public static final BooleanProperty HAS_RECORD = BlockStateProperties.HAS_RECORD;

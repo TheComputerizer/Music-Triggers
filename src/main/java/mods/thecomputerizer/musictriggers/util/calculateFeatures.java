@@ -150,6 +150,7 @@ public class CalculateFeatures {
         return triggerID+"@"+pass+"@"+currentBiome+"$";
     }
 
+
     private static String calculateSnow(BlockPos pos, UUID uuid) {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         ServerPlayer player = server.getPlayerList().getPlayer(uuid);

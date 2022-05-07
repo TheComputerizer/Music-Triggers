@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
 
+@SuppressWarnings("CollectionAddAllCanBeReplacedWithConstructor")
 public class ConfigObject {
     private final Map<String, String> songholder;
     private final Map<String, Map<String, String[]>> triggerholder;
@@ -225,7 +226,7 @@ public class ConfigObject {
         assert listOfFiles != null;
         for(File f : listOfFiles) {
             if(f.isDirectory()) ret.put(f.getName(), true);
-            else if(f.getName().contains(".png") && !f.getName().contains(".png.mcmeta") && Arrays.stream(listOfFiles).collect(Collectors.toList()).contains(new File(f.getPath()+".mcmeta"))) ret.put(f.getName(),true);
+            else if(f.getName().contains(".png") && !f.getName().contains(".png.mcmeta") && Arrays.stream(listOfFiles).toList().contains(new File(f.getPath()+".mcmeta"))) ret.put(f.getName(),true);
             else if(f.getName().contains(".gif")) ret.put(f.getName(), true);
             else if(f.getName().contains(".mp4")) ret.put(f.getName(), true);
             else if(f.getName().contains(".png")) ret.put(f.getName(), false);
@@ -796,7 +797,7 @@ public class ConfigObject {
 
     public void write() throws IOException {
         StringBuilder mainBuilder = new StringBuilder();
-        this.writeUniversal(mainBuilder);
+        mainBuilder.append(this.writeUniversal());
         for(int j=0;j<this.songholder.entrySet().size();j++) {
             String code = "song"+j;
             MusicTriggers.logger.info("writing code: "+code);
@@ -941,8 +942,8 @@ public class ConfigObject {
         List<String> temp = this.getAllTriggersForCode(code);
         List<String> triggers = new ArrayList<>();
         for(String trigger : temp) {
-            if(!this.triggerholder.get(code).get(trigger)[10].matches("minecraft")) triggers.add(trigger+"-"+this.triggerholder.get(code).get(trigger)[10]);
-            else triggers.add(trigger);
+            if(!this.triggerholder.get(code).get(trigger)[10].matches("minecraft")) triggers.add(translateCodedTrigger(code,trigger)+"-"+this.triggerholder.get(code).get(trigger)[10]);
+            else triggers.add(translateCodedTrigger(code,trigger));
         }
         StringBuilder defaults = new StringBuilder();
         defaults.append("\t\tdefault = [ ");
@@ -954,7 +955,7 @@ public class ConfigObject {
     }
 
     private String formatLinkingTriggers(String code, String song) {
-        List<String> triggers = Arrays.stream(this.triggerlinking.get(code).get(song)).collect(Collectors.toList());
+        List<String> triggers = Arrays.stream(this.triggerlinking.get(code).get(song)).toList();
         StringBuilder triggerbuilder = new StringBuilder();
         triggerbuilder.append("\t\t\tname = [ ");
         for(String trigger : triggers) {
@@ -999,12 +1000,15 @@ public class ConfigObject {
         builder.append("\t\t\tz_max = \"").append(broken[5]).append("\"\n");
     }
 
-    private void writeUniversal(StringBuilder builder) {
+    private String writeUniversal() {
+        String ret ="";
         if(MusicPicker.universalDelay!=0 || MusicPicker.universalFadeIn!=0 || MusicPicker.universalFadeOut!=0) {
-            builder.append("[universal]\n");
-            if(MusicPicker.universalDelay!=0) builder.append("\ndelay = \"").append(MusicPicker.universalDelay).append("\"\n");
-            if(MusicPicker.universalFadeIn!=0) builder.append("\nfade_in = \"").append(MusicPicker.universalFadeIn).append("\"\n");
-            if(MusicPicker.universalFadeOut!=0) builder.append("\nfade_out = \"").append(MusicPicker.universalFadeOut).append("\"\n");
+            ret+="[universal]\n";
+            if(MusicPicker.universalDelay!=0) ret+="\tdelay = \""+MusicPicker.universalDelay+"\"\n";
+            if(MusicPicker.universalFadeIn!=0) ret+="\tfade_in = \""+MusicPicker.universalFadeIn+"\"\n";
+            if(MusicPicker.universalFadeOut!=0) ret+="\tfade_out = \""+MusicPicker.universalFadeOut+"\"\n";
+            ret+="\n";
         }
+        return ret;
     }
 }

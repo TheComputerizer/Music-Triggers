@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
 
 public class SendTriggerData {
-    private String s;
+    private final String s;
 
     public SendTriggerData(FriendlyByteBuf buf) {
         this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));

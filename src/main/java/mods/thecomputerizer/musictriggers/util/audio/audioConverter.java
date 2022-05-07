@@ -5,6 +5,7 @@ import javazoom.jl.converter.Converter;
 import java.io.File;
 import java.io.FileInputStream;
 
+@SuppressWarnings("ResultOfMethodCallIgnored")
 public class AudioConverter {
 
     public static void mp3ToOgg(File source, File folder, String name){

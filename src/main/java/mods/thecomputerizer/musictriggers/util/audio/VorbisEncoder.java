@@ -20,6 +20,7 @@ import mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.*;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 
+@SuppressWarnings({"ConstantConditions", "LoopConditionNotUpdatedInsideLoop", "unused"})
 public class VorbisEncoder {
     static vorbisenc encoder;
 
@@ -37,9 +38,6 @@ public class VorbisEncoder {
 
     static int READ = 1024;
     static byte[] readbuffer = new byte[READ*4+44];
-
-    static int page_count = 0;
-    static int block_count = 0;
 
     /**
      * VorbisEncoder.java

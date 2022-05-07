@@ -32,6 +32,7 @@ import java.util.*;
 
 import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
 
+@SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
 public class MusicPicker {
     public static Minecraft mc;
     public static Player player;
@@ -131,7 +132,7 @@ public class MusicPicker {
                 for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.songCombos.entrySet()) {
                     String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
                     if (s.startsWith("@") && s.replaceAll("@", "").matches(checkThis)) {
-                        if (playableList.containsAll(SoundHandler.songCombos.get(s.replaceAll("@", ""))) && SoundHandler.TriggerInfoMap.keySet().containsAll(SoundHandler.instantiatedCombos.get(SoundHandler.songCombos.get(s.replaceAll("@", ""))))) {
+                        if (new HashSet<>(playableList).containsAll(SoundHandler.songCombos.get(s.replaceAll("@", ""))) && SoundHandler.TriggerInfoMap.keySet().containsAll(SoundHandler.instantiatedCombos.get(SoundHandler.songCombos.get(s.replaceAll("@", ""))))) {
                             playableSongs.add(s.substring(1));
                             if (!titleCardEvents.contains(st)) {
                                 titleCardEvents.addAll(SoundHandler.songCombos.get(s.replaceAll("@", "")));
@@ -544,7 +545,7 @@ public class MusicPicker {
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("riding").keySet()) {
                     crashHelper = "riding-"+identifier;
                     String ridingName = SoundHandler.TriggerInfoMap.get("riding-" + identifier)[9];
-                    if (checkResourceList(Objects.requireNonNull(player.getControllingPassenger()).getName().getString(),ridingName,true) || checkResourceList(Objects.requireNonNull(ForgeRegistries.ENTITIES.getKey(player.getControllingPassenger().getType())).toString(),ridingName,true) || ridingName.matches("minecraft")) {
+                    if (ridingName.matches("minecraft") || (player.getControllingPassenger()!=null && checkResourceList(Objects.requireNonNull(player.getControllingPassenger()).getName().getString(),ridingName,true)) || (ForgeRegistries.ENTITIES.getKey(player.getControllingPassenger().getType())!=null && checkResourceList(Objects.requireNonNull(ForgeRegistries.ENTITIES.getKey(player.getControllingPassenger().getType())).toString(),ridingName,true))) {
                         if (!events.contains("riding-" + identifier)) {
                             events.add("riding-" + identifier);
                             dynamicSongs.put("riding-" + identifier, SoundHandler.TriggerIdentifierMap.get("riding").get(identifier));
@@ -902,7 +903,8 @@ public class MusicPicker {
             if (SoundHandler.TriggerIdentifierMap.get("victory") != null) {
                 crashHelper = "victory";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("victory").keySet()) {
-                    if (victory.get(Integer.parseInt(SoundHandler.TriggerInfoMap.get("victory-" + identifier)[17]))) {
+                    int id = Integer.parseInt(SoundHandler.TriggerInfoMap.get("victory-" + identifier)[17]);
+                    if (victory.get(id)!=null && victory.get(id)) {
                         crashHelper = "victory-"+identifier;
                         if (!events.contains("victory-" + identifier)) {
                             events.add("victory-" + identifier);
@@ -932,7 +934,7 @@ public class MusicPicker {
                 crashHelper = "gui";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("gui").keySet()) {
                     crashHelper = "gui-"+identifier;
-                    if (checkResourceList(mc.screen.toString(), SoundHandler.TriggerInfoMap.get("gui-" + identifier)[9], false)) {
+                    if (checkResourceList(mc.screen.getClass().getName(), SoundHandler.TriggerInfoMap.get("gui-" + identifier)[9], false)) {
                         if (!events.contains("gui-" + identifier)) {
                             events.add("gui-" + identifier);
                             dynamicSongs.put("gui-" + identifier, SoundHandler.TriggerIdentifierMap.get("gui").get(identifier));
@@ -1106,7 +1108,7 @@ public class MusicPicker {
                 crashHelper = "statistic";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("statistic").keySet()) {
                     crashHelper = "statistic-"+identifier;
-                    if (checkStat(SoundHandler.TriggerInfoMap.get("statistic-" + identifier)[9], Integer.parseInt(SoundHandler.TriggerInfoMap.get("statistic-" + identifier)[9]))) {
+                    if (checkStat(SoundHandler.TriggerInfoMap.get("statistic-" + identifier)[9], Integer.parseInt(SoundHandler.TriggerInfoMap.get("statistic-" + identifier)[2]))) {
                         if (!events.contains("statistic-" + identifier)) {
                             events.add("statistic-" + identifier);
                             dynamicSongs.put("statistic-" + identifier, SoundHandler.TriggerIdentifierMap.get("statistic").get(identifier));
@@ -1138,7 +1140,7 @@ public class MusicPicker {
         }
         playableList = events;
         savePlayable = events;
-        if(!ConfigRegistry.clientSideOnly && !events.isEmpty()) {
+        if(!ConfigRegistry.clientSideOnly) {
             packetBuilder.insert(0, allTriggersAsSingleString() + "&#");
             PacketHandler.sendToServer(new SendTriggerData(packetBuilder.toString(), player.getUUID()));
         }
@@ -1155,8 +1157,8 @@ public class MusicPicker {
                     int seasonID = Integer.parseInt(SoundHandler.TriggerInfoMap.get("season-" + identifier)[2]);
                     ISeasonState curSeason = SeasonHelper.getSeasonState(world);
                     if (seasonID == 0 && curSeason.getSeason() == Season.SPRING) {
-                        if (!tempList.contains("season-" + seasonID)) {
-                            tempList.add("season-" + seasonID);
+                        if (!tempList.contains("season-" + identifier)) {
+                            tempList.add("season-" + identifier);
                             dynamicSongs.put("season-" + identifier, SoundHandler.TriggerIdentifierMap.get("season").get(identifier));
                             dynamicPriorities.put("season-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("season-" + identifier)[0]));
                             dynamicFadeIn.put("season-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("season-" + identifier)[1]));
@@ -1166,8 +1168,8 @@ public class MusicPicker {
                             if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("season-" + identifier)[33])) timeSwitch.add("season-" + identifier);
                         }
                     } else if (seasonID == 1 && curSeason.getSeason() == Season.SUMMER) {
-                        if (!tempList.contains("season-" + seasonID)) {
-                            tempList.add("season-" + seasonID);
+                        if (!tempList.contains("season-" + identifier)) {
+                            tempList.add("season-" + identifier);
                             dynamicSongs.put("season-" + identifier, SoundHandler.TriggerIdentifierMap.get("season").get(identifier));
                             dynamicPriorities.put("season-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("season-" + identifier)[0]));
                             dynamicFadeIn.put("season-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("season-" + identifier)[1]));
@@ -1177,8 +1179,8 @@ public class MusicPicker {
                             if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("season-" + identifier)[33])) timeSwitch.add("season-" + identifier);
                         }
                     } else if (seasonID == 2 && curSeason.getSeason() == Season.AUTUMN) {
-                        if (!tempList.contains("season-" + seasonID)) {
-                            tempList.add("season-" + seasonID);
+                        if (!tempList.contains("season-" + identifier)) {
+                            tempList.add("season-" + identifier);
                             dynamicSongs.put("season-" + identifier, SoundHandler.TriggerIdentifierMap.get("season").get(identifier));
                             dynamicPriorities.put("season-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("season-" + identifier)[0]));
                             dynamicFadeIn.put("season-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("season-" + identifier)[1]));
@@ -1188,8 +1190,8 @@ public class MusicPicker {
                             if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("season-" + identifier)[33])) timeSwitch.add("season-" + identifier);
                         }
                     } else if (seasonID == 3 && curSeason.getSeason() == Season.WINTER) {
-                        if (!tempList.contains("season-" + seasonID)) {
-                            tempList.add("season-" + seasonID);
+                        if (!tempList.contains("season-" + identifier)) {
+                            tempList.add("season-" + identifier);
                             dynamicSongs.put("season-" + identifier, SoundHandler.TriggerIdentifierMap.get("season").get(identifier));
                             dynamicPriorities.put("season-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("season-" + identifier)[0]));
                             dynamicFadeIn.put("season-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("season-" + identifier)[1]));
@@ -1199,8 +1201,8 @@ public class MusicPicker {
                             if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("season-" + identifier)[33])) timeSwitch.add("season-" + identifier);
                         }
                     } else if (triggerPersistence.get("season-" + identifier) != null && triggerPersistence.get("season-" + identifier) > 0) {
-                        if (!tempList.contains("season-" + seasonID)) {
-                            tempList.add("season-" + seasonID);
+                        if (!tempList.contains("season-" + identifier)) {
+                            tempList.add("season-" + identifier);
                             dynamicSongs.put("season-" + identifier, SoundHandler.TriggerIdentifierMap.get("season").get(identifier));
                             dynamicPriorities.put("season-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("season-" + identifier)[0]));
                             dynamicFadeIn.put("season-" + identifier, Integer.parseInt(SoundHandler.TriggerInfoMap.get("season-" + identifier)[1]));
@@ -1256,9 +1258,7 @@ public class MusicPicker {
             for (String song : SoundHandler.TriggerIdentifierMap.get("menu").get("_")) {
                 ret.append(ConfigToml.songholder.get(song)).append(",");
             }
-            if (ret.length() != 0) {
-                return player.getStringUUID()+","+ret.substring(0, ret.length() - 1);
-            }
+            if (ret.length() != 0) return player.getStringUUID()+","+ret.substring(0, ret.length() - 1);
         }
         return null;
     }
