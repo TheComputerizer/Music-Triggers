@@ -483,7 +483,7 @@ public class MusicPlayer {
             }
             tickCounter++;
             if (tickCounter == 100) tickCounter = 10;
-        } else paused = true;
+        }
     }
 
     @SuppressWarnings("ConstantConditions")
