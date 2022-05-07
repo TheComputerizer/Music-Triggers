@@ -32,21 +32,14 @@ public class MusicTriggersCommon implements ModInitializer {
     public static File songsDir;
     public static File texturesDir;
 
-    @SuppressWarnings("InstantiationOfUtilityClass")
     @Override
     public void onInitialize() {
         Mappings.init();
         configDir = new File(FabricLoaderImpl.INSTANCE.getConfigDir().toString(), "MusicTriggers");
-        if (!configDir.exists()) {
-            configDir.mkdir();
-        }
-        if(FabricLoaderImpl.INSTANCE.getEnvironmentType()== EnvType.CLIENT) {
-            setUpClientPt1();
-        }
-        ConfigToml.parse();
-        if(FabricLoaderImpl.INSTANCE.getEnvironmentType()== EnvType.CLIENT) {
-            setUpClientPt2();
-        }
+        if (!configDir.exists()) configDir.mkdir();
+        if(FabricLoaderImpl.INSTANCE.getEnvironmentType()== EnvType.CLIENT) setUpClientPt1();
+        ConfigToml.parse(FabricLoaderImpl.INSTANCE.getEnvironmentType()== EnvType.CLIENT);
+        if(FabricLoaderImpl.INSTANCE.getEnvironmentType()== EnvType.CLIENT) setUpClientPt2();
         File debugConfig = new File("config/MusicTriggers/debug.toml");
         if(!debugConfig.exists()) {
             try {
@@ -72,9 +65,7 @@ public class MusicTriggersCommon implements ModInitializer {
         ConfigRegistry.parse(registrationConfig);
         RegistryHandler.init();
         setUpCommonEvents();
-        if(!ConfigRegistry.clientSideOnly) {
-            PacketHandler.register();
-        }
+        if(!ConfigRegistry.clientSideOnly) PacketHandler.registerReceivers();
     }
 
     private static void setUpCommonEvents() {
@@ -83,29 +74,17 @@ public class MusicTriggersCommon implements ModInitializer {
 
     private static void setUpClientPt1() {
         songsDir = new File(configDir.getPath(), "songs");
-        if (!songsDir.exists()) {
-            songsDir.mkdir();
-        }
+        if (!songsDir.exists()) songsDir.mkdir();
         File assetsDir = new File(songsDir.getPath(), "assets");
-        if (!assetsDir.exists()) {
-            assetsDir.mkdir();
-        }
+        if (!assetsDir.exists()) assetsDir.mkdir();
         File musictriggersDir = new File(assetsDir.getPath(), "musictriggers");
-        if (!musictriggersDir.exists()) {
-            musictriggersDir.mkdir();
-        }
+        if (!musictriggersDir.exists()) musictriggersDir.mkdir();
         File soundsDir = new File(musictriggersDir.getPath(), "sounds");
-        if (!soundsDir.exists()) {
-            soundsDir.mkdir();
-        }
+        if (!soundsDir.exists()) soundsDir.mkdir();
         File musicDir = new File(soundsDir.getPath(), "music");
-        if (!musicDir.exists()) {
-            musicDir.mkdir();
-        }
+        if (!musicDir.exists()) musicDir.mkdir();
         texturesDir = new File(musictriggersDir.getPath(), "textures");
-        if (!texturesDir.exists()) {
-            texturesDir.mkdir();
-        }
+        if (!texturesDir.exists()) texturesDir.mkdir();
         File mcmeta = new File(songsDir.getPath() + "/pack.mcmeta");
         if (!mcmeta.exists()) {
             try {
@@ -122,7 +101,7 @@ public class MusicTriggersCommon implements ModInitializer {
             }
         }
         File jjson = new File(musictriggersDir.getPath() + "/sounds.json");
-        if (!jjson.exists() && Json.collector() != null) {
+        if (!jjson.exists() && Json.allSongs != null) {
             try {
                 jjson.createNewFile();
             } catch (IOException ex) {
@@ -130,9 +109,7 @@ public class MusicTriggersCommon implements ModInitializer {
             }
         }
         File langDir = new File(musictriggersDir.getPath(), "lang");
-        if (!langDir.exists()) {
-            langDir.mkdir();
-        }
+        if (!langDir.exists()) langDir.mkdir();
         File lang = new File(langDir.getPath() + "/en_us.json");
         if (!lang.exists()) {
             try {

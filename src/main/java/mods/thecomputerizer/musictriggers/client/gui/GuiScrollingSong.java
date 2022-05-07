@@ -10,7 +10,6 @@ import net.minecraft.text.TranslatableText;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
-@SuppressWarnings("NullableProblems")
 public class GuiScrollingSong extends AlwaysSelectedEntryListWidget<GuiScrollingSong.Entry> {
 
     private final List<String> codes;

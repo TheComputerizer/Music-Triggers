@@ -30,7 +30,7 @@ import java.util.*;
 
 import static mods.thecomputerizer.musictriggers.MusicTriggersCommon.stringBreaker;
 
-@SuppressWarnings({"rawtypes"})
+@SuppressWarnings({"rawtypes", "MismatchedQueryAndUpdateOfCollection"})
 public class MusicPicker {
     public static MinecraftClient mc;
     public static PlayerEntity player;
@@ -134,7 +134,7 @@ public class MusicPicker {
                 for (Map.Entry<String, List<String>> stringListEntry : SoundHandler.songCombos.entrySet()) {
                     String checkThis = ((Map.Entry) stringListEntry).getKey().toString();
                     if (s.startsWith("@") && s.replaceAll("@", "").matches(checkThis)) {
-                        if (playableList.containsAll(SoundHandler.songCombos.get(s.replaceAll("@", ""))) && SoundHandler.TriggerInfoMap.keySet().containsAll(SoundHandler.instantiatedCombos.get(SoundHandler.songCombos.get(s.replaceAll("@", ""))))) {
+                        if (new HashSet<>(playableList).containsAll(SoundHandler.songCombos.get(s.replaceAll("@", ""))) && SoundHandler.TriggerInfoMap.keySet().containsAll(SoundHandler.instantiatedCombos.get(SoundHandler.songCombos.get(s.replaceAll("@", ""))))) {
                             playableSongs.add(s.substring(1));
                             if (!titleCardEvents.contains(st)) {
                                 titleCardEvents.addAll(SoundHandler.songCombos.get(s.replaceAll("@", "")));
@@ -551,7 +551,7 @@ public class MusicPicker {
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("riding").keySet()) {
                     crashHelper = "riding-" + identifier;
                     String ridingName = SoundHandler.TriggerInfoMap.get("riding-" + identifier)[9];
-                    if (checkResourceList(Objects.requireNonNull(player.getVehicle()).getName().getString(),ridingName,true) || checkResourceList(Objects.requireNonNull(EntityType.getId(player.getVehicle().getType())).toString(),ridingName,true) || ridingName.matches("minecraft")) {
+                    if (player.getVehicle()!=null && (checkResourceList(Objects.requireNonNull(player.getVehicle()).getName().getString(),ridingName,true)) || (EntityType.getId(player.getVehicle().getType())!=null && checkResourceList(Objects.requireNonNull(EntityType.getId(player.getVehicle().getType())).toString(),ridingName,true)) || ridingName.matches("minecraft")) {
                         if (!events.contains("riding-" + identifier)) {
                             events.add("riding-" + identifier);
                             dynamicSongs.put("riding-" + identifier, SoundHandler.TriggerIdentifierMap.get("riding").get(identifier));
@@ -909,7 +909,8 @@ public class MusicPicker {
             if (SoundHandler.TriggerIdentifierMap.get("victory") != null) {
                 crashHelper = "victory";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("victory").keySet()) {
-                    if (victory.get(Integer.parseInt(SoundHandler.TriggerInfoMap.get("victory-" + identifier)[17]))) {
+                    int id = Integer.parseInt(SoundHandler.TriggerInfoMap.get("victory-" + identifier)[17]);
+                    if (victory.get(id)!=null && victory.get(id)) {
                         crashHelper = "victory-"+identifier;
                         if (!events.contains("victory-" + identifier)) {
                             events.add("victory-" + identifier);
@@ -938,7 +939,7 @@ public class MusicPicker {
             if (mc.currentScreen != null && SoundHandler.TriggerIdentifierMap.get("gui") != null) {
                 crashHelper = "gui";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("gui").keySet()) {
-                    if (checkResourceList(mc.currentScreen.toString(), SoundHandler.TriggerInfoMap.get("gui-" + identifier)[9], false)) {
+                    if (checkResourceList(mc.currentScreen.getClass().getName(), SoundHandler.TriggerInfoMap.get("gui-" + identifier)[9], false)) {
                         if (!events.contains("gui-" + identifier)) {
                             events.add("gui-" + identifier);
                             dynamicSongs.put("gui-" + identifier, SoundHandler.TriggerIdentifierMap.get("gui").get(identifier));
@@ -1111,7 +1112,7 @@ public class MusicPicker {
                 crashHelper = "statistic";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("statistic").keySet()) {
                     crashHelper = "statistic-"+identifier;
-                    if (checkStat(SoundHandler.TriggerInfoMap.get("statistic-" + identifier)[9], Integer.parseInt(SoundHandler.TriggerInfoMap.get("statistic-" + identifier)[9]))) {
+                    if (checkStat(SoundHandler.TriggerInfoMap.get("statistic-" + identifier)[9], Integer.parseInt(SoundHandler.TriggerInfoMap.get("statistic-" + identifier)[2]))) {
                         if (!events.contains("statistic-" + identifier)) {
                             events.add("statistic-" + identifier);
                             dynamicSongs.put("statistic-" + identifier, SoundHandler.TriggerIdentifierMap.get("statistic").get(identifier));
@@ -1141,7 +1142,7 @@ public class MusicPicker {
         }
         playableList = events;
         savePlayable = events;
-        if(!ConfigRegistry.clientSideOnly && !events.isEmpty()) {
+        if(!ConfigRegistry.clientSideOnly) {
             packetBuilder.insert(0, allTriggersAsSingleString() + "&#");
             PacketHandler.sendToServer(SendTriggerData.id, SendTriggerData.encode(packetBuilder.toString(), player.getUuid()));
         }
@@ -1188,9 +1189,7 @@ public class MusicPicker {
             for (String song : SoundHandler.TriggerIdentifierMap.get("menu").get("_")) {
                 ret.append(ConfigToml.songholder.get(song)).append(",");
             }
-            if (ret.length() != 0) {
-                return player.getUuidAsString()+","+ret.substring(0, ret.length() - 1);
-            }
+            if (ret.length() != 0) return player.getUuidAsString()+","+ret.substring(0, ret.length() - 1);
         }
         return null;
     }

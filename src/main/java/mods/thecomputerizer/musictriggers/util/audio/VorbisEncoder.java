@@ -20,6 +20,7 @@ import mods.thecomputerizer.musictriggers.libraries.org.xiph.libvorbis.*;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 
+@SuppressWarnings({"ConstantConditions", "LoopConditionNotUpdatedInsideLoop"})
 public class VorbisEncoder {
     static vorbisenc encoder;
 

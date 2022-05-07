@@ -30,7 +30,6 @@ public class SendTriggerData {
         ServerPlayNetworking.registerGlobalReceiver(id,(server, player, handler, buf, sender) -> {
             CalculateFeatures.curServer = server;
             String s = decode(buf);
-            MusicTriggersCommon.logger.info("Trigger data: "+getTriggerData(s));
             CalculateFeatures.calculateServerTriggers(stringBreaker(getTriggerData(s),"#"), getPlayerUUID(s));
         });
     }

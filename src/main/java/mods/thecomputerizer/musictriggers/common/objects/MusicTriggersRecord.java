@@ -33,7 +33,7 @@ public class MusicTriggersRecord extends MusicDiscItem {
             }
             return ActionResult.SUCCESS;
         }
-        else return ActionResult.PASS;
+        else return super.useOnBlock(ctx);
     }
 
     @Override

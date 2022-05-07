@@ -1,6 +1,5 @@
 package mods.thecomputerizer.musictriggers.mixin;
 
-import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
 import net.minecraft.client.resource.ClientBuiltinResourcePackProvider;
 import net.minecraft.resource.*;
 import net.minecraft.text.Text;

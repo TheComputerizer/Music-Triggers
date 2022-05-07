@@ -21,6 +21,7 @@ import java.util.*;
 
 import static mods.thecomputerizer.musictriggers.MusicTriggersCommon.stringBreaker;
 
+@SuppressWarnings("unused")
 public class CalculateFeatures {
 
     public static MinecraftServer curServer;
@@ -138,7 +139,7 @@ public class CalculateFeatures {
         ServerPlayerEntity player = curServer.getPlayerManager().getPlayer(uuid);
         if(player!=null) {
             RegistryWorldView world = curServer.getWorld(player.getWorld().getRegistryKey());
-            if (world != null) {
+            if (world != null && world.getBiomeKey(pos).isPresent()) {
                 curBiome = world.getBiomeKey(pos).get().getValue().toString();
                 pass = checkBiome(world.getBiome(pos), curBiome,biome,category,rainType,temperature,cold,rainfall,togglerainfall);
             }

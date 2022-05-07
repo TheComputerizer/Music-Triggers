@@ -18,36 +18,7 @@
     ],
     "C": [
       {
-        "item": "minecraft:music_disc_13"
-      }
-    ]
-  },
-  "result": {
-    "item": "musictriggers:blank_record",
-    "count": 1
-  }
-},
-{
-  "type": "minecraft:crafting_shaped",
-  "pattern": [
-    "ABA",
-    "BCB",
-    "ABA"
-  ],
-  "key": {
-    "A": [
-      {
-        "item": "minecraft:diamond"
-      }
-    ],
-    "B": [
-      {
-        "item": "minecraft:paper"
-      }
-    ],
-    "C": [
-      {
-        "item": "minecraft:music_disc_cat"
+        "tag": "minecraft:music_discs"
       }
     ]
   },
