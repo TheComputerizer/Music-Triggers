@@ -1636,7 +1636,7 @@ public class MusicPicker {
 
     public static boolean checkStatResourceList(String type, String resourceList, String stat) {
         for(String resource : stringBreaker(resourceList,";")) {
-            if(resource.contains(stat) && type.contains(resource.replaceAll(stat,"").replaceAll(":",""))) return true;
+            if(resource.contains(stat) && type.contains(resource.replaceAll(stat,""))) return true;
         }
         return false;
     }
