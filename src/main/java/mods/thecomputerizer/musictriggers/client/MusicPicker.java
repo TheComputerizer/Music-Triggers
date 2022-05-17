@@ -1542,7 +1542,7 @@ public class MusicPicker {
     }
 
     public static boolean checkRiding(String resource) {
-        if(player.isRiding() || player.getRidingEntity()==null) return false;
+        if(!player.isRiding() || player.getRidingEntity()==null) return false;
         else if(resource.matches("minecraft")) return true;
         else if(checkResourceList(Objects.requireNonNull(player.getRidingEntity()).getName(),resource,true)) return true;
         else if(EntityList.getKey(player.getRidingEntity())==null) return false;

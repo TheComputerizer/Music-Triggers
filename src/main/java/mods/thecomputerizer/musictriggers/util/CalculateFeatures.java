@@ -157,7 +157,7 @@ public class CalculateFeatures {
                 int mobCounter = 0;
                 List<EntityLiving> mobListSpecific = new ArrayList<>();
                 for (EntityLiving e : mobTempList) {
-                    if ((checkResourceList(e.getName(), mobname, true) || checkResourceList(Objects.requireNonNull(EntityList.getKey(e)).toString(), mobname, true)) && nbtChecker(e, nbtKey)) {
+                    if ((checkResourceList(e.getName(), mobname, true) || checkResourceList(Objects.requireNonNull(EntityList.getKey(e)).toString(), mobname, false)) && nbtChecker(e, nbtKey)) {
                         mobCounter++;
                         mobListSpecific.add(e);
                     }
