@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.mixin;
 
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import net.minecraft.client.audio.MusicTicker;

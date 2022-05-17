@@ -8,7 +8,6 @@ import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
 
 public class FromServer {
     private static final ExecutorService executorThread = Executors.newSingleThreadExecutor();
-
     public static HashMap<String, Boolean> inStructure = new HashMap<>();
     public static HashMap<String, Boolean> mob = new HashMap<>();
     public static HashMap<Integer, Boolean> mobVictory = new HashMap<>();

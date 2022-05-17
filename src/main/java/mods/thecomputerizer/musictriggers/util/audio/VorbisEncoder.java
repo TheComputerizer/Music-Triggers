@@ -46,7 +46,7 @@ public class VorbisEncoder {
      * java -cp VorbisEncoder <Input File[.wav]> <Output File[.ogg]>
      *
      */
-    public static void encode(InputStream wav, String ogg) {
+    public static void encode(InputStream wav, String ogg, int rate) {
 
         boolean eos = false;
 
@@ -54,7 +54,7 @@ public class VorbisEncoder {
 
         encoder = new vorbisenc();
 
-        if ( !encoder.vorbis_encode_init_vbr( vi, 2, 44100, .3f ) ) {
+        if ( !encoder.vorbis_encode_init_vbr( vi, 2, rate, .3f ) ) {
             System.out.println( "Failed to Initialize vorbisenc" );
             return;
         }

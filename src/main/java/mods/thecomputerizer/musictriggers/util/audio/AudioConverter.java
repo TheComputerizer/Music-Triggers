@@ -18,16 +18,16 @@ public class AudioConverter {
             e.printStackTrace();
         }
         source.delete();
-        WavToOgg(target.getPath(), target.getPath().replaceAll(".wav",".ogg"), false);
+        WavToOgg(target.getPath(), target.getPath().replaceAll(".wav",".ogg"), false, 44100);
     }
 
-    public static void WavToOgg(String sourcePath, String targetPath, boolean temp) {
+    public static void WavToOgg(String sourcePath, String targetPath, boolean temp, int rate) {
         File target = new File(targetPath);
         File source = new File(sourcePath);
         if (target.exists()) target.delete();
         try {
             FileInputStream stream = new FileInputStream(sourcePath);
-            VorbisEncoder.encode(stream,targetPath);
+            VorbisEncoder.encode(stream,targetPath, rate);
             source.delete();
         } catch(Exception e) {
             e.printStackTrace();

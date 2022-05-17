@@ -2,7 +2,6 @@ package mods.thecomputerizer.musictriggers.util;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
 import c4.champions.common.capability.CapabilityChampionship;
-import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.util.packets.PacketReturnTriggers;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
@@ -87,7 +86,7 @@ public class CalculateFeatures {
         return triggerID+"@"+pass+"$";
     }
 
-    public static String calculateMob(String triggerID, UUID uuid, String mobname, int detectionrange, boolean targetting, int targettingpercentage, int health, int healthpercentage, boolean victory, int victoryID, String i, int num, int timeout, String nbtKey, String c) {
+    public static String calculateMob(String triggerID, UUID uuid, String mobname, int detectionrange, boolean targeting, int targetingpercentage, int health, int healthpercentage, boolean victory, int victoryID, String i, int num, int timeout, String nbtKey, String c) {
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
         EntityPlayerMP player = (EntityPlayerMP)server.getEntityFromUuid(uuid);
         boolean pass = false;
@@ -120,7 +119,7 @@ public class CalculateFeatures {
                     }
                 }
                 if (mobsWithBlacklist.size() >= num &&
-                        ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) &&
+                        ((!targeting || (float) trackingCounter / num >= targetingpercentage / 100F) &&
                                 infernal && champion &&
                                 (float) healthCounter / num >= healthpercentage / 100F)) {
                     pass = true;
@@ -175,7 +174,7 @@ public class CalculateFeatures {
                         }
                     }
                 }
-                if (mobCounter >= num && ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) && infernal && champion && (float) healthCounter / num >= healthpercentage / 100F)) {
+                if (mobCounter >= num && ((!targeting || (float) trackingCounter / num >= targetingpercentage / 100F) && infernal && champion && (float) healthCounter / num >= healthpercentage / 100F)) {
                     pass = true;
                 }
                 if (victoryMobs.get(triggerID) != null) {
@@ -244,7 +243,7 @@ public class CalculateFeatures {
     public static boolean checkMobBlacklist(EntityLiving e, String resourceList) {
         for(String resource : stringBreaker(resourceList,";")) {
             if(!resource.matches("MOB"))
-                if ((e.getName().matches(resource)) || (Objects.requireNonNull(EntityList.getKey(e)).toString().matches(resource))) return false;
+                if ((e.getName().matches(resource)) || (Objects.requireNonNull(EntityList.getKey(e)).toString().contains(resource))) return false;
         }
         return true;
     }

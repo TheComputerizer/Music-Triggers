@@ -1,17 +1,18 @@
 package mods.thecomputerizer.musictriggers;
 
-import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.client.gui.Mappings;
 import mods.thecomputerizer.musictriggers.common.EventsCommon;
 import mods.thecomputerizer.musictriggers.config.*;
 import mods.thecomputerizer.musictriggers.util.CustomTick;
-import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.Json;
+import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.FolderResourcePack;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -31,52 +32,38 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
-@SuppressWarnings("ALL")
-@Mod(modid = MusicTriggers.MODID, name = MusicTriggers.NAME, version = MusicTriggers.VERSION)
+@Mod(modid = MusicTriggers.MODID, name = MusicTriggers.NAME, version = MusicTriggers.VERSION, dependencies = "required-after:mixinbooter")
 public class MusicTriggers {
     public static final String MODID = "musictriggers";
     public static final String NAME = "Music Triggers";
-    public static final String VERSION = "1.12.2-5.2";
-
+    public static final String VERSION = "1.12.2-5.4";
     public static File songsDir;
     public static File texturesDir;
     public static File songs;
     public static File readFrom;
     public static File pack;
-
     public static Logger logger;
+    //public static ExternalManager externalManager;
+
 
     public MusicTriggers() {
         logger = LogManager.getLogger(MODID);
         File configDir = new File(".", "config/MusicTriggers");
-        if (!configDir.exists()) {
-            configDir.mkdir();
-        }
+        if (!configDir.exists()) configDir.mkdir();
         if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
+            //externalManager = new ExternalManager();
             songsDir = new File(configDir.getPath(), "songs");
-            if (!songsDir.exists()) {
-                songsDir.mkdir();
-            }
+            if (!songsDir.exists()) songsDir.mkdir();
             File assetsDir = new File(songsDir.getPath(), "assets");
-            if (!assetsDir.exists()) {
-                assetsDir.mkdir();
-            }
+            if (!assetsDir.exists()) assetsDir.mkdir();
             File musictriggersDir = new File(assetsDir.getPath(), "musictriggers");
-            if (!musictriggersDir.exists()) {
-                musictriggersDir.mkdir();
-            }
+            if (!musictriggersDir.exists()) musictriggersDir.mkdir();
             File soundsDir = new File(musictriggersDir.getPath(), "sounds");
-            if (!soundsDir.exists()) {
-                soundsDir.mkdir();
-            }
+            if (!soundsDir.exists()) soundsDir.mkdir();
             File musicDir = new File(soundsDir.getPath(), "music");
-            if (!musicDir.exists()) {
-                musicDir.mkdir();
-            }
+            if (!musicDir.exists()) musicDir.mkdir();
             texturesDir = new File(musictriggersDir.getPath(), "textures");
-            if (!texturesDir.exists()) {
-                texturesDir.mkdir();
-            }
+            if (!texturesDir.exists()) texturesDir.mkdir();
             File mcmeta = new File(songsDir.getPath() + "/pack.mcmeta");
             if (!mcmeta.exists()) {
                 try {
@@ -101,9 +88,7 @@ public class MusicTriggers {
                 }
             }
             File langDir = new File(musictriggersDir.getPath(), "lang");
-            if (!langDir.exists()) {
-                langDir.mkdir();
-            }
+            if (!langDir.exists()) langDir.mkdir();
             File lang = new File(langDir.getPath() + "/en_us.lang");
             if (!lang.exists()) {
                 try {
@@ -117,9 +102,7 @@ public class MusicTriggers {
         readFrom = new File("config/MusicTriggers/songs/");
         if (readFrom.exists() && Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {
             File sj = new File("config/MusicTriggers/songs/assets/musictriggers/sounds.json");
-            if (sj.exists()) {
-                sj.delete();
-            }
+            if (sj.exists()) sj.delete();
             List<String> writeThis = Json.create();
             if (writeThis != null) {
                 try {
@@ -134,26 +117,25 @@ public class MusicTriggers {
                 }
             }
             sj = new File("config/MusicTriggers/songs/assets/musictriggers/lang/en_us.lang");
-            if (sj.exists()) {
-                sj.delete();
-            }
-            assert writeThis != null;
-            writeThis.clear();
-            writeThis = Json.lang();
-            if (writeThis != null) {
-                try {
-                    sj.createNewFile();
-                    FileWriter writer = new FileWriter(sj);
-                    for (String str : writeThis) {
-                        writer.write(str + System.lineSeparator());
+            if (sj.exists()) sj.delete();
+            if(writeThis != null) {
+                writeThis.clear();
+                writeThis = Json.lang();
+                if (writeThis != null) {
+                    try {
+                        sj.createNewFile();
+                        FileWriter writer = new FileWriter(sj);
+                        for (String str : writeThis) {
+                            writer.write(str + System.lineSeparator());
+                        }
+                        writer.close();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
                     }
-                    writer.close();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
                 }
             }
         }
-        ConfigToml.parse(Thread.currentThread().getThreadGroup() == SidedThreadGroups.CLIENT);
+        ConfigToml.parse(FMLCommonHandler.instance().getEffectiveSide()!=Side.SERVER);
         ConfigCommands.parse();
         Mappings.init();
         if(Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) {

@@ -13,7 +13,7 @@ public class Json {
     public static List<String> js = new ArrayList<>();
 
     public static List<String> create() {
-        MusicTriggers.logger.info("Creating sound.json");
+        MusicTriggers.logger.info("Creating sounds.json");
         format();
         collector();
         if (allSongs != null && !allSongs.isEmpty()) {
@@ -44,7 +44,6 @@ public class Json {
         format();
         collector();
         if (allSongs != null && !allSongs.isEmpty()) {
-            System.out.print(allSongs.size());
             js.add("{");
             for (String allSong : allSongs) {
                 js.add("item.musictriggers:" + allSong.toLowerCase() + ".name=Music Disc");
@@ -66,7 +65,7 @@ public class Json {
         File[] listOfWav = folder.listFiles((dir, name) -> name.endsWith(".wav"));
         if (listOfWav != null) {
             for (File wav : listOfWav) {
-                AudioConverter.WavToOgg(wav.getPath(), wav.getPath().replaceAll(".wav",".ogg"), false);
+                AudioConverter.WavToOgg(wav.getPath(), wav.getPath().replaceAll(".wav",".ogg"), false,44100);
             }
         }
         File[] listOfFiles = folder.listFiles((dir, name) -> name.endsWith(".ogg"));

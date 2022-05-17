@@ -19,7 +19,7 @@ apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'maven-publish'
 
-version = '1.12.2-5.3'
+version = '1.12.2-5.4'
 group = 'mods.thecomputerizer.musictriggers'
 archivesBaseName = 'musictriggers'
 
@@ -87,22 +87,24 @@ dependencies {
 
     shade("com.googlecode.soundlibs:jlayer:1.0.1.4")
     shade("com.github.sealedtx:java-youtube-downloader:3.0.2")
-    shade("com.moandjiezana.toml:toml4j:0.7.2"){
+    shade("com.moandjiezana.toml:toml4j:0.7.2") {
         exclude group: 'com.google.code.gson', module: 'gson' // provided by minecraft
     }
     shade("org.jcodec:jcodec:0.2.5")
     shade("org.jcodec:jcodec-javase:0.2.5")
     shade("io.github.kostaskougios:cloning:1.10.3")
+    //shade("com.sedmelluq:lavaplayer:1.3.78"){
+        //exclude module: 'httpclient'
+    //}
 
     //libraries that may or may not be included by forge/minecraft and need to be relocated
-    //theres nothing here...
+    //shade ("org.slf4j:slf4j-api:2.0.0-alpha6")
+    //shade ("org.apache.httpcomponents:httpcore:4.4.12")
+    //shade ("org.apache.httpcomponents:httpclient:4.5.10")
+    //shade ("org.apache.commons:commons-collections4:4.4")
 
-    embed('org.spongepowered:mixin:0.8.4') {
-        exclude module: 'guava'
-        exclude module: 'commons-io'
-        exclude module: 'gson'
-    }
-    annotationProcessor('org.spongepowered:mixin:0.8.4:processor')
+    implementation fg.deobf("curse.maven:mixin-booter-419286:3687785")
+    implementation('org.spongepowered:mixin:0.8.4')
 
     implementation fg.deobf("curse.maven:codechicken-lib-242818:2779848")
     implementation fg.deobf("curse.maven:bloodmoon-226321:2537917")
@@ -147,28 +149,20 @@ processResources {
 }
 
 mixin {
-    add sourceSets.main, "musictriggers.refmap.json"
+    disableAnnotationProcessorCheck()
 }
 
 jar {
-    from {
-        configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }
-    } {
-        exclude "LICENSE.txt", "META-INF/MANIFSET.MF", "META-INF/maven/**", "META-INF/*.RSA", "META-INF/*.SF"
-    }
     manifest {
         attributes([
             "FMLAT": "musictriggers_at.cfg",
-            "ForceLoadAsMod": true,
             "Specification-Title": "musictriggers",
             "Specification-Vendor": "musictriggerssareus",
-            "Specification-Version": "1.12.2-5.3",
+            "Specification-Version": "1.12.2-5.4",
             "Implementation-Title": project.name,
-            "Implementation-Version": "1.12.2-5.3",
+            "Implementation-Version": "1.12.2-5.4",
             "Implementation-Vendor" :"musictriggers",
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-            "TweakClass": "org.spongepowered.asm.launch.MixinTweaker",
-            "MixinConfigs": "musictriggers.mixin.json"
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
 }

@@ -80,7 +80,7 @@ public class MusicPicker {
     public static int universalDelay = 0;
     public static String crashHelper;
 
-    public static String[] playThese() {
+    public static List<String> playThese() {
         if (!MusicPlayer.fadingOut) titleCardEvents = new ArrayList<>();
         mc = Minecraft.getMinecraft();
         player = mc.player;
@@ -89,7 +89,7 @@ public class MusicPicker {
 
         if(player == null) {
             if (SoundHandler.TriggerIdentifierMap.get("menu") != null && mc.currentScreen!=null)
-                return SoundHandler.TriggerIdentifierMap.get("menu").get("_").toArray(new String[0]);
+                return SoundHandler.TriggerIdentifierMap.get("menu").get("_");
         } else {
             String builtMenuSongs = allMenuSongsAsSingleString();
             if (builtMenuSongs != null)
@@ -106,7 +106,7 @@ public class MusicPicker {
                 dynamicPriorities = new HashMap<>();
                 dynamicFadeIn = new HashMap<>();
                 dynamicFadeOut = new HashMap<>();
-                return res.toArray(new String[0]);
+                return res;
             }
             dynamicSongs = new HashMap<>();
             dynamicPriorities = new HashMap<>();
@@ -121,7 +121,7 @@ public class MusicPicker {
                 if (curFadeIn == 0) curFadeIn = universalFadeIn;
                 curFadeOut = Integer.parseInt(SoundHandler.TriggerInfoMap.get("generic")[35]);
                 if (curFadeOut == 0) curFadeOut = universalFadeOut;
-                return SoundHandler.TriggerIdentifierMap.get("generic").get("_").toArray(new String[0]);
+                return SoundHandler.TriggerIdentifierMap.get("generic").get("_");
             }
         }
         return null;
@@ -333,8 +333,9 @@ public class MusicPicker {
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("height").keySet()) {
                     crashHelper = "height-" + identifier;
                     boolean pass;
-                    if (Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("height-" + identifier)[28]))
+                    if (Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("height-" + identifier)[28])) {
                         pass = player.posY < Integer.parseInt(SoundHandler.TriggerInfoMap.get("height-" + identifier)[2]) && !world.canSeeSky(roundedPos(player));
+                    }
                     else
                         pass = player.posY > Integer.parseInt(SoundHandler.TriggerInfoMap.get("height-" + identifier)[2]);
                     if (pass) {
@@ -486,7 +487,7 @@ public class MusicPicker {
                 dynamicDelay.put("lowhp", Integer.parseInt(SoundHandler.TriggerInfoMap.get("lowhp")[4]));
                 if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("lowhp")[33])) timeSwitch.add("lowhp");
             }
-            if (player.isDead && SoundHandler.TriggerIdentifierMap.get("dead") != null) {
+            if (SoundHandler.TriggerIdentifierMap.get("dead") != null && (player.getHealth()<=0f || player.isDead)) {
                 crashHelper = "dead";
                 events.add("dead");
                 dynamicSongs.put("dead", SoundHandler.TriggerIdentifierMap.get("dead").get("_"));
@@ -550,12 +551,11 @@ public class MusicPicker {
                 dynamicDelay.put("creative", Integer.parseInt(SoundHandler.TriggerInfoMap.get("creative")[4]));
                 if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("creative")[33])) timeSwitch.add("creative");
             }
-            if (SoundHandler.TriggerIdentifierMap.get("riding") != null && player.isRiding()) {
+            if (SoundHandler.TriggerIdentifierMap.get("riding") != null) {
                 crashHelper = "riding";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("riding").keySet()) {
                     crashHelper = "riding-" + identifier;
-                    String ridingName = SoundHandler.TriggerInfoMap.get("riding-" + identifier)[9];
-                    if (ridingName.matches("minecraft") || (player.getRidingEntity()!=null && checkResourceList(Objects.requireNonNull(player.getRidingEntity()).getName(),ridingName,true)) || (EntityList.getKey(player.getRidingEntity())!=null && checkResourceList(Objects.requireNonNull(EntityList.getKey(player.getRidingEntity())).toString(),ridingName,true))) {
+                    if (checkRiding(SoundHandler.TriggerInfoMap.get("riding-" + identifier)[9])) {
                         if (!events.contains("riding-" + identifier)) {
                             events.add("riding-" + identifier);
                             dynamicSongs.put("riding-" + identifier, SoundHandler.TriggerIdentifierMap.get("riding").get(identifier));
@@ -935,7 +935,7 @@ public class MusicPicker {
                     }
                 }
             }
-            if (!mc.inGameHasFocus && SoundHandler.TriggerIdentifierMap.get("gui") != null) {
+            if (SoundHandler.TriggerIdentifierMap.get("gui") != null) {
                 crashHelper = "gui";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("gui").keySet()) {
                     crashHelper = "gui-" + identifier;
@@ -1541,8 +1541,19 @@ public class MusicPicker {
         return checkResourceList(DimensionType.getById(playerDim).getName(),resourceList,false);
     }
 
-    public static boolean checkStat(String stat, int level) throws NoSuchFieldException, IllegalAccessException {
-        return mc.player.getStatFileWriter().readStat((StatBase) StatList.class.getField(stat.toUpperCase()).get(null))>level;
+    public static boolean checkRiding(String resource) {
+        if(player.isRiding() || player.getRidingEntity()==null) return false;
+        else if(resource.matches("minecraft")) return true;
+        else if(checkResourceList(Objects.requireNonNull(player.getRidingEntity()).getName(),resource,true)) return true;
+        else if(EntityList.getKey(player.getRidingEntity())==null) return false;
+        return checkResourceList(Objects.requireNonNull(EntityList.getKey(player.getRidingEntity())).toString(),resource,false);
+    }
+
+    public static boolean checkStat(String stat, int level) {
+        for(StatBase s : StatList.ALL_STATS) {
+            return checkResourceList(s.statId,stat,false) && mc.player.getStatFileWriter().readStat(s)>level;
+        }
+        return false;
     }
 
     public static String allTriggersAsSingleString() {
