@@ -52,22 +52,14 @@ public class MusicTriggers {
         IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
         MinecraftForge.EVENT_BUS.register(this);
         File configDir = new File("config", "MusicTriggers");
-        if (!configDir.exists()) {
-            configDir.mkdir();
-        }
+        if (!configDir.exists()) configDir.mkdir();
         if (FMLEnvironment.dist == Dist.CLIENT) {
             songsDir = new File(configDir.getPath(), "songs");
-            if (!songsDir.exists()) {
-                songsDir.mkdir();
-            }
+            if (!songsDir.exists()) songsDir.mkdir();
             File assetsDir = new File(songsDir.getPath(), "assets");
-            if (!assetsDir.exists()) {
-                assetsDir.mkdir();
-            }
+            if (!assetsDir.exists()) assetsDir.mkdir();
             File musictriggersDir = new File(assetsDir.getPath(), "musictriggers");
-            if (!musictriggersDir.exists()) {
-                musictriggersDir.mkdir();
-            }
+            if (!musictriggersDir.exists()) musictriggersDir.mkdir();
             File jjson = new File(musictriggersDir.getPath() + "/sounds.json");
             if (!jjson.exists() && Json.allSongs != null) {
                 try {
@@ -77,17 +69,11 @@ public class MusicTriggers {
                 }
             }
             File soundsDir = new File(musictriggersDir.getPath(), "sounds");
-            if (!soundsDir.exists()) {
-                soundsDir.mkdir();
-            }
+            if (!soundsDir.exists()) soundsDir.mkdir();
             File musicDir = new File(soundsDir.getPath(), "music");
-            if (!musicDir.exists()) {
-                musicDir.mkdir();
-            }
+            if (!musicDir.exists()) musicDir.mkdir();
             texturesDir = new File(musictriggersDir.getPath(), "textures");
-            if (!texturesDir.exists()) {
-                texturesDir.mkdir();
-            }
+            if (!texturesDir.exists()) texturesDir.mkdir();
             File mcmeta = new File(songsDir.getPath() + "/pack.mcmeta");
             if (!mcmeta.exists()) {
                 try {
@@ -104,9 +90,7 @@ public class MusicTriggers {
                 }
             }
             File langDir = new File(musictriggersDir.getPath(), "lang");
-            if (!langDir.exists()) {
-                langDir.mkdir();
-            }
+            if (!langDir.exists()) langDir.mkdir();
             File lang = new File(langDir.getPath() + "/en_us.json");
             if (!lang.exists()) {
                 try {
@@ -167,18 +151,13 @@ public class MusicTriggers {
     }
 
     public void commonsetup(FMLCommonSetupEvent ev) {
-        if(ConfigRegistry.clientSideOnly) {
+        if(ConfigRegistry.clientSideOnly)
             ModLoadingContext.get().registerExtensionPoint(ExtensionPoint.DISPLAYTEST,() -> Pair.of(()-> FMLNetworkConstants.IGNORESERVERONLY,(a,b)->true));
-        }
-        else {
-            PacketHandler.register();
-        }
+        else PacketHandler.register();
     }
     public static void makeSoundsJson() {
         File sj = new File("config/MusicTriggers/songs/assets/musictriggers/sounds.json");
-        if (sj.exists()) {
-            sj.delete();
-        }
+        if (sj.exists()) sj.delete();
         List<String> writeThis = Json.create();
         if (writeThis != null) {
             try {
@@ -197,9 +176,7 @@ public class MusicTriggers {
     public static void makeDiscLang() {
         if(ConfigRegistry.registerDiscs) {
             File sj = new File("config/MusicTriggers/songs/assets/musictriggers/lang/en_us.json");
-            if (sj.exists()) {
-                sj.delete();
-            }
+            if (sj.exists()) sj.delete();
             List<String> writeThis = Json.create();
             assert writeThis != null;
             writeThis.clear();
@@ -208,9 +185,7 @@ public class MusicTriggers {
                 try {
                     sj.createNewFile();
                     FileWriter writer = new FileWriter(sj);
-                    for (String str : writeThis) {
-                        writer.write(str + System.lineSeparator());
-                    }
+                    for (String str : writeThis) writer.write(str + System.lineSeparator());
                     writer.close();
                 } catch (IOException ex) {
                     ex.printStackTrace();

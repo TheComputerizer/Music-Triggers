@@ -355,17 +355,17 @@ public class MusicPlayer {
                                 if (musicLinker != null) for (String sound : musicLinker.keySet()) sh.stop(musicLinker.get(sound));
                                 musicLinker = new HashMap<>();
                                 EventsClient.GuiCounter = 0;
-                                curTrackList = curTrackList.stream().filter(track -> !oncePerTrigger.contains(track)).collect(Collectors.toList());
-                                curTrackList = curTrackList.stream().filter(track -> !onceUntilEmpty.contains(track)).collect(Collectors.toList());
-                                if (curTrackList.size() >= 1) {
-                                    int i = ThreadLocalRandom.current().nextInt(0, curTrackList.size());
-                                    if (curTrackList.size() > 1 && curTrack != null) {
-                                        int total = curTrackList.stream().mapToInt(s -> Integer.parseInt(ConfigToml.otherinfo.get(s)[3])).sum();
+                                List<String> trimmedList = curTrackList.stream().filter(track -> !oncePerTrigger.contains(track)).collect(Collectors.toList());
+                                trimmedList = trimmedList.stream().filter(track -> !onceUntilEmpty.contains(track)).collect(Collectors.toList());
+                                if (trimmedList.size() >= 1) {
+                                    int i = ThreadLocalRandom.current().nextInt(0, trimmedList.size());
+                                    if (trimmedList.size() > 1 && curTrack != null) {
+                                        int total = trimmedList.stream().mapToInt(s -> Integer.parseInt(ConfigToml.otherinfo.get(s)[3])).sum();
                                         int j;
                                         for (j = 0; j < 1000; j++) {
                                             int r = ThreadLocalRandom.current().nextInt(1, total + 1);
                                             String temp = " ";
-                                            for (String s : curTrackList) {
+                                            for (String s : trimmedList) {
                                                 if (r < Integer.parseInt(ConfigToml.otherinfo.get(s)[3])) {
                                                     temp = s;
                                                     break;
@@ -379,7 +379,7 @@ public class MusicPlayer {
                                         }
                                         if (j >= 1000)
                                             MusicTriggers.logger.warn("Attempt to get non duplicate song passed 1000 tries! Forcing current song " + ConfigToml.songholder.get(curTrack) + " to play.");
-                                    } else curTrack = curTrackList.get(i);
+                                    } else curTrack = trimmedList.get(i);
                                     if (curTrack != null) {
                                         curTrack = curTrack.replaceAll("@", "").replaceAll("#", "");
                                         MusicTriggers.logger.debug(curTrack + " was chosen");
@@ -490,6 +490,7 @@ public class MusicPlayer {
                                 EventsClient.activated = false;
                                 EventsClient.ismoving = false;
                                 cards = true;
+                                clearSongs();
                             }
                         } else {
                             EventsClient.IMAGE_CARD = null;

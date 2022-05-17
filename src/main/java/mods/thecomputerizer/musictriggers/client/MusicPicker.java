@@ -337,9 +337,8 @@ public class MusicPicker {
                     crashHelper = "height-"+identifier;
                     boolean pass;
                     if (Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("height-" + identifier)[28]))
-                        pass = player.getY() < Integer.parseInt(SoundHandler.TriggerInfoMap.get("height-" + identifier)[2]) && !world.canSeeSky(roundedPos(player));
-                    else
-                        pass = player.getY() > Integer.parseInt(SoundHandler.TriggerInfoMap.get("height-" + identifier)[2]);
+                        pass = player.getY() < Integer.parseInt(SoundHandler.TriggerInfoMap.get("height-" + identifier)[2]) && checkForSky();
+                    else pass = player.getY() > Integer.parseInt(SoundHandler.TriggerInfoMap.get("height-" + identifier)[2]);
                     if (pass) {
                         if (!events.contains("height-" + identifier)) {
                             events.add("height-" + identifier);
@@ -493,7 +492,7 @@ public class MusicPicker {
                 dynamicDelay.put("lowhp", Integer.parseInt(SoundHandler.TriggerInfoMap.get("lowhp")[4]));
                 if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("lowhp")[33])) timeSwitch.add("lowhp");
             }
-            if (player.isDeadOrDying() && SoundHandler.TriggerIdentifierMap.get("dead") != null) {
+            if (SoundHandler.TriggerIdentifierMap.get("dead") != null && (player.getHealth()<=0f || player.isDeadOrDying())) {
                 crashHelper = "dead";
                 events.add("dead");
                 dynamicSongs.put("dead", SoundHandler.TriggerIdentifierMap.get("dead").get("_"));
@@ -557,12 +556,11 @@ public class MusicPicker {
                 dynamicDelay.put("creative", Integer.parseInt(SoundHandler.TriggerInfoMap.get("creative")[4]));
                 if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("creative")[33])) timeSwitch.add("creative");
             }
-            if (SoundHandler.TriggerIdentifierMap.get("riding") != null && player.isPassenger()) {
+            if (SoundHandler.TriggerIdentifierMap.get("riding") != null) {
                 crashHelper = "riding";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("riding").keySet()) {
                     crashHelper = "riding-"+identifier;
-                    String ridingName = SoundHandler.TriggerInfoMap.get("riding-" + identifier)[9];
-                    if (ridingName.matches("minecraft") || (player.getControllingPassenger()!=null && checkResourceList(Objects.requireNonNull(player.getControllingPassenger()).getName().getString(),ridingName,true)) || (ForgeRegistries.ENTITIES.getKey(player.getControllingPassenger().getType())!=null && checkResourceList(Objects.requireNonNull(ForgeRegistries.ENTITIES.getKey(player.getControllingPassenger().getType())).toString(),ridingName,true))) {
+                    if (checkRiding(SoundHandler.TriggerInfoMap.get("riding-" + identifier)[9])) {
                         if (!events.contains("riding-" + identifier)) {
                             events.add("riding-" + identifier);
                             dynamicSongs.put("riding-" + identifier, SoundHandler.TriggerIdentifierMap.get("riding").get(identifier));
@@ -692,7 +690,7 @@ public class MusicPicker {
                     dynamicSongs.put("home", SoundHandler.TriggerIdentifierMap.get("home").get("_"));
                     dynamicPriorities.put("home", Integer.parseInt(SoundHandler.TriggerInfoMap.get("home")[0]));
                     dynamicFadeIn.put("home", Integer.parseInt(SoundHandler.TriggerInfoMap.get("home")[1]));
-                dynamicFadeOut.put("home", Integer.parseInt(SoundHandler.TriggerInfoMap.get("home")[35]));
+                    dynamicFadeOut.put("home", Integer.parseInt(SoundHandler.TriggerInfoMap.get("home")[35]));
                     dynamicDelay.put("home", Integer.parseInt(SoundHandler.TriggerInfoMap.get("home")[4]));
                     triggerPersistence.put("home", Integer.parseInt(SoundHandler.TriggerInfoMap.get("home")[3]));
                     if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("home")[33])) timeSwitch.add("home");
@@ -701,7 +699,7 @@ public class MusicPicker {
                     dynamicSongs.put("home", SoundHandler.TriggerIdentifierMap.get("home").get("_"));
                     dynamicPriorities.put("home", Integer.parseInt(SoundHandler.TriggerInfoMap.get("home")[0]));
                     dynamicFadeIn.put("home", Integer.parseInt(SoundHandler.TriggerInfoMap.get("home")[1]));
-                dynamicFadeOut.put("home", Integer.parseInt(SoundHandler.TriggerInfoMap.get("home")[35]));
+                    dynamicFadeOut.put("home", Integer.parseInt(SoundHandler.TriggerInfoMap.get("home")[35]));
                     dynamicDelay.put("home", Integer.parseInt(SoundHandler.TriggerInfoMap.get("home")[4]));
                     if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("home")[33])) timeSwitch.add("home");
                 }
@@ -979,11 +977,11 @@ public class MusicPicker {
                     }
                 }
             }
-            if (mc.screen != null && SoundHandler.TriggerIdentifierMap.get("gui") != null) {
+            if (SoundHandler.TriggerIdentifierMap.get("gui") != null) {
                 crashHelper = "gui";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("gui").keySet()) {
                     crashHelper = "gui-"+identifier;
-                    if (checkResourceList(mc.screen.getClass().getName(), SoundHandler.TriggerInfoMap.get("gui-" + identifier)[9], false)) {
+                    if (mc.screen!=null && checkResourceList(mc.screen.getClass().getName(), SoundHandler.TriggerInfoMap.get("gui-" + identifier)[9], false)) {
                         if (!events.contains("gui-" + identifier)) {
                             events.add("gui-" + identifier);
                             dynamicSongs.put("gui-" + identifier, SoundHandler.TriggerIdentifierMap.get("gui").get(identifier));
@@ -1633,6 +1631,14 @@ public class MusicPicker {
         return false;
     }
 
+    public static boolean checkRiding(String resource) {
+        if(!player.isPassenger() || player.getControllingPassenger()==null) return false;
+        else if(resource.matches("minecraft")) return true;
+        else if(checkResourceList(Objects.requireNonNull(player.getControllingPassenger()).getName().getString(),resource,true)) return true;
+        else if(ForgeRegistries.ENTITIES.getKey(player.getControllingPassenger().getType())==null) return false;
+        return checkResourceList(Objects.requireNonNull(ForgeRegistries.ENTITIES.getKey(player.getControllingPassenger().getType())).toString(),resource,false);
+    }
+
     public static boolean checkStat(String statName, int level) {
         assert mc.player != null;
         ObjectArrayList<Stat<ResourceLocation>> stats = new ObjectArrayList<>(Stats.CUSTOM.iterator());
@@ -1640,6 +1646,15 @@ public class MusicPicker {
             if(checkResourceList(stat.toString(),statName,false) && mc.player.getStats().getValue(stat)>level) return true;
         }
         return false;
+    }
+
+    public static boolean checkForSky() {
+        BlockPos pp = roundedPos(player);
+        if(!world.canSeeSky(pp)) return true;
+        if(player.isInWater()) {
+            BlockPos pos = new BlockPos(pp.getX(), world.getFluidState(pp).getHeight(world, pp), pp.getZ());
+            return !world.canSeeSky(pos);
+        } return false;
     }
 
     public static String allTriggersAsSingleString() {

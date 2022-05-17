@@ -34,8 +34,8 @@ public class Mappings {
         parameters.put(9, "resource_name");
         parameters.put(10, "identifier");
         parameters.put(11, "detection_range");
-        parameters.put(12, "mob_targetting");
-        parameters.put(13, "horde_targetting_percentage");
+        parameters.put(12, "mob_targeting");
+        parameters.put(13, "horde_targeting_percentage");
         parameters.put(14, "health");
         parameters.put(15, "horde_health_percentage");
         parameters.put(16, "victory");
@@ -82,8 +82,8 @@ public class Mappings {
         reverseparameters.put("resource_name", 9);
         reverseparameters.put("identifier", 10);
         reverseparameters.put("detection_range", 11);
-        reverseparameters.put("mob_targetting", 12);
-        reverseparameters.put("horde_targetting_percentage", 13);
+        reverseparameters.put("mob_targeting", 12);
+        reverseparameters.put("horde_targeting_percentage", 13);
         reverseparameters.put("health", 14);
         reverseparameters.put("horde_health_percentage", 15);
         reverseparameters.put("victory", 16);

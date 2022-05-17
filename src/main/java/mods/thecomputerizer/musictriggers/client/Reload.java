@@ -6,6 +6,7 @@ import mods.thecomputerizer.musictriggers.config.ConfigCommands;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.musictriggers.config.ConfigTitleCards;
 import mods.thecomputerizer.musictriggers.config.ConfigToml;
+import mods.thecomputerizer.musictriggers.util.Json;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.ForgeHooksClient;
@@ -24,6 +25,7 @@ public class Reload {
         ConfigTitleCards.emptyMaps();
         SoundHandler.emptyListsAndMaps();
         ConfigCommands.commandMap = new HashMap<>();
+        Json.collector();
         ConfigToml.parse(FMLEnvironment.dist == Dist.CLIENT);
         ConfigTitleCards.parse();
         ConfigCommands.parse();

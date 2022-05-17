@@ -1,7 +1,9 @@
 package mods.thecomputerizer.musictriggers.client;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
+import com.legacy.blue_skies.client.audio.SkiesMusicTicker;
 import com.mojang.blaze3d.systems.RenderSystem;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.gui.GuiMain;
 import mods.thecomputerizer.musictriggers.client.gui.GuiTriggerInfo;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
@@ -181,8 +183,8 @@ public class EventsClient {
         PlayerEntity player = mc.player;
         if (e.getType() == RenderGameOverlayEvent.ElementType.ALL) {
             if (player != null && ConfigTitleCards.imagecards.get(curImageIndex)!=null) {
-                int x = mc.getWindow().getScreenWidth();
-                int y = mc.getWindow().getScreenHeight();
+                int x = mc.getWindow().getGuiScaledWidth();
+                int y = mc.getWindow().getGuiScaledHeight();
                 if (fadeCount != 1000 && IMAGE_CARD!=null) {
                     RenderSystem.pushMatrix();
                     RenderSystem.pushTextureAttributes();
@@ -193,17 +195,17 @@ public class EventsClient {
                     opacity = (opacity * 1.15f) / 15;
                     RenderSystem.color4f(1F, 1F, 1F, Math.max(0, Math.min(0.95f, opacity)));
 
-                    int sizeX = ConfigTitleCards.imageDimensions.get(IMAGE_CARD).getWidth();
-                    int sizeY = ConfigTitleCards.imageDimensions.get(IMAGE_CARD).getHeight();
-
-                    float scaleY = (0.25f*(ConfigTitleCards.imagecards.get(curImageIndex).getScaleY()/100f));
-                    float scaleX = (0.25f*(ConfigTitleCards.imagecards.get(curImageIndex).getScaleX()/100f));
+                    float scaleY = 0.25f*(ConfigTitleCards.imagecards.get(curImageIndex).getScaleY()/100f);
+                    float scaleX = (0.25f*((float)y/(float)x))*(ConfigTitleCards.imagecards.get(curImageIndex).getScaleX()/100f);
                     RenderSystem.scalef(scaleX,scaleY,1F);
 
+                    float posY = (y*(1f/scaleY))/8f+(ConfigTitleCards.imagecards.get(curImageIndex).getHorizontal()*(1/scaleY));
+                    float posX = ((x*(1f/scaleX))/2f)-(x/2f)+(ConfigTitleCards.imagecards.get(curImageIndex).getHorizontal()*(1/scaleX));
+
+                    MusicTriggers.logger.info("x: "+posX+" max: "+x);
+
                     mc.getTextureManager().bind(IMAGE_CARD);
-                    float posY = (y/(4f*(ConfigTitleCards.imagecards.get(curImageIndex).getScaleY()/100f)))+ ConfigTitleCards.imagecards.get(curImageIndex).getVertical();
-                    float posX = (x/(ConfigTitleCards.imagecards.get(curImageIndex).getScaleX()/100f))-(sizeX/2f)+ ConfigTitleCards.imagecards.get(curImageIndex).getHorizontal();
-                    AbstractGui.blit(e.getMatrixStack(),(int)posX, (int)posY, 0, 0, sizeX, sizeY, sizeX, sizeY);
+                    AbstractGui.blit(e.getMatrixStack(),(int)posX, (int)posY, 0, 0, x, y, x, y);
 
                     RenderSystem.popAttributes();
                     RenderSystem.popMatrix();

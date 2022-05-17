@@ -5,6 +5,7 @@
   "refmap": "musictriggers.refmap.json",
   "mixins": [],
   "client": [
+    "MixinBlueSkiesMusic",
     "MixinMusicTicker",
     "MixinSoundEngine",
     "MixinSoundSource"
