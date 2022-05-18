@@ -6,6 +6,7 @@ import mods.thecomputerizer.musictriggers.config.ConfigCommands;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.musictriggers.config.ConfigTitleCards;
 import mods.thecomputerizer.musictriggers.config.ConfigToml;
+import mods.thecomputerizer.musictriggers.util.Json;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
 import net.minecraft.client.MinecraftClient;
@@ -22,6 +23,7 @@ public class Reload {
         ConfigTitleCards.emptyMaps();
         SoundHandler.emptyListsAndMaps();
         ConfigCommands.commandMap = new HashMap<>();
+        Json.collector();
         ConfigToml.parse(FabricLoaderImpl.INSTANCE.getEnvironmentType()== EnvType.CLIENT);
         ConfigTitleCards.parse();
         ConfigCommands.parse();

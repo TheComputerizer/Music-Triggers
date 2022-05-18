@@ -2,6 +2,8 @@ package mods.thecomputerizer.musictriggers.common;
 
 import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.loader.impl.FabricLoaderImpl;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.sound.SoundEvent;
@@ -26,8 +28,10 @@ public class ModSounds {
                 Registry.register(Registry.SOUND_EVENT, soundID, soundEvent);
                 MusicTriggersCommon.logger.info(songName+" is being initialized at resource location "+new Identifier(MusicTriggersCommon.MODID+":music." + songName));
             }
-            SoundInstance i = PositionedSoundInstance.music(soundEvent);
-            playableSounds.put("music." + songName, i);
+            if(FabricLoaderImpl.INSTANCE.getEnvironmentType()==EnvType.CLIENT) {
+                SoundInstance i = PositionedSoundInstance.music(soundEvent);
+                playableSounds.put("music." + songName, i);
+            }
         }
     }
     public static void reload() {
