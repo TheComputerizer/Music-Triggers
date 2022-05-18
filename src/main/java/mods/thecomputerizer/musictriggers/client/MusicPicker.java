@@ -22,12 +22,15 @@ import net.minecraft.stats.Stat;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.fml.ModList;
@@ -328,9 +331,8 @@ public class MusicPicker {
                     crashHelper = "height-"+identifier;
                     boolean pass;
                     if (Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("height-" + identifier)[28]))
-                        pass = player.getY() < Integer.parseInt(SoundHandler.TriggerInfoMap.get("height-" + identifier)[2]) && !world.canSeeSky(roundedPos(player));
-                    else
-                        pass = player.getY() > Integer.parseInt(SoundHandler.TriggerInfoMap.get("height-" + identifier)[2]);
+                        pass = player.getY() < Integer.parseInt(SoundHandler.TriggerInfoMap.get("height-" + identifier)[2]) && checkForSky();
+                    else pass = player.getY() > Integer.parseInt(SoundHandler.TriggerInfoMap.get("height-" + identifier)[2]);
                     if (pass) {
                         if (!events.contains("height-" + identifier)) {
                             events.add("height-" + identifier);
@@ -484,7 +486,7 @@ public class MusicPicker {
                 dynamicDelay.put("lowhp", Integer.parseInt(SoundHandler.TriggerInfoMap.get("lowhp")[4]));
                 if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("lowhp")[33])) timeSwitch.add("lowhp");
             }
-            if (player.isDeadOrDying() && SoundHandler.TriggerIdentifierMap.get("dead") != null) {
+            if (SoundHandler.TriggerIdentifierMap.get("dead") != null && (player.getHealth()<=0f || player.isDeadOrDying())) {
                 crashHelper = "dead";
                 events.add("dead");
                 dynamicSongs.put("dead", SoundHandler.TriggerIdentifierMap.get("dead").get("_"));
@@ -548,12 +550,11 @@ public class MusicPicker {
                 dynamicDelay.put("creative", Integer.parseInt(SoundHandler.TriggerInfoMap.get("creative")[4]));
                 if(Boolean.parseBoolean(SoundHandler.TriggerInfoMap.get("creative")[33])) timeSwitch.add("creative");
             }
-            if (SoundHandler.TriggerIdentifierMap.get("riding") != null && player.isPassenger()) {
+            if (SoundHandler.TriggerIdentifierMap.get("riding") != null) {
                 crashHelper = "riding";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("riding").keySet()) {
                     crashHelper = "riding-"+identifier;
-                    String ridingName = SoundHandler.TriggerInfoMap.get("riding-" + identifier)[9];
-                    if (ridingName.matches("minecraft") || (player.getControllingPassenger()!=null && checkResourceList(Objects.requireNonNull(player.getControllingPassenger()).getName().getString(),ridingName,true)) || (ForgeRegistries.ENTITIES.getKey(player.getControllingPassenger().getType())!=null && checkResourceList(Objects.requireNonNull(ForgeRegistries.ENTITIES.getKey(player.getControllingPassenger().getType())).toString(),ridingName,true))) {
+                    if (checkRiding(SoundHandler.TriggerInfoMap.get("riding-" + identifier)[9])) {
                         if (!events.contains("riding-" + identifier)) {
                             events.add("riding-" + identifier);
                             dynamicSongs.put("riding-" + identifier, SoundHandler.TriggerIdentifierMap.get("riding").get(identifier));
@@ -969,11 +970,11 @@ public class MusicPicker {
                     }
                 }
             }
-            if (mc.screen != null && SoundHandler.TriggerIdentifierMap.get("gui") != null) {
+            if (SoundHandler.TriggerIdentifierMap.get("gui") != null) {
                 crashHelper = "gui";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("gui").keySet()) {
                     crashHelper = "gui-"+identifier;
-                    if (checkResourceList(mc.screen.getClass().getName(), SoundHandler.TriggerInfoMap.get("gui-" + identifier)[9], false)) {
+                    if (mc.screen != null && checkResourceList(mc.screen.getClass().getName(), SoundHandler.TriggerInfoMap.get("gui-" + identifier)[9], false)) {
                         if (!events.contains("gui-" + identifier)) {
                             events.add("gui-" + identifier);
                             dynamicSongs.put("gui-" + identifier, SoundHandler.TriggerIdentifierMap.get("gui").get(identifier));
@@ -1407,6 +1408,14 @@ public class MusicPicker {
         return false;
     }
 
+    public static boolean checkRiding(String resource) {
+        if(!player.isPassenger() || player.getControllingPassenger()==null) return false;
+        else if(resource.matches("minecraft")) return true;
+        else if(checkResourceList(Objects.requireNonNull(player.getControllingPassenger()).getName().getString(),resource,true)) return true;
+        else if(ForgeRegistries.ENTITIES.getKey(player.getControllingPassenger().getType())==null) return false;
+        return checkResourceList(Objects.requireNonNull(ForgeRegistries.ENTITIES.getKey(player.getControllingPassenger().getType())).toString(),resource,false);
+    }
+
     public static boolean checkResourceList(String type, String resourceList, boolean match) {
         for(String resource : stringBreaker(resourceList,";")) {
             if(match && type.matches(resource)) return true;
@@ -1415,13 +1424,85 @@ public class MusicPicker {
         return false;
     }
 
-    public static boolean checkStat(String statName, int level) {
-        assert mc.player != null;
-        ObjectArrayList<Stat<ResourceLocation>> stats = new ObjectArrayList<>(Stats.CUSTOM.iterator());
-        for(Stat<ResourceLocation> stat : stats) {
-            if(checkResourceList(stat.toString(),statName,false) && mc.player.getStats().getValue(stat)>level) return true;
+    public static boolean checkStatResourceList(String type, String resourceList, String stat) {
+        for(String resource : stringBreaker(resourceList,";")) {
+            if(resource.contains(stat) && type.contains(resource.replaceAll(stat,""))) return true;
         }
         return false;
+    }
+
+    public static boolean checkStat(String statName, int level) {
+        assert mc.player != null;
+        ObjectArrayList<Stat<ResourceLocation>> statsCustom = new ObjectArrayList<>(Stats.CUSTOM.iterator());
+        for(Stat<ResourceLocation> stat : statsCustom) {
+            if(checkResourceList(stat.getValue().toString(),statName,false) && mc.player.getStats().getValue(stat)>level) return true;
+        }
+        if(statName.contains("mined")) {
+            ObjectArrayList<Stat<Block>> statsBlocks = new ObjectArrayList<>(Stats.BLOCK_MINED.iterator());
+            for (Stat<Block> stat : statsBlocks) {
+                if (stat.getValue().getRegistryName() != null && checkStatResourceList(stat.getValue().getRegistryName().toString(), statName, "mined") && mc.player.getStats().getValue(stat) > level)
+                    return true;
+            }
+        }
+        if(statName.contains("crafted")) {
+            ObjectArrayList<Stat<Item>> statsBlocks = new ObjectArrayList<>(Stats.ITEM_CRAFTED.iterator());
+            for (Stat<Item> stat : statsBlocks) {
+                if (stat.getValue().getRegistryName() != null && checkStatResourceList(stat.getValue().getRegistryName().toString(), statName, "crafted") && mc.player.getStats().getValue(stat) > level)
+                    return true;
+            }
+        }
+        if(statName.contains("used")) {
+            ObjectArrayList<Stat<Item>> statsBlocks = new ObjectArrayList<>(Stats.ITEM_USED.iterator());
+            for (Stat<Item> stat : statsBlocks) {
+                if (stat.getValue().getRegistryName() != null && checkStatResourceList(stat.getValue().getRegistryName().toString(), statName, "used") && mc.player.getStats().getValue(stat) > level)
+                    return true;
+            }
+        }
+        if(statName.contains("broken")) {
+            ObjectArrayList<Stat<Item>> statsBlocks = new ObjectArrayList<>(Stats.ITEM_BROKEN.iterator());
+            for (Stat<Item> stat : statsBlocks) {
+                if (stat.getValue().getRegistryName() != null && checkStatResourceList(stat.getValue().getRegistryName().toString(), statName, "broken") && mc.player.getStats().getValue(stat) > level)
+                    return true;
+            }
+        }
+        if(statName.contains("picked_up")) {
+            ObjectArrayList<Stat<Item>> statsBlocks = new ObjectArrayList<>(Stats.ITEM_PICKED_UP.iterator());
+            for (Stat<Item> stat : statsBlocks) {
+                if (stat.getValue().getRegistryName() != null && checkStatResourceList(stat.getValue().getRegistryName().toString(), statName, "picked_up") && mc.player.getStats().getValue(stat) > level)
+                    return true;
+            }
+        }
+        if(statName.contains("dropped")) {
+            ObjectArrayList<Stat<Item>> statsBlocks = new ObjectArrayList<>(Stats.ITEM_DROPPED.iterator());
+            for (Stat<Item> stat : statsBlocks) {
+                if (stat.getValue().getRegistryName() != null && checkStatResourceList(stat.getValue().getRegistryName().toString(), statName, "dropped") && mc.player.getStats().getValue(stat) > level)
+                    return true;
+            }
+        }
+        if(statName.contains("killed")) {
+            ObjectArrayList<Stat<EntityType<?>>> statsBlocks = new ObjectArrayList<>(Stats.ENTITY_KILLED.iterator());
+            for (Stat<EntityType<?>> stat : statsBlocks) {
+                if (stat.getValue().getRegistryName() != null && checkStatResourceList(stat.getValue().getRegistryName().toString(), statName, "killed") && mc.player.getStats().getValue(stat) > level)
+                    return true;
+            }
+        }
+        if(statName.contains("killed_by")) {
+            ObjectArrayList<Stat<EntityType<?>>> statsBlocks = new ObjectArrayList<>(Stats.ENTITY_KILLED_BY.iterator());
+            for (Stat<EntityType<?>> stat : statsBlocks) {
+                if (stat.getValue().getRegistryName() != null && checkStatResourceList(stat.getValue().getRegistryName().toString(), statName, "killed_by") && mc.player.getStats().getValue(stat) > level)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean checkForSky() {
+        BlockPos pp = roundedPos(player);
+        if(!world.canSeeSky(pp)) return true;
+        if(player.isInWater()) {
+            BlockPos pos = new BlockPos(pp.getX(), world.getFluidState(pp).getHeight(world, pp), pp.getZ());
+            return !world.canSeeSky(pos);
+        } return false;
     }
 
     public static String allTriggersAsSingleString() {
