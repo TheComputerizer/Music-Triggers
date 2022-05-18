@@ -208,7 +208,7 @@ public class CalculateFeatures {
         return false;
     }
 
-    private static String calculateMobs(String triggerID, UUID uuid, String mobname, int detectionrange, boolean targetting, int targettingpercentage, int health, int healthpercentage, boolean victory, int victoryID, String i, int num, int timeout, String nbtKey, String c) {
+    private static String calculateMobs(String triggerID, UUID uuid, String mobname, int detectionrange, boolean targeting, int targetingpercentage, int health, int healthpercentage, boolean victory, int victoryID, String i, int num, int timeout, String nbtKey, String c) {
         ServerPlayerEntity player = curServer.getPlayerManager().getPlayer(uuid);
         boolean victoryRet = false;
         boolean pass = false;
@@ -246,7 +246,7 @@ public class CalculateFeatures {
                     }
                 }
                 if (mobsWithBlacklist.size() >= num &&
-                        ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) &&
+                        ((!targeting || (float) trackingCounter / num >= targetingpercentage / 100F) &&
                                 (float) healthCounter / num >= healthpercentage / 100F)) {
                     pass = true;
                 }
@@ -285,7 +285,7 @@ public class CalculateFeatures {
                 int mobCounter = 0;
                 List<MobEntity> mobListSpecific = new ArrayList<>();
                 for (LivingEntity e : mobTempList) {
-                    if ((checkResourceList(e.getDisplayName().getString(),mobname,true) || checkResourceList(Objects.requireNonNull(e.getType().getName()).toString(),mobname,true)) && nbtChecker(e, nbtKey)) {
+                    if ((checkResourceList(e.getDisplayName().getString(),mobname,true) || checkResourceList(Objects.requireNonNull(e.getType().getName()).toString(),mobname,false)) && nbtChecker(e, nbtKey)) {
                         if(e instanceof  MobEntity) {
                             mobCounter++;
                             mobListSpecific.add((MobEntity) e);
@@ -303,7 +303,7 @@ public class CalculateFeatures {
                     }
                 }
                 if (mobCounter >= num &&
-                        ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) &&
+                        ((!targeting || (float) trackingCounter / num >= targetingpercentage / 100F) &&
                                 (float) healthCounter / num >= healthpercentage / 100F)) {
                     pass = true;
                 }
@@ -356,7 +356,7 @@ public class CalculateFeatures {
         for(String resource : stringBreaker(resourceList,";")) {
             if(!resource.matches("MOB")) {
                 if (e.getName().getString().matches(resource)) return false;
-                else if (Objects.requireNonNull(e.getType().getName()).toString().matches(resource)) return false;
+                else if (Objects.requireNonNull(e.getType().getName()).toString().contains(resource)) return false;
             }
         }
         return true;

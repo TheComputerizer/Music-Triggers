@@ -147,29 +147,26 @@ public class EventsClient {
         MinecraftClient mc = MinecraftClient.getInstance();
         PlayerEntity player = mc.player;
         if (player != null && ConfigTitleCards.imagecards.get(curImageIndex) != null) {
-            int x = mc.getWindow().getWidth();
-            int y = mc.getWindow().getHeight();
+            int x = mc.getWindow().getScaledWidth();
+            int y = mc.getWindow().getScaledHeight();
             if (fadeCount != 1000 && IMAGE_CARD != null) {
                 matrix.push();
 
                 float opacity = (int) (17 - (fadeCount / 80));
                 opacity = (opacity * 1.15f) / 15;
 
-                int sizeX = ConfigTitleCards.imageDimensions.get(IMAGE_CARD).getWidth();
-                int sizeY = ConfigTitleCards.imageDimensions.get(IMAGE_CARD).getHeight();
-
-                float scaleY = (0.25f * (ConfigTitleCards.imagecards.get(curImageIndex).getScaleY() / 100f));
-                float scaleX = (0.25f * (ConfigTitleCards.imagecards.get(curImageIndex).getScaleX() / 100f));
+                float scaleY = 0.25f*(ConfigTitleCards.imagecards.get(curImageIndex).getScaleY()/100f);
+                float scaleX = (0.25f*((float)y/(float)x))*(ConfigTitleCards.imagecards.get(curImageIndex).getScaleX()/100f);
                 matrix.scale(scaleX, scaleY, 1f);
 
-                float posY = ((y * 2f) / ((4f * (ConfigTitleCards.imagecards.get(curImageIndex).getScaleY() / 100f)) * 3f)) + ConfigTitleCards.imagecards.get(curImageIndex).getVertical();
-                float posX = ((x * 2f) / ((ConfigTitleCards.imagecards.get(curImageIndex).getScaleX() / 100f) * 3f)) - (sizeX / 2f) + ConfigTitleCards.imagecards.get(curImageIndex).getHorizontal();
+                float posY = (y*(1f/scaleY))/8f+(ConfigTitleCards.imagecards.get(curImageIndex).getHorizontal()*(1/scaleY));
+                float posX = ((x*(1f/scaleX))/2f)-(x/2f)+(ConfigTitleCards.imagecards.get(curImageIndex).getHorizontal()*(1/scaleX));
 
                 MusicTriggersCommon.logger.info(IMAGE_CARD + " X: " + x + " Y: " + y + " PosX: " + posX + " PosY: " + posY);
 
                 RenderSystem.setShaderColor(1F, 1F, 1F, Math.max(0, Math.min(0.95f, opacity)));
                 RenderSystem.setShaderTexture(0, IMAGE_CARD);
-                DrawableHelper.drawTexture(matrix, (int) posX, (int) posY, 0F, 0F, sizeX, sizeY, sizeX, sizeY);
+                DrawableHelper.drawTexture(matrix, (int) posX, (int) posY, 0F, 0F, x, y, x, y);
                 matrix.pop();
             }
         }
