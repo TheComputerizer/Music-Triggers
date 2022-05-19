@@ -12,11 +12,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Arrays;
 
+@SuppressWarnings("ALL")
 @Pseudo
-@Mixin(value = SkiesMusicTicker.class, remap = false)
+@Mixin(value = SkiesMusicTicker.class)
 public class MixinBlueSkiesMusic {
 
-    @Inject(at = @At(value = "HEAD"), method = "tick", cancellable = true)
+    @Inject(at = @At(value = "HEAD"), method = "func_110550_d", cancellable = true)
     private void tick(CallbackInfo info) {
         if(Arrays.asList(ConfigDebug.blockedmods).contains(BlueSkies.MODID) && (!ConfigDebug.SilenceIsBad || MusicPlayer.curMusic!=null)) info.cancel();
     }
