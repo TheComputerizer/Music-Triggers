@@ -18,6 +18,7 @@ import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.packet.c2s.play.ClientStatusC2SPacket;
 import net.minecraft.predicate.entity.EntityPredicates;
 import net.minecraft.stat.Stat;
 import net.minecraft.stat.Stats;
@@ -552,7 +553,6 @@ public class MusicPicker {
                 crashHelper = "riding";
                 for (String identifier : SoundHandler.TriggerIdentifierMap.get("riding").keySet()) {
                     crashHelper = "riding-" + identifier;
-                    String ridingName = SoundHandler.TriggerInfoMap.get("riding-" + identifier)[9];
                     if (checkRiding(SoundHandler.TriggerInfoMap.get("riding-" + identifier)[9])) {
                         if (!events.contains("riding-" + identifier)) {
                             events.add("riding-" + identifier);
@@ -1177,7 +1177,7 @@ public class MusicPicker {
 
     public static boolean checkStatResourceList(String type, String resourceList, String stat) {
         for(String resource : stringBreaker(resourceList,";")) {
-            if(resource.contains(stat) && type.contains(resource.replaceAll(stat,""))) return true;
+            if(resource.contains(stat) && type.contains(resource.substring(stat.length()+1))) return true;
         }
         return false;
     }
@@ -1192,65 +1192,68 @@ public class MusicPicker {
     }
 
     public static boolean checkStat(String statName, int level) {
-        assert mc.player != null;
-        ObjectArrayList<Stat<Identifier>> statsCustom = new ObjectArrayList<>(Stats.CUSTOM.iterator());
-        for(Stat<Identifier> stat : statsCustom) {
-            if(checkResourceList(stat.getValue().toString(),statName,false) && mc.player.getStatHandler().getStat(stat)>level) return true;
-        }
-        if(statName.contains("mined")) {
-            ObjectArrayList<Stat<Block>> statsBlocks = new ObjectArrayList<>(Stats.MINED.iterator());
-            for (Stat<Block> stat : statsBlocks) {
-                if (checkStatResourceList(Registry.BLOCK.getId(stat.getValue()).toString(), statName, "mined") && mc.player.getStatHandler().getStat(stat) > level)
+        if(mc.player!=null && mc.getNetworkHandler()!=null) {
+            mc.getNetworkHandler().sendPacket(new ClientStatusC2SPacket(ClientStatusC2SPacket.Mode.REQUEST_STATS));
+            ObjectArrayList<Stat<Identifier>> statsCustom = new ObjectArrayList<>(Stats.CUSTOM.iterator());
+            for (Stat<Identifier> stat : statsCustom) {
+                if (checkResourceList(stat.getValue().toString(), statName, false) && mc.player.getStatHandler().getStat(stat) > level)
                     return true;
             }
-        }
-        if(statName.contains("crafted")) {
-            ObjectArrayList<Stat<Item>> statsBlocks = new ObjectArrayList<>(Stats.CRAFTED.iterator());
-            for (Stat<Item> stat : statsBlocks) {
-                if (checkStatResourceList(Registry.ITEM.getId(stat.getValue()).toString(), statName, "crafted") && mc.player.getStatHandler().getStat(stat) > level)
-                    return true;
+            if (statName.contains("mined")) {
+                ObjectArrayList<Stat<Block>> statsBlocks = new ObjectArrayList<>(Stats.MINED.iterator());
+                for (Stat<Block> stat : statsBlocks) {
+                    if (checkStatResourceList(Registry.BLOCK.getId(stat.getValue()).toString(), statName, "mined") && mc.player.getStatHandler().getStat(Stats.MINED.getOrCreateStat(stat.getValue())) > level)
+                        return true;
+                }
             }
-        }
-        if(statName.contains("used")) {
-            ObjectArrayList<Stat<Item>> statsBlocks = new ObjectArrayList<>(Stats.USED.iterator());
-            for (Stat<Item> stat : statsBlocks) {
-                if (checkStatResourceList(Registry.ITEM.getId(stat.getValue()).toString(), statName, "used") && mc.player.getStatHandler().getStat(stat) > level)
-                    return true;
+            if (statName.contains("crafted")) {
+                ObjectArrayList<Stat<Item>> statsBlocks = new ObjectArrayList<>(Stats.CRAFTED.iterator());
+                for (Stat<Item> stat : statsBlocks) {
+                    if (checkStatResourceList(Registry.ITEM.getId(stat.getValue()).toString(), statName, "crafted") && mc.player.getStatHandler().getStat(Stats.CRAFTED.getOrCreateStat(stat.getValue())) > level)
+                        return true;
+                }
             }
-        }
-        if(statName.contains("broken")) {
-            ObjectArrayList<Stat<Item>> statsBlocks = new ObjectArrayList<>(Stats.BROKEN.iterator());
-            for (Stat<Item> stat : statsBlocks) {
-                if (checkStatResourceList(Registry.ITEM.getId(stat.getValue()).toString(), statName, "broken") && mc.player.getStatHandler().getStat(stat) > level)
-                    return true;
+            if (statName.contains("used")) {
+                ObjectArrayList<Stat<Item>> statsBlocks = new ObjectArrayList<>(Stats.USED.iterator());
+                for (Stat<Item> stat : statsBlocks) {
+                    if (checkStatResourceList(Registry.ITEM.getId(stat.getValue()).toString(), statName, "used") && mc.player.getStatHandler().getStat(Stats.USED.getOrCreateStat(stat.getValue())) > level)
+                        return true;
+                }
             }
-        }
-        if(statName.contains("picked_up")) {
-            ObjectArrayList<Stat<Item>> statsBlocks = new ObjectArrayList<>(Stats.PICKED_UP.iterator());
-            for (Stat<Item> stat : statsBlocks) {
-                if (checkStatResourceList(Registry.ITEM.getId(stat.getValue()).toString(), statName, "picked_up") && mc.player.getStatHandler().getStat(stat) > level)
-                    return true;
+            if (statName.contains("broken")) {
+                ObjectArrayList<Stat<Item>> statsBlocks = new ObjectArrayList<>(Stats.BROKEN.iterator());
+                for (Stat<Item> stat : statsBlocks) {
+                    if (checkStatResourceList(Registry.ITEM.getId(stat.getValue()).toString(), statName, "broken") && mc.player.getStatHandler().getStat(Stats.BROKEN.getOrCreateStat(stat.getValue())) > level)
+                        return true;
+                }
             }
-        }
-        if(statName.contains("dropped")) {
-            ObjectArrayList<Stat<Item>> statsBlocks = new ObjectArrayList<>(Stats.DROPPED.iterator());
-            for (Stat<Item> stat : statsBlocks) {
-                if (checkStatResourceList(Registry.ITEM.getId(stat.getValue()).toString(), statName, "dropped") && mc.player.getStatHandler().getStat(stat) > level)
-                    return true;
+            if (statName.contains("picked_up")) {
+                ObjectArrayList<Stat<Item>> statsBlocks = new ObjectArrayList<>(Stats.PICKED_UP.iterator());
+                for (Stat<Item> stat : statsBlocks) {
+                    if (checkStatResourceList(Registry.ITEM.getId(stat.getValue()).toString(), statName, "picked_up") && mc.player.getStatHandler().getStat(Stats.PICKED_UP.getOrCreateStat(stat.getValue())) > level)
+                        return true;
+                }
             }
-        }
-        if(statName.contains("killed")) {
-            ObjectArrayList<Stat<EntityType<?>>> statsBlocks = new ObjectArrayList<>(Stats.KILLED.iterator());
-            for (Stat<EntityType<?>> stat : statsBlocks) {
-                if (checkStatResourceList(Registry.ENTITY_TYPE.getId(stat.getValue()).toString(), statName, "killed") && mc.player.getStatHandler().getStat(stat) > level)
-                    return true;
+            if (statName.contains("dropped")) {
+                ObjectArrayList<Stat<Item>> statsBlocks = new ObjectArrayList<>(Stats.DROPPED.iterator());
+                for (Stat<Item> stat : statsBlocks) {
+                    if (checkStatResourceList(Registry.ITEM.getId(stat.getValue()).toString(), statName, "dropped") && mc.player.getStatHandler().getStat(Stats.DROPPED.getOrCreateStat(stat.getValue())) > level)
+                        return true;
+                }
             }
-        }
-        if(statName.contains("killed_by")) {
-            ObjectArrayList<Stat<EntityType<?>>> statsBlocks = new ObjectArrayList<>(Stats.KILLED_BY.iterator());
-            for (Stat<EntityType<?>> stat : statsBlocks) {
-                if (checkStatResourceList(Registry.ENTITY_TYPE.getId(stat.getValue()).toString(), statName, "killed_by") && mc.player.getStatHandler().getStat(stat) > level)
-                    return true;
+            if (statName.contains("killed")) {
+                ObjectArrayList<Stat<EntityType<?>>> statsBlocks = new ObjectArrayList<>(Stats.KILLED.iterator());
+                for (Stat<EntityType<?>> stat : statsBlocks) {
+                    if (checkStatResourceList(Registry.ENTITY_TYPE.getId(stat.getValue()).toString(), statName, "killed") && mc.player.getStatHandler().getStat(Stats.KILLED.getOrCreateStat(stat.getValue())) > level)
+                        return true;
+                }
+            }
+            if (statName.contains("killed_by")) {
+                ObjectArrayList<Stat<EntityType<?>>> statsBlocks = new ObjectArrayList<>(Stats.KILLED_BY.iterator());
+                for (Stat<EntityType<?>> stat : statsBlocks) {
+                    if (checkStatResourceList(Registry.ENTITY_TYPE.getId(stat.getValue()).toString(), statName, "killed_by") && mc.player.getStatHandler().getStat(Stats.KILLED_BY.getOrCreateStat(stat.getValue())) > level)
+                        return true;
+                }
             }
         }
         return false;
