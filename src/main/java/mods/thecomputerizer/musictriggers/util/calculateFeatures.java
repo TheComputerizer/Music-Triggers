@@ -215,7 +215,7 @@ public class CalculateFeatures {
         return false;
     }
 
-    private static String calculateMobs(String triggerID, UUID uuid, String mobname, int detectionrange, boolean targetting, int targettingpercentage, int health, int healthpercentage, boolean victory, int victoryID, String i, int num, int timeout, String nbtKey, String c) {
+    private static String calculateMobs(String triggerID, UUID uuid, String mobname, int detectionrange, boolean targeting, int targetingpercentage, int health, int healthpercentage, boolean victory, int victoryID, String i, int num, int timeout, String nbtKey, String c) {
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         ServerPlayer player = server.getPlayerList().getPlayer(uuid);
         boolean victoryRet = false;
@@ -256,7 +256,7 @@ public class CalculateFeatures {
                     }
                 }
                 if (mobsWithBlacklist.size() >= num &&
-                        ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) &&
+                        ((!targeting || (float) trackingCounter / num >= targetingpercentage / 100F) &&
                                 infernal && champion &&
                                 (float) healthCounter / num >= healthpercentage / 100F)) {
                     pass = true;
@@ -296,7 +296,7 @@ public class CalculateFeatures {
                 int mobCounter = 0;
                 List<Mob> mobListSpecific = new ArrayList<>();
                 for (LivingEntity e : mobTempList) {
-                    if ((checkResourceList(e.getDisplayName().getString(), mobname, true) || checkResourceList(Objects.requireNonNull(e.getType().getRegistryName()).toString(), mobname, true)) && nbtChecker(e, nbtKey)) {
+                    if ((checkResourceList(e.getDisplayName().getString(), mobname, true) || checkResourceList(Objects.requireNonNull(e.getType().getRegistryName()).toString(), mobname, false)) && nbtChecker(e, nbtKey)) {
                         if (e instanceof Mob) {
                             mobCounter++;
                             mobListSpecific.add((Mob) e);
@@ -316,7 +316,7 @@ public class CalculateFeatures {
                     }
                 }
                 if (mobCounter >= num &&
-                        ((!targetting || (float) trackingCounter / num >= targettingpercentage / 100F) &&
+                        ((!targeting || (float) trackingCounter / num >= targetingpercentage / 100F) &&
                                 infernal && champion &&
                                 (float) healthCounter / num >= healthpercentage / 100F)) {
                     pass = true;
@@ -393,7 +393,7 @@ public class CalculateFeatures {
         for(String resource : stringBreaker(resourceList,";")) {
             if(!resource.matches("MOB")) {
                 if (e.getName().getString().matches(resource)) return false;
-                else if (Objects.requireNonNull(e.getType().getRegistryName()).toString().matches(resource)) return false;
+                else if (Objects.requireNonNull(e.getType().getRegistryName()).toString().contains(resource)) return false;
             }
         }
         return true;
