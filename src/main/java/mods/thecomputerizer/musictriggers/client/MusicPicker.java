@@ -1655,7 +1655,6 @@ public class MusicPicker {
             Objects.requireNonNull(mc.getConnection()).send(new CClientStatusPacket(CClientStatusPacket.State.REQUEST_STATS));
             ObjectArrayList<Stat<ResourceLocation>> statsCustom = new ObjectArrayList<>(Stats.CUSTOM.iterator());
             for (Stat<ResourceLocation> stat : statsCustom) {
-                MusicTriggers.logger.info("resource location: " + stat.getValue() + " level: " + mc.player.getStats().getValue(stat));
                 if (checkResourceList(stat.getValue().toString(), statName, false) && mc.player.getStats().getValue(stat) > level)
                     return true;
             }
