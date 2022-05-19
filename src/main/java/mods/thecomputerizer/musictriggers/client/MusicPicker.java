@@ -21,6 +21,7 @@ import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.passive.EntityTameable;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.network.play.client.CPacketClientStatus;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.stats.StatBase;
 import net.minecraft.stats.StatList;
@@ -1550,8 +1551,11 @@ public class MusicPicker {
     }
 
     public static boolean checkStat(String stat, int level) {
-        for(StatBase s : StatList.ALL_STATS) {
-            return checkResourceList(s.statId,stat,false) && mc.player.getStatFileWriter().readStat(s)>level;
+        if(mc.getConnection()!=null) {
+            Objects.requireNonNull(mc.getConnection()).sendPacket(new CPacketClientStatus(CPacketClientStatus.State.REQUEST_STATS));
+            for (StatBase s : StatList.ALL_STATS) {
+                return checkResourceList(s.statId, stat, false) && mc.player.getStatFileWriter().readStat(s) > level;
+            }
         }
         return false;
     }
