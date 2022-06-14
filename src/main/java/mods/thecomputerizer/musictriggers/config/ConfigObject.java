@@ -3,6 +3,8 @@ package mods.thecomputerizer.musictriggers.config;
 import com.rits.cloning.Cloner;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.MusicPicker;
+import mods.thecomputerizer.musictriggers.client.audio.Channel;
+import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.Mappings;
 
 import java.io.File;
@@ -22,8 +24,8 @@ public class ConfigObject {
     private final Map<String, Map<String, String[]>> triggerlinking;
     private final Map<String, Map<Integer, String[]>> loopPoints;
     private final Map<String, Map<String, Map<Integer, String[]>>> linkingLoopPoints;
-    private final Map<Integer, ConfigTitleCards.Title> titlecards;
-    private final Map<Integer, ConfigTitleCards.Image> imagecards;
+    private final Map<Integer, ConfigTransitions.Title> titlecards;
+    private final Map<Integer, ConfigTransitions.Image> imagecards;
     private final Map<Integer, Boolean> ismoving;
     private final List<String> blockedmods;
     private final List<String> debugStuff;
@@ -51,8 +53,8 @@ public class ConfigObject {
 
     private ConfigObject(Map<String, String> songholder, Map<String, Map<String, String[]>> triggerholder, Map<String, Map<String, String>> triggerMapper, Map<String, String[]> otherinfo,
                          Map<String, Map<String, String[]>> otherlinkinginfo, Map<String, Map<String, String[]>> triggerlinking, Map<String, Map<Integer, String[]>> loopPoints,
-                         Map<String, Map<String, Map<Integer, String[]>>> linkingLoopPoints, Map<Integer, ConfigTitleCards.Title> titlecards,
-                         Map<Integer, ConfigTitleCards.Image> imagecards, Map<Integer, Boolean> ismoving, List<String> blockedmods, List<String> debugStuff) {
+                         Map<String, Map<String, Map<Integer, String[]>>> linkingLoopPoints, Map<Integer, ConfigTransitions.Title> titlecards,
+                         Map<Integer, ConfigTransitions.Image> imagecards, Map<Integer, Boolean> ismoving, List<String> blockedmods, List<String> debugStuff) {
         this.songholder = songholder;
         this.triggerholder = triggerholder;
         this.triggerMapper = triggerMapper;
@@ -79,7 +81,7 @@ public class ConfigObject {
         this.registrationConfig = new File("config/MusicTriggers/registration.toml");
     }
 
-    private static Map<Integer, ConfigTitleCards.Image> fixNullImageCards(Map<Integer, ConfigTitleCards.Image> input) {
+    private static Map<Integer, ConfigTransitions.Image> fixNullImageCards(Map<Integer, ConfigTransitions.Image> input) {
         return input.entrySet().stream().filter(entry -> entry.getValue().getName()!=null).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
@@ -94,12 +96,14 @@ public class ConfigObject {
         return ret;
     }
 
-    public static ConfigObject createFromCurrent() {
+    public static ConfigObject createFromChannel(Channel channel) {
         Cloner cloner=new Cloner();
-        return new ConfigObject(cloner.deepClone(ConfigToml.songholder),cloner.deepClone(ConfigToml.triggerholder),cloner.deepClone(ConfigToml.triggerMapper),cloner.deepClone(ConfigToml.otherinfo),
-                cloner.deepClone(ConfigToml.otherlinkinginfo),cloner.deepClone(ConfigToml.triggerlinking),cloner.deepClone(ConfigToml.loopPoints),
-                cloner.deepClone(ConfigToml.linkingLoopPoints),cloner.deepClone(ConfigTitleCards.titlecards),cloner.deepClone(ConfigTitleCards.imagecards),
-                cloner.deepClone(ConfigTitleCards.ismoving),cloner.deepClone(Arrays.asList(ConfigDebug.blockedmods)),cloner.deepClone(compileDebugStuff()));
+        return new ConfigObject(cloner.deepClone(ChannelManager.getSongHolder(channel)),cloner.deepClone(ChannelManager.getTriggerHolder(channel)),
+                cloner.deepClone(ChannelManager.getTriggerMapper(channel)),cloner.deepClone(ChannelManager.getOtherInfo(channel)),
+                cloner.deepClone(ChannelManager.getOtherLinkingInfo(channel)),cloner.deepClone(ChannelManager.getTriggerLinking(channel)),
+                cloner.deepClone(ChannelManager.getLoopPoints(channel)),cloner.deepClone(ChannelManager.getLinkingLoopsPoints(channel)),
+                cloner.deepClone(ChannelManager.getTitleCards(channel)),cloner.deepClone(ChannelManager.getImageCards(channel)),
+                cloner.deepClone(ChannelManager.getIsMoving(channel)),cloner.deepClone(Arrays.asList(ConfigDebug.blockedmods)),cloner.deepClone(compileDebugStuff()));
     }
 
     public List<String> getAllDebugStuff() {
@@ -319,11 +323,11 @@ public class ConfigObject {
         int index;
         if(title) {
             index = this.titlecards.size();
-            this.titlecards.put(index, new ConfigTitleCards.Title());
+            this.titlecards.put(index, new ConfigTransitions.Title());
         } else {
             index = this.imagecards.size();
             MusicTriggers.logger.info(index);
-            this.imagecards.put(index, new ConfigTitleCards.Image());
+            this.imagecards.put(index, new ConfigTransitions.Image());
             this.imagecards.get(index).setName(name);
             this.ismoving.put(index, ismoving);
             this.markImageInfoForWriting.putIfAbsent(index, new ArrayList<>());
@@ -625,7 +629,7 @@ public class ConfigObject {
         }
     }
 
-    private String[] titleInfoToArray(ConfigTitleCards.Title title) {
+    private String[] titleInfoToArray(ConfigTransitions.Title title) {
         List<String> ret = new ArrayList<>();
         ret.add(title.getPlayonce().toString());
         ret.add(title.getTitlecolor());
@@ -634,7 +638,7 @@ public class ConfigObject {
         return ret.toArray(new String[0]);
     }
 
-    private String[] imageInfoToArray(ConfigTitleCards.Image image) {
+    private String[] imageInfoToArray(ConfigTransitions.Image image) {
         List<String> ret = new ArrayList<>();
         ret.add(image.getName());
         ret.add(image.getTime()+"");
@@ -719,7 +723,7 @@ public class ConfigObject {
             index-=triggers.size();
             int change;
             if(keyCode==14) change=-10;
-            else if(typedChar=='1' || typedChar=='2' || typedChar=='3' || typedChar=='4' || typedChar=='5' || typedChar=='6' || typedChar=='7' || typedChar=='8' || typedChar=='9') change = Integer.parseInt(typedChar+"");
+            else if(typedChar=='1' || typedChar=='2' || typedChar=='3' || typedChar=='4' || typedChar=='5' || typedChar=='6' || typedChar=='7' || typedChar=='8' || typedChar=='9') change = MusicTriggers.randomInt(typedChar+"");
             else if(typedChar=='0') change = 10;
             else change = -1;
             switch (index) {
@@ -793,7 +797,7 @@ public class ConfigObject {
 
     public void write() throws IOException {
         StringBuilder mainBuilder = new StringBuilder();
-        mainBuilder.append(this.writeUniversal());
+        //mainBuilder.append(this.writeUniversal());
         for(int j=0;j<this.songholder.entrySet().size();j++) {
             String code = "song"+j;
             MusicTriggers.logger.info("writing code: "+code);
@@ -824,8 +828,8 @@ public class ConfigObject {
                 if (this.triggerlinking.get(code) != null && !getAllSongsForLinking(code).isEmpty()) {
                     mainBuilder.append("\t[").append(this.songholder.get(code)).append(".link]\n");
                     mainBuilder.append(this.formatLinkingDefaults(code)).append("\n");
-                    if(Integer.parseInt(this.otherinfo.get(code)[5])!=0) mainBuilder.append("\t\tfade_in = \"").append(this.otherinfo.get(code)[5]).append("\"\n");
-                    if(Integer.parseInt(this.otherinfo.get(code)[6])!=0) mainBuilder.append("\t\tfade_out = \"").append(this.otherinfo.get(code)[6]).append("\"\n");
+                    if(MusicTriggers.randomInt(this.otherinfo.get(code)[5])!=0) mainBuilder.append("\t\tfade_in = \"").append(this.otherinfo.get(code)[5]).append("\"\n");
+                    if(MusicTriggers.randomInt(this.otherinfo.get(code)[6])!=0) mainBuilder.append("\t\tfade_out = \"").append(this.otherinfo.get(code)[6]).append("\"\n");
                     for (Map.Entry<String, String[]> stringEntry : this.triggerlinking.get(code).entrySet()) {
                         String song = stringEntry.getKey();
                         if (!song.matches(code)) {
@@ -996,6 +1000,7 @@ public class ConfigObject {
         builder.append("\t\t\tz_max = \"").append(broken[5]).append("\"\n");
     }
 
+    /*
     private String writeUniversal() {
         String ret ="";
         if(MusicPicker.universalDelay!=0 || MusicPicker.universalFadeIn!=0 || MusicPicker.universalFadeOut!=0) {
@@ -1006,4 +1011,5 @@ public class ConfigObject {
         }
         return ret;
     }
+     */
 }

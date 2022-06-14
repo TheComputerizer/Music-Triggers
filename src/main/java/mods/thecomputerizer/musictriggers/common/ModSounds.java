@@ -10,7 +10,7 @@ public class ModSounds {
     private List<SoundEvent> sounds;
 
     public void init(){
-        sounds = SoundHandler.allSoundEvents;
+        //sounds = SoundHandler.allSoundEvents;
     }
 
     public List<SoundEvent> getSounds(){

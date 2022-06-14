@@ -16,6 +16,7 @@ import java.util.Objects;
 
 public class MusicTriggersRecord extends ItemRecord {
 
+
     public MusicTriggersRecord(String name, SoundEvent soundIn) {
         super(name, soundIn);
         setRegistryName(name);

@@ -33,6 +33,7 @@ import static mods.thecomputerizer.musictriggers.common.MusicTriggersItems.MUSIC
 public final class RegistryHandler {
     public static SimpleNetworkWrapper network;
 
+    /*
     @SubscribeEvent
     public static void onRegisterItems(RegistryEvent.Register<Item> e) {
         MusicTriggersItems.INSTANCE.init();
@@ -69,6 +70,7 @@ public final class RegistryHandler {
             ModelLoader.setCustomModelResourceLocation(MUSIC_RECORDER, 0, new ModelResourceLocation(Objects.requireNonNull(MUSIC_RECORDER.getRegistryName()), "inventory"));
         }
     }
+     */
 
     public static void init() {
         network = NetworkRegistry.INSTANCE.newSimpleChannel(MusicTriggers.MODID);
@@ -77,11 +79,8 @@ public final class RegistryHandler {
 
     private static void registerPackets() {
         int id = 0;
-        network.registerMessage(PacketCurSong.class, PacketCurSong.packetCurSongMessage.class, id++, Side.SERVER);
         network.registerMessage(PacketBossInfo.class, PacketBossInfo.packetBossInfoMessage.class, id++, Side.SERVER);
-        network.registerMessage(PacketMenuSongs.class, PacketMenuSongs.packetMenuSongsMessage.class, id++, Side.SERVER);
-        network.registerMessage(PacketExecuteCommand.class, PacketExecuteCommand.packetExecuteCommandMessage.class, id++, Side.SERVER);
-        network.registerMessage(PacketSendTriggers.class, PacketSendTriggers.PacketSendTriggersMessage.class, id++, Side.SERVER);
-        network.registerMessage(PacketReturnTriggers.class, PacketReturnTriggers.PacketReturnTriggersMessage.class, id, Side.CLIENT);
+        network.registerMessage(PacketQueryServerInfo.class, PacketQueryServerInfo.PacketQueryServerInfoMessage.class, id++, Side.SERVER);
+        network.registerMessage(PacketSyncServerInfo.class, PacketSyncServerInfo.PacketSyncServerInfoMessage.class, id, Side.CLIENT);
     }
 }

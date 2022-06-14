@@ -2,7 +2,8 @@ package mods.thecomputerizer.musictriggers.util;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
 import c4.champions.common.capability.CapabilityChampionship;
-import mods.thecomputerizer.musictriggers.util.packets.PacketReturnTriggers;
+import mods.thecomputerizer.musictriggers.common.EventsCommon;
+import mods.thecomputerizer.musictriggers.common.ServerChannelData;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.boss.EntityDragon;
@@ -28,107 +29,74 @@ public class CalculateFeatures {
     public static HashMap<String, Map<EntityLiving, Integer>> victoryMobs = new HashMap<>();
     public static HashMap<String, Float> bossInfo = new HashMap<>();
 
-    public static void calculateServerTriggers(String[] triggers, UUID playerUUID) {
-        allTriggers = getTriggers(triggers[0]);
-        StringBuilder toSend = new StringBuilder();
-        String[] allHomeTriggers = stringBreaker(triggers[1],"\\$");
-        boolean removeLast = false;
-        for(String home : allHomeTriggers) {
-            home = home.replaceAll("&","");
-            if(!home.isEmpty()) {
-                removeLast = true;
-                toSend.append(calculateHome(toInt(home), playerUUID));
-            }
-        }
-        if(removeLast) toSend = new StringBuilder(toSend.substring(0, toSend.length() - 1));
-        toSend.append("&#");
-        removeLast = false;
-        String[] allStructureTriggers = stringBreaker(triggers[2],"\\$");
-        for(String structure : allStructureTriggers) {
-            structure = structure.replaceAll("&","");
-            if(!structure.isEmpty()) {
-                removeLast = true;
-                String[] structureParameters = stringBreaker(structure, "@");
-                toSend.append(calculateStruct(structureParameters[0], structureParameters[1], toPos(structureParameters[2]), toInt(structureParameters[3])));
-            }
-        }
-        if(removeLast) toSend = new StringBuilder(toSend.substring(0, toSend.length() - 1));
-        toSend.append("&#");
-        removeLast = false;
-        String[] allMobTriggers = stringBreaker(triggers[3],"\\$");
-        for(String mob : allMobTriggers) {
-            mob = mob.replaceAll("&","");
-            if(!mob.isEmpty()) {
-                removeLast = true;
-                String[] mobParameters = stringBreaker(mob, "@");
-                toSend.append(calculateMob(mobParameters[0], playerUUID, mobParameters[1], toInt(mobParameters[2]), toBool(mobParameters[3]), toInt(mobParameters[4]), toInt(mobParameters[5]), toInt(mobParameters[6]), toBool(mobParameters[7]), toInt(mobParameters[8]), mobParameters[9], toInt(mobParameters[10]), toInt(mobParameters[11]), mobParameters[12], mobParameters[13]));
-            }
-        }
-        if(removeLast) toSend = new StringBuilder(toSend.substring(0, toSend.length() - 1));
-        toSend.append("&");
-        RegistryHandler.network.sendTo(new PacketReturnTriggers.PacketReturnTriggersMessage(toSend.toString()),FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUUID(playerUUID));
+    public static ServerChannelData calculateServerTriggers(ServerChannelData serverData) {
+        allTriggers = serverData.getAllTriggers();
+        if(!serverData.getCurrentSong().matches("placeholder")) EventsCommon.currentSongs.get(serverData.getPlayerUUID()).add(serverData.getCurrentSong());
+        for(ServerChannelData.Home home : serverData.getHomeTriggers()) home.setActive(calculateHome(home,serverData.getPlayerUUID()));
+        for(ServerChannelData.Structure structure : serverData.getStructureTriggers()) structure.setActive(calculateStruct(structure));
+        for(ServerChannelData.Mob mob : serverData.getMobTriggers()) mob.setActive(calculateMob(mob, serverData.getPlayerUUID()));
+        return serverData;
     }
 
-    public static String calculateHome(Integer range, UUID uuid) {
+    public static boolean calculateHome(ServerChannelData.Home home, UUID uuid) {
         EntityPlayerMP player = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUUID(uuid);
-        boolean pass = player.getBedLocation(player.dimension).getDistance(roundedPos(player).getX(), roundedPos(player).getY(), roundedPos(player).getZ())<=range;
-        return pass+"$";
+        return player.getBedLocation(player.dimension).getDistance(roundedPos(player).getX(), roundedPos(player).getY(), roundedPos(player).getZ())<=home.getRange();
     }
 
-    public static String calculateStruct(String triggerID, String struct, BlockPos pos, Integer dimID) {
+    public static boolean calculateStruct(ServerChannelData.Structure structure) {
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-        WorldServer world = server.getWorld(dimID);
+        WorldServer world = server.getWorld(structure.getDimension());
         boolean pass = false;
-        for(String actualStructure : stringBreaker(struct,";")) {
-            pass = world.getChunkProvider().isInsideStructure(world, actualStructure, pos);
+        for(String actualStructure : stringBreaker(structure.getStructure(), ";")) {
+            pass = world.getChunkProvider().isInsideStructure(world, actualStructure, structure.getPos());
             if(pass) break;
         }
-        return triggerID+"@"+pass+"$";
+        return pass;
     }
 
-    public static String calculateMob(String triggerID, UUID uuid, String mobname, int detectionrange, boolean targeting, int targetingpercentage, int health, int healthpercentage, boolean victory, int victoryID, String i, int num, int timeout, String nbtKey, String c) {
+    public static boolean calculateMob(ServerChannelData.Mob mob, UUID uuid) {
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
         EntityPlayerMP player = (EntityPlayerMP)server.getEntityFromUuid(uuid);
         boolean pass = false;
         boolean victoryRet = false;
         if(player!=null) {
             WorldServer world = server.getWorld(player.dimension);
-            List<EntityLiving> mobTempList = world.getEntitiesWithinAABB(EntityLiving.class, new AxisAlignedBB(player.posX - (double) detectionrange, player.posY - ((double) detectionrange / 2), player.posZ - (double) detectionrange, player.posX + (double) detectionrange, player.posY + ((double) detectionrange / 2), player.posZ + (double) detectionrange));
+            List<EntityLiving> mobTempList = world.getEntitiesWithinAABB(EntityLiving.class, new AxisAlignedBB(player.posX - (double) mob.getRange(), player.posY - ((double) mob.getRange() / 2), player.posZ - (double) mob.getRange(), player.posX + (double) mob.getRange(), player.posY + ((double) mob.getRange() / 2), player.posZ + (double) mob.getRange()));
             List<EntityLiving> mobList = new ArrayList<>();
             for (EntityLiving e : mobTempList) {
-                if ((e instanceof EntityMob || e instanceof EntityDragon) && nbtChecker(e, nbtKey)) mobList.add(e);
+                if ((e instanceof EntityMob || e instanceof EntityDragon) && nbtChecker(e, mob.getNbtKey())) mobList.add(e);
             }
             int trackingCounter = 0;
             int healthCounter = 0;
             boolean infernal = true;
             boolean champion = true;
-            if (mobname.matches("MOB") || stringBreaker(mobname, ";")[0].matches("MOB")) {
+            if (mob.getName().matches("MOB") || stringBreaker(mob.getName(), ";")[0].matches("MOB")) {
                 List<EntityLiving> mobsWithBlacklist = new ArrayList<>();
                 for (EntityLiving e : mobList) {
-                    if (checkMobBlacklist(e, mobname)) {
+                    if (checkMobBlacklist(e, mob.getName())) {
                         mobsWithBlacklist.add(e);
                         if (e.getAttackTarget() == player) trackingCounter++;
-                        if (e.getHealth() / e.getMaxHealth() <= (float) health / 100F) healthCounter++;
-                        infernal = infernalChecker(e,i);
-                        champion = championChecker(e,c);
-                        if (victory) {
-                            victoryMobs.computeIfAbsent(triggerID, k -> new HashMap<>());
-                            if (victoryMobs.get(triggerID).size() < num)
-                                victoryMobs.get(triggerID).put(e, timeout);
+                        if (e.getHealth() / e.getMaxHealth() <= (float) mob.getHealth() / 100F) healthCounter++;
+                        infernal = infernalChecker(e,mob.getInfernal());
+                        champion = championChecker(e,mob.getChampion());
+                        if (mob.getVictory()) {
+                            victoryMobs.computeIfAbsent(mob.getTrigger(), k -> new HashMap<>());
+                            if (victoryMobs.get(mob.getTrigger()).size() < mob.getMobLevel())
+                                victoryMobs.get(mob.getTrigger()).put(e, mob.getVictoryTimeout());
                         }
                     }
                 }
-                if (mobsWithBlacklist.size() >= num &&
-                        ((!targeting || (float) trackingCounter / num >= targetingpercentage / 100F) &&
+                if (mobsWithBlacklist.size() >= mob.getMobLevel() &&
+                        ((!mob.getTargetting() || (float) trackingCounter / mob.getMobLevel() >= mob.getTargettingPercentage() / 100F) &&
                                 infernal && champion &&
-                                (float) healthCounter / num >= healthpercentage / 100F)) {
+                                (float) healthCounter / mob.getMobLevel() >= mob.getHealthPercentage() / 100F)) {
                     pass = true;
                 }
-                if (victoryMobs.get(triggerID) != null) {
-                    if (victoryMobs.get(triggerID).keySet().size() < num) {
+                if (victoryMobs.get(mob.getTrigger()) != null) {
+                    if (victoryMobs.get(mob.getTrigger()).keySet().size() < mob.getMobLevel()) {
                         victoryMobs = new HashMap<>();
                     } else {
-                        for (EntityLiving e : victoryMobs.get(triggerID).keySet()) {
+                        for (EntityLiving e : victoryMobs.get(mob.getTrigger()).keySet()) {
                             if (e.isDead || e.getHealth()==0) {
                                 victoryRet = true;
                                 break;
@@ -136,17 +104,17 @@ public class CalculateFeatures {
                         }
                     }
                 }
-            } else if (mobname.matches("BOSS") || stringBreaker(mobname, ";")[0].matches("BOSS")) {
+            } else if (mob.getName().matches("BOSS") || stringBreaker(mob.getName(), ";")[0].matches("BOSS")) {
                 HashMap<String, Float> tempBoss = bossInfo;
                 if (!bossInfo.isEmpty()) {
                     List<String> correctBosses = new ArrayList<>();
                     for (String name : tempBoss.keySet()) {
-                        if (checkResourceList(name, mobname, true)) {
+                        if (checkResourceList(name, mob.getName(), true)) {
                             correctBosses.add(name);
-                            if (health / 100f >= bossInfo.get(name)) healthCounter++;
+                            if (mob.getHealth() / 100f >= bossInfo.get(name)) healthCounter++;
                         }
                     }
-                    if (correctBosses.size() >= num && (float) healthCounter / bossInfo.size() <= 100f / healthpercentage) {
+                    if (correctBosses.size() >= mob.getMobLevel() && (float) healthCounter / bossInfo.size() <= 100f / mob.getHealthPercentage()) {
                         pass = true;
                     }
                     for (String name : tempBoss.keySet()) {
@@ -157,31 +125,31 @@ public class CalculateFeatures {
                 int mobCounter = 0;
                 List<EntityLiving> mobListSpecific = new ArrayList<>();
                 for (EntityLiving e : mobTempList) {
-                    if ((checkResourceList(e.getName(), mobname, true) || checkResourceList(Objects.requireNonNull(EntityList.getKey(e)).toString(), mobname, false)) && nbtChecker(e, nbtKey)) {
+                    if ((checkResourceList(e.getName(), mob.getName(), true) || checkResourceList(Objects.requireNonNull(EntityList.getKey(e)).toString(), mob.getName(), false)) && nbtChecker(e, mob.getNbtKey())) {
                         mobCounter++;
                         mobListSpecific.add(e);
                     }
                 }
                 for (EntityLiving e : mobListSpecific) {
                     if (e.getAttackTarget() == player) trackingCounter++;
-                    if (e.getHealth() / e.getMaxHealth() <= health / 100F) healthCounter++;
-                    infernal = infernalChecker(e,i);
-                    champion = championChecker(e,c);
-                    if (victory) {
-                        victoryMobs.computeIfAbsent(triggerID, k -> new HashMap<>());
-                        if (victoryMobs.get(triggerID).size() < num) {
-                            victoryMobs.get(triggerID).put(e, timeout);
+                    if (e.getHealth() / e.getMaxHealth() <= mob.getHealth() / 100F) healthCounter++;
+                    infernal = infernalChecker(e,mob.getInfernal());
+                    champion = championChecker(e,mob.getChampion());
+                    if (mob.getVictory()) {
+                        victoryMobs.computeIfAbsent(mob.getTrigger(), k -> new HashMap<>());
+                        if (victoryMobs.get(mob.getTrigger()).size() < mob.getMobLevel()) {
+                            victoryMobs.get(mob.getTrigger()).put(e, mob.getVictoryTimeout());
                         }
                     }
                 }
-                if (mobCounter >= num && ((!targeting || (float) trackingCounter / num >= targetingpercentage / 100F) && infernal && champion && (float) healthCounter / num >= healthpercentage / 100F)) {
+                if (mobCounter >= mob.getMobLevel() && ((!mob.getTargetting() || (float) trackingCounter / mob.getMobLevel() >= mob.getTargettingPercentage() / 100F) && infernal && champion && (float) healthCounter / mob.getMobLevel() >= mob.getHealthPercentage() / 100F)) {
                     pass = true;
                 }
-                if (victoryMobs.get(triggerID) != null) {
-                    if (victoryMobs.get(triggerID).keySet().size() < num) {
+                if (victoryMobs.get(mob.getTrigger()) != null) {
+                    if (victoryMobs.get(mob.getTrigger()).keySet().size() < mob.getMobLevel()) {
                         victoryMobs = new HashMap<>();
                     } else {
-                        for (EntityLiving e : victoryMobs.get(triggerID).keySet()) {
+                        for (EntityLiving e : victoryMobs.get(mob.getTrigger()).keySet()) {
                             if (e.isDead || e.getHealth()==0) {
                                 victoryRet = true;
                                 break;
@@ -191,7 +159,8 @@ public class CalculateFeatures {
                 }
             }
         }
-        return triggerID+"@"+pass+"@"+victoryID+"@"+victoryRet+"$";
+        mob.setVictory(victoryRet);
+        return pass;
     }
 
     private static boolean infernalChecker(EntityLiving m, String s) {
@@ -250,21 +219,5 @@ public class CalculateFeatures {
 
     public static BlockPos roundedPos(EntityPlayer p) {
         return new BlockPos((Math.round(p.posX * 2) / 2.0), (Math.round(p.posY * 2) / 2.0), (Math.round(p.posZ * 2) / 2.0));
-    }
-
-    public static List<String> getTriggers(String triggers) {
-        return new ArrayList<>(Arrays.asList(stringBreaker(triggers,",")));
-    }
-
-    public static int toInt(String s) {
-        return Integer.parseInt(s);
-    }
-
-    public static BlockPos toPos(String s) {
-        return BlockPos.fromLong(Long.parseLong(s));
-    }
-
-    public static boolean toBool(String s) {
-        return Boolean.parseBoolean(s);
     }
 }

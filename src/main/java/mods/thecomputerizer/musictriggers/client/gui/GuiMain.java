@@ -1,11 +1,8 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.MusicPicker;
-import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.config.ConfigObject;
-import mods.thecomputerizer.musictriggers.util.Json;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
@@ -112,7 +109,7 @@ public class GuiMain extends GuiScreen {
             this.mc.setIngameFocus();
         }
         if(button.id==3) {
-            this.mc.displayGuiScreen(new GuiAddSongs(this, Json.allSongs, holder, null));
+            //this.mc.displayGuiScreen(new GuiAddSongs(this, Json.allSongs, holder, null));
         }
         if(button.id==4) {
             this.mc.displayGuiScreen(new GuiEditSongs(this, holder));
@@ -124,7 +121,7 @@ public class GuiMain extends GuiScreen {
             this.mc.displayGuiScreen(new GuiOther(this, holder));
         }
         if(button.id==7) {
-            if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing) this.mc.displayGuiScreen(new GuiCurPlaying(this, this.holder));
+            //if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing) this.mc.displayGuiScreen(new GuiCurPlaying(this, this.holder));
         }
     }
 
@@ -132,10 +129,10 @@ public class GuiMain extends GuiScreen {
     public void onGuiClosed() {
         EventsClient.renderDebug = true;
         if(this.reload && this.mc.player!=null) {
-            Minecraft.getMinecraft().getSoundHandler().stopSounds();
-            MusicPicker.player.sendMessage(new TextComponentString("\u00A74\u00A7oReloading Music... This may take a while!"));
-            MusicPlayer.reloading = true;
-            EventsClient.reloadCounter = 5;
+            //Minecraft.getMinecraft().getSoundHandler().stopSounds();
+            //this.mc.player.sendMessage(new TextComponentString("\u00A74\u00A7oReloading Music... This may take a while!"));
+            //MusicPlayer.reloading = true;
+            //EventsClient.reloadCounter = 5;
         }
     }
 

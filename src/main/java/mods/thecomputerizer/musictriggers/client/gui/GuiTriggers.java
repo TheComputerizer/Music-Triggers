@@ -2,7 +2,7 @@ package mods.thecomputerizer.musictriggers.client.gui;
 
 import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.config.ConfigObject;
-import mods.thecomputerizer.musictriggers.config.ConfigToml;
+import mods.thecomputerizer.musictriggers.config.ConfigMain;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 
@@ -26,8 +26,8 @@ public class GuiTriggers extends GuiScreen {
         this.songCode = songCode;
         this.holder = holder;
         this.triggers = new ArrayList<>();
-        this.triggers.addAll(Arrays.stream(ConfigToml.triggers).collect(Collectors.toList()));
-        this.triggers.addAll(Arrays.stream(ConfigToml.modtriggers).collect(Collectors.toList()));
+        this.triggers.addAll(Arrays.stream(ConfigMain.triggers).collect(Collectors.toList()));
+        this.triggers.addAll(Arrays.stream(ConfigMain.modtriggers).collect(Collectors.toList()));
     }
 
     @Override

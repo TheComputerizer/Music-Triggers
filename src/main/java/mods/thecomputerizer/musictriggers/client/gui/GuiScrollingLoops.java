@@ -50,7 +50,7 @@ public class GuiScrollingLoops extends GuiSlot {
             return false;
         }
         else {
-            return index==Integer.parseInt(curSelected.substring(curSelected.length()-1));
+            return index==MusicTriggers.randomInt(curSelected.substring(curSelected.length()-1));
         }
     }
 

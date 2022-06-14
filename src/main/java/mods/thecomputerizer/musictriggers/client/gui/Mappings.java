@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
-import mods.thecomputerizer.musictriggers.config.ConfigTitleCards;
+import mods.thecomputerizer.musictriggers.config.ConfigTransitions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -419,7 +419,7 @@ public class Mappings {
         return ret;
     }
 
-    public static void buildTitleOutputForGuiFromIndex(ConfigTitleCards.Title title, StringBuilder builder, List<Integer> parameters) {
+    public static void buildTitleOutputForGuiFromIndex(ConfigTransitions.Title title, StringBuilder builder, List<Integer> parameters) {
         builder.append("\ttitle = [ ");
         for(String t : title.getTitles()) {
             builder.append("\"").append(t).append("\" ");
@@ -435,7 +435,7 @@ public class Mappings {
         }
     }
 
-    private static void buildIndividualTitleOutputForGuiFromIndex(ConfigTitleCards.Title title, StringBuilder builder, int index) {
+    private static void buildIndividualTitleOutputForGuiFromIndex(ConfigTransitions.Title title, StringBuilder builder, int index) {
         switch (index) {
             case 0:
                 builder.append("\tplay_once = \"").append(title.getPlayonce()).append("\"\n");
@@ -451,7 +451,7 @@ public class Mappings {
         }
     }
 
-    public static void buildImageOutputForGuiFromIndex(ConfigTitleCards.Image image, StringBuilder builder, List<Integer> parameters, boolean ismoving) {
+    public static void buildImageOutputForGuiFromIndex(ConfigTransitions.Image image, StringBuilder builder, List<Integer> parameters, boolean ismoving) {
         for(int i : parameters) {
             buildIndividualStaticImageOutputForGuiFromIndex(image,builder,i);
         }
@@ -463,7 +463,7 @@ public class Mappings {
         }
     }
 
-    private static void buildIndividualStaticImageOutputForGuiFromIndex(ConfigTitleCards.Image image, StringBuilder builder, int index) {
+    private static void buildIndividualStaticImageOutputForGuiFromIndex(ConfigTransitions.Image image, StringBuilder builder, int index) {
         if(index<=9) {
             switch (index) {
                 case 0:
@@ -499,7 +499,7 @@ public class Mappings {
         }
     }
 
-    private static void buildIndividualMovingImageOutputForGuiFromIndex(ConfigTitleCards.Image image, StringBuilder builder, int index) {
+    private static void buildIndividualMovingImageOutputForGuiFromIndex(ConfigTransitions.Image image, StringBuilder builder, int index) {
         if(index>9) {
             switch (index) {
                 case 10:

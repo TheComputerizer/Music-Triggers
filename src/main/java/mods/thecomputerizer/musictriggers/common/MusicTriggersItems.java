@@ -25,17 +25,16 @@ public class MusicTriggersItems {
     public static final Item MUSIC_RECORDER = makeItemBlock(MusicTriggersBlocks.MUSIC_RECORDER, item -> item.setCreativeTab(CreativeTabs.MISC));
 
     public void init() {
-        SoundHandler.registerSounds();
         if(ConfigRegistry.registerDiscs) {
             allItemsWithTrigger = new HashMap<>();
             allItems = new ArrayList<>();
-            for (SoundEvent s : SoundHandler.allSoundEvents) {
-                Item i = (new MusicTriggersRecord(Objects.requireNonNull(s.getRegistryName()).toString().replace("musictriggers:", ""), s));
-                if (!allItems.contains(i)) {
-                    allItems.add(i);
-                    allItemsWithTrigger.put(i,SoundHandler.allSoundEventsTriggers.get(s));
-                }
-            }
+            //for (SoundEvent s : SoundHandler.allSoundEvents) {
+                //Item i = (new MusicTriggersRecord(Objects.requireNonNull(s.getRegistryName()).toString().replace("musictriggers:", ""), s));
+                //if (!allItems.contains(i)) {
+                    //allItems.add(i);
+                    //allItemsWithTrigger.put(i,SoundHandler.allSoundEventsTriggers.get(s));
+                //}
+            //}
         }
     }
 

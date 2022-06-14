@@ -2,7 +2,6 @@ package mods.thecomputerizer.musictriggers.client.gui;
 
 import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.config.ConfigObject;
-import mods.thecomputerizer.musictriggers.util.Json;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 
@@ -65,7 +64,7 @@ public class GuiLinking extends GuiScreen {
             this.mc.displayGuiScreen(this.parentScreen);
         }
         if (button.id == 2) {
-            this.mc.displayGuiScreen(new GuiAddSongs(this, Json.allSongs, this.holder, this));
+            //this.mc.displayGuiScreen(new GuiAddSongs(this, Json.allSongs, this.holder, this));
         }
     }
 

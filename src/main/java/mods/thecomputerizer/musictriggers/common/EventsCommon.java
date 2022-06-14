@@ -5,7 +5,6 @@ import mods.thecomputerizer.musictriggers.common.objects.BlankRecord;
 import mods.thecomputerizer.musictriggers.common.objects.MusicRecorder;
 import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
 import mods.thecomputerizer.musictriggers.util.CalculateFeatures;
-import mods.thecomputerizer.musictriggers.util.packets.PacketCurSong;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.effect.EntityLightningBolt;
 import net.minecraft.item.Item;
@@ -22,6 +21,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Mod.EventBusSubscriber(modid= MusicTriggers.MODID)
 public class EventsCommon {
 
+    public static HashMap<UUID, List<String>> currentSongs = new HashMap<>();
     public static HashMap<BlockPos, Integer> tickCounter = new HashMap<>();
     public static HashMap<BlockPos, ItemStack> recordHolder = new HashMap<>();
     public static HashMap<BlockPos, UUID> recordUUID = new HashMap<>();
@@ -60,12 +60,12 @@ public class EventsCommon {
                     if(recordMenu.get(recordUUID.get(blockPos))!=null) randomMenuSong = recordMenu.get(recordUUID.get(blockPos)).get(new Random().nextInt(recordMenu.get(recordUUID.get(blockPos)).size()));
                     for (Item i : MusicTriggersItems.allItems) {
                         if(recordHolder.get(blockPos).getItem() instanceof BlankRecord) {
-                            String itemName = Objects.requireNonNull(i.getRegistryName()).toString().replaceAll("musictriggers:", "");
-                            if (itemName.matches(PacketCurSong.curSong.get(recordUUID.get(blockPos)))) recordHolder.put(blockPos, i.getDefaultInstance());
+                            //String itemName = Objects.requireNonNull(i.getRegistryName()).toString().replaceAll("musictriggers:", "");
+                            //if (itemName.matches(PacketCurSong.curSong.get(recordUUID.get(blockPos)))) recordHolder.put(blockPos, i.getDefaultInstance());
 
                         } else if(recordMenu.get(recordUUID.get(blockPos))!=null && !recordMenu.get(recordUUID.get(blockPos)).isEmpty() && recordWorld.get(blockPos).getBlockState(blockPos).getValue(MusicRecorder.HAS_DISC)) {
-                            String itemName = Objects.requireNonNull(i.getRegistryName()).toString().replaceAll("musictriggers:", "");
-                            if (itemName.matches(randomMenuSong)) recordHolder.put(blockPos, i.getDefaultInstance());
+                            //String itemName = Objects.requireNonNull(i.getRegistryName()).toString().replaceAll("musictriggers:", "");
+                            //if (itemName.matches(randomMenuSong)) recordHolder.put(blockPos, i.getDefaultInstance());
 
                         }
                     }

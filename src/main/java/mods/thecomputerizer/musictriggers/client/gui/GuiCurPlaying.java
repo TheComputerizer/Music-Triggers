@@ -1,11 +1,9 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.config.ConfigObject;
-import mods.thecomputerizer.musictriggers.config.ConfigToml;
-import mods.thecomputerizer.musictriggers.util.audio.SoundManipulator;
+import mods.thecomputerizer.musictriggers.config.ConfigMain;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.gui.GuiButton;
@@ -55,6 +53,7 @@ public class GuiCurPlaying extends GuiScreen implements GuiSlider.FormatHelper, 
         if(this.selectedButton != null && state == 0 && this.selectedButton instanceof CustomSlider) {
             CustomSlider slider = (CustomSlider) this.selectedButton;
             if(slider.isMouseDown) {
+                /*
                 synchronized (SoundSystemConfig.THREAD_SYNC) {
                     if (MusicPlayer.curMusic != null && !MusicPlayer.reloading && !MusicPlayer.playing) {
                         float seconds = ((float) (mouseX - (slider.x + 4)) / (float) (slider.width - 8)) * slider.getMax();
@@ -64,6 +63,8 @@ public class GuiCurPlaying extends GuiScreen implements GuiSlider.FormatHelper, 
                         SoundManipulator.setMillisecondTimeForSource(this.mc.getSoundHandler().sndManager.sndSystem, this.mc.getSoundHandler().sndManager.invPlayingSounds.get(MusicPlayer.curMusic), seconds * 1000f);
                     }
                 }
+
+                 */
             }
         }
         super.mouseReleased(mouseX, mouseY, state);
@@ -92,18 +93,21 @@ public class GuiCurPlaying extends GuiScreen implements GuiSlider.FormatHelper, 
     }
 
     private void addSongSlider() {
+        /*
         float max = 1f;
         if(MusicPlayer.curMusic!=null) max = this.getMaxSongSeconds(MusicPlayer.curMusic);
-        CustomSlider slider = new CustomSlider(this,2,this.width/2-80,this.height/2-10, ConfigToml.songholder.get(MusicPlayer.curTrack),0f, max, getSongPosInSeconds(MusicPlayer.curMusic),this);
+        CustomSlider slider = new CustomSlider(this,2,this.width/2-80,this.height/2-10, ConfigMain.songholder.get(MusicPlayer.curTrack),0f, max, getSongPosInSeconds(MusicPlayer.curMusic),this);
         slider.setWidth(160);
         this.buttonList.add(slider);
+
+         */
     }
 
     @Override
     public void actionPerformed(GuiButton button) {
         if (button.id == 0) this.mc.displayGuiScreen(this.parentScreen);
         if(button.id==1) {
-            if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing) this.mc.getSoundHandler().stopSound(MusicPlayer.curMusic);
+            //if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing) this.mc.getSoundHandler().stopSound(MusicPlayer.curMusic);
         }
     }
 
@@ -147,7 +151,7 @@ public class GuiCurPlaying extends GuiScreen implements GuiSlider.FormatHelper, 
     public static float getSongPosInSeconds(ISound sound) {
         float seconds = 0;
         try {
-            if(sound!=null) seconds = (float)Math.floor((double)SoundManipulator.getMillisecondTimeForSource(Minecraft.getMinecraft().getSoundHandler().sndManager.sndSystem, Minecraft.getMinecraft().getSoundHandler().sndManager.invPlayingSounds.get(sound))/1000f);
+            //if(sound!=null) seconds = (float)Math.floor((double)SoundManipulator.getMillisecondTimeForSource(Minecraft.getMinecraft().getSoundHandler().sndManager.sndSystem, Minecraft.getMinecraft().getSoundHandler().sndManager.invPlayingSounds.get(sound))/1000f);
         } catch (Exception e) {
             MusicTriggers.logger.error("Could not get current position of song");
             e.printStackTrace();

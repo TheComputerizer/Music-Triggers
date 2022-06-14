@@ -1,4 +1,4 @@
 item.musictriggers.blank_record.name=Blank Record
 tile.musictriggers.music_recorder.name=Music Recorder
-key.reload_musictriggers=Reload Config
+key.musictriggers_gui=Open In-Game Config GUI
 key.categories.musictriggers=Music Triggers
