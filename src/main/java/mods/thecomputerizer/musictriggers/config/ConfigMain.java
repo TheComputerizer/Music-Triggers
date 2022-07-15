@@ -29,11 +29,11 @@ public class ConfigMain {
             {"menu","generic","difficulty","time","light","height","raining","storming","snowing","lowhp","dead",
                     "creative","spectator","riding","pet","underwater","elytra","fishing","drowning","home",
                     "dimension","biome", "structure","mob","victory","gui","effect","zones","pvp","advancement",
-                    "statistic"};
+                    "statistic","command"};
     public static final String[] modtriggers = new String[]
             {"gamestage","bloodmoon","harvestmoon","fallingstars","rainintensity","tornado","hurricane","sandstorm","season"};
     public static final String[] allmodtriggers = new String[]
-            {"raid", "gamestage","bloodmoon","harvestmoon","fallingstars","rainintensity","tornado","hurricane","sandstorm","acidrain","blizzard","cloudy","lightrain","season"};
+            {"raid", "gamestage","bloodmoon","harvestmoon","fallingstars","bluemoon","rainintensity","tornado","hurricane","sandstorm","acidrain","blizzard","cloudy","lightrain","season"};
 
     public ConfigMain(File file, String channel) {
         if(!file.getParentFile().exists()) file.getParentFile().mkdirs();

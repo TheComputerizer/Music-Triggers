@@ -757,7 +757,7 @@ public class Channel {
                 if (song.matches(songNum)) {
                     curLinkNum = song;
                     curTrackHolder = songNameLinker.get(song);
-                    playTrack(songNameLinker.get(song), musicLinker.get(song),0);
+                    playTrack(songNameLinker.get(song), musicLinker.get(song), getCurPlaying().getPosition());
                 }
             }
         }

@@ -5,6 +5,7 @@ import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.audio.Channel;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.GuiTriggerInfo;
+import mods.thecomputerizer.musictriggers.common.TriggerCommand;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.packets.PacketBossInfo;
@@ -26,6 +27,7 @@ import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
+import net.minecraftforge.event.CommandEvent;
 import net.minecraftforge.event.entity.player.AdvancementEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
@@ -37,6 +39,7 @@ import net.minecraftforge.fml.relauncher.Side;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Mod.EventBusSubscriber(modid = MusicTriggers.MODID, value = Side.CLIENT)
@@ -67,6 +70,7 @@ public class EventsClient {
     public static int y2 = 0;
     public static int z2 = 0;
     private static int bossBarCounter = 0;
+    public static final HashMap<String, Boolean> commandMap = new HashMap<>();
 
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
@@ -103,6 +107,14 @@ public class EventsClient {
     public static void onAdvancement(AdvancementEvent e) {
         lastAdvancement = e.getAdvancement().getId().toString();
         advancement = true;
+    }
+
+    @SubscribeEvent
+    public static void onCommand(CommandEvent e) {
+        if(e.getCommand() instanceof TriggerCommand) {
+            TriggerCommand command = (TriggerCommand) e.getCommand();
+            if(!command.getIdentifier().matches("_")) commandMap.put(command.getIdentifier(),true);
+        }
     }
 
     @SubscribeEvent
