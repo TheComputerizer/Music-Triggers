@@ -22,13 +22,10 @@ public class PacketHandler {
             .simpleChannel ();
 
     public static void register() {
-        HANDLER.registerMessage(disc++, SendTriggerData.class, SendTriggerData::encode, SendTriggerData::new, SendTriggerData::handle);
-        HANDLER.registerMessage(disc++, BossInfo.class, BossInfo::encode, BossInfo::new, BossInfo::handle);
-        HANDLER.registerMessage(disc++, CurSong.class, CurSong::encode, CurSong::new, CurSong::handle);
-        HANDLER.registerMessage(disc++, SendTriggerData.class, SendTriggerData::encode, SendTriggerData::new, SendTriggerData::handle);
-        HANDLER.registerMessage(disc++, ReturnTriggerData.class, ReturnTriggerData::encode, ReturnTriggerData::new, ReturnTriggerData::handle);
-        HANDLER.registerMessage(disc++, ExecuteCommand.class, ExecuteCommand::encode, ExecuteCommand::new, ExecuteCommand::handle);
-        HANDLER.registerMessage(disc++, MenuSongs.class, MenuSongs::encode, MenuSongs::new, MenuSongs::handle);
+        HANDLER.registerMessage(disc++, PacketBossInfo.class, PacketBossInfo::encode, PacketBossInfo::new, PacketBossInfo::handle);
+        HANDLER.registerMessage(disc++, PacketQueryServerInfo.class, PacketQueryServerInfo::encode, PacketQueryServerInfo::new, PacketQueryServerInfo::handle);
+        HANDLER.registerMessage(disc++, PacketSyncServerInfo.class, PacketSyncServerInfo::encode, PacketSyncServerInfo::new, PacketSyncServerInfo::handle);
+        HANDLER.registerMessage(disc++, PacketReceiveCommand.class, PacketReceiveCommand::encode, PacketReceiveCommand::new, PacketReceiveCommand::handle);
     }
 
     public static void sendTo(Object message, ServerPlayerEntity player) {

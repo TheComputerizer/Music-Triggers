@@ -59,7 +59,7 @@ public class GuiTransitionInfo extends Screen {
     public boolean keyPressed(int keyCode, int i, int j) {
         if(keyCode==259) {
             if(!this.holder.getTransitionInfoAtIndex(this.title, this.index, this.scrollingSongs.index).matches("")) {
-                this.holder.editTransitionInfoAtIndex(this.title, this.index, this.scrollingSongs.index, StringUtils.chop(this.holder.getTransitionInfoAtIndex(this.title, this.index, this.scrollingSongs.index)), getChange('~'));
+                //this.holder.editTransitionInfoAtIndex(this.title, this.index, this.scrollingSongs.index, StringUtils.chop(this.holder.getTransitionInfoAtIndex(this.title, this.index, this.scrollingSongs.index)), getChange('~'));
                 return true;
             } else if(this.holder.getTransitionInfoAtIndex(this.title, this.index, this.scrollingSongs.index).matches("") && this.holder.checkIfTransitionIndexIsArray(this.title, this.index, this.scrollingSongs.index)) {
                 this.holder.removeTransitionTrigger(this.title, this.index, this.scrollingSongs.index);
@@ -75,7 +75,7 @@ public class GuiTransitionInfo extends Screen {
     @Override
     public boolean charTyped(char typedChar, int keyCode) {
         if(this.scrollingSongs.getSelected()!=null) {
-            this.holder.editTransitionInfoAtIndex(this.title, this.index, this.scrollingSongs.index, this.holder.getTransitionInfoAtIndex(this.title, this.index, this.scrollingSongs.index) + typedChar, getChange(typedChar));
+            //this.holder.editTransitionInfoAtIndex(this.title, this.index, this.scrollingSongs.index, this.holder.getTransitionInfoAtIndex(this.title, this.index, this.scrollingSongs.index) + typedChar, getChange(typedChar));
             return true;
         }
         return super.charTyped(typedChar, keyCode);

@@ -3,11 +3,8 @@ package mods.thecomputerizer.musictriggers.client.gui;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.MusicPicker;
-import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.config.ConfigObject;
-import mods.thecomputerizer.musictriggers.util.Json;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -94,7 +91,7 @@ public class GuiMain extends Screen {
         this.addButton(new Button(this.width / 2 - 175, this.height / 2 - 10, 150, 20, new TranslationTextComponent("screen.musictriggers.button.add_songs"),
                 (button) -> {
                     assert this.minecraft != null;
-                    this.minecraft.setScreen(new GuiAddSongs(this, Json.allSongs, holder, null));
+                    //this.minecraft.setScreen(new GuiAddSongs(this, Json.allSongs, holder, null));
                 }));
     }
 
@@ -125,10 +122,10 @@ public class GuiMain extends Screen {
     private void addCurrentSongButton() {
         this.addButton(new Button(this.width - 80, 8, 64, 16, new TranslationTextComponent("screen.musictriggers.button.playback"),
                 (button) -> {
-                    if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing) {
-                        assert this.minecraft != null;
-                        this.minecraft.setScreen(new GuiCurPlaying(this,this.holder));
-                    }
+                    //if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing) {
+                        //assert this.minecraft != null;
+                        //this.minecraft.setScreen(new GuiCurPlaying(this,this.holder));
+                    //}
                 }));
     }
 
@@ -139,8 +136,8 @@ public class GuiMain extends Screen {
             assert this.minecraft != null;
             if (this.minecraft.player!=null) {
                 this.minecraft.getSoundManager().stop();
-                MusicPicker.player.sendMessage(new TranslationTextComponent("musictriggers.reloading").withStyle(TextFormatting.RED).withStyle(TextFormatting.ITALIC), MusicPicker.player.getUUID());
-                MusicPlayer.reloading = true;
+                this.minecraft.player.sendMessage(new TranslationTextComponent("musictriggers.reloading").withStyle(TextFormatting.RED).withStyle(TextFormatting.ITALIC), this.minecraft.player.getUUID());
+                //MusicPlayer.reloading = true;
                 EventsClient.reloadCounter = 5;
             }
         }

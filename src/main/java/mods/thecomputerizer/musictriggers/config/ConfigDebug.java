@@ -5,7 +5,6 @@ import com.moandjiezana.toml.Toml;
 import java.io.File;
 import java.io.FileWriter;
 
-
 @SuppressWarnings("SuspiciousToArrayCall")
 public class ConfigDebug {
 
@@ -31,6 +30,15 @@ public class ConfigDebug {
     }
 
     public static void parse(File f) {
+        if(!f.exists()) {
+            try {
+                f.createNewFile();
+                create(f);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         Toml toml = new Toml().read(f);
         ShowDebugInfo = Boolean.parseBoolean(toml.getString("showdebuginfo"));
         ShowJustCurSong = Boolean.parseBoolean(toml.getString("showjustcursong"));

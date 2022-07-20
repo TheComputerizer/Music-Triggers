@@ -22,6 +22,15 @@ public class ConfigRegistry {
     }
 
     public static void parse(File f) {
+        if(!f.exists()) {
+            try {
+                f.createNewFile();
+                create(f);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         Toml toml = new Toml().read(f);
         registerDiscs = Boolean.parseBoolean(toml.getString("registerdiscs"));
         clientSideOnly = Boolean.parseBoolean(toml.getString("clientSideOnly"));

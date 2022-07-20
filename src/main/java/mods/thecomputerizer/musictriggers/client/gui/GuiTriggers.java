@@ -5,7 +5,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.config.ConfigObject;
-import mods.thecomputerizer.musictriggers.config.ConfigToml;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -17,9 +16,7 @@ import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class GuiTriggers extends Screen {
 
@@ -36,8 +33,8 @@ public class GuiTriggers extends Screen {
         this.songCode = songCode;
         this.holder = holder;
         this.triggers = new ArrayList<>();
-        this.triggers.addAll(Arrays.stream(ConfigToml.triggers).collect(Collectors.toList()));
-        this.triggers.addAll(Arrays.stream(ConfigToml.modtriggers).collect(Collectors.toList()));
+        //this.triggers.addAll(Arrays.stream(ConfigToml.triggers).collect(Collectors.toList()));
+        //this.triggers.addAll(Arrays.stream(ConfigToml.modtriggers).collect(Collectors.toList()));
         this.background = new ResourceLocation(MusicTriggers.MODID,"textures/block/recorder_side_active.png");
     }
 

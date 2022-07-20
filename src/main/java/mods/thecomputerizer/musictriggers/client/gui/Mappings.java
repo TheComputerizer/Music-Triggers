@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
-import mods.thecomputerizer.musictriggers.config.ConfigTitleCards;
+import mods.thecomputerizer.musictriggers.config.ConfigTransitions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,7 +18,7 @@ public class Mappings {
             "minecraft", "_", "16", "false", "100", "100", "100",
             "false", "0", "minecraft", "true", "true", "0", "0", "nope",
             "nope", "-111", "false","_", "true", "-1", "-111", "true",
-            "false", "false", "false", "0", "minecraft"};
+            "false", "false", "false", "0"};
     public static Map<Integer, String> defparameters = new HashMap<>();
 
     public static void init() {
@@ -138,10 +138,10 @@ public class Mappings {
                 case "generic":
                     ret.add(1);
                     ret.add(4);
+                    ret.add(35);
                     return ret;
                 case "difficulty":
                 case "rainintensity":
-                case "raid":
                 case "season":
                     ret.add(0);
                     ret.add(1);
@@ -207,11 +207,7 @@ public class Mappings {
                 case "pet":
                 case "bloodmoon":
                 case "harvestmoon":
-                case "bluemoon":
-                case "acidrain":
-                case "blizzard":
-                case "cloudy":
-                case "lightrain":
+                case "fallingstars":
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -240,7 +236,6 @@ public class Mappings {
                 case "structure":
                 case "gui":
                 case "effect":
-                case "moon":
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -268,6 +263,8 @@ public class Mappings {
                     ret.add(35);
                     return ret;
                 case "home":
+                case "hurricane":
+                case "sandstorm":
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -416,12 +413,13 @@ public class Mappings {
                     ret.add(33);
                     ret.add(34);
                     ret.add(35);
+                    return ret;
             }
         }
         return ret;
     }
 
-    public static void buildTitleOutputForGuiFromIndex(ConfigTitleCards.Title title, StringBuilder builder, List<Integer> parameters) {
+    public static void buildTitleOutputForGuiFromIndex(ConfigTransitions.Title title, StringBuilder builder, List<Integer> parameters) {
         builder.append("\ttitle = [ ");
         for(String t : title.getTitles()) {
             builder.append("\"").append(t).append("\" ");
@@ -437,7 +435,7 @@ public class Mappings {
         }
     }
 
-    private static void buildIndividualTitleOutputForGuiFromIndex(ConfigTitleCards.Title title, StringBuilder builder, int index) {
+    private static void buildIndividualTitleOutputForGuiFromIndex(ConfigTransitions.Title title, StringBuilder builder, int index) {
         switch (index) {
             case 0:
                 builder.append("\tplay_once = \"").append(title.getPlayonce()).append("\"\n");
@@ -453,7 +451,7 @@ public class Mappings {
         }
     }
 
-    public static void buildImageOutputForGuiFromIndex(ConfigTitleCards.Image image, StringBuilder builder, List<Integer> parameters, boolean ismoving) {
+    public static void buildImageOutputForGuiFromIndex(ConfigTransitions.Image image, StringBuilder builder, List<Integer> parameters, boolean ismoving) {
         for(int i : parameters) {
             buildIndividualStaticImageOutputForGuiFromIndex(image,builder,i);
         }
@@ -465,7 +463,7 @@ public class Mappings {
         }
     }
 
-    private static void buildIndividualStaticImageOutputForGuiFromIndex(ConfigTitleCards.Image image, StringBuilder builder, int index) {
+    private static void buildIndividualStaticImageOutputForGuiFromIndex(ConfigTransitions.Image image, StringBuilder builder, int index) {
         if(index<=9) {
             switch (index) {
                 case 0:
@@ -501,7 +499,7 @@ public class Mappings {
         }
     }
 
-    private static void buildIndividualMovingImageOutputForGuiFromIndex(ConfigTitleCards.Image image, StringBuilder builder, int index) {
+    private static void buildIndividualMovingImageOutputForGuiFromIndex(ConfigTransitions.Image image, StringBuilder builder, int index) {
         if(index>9) {
             switch (index) {
                 case 10:

@@ -5,7 +5,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.config.ConfigObject;
-import mods.thecomputerizer.musictriggers.util.Json;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -73,7 +72,7 @@ public class GuiLinking extends Screen {
         this.addButton(new Button(this.width/2-64, this.height-24, 128, 16, new TranslationTextComponent("screen.musictriggers.button.add_song"),
                 (button) -> {
                     assert this.minecraft != null;
-                    this.minecraft.setScreen(new GuiAddSongs(this, Json.allSongs, this.holder, this));
+                    //this.minecraft.setScreen(new GuiAddSongs(this, Json.allSongs, this.holder, this));
                 }));
     }
 

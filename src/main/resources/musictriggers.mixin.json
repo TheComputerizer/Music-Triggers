@@ -7,8 +7,7 @@
   "client": [
     "MixinBlueSkiesMusic",
     "MixinMusicTicker",
-    "MixinSoundEngine",
-    "MixinSoundSource"
+    "MixinSoundEngine"
   ],
   "injectors": {
     "defaultRequire": 1

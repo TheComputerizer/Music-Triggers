@@ -23,6 +23,7 @@ public class ModSounds {
     public static HashMap<String,ISound> playableSounds = new HashMap<>();
 
     public void init(){
+        /*
         List<SoundEvent> sounds = SoundHandler.allSoundEvents;
         for(SoundEvent s: sounds) {
             String songName = Objects.requireNonNull(s.getRegistryName()).toString().replaceAll("musictriggers:","");
@@ -35,9 +36,12 @@ public class ModSounds {
                 playableSounds.put("music." + songName, i);
             }
         }
+
+         */
     }
     public static void reload() {
         playableSounds = new HashMap<>();
+        /*
         List<SoundEvent> sounds = SoundHandler.allSoundEvents;
         for(SoundEvent s: sounds) {
             String songName = Objects.requireNonNull(s.getRegistryName()).toString().replaceAll("musictriggers:", "");
@@ -46,5 +50,7 @@ public class ModSounds {
                 playableSounds.put("music." + songName, i);
             }
         }
+
+         */
     }
 }
