@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
-import mods.thecomputerizer.musictriggers.config.ConfigTitleCards;
+import mods.thecomputerizer.musictriggers.config.ConfigTransitions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,7 +18,7 @@ public class Mappings {
             "minecraft", "_", "16", "false", "100", "100", "100",
             "false", "0", "minecraft", "true", "true", "0", "0", "nope",
             "nope", "-111", "false","_", "true", "-1", "-111", "true",
-            "false", "false", "false", "0", "minecraft"};
+            "false", "false", "false", "0"};
     public static Map<Integer, String> defparameters = new HashMap<>();
 
     public static void init() {
@@ -135,14 +135,14 @@ public class Mappings {
         List<Integer> ret = new ArrayList<>();
         if (trigger != null) {
             switch (trigger) {
-                case "generic" -> {
+                case "generic":
                     ret.add(1);
                     ret.add(4);
-                    ret.add(34);
                     ret.add(35);
                     return ret;
-                }
-                case "difficulty", "raid", "season"-> {
+                case "difficulty":
+                case "rainintensity":
+                case "season":
                     ret.add(0);
                     ret.add(1);
                     ret.add(2);
@@ -155,8 +155,7 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                }
-                case "time" -> {
+                case "time":
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -171,8 +170,7 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                }
-                case "light" -> {
+                case "light":
                     ret.add(0);
                     ret.add(1);
                     ret.add(2);
@@ -186,8 +184,7 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                }
-                case "height" -> {
+                case "height":
                     ret.add(0);
                     ret.add(1);
                     ret.add(2);
@@ -201,8 +198,16 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                }
-                case "raining", "storming", "snowing", "dead", "creative", "spectator", "pet", "bloodmoon", "harvestmoon", "bluemoon" -> {
+                case "raining":
+                case "storming":
+                case "snowing":
+                case "dead":
+                case "creative":
+                case "spectator":
+                case "pet":
+                case "bloodmoon":
+                case "harvestmoon":
+                case "fallingstars":
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -213,8 +218,8 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                }
-                case "lowhp", "drowning" -> {
+                case "drowning":
+                case "lowhp":
                     ret.add(0);
                     ret.add(1);
                     ret.add(2);
@@ -226,8 +231,11 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                }
-                case "riding", "dimension", "structure", "gui", "effect", "moon" -> {
+                case "riding":
+                case "dimension":
+                case "structure":
+                case "gui":
+                case "effect":
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -240,8 +248,9 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                }
-                case "elytra", "fishing", "underwater" -> {
+                case "elytra":
+                case "fishing":
+                case "underwater":
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -253,8 +262,9 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                }
-                case "home" -> {
+                case "home":
+                case "hurricane":
+                case "sandstorm":
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -266,8 +276,7 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                }
-                case "biome" -> {
+                case "biome":
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -286,8 +295,7 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                }
-                case "mob" -> {
+                case "mob":
                     ret.add(0);
                     ret.add(1);
                     ret.add(2);
@@ -311,8 +319,7 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                }
-                case "victory" -> {
+                case "victory":
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -325,8 +332,7 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                }
-                case "zones" -> {
+                case "zones":
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -339,8 +345,7 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                }
-                case "pvp" -> {
+                case "pvp":
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -354,8 +359,7 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                }
-                case "advancement" -> {
+                case "advancement":
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -368,8 +372,35 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                }
-                case "statistic" -> {
+                case "gamestage":
+                    ret.add(0);
+                    ret.add(1);
+                    ret.add(3);
+                    ret.add(4);
+                    ret.add(6);
+                    ret.add(9);
+                    ret.add(10);
+                    ret.add(19);
+                    ret.add(32);
+                    ret.add(33);
+                    ret.add(34);
+                    ret.add(35);
+                    return ret;
+                case "tornado":
+                    ret.add(0);
+                    ret.add(1);
+                    ret.add(2);
+                    ret.add(3);
+                    ret.add(4);
+                    ret.add(6);
+                    ret.add(10);
+                    ret.add(11);
+                    ret.add(32);
+                    ret.add(33);
+                    ret.add(34);
+                    ret.add(35);
+                    return ret;
+                case "statistic":
                     ret.add(0);
                     ret.add(1);
                     ret.add(2);
@@ -383,13 +414,12 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                }
             }
         }
         return ret;
     }
 
-    public static void buildTitleOutputForGuiFromIndex(ConfigTitleCards.Title title, StringBuilder builder, List<Integer> parameters) {
+    public static void buildTitleOutputForGuiFromIndex(ConfigTransitions.Title title, StringBuilder builder, List<Integer> parameters) {
         builder.append("\ttitle = [ ");
         for(String t : title.getTitles()) {
             builder.append("\"").append(t).append("\" ");
@@ -405,16 +435,23 @@ public class Mappings {
         }
     }
 
-    private static void buildIndividualTitleOutputForGuiFromIndex(ConfigTitleCards.Title title, StringBuilder builder, int index) {
+    private static void buildIndividualTitleOutputForGuiFromIndex(ConfigTransitions.Title title, StringBuilder builder, int index) {
         switch (index) {
-            case 0 -> builder.append("\tplay_once = \"").append(title.getPlayonce()).append("\"\n");
-            case 1 -> builder.append("\ttitle_color = \"").append(title.getTitlecolor()).append("\"\n");
-            case 2 -> builder.append("\tsubtitle_color = \"").append(title.getSubtitlecolor()).append("\"\n");
-            case 3 -> builder.append("\tvague = \"").append(title.getVague()).append("\"\n");
+            case 0:
+                builder.append("\tplay_once = \"").append(title.getPlayonce()).append("\"\n");
+                return;
+            case 1:
+                builder.append("\ttitle_color = \"").append(title.getTitlecolor()).append("\"\n");
+                return;
+            case 2:
+                builder.append("\tsubtitle_color = \"").append(title.getSubtitlecolor()).append("\"\n");
+                return;
+            case 3:
+                builder.append("\tvague = \"").append(title.getVague()).append("\"\n");
         }
     }
 
-    public static void buildImageOutputForGuiFromIndex(ConfigTitleCards.Image image, StringBuilder builder, List<Integer> parameters, boolean ismoving) {
+    public static void buildImageOutputForGuiFromIndex(ConfigTransitions.Image image, StringBuilder builder, List<Integer> parameters, boolean ismoving) {
         for(int i : parameters) {
             buildIndividualStaticImageOutputForGuiFromIndex(image,builder,i);
         }
@@ -426,29 +463,53 @@ public class Mappings {
         }
     }
 
-    private static void buildIndividualStaticImageOutputForGuiFromIndex(ConfigTitleCards.Image image, StringBuilder builder, int index) {
+    private static void buildIndividualStaticImageOutputForGuiFromIndex(ConfigTransitions.Image image, StringBuilder builder, int index) {
         if(index<=9) {
             switch (index) {
-                case 0 -> builder.append("\tname = \"").append(image.getName()).append("\"\n");
-                case 1 -> builder.append("\ttime = \"").append(image.getTime()).append("\"\n");
-                case 2 -> builder.append("\tvertical = \"").append(image.getVertical()).append("\"\n");
-                case 3 -> builder.append("\thorizontal = \"").append(image.getHorizontal()).append("\"\n");
-                case 4 -> builder.append("\tscale_x = \"").append(image.getScaleX()).append("\"\n");
-                case 5 -> builder.append("\tscale_y = \"").append(image.getScaleY()).append("\"\n");
-                case 6 -> builder.append("\tplay_once = \"").append(image.getPlayonce()).append("\"\n");
-                case 7 -> builder.append("\tfade_in = \"").append(image.getFadeIn()).append("\"\n");
-                case 8 -> builder.append("\tfade_out = \"").append(image.getFadeOut()).append("\"\n");
-                case 9 -> builder.append("\tvague = \"").append(image.getVague()).append("\"\n");
+                case 0:
+                    builder.append("\tname = \"").append(image.getName()).append("\"\n");
+                    return;
+                case 1:
+                    builder.append("\ttime = \"").append(image.getTime()).append("\"\n");
+                    return;
+                case 2:
+                    builder.append("\tvertical = \"").append(image.getVertical()).append("\"\n");
+                    return;
+                case 3:
+                    builder.append("\thorizontal = \"").append(image.getHorizontal()).append("\"\n");
+                    return;
+                case 4:
+                    builder.append("\tscale_x = \"").append(image.getScaleX()).append("\"\n");
+                    return;
+                case 5:
+                    builder.append("\tscale_y = \"").append(image.getScaleY()).append("\"\n");
+                    return;
+                case 6:
+                    builder.append("\tplay_once = \"").append(image.getPlayonce()).append("\"\n");
+                    return;
+                case 7:
+                    builder.append("\tfade_in = \"").append(image.getFadeIn()).append("\"\n");
+                    return;
+                case 8:
+                    builder.append("\tfade_out = \"").append(image.getFadeOut()).append("\"\n");
+                    return;
+                case 9:
+                    builder.append("\tvague = \"").append(image.getVague()).append("\"\n");
             }
         }
     }
 
-    private static void buildIndividualMovingImageOutputForGuiFromIndex(ConfigTitleCards.Image image, StringBuilder builder, int index) {
+    private static void buildIndividualMovingImageOutputForGuiFromIndex(ConfigTransitions.Image image, StringBuilder builder, int index) {
         if(index>9) {
             switch (index) {
-                case 10 -> builder.append("\t\tdelay = \"").append(image.getDelay()).append("\"\n");
-                case 11 -> builder.append("\t\tsplit = \"").append(image.getSplit()).append("\"\n");
-                case 12 -> builder.append("\t\tframes_skipped = \"").append(image.getSkip()).append("\"\n");
+                case 10:
+                    builder.append("\t\tdelay = \"").append(image.getDelay()).append("\"\n");
+                    return;
+                case 11:
+                    builder.append("\t\tsplit = \"").append(image.getSplit()).append("\"\n");
+                    return;
+                case 12:
+                    builder.append("\t\tframes_skipped = \"").append(image.getSkip()).append("\"\n");
             }
         }
     }

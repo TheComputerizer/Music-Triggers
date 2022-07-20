@@ -11,12 +11,8 @@ public class ConfigRegistry {
 
     public static void create(File f) {
         try {
-            String sb = """
-                    # Music Discs
-                    registerdiscs = "true"
-                    # Client Side Only (Some triggers will not be able to trigger)
-                    clientsideonly = "false"
-                    """;
+            String sb = "# Music Discs\n" + "registerdiscs = \"true\"\n" +
+                    "# Client Side Only (Some triggers will not be able to trigger)\n" + "clientsideonly = \"false\"\n";
             FileWriter writer = new FileWriter(f);
             writer.write(sb);
             writer.close();
@@ -26,6 +22,15 @@ public class ConfigRegistry {
     }
 
     public static void parse(File f) {
+        if(!f.exists()) {
+            try {
+                f.createNewFile();
+                create(f);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         Toml toml = new Toml().read(f);
         registerDiscs = Boolean.parseBoolean(toml.getString("registerdiscs"));
         clientSideOnly = Boolean.parseBoolean(toml.getString("clientSideOnly"));

@@ -1,17 +1,14 @@
 package mods.thecomputerizer.musictriggers.client;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
-import com.mojang.blaze3d.systems.RenderSystem;
-import mods.thecomputerizer.musictriggers.client.gui.GuiMain;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.client.audio.Channel;
+import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.GuiTriggerInfo;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
-import mods.thecomputerizer.musictriggers.config.ConfigObject;
-import mods.thecomputerizer.musictriggers.config.ConfigTitleCards;
-import mods.thecomputerizer.musictriggers.util.CustomTick;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
-import mods.thecomputerizer.musictriggers.util.packets.BossInfo;
+import mods.thecomputerizer.musictriggers.util.packets.PacketBossInfo;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.core.BlockPos;
@@ -22,35 +19,34 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderLevelLastEvent;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.player.AdvancementEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.common.Mod;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 
+@Mod.EventBusSubscriber(modid = MusicTriggers.MODID, value = Dist.CLIENT)
 public class EventsClient {
-
     public static ResourceLocation IMAGE_CARD = null;
     public static int curImageIndex;
     public static boolean isWorldRendered;
     public static float fadeCount = 1000;
     public static float startDelayCount = 0;
     public static Boolean activated = false;
-    public static int timer = 0;
+    public static long timer=0;
     public static int GuiCounter = 0;
     public static int reloadCounter = 0;
     public static boolean ismoving;
@@ -70,31 +66,33 @@ public class EventsClient {
     public static int y2 = 0;
     public static int z2 = 0;
     private static int bossBarCounter = 0;
+    public static final HashMap<String, Boolean> commandMap = new HashMap<>();
 
-    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
-        if (e.getSound()!=null) {
-            for (String s : ConfigDebug.blockedmods) {
-                if (e.getSound().getLocation().getNamespace().contains(s) && e.getSound().getSource() == SoundSource.MUSIC && !(MusicPlayer.curMusic == null && ConfigDebug.SilenceIsBad))
-                        e.setSound(new SimpleSoundInstance(e.getSound().getLocation(), SoundSource.MUSIC, Float.MIN_VALUE, 1F, false, 0, SoundInstance.Attenuation.LINEAR, 0,0,0, false));
+        SimpleSoundInstance silenced = new SimpleSoundInstance(e.getSound().getLocation(), SoundSource.MUSIC, Float.MIN_VALUE, 1F, false, 0, SoundInstance.Attenuation.LINEAR, 0,0,0, false);
+        for(String s : ConfigDebug.blockedmods) {
+            if(e.getSound().getLocation().toString().contains(s) && e.getSound().getSource()==SoundSource.MUSIC) {
+                if(!(!ChannelManager.canAnyChannelOverrideMusic() && ConfigDebug.SilenceIsBad)) e.setSound(silenced);
             }
         }
     }
 
+    /*
     @SubscribeEvent
     public static void onDamage(LivingDamageEvent e) {
-        if(e.getEntityLiving() instanceof Player && e.getSource().getEntity() instanceof Player) {
+        if(e.getEntityLiving() instanceof EntityPlayer && e.getSource().getTrueSource() instanceof EntityPlayer) {
             if (e.getEntityLiving() == MusicPicker.player) {
-                PVPTracker = (Player) e.getSource().getEntity();
+                PVPTracker = (EntityPlayer)e.getSource().getTrueSource();
                 MusicPicker.setPVP = true;
             }
-            else if(e.getSource().getEntity() == MusicPicker.player) {
-                PVPTracker = (Player)e.getEntityLiving();
+            else if(e.getSource().getTrueSource() == MusicPicker.player) {
+                PVPTracker = (EntityPlayer)e.getEntityLiving();
                 MusicPicker.setPVP = true;
             }
         }
     }
+     */
 
     @SubscribeEvent
     public static void onAdvancement(AdvancementEvent e) {
@@ -102,24 +100,14 @@ public class EventsClient {
         advancement = true;
     }
 
-    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void worldRender(RenderLevelLastEvent e) {
-        isWorldRendered = true;
+        isWorldRendered=true;
     }
 
-    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void clientDisconnected(PlayerEvent.PlayerLoggedOutEvent e) {
-        MusicPicker.mc.getSoundManager().stop();
-        MusicPlayer.fadingOut = false;
-        MusicPlayer.fadingIn = false;
-        MusicPlayer.linkedFadingIn = new HashMap<>();
-        MusicPlayer.linkedFadingOut = new HashMap<>();
-        MusicPlayer.curMusic = null;
-        MusicPlayer.fadeOutList = null;
-        isWorldRendered = false;
-        MusicPicker.player = null;
+        isWorldRendered=false;
     }
 
     @SubscribeEvent
@@ -127,26 +115,20 @@ public class EventsClient {
         if(e.getType()==RenderGameOverlayEvent.ElementType.ALL && !renderDebug) e.setCanceled(true);
     }
 
+    /*
     @SubscribeEvent
     public static void customTick(CustomTick ev) {
-        if(MusicPlayer.curMusic!=null
-                && Minecraft.getInstance().getSoundManager().soundEngine.instanceToChannel.get(MusicPlayer.curMusic)!=null
-                && Minecraft.getInstance().getSoundManager().soundEngine.instanceToChannel.get(MusicPlayer.curMusic).channel!=null
-                && Objects.requireNonNull(Minecraft.getInstance().getSoundManager().soundEngine.instanceToChannel.get(MusicPlayer.curMusic).channel).getState()!=0x1013)
-            MusicPlayer.curMusicTimer+=20;
-        if(ConfigTitleCards.imagecards.get(curImageIndex)!=null) {
-            if (timer > ConfigTitleCards.imagecards.get(curImageIndex).getTime()) {
+        if(ConfigTransitions.imagecards.get(curImageIndex)!=null) {
+            if (timer > ConfigTransitions.imagecards.get(curImageIndex).getTime()) {
                 activated = false;
                 timer = 0;
                 ismoving = false;
                 movingcounter = 0;
             }
             if (ismoving) {
-                if (timer % ConfigTitleCards.imagecards.get(curImageIndex).getDelay() == 0) {
+                if (timer % ConfigTransitions.imagecards.get(curImageIndex).getDelay() == 0) {
                     movingcounter++;
-                    if (movingcounter >= pngs.size()) {
-                        movingcounter = 0;
-                    }
+                    if (movingcounter >= pngs.size()) movingcounter = 0;
                 }
                 IMAGE_CARD = pngs.get(movingcounter);
             }
@@ -155,15 +137,13 @@ public class EventsClient {
                 startDelayCount++;
                 if (startDelayCount > 0) {
                     if (fadeCount > 1) {
-                        fadeCount -= ConfigTitleCards.imagecards.get(curImageIndex).getFadeIn();
-                        if (fadeCount < 1) {
-                            fadeCount = 1;
-                        }
+                        fadeCount -= ConfigTransitions.imagecards.get(curImageIndex).getFadeIn();
+                        if (fadeCount < 1) fadeCount = 1;
                     }
                 }
             } else {
                 if (fadeCount < 1000) {
-                    fadeCount += ConfigTitleCards.imagecards.get(curImageIndex).getFadeOut();
+                    fadeCount += ConfigTransitions.imagecards.get(curImageIndex).getFadeOut();
                     if (fadeCount > 1000) {
                         fadeCount = 1000;
                         ismoving = false;
@@ -174,49 +154,58 @@ public class EventsClient {
         }
     }
 
-    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void imageCards(RenderGameOverlayEvent.Post e) {
-        Minecraft mc = Minecraft.getInstance();
-        Player player = mc.player;
-        if (e.getType() == RenderGameOverlayEvent.ElementType.ALL) {
-            if (player != null && ConfigTitleCards.imagecards.get(curImageIndex)!=null) {
-                int x = mc.getWindow().getGuiScaledWidth();
-                int y = mc.getWindow().getGuiScaledHeight();
+        Minecraft mc = Minecraft.getMinecraft();
+        EntityPlayer player = mc.player;
+        if(e.getType()== RenderGameOverlayEvent.ElementType.ALL) {
+            ScaledResolution res = e.getResolution();
+            if (player != null && ConfigTransitions.imagecards.get(curImageIndex)!=null) {
+                int x = res.getScaledWidth();
+                int y = res.getScaledHeight();
+                Vector4f color = new Vector4f(1, 1, 1, 1);
                 if (fadeCount != 1000 && IMAGE_CARD!=null) {
-                    e.getMatrixStack().pushPose();
+                    GlStateManager.enableBlend();
+                    GlStateManager.pushMatrix();
+                    mc.getTextureManager().bindTexture(IMAGE_CARD);
 
                     float opacity = (int) (17 - (fadeCount / 80));
                     opacity = (opacity * 1.15f) / 15;
+                    GlStateManager.color(color.getX(), color.getY(), color.getZ(), Math.max(0, Math.min(0.95f, opacity)));
 
-                    float scaleY = 0.25f*(ConfigTitleCards.imagecards.get(curImageIndex).getScaleY()/100f);
-                    float scaleX = (0.25f*((float)y/(float)x))*(ConfigTitleCards.imagecards.get(curImageIndex).getScaleX()/100f);
-                    e.getMatrixStack().scale(scaleX,scaleY,1f);
+                    float scale_x = (0.25f*((float)y/(float)x))*(ConfigTransitions.imagecards.get(curImageIndex).getScaleX()/100f);
+                    float scale_y = 0.25f*(ConfigTransitions.imagecards.get(curImageIndex).getScaleY()/100f);
+                    GlStateManager.scale(scale_x,scale_y,1f);
 
-                    float posY = (y*(1f/scaleY))/8f+(ConfigTitleCards.imagecards.get(curImageIndex).getHorizontal()*(1/scaleY));
-                    float posX = ((x*(1f/scaleX))/2f)-(x/2f)+(ConfigTitleCards.imagecards.get(curImageIndex).getHorizontal()*(1/scaleX));
+                    float posX = ((x*(1f/scale_x))/2f)-(x/2f);
+                    float posY = (y*(1f/scale_y))/8f;
+                    GuiScreen.drawModalRectWithCustomSizedTexture((int)((posX)+(ConfigTransitions.imagecards.get(curImageIndex).getHorizontal()*(1/scale_x))),
+                            (int)((posY)+(ConfigTransitions.imagecards.get(curImageIndex).getVertical()*(1/scale_y))),x,y,x,y,x,y);
 
-                    RenderSystem.setShaderColor(1F, 1F, 1F, Math.max(0, Math.min(0.95f, opacity)));
-                    RenderSystem.setShaderTexture(0, IMAGE_CARD);
-                    GuiComponent.blit(e.getMatrixStack(), (int)posX, (int)posY, 0F, 0F, x, y, x, y);
-
-                    e.getMatrixStack().popPose();
+                    GlStateManager.color(1F, 1F, 1F, 1);
+                    GlStateManager.popMatrix();
                 }
             }
         }
     }
+     */
 
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent e) {
-        if(MusicPlayer.RELOAD.isDown() && Minecraft.getInstance().player!=null) {
+        if(Channel.GUI.isDown() && Minecraft.getInstance().player!=null) {
             BlockPos pos = MusicPicker.roundedPos(Minecraft.getInstance().player);
-            if(!zone) Minecraft.getInstance().setScreen(new GuiMain(ConfigObject.createFromCurrent()));
+            if(!zone) {
+                //Minecraft.getInstance().displayGuiScreen(new GuiMain(ConfigObject.createFromCurrent()));
+                Minecraft.getInstance().player.sendMessage(new TextComponent("\u00A74\u00A7oReloading Music! This won't take long..."),Minecraft.getInstance().player.getUUID());
+                reloadCounter = 5;
+                ChannelManager.reloading = true;
+            }
             else if(!firstPass) {
                 x1 = pos.getX();
                 y1 = pos.getY();
                 z1 = pos.getZ();
                 firstPass = true;
-                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.ANVIL_LAND, 1f));
+                Minecraft.getInstance().getSoundManager().play(new SimpleSoundInstance(SoundEvents.ANVIL_LAND, SoundSource.MUSIC, 1f, 1f, pos));
             } else {
                 x2 = pos.getX();
                 y2 = pos.getY();
@@ -239,7 +228,7 @@ public class EventsClient {
                 }
                 firstPass = false;
                 zone = false;
-                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.ANVIL_BREAK, 1f));
+                Minecraft.getInstance().getSoundManager().play(new SimpleSoundInstance(SoundEvents.ANVIL_LAND, SoundSource.MUSIC, 1f, 1f, pos));
                 String compiledZoneCoords = x1+","+y1+","+z1+","+x2+","+y2+","+z2;
                 parentScreen.holder.editTriggerInfoParameter(parentScreen.songCode, parentScreen.trigger, parentScreen.scrollingSongs.index, compiledZoneCoords);
                 Minecraft.getInstance().setScreen(parentScreen);
@@ -247,100 +236,102 @@ public class EventsClient {
         }
     }
 
-    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent event) {
         if(!Minecraft.getInstance().isPaused() && !renderDebug) renderDebug = true;
         if(reloadCounter>0) {
             reloadCounter-=1;
             if(reloadCounter==1) {
-                Reload.readAndReload();
-                TextComponent msg = new TextComponent("\u00A7a\u00A7oFinished!");
-                MusicPicker.player.sendMessage(msg,MusicPicker.player.getUUID());
+                ChannelManager.reloadAllChannels();
+                if(Minecraft.getInstance().player!=null) Minecraft.getInstance().player.sendMessage(new TextComponent("\u00A7a\u00A7oFinished!"),Minecraft.getInstance().player.getUUID());
                 IMAGE_CARD = null;
                 fadeCount = 1000;
                 timer = 0;
                 activated = false;
                 ismoving = false;
-                MusicPlayer.fadingIn=false;
-                MusicPlayer.fadingOut = false;
-                MusicPlayer.curMusic = null;
-                MusicPlayer.curTrack = null;
-                MusicPlayer.curTrackList = null;
-                MusicPlayer.cards = true;
-                MusicPlayer.reloading = false;
-                MusicPlayer.fadeOutList = null;
+                ChannelManager.reloading = false;
             }
         }
     }
 
-    @OnlyIn(Dist.CLIENT)
+    @SuppressWarnings("ConstantConditions")
     @SubscribeEvent
     public static void debugInfo(RenderGameOverlayEvent.Text e) {
-        if (ConfigDebug.ShowDebugInfo && isWorldRendered) {
-            if (MusicPlayer.curTrack != null) e.getLeft().add("Music Triggers Current song: " + MusicPlayer.curTrackHolder);
-            if (!ConfigDebug.ShowJustCurSong) {
+        if(ConfigDebug.ShowDebugInfo && isWorldRendered && renderDebug) {
+            e.getLeft().add("Music Triggers Debug Information");
+            for(Channel channel : ChannelManager.getAllChannels())
+                if(channel.currentSongName()!=null)
+                    e.getLeft().add("Channel["+channel.getChannelName()+"] Current Song: "+channel.currentSongName());
+            if(!ConfigDebug.ShowJustCurSong) {
                 int displayCount = 0;
-                if(!MusicPlayer.formatSongTime().matches("No song playing")) e.getLeft().add("Music Triggers Current Song Time: " + MusicPlayer.formatSongTime());
-                if(MusicPlayer.fadingOut) e.getLeft().add("Music Triggers Fading Out: "+MusicPlayer.formattedTimeFromMilliseconds(MusicPlayer.tempFadeOut*50));
-                if(MusicPlayer.fadingIn) e.getLeft().add("Music Triggers Fading In: "+MusicPlayer.formattedTimeFromMilliseconds(MusicPlayer.tempFadeIn*50));
-                if(MusicPicker.playableList!=null && !MusicPicker.playableList.isEmpty()) {
-                    StringBuilder s = new StringBuilder();
-                    for (String ev : MusicPicker.playableList) {
-                        if(Minecraft.getInstance().font.width(s+" "+ev)>0.75f*Minecraft.getInstance().getWindow().getScreenWidth()) {
-                            if(displayCount==0) {
-                                e.getLeft().add("Music Triggers Playable Events: " + s);
-                                displayCount++;
-                            } else e.getLeft().add(s.toString());
-                            s = new StringBuilder();
-                        }
-                        s.append(" ").append(ev);
-                    }
-                    if(displayCount==0) e.getLeft().add("Music Triggers Playable Events: " + s);
-                    else e.getLeft().add(s.toString());
+                for(Channel channel : ChannelManager.getAllChannels()) {
+                    if(!channel.formatSongTime().matches("No song playing")) e.getLeft().add("Channel["+channel.getChannelName()+"] Current Song Time: " + channel.formatSongTime());
+                    if(channel.formattedFadeOutTime()!=null) e.getLeft().add("Channel["+channel.getChannelName()+"] Fading Out: "+channel.formattedFadeOutTime());
+                    if(channel.formattedFadeInTime()!=null) e.getLeft().add("Channel["+channel.getChannelName()+"] Fading In: "+channel.formattedFadeInTime());
                 }
-                displayCount=0;
+                for(Channel channel : ChannelManager.getAllChannels()) {
+                    if (!channel.getPlayableTriggers().isEmpty()) {
+                        StringBuilder s = new StringBuilder();
+                        for (String trigger : channel.getPlayableTriggers()) {
+                            if (Minecraft.getInstance().font.width(s + " " + trigger) > 0.75f * Minecraft.getInstance().getWindow().getScreenWidth()) {
+                                if (displayCount == 0) {
+                                    e.getLeft().add("Channel["+channel.getChannelName()+"] Playable Events: " + s);
+                                    displayCount++;
+                                } else e.getLeft().add(s.toString());
+                                s = new StringBuilder();
+                            }
+                            s.append(" ").append(trigger);
+                        }
+                        if (displayCount == 0) e.getLeft().add("Channel["+channel.getChannelName()+"] Playable Events: " + s);
+                        else e.getLeft().add(s.toString());
+                    }
+                    displayCount = 0;
+                }
                 StringBuilder sm = new StringBuilder();
                 sm.append("minecraft");
                 for (String ev : ConfigDebug.blockedmods) {
                     if(Minecraft.getInstance().font.width(sm+" "+ev)>0.75f*Minecraft.getInstance().getWindow().getScreenWidth()) {
                         if(displayCount==0) {
-                            e.getLeft().add("Music Triggers Blocked Mods: " + sm);
+                            e.getLeft().add("Blocked Mods: " + sm);
                             displayCount++;
                         } else e.getLeft().add(sm.toString());
                         sm = new StringBuilder();
                     }
                     sm.append(" ").append(ev);
                 }
-                if(displayCount==0) e.getLeft().add("Music Triggers Blocked Mods: " + sm);
+                if(displayCount==0) e.getLeft().add("Blocked Mods: " + sm);
                 else e.getLeft().add(sm.toString());
                 displayCount=0;
-                if (MusicPicker.player != null && MusicPicker.world != null) {
-                    if (FromServer.curStruct != null) e.getLeft().add("Music Triggers Current Structure: " + FromServer.curStruct);
-                    e.getLeft().add("Music Triggers Current Biome: " + FromServer.curBiome);
-                    e.getLeft().add("Music Triggers Current Dimension: " + MusicPicker.player.level.dimension().location());
-                    e.getLeft().add("Music Triggers Current Total Light: " + MusicPicker.world.getRawBrightness(MusicPicker.roundedPos(MusicPicker.player), 0));
-                    e.getLeft().add("Music Triggers Current Block Light: " + MusicPicker.world.getBrightness(LightLayer.BLOCK, MusicPicker.roundedPos(MusicPicker.player)));
+                Minecraft mc = Minecraft.getInstance();
+                Player player = mc.player;
+                Level world = player.level;
+                if(player!=null && world!=null) {
+                    e.getLeft().add("Current Biome: " + world.getBiome(MusicPicker.roundedPos(player)).value().getRegistryName());
+                    e.getLeft().add("Current Dimension: " + world.dimension().location());
+                    e.getLeft().add("Current Total Light: " + world.getRawBrightness(MusicPicker.roundedPos(player), 0));
+                    e.getLeft().add("Current Block Light: " + world.getBrightness(LightLayer.BLOCK, MusicPicker.roundedPos(player)));
                     if (MusicPicker.effectList != null && !MusicPicker.effectList.isEmpty()) {
                         StringBuilder se = new StringBuilder();
                         for (String ev : MusicPicker.effectList) {
                             if(Minecraft.getInstance().font.width(se+" "+ev)>0.75f*Minecraft.getInstance().getWindow().getScreenWidth()) {
                                 if(displayCount==0) {
-                                    e.getLeft().add("Music Triggers Effect List: " + se);
+                                    e.getLeft().add("Effect List: " + se);
                                     displayCount++;
                                 } else e.getLeft().add(se.toString());
                                 se = new StringBuilder();
                             }
                             se.append(" ").append(ev);
                         }
-                        if(displayCount==0) e.getLeft().add("Music Triggers Effect List: " + se);
+                        if(displayCount==0) e.getLeft().add("Effect List: " + se);
                         else e.getLeft().add(se.toString());
                     }
-                    if (MusicPicker.mc.screen != null) e.getLeft().add("Music Triggers current GUI: " + MusicPicker.mc.screen.toString());
-                    if (getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity) != null) e.getLeft().add("Music Triggers Current Entity Name: " + getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity).getName().getString());
-                    try {
-                        if (infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)) != null) e.getLeft().add("Music Triggers Infernal Mob Mod Name: " + infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)));
-                    } catch (NoSuchMethodError ignored) {
+                    if(Minecraft.getInstance().crosshairPickEntity != null) {
+                        if (getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity) != null)
+                            e.getLeft().add("Current Entity Name: " + getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity));
+                        try {
+                            if (infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)) != null)
+                                e.getLeft().add("Infernal Mob Mod Name: " + infernalChecker(getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity)));
+                        } catch (NoSuchMethodError ignored) { }
                     }
                 }
             }
@@ -350,7 +341,7 @@ public class EventsClient {
     @SubscribeEvent
     public static void renderBoss(RenderGameOverlayEvent.BossInfo e) {
         if (bossBarCounter % 11 == 0) {
-            PacketHandler.sendToServer(new BossInfo(e.getBossEvent().getName().getString(), e.getBossEvent().getProgress()));
+            PacketHandler.sendToServer(new PacketBossInfo(e.getBossEvent().getName().getString(), e.getBossEvent().getProgress()));
             bossBarCounter = 0;
         }
         bossBarCounter++;

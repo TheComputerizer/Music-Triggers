@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 
-import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.network.chat.Component;
@@ -27,8 +26,8 @@ public class CustomSlider extends AbstractSliderButton {
     }
 
     private String getText() {
-        String track;
-        track = this.holder.decode(MusicPlayer.curTrack);
+        String track = "temp";
+        //track = this.holder.decode(MusicPlayer.curTrack);
         int minutes = (int)((this.value*this.max)/60);
         int seconds = (int)((this.value*this.max)%60);
         String formattedMinutes;

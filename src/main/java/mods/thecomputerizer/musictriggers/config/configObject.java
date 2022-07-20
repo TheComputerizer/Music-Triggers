@@ -2,7 +2,8 @@ package mods.thecomputerizer.musictriggers.config;
 
 import com.rits.cloning.Cloner;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.MusicPicker;
+import mods.thecomputerizer.musictriggers.client.audio.Channel;
+import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.Mappings;
 
 import java.io.File;
@@ -13,7 +14,6 @@ import java.util.stream.Collectors;
 
 import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
 
-@SuppressWarnings("CollectionAddAllCanBeReplacedWithConstructor")
 public class ConfigObject {
     private final Map<String, String> songholder;
     private final Map<String, Map<String, String[]>> triggerholder;
@@ -23,8 +23,8 @@ public class ConfigObject {
     private final Map<String, Map<String, String[]>> triggerlinking;
     private final Map<String, Map<Integer, String[]>> loopPoints;
     private final Map<String, Map<String, Map<Integer, String[]>>> linkingLoopPoints;
-    private final Map<Integer, ConfigTitleCards.Title> titlecards;
-    private final Map<Integer, ConfigTitleCards.Image> imagecards;
+    private final Map<Integer, ConfigTransitions.Title> titlecards;
+    private final Map<Integer, ConfigTransitions.Image> imagecards;
     private final Map<Integer, Boolean> ismoving;
     private final List<String> blockedmods;
     private final List<String> debugStuff;
@@ -52,8 +52,8 @@ public class ConfigObject {
 
     private ConfigObject(Map<String, String> songholder, Map<String, Map<String, String[]>> triggerholder, Map<String, Map<String, String>> triggerMapper, Map<String, String[]> otherinfo,
                          Map<String, Map<String, String[]>> otherlinkinginfo, Map<String, Map<String, String[]>> triggerlinking, Map<String, Map<Integer, String[]>> loopPoints,
-                         Map<String, Map<String, Map<Integer, String[]>>> linkingLoopPoints, Map<Integer, ConfigTitleCards.Title> titlecards,
-                         Map<Integer, ConfigTitleCards.Image> imagecards, Map<Integer, Boolean> ismoving, List<String> blockedmods, List<String> debugStuff) {
+                         Map<String, Map<String, Map<Integer, String[]>>> linkingLoopPoints, Map<Integer, ConfigTransitions.Title> titlecards,
+                         Map<Integer, ConfigTransitions.Image> imagecards, Map<Integer, Boolean> ismoving, List<String> blockedmods, List<String> debugStuff) {
         this.songholder = songholder;
         this.triggerholder = triggerholder;
         this.triggerMapper = triggerMapper;
@@ -80,7 +80,7 @@ public class ConfigObject {
         this.registrationConfig = new File("config/MusicTriggers/registration.toml");
     }
 
-    private static Map<Integer, ConfigTitleCards.Image> fixNullImageCards(Map<Integer, ConfigTitleCards.Image> input) {
+    private static Map<Integer, ConfigTransitions.Image> fixNullImageCards(Map<Integer, ConfigTransitions.Image> input) {
         return input.entrySet().stream().filter(entry -> entry.getValue().getName()!=null).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
@@ -95,14 +95,14 @@ public class ConfigObject {
         return ret;
     }
 
-    public static ConfigObject createFromCurrent() {
+    public static ConfigObject createFromChannel(Channel channel) {
         Cloner cloner=new Cloner();
-        List<String> blocked = new ArrayList<>();
-        blocked.addAll(Arrays.asList(ConfigDebug.blockedmods));
-        return new ConfigObject(cloner.deepClone(ConfigToml.songholder),cloner.deepClone(ConfigToml.triggerholder),cloner.deepClone(ConfigToml.triggerMapper),cloner.deepClone(ConfigToml.otherinfo),
-                cloner.deepClone(ConfigToml.otherlinkinginfo),cloner.deepClone(ConfigToml.triggerlinking),cloner.deepClone(ConfigToml.loopPoints),
-                cloner.deepClone(ConfigToml.linkingLoopPoints),cloner.deepClone(ConfigTitleCards.titlecards),cloner.deepClone(ConfigTitleCards.imagecards),
-                cloner.deepClone(ConfigTitleCards.ismoving),cloner.deepClone(blocked),cloner.deepClone(compileDebugStuff()));
+        return new ConfigObject(cloner.deepClone(ChannelManager.getSongHolder(channel)),cloner.deepClone(ChannelManager.getTriggerHolder(channel)),
+                cloner.deepClone(ChannelManager.getTriggerMapper(channel)),cloner.deepClone(ChannelManager.getOtherInfo(channel)),
+                cloner.deepClone(ChannelManager.getOtherLinkingInfo(channel)),cloner.deepClone(ChannelManager.getTriggerLinking(channel)),
+                cloner.deepClone(ChannelManager.getLoopPoints(channel)),cloner.deepClone(ChannelManager.getLinkingLoopsPoints(channel)),
+                cloner.deepClone(ChannelManager.getTitleCards(channel)),cloner.deepClone(ChannelManager.getImageCards(channel)),
+                cloner.deepClone(ChannelManager.getIsMoving(channel)),cloner.deepClone(Arrays.asList(ConfigDebug.blockedmods)),cloner.deepClone(compileDebugStuff()));
     }
 
     public List<String> getAllDebugStuff() {
@@ -226,7 +226,7 @@ public class ConfigObject {
         assert listOfFiles != null;
         for(File f : listOfFiles) {
             if(f.isDirectory()) ret.put(f.getName(), true);
-            else if(f.getName().contains(".png") && !f.getName().contains(".png.mcmeta") && Arrays.stream(listOfFiles).toList().contains(new File(f.getPath()+".mcmeta"))) ret.put(f.getName(),true);
+            else if(f.getName().contains(".png") && !f.getName().contains(".png.mcmeta") && Arrays.stream(listOfFiles).collect(Collectors.toList()).contains(new File(f.getPath()+".mcmeta"))) ret.put(f.getName(),true);
             else if(f.getName().contains(".gif")) ret.put(f.getName(), true);
             else if(f.getName().contains(".mp4")) ret.put(f.getName(), true);
             else if(f.getName().contains(".png")) ret.put(f.getName(), false);
@@ -322,11 +322,11 @@ public class ConfigObject {
         int index;
         if(title) {
             index = this.titlecards.size();
-            this.titlecards.put(index, new ConfigTitleCards.Title());
+            this.titlecards.put(index, new ConfigTransitions.Title());
         } else {
             index = this.imagecards.size();
             MusicTriggers.logger.info(index);
-            this.imagecards.put(index, new ConfigTitleCards.Image());
+            this.imagecards.put(index, new ConfigTransitions.Image());
             this.imagecards.get(index).setName(name);
             this.ismoving.put(index, ismoving);
             this.markImageInfoForWriting.putIfAbsent(index, new ArrayList<>());
@@ -522,16 +522,12 @@ public class ConfigObject {
     public String buildLoopTitle(String code, String song, boolean linked, int index) {
         StringBuilder ret = new StringBuilder();
         if(!linked) {
-            if(loopPoints!=null && loopPoints.get(code)!=null && loopPoints.get(code).get(index)!=null) {
-                for (String l : loopPoints.get(code).get(index)) {
-                    ret.append(l).append(" ");
-                }
+            for(String l : loopPoints.get(code).get(index)) {
+                ret.append(l).append(" ");
             }
         } else {
-            if(linkingLoopPoints!=null && linkingLoopPoints.get(code)!=null && linkingLoopPoints.get(code).get(song)!=null && linkingLoopPoints.get(code).get(song).get(index)!=null) {
-                for (String l : linkingLoopPoints.get(code).get(song).get(index)) {
-                    ret.append(l).append(" ");
-                }
+            for(String l : linkingLoopPoints.get(code).get(song).get(index)) {
+                ret.append(l).append(" ");
             }
         }
         return ret.toString();
@@ -600,6 +596,7 @@ public class ConfigObject {
         this.markLinkingInfoForWriting.get(code).putIfAbsent(song, new ArrayList<>());
         for(int i=0;i<this.otherlinkinginfo.get(code).get(song).length;i++) {
             if(!this.otherlinkinginfo.get(code).get(song)[i].matches(linkingInfoDefaults[i])) {
+                MusicTriggers.logger.info("Code: "+code+" Song: "+song);
                 if(!this.markLinkingInfoForWriting.get(code).get(song).contains(i)) {
                     this.markLinkingInfoForWriting.get(code).get(song).add(i);
                 }
@@ -631,7 +628,7 @@ public class ConfigObject {
         }
     }
 
-    private String[] titleInfoToArray(ConfigTitleCards.Title title) {
+    private String[] titleInfoToArray(ConfigTransitions.Title title) {
         List<String> ret = new ArrayList<>();
         ret.add(title.getPlayonce().toString());
         ret.add(title.getTitlecolor());
@@ -640,7 +637,7 @@ public class ConfigObject {
         return ret.toArray(new String[0]);
     }
 
-    private String[] imageInfoToArray(ConfigTitleCards.Image image) {
+    private String[] imageInfoToArray(ConfigTransitions.Image image) {
         List<String> ret = new ArrayList<>();
         ret.add(image.getName());
         ret.add(image.getTime()+"");
@@ -651,7 +648,7 @@ public class ConfigObject {
         ret.add(image.getPlayonce().toString());
         ret.add(image.getFadeIn()+"");
         ret.add(image.getFadeOut()+"");
-        ret.add(image.getVague().toString());
+        ret.add(image.getVague()+"");
         ret.add(image.getDelay()+"");
         ret.add(image.getSplit()+"");
         ret.add(image.getSkip()+"");
@@ -676,7 +673,7 @@ public class ConfigObject {
         else this.otherlinkinginfo.get(code).get(song)[index-triggerSize] = newVal;
     }
 
-    public void editTransitionInfoAtIndex(boolean title, int transitionIndex, int index, String newVal, int change) {
+    public void editTransitionInfoAtIndex(boolean title, int transitionIndex, int index, String newVal, char typedChar, int keyCode) {
         if(title) {
             List<String> triggers = this.titlecards.get(transitionIndex).getTriggers();
             if(index<triggers.size()) {
@@ -698,22 +695,21 @@ public class ConfigObject {
             index-=subtitles.size();
             this.markTitleInfoForWriting.putIfAbsent(transitionIndex, new ArrayList<>());
             switch (index) {
-                case 0 -> {
+                case 0 :
                     this.titlecards.get(transitionIndex).setPlayonce(!this.titlecards.get(transitionIndex).getPlayonce());
-                    if (!this.markTitleInfoForWriting.get(transitionIndex).contains(index)) this.markTitleInfoForWriting.get(transitionIndex).add(index);
-                }
-                case 1 -> {
+                    if(!this.markTitleInfoForWriting.get(transitionIndex).contains(index)) this.markTitleInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 1 :
                     this.titlecards.get(transitionIndex).setTitlecolor(newVal);
-                    if (!this.markTitleInfoForWriting.get(transitionIndex).contains(index)) this.markTitleInfoForWriting.get(transitionIndex).add(index);
-                }
-                case 2 -> {
+                    if(!this.markTitleInfoForWriting.get(transitionIndex).contains(index)) this.markTitleInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 2 :
                     this.titlecards.get(transitionIndex).setSubtitlecolor(newVal);
-                    if (!this.markTitleInfoForWriting.get(transitionIndex).contains(index)) this.markTitleInfoForWriting.get(transitionIndex).add(index);
-                }
-                case 3 -> {
+                    if(!this.markTitleInfoForWriting.get(transitionIndex).contains(index)) this.markTitleInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 3 :
                     this.titlecards.get(transitionIndex).setVague(!this.titlecards.get(transitionIndex).getVague());
-                    if (!this.markTitleInfoForWriting.get(transitionIndex).contains(index)) this.markTitleInfoForWriting.get(transitionIndex).add(index);
-                }
+                    if(!this.markTitleInfoForWriting.get(transitionIndex).contains(index)) this.markTitleInfoForWriting.get(transitionIndex).add(index);
             }
         } else {
             transitionIndex-=this.titlecards.size();
@@ -724,60 +720,63 @@ public class ConfigObject {
             }
             markImageInfoForWriting.putIfAbsent(transitionIndex, new ArrayList<>());
             index-=triggers.size();
+            int change;
+            if(keyCode==14) change=-10;
+            else if(typedChar=='1' || typedChar=='2' || typedChar=='3' || typedChar=='4' || typedChar=='5' || typedChar=='6' || typedChar=='7' || typedChar=='8' || typedChar=='9') change = MusicTriggers.randomInt(typedChar+"");
+            else if(typedChar=='0') change = 10;
+            else change = -1;
             switch (index) {
-                case 0 -> {
+                case 0:
                     this.imagecards.get(transitionIndex).setName(newVal);
-                    if (!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
-                }
-                case 1 -> {
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 1:
                     this.imagecards.get(transitionIndex).setTime(this.imagecards.get(transitionIndex).getTime() + change);
-                    if (!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
-                }
-                case 2 -> {
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 2:
                     this.imagecards.get(transitionIndex).setVertical(this.imagecards.get(transitionIndex).getVertical() + change);
-                    if (!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
-                }
-                case 3 -> {
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 3:
                     this.imagecards.get(transitionIndex).setHorizontal(this.imagecards.get(transitionIndex).getHorizontal() + change);
-                    if (!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
-                }
-                case 4 -> {
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 4:
                     this.imagecards.get(transitionIndex).setScaleX(this.imagecards.get(transitionIndex).getScaleX() + change);
-                    if (!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
-                }
-                case 5 -> {
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 5:
                     this.imagecards.get(transitionIndex).setScaleY(this.imagecards.get(transitionIndex).getScaleY() + change);
-                    if (!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
-                }
-                case 6 -> {
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 6:
                     this.imagecards.get(transitionIndex).setPlayonce(!this.imagecards.get(transitionIndex).getPlayonce());
-                    if (!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
-                }
-                case 7 -> {
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 7:
                     this.imagecards.get(transitionIndex).setFadeIn(this.imagecards.get(transitionIndex).getFadeIn() + change);
-                    if (!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
-                }
-                case 8 -> {
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 8:
                     this.imagecards.get(transitionIndex).setFadeOut(this.imagecards.get(transitionIndex).getFadeOut() + change);
-                    if (!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
-                }
-                case 9 -> {
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 9:
                     this.imagecards.get(transitionIndex).setVague(!this.imagecards.get(transitionIndex).getVague());
-                    if (!this.markImageInfoForWriting.get(transitionIndex).contains(index))
-                        this.markImageInfoForWriting.get(transitionIndex).add(index);
-                }
-                case 10 -> {
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 10:
                     this.imagecards.get(transitionIndex).setDelay(this.imagecards.get(transitionIndex).getDelay() + change);
-                    if (!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
-                }
-                case 11 -> {
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 11:
                     this.imagecards.get(transitionIndex).setSplit(this.imagecards.get(transitionIndex).getSplit() + change);
-                    if (!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
-                }
-                case 12 -> {
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
+                    return;
+                case 12:
                     this.imagecards.get(transitionIndex).setSkip(this.imagecards.get(transitionIndex).getSkip() + change);
-                    if (!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
-                }
+                    if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
             }
         }
     }
@@ -797,7 +796,7 @@ public class ConfigObject {
 
     public void write() throws IOException {
         StringBuilder mainBuilder = new StringBuilder();
-        mainBuilder.append(this.writeUniversal());
+        //mainBuilder.append(this.writeUniversal());
         for(int j=0;j<this.songholder.entrySet().size();j++) {
             String code = "song"+j;
             MusicTriggers.logger.info("writing code: "+code);
@@ -828,8 +827,8 @@ public class ConfigObject {
                 if (this.triggerlinking.get(code) != null && !getAllSongsForLinking(code).isEmpty()) {
                     mainBuilder.append("\t[").append(this.songholder.get(code)).append(".link]\n");
                     mainBuilder.append(this.formatLinkingDefaults(code)).append("\n");
-                    if(Integer.parseInt(this.otherinfo.get(code)[5])!=0) mainBuilder.append("\t\tfade_in = \"").append(this.otherinfo.get(code)[5]).append("\"\n");
-                    if(Integer.parseInt(this.otherinfo.get(code)[6])!=0) mainBuilder.append("\t\tfade_out = \"").append(this.otherinfo.get(code)[6]).append("\"\n");
+                    if(MusicTriggers.randomInt(this.otherinfo.get(code)[5])!=0) mainBuilder.append("\t\tfade_in = \"").append(this.otherinfo.get(code)[5]).append("\"\n");
+                    if(MusicTriggers.randomInt(this.otherinfo.get(code)[6])!=0) mainBuilder.append("\t\tfade_out = \"").append(this.otherinfo.get(code)[6]).append("\"\n");
                     for (Map.Entry<String, String[]> stringEntry : this.triggerlinking.get(code).entrySet()) {
                         String song = stringEntry.getKey();
                         if (!song.matches(code)) {
@@ -955,7 +954,7 @@ public class ConfigObject {
     }
 
     private String formatLinkingTriggers(String code, String song) {
-        List<String> triggers = Arrays.stream(this.triggerlinking.get(code).get(song)).toList();
+        List<String> triggers = Arrays.stream(this.triggerlinking.get(code).get(song)).collect(Collectors.toList());
         StringBuilder triggerbuilder = new StringBuilder();
         triggerbuilder.append("\t\t\tname = [ ");
         for(String trigger : triggers) {
@@ -1000,15 +999,16 @@ public class ConfigObject {
         builder.append("\t\t\tz_max = \"").append(broken[5]).append("\"\n");
     }
 
+    /*
     private String writeUniversal() {
         String ret ="";
         if(MusicPicker.universalDelay!=0 || MusicPicker.universalFadeIn!=0 || MusicPicker.universalFadeOut!=0) {
             ret+="[universal]\n";
-            if(MusicPicker.universalDelay!=0) ret+="\tdelay = \""+MusicPicker.universalDelay+"\"\n";
-            if(MusicPicker.universalFadeIn!=0) ret+="\tfade_in = \""+MusicPicker.universalFadeIn+"\"\n";
-            if(MusicPicker.universalFadeOut!=0) ret+="\tfade_out = \""+MusicPicker.universalFadeOut+"\"\n";
-            ret+="\n";
+            if(MusicPicker.universalDelay!=0) ret+="\ndelay = \""+MusicPicker.universalDelay+"\"\n";
+            if(MusicPicker.universalFadeIn!=0) ret+="\nfade_in = \""+MusicPicker.universalFadeIn+"\"\n";
+            if(MusicPicker.universalFadeOut!=0) ret+="\nfade_out = \""+MusicPicker.universalFadeOut+"\"\n";
         }
         return ret;
     }
+     */
 }

@@ -26,6 +26,7 @@ public class MusicTriggersItems {
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MusicTriggers.MODID);
 
     public void init() {
+        /*
         SoundHandler.registerSounds();
         if(ConfigRegistry.registerDiscs) {
             for (SoundEvent s : SoundHandler.allSoundEvents) {
@@ -35,6 +36,8 @@ public class MusicTriggersItems {
             }
             ITEMS.register("blank_record", () -> new BlankRecord(new Item.Properties().rarity(Rarity.EPIC).fireResistant().stacksTo(1).tab(CreativeModeTab.TAB_MISC)));
         }
+
+         */
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
