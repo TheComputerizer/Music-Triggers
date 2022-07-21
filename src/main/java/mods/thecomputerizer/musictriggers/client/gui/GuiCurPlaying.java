@@ -2,7 +2,6 @@ package mods.thecomputerizer.musictriggers.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
-import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.gui.screen.Screen;
@@ -64,15 +63,15 @@ public class GuiCurPlaying extends Screen {
     private void addSkipSongButton() {
         this.addDrawableChild(new ButtonWidget(this.width - 80, 8, 64, 16, new TranslatableText("screen.musictriggers.button.skip_song").setStyle(Style.EMPTY.withFormatting(Formatting.RED)),
                 (button) -> {
-                    if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing) {
-                        assert this.client != null;
-                        this.client.getSoundManager().stop(MusicPlayer.curMusic);
-                    }
+                    //if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing) {
+                        //assert this.client != null;
+                        //this.client.getSoundManager().stop(MusicPlayer.curMusic);
+                    //}
                 }));
     }
 
     private void addSongSlider() {
-        this.slider = new CustomSlider(this.width/2-80,this.height/2-10, 160,20, new TranslatableText("screen.musictriggers.button.slider"), getSongPosInSeconds(MusicPlayer.curMusic), this.holder, this.getMaxSongSeconds(MusicPlayer.curMusic));
+        //this.slider = new CustomSlider(this.width/2-80,this.height/2-10, 160,20, new TranslatableText("screen.musictriggers.button.slider"), getSongPosInSeconds(MusicPlayer.curMusic), this.holder, this.getMaxSongSeconds(MusicPlayer.curMusic));
         this.addSelectableChild(this.slider);
     }
 
@@ -121,7 +120,7 @@ public class GuiCurPlaying extends Screen {
     public static double getSongPosInSeconds(SoundInstance sound) {
         double seconds = 0;
         try {
-            if(sound!=null) seconds = Math.floor((float) MusicPlayer.curMusicTimer/1000f);
+            //if(sound!=null) seconds = Math.floor((float) MusicPlayer.curMusicTimer/1000f);
         } catch (Exception e) {
             MusicTriggersCommon.logger.error("Could not get current position of song");
             e.printStackTrace();

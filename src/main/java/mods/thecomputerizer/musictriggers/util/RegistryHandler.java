@@ -26,7 +26,7 @@ public final class RegistryHandler {
     }
 
     public static void init() {
-        SoundHandler.registerSounds();
+        //SoundHandler.registerSounds();
         if(ConfigRegistry.registerDiscs) {
             registerBlocks();
             registerItems();

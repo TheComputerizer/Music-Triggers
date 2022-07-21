@@ -10,12 +10,9 @@
     "MixinLivingDamageEvent",
     "MixinMusicTracker",
     "MixinPlaySoundEvent",
-    "MixinSoundSystem",
-    "MixinSource"
+    "MixinSoundSystem"
   ],
-  "client": [
-    "MixinResourcePack"
-  ],
+  "client": [],
   "injectors": {
     "defaultRequire": 1
   }

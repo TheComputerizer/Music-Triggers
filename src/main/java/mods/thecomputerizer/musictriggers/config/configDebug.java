@@ -1,4 +1,3 @@
-
 package mods.thecomputerizer.musictriggers.config;
 
 import com.moandjiezana.toml.Toml;
@@ -17,18 +16,11 @@ public class ConfigDebug {
 
     public static void create(File f) {
         try {
-            String sb = """
-                    # Show the debug info
-                    showdebuginfo = "false"
-                    # If ShowDebugInfo is set to true, but you only want to see the song name
-                    showjustcursong = "false"
-                    # Show an overlay for the name of the current GUI
-                    showguiname = "false"
-                    # Only silence blocked music when there is music from Music Triggers already playing
-                    silenceisbad = "false"
-                    # List of mod ids to remove the music from so there is not any overlap
-                    blockedmods = [ ]
-                    """;
+            String sb = "# Show the debug info\n" + "showdebuginfo = \"false\"\n" +
+                    "# If ShowDebugInfo is set to true, but you only want to see the song name\n" + "showjustcursong = \"false\"\n" +
+                    "# Show an overlay for the name of the current GUI\n" + "showguiname = \"false\"\n" +
+                    "# Only silence blocked music when there is music from Music Triggers already playing\n" + "silenceisbad = \"false\"\n" +
+                    "# List of mod ids to remove the music from so there is not any overlap\n" + "blockedmods = [ ]\n";
             FileWriter writer = new FileWriter(f);
             writer.write(sb);
             writer.close();
@@ -38,6 +30,15 @@ public class ConfigDebug {
     }
 
     public static void parse(File f) {
+        if(!f.exists()) {
+            try {
+                f.createNewFile();
+                create(f);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         Toml toml = new Toml().read(f);
         ShowDebugInfo = Boolean.parseBoolean(toml.getString("showdebuginfo"));
         ShowJustCurSong = Boolean.parseBoolean(toml.getString("showjustcursong"));

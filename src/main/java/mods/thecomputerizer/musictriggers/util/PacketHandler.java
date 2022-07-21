@@ -14,12 +14,12 @@ import net.minecraft.util.Identifier;
 public class PacketHandler {
 
     public static void registerReceivers() {
-        CurSong.register();
-        SendTriggerData.register();
-        if(FabricLoaderImpl.INSTANCE.getEnvironmentType()!=EnvType.SERVER) ReturnTriggerData.register();
-        BossInfo.register();
-        MenuSongs.register();
-        ExecuteCommand.register();
+        PacketBossInfo.register();
+        PacketQueryServerInfo.register();
+        if(FabricLoaderImpl.INSTANCE.getEnvironmentType()!=EnvType.SERVER) {
+            PacketSyncServerInfo.register();
+            PacketReceiveCommand.register();
+        }
     }
 
     public static void sendTo(Identifier id, PacketByteBuf buf, ServerPlayerEntity player) {

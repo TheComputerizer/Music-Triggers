@@ -11,8 +11,8 @@ public class CustomTick {
     public CustomTick(){}
 
     public static void setUp() {
-        Runnable tickTimer = EventsClient::onCustomTick;
-        ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
-        executor.scheduleAtFixedRate(tickTimer, 0, 20, TimeUnit.MILLISECONDS);
+        //Runnable tickTimer = EventsClient::onCustomTick;
+        //ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+        //executor.scheduleAtFixedRate(tickTimer, 0, 20, TimeUnit.MILLISECONDS);
     }
 }

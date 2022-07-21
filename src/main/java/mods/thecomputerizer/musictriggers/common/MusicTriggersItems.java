@@ -27,6 +27,7 @@ public class MusicTriggersItems {
     public static final Item BLANK_RECORD = new BlankRecord(new Item.Settings().rarity(Rarity.EPIC).fireproof().group(ItemGroup.MISC));
     public static void init() {
         Registry.register(Registry.ITEM,BLANK_RECORD_ID,BLANK_RECORD);
+        /*
         if(ConfigRegistry.registerDiscs) {
             for (SoundEvent s : SoundHandler.allSoundEvents) {
                 String name = Objects.requireNonNull(s.getId()).toString().replaceAll("musictriggers:", "");
@@ -34,6 +35,8 @@ public class MusicTriggersItems {
                 buildModel(name,SoundHandler.allSoundEventsWithTriggers.get(s));
             }
         }
+
+         */
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")

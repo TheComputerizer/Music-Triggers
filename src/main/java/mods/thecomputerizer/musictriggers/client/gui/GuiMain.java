@@ -4,10 +4,8 @@ package mods.thecomputerizer.musictriggers.client.gui;
 import com.mojang.blaze3d.systems.RenderSystem;
 import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
 import mods.thecomputerizer.musictriggers.client.MusicPicker;
-import mods.thecomputerizer.musictriggers.client.MusicPlayer;
 import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.config.ConfigObject;
-import mods.thecomputerizer.musictriggers.util.Json;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.render.*;
@@ -93,7 +91,7 @@ public class GuiMain extends Screen {
         this.addDrawableChild(new ButtonWidget(this.width / 2 - 175, this.height / 2 - 10, 150, 20, new TranslatableText("screen.musictriggers.button.add_songs"),
                 (button) -> {
                     assert this.client != null;
-                    this.client.setScreen(new GuiAddSongs(this, Json.allSongs, holder, null));
+                    //this.client.setScreen(new GuiAddSongs(this, Json.allSongs, holder, null));
                 }));
     }
 
@@ -124,10 +122,10 @@ public class GuiMain extends Screen {
     private void addCurrentSongButton() {
         this.addDrawableChild(new ButtonWidget(this.width - 80, 8, 64, 16, new TranslatableText("screen.musictriggers.button.playback"),
                 (button) -> {
-                    if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing) {
-                        assert this.client != null;
-                        this.client.setScreen(new GuiCurPlaying(this,this.holder));
-                    }
+                    //if(MusicPlayer.curMusic!=null && !MusicPlayer.reloading && !MusicPlayer.playing) {
+                        //assert this.client != null;
+                        //this.client.setScreen(new GuiCurPlaying(this,this.holder));
+                    //}
                 }));
     }
 
@@ -138,8 +136,8 @@ public class GuiMain extends Screen {
             assert this.client != null;
             if (this.client.player!=null) {
                 this.client.getSoundManager().stopAll();
-                MusicPicker.player.sendMessage(new TranslatableText("musictriggers.reloading").setStyle(Style.EMPTY.withFormatting(Formatting.RED).withFormatting(Formatting.ITALIC)), false);
-                MusicPlayer.reloading = true;
+                //MusicPicker.player.sendMessage(new TranslatableText("musictriggers.reloading").setStyle(Style.EMPTY.withFormatting(Formatting.RED).withFormatting(Formatting.ITALIC)), false);
+                //MusicPlayer.reloading = true;
                 EventsClient.reloadCounter = 5;
             }
         }

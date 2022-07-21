@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.mixin;
 
-import mods.thecomputerizer.musictriggers.client.MusicPlayer;
+import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import net.minecraft.client.sound.MusicTracker;
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,6 +14,6 @@ public class MixinMusicTracker {
 
     @Inject(at = @At(value = "HEAD"), method = "method_18669()V", cancellable = true)
     private void tick(CallbackInfo info) {
-        if(!ConfigDebug.SilenceIsBad || MusicPlayer.curMusic!=null) info.cancel();
+        if(!ConfigDebug.SilenceIsBad || !ChannelManager.canAnyChannelOverrideMusic()) info.cancel();
     }
 }

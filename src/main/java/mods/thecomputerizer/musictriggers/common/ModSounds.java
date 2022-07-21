@@ -19,6 +19,7 @@ public class ModSounds {
     public static HashMap<String, SoundInstance> playableSounds = new HashMap<>();
 
     public static void init(){
+        /*
         List<SoundEvent> sounds = SoundHandler.allSoundEvents;
         for(SoundEvent s: sounds) {
             String songName = Objects.requireNonNull(s.getId()).toString().replaceAll("musictriggers:","");
@@ -33,14 +34,18 @@ public class ModSounds {
                 playableSounds.put("music." + songName, i);
             }
         }
+
+         */
     }
     public static void reload() {
         playableSounds = new HashMap<>();
+        /*
         List<SoundEvent> sounds = SoundHandler.allSoundEvents;
         for(SoundEvent s: sounds) {
             String songName = Objects.requireNonNull(s.getId()).toString().replaceAll("musictriggers:", "");
             SoundInstance i = PositionedSoundInstance.music(new SoundEvent(new Identifier(MusicTriggersCommon.MODID + ":music." + songName)));
             playableSounds.put("music." + songName, i);
         }
+         */
     }
 }
