@@ -11,8 +11,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.client.resource.VanillaResourceType;
-import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -30,6 +28,7 @@ public class ChannelManager {
     private static final HashMap<String, ConfigMain> mainConfigMap = new HashMap<>();
     private static final HashMap<String, ConfigTransitions> transitionsConfigMap = new HashMap<>();
     private static final HashMap<String, ConfigCommands> commandsConfigMap = new HashMap<>();
+    private static final HashMap<String, ConfigToggles> toggleConfigMap = new HashMap<>();
 
     private static final List<String> songsInFolder = new ArrayList<>();
     public static final HashMap<String, File> openAudioFiles = new HashMap<>();
@@ -39,10 +38,10 @@ public class ChannelManager {
     private static int tickCounter = 0;
     public static boolean reloading = false;
 
-    public static void createChannel(String channel, String mainFileName, String transitionsFileName, String commandsFileName, String redirectFileName, boolean clientSide, boolean pausedByJukeBox, boolean overridesNormalMusic) {
+    public static void createChannel(String channel, String mainFileName, String transitionsFileName, String commandsFileName, String togglesFileName, String redirectFileName, boolean clientSide, boolean pausedByJukeBox, boolean overridesNormalMusic) {
         if(getChannel(channel)==null) {
             if(clientSide) {
-                handlerMap.put(channel, new SoundHandler(channel));
+                handlerMap.put(channel, new SoundHandler());
                 channelMap.put(channel, new Channel(channel,pausedByJukeBox,overridesNormalMusic));
                 redirectMap.put(channel, new Redirect(new File(MusicTriggers.configDir,redirectFileName+".txt")));
             }
@@ -50,8 +49,9 @@ public class ChannelManager {
             if(clientSide) {
                 transitionsConfigMap.put(channel, new ConfigTransitions(new File(MusicTriggers.configDir, transitionsFileName + ".toml"),channelMap.get(channel)));
                 commandsConfigMap.put(channel, new ConfigCommands(new File(MusicTriggers.configDir, commandsFileName + ".toml")));
+                toggleConfigMap.put(channel, new ConfigToggles(new File(MusicTriggers.configDir, togglesFileName + ".toml"),channelMap.get(channel), handlerMap.get(channel)));
+                channelMap.get(channel).passThroughConfigObjects(mainConfigMap.get(channel),transitionsConfigMap.get(channel),commandsConfigMap.get(channel),toggleConfigMap.get(channel),redirectMap.get(channel),handlerMap.get(channel));
             }
-            if(clientSide) channelMap.get(channel).passThroughConfigObjects(mainConfigMap.get(channel),transitionsConfigMap.get(channel),commandsConfigMap.get(channel),redirectMap.get(channel),handlerMap.get(channel));
         }
         else MusicTriggers.logger.error("Channel already exists for category "+channel+"! Cannot assign 2 config files to the same music category.");
     }
@@ -65,6 +65,7 @@ public class ChannelManager {
         for(Channel channel : channelMap.values()) channel.parseRedirect(redirectMap.get(channel.getChannelName()));
         for(ConfigTransitions transitions: transitionsConfigMap.values()) transitions.parse();
         for(ConfigCommands commands : commandsConfigMap.values()) commands.parse();
+        for(ConfigToggles toggles : toggleConfigMap.values()) toggles.parse();
         ConfigDebug.parse(new File(MusicTriggers.configDir,"debug.toml"));
         ConfigRegistry.parse(new File(MusicTriggers.configDir,"registration.toml"));
     }

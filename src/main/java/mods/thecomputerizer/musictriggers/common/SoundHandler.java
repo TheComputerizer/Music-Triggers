@@ -2,16 +2,12 @@ package mods.thecomputerizer.musictriggers.common;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.config.ConfigMain;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
-import net.minecraftforge.client.EnumHelperClient;
-import net.minecraftforge.fml.common.thread.SidedThreadGroups;
 
 import java.util.*;
 
 public class SoundHandler {
 
-    private final String channel;
     public final List<SoundEvent> allSoundEvents = new ArrayList<>();
     public final HashMap<SoundEvent,String> allSoundEventsTriggers = new HashMap<>();
 
@@ -22,15 +18,10 @@ public class SoundHandler {
     public final HashMap<String, List<String>> antiSongs = new HashMap<>();
     public final HashMap<List<String>, List<String>> instantiatedCombos = new HashMap<>();
 
-    public SoundHandler(String channel) {
-        this.channel = channel;
-    }
-
     public void registerSounds(ConfigMain main, String channel) {
         for(int i = 0; i< main.songholder.entrySet().size(); i++) {
             String songEntry = "song"+i;
             MusicTriggers.logger.info("Registering sound: "+ main.songholder.get(songEntry)+" in channel "+channel);
-            SoundEvent sound = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + main.songholder.get(songEntry))).setRegistryName(new ResourceLocation(MusicTriggers.MODID, main.songholder.get(songEntry)));
             List<String> triggers = new ArrayList<>();
             for (String trigger : main.triggerholder.get(songEntry).keySet()) {
                 String decoded = decode(main,songEntry,trigger);
@@ -52,11 +43,6 @@ public class SoundHandler {
                     if (!TriggerInfoMap.containsKey(decoded + "-" + main.triggerholder.get(songEntry).get(trigger)[10])) {
                         TriggerInfoMap.put(decoded + "-" + main.triggerholder.get(songEntry).get(trigger)[10], main.triggerholder.get(songEntry).get(trigger));
                     }
-                }
-                if(checkResourceLocation(sound)) {
-                    //allSoundEvents.add(sound);
-                    //allSoundEventsTriggers.put(sound, decoded);
-                    //if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) EnumHelperClient.addMusicType(songEntry, sound, 0, 0);
                 }
             }
             else {
@@ -98,33 +84,8 @@ public class SoundHandler {
                         }
                         else values.add(decoded+"-"+ main.triggerholder.get(songEntry).get(trigger)[10]);
                     }
-                    if(checkResourceLocation(sound)) {
-                        //allSoundEvents.add(sound);
-                        //allSoundEventsTriggers.put(sound, decoded);
-                        //if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) EnumHelperClient.addMusicType(songEntry, sound, 0, 0);
-                    }
                 }
                 instantiatedCombos.put(songCombos.get(songEntry),values);
-            }
-            if(main.triggerlinking.get(songEntry) !=null) {
-                int triggerCounter=0;
-                for(String song : main.triggerlinking.get(songEntry).keySet()) {
-                    if(triggerCounter!=0) {
-                        SoundEvent soundLink = new SoundEvent(new ResourceLocation(MusicTriggers.MODID, "music." + song)).setRegistryName(new ResourceLocation(MusicTriggers.MODID, song));
-                        boolean shouldBeAdded = true;
-                        for(SoundEvent s : allSoundEvents) {
-                            if(Objects.requireNonNull(soundLink.getRegistryName()).toString().matches(Objects.requireNonNull(s.getRegistryName()).toString())) shouldBeAdded = false;
-                        }
-                        if(shouldBeAdded) {
-                            if(checkResourceLocation(soundLink)) {
-                                //allSoundEvents.add(soundLink);
-                                //allSoundEventsTriggers.put(soundLink, main.triggerlinking.get(songEntry).get(song)[0].split("-")[0]);
-                                //if (Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER) EnumHelperClient.addMusicType(songEntry, soundLink, 0, 0);
-                            }
-                        }
-                    }
-                    triggerCounter++;
-                }
             }
         }
         for(String t : TriggerIdentifierMap.keySet()) {
@@ -137,11 +98,6 @@ public class SoundHandler {
             }
             MusicTriggers.logger.info(triggerChecker.toString());
         }
-    }
-
-    public boolean checkResourceLocation(SoundEvent sound) {
-        for(SoundEvent s : allSoundEvents) if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) return false;
-        return true;
     }
 
     public String decode(ConfigMain main, String code, String triggerID) {

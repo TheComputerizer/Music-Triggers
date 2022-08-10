@@ -44,13 +44,10 @@ public class Redirect {
             }
         }
         try {
-            MusicTriggers.logger.info("parsing redirect");
             BufferedReader br = new BufferedReader(new FileReader(this.file));
             String line = br.readLine();
             while (line != null) {
-                MusicTriggers.logger.info("parsing redirect: line - "+line);
                 if(!line.contains("Format") && line.contains("=")) {
-                    MusicTriggers.logger.info("found viable line");
                     String[] broken = MusicTriggers.stringBreaker(line,"=");
                     urlMap.put(broken[0].trim(),broken[1].trim());
                 }

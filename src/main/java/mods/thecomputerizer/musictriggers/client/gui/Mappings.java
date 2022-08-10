@@ -59,6 +59,7 @@ public class Mappings {
         parameters.put(34, "remove_inactive_playable");
         parameters.put(35, "fade_out");
         parameters.put(36, "mob_champion");
+        parameters.put(37, "toggled");
         songparameters.put(0, "pitch");
         songparameters.put(1, "play_once");
         songparameters.put(2, "must_finish");
@@ -107,6 +108,7 @@ public class Mappings {
         reverseparameters.put("remove_inactive_playable", 34);
         reverseparameters.put("fade_out", 35);
         reverseparameters.put("mob_champion", 36);
+        reverseparameters.put("toggled",37);
         reversesongparameters.put("pitch", 0);
         reversesongparameters.put("play_once", 1);
         reversesongparameters.put("must_finish", 2);

@@ -39,7 +39,7 @@ public class MusicTriggers {
         configDir = new File(".", "config/MusicTriggers");
         if (!configDir.exists()) configDir.mkdir();
         for(ConfigChannels.ChannelInfo info : ConfigChannels.parse(new File(configDir,"channels.toml")))
-            ChannelManager.createChannel(info.getChannelName(),info.getMain(),info.getTransitions(),info.getCommands(),info.getRedirect(),Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER,info.getPausedByJukeBox(),info.getOverridesNormalMusic());
+            ChannelManager.createChannel(info.getChannelName(),info.getMain(),info.getTransitions(),info.getCommands(),info.getToggles(),info.getRedirect(),Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER,info.getPausedByJukeBox(),info.getOverridesNormalMusic());
         ChannelManager.parseConfigFiles();
         Mappings.init();
     }

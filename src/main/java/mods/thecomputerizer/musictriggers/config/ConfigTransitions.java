@@ -11,6 +11,7 @@ import org.apache.commons.io.FileDeleteStrategy;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,20 +36,34 @@ public class ConfigTransitions {
             } catch(Exception e) {
                 e.printStackTrace();
             }
+            writeInformationalHeader(file);
         }
         this.file = file;
         this.channel = channel;
-        this.CrashHelper = "There was a problem initializing transitions";
+        this.CrashHelper = "There was a problem initializing transitions in channel "+channel.getChannelName();
+    }
+
+    public static void writeInformationalHeader(File toml) {
+        try {
+            String header = "# Please refer to the wiki page located at https://github.com/TheComputerizer/Music-Triggers/wiki/Title-Cards-&-Image-Cards\n" +
+                    "# or the discord server located at https://discord.gg/FZHXFYp8fc\n"+
+                    "# for any specific questions you might have regarding transitions";
+            FileWriter writer = new FileWriter(toml);
+            writer.write(header);
+            writer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void parse() {
-        CrashHelper = "There was a problem initializing transitions";
+        CrashHelper = "There was a problem initializing transitions in channel "+channel.getChannelName();
         int titleCounter = 0;
         int imageCounter = 0;
         try {
             Toml toml = new Toml().read(this.file);
             if (toml.containsTableArray("title")) {
-                CrashHelper = "There was a problem initializing title cards";
+                CrashHelper = "There was a problem initializing title cards in channel "+channel.getChannelName();
                 for (Toml title : toml.getTables("title")) {
                     this.titlecards.putIfAbsent(titleCounter, new Title());
                     if (title.contains("title")) {
@@ -77,7 +92,7 @@ public class ConfigTransitions {
                     titleCounter++;
                 }
             } else if (toml.containsTable("title")) {
-                CrashHelper = "There was a problem initializing title cards";
+                CrashHelper = "There was a problem initializing title cards in channel "+channel.getChannelName();
                 Toml title = toml.getTable("title");
                 this.titlecards.putIfAbsent(titleCounter, new Title());
                 if (title.contains("title")) {
@@ -105,7 +120,7 @@ public class ConfigTransitions {
                 }
             }
             if (toml.containsTableArray("image")) {
-                CrashHelper = "There was a problem initializing image cards";
+                CrashHelper = "There was a problem initializing image cards in channel "+channel.getChannelName();
                 for (Toml image : toml.getTables("image")) {
                     this.imagecards.putIfAbsent(imageCounter, new Image());
                     this.ismoving.putIfAbsent(imageCounter, false);
@@ -160,7 +175,7 @@ public class ConfigTransitions {
                     imageCounter++;
                 }
             } else if (toml.containsTable("image")) {
-                CrashHelper = "There was a problem initializing image cards";
+                CrashHelper = "There was a problem initializing image cards in channel "+channel.getChannelName();
                 Toml image = toml.getTable("image");
                 this.imagecards.putIfAbsent(imageCounter, new Image());
                 this.ismoving.putIfAbsent(imageCounter, false);

@@ -53,7 +53,7 @@ repositories {
         }
     }
     maven {
-        url = uri("https://maven.mcmoddev.com")
+        url = uri("https://maven.blamejared.com")
     }
     maven {
         url = uri("https://m2.dv8tion.net/releases")
