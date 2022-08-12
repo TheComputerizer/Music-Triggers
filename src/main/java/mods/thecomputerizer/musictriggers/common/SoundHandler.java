@@ -8,7 +8,6 @@ import java.util.*;
 
 public class SoundHandler {
 
-    private final String channel;
     public final List<SoundEvent> allSoundEvents = new ArrayList<>();
     public final HashMap<SoundEvent,String> allSoundEventsTriggers = new HashMap<>();
 
@@ -19,11 +18,7 @@ public class SoundHandler {
     public final HashMap<String, List<String>> antiSongs = new HashMap<>();
     public final HashMap<List<String>, List<String>> instantiatedCombos = new HashMap<>();
 
-    public SoundHandler(String channel) {
-        this.channel = channel;
-    }
-
-    public void registerSounds(ConfigMain main, String channel) {
+    public void registerSounds(ConfigMain main) {
         for(int i = 0; i< main.songholder.entrySet().size(); i++) {
             String songEntry = "song"+i;
             List<String> triggers = new ArrayList<>();
@@ -91,18 +86,6 @@ public class SoundHandler {
                 }
                 instantiatedCombos.put(songCombos.get(songEntry),values);
             }
-            if(main.triggerlinking.get(songEntry) !=null) {
-                int triggerCounter=0;
-                for(String song : main.triggerlinking.get(songEntry).keySet()) {
-                    if(triggerCounter!=0) {
-                        boolean shouldBeAdded = true;
-                        for(SoundEvent s : allSoundEvents) {
-                            //if(Objects.requireNonNull(soundLink.getRegistryName()).toString().matches(Objects.requireNonNull(s.getRegistryName()).toString())) shouldBeAdded = false;
-                        }
-                    }
-                    triggerCounter++;
-                }
-            }
         }
         for(String t : TriggerIdentifierMap.keySet()) {
             StringBuilder triggerChecker = new StringBuilder();
@@ -114,11 +97,6 @@ public class SoundHandler {
             }
             MusicTriggers.logger.info(triggerChecker.toString());
         }
-    }
-
-    public boolean checkResourceLocation(SoundEvent sound) {
-        for(SoundEvent s : allSoundEvents) if(Objects.requireNonNull(s.getRegistryName()).toString().matches(Objects.requireNonNull(sound.getRegistryName()).toString())) return false;
-        return true;
     }
 
     public String decode(ConfigMain main, String code, String triggerID) {

@@ -289,9 +289,9 @@ public class ServerChannelData {
         public void encode(ByteBuf buf) {
             buf.writeInt(this.getTrigger().length());
             buf.writeCharSequence(this.getTrigger(), StandardCharsets.UTF_8);
+            buf.writeBoolean(this.isActive());
             buf.writeInt(this.getCurrentBiome().length());
             buf.writeCharSequence(this.getCurrentBiome(), StandardCharsets.UTF_8);
-            buf.writeBoolean(this.isActive());
         }
 
         public static Biome decode(ByteBuf buf) {

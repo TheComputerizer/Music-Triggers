@@ -59,6 +59,7 @@ public class Mappings {
         parameters.put(34, "remove_inactive_playable");
         parameters.put(35, "fade_out");
         parameters.put(36, "mob_champion");
+        parameters.put(37, "toggled");
         songparameters.put(0, "pitch");
         songparameters.put(1, "play_once");
         songparameters.put(2, "must_finish");
@@ -107,6 +108,7 @@ public class Mappings {
         reverseparameters.put("remove_inactive_playable", 34);
         reverseparameters.put("fade_out", 35);
         reverseparameters.put("mob_champion", 36);
+        reverseparameters.put("toggled",37);
         reversesongparameters.put("pitch", 0);
         reversesongparameters.put("play_once", 1);
         reversesongparameters.put("must_finish", 2);
@@ -135,14 +137,13 @@ public class Mappings {
         List<Integer> ret = new ArrayList<>();
         if (trigger != null) {
             switch (trigger) {
-                case "generic":
+                case "generic" -> {
                     ret.add(1);
                     ret.add(4);
                     ret.add(35);
                     return ret;
-                case "difficulty":
-                case "rainintensity":
-                case "season":
+                }
+                case "difficulty", "rainintensity", "season" -> {
                     ret.add(0);
                     ret.add(1);
                     ret.add(2);
@@ -155,7 +156,8 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                case "time":
+                }
+                case "time" -> {
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -170,7 +172,8 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                case "light":
+                }
+                case "light" -> {
                     ret.add(0);
                     ret.add(1);
                     ret.add(2);
@@ -184,7 +187,8 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                case "height":
+                }
+                case "height" -> {
                     ret.add(0);
                     ret.add(1);
                     ret.add(2);
@@ -198,16 +202,8 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                case "raining":
-                case "storming":
-                case "snowing":
-                case "dead":
-                case "creative":
-                case "spectator":
-                case "pet":
-                case "bloodmoon":
-                case "harvestmoon":
-                case "fallingstars":
+                }
+                case "raining", "storming", "snowing", "dead", "creative", "spectator", "pet", "bloodmoon", "harvestmoon", "fallingstars" -> {
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -218,8 +214,8 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                case "drowning":
-                case "lowhp":
+                }
+                case "drowning", "lowhp" -> {
                     ret.add(0);
                     ret.add(1);
                     ret.add(2);
@@ -231,11 +227,8 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                case "riding":
-                case "dimension":
-                case "structure":
-                case "gui":
-                case "effect":
+                }
+                case "riding", "dimension", "structure", "gui", "effect" -> {
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -248,9 +241,8 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                case "elytra":
-                case "fishing":
-                case "underwater":
+                }
+                case "elytra", "fishing", "underwater" -> {
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -262,9 +254,8 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                case "home":
-                case "hurricane":
-                case "sandstorm":
+                }
+                case "home", "hurricane", "sandstorm" -> {
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -276,7 +267,8 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                case "biome":
+                }
+                case "biome" -> {
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -295,7 +287,8 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                case "mob":
+                }
+                case "mob" -> {
                     ret.add(0);
                     ret.add(1);
                     ret.add(2);
@@ -319,7 +312,8 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                case "victory":
+                }
+                case "victory" -> {
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -332,7 +326,8 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                case "zones":
+                }
+                case "zones" -> {
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -345,7 +340,8 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                case "pvp":
+                }
+                case "pvp" -> {
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -359,7 +355,8 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                case "advancement":
+                }
+                case "advancement" -> {
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -372,7 +369,8 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                case "gamestage":
+                }
+                case "gamestage" -> {
                     ret.add(0);
                     ret.add(1);
                     ret.add(3);
@@ -386,7 +384,8 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                case "tornado":
+                }
+                case "tornado" -> {
                     ret.add(0);
                     ret.add(1);
                     ret.add(2);
@@ -400,7 +399,8 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
-                case "statistic":
+                }
+                case "statistic" -> {
                     ret.add(0);
                     ret.add(1);
                     ret.add(2);
@@ -414,6 +414,7 @@ public class Mappings {
                     ret.add(34);
                     ret.add(35);
                     return ret;
+                }
             }
         }
         return ret;
@@ -437,17 +438,10 @@ public class Mappings {
 
     private static void buildIndividualTitleOutputForGuiFromIndex(ConfigTransitions.Title title, StringBuilder builder, int index) {
         switch (index) {
-            case 0:
-                builder.append("\tplay_once = \"").append(title.getPlayonce()).append("\"\n");
-                return;
-            case 1:
-                builder.append("\ttitle_color = \"").append(title.getTitlecolor()).append("\"\n");
-                return;
-            case 2:
-                builder.append("\tsubtitle_color = \"").append(title.getSubtitlecolor()).append("\"\n");
-                return;
-            case 3:
-                builder.append("\tvague = \"").append(title.getVague()).append("\"\n");
+            case 0 -> builder.append("\tplay_once = \"").append(title.getPlayonce()).append("\"\n");
+            case 1 -> builder.append("\ttitle_color = \"").append(title.getTitlecolor()).append("\"\n");
+            case 2 -> builder.append("\tsubtitle_color = \"").append(title.getSubtitlecolor()).append("\"\n");
+            case 3 -> builder.append("\tvague = \"").append(title.getVague()).append("\"\n");
         }
     }
 
@@ -466,35 +460,16 @@ public class Mappings {
     private static void buildIndividualStaticImageOutputForGuiFromIndex(ConfigTransitions.Image image, StringBuilder builder, int index) {
         if(index<=9) {
             switch (index) {
-                case 0:
-                    builder.append("\tname = \"").append(image.getName()).append("\"\n");
-                    return;
-                case 1:
-                    builder.append("\ttime = \"").append(image.getTime()).append("\"\n");
-                    return;
-                case 2:
-                    builder.append("\tvertical = \"").append(image.getVertical()).append("\"\n");
-                    return;
-                case 3:
-                    builder.append("\thorizontal = \"").append(image.getHorizontal()).append("\"\n");
-                    return;
-                case 4:
-                    builder.append("\tscale_x = \"").append(image.getScaleX()).append("\"\n");
-                    return;
-                case 5:
-                    builder.append("\tscale_y = \"").append(image.getScaleY()).append("\"\n");
-                    return;
-                case 6:
-                    builder.append("\tplay_once = \"").append(image.getPlayonce()).append("\"\n");
-                    return;
-                case 7:
-                    builder.append("\tfade_in = \"").append(image.getFadeIn()).append("\"\n");
-                    return;
-                case 8:
-                    builder.append("\tfade_out = \"").append(image.getFadeOut()).append("\"\n");
-                    return;
-                case 9:
-                    builder.append("\tvague = \"").append(image.getVague()).append("\"\n");
+                case 0 -> builder.append("\tname = \"").append(image.getName()).append("\"\n");
+                case 1 -> builder.append("\ttime = \"").append(image.getTime()).append("\"\n");
+                case 2 -> builder.append("\tvertical = \"").append(image.getVertical()).append("\"\n");
+                case 3 -> builder.append("\thorizontal = \"").append(image.getHorizontal()).append("\"\n");
+                case 4 -> builder.append("\tscale_x = \"").append(image.getScaleX()).append("\"\n");
+                case 5 -> builder.append("\tscale_y = \"").append(image.getScaleY()).append("\"\n");
+                case 6 -> builder.append("\tplay_once = \"").append(image.getPlayonce()).append("\"\n");
+                case 7 -> builder.append("\tfade_in = \"").append(image.getFadeIn()).append("\"\n");
+                case 8 -> builder.append("\tfade_out = \"").append(image.getFadeOut()).append("\"\n");
+                case 9 -> builder.append("\tvague = \"").append(image.getVague()).append("\"\n");
             }
         }
     }
@@ -502,14 +477,9 @@ public class Mappings {
     private static void buildIndividualMovingImageOutputForGuiFromIndex(ConfigTransitions.Image image, StringBuilder builder, int index) {
         if(index>9) {
             switch (index) {
-                case 10:
-                    builder.append("\t\tdelay = \"").append(image.getDelay()).append("\"\n");
-                    return;
-                case 11:
-                    builder.append("\t\tsplit = \"").append(image.getSplit()).append("\"\n");
-                    return;
-                case 12:
-                    builder.append("\t\tframes_skipped = \"").append(image.getSkip()).append("\"\n");
+                case 10 -> builder.append("\t\tdelay = \"").append(image.getDelay()).append("\"\n");
+                case 11 -> builder.append("\t\tsplit = \"").append(image.getSplit()).append("\"\n");
+                case 12 -> builder.append("\t\tframes_skipped = \"").append(image.getSkip()).append("\"\n");
             }
         }
     }

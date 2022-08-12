@@ -16,10 +16,7 @@ import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.client.MusicPicker;
 import mods.thecomputerizer.musictriggers.common.ServerChannelData;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
-import mods.thecomputerizer.musictriggers.config.ConfigCommands;
-import mods.thecomputerizer.musictriggers.config.ConfigMain;
-import mods.thecomputerizer.musictriggers.config.ConfigTransitions;
-import mods.thecomputerizer.musictriggers.config.Redirect;
+import mods.thecomputerizer.musictriggers.config.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -38,6 +35,7 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("FieldCanBeLocal")
 @OnlyIn(Dist.CLIENT)
 public class Channel {
     public static final KeyMapping GUI = new KeyMapping("key.musictriggers.menu", KeyConflictContext.UNIVERSAL, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.categories.musictriggers");
@@ -47,6 +45,7 @@ public class Channel {
     private ConfigMain main;
     private ConfigTransitions transitions;
     private ConfigCommands commands;
+    private ConfigToggles toggles;
     private Redirect redirect;
     private SoundHandler handler;
     private MusicPicker picker;
@@ -88,6 +87,9 @@ public class Channel {
     private String curLinkNum = "song-0";
     private boolean nullFromLink = false;
     private boolean trackSetChanged = true;
+    private int delayCounter = 0;
+    private String maxDelay = "0";
+    private boolean delayCatch = false;
 
     public Channel(String channel, boolean pausedByJukeBox, boolean overrides) {
         this.channel = channel;
@@ -133,13 +135,22 @@ public class Channel {
         return this.main;
     }
 
-    public void passThroughConfigObjects(ConfigMain main, ConfigTransitions transitions, ConfigCommands commands, Redirect redirect, SoundHandler handler) {
+    public void passThroughConfigObjects(ConfigMain main, ConfigTransitions transitions, ConfigCommands commands, ConfigToggles toggles, Redirect redirect, SoundHandler handler) {
         this.main=main;
         this.transitions = transitions;
         this.commands = commands;
+        this.toggles = toggles;
         this.redirect = redirect;
         this.handler = handler;
         this.picker = new MusicPicker(this,this.handler);
+    }
+
+    public void runToggle(int condition, List<String> triggers) {
+        this.toggles.runToggle(condition, triggers);
+    }
+
+    public boolean getToggleStatusForTrigger(String triggerIdentifier) {
+        return this.toggles.getToggle(triggerIdentifier);
     }
 
     public ClientSync getSyncStatus() {
@@ -211,11 +222,13 @@ public class Channel {
             }
         }
         setVolume(calculatedVolume);
+        if(delayCounter>0) delayCounter-=1;
     }
 
     public void tickSlow() {
         Minecraft mc = Minecraft.getInstance();
         this.toSend = this.picker.querySongList();
+        this.maxDelay = this.picker.curDelay;
         if (!this.picker.getInfo().getCurrentSongList().isEmpty()) {
             boolean startQuiet = false;
             for (int i : canPlayTitle.keySet()) {
@@ -264,104 +277,114 @@ public class Channel {
             if (this.picker.getInfo().songListChanged()) {
                 if (this.picker.getInfo().getCurrentSongList().size() != 0) changeTrack(mc);
                 else this.trackSetChanged = true;
+                this.delayCounter = 0;
+                this.delayCatch = false;
             } else if (!isPlaying() && mc.options.getSoundSourceVolume(this.category) > 0 && mc.options.getSoundSourceVolume(SoundSource.MASTER) > 0) {
-                this.triggerLinker.clear();
-                this.musicLinker.clear();
-                this.songNameLinker.clear();
-                this.volumeLinker.clear();
-                this.pitchLinker.clear();
-                EventsClient.GuiCounter = 0;
-                List<String> trimmedList = this.picker.getInfo().getCurrentSongList().stream().filter(track -> !this.oncePerTrigger.contains(track)).collect(Collectors.toList());
-                trimmedList = trimmedList.stream().filter(track -> !this.onceUntilEmpty.contains(track)).collect(Collectors.toList());
-                if (trimmedList.size() >= 1) {
-                    int i = ThreadLocalRandom.current().nextInt(0, trimmedList.size());
-                    if (trimmedList.size() > 1 && this.curTrack != null) {
-                        int total = trimmedList.stream().mapToInt(s -> MusicTriggers.randomInt(this.main.otherinfo.get(s)[3])).sum();
-                        int j;
-                        for (j = 0; j < 1000; j++) {
-                            int r = ThreadLocalRandom.current().nextInt(1, total + 1);
-                            String temp = " ";
-                            for (String s : trimmedList) {
-                                if (r < MusicTriggers.randomInt(this.main.otherinfo.get(s)[3])) {
-                                    temp = s;
+                if(!this.delayCatch) {
+                    this.delayCounter = MusicTriggers.randomInt(this.maxDelay);
+                    this.delayCatch = true;
+                }
+                if(this.delayCounter<=0) {
+                    this.triggerLinker.clear();
+                    this.musicLinker.clear();
+                    this.songNameLinker.clear();
+                    this.volumeLinker.clear();
+                    this.pitchLinker.clear();
+                    EventsClient.GuiCounter = 0;
+                    List<String> trimmedList = this.picker.getInfo().getCurrentSongList().stream().filter(track -> !this.oncePerTrigger.contains(track)).collect(Collectors.toList());
+                    trimmedList = trimmedList.stream().filter(track -> !this.onceUntilEmpty.contains(track)).collect(Collectors.toList());
+                    if (trimmedList.size() >= 1) {
+                        int i = ThreadLocalRandom.current().nextInt(0, trimmedList.size());
+                        if (trimmedList.size() > 1 && this.curTrack != null) {
+                            int total = trimmedList.stream().mapToInt(s -> MusicTriggers.randomInt(this.main.otherinfo.get(s)[3])).sum();
+                            int j;
+                            for (j = 0; j < 1000; j++) {
+                                int r = ThreadLocalRandom.current().nextInt(1, total + 1);
+                                String temp = " ";
+                                for (String s : trimmedList) {
+                                    if (r < MusicTriggers.randomInt(this.main.otherinfo.get(s)[3])) {
+                                        temp = s;
+                                        break;
+                                    }
+                                    r -= MusicTriggers.randomInt(this.main.otherinfo.get(s)[3]);
+                                }
+                                if (!temp.matches(this.curTrack) && !temp.matches(" ")) {
+                                    this.curTrack = temp;
                                     break;
                                 }
-                                r -= MusicTriggers.randomInt(this.main.otherinfo.get(s)[3]);
                             }
-                            if (!temp.matches(this.curTrack) && !temp.matches(" ")) {
-                                this.curTrack = temp;
-                                break;
-                            }
-                        }
-                        if (j >= 1000)
-                            MusicTriggers.logger.warn("Attempt to get non duplicate song passed 1000 tries! Forcing current song " + this.main.songholder.get(curTrack) + " to play.");
-                    } else curTrack = trimmedList.get(i);
-                    if (this.curTrack != null) {
-                        this.curTrack = curTrack.replaceAll("@", "").replaceAll("#", "");
-                        MusicTriggers.logger.debug(curTrack + " was chosen");
-                        this.curTrackHolder = this.main.songholder.get(curTrack);
-                        MusicTriggers.logger.info("Attempting to play track: " + this.curTrackHolder);
-                        if (this.main.triggerlinking.get(curTrack) != null) {
-                            this.triggerLinker.put("song-" + 0, this.main.triggerlinking.get(this.curTrack).get(this.curTrack));
-                            this.musicLinker.put("song-" + 0, this.loadedTracks.get(this.curTrackHolder));
-                            this.songNameLinker.put("song-" + 0,this.curTrackHolder);
-                            this.pitchLinker.put("song-" + 0, Float.parseFloat(this.main.otherinfo.get(this.curTrack)[0]));
-                            this.volumeLinker.put("song-" + 0, Float.parseFloat(this.main.otherinfo.get(this.curTrack)[4]));
-                            this.saveVolIn = Float.parseFloat(this.main.otherinfo.get(this.curTrack)[4]);
-                            for (int l : this.main.loopPoints.get(this.curTrack).keySet()) {
-                                this.loopLinker.putIfAbsent("song-" + 0, new HashMap<>());
-                                this.loopLinker.get("song-" + 0).put(l, this.main.loopPoints.get(this.curTrack).get(l));
-                                this.loopLinkerCounter.putIfAbsent("song-" + 0, new HashMap<>());
-                                this.loopLinkerCounter.get("song-" + 0).put(l, 0);
-                            }
-                            int linkcounter = 1;
-                            for (String song : this.main.triggerlinking.get(this.curTrack).keySet()) {
-                                if (!song.matches(this.curTrack)) {
-                                    this.triggerLinker.put("song-" + linkcounter, this.main.triggerlinking.get(this.curTrack).get(song));
-                                    this.musicLinker.put("song-" + linkcounter, this.loadedTracks.get(song));
-                                    this.songNameLinker.put("song-" + linkcounter,song);
-                                    this.volumeLinker.put("song-" + linkcounter, Float.parseFloat(this.main.otherlinkinginfo.get(this.curTrack).get(song)[1]));
-                                    this.pitchLinker.put("song-" + linkcounter, Float.parseFloat(this.main.otherlinkinginfo.get(this.curTrack).get(song)[0]));
-                                    if (this.main.linkingLoopPoints.get(this.curTrack) != null && this.main.linkingLoopPoints.get(this.curTrack).get(song) != null) {
-                                        for (int l : this.main.linkingLoopPoints.get(this.curTrack).get(song).keySet()) {
-                                            this.loopLinker.putIfAbsent("song-" + linkcounter, new HashMap<>());
-                                            this.loopLinker.get("song-" + linkcounter).put(l, this.main.linkingLoopPoints.get(this.curTrack).get(song).get(l));
-                                            this.loopLinkerCounter.putIfAbsent("song-" + linkcounter, new HashMap<>());
-                                            this.loopLinkerCounter.get("song-" + linkcounter).put(l, 0);
+                            if (j >= 1000)
+                                MusicTriggers.logger.warn("Attempt to get non duplicate song passed 1000 tries! Forcing current song " + this.main.songholder.get(curTrack) + " to play.");
+                        } else curTrack = trimmedList.get(i);
+                        if (this.curTrack != null) {
+                            this.curTrack = curTrack.replaceAll("@", "").replaceAll("#", "");
+                            MusicTriggers.logger.debug(curTrack + " was chosen");
+                            this.curTrackHolder = this.main.songholder.get(curTrack);
+                            MusicTriggers.logger.info("Attempting to play track: " + this.curTrackHolder);
+                            if (this.main.triggerlinking.get(curTrack) != null) {
+                                this.triggerLinker.put("song-" + 0, this.main.triggerlinking.get(this.curTrack).get(this.curTrack));
+                                this.musicLinker.put("song-" + 0, this.loadedTracks.get(this.curTrackHolder));
+                                this.songNameLinker.put("song-" + 0, this.curTrackHolder);
+                                this.pitchLinker.put("song-" + 0, Float.parseFloat(this.main.otherinfo.get(this.curTrack)[0]));
+                                this.volumeLinker.put("song-" + 0, Float.parseFloat(this.main.otherinfo.get(this.curTrack)[4]));
+                                this.saveVolIn = Float.parseFloat(this.main.otherinfo.get(this.curTrack)[4]);
+                                for (int l : this.main.loopPoints.get(this.curTrack).keySet()) {
+                                    this.loopLinker.putIfAbsent("song-" + 0, new HashMap<>());
+                                    this.loopLinker.get("song-" + 0).put(l, this.main.loopPoints.get(this.curTrack).get(l));
+                                    this.loopLinkerCounter.putIfAbsent("song-" + 0, new HashMap<>());
+                                    this.loopLinkerCounter.get("song-" + 0).put(l, 0);
+                                }
+                                int linkcounter = 1;
+                                for (String song : this.main.triggerlinking.get(this.curTrack).keySet()) {
+                                    if (!song.matches(this.curTrack)) {
+                                        this.triggerLinker.put("song-" + linkcounter, this.main.triggerlinking.get(this.curTrack).get(song));
+                                        this.musicLinker.put("song-" + linkcounter, this.loadedTracks.get(song));
+                                        this.songNameLinker.put("song-" + linkcounter, song);
+                                        this.volumeLinker.put("song-" + linkcounter, Float.parseFloat(this.main.otherlinkinginfo.get(this.curTrack).get(song)[1]));
+                                        this.pitchLinker.put("song-" + linkcounter, Float.parseFloat(this.main.otherlinkinginfo.get(this.curTrack).get(song)[0]));
+                                        if (this.main.linkingLoopPoints.get(this.curTrack) != null && this.main.linkingLoopPoints.get(this.curTrack).get(song) != null) {
+                                            for (int l : this.main.linkingLoopPoints.get(this.curTrack).get(song).keySet()) {
+                                                this.loopLinker.putIfAbsent("song-" + linkcounter, new HashMap<>());
+                                                this.loopLinker.get("song-" + linkcounter).put(l, this.main.linkingLoopPoints.get(this.curTrack).get(song).get(l));
+                                                this.loopLinkerCounter.putIfAbsent("song-" + linkcounter, new HashMap<>());
+                                                this.loopLinkerCounter.get("song-" + linkcounter).put(l, 0);
+                                            }
                                         }
                                     }
+                                    linkcounter++;
                                 }
-                                linkcounter++;
+                            } else {
+                                this.musicLinker.put("song-" + 0, this.loadedTracks.get(this.curTrackHolder));
+                                this.songNameLinker.put("song-" + 0, this.curTrackHolder);
+                                this.saveVolIn = Float.parseFloat(this.main.otherinfo.get(this.curTrack)[4]);
+                                this.volumeLinker.put("song-" + 0, Float.parseFloat(this.main.otherinfo.get(this.curTrack)[4]));
+                                this.pitchLinker.put("song-" + 0, Float.parseFloat(this.main.otherinfo.get(this.curTrack)[0]));
+                                for (int l : this.main.loopPoints.get(this.curTrack).keySet()) {
+                                    this.loopLinker.putIfAbsent("song-" + 0, new HashMap<>());
+                                    this.loopLinker.get("song-" + 0).put(l, this.main.loopPoints.get(this.curTrack).get(l));
+                                    this.loopLinkerCounter.putIfAbsent("song-" + 0, new HashMap<>());
+                                    this.loopLinkerCounter.get("song-" + 0).put(l, 0);
+                                }
                             }
-                        } else {
-                            this.musicLinker.put("song-" + 0, this.loadedTracks.get(this.curTrackHolder));
-                            this.songNameLinker.put("song-" + 0,this.curTrackHolder);
-                            this.saveVolIn = Float.parseFloat(this.main.otherinfo.get(this.curTrack)[4]);
-                            this.volumeLinker.put("song-" + 0, Float.parseFloat(this.main.otherinfo.get(this.curTrack)[4]));
-                            this.pitchLinker.put("song-" + 0, Float.parseFloat(this.main.otherinfo.get(this.curTrack)[0]));
-                            for (int l : this.main.loopPoints.get(this.curTrack).keySet()) {
-                                this.loopLinker.putIfAbsent("song-" + 0, new HashMap<>());
-                                this.loopLinker.get("song-" + 0).put(l, this.main.loopPoints.get(this.curTrack).get(l));
-                                this.loopLinkerCounter.putIfAbsent("song-" + 0, new HashMap<>());
-                                this.loopLinkerCounter.get("song-" + 0).put(l, 0);
+                            if (cards) renderCards(mc);
+                            setPitch(pitchLinker.get("song-0"));
+                            if (!startQuiet) setVolume(volumeLinker.get("song-0"));
+                            playTrack(songNameLinker.get("song-0"), musicLinker.get("song-0"), 0);
+                            if (this.trackSetChanged) this.trackSetChanged = false;
+                            this.curLinkNum = "song-0";
+                            if (MusicTriggers.randomInt(this.main.otherinfo.get(this.curTrack)[1]) == 1)
+                                this.onceUntilEmpty.add(curTrack);
+                            else if (MusicTriggers.randomInt(this.main.otherinfo.get(this.curTrack)[1]) == 2)
+                                this.oncePerTrigger.add(curTrack);
+                            else if (MusicTriggers.randomInt(this.main.otherinfo.get(this.curTrack)[1]) == 3) {
+                                this.trackToDelete = this.curTrack;
+                                this.indexToDelete = i;
+                                this.playedEvents.clear();
+                                this.playedEvents.addAll(this.picker.getInfo().getActiveTriggers());
                             }
-                        }
-                        if (cards) renderCards(mc);
-                        setPitch(pitchLinker.get("song-0"));
-                        if(!startQuiet) setVolume(volumeLinker.get("song-0"));
-                        playTrack(songNameLinker.get("song-0"),musicLinker.get("song-0"),0);
-                        if(this.trackSetChanged) this.trackSetChanged = false;
-                        this.curLinkNum = "song-0";
-                        if (MusicTriggers.randomInt(this.main.otherinfo.get(this.curTrack)[1]) == 1) this.onceUntilEmpty.add(curTrack);
-                        else if (MusicTriggers.randomInt(this.main.otherinfo.get(this.curTrack)[1]) == 2) this.oncePerTrigger.add(curTrack);
-                        else if (MusicTriggers.randomInt(this.main.otherinfo.get(this.curTrack)[1]) == 3) {
-                            this.trackToDelete = this.curTrack;
-                            this.indexToDelete = i;
-                            this.playedEvents.clear();
-                            this.playedEvents.addAll(this.picker.getInfo().getActiveTriggers());
-                        }
-                    } else this.trackSetChanged = true;
-                } else this.onceUntilEmpty.clear();
+                        } else this.trackSetChanged = true;
+                    } else this.onceUntilEmpty.clear();
+                }
             }
         } else {
             EventsClient.IMAGE_CARD = null;
@@ -823,13 +846,15 @@ public class Channel {
         this.main.parse();
         this.transitions.parse();
         this.commands.parse();
-        this.handler.registerSounds(this.main,getChannelName());
+        this.toggles.parse();
+        this.handler.registerSounds(this.main);
     }
 
     private void clearAllListsAndMaps() {
         this.main.clearMaps();
         this.transitions.clearMaps();
         this.commands.commandMap.clear();
+        this.toggles.clearMaps();
         this.handler.clearListsAndMaps();
         this.redirect.urlMap.clear();
         this.picker.clearListsAndMaps();

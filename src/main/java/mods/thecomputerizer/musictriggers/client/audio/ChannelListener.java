@@ -44,7 +44,7 @@ public class ChannelListener extends AudioEventAdapter {
 
     @Override
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
-        MusicTriggers.logger.error("Track exception caught! Stopping audio output for channel: "+this.channel);
+        MusicTriggers.logger.error("Track exception caught! Restarting audio output for channel: "+this.channel);
         exception.printStackTrace();
         this.AUDIO_THREAD.setRunAudioLoop(false);
     }
@@ -85,6 +85,9 @@ public class ChannelListener extends AudioEventAdapter {
                             sleep(frameDuration);
                         }
                     }
+                } else {
+                    sleep(250);
+                    this.runAudioLoop = true;
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
