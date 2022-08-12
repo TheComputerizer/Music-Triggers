@@ -68,7 +68,7 @@ public class MusicPicker {
     public final HashMap<String, Integer> dynamicPriorities = new HashMap<>();
     public final HashMap<String, Integer> dynamicFadeIn = new HashMap<>();
     public final HashMap<String, Integer> dynamicFadeOut = new HashMap<>();
-    public final HashMap<String, Integer> dynamicDelay = new HashMap<>();
+    public final HashMap<String, String> dynamicDelay = new HashMap<>();
     public final List<String> savePlayable = new ArrayList<>();
     public final List<String> titleCardEvents = new ArrayList<>();
     public final List<String> timeSwitch = new ArrayList<>();
@@ -77,7 +77,7 @@ public class MusicPicker {
 
     public int curFadeIn = 0;
     public int curFadeOut = 0;
-    public int curDelay = 0;
+    public String curDelay = "0";
     public String crashHelper;
 
     public MusicPicker(Channel channel, SoundHandler handler) {
@@ -96,6 +96,7 @@ public class MusicPicker {
         this.player = Minecraft.getInstance().player;
         if(this.handler.TriggerIdentifierMap.isEmpty()) {
             this.getInfo().updateSongList(new ArrayList<>());
+            this.info.runToggles();
             return packet;
         }
         if(this.player == null) {
@@ -119,6 +120,7 @@ public class MusicPicker {
                 dynamicFadeIn.clear();
                 dynamicFadeOut.clear();
                 this.getInfo().updateSongList(activeSongs);
+                this.info.runToggles();
                 return packet;
             }
             dynamicSongs.clear();
@@ -128,8 +130,8 @@ public class MusicPicker {
             if (this.handler.TriggerIdentifierMap.get("generic") != null) {
                 this.getInfo().updatePlayableTriggers(Collections.singletonList("generic"));
                 this.getInfo().updateActiveTriggers(Collections.singletonList("generic"));
-                curDelay = MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("generic")[4]);
-                if (curDelay == 0) curDelay = this.channel.getMainConfig().universalDelay;
+                curDelay = this.handler.TriggerInfoMap.get("generic")[4];
+                if (curDelay.matches("0")) curDelay = this.channel.getMainConfig().universalDelay;
                 curFadeIn = MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("generic")[1]);
                 if (curFadeIn == 0) curFadeIn = this.channel.getMainConfig().universalFadeIn;
                 curFadeOut = MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("generic")[35]);
@@ -137,6 +139,7 @@ public class MusicPicker {
                 this.getInfo().updateSongList(this.handler.TriggerIdentifierMap.get("generic").get("_"));
             }
         }
+        this.info.runToggles();
         return packet;
     }
 
@@ -220,8 +223,8 @@ public class MusicPicker {
         }
         if (!dynamicDelay.isEmpty()) {
             if (dynamicDelay.get(trueHighest) != null) curDelay = dynamicDelay.get(trueHighest);
-            else curDelay = 0;
-            if(curDelay==0) curDelay = this.channel.getMainConfig().universalDelay;
+            else curDelay = "0";
+            if(curDelay.matches("0")) curDelay = this.channel.getMainConfig().universalDelay;
         }
         return trueHighest;
     }
@@ -229,6 +232,7 @@ public class MusicPicker {
     public List<String> playableEvents(Packeted packet) {
         crashHelper = "";
         List<String> events = new ArrayList<>();
+        this.info.updateActiveTriggers(new ArrayList<>());
         try {
             double time = (double) world.dayTime() / 24000.0;
             if (time > 1) {
@@ -270,6 +274,7 @@ public class MusicPicker {
                     else pass = time >= transformedTimeMin || time < transformedTimeMax;
                     if (pass) {
                         this.boolMap.put("time-" + identifier, true);
+                        this.startMap.putIfAbsent("time-" + identifier,0);
                         if (MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("time-" + identifier)[21]) == 0) {
                             if (!events.contains("time-" + identifier)) {
                                 events.add("time-" + identifier);
@@ -277,7 +282,7 @@ public class MusicPicker {
                                 dynamicPriorities.put("time-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("time-" + identifier)[0]));
                                 dynamicFadeIn.put("time-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("time-" + identifier)[1]));
                                 dynamicFadeOut.put("time-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("time-" + identifier)[35]));
-                                dynamicDelay.put("time-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("time-" + identifier)[4]));
+                                dynamicDelay.put("time-" + identifier, this.handler.TriggerInfoMap.get("time-" + identifier)[4]);
                                 triggerPersistence.put("time-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("time-" + identifier)[3]));
                                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("time-" + identifier)[33]))
                                     timeSwitch.add("time-" + identifier);
@@ -289,7 +294,7 @@ public class MusicPicker {
                                 dynamicPriorities.put("time-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("time-" + identifier)[0]));
                                 dynamicFadeIn.put("time-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("time-" + identifier)[1]));
                                 dynamicFadeOut.put("time-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("time-" + identifier)[35]));
-                                dynamicDelay.put("time-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("time-" + identifier)[4]));
+                                dynamicDelay.put("time-" + identifier, this.handler.TriggerInfoMap.get("time-" + identifier)[4]);
                                 triggerPersistence.put("time-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("time-" + identifier)[3]));
                                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("time-" + identifier)[33]))
                                     timeSwitch.add("time-" + identifier);
@@ -302,7 +307,7 @@ public class MusicPicker {
                             dynamicPriorities.put("time-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("time-" + identifier)[0]));
                             dynamicFadeIn.put("time-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("time-" + identifier)[1]));
                             dynamicFadeOut.put("time-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("time-" + identifier)[35]));
-                            dynamicDelay.put("time-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("time-" + identifier)[4]));
+                            dynamicDelay.put("time-" + identifier, this.handler.TriggerInfoMap.get("time-" + identifier)[4]);
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("time-" + identifier)[33]))
                                 timeSwitch.add("time-" + identifier);
                         }
@@ -323,7 +328,7 @@ public class MusicPicker {
                                 dynamicPriorities.put("light-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("light-" + identifier)[0]));
                                 dynamicFadeIn.put("light-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("light-" + identifier)[1]));
                                 dynamicFadeOut.put("light-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("light-" + identifier)[35]));
-                                dynamicDelay.put("light-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("light-" + identifier)[4]));
+                                dynamicDelay.put("light-" + identifier, this.handler.TriggerInfoMap.get("light-" + identifier)[4]);
                                 triggerPersistence.put("light-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("light-" + identifier)[3]));
                                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("light-" + identifier)[33]))
                                     timeSwitch.add("light-" + identifier);
@@ -336,7 +341,7 @@ public class MusicPicker {
                             dynamicPriorities.put("light-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("light-" + identifier)[0]));
                             dynamicFadeIn.put("light-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("light-" + identifier)[1]));
                             dynamicFadeOut.put("light-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("light-" + identifier)[35]));
-                            dynamicDelay.put("light-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("light-" + identifier)[4]));
+                            dynamicDelay.put("light-" + identifier, this.handler.TriggerInfoMap.get("light-" + identifier)[4]);
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("light-" + identifier)[33]))
                                 timeSwitch.add("light-" + identifier);
                         }
@@ -357,6 +362,7 @@ public class MusicPicker {
                         pass = player.getY() > MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("height-" + identifier)[2]);
                     if (pass) {
                         this.boolMap.put("height-" + identifier, true);
+                        this.startMap.putIfAbsent("height-" + identifier,0);
                         if (this.boolMap.get("height-" + identifier) && this.startMap.get("height-" + identifier) > MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("height-" + identifier)[8])) {
                             if (!events.contains("height-" + identifier)) {
                                 events.add("height-" + identifier);
@@ -364,7 +370,7 @@ public class MusicPicker {
                                 dynamicPriorities.put("height-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("height-" + identifier)[0]));
                                 dynamicFadeIn.put("height-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("height-" + identifier)[1]));
                                 dynamicFadeOut.put("height-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("height-" + identifier)[35]));
-                                dynamicDelay.put("height-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("height-" + identifier)[4]));
+                                dynamicDelay.put("height-" + identifier, this.handler.TriggerInfoMap.get("height-" + identifier)[4]);
                                 triggerPersistence.put("height-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("height-" + identifier)[3]));
                                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("height-" + identifier)[33]))
                                     timeSwitch.add("height-" + identifier);
@@ -377,7 +383,7 @@ public class MusicPicker {
                             dynamicPriorities.put("height-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("height-" + identifier)[0]));
                             dynamicFadeIn.put("height-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("height-" + identifier)[1]));
                             dynamicFadeOut.put("height-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("height-" + identifier)[35]));
-                            dynamicDelay.put("height-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("height-" + identifier)[4]));
+                            dynamicDelay.put("height-" + identifier, this.handler.TriggerInfoMap.get("height-" + identifier)[4]);
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("height-" + identifier)[33]))
                                 timeSwitch.add("height-" + identifier);
                         }
@@ -394,7 +400,7 @@ public class MusicPicker {
                 dynamicPriorities.put("elytra", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("elytra")[0]));
                 dynamicFadeIn.put("elytra", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("elytra")[1]));
                 dynamicFadeOut.put("elytra", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("elytra")[35]));
-                dynamicDelay.put("elytra", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("elytra")[4]));
+                dynamicDelay.put("elytra", this.handler.TriggerInfoMap.get("elytra")[4]);
                 triggerPersistence.put("elytra", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("elytra")[3]));
                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("elytra")[33])) timeSwitch.add("elytra");
             } else if (triggerPersistence.get("elytra") != null && triggerPersistence.get("elytra") > 0) {
@@ -404,29 +410,23 @@ public class MusicPicker {
                 dynamicPriorities.put("elytra", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("elytra")[0]));
                 dynamicFadeIn.put("elytra", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("elytra")[1]));
                 dynamicFadeOut.put("elytra", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("elytra")[35]));
-                dynamicDelay.put("elytra", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("elytra")[4]));
+                dynamicDelay.put("elytra", this.handler.TriggerInfoMap.get("elytra")[4]);
                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("elytra")[33])) timeSwitch.add("elytra");
             }
             if (player.fishing != null && player.fishing.isInWaterOrBubble()) {
                 this.boolMap.put("fishing", true);
                 this.startMap.putIfAbsent("fishing", 0);
-                this.startMap.putIfAbsent("fishing", 0);
                 if (this.boolMap.get("fishing") && this.startMap.get("fishing") > MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("fishing")[8])) {
-                    this.boolMap.put("fishing", true);
-                    this.startMap.putIfAbsent("fishing", 0);
-                    this.startMap.putIfAbsent("fishing", 0);
-                    if (this.boolMap.get("fishing") && this.startMap.get("fishing") > MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("fishing")[8])) {
-                        crashHelper = "fishing";
-                        events.add("fishing");
-                        dynamicSongs.put("fishing", this.handler.TriggerIdentifierMap.get("fishing").get("_"));
-                        dynamicPriorities.put("fishing", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("fishing")[0]));
-                        dynamicFadeIn.put("fishing", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("fishing")[1]));
-                        dynamicFadeOut.put("fishing", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("fishing")[35]));
-                        dynamicDelay.put("fishing", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("fishing")[4]));
-                        triggerPersistence.put("fishing", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("fishing")[3]));
-                        if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("fishing")[33]))
-                            timeSwitch.add("fishing");
-                    }
+                    crashHelper = "fishing";
+                    events.add("fishing");
+                    dynamicSongs.put("fishing", this.handler.TriggerIdentifierMap.get("fishing").get("_"));
+                    dynamicPriorities.put("fishing", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("fishing")[0]));
+                    dynamicFadeIn.put("fishing", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("fishing")[1]));
+                    dynamicFadeOut.put("fishing", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("fishing")[35]));
+                    dynamicDelay.put("fishing", this.handler.TriggerInfoMap.get("fishing")[4]);
+                    triggerPersistence.put("fishing", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("fishing")[3]));
+                    if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("fishing")[33]))
+                        timeSwitch.add("fishing");
                 }
             } else if (triggerPersistence.get("fishing") != null && triggerPersistence.get("fishing") > 0) {
                 crashHelper = "fishing";
@@ -435,7 +435,7 @@ public class MusicPicker {
                 dynamicPriorities.put("fishing", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("fishing")[0]));
                 dynamicFadeIn.put("fishing", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("fishing")[1]));
                 dynamicFadeOut.put("fishing", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("fishing")[35]));
-                dynamicDelay.put("fishing", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("fishing")[4]));
+                dynamicDelay.put("fishing", this.handler.TriggerInfoMap.get("fishing")[4]);
                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("fishing")[33])) timeSwitch.add("fishing");
             } else this.boolMap.put("fishing", false);
             if (world.isRaining() && this.handler.TriggerIdentifierMap.get("raining") != null) {
@@ -448,7 +448,7 @@ public class MusicPicker {
                     dynamicPriorities.put("raining", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("raining")[0]));
                     dynamicFadeIn.put("raining", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("raining")[1]));
                     dynamicFadeOut.put("raining", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("raining")[35]));
-                    dynamicDelay.put("raining", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("raining")[4]));
+                    dynamicDelay.put("raining", this.handler.TriggerInfoMap.get("raining")[4]);
                     triggerPersistence.put("raining", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("raining")[3]));
                     if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("raining")[33])) timeSwitch.add("raining");
                 }
@@ -459,7 +459,7 @@ public class MusicPicker {
                 dynamicPriorities.put("raining", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("raining")[0]));
                 dynamicFadeIn.put("raining", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("raining")[1]));
                 dynamicFadeOut.put("raining", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("raining")[35]));
-                dynamicDelay.put("raining", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("raining")[4]));
+                dynamicDelay.put("raining", this.handler.TriggerInfoMap.get("raining")[4]);
                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("raining")[33])) timeSwitch.add("raining");
             } else {
                 this.boolMap.put("raining", false);
@@ -470,7 +470,6 @@ public class MusicPicker {
                 if (this.handler.TriggerIdentifierMap.get("snowing") != null && world.isRaining() && this.channel.getSyncStatus().isSnowTriggerActive()) {
                     this.boolMap.put("snowing", true);
                     this.startMap.putIfAbsent("snowing", 0);
-                    this.startMap.putIfAbsent("snowing", 0);
                     if (this.boolMap.get("snowing") && this.startMap.get("snowing") > MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("snowing")[8])) {
                         crashHelper = "snowing";
                         events.add("snowing");
@@ -478,7 +477,7 @@ public class MusicPicker {
                         dynamicPriorities.put("snowing", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("snowing")[0]));
                         dynamicFadeIn.put("snowing", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("snowing")[1]));
                         dynamicFadeOut.put("snowing", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("snowing")[35]));
-                        dynamicDelay.put("snowing", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("snowing")[4]));
+                        dynamicDelay.put("snowing", this.handler.TriggerInfoMap.get("snowing")[4]);
                         triggerPersistence.put("snowing", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("snowing")[3]));
                         if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("snowing")[33]))
                             timeSwitch.add("snowing");
@@ -490,7 +489,7 @@ public class MusicPicker {
                     dynamicPriorities.put("snowing", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("snowing")[0]));
                     dynamicFadeIn.put("snowing", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("snowing")[1]));
                     dynamicFadeOut.put("snowing", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("snowing")[35]));
-                    dynamicDelay.put("snowing", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("snowing")[4]));
+                    dynamicDelay.put("snowing", this.handler.TriggerInfoMap.get("snowing")[4]);
                     if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("snowing")[33])) timeSwitch.add("snowing");
                 } else {
                     this.boolMap.put("snowing", false);
@@ -507,7 +506,7 @@ public class MusicPicker {
                     dynamicPriorities.put("storming", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("storming")[0]));
                     dynamicFadeIn.put("storming", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("storming")[1]));
                     dynamicFadeOut.put("storming", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("storming")[35]));
-                    dynamicDelay.put("storming", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("storming")[4]));
+                    dynamicDelay.put("storming", this.handler.TriggerInfoMap.get("storming")[4]);
                     triggerPersistence.put("storming", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("storming")[3]));
                     if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("storming")[33]))
                         timeSwitch.add("storming");
@@ -519,7 +518,7 @@ public class MusicPicker {
                 dynamicPriorities.put("storming", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("storming")[0]));
                 dynamicFadeIn.put("storming", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("storming")[1]));
                 dynamicFadeOut.put("storming", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("storming")[35]));
-                dynamicDelay.put("storming", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("storming")[4]));
+                dynamicDelay.put("storming", this.handler.TriggerInfoMap.get("storming")[4]);
                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("storming")[33])) timeSwitch.add("storming");
             } else {
                 this.boolMap.put("storming", false);
@@ -535,7 +534,7 @@ public class MusicPicker {
                     dynamicPriorities.put("lowhp", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("lowhp")[0]));
                     dynamicFadeIn.put("lowhp", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("lowhp")[1]));
                     dynamicFadeOut.put("lowhp", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("lowhp")[35]));
-                    dynamicDelay.put("lowhp", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("lowhp")[4]));
+                    dynamicDelay.put("lowhp", this.handler.TriggerInfoMap.get("lowhp")[4]);
                     triggerPersistence.put("lowhp", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("lowhp")[3]));
                     if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("lowhp")[33])) timeSwitch.add("lowhp");
                 }
@@ -546,7 +545,7 @@ public class MusicPicker {
                 dynamicPriorities.put("lowhp", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("lowhp")[0]));
                 dynamicFadeIn.put("lowhp", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("lowhp")[1]));
                 dynamicFadeOut.put("lowhp", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("lowhp")[35]));
-                dynamicDelay.put("lowhp", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("lowhp")[4]));
+                dynamicDelay.put("lowhp", this.handler.TriggerInfoMap.get("lowhp")[4]);
                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("lowhp")[33])) timeSwitch.add("lowhp");
             } else {
                 this.boolMap.put("lowhp", false);
@@ -562,7 +561,7 @@ public class MusicPicker {
                     dynamicPriorities.put("dead", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("dead")[0]));
                     dynamicFadeIn.put("dead", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("dead")[1]));
                     dynamicFadeOut.put("dead", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("dead")[35]));
-                    dynamicDelay.put("dead", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("dead")[4]));
+                    dynamicDelay.put("dead", this.handler.TriggerInfoMap.get("dead")[4]);
                     for (Map.Entry<Integer, Boolean> integerListEntry : victory.entrySet()) {
                         int key = integerListEntry.getKey();
                         victory.put(key, false);
@@ -577,7 +576,7 @@ public class MusicPicker {
                 dynamicPriorities.put("dead", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("dead")[0]));
                 dynamicFadeIn.put("dead", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("dead")[1]));
                 dynamicFadeOut.put("dead", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("dead")[35]));
-                dynamicDelay.put("dead", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("dead")[4]));
+                dynamicDelay.put("dead", this.handler.TriggerInfoMap.get("dead")[4]);
                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("dead")[33])) timeSwitch.add("dead");
             } else {
                 this.boolMap.put("dead", false);
@@ -593,7 +592,7 @@ public class MusicPicker {
                     dynamicPriorities.put("spectator", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("spectator")[0]));
                     dynamicFadeIn.put("spectator", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("spectator")[1]));
                     dynamicFadeOut.put("spectator", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("spectator")[35]));
-                    dynamicDelay.put("spectator", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("spectator")[4]));
+                    dynamicDelay.put("spectator", this.handler.TriggerInfoMap.get("spectator")[4]);
                     triggerPersistence.put("spectator", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("spectator")[3]));
                     if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("spectator")[33]))
                         timeSwitch.add("spectator");
@@ -605,7 +604,7 @@ public class MusicPicker {
                 dynamicPriorities.put("spectator", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("spectator")[0]));
                 dynamicFadeIn.put("spectator", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("spectator")[1]));
                 dynamicFadeOut.put("spectator", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("spectator")[35]));
-                dynamicDelay.put("spectator", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("spectator")[4]));
+                dynamicDelay.put("spectator", this.handler.TriggerInfoMap.get("spectator")[4]);
                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("spectator")[33])) timeSwitch.add("spectator");
             } else {
                 this.boolMap.put("spectator", false);
@@ -621,7 +620,7 @@ public class MusicPicker {
                     dynamicPriorities.put("creative", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("creative")[0]));
                     dynamicFadeIn.put("creative", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("creative")[1]));
                     dynamicFadeOut.put("creative", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("creative")[35]));
-                    dynamicDelay.put("creative", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("creative")[4]));
+                    dynamicDelay.put("creative", this.handler.TriggerInfoMap.get("creative")[4]);
                     triggerPersistence.put("creative", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("creative")[3]));
                     if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("creative")[33]))
                         timeSwitch.add("creative");
@@ -633,7 +632,7 @@ public class MusicPicker {
                 dynamicPriorities.put("creative", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("creative")[0]));
                 dynamicFadeIn.put("creative", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("creative")[1]));
                 dynamicFadeOut.put("creative", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("creative")[35]));
-                dynamicDelay.put("creative", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("creative")[4]));
+                dynamicDelay.put("creative", this.handler.TriggerInfoMap.get("creative")[4]);
                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("creative")[33])) timeSwitch.add("creative");
             } else {
                 this.boolMap.put("creative", false);
@@ -653,7 +652,7 @@ public class MusicPicker {
                                 dynamicPriorities.put("riding-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("riding-" + identifier)[0]));
                                 dynamicFadeIn.put("riding-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("riding-" + identifier)[1]));
                                 dynamicFadeOut.put("riding-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("riding-" + identifier)[35]));
-                                dynamicDelay.put("riding-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("riding-" + identifier)[4]));
+                                dynamicDelay.put("riding-" + identifier, this.handler.TriggerInfoMap.get("riding-" + identifier)[4]);
                                 triggerPersistence.put("riding-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("riding-" + identifier)[3]));
                                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("riding-" + identifier)[33]))
                                     timeSwitch.add("riding-" + identifier);
@@ -666,7 +665,7 @@ public class MusicPicker {
                             dynamicPriorities.put("riding-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("riding-" + identifier)[0]));
                             dynamicFadeIn.put("riding-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("riding-" + identifier)[1]));
                             dynamicFadeOut.put("riding-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("riding-" + identifier)[35]));
-                            dynamicDelay.put("riding-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("riding-" + identifier)[4]));
+                            dynamicDelay.put("riding-" + identifier, this.handler.TriggerInfoMap.get("riding-" + identifier)[4]);
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("riding-" + identifier)[33]))
                                 timeSwitch.add("riding-" + identifier);
                         }
@@ -686,7 +685,7 @@ public class MusicPicker {
                     dynamicPriorities.put("underwater", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("underwater")[0]));
                     dynamicFadeIn.put("underwater", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("underwater")[1]));
                     dynamicFadeOut.put("underwater", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("underwater")[35]));
-                    dynamicDelay.put("underwater", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("underwater")[4]));
+                    dynamicDelay.put("underwater", this.handler.TriggerInfoMap.get("underwater")[4]);
                     triggerPersistence.put("underwater", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("underwater")[3]));
                     if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("underwater")[33]))
                         timeSwitch.add("underwater");
@@ -698,7 +697,7 @@ public class MusicPicker {
                 dynamicPriorities.put("underwater", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("underwater")[0]));
                 dynamicFadeIn.put("underwater", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("underwater")[1]));
                 dynamicFadeOut.put("underwater", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("underwater")[35]));
-                dynamicDelay.put("underwater", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("underwater")[4]));
+                dynamicDelay.put("underwater", this.handler.TriggerInfoMap.get("underwater")[4]);
                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("underwater")[33]))
                     timeSwitch.add("underwater");
             } else {
@@ -713,7 +712,7 @@ public class MusicPicker {
                     dynamicPriorities.put("pet", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("pet")[0]));
                     dynamicFadeIn.put("pet", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("pet")[1]));
                     dynamicFadeOut.put("pet", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("pet")[35]));
-                    dynamicDelay.put("pet", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("pet")[4]));
+                    dynamicDelay.put("pet", this.handler.TriggerInfoMap.get("pet")[4]);
                     triggerPersistence.put("pet", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("pet")[3]));
                     if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("pet")[33])) timeSwitch.add("pet");
                     break;
@@ -726,7 +725,7 @@ public class MusicPicker {
                 dynamicPriorities.put("pet", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("pet")[0]));
                 dynamicFadeIn.put("pet", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("pet")[1]));
                 dynamicFadeOut.put("pet", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("pet")[35]));
-                dynamicDelay.put("pet", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("pet")[4]));
+                dynamicDelay.put("pet", this.handler.TriggerInfoMap.get("pet")[4]);
                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("pet")[33])) timeSwitch.add("pet");
             }
             if (this.handler.TriggerIdentifierMap.get("drowning") != null && player.getAirSupply() < MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("drowning")[2])) {
@@ -739,7 +738,7 @@ public class MusicPicker {
                     dynamicPriorities.put("drowning", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("drowning")[0]));
                     dynamicFadeIn.put("drowning", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("drowning")[1]));
                     dynamicFadeOut.put("drowning", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("drowning")[35]));
-                    dynamicDelay.put("drowning", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("drowning")[4]));
+                    dynamicDelay.put("drowning", this.handler.TriggerInfoMap.get("drowning")[4]);
                     triggerPersistence.put("drowning", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("drowning")[3]));
                     if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("drowning")[33]))
                         timeSwitch.add("drowning");
@@ -751,7 +750,7 @@ public class MusicPicker {
                 dynamicPriorities.put("drowning", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("drowning")[0]));
                 dynamicFadeIn.put("drowning", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("drowning")[1]));
                 dynamicFadeOut.put("drowning", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("drowning")[35]));
-                dynamicDelay.put("drowning", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("drowning")[4]));
+                dynamicDelay.put("drowning", this.handler.TriggerInfoMap.get("drowning")[4]);
                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("drowning")[33])) timeSwitch.add("drowning");
             } else {
                 this.boolMap.put("drowning", false);
@@ -767,7 +766,7 @@ public class MusicPicker {
                     dynamicPriorities.put("pvp", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("pvp")[0]));
                     dynamicFadeIn.put("pvp", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("pvp")[1]));
                     dynamicFadeOut.put("pvp", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("pvp")[35]));
-                    dynamicDelay.put("pvp", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("pvp")[4]));
+                    dynamicDelay.put("pvp", this.handler.TriggerInfoMap.get("pvp")[4]);
                     triggerPersistence.put("pvp", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("pvp")[3]));
                     triggerPersistence.put("pvp-victory_timeout", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("pvp")[22]));
                     if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("pvp")[33])) timeSwitch.add("pvp");
@@ -782,7 +781,7 @@ public class MusicPicker {
                 dynamicPriorities.put("pvp", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("pvp")[0]));
                 dynamicFadeIn.put("pvp", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("pvp")[1]));
                 dynamicFadeOut.put("pvp", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("pvp")[35]));
-                dynamicDelay.put("pvp", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("pvp")[4]));
+                dynamicDelay.put("pvp", this.handler.TriggerInfoMap.get("pvp")[4]);
                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("pvp")[33])) timeSwitch.add("pvp");
             } else {
                 this.boolMap.put("pvp", false);
@@ -801,14 +800,13 @@ public class MusicPicker {
                 if (this.channel.getSyncStatus().isHomeTriggerActive()) {
                     this.boolMap.put("home", true);
                     this.startMap.putIfAbsent("home", 0);
-                    this.startMap.putIfAbsent("home", 0);
                     if (this.startMap.get("home") > MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("home")[8])) {
                         events.add("home");
                         dynamicSongs.put("home", this.handler.TriggerIdentifierMap.get("home").get("_"));
                         dynamicPriorities.put("home", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("home")[0]));
                         dynamicFadeIn.put("home", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("home")[1]));
                         dynamicFadeOut.put("home", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("home")[35]));
-                        dynamicDelay.put("home", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("home")[4]));
+                        dynamicDelay.put("home", this.handler.TriggerInfoMap.get("home")[4]);
                         triggerPersistence.put("home", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("home")[3]));
                         if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("home")[33])) timeSwitch.add("home");
                     }
@@ -819,7 +817,7 @@ public class MusicPicker {
                     dynamicPriorities.put("home", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("home")[0]));
                     dynamicFadeIn.put("home", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("home")[1]));
                     dynamicFadeOut.put("home", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("home")[35]));
-                    dynamicDelay.put("home", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("home")[4]));
+                    dynamicDelay.put("home", this.handler.TriggerInfoMap.get("home")[4]);
                     if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("home")[33])) timeSwitch.add("home");
                 } else {
                     this.boolMap.put("home", false);
@@ -840,7 +838,7 @@ public class MusicPicker {
                                 dynamicPriorities.put("dimension-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("dimension-" + identifier)[0]));
                                 dynamicFadeIn.put("dimension-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("dimension-" + identifier)[1]));
                                 dynamicFadeOut.put("dimension-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("dimension-" + identifier)[35]));
-                                dynamicDelay.put("dimension-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("dimension-" + identifier)[4]));
+                                dynamicDelay.put("dimension-" + identifier, this.handler.TriggerInfoMap.get("dimension-" + identifier)[4]);
                                 triggerPersistence.put("dimension-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("dimension-" + identifier)[3]));
                                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("dimension-" + identifier)[33]))
                                     timeSwitch.add("dimension-" + identifier);
@@ -853,7 +851,7 @@ public class MusicPicker {
                             dynamicPriorities.put("dimension-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("dimension-" + identifier)[0]));
                             dynamicFadeIn.put("dimension-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("dimension-" + identifier)[1]));
                             dynamicFadeOut.put("dimension-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("dimension-" + identifier)[35]));
-                            dynamicDelay.put("dimension-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("dimension-" + identifier)[4]));
+                            dynamicDelay.put("dimension-" + identifier, this.handler.TriggerInfoMap.get("dimension-" + identifier)[4]);
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("dimension-" + identifier)[33]))
                                 timeSwitch.add("dimension-" + identifier);
                         }
@@ -873,6 +871,7 @@ public class MusicPicker {
                             Float.parseFloat(this.handler.TriggerInfoMap.get("biome-" + identifier)[30]), Boolean.parseBoolean(this.handler.TriggerInfoMap.get("biome-" + identifier)[31])));
                     if (this.channel.getSyncStatus().isBiomeTriggerActive("biome-" + identifier)) {
                         this.boolMap.put("biome-" + identifier, true);
+                        this.startMap.putIfAbsent("biome-" + identifier,0);
                         if (this.boolMap.get("biome-" + identifier) && this.startMap.get("biome-" + identifier) > MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("biome-" + identifier)[8])) {
                             if (!events.contains("biome-" + identifier)) {
                                 events.add("biome-" + identifier);
@@ -880,7 +879,7 @@ public class MusicPicker {
                                 dynamicPriorities.put("biome-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("biome-" + identifier)[0]));
                                 dynamicFadeIn.put("biome-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("biome-" + identifier)[1]));
                                 dynamicFadeOut.put("biome-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("biome-" + identifier)[35]));
-                                dynamicDelay.put("biome-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("biome-" + identifier)[4]));
+                                dynamicDelay.put("biome-" + identifier, this.handler.TriggerInfoMap.get("biome-" + identifier)[4]);
                                 triggerPersistence.put("biome-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("biome-" + identifier)[3]));
                                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("biome-" + identifier)[33]))
                                     timeSwitch.add("biome-" + identifier);
@@ -893,7 +892,7 @@ public class MusicPicker {
                             dynamicPriorities.put("biome-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("biome-" + identifier)[0]));
                             dynamicFadeIn.put("biome-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("biome-" + identifier)[1]));
                             dynamicFadeOut.put("biome-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("biome-" + identifier)[35]));
-                            dynamicDelay.put("biome-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("biome-" + identifier)[4]));
+                            dynamicDelay.put("biome-" + identifier, this.handler.TriggerInfoMap.get("biome-" + identifier)[4]);
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("biome-" + identifier)[33]))
                                 timeSwitch.add("biome-" + identifier);
                         }
@@ -910,6 +909,7 @@ public class MusicPicker {
                     packet.addStructureTrigger(new ServerChannelData.Structure("structure-" + identifier, this.handler.TriggerInfoMap.get("structure-" + identifier)[9]));
                     if (this.channel.getSyncStatus().isStructureTriggerActive("structure-" + identifier)) {
                         this.boolMap.put("structure-" + identifier, true);
+                        this.startMap.putIfAbsent("structure-" + identifier,0);
                         if (this.boolMap.get("structure-" + identifier) && this.startMap.get("structure-" + identifier) > MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("structure-" + identifier)[8])) {
                             if (!events.contains("structure-" + identifier)) {
                                 events.add("structure-" + identifier);
@@ -917,7 +917,7 @@ public class MusicPicker {
                                 dynamicPriorities.put("structure-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("structure-" + identifier)[0]));
                                 dynamicFadeIn.put("structure-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("structure-" + identifier)[1]));
                                 dynamicFadeOut.put("structure-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("structure-" + identifier)[35]));
-                                dynamicDelay.put("structure-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("structure-" + identifier)[4]));
+                                dynamicDelay.put("structure-" + identifier, this.handler.TriggerInfoMap.get("structure-" + identifier)[4]);
                                 triggerPersistence.put("structure-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("structure-" + identifier)[3]));
                                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("structure-" + identifier)[33]))
                                     timeSwitch.add("structure-" + identifier);
@@ -930,7 +930,7 @@ public class MusicPicker {
                             dynamicPriorities.put("structure-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("structure-" + identifier)[0]));
                             dynamicFadeIn.put("structure-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("structure-" + identifier)[1]));
                             dynamicFadeOut.put("structure-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("structure-" + identifier)[35]));
-                            dynamicDelay.put("structure-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("structure-" + identifier)[4]));
+                            dynamicDelay.put("structure-" + identifier, this.handler.TriggerInfoMap.get("structure-" + identifier)[4]);
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("structure-" + identifier)[33]))
                                 timeSwitch.add("structure-" + identifier);
                         }
@@ -961,7 +961,7 @@ public class MusicPicker {
                                 dynamicPriorities.put("mob-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("mob-" + identifier)[0]));
                                 dynamicFadeIn.put("mob-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("mob-" + identifier)[1]));
                                 dynamicFadeOut.put("mob-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("mob-" + identifier)[35]));
-                                dynamicDelay.put("mob-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("mob-" + identifier)[4]));
+                                dynamicDelay.put("mob-" + identifier, this.handler.TriggerInfoMap.get("mob-" + identifier)[4]);
                                 triggerPersistence.put("mob-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("mob-" + identifier)[3]));
                                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("mob-" + identifier)[33]))
                                     timeSwitch.add("mob-" + identifier);
@@ -974,7 +974,7 @@ public class MusicPicker {
                             dynamicPriorities.put("mob-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("mob-" + identifier)[0]));
                             dynamicFadeIn.put("mob-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("mob-" + identifier)[1]));
                             dynamicFadeOut.put("mob-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("mob-" + identifier)[35]));
-                            dynamicDelay.put("mob-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("mob-" + identifier)[4]));
+                            dynamicDelay.put("mob-" + identifier, this.handler.TriggerInfoMap.get("mob-" + identifier)[4]);
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("mob-" + identifier)[33]))
                                 timeSwitch.add("mob-" + identifier);
                         }
@@ -999,6 +999,7 @@ public class MusicPicker {
                     int z2 = MusicTriggers.randomInt(broken[5]);
                     if (bp.getX() > x1 && bp.getX() < x2 && bp.getY() > y1 && bp.getY() < y2 && bp.getZ() > z1 && bp.getZ() < z2) {
                         this.boolMap.put("zones-" + identifier, true);
+                        this.startMap.putIfAbsent("zones-" + identifier,0);
                         if (this.boolMap.get("zones-" + identifier) && this.startMap.get("zones-" + identifier) > MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("zones-" + identifier)[8])) {
                             if (!events.contains("zones-" + identifier)) {
                                 events.add("zones-" + identifier);
@@ -1006,7 +1007,7 @@ public class MusicPicker {
                                 dynamicPriorities.put("zones-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("zones-" + identifier)[0]));
                                 dynamicFadeIn.put("zones-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("zones-" + identifier)[1]));
                                 dynamicFadeOut.put("zones-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("zones-" + identifier)[35]));
-                                dynamicDelay.put("zones-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("zones-" + identifier)[4]));
+                                dynamicDelay.put("zones-" + identifier, this.handler.TriggerInfoMap.get("zones-" + identifier)[4]);
                                 triggerPersistence.put("zones-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("zones-" + identifier)[3]));
                                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("zones-" + identifier)[33]))
                                     timeSwitch.add("zones-" + identifier);
@@ -1019,7 +1020,7 @@ public class MusicPicker {
                             dynamicPriorities.put("zones-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("zones-" + identifier)[0]));
                             dynamicFadeIn.put("zones-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("zones-" + identifier)[1]));
                             dynamicFadeOut.put("zones-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("zones-" + identifier)[35]));
-                            dynamicDelay.put("zones-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("zones-" + identifier)[4]));
+                            dynamicDelay.put("zones-" + identifier, this.handler.TriggerInfoMap.get("zones-" + identifier)[4]);
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("zones-" + identifier)[33]))
                                 timeSwitch.add("zones-" + identifier);
                         }
@@ -1046,7 +1047,7 @@ public class MusicPicker {
                                     dynamicPriorities.put("effect-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("effect-" + identifier)[0]));
                                     dynamicFadeIn.put("effect-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("effect-" + identifier)[1]));
                                     dynamicFadeOut.put("effect-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("effect-" + identifier)[35]));
-                                    dynamicDelay.put("effect-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("effect-" + identifier)[4]));
+                                    dynamicDelay.put("effect-" + identifier, this.handler.TriggerInfoMap.get("effect-" + identifier)[4]);
                                     triggerPersistence.put("effect-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("effect-" + identifier)[3]));
                                     if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("effect-" + identifier)[33]))
                                         timeSwitch.add("effect-" + identifier);
@@ -1059,7 +1060,7 @@ public class MusicPicker {
                                 dynamicPriorities.put("effect-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("effect-" + identifier)[0]));
                                 dynamicFadeIn.put("effect-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("effect-" + identifier)[1]));
                                 dynamicFadeOut.put("effect-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("effect-" + identifier)[35]));
-                                dynamicDelay.put("effect-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("effect-" + identifier)[4]));
+                                dynamicDelay.put("effect-" + identifier, this.handler.TriggerInfoMap.get("effect-" + identifier)[4]);
                                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("effect-" + identifier)[33]))
                                     timeSwitch.add("effect-" + identifier);
                             }
@@ -1085,7 +1086,7 @@ public class MusicPicker {
                                 dynamicPriorities.put("victory-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("victory-" + identifier)[0]));
                                 dynamicFadeIn.put("victory-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("victory-" + identifier)[1]));
                                 dynamicFadeOut.put("victory-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("victory-" + identifier)[35]));
-                                dynamicDelay.put("victory-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("victory-" + identifier)[4]));
+                                dynamicDelay.put("victory-" + identifier, this.handler.TriggerInfoMap.get("victory-" + identifier)[4]);
                                 triggerPersistence.put("victory-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("victory-" + identifier)[3]));
                                 victory.put(MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("victory-" + identifier)[17]), false);
                                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("victory-" + identifier)[33]))
@@ -1099,7 +1100,7 @@ public class MusicPicker {
                             dynamicPriorities.put("victory-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("victory-" + identifier)[0]));
                             dynamicFadeIn.put("victory-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("victory-" + identifier)[1]));
                             dynamicFadeOut.put("victory-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("victory-" + identifier)[35]));
-                            dynamicDelay.put("victory-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("victory-" + identifier)[4]));
+                            dynamicDelay.put("victory-" + identifier, this.handler.TriggerInfoMap.get("victory-" + identifier)[4]);
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("victory-" + identifier)[33]))
                                 timeSwitch.add("victory-" + identifier);
                         }
@@ -1123,7 +1124,7 @@ public class MusicPicker {
                                 dynamicPriorities.put("gui-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gui-" + identifier)[0]));
                                 dynamicFadeIn.put("gui-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gui-" + identifier)[1]));
                                 dynamicFadeOut.put("gui-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gui-" + identifier)[35]));
-                                dynamicDelay.put("gui-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gui-" + identifier)[4]));
+                                dynamicDelay.put("gui-" + identifier, this.handler.TriggerInfoMap.get("gui-" + identifier)[4]);
                                 triggerPersistence.put("gui-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gui-" + identifier)[3]));
                                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("gui-" + identifier)[33]))
                                     timeSwitch.add("gui-" + identifier);
@@ -1136,7 +1137,7 @@ public class MusicPicker {
                             dynamicPriorities.put("gui-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gui-" + identifier)[0]));
                             dynamicFadeIn.put("gui-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gui-" + identifier)[1]));
                             dynamicFadeOut.put("gui-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gui-" + identifier)[35]));
-                            dynamicDelay.put("gui-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gui-" + identifier)[4]));
+                            dynamicDelay.put("gui-" + identifier, this.handler.TriggerInfoMap.get("gui-" + identifier)[4]);
                             triggerPersistence.put("gui-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gui-" + identifier)[3]));
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("gui-" + identifier)[33]))
                                 timeSwitch.add("gui-" + identifier);
@@ -1148,7 +1149,7 @@ public class MusicPicker {
                             dynamicPriorities.put("gui-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gui-" + identifier)[0]));
                             dynamicFadeIn.put("gui-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gui-" + identifier)[1]));
                             dynamicFadeOut.put("gui-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gui-" + identifier)[35]));
-                            dynamicDelay.put("gui-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gui-" + identifier)[4]));
+                            dynamicDelay.put("gui-" + identifier, this.handler.TriggerInfoMap.get("gui-" + identifier)[4]);
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("gui-" + identifier)[33]))
                                 timeSwitch.add("gui-" + identifier);
                         }
@@ -1170,7 +1171,7 @@ public class MusicPicker {
                             dynamicPriorities.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[0]));
                             dynamicFadeIn.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[1]));
                             dynamicFadeOut.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[35]));
-                            dynamicDelay.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[4]));
+                            dynamicDelay.put("difficulty-" + identifier, this.handler.TriggerInfoMap.get("difficulty-" + identifier)[4]);
                             triggerPersistence.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[3]));
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[33]))
                                 timeSwitch.add("difficulty-" + identifier);
@@ -1182,7 +1183,7 @@ public class MusicPicker {
                             dynamicPriorities.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[0]));
                             dynamicFadeIn.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[1]));
                             dynamicFadeOut.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[35]));
-                            dynamicDelay.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[4]));
+                            dynamicDelay.put("difficulty-" + identifier, this.handler.TriggerInfoMap.get("difficulty-" + identifier)[4]);
                             triggerPersistence.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[3]));
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[33]))
                                 timeSwitch.add("difficulty-" + identifier);
@@ -1194,7 +1195,7 @@ public class MusicPicker {
                             dynamicPriorities.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[0]));
                             dynamicFadeIn.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[1]));
                             dynamicFadeOut.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[35]));
-                            dynamicDelay.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[4]));
+                            dynamicDelay.put("difficulty-" + identifier, this.handler.TriggerInfoMap.get("difficulty-" + identifier)[4]);
                             triggerPersistence.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[3]));
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[33]))
                                 timeSwitch.add("difficulty-" + identifier);
@@ -1206,7 +1207,7 @@ public class MusicPicker {
                             dynamicPriorities.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[0]));
                             dynamicFadeIn.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[1]));
                             dynamicFadeOut.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[35]));
-                            dynamicDelay.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[4]));
+                            dynamicDelay.put("difficulty-" + identifier, this.handler.TriggerInfoMap.get("difficulty-" + identifier)[4]);
                             triggerPersistence.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[3]));
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[33]))
                                 timeSwitch.add("difficulty-" + identifier);
@@ -1218,7 +1219,7 @@ public class MusicPicker {
                             dynamicPriorities.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[0]));
                             dynamicFadeIn.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[1]));
                             dynamicFadeOut.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[35]));
-                            dynamicDelay.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[4]));
+                            dynamicDelay.put("difficulty-" + identifier, this.handler.TriggerInfoMap.get("difficulty-" + identifier)[4]);
                             triggerPersistence.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[3]));
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[33]))
                                 timeSwitch.add("difficulty-" + identifier);
@@ -1230,7 +1231,7 @@ public class MusicPicker {
                             dynamicPriorities.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[0]));
                             dynamicFadeIn.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[1]));
                             dynamicFadeOut.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[35]));
-                            dynamicDelay.put("difficulty-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[4]));
+                            dynamicDelay.put("difficulty-" + identifier, this.handler.TriggerInfoMap.get("difficulty-" + identifier)[4]);
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("difficulty-" + identifier)[33]))
                                 timeSwitch.add("difficulty-" + identifier);
                         }
@@ -1243,6 +1244,7 @@ public class MusicPicker {
                     crashHelper = "advancement-" + identifier;
                     if (EventsClient.advancement && (EventsClient.lastAdvancement.contains(this.handler.TriggerInfoMap.get("advancement-" + identifier)[5]) || this.handler.TriggerInfoMap.get("advancement-" + identifier)[5].matches("YouWillNeverGuessThis"))) {
                         this.boolMap.put("advancement-" + identifier, true);
+                        this.startMap.putIfAbsent("advancement-" + identifier,0);
                         if (this.boolMap.get("advancement-" + identifier) && this.startMap.get("advancement-" + identifier) > MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("advancement-" + identifier)[8])) {
                             EventsClient.advancement = false;
                             if (!events.contains("advancement-" + identifier)) {
@@ -1251,7 +1253,7 @@ public class MusicPicker {
                                 dynamicPriorities.put("advancement-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("advancement-" + identifier)[0]));
                                 dynamicFadeIn.put("advancement-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("advancement-" + identifier)[1]));
                                 dynamicFadeOut.put("advancement-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("advancement-" + identifier)[35]));
-                                dynamicDelay.put("advancement-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("advancement-" + identifier)[4]));
+                                dynamicDelay.put("advancement-" + identifier, this.handler.TriggerInfoMap.get("advancement-" + identifier)[4]);
                                 triggerPersistence.put("advancement-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("advancement-" + identifier)[3]));
                                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("advancement-" + identifier)[33]))
                                     timeSwitch.add("advancement-" + identifier);
@@ -1264,7 +1266,7 @@ public class MusicPicker {
                             dynamicPriorities.put("advancement-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("advancement-" + identifier)[0]));
                             dynamicFadeIn.put("advancement-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("advancement-" + identifier)[1]));
                             dynamicFadeOut.put("advancement-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("advancement-" + identifier)[35]));
-                            dynamicDelay.put("advancement-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("advancement-" + identifier)[4]));
+                            dynamicDelay.put("advancement-" + identifier, this.handler.TriggerInfoMap.get("advancement-" + identifier)[4]);
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("advancement-" + identifier)[33]))
                                 timeSwitch.add("advancement-" + identifier);
                         }
@@ -1281,6 +1283,7 @@ public class MusicPicker {
                     packet.addRaidTrigger(new ServerChannelData.Raid("raid-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("raid-" + identifier)[2])));
                     if (this.channel.getSyncStatus().isRaidTriggerActive("raid-" + identifier)) {
                         this.boolMap.put("raid-" + identifier, true);
+                        this.startMap.putIfAbsent("raid-" + identifier, 0);
                         if (this.boolMap.get("raid-" + identifier) && this.startMap.get("raid-" + identifier) > MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("raid-" + identifier)[8])) {
                             if (!events.contains("raid-" + identifier)) {
                                 events.add("raid-" + identifier);
@@ -1288,7 +1291,7 @@ public class MusicPicker {
                                 dynamicPriorities.put("raid-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("raid-" + identifier)[0]));
                                 dynamicFadeIn.put("raid-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("raid-" + identifier)[1]));
                                 dynamicFadeOut.put("raid-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("raid-" + identifier)[35]));
-                                dynamicDelay.put("raid-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("raid-" + identifier)[4]));
+                                dynamicDelay.put("raid-" + identifier, this.handler.TriggerInfoMap.get("raid-" + identifier)[4]);
                                 triggerPersistence.put("raid-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("raid-" + identifier)[3]));
                                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("raid-" + identifier)[33]))
                                     timeSwitch.add("raid-" + identifier);
@@ -1301,7 +1304,7 @@ public class MusicPicker {
                             dynamicPriorities.put("raid-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("raid-" + identifier)[0]));
                             dynamicFadeIn.put("raid-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("raid-" + identifier)[1]));
                             dynamicFadeOut.put("raid-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("raid-" + identifier)[35]));
-                            dynamicDelay.put("raid-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("raid-" + identifier)[4]));
+                            dynamicDelay.put("raid-" + identifier, this.handler.TriggerInfoMap.get("raid-" + identifier)[4]);
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("raid-" + identifier)[33]))
                                 timeSwitch.add("raid-" + identifier);
                         }
@@ -1325,7 +1328,7 @@ public class MusicPicker {
                                 dynamicPriorities.put("statistic-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("statistic-" + identifier)[0]));
                                 dynamicFadeIn.put("statistic-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("statistic-" + identifier)[1]));
                                 dynamicFadeOut.put("statistic-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("statistic-" + identifier)[35]));
-                                dynamicDelay.put("statistic-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("statistic-" + identifier)[4]));
+                                dynamicDelay.put("statistic-" + identifier, this.handler.TriggerInfoMap.get("statistic-" + identifier)[4]);
                                 triggerPersistence.put("statistic-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("statistic-" + identifier)[3]));
                                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("statistic-" + identifier)[33]))
                                     timeSwitch.add("statistic-" + identifier);
@@ -1338,7 +1341,7 @@ public class MusicPicker {
                             dynamicPriorities.put("statistic-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("statistic-" + identifier)[0]));
                             dynamicFadeIn.put("statistic-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("statistic-" + identifier)[1]));
                             dynamicFadeOut.put("statistic-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("statistic-" + identifier)[35]));
-                            dynamicDelay.put("statistic-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("statistic-" + identifier)[4]));
+                            dynamicDelay.put("statistic-" + identifier, this.handler.TriggerInfoMap.get("statistic-" + identifier)[4]);
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("statistic-" + identifier)[33]))
                                 timeSwitch.add("statistic-" + identifier);
                         }
@@ -1363,7 +1366,7 @@ public class MusicPicker {
                                 dynamicPriorities.put("command-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("command-" + identifier)[0]));
                                 dynamicFadeIn.put("command-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("command-" + identifier)[1]));
                                 dynamicFadeOut.put("command-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("command-" + identifier)[35]));
-                                dynamicDelay.put("command-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("command-" + identifier)[4]));
+                                dynamicDelay.put("command-" + identifier, this.handler.TriggerInfoMap.get("command-" + identifier)[4]);
                                 triggerPersistence.put("command-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("command-" + identifier)[3]));
                                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("command-" + identifier)[33]))
                                     timeSwitch.add("command-" + identifier);
@@ -1376,7 +1379,7 @@ public class MusicPicker {
                             dynamicPriorities.put("command-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("command-" + identifier)[0]));
                             dynamicFadeIn.put("command-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("command-" + identifier)[1]));
                             dynamicFadeOut.put("command-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("command-" + identifier)[35]));
-                            dynamicDelay.put("command-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("command-" + identifier)[4]));
+                            dynamicDelay.put("command-" + identifier, this.handler.TriggerInfoMap.get("command-" + identifier)[4]);
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("command-" + identifier)[33]))
                                 timeSwitch.add("command-" + identifier);
                         }
@@ -1401,6 +1404,7 @@ public class MusicPicker {
             if (lightrain()) events.add("lightrain");
             List<String> seasons = seasons();
             if (!seasons.isEmpty()) events.addAll(seasons);
+            events.removeIf(trigger -> !this.channel.getToggleStatusForTrigger(trigger));
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("There was a problem with your " + crashHelper + " trigger! The error was " + e.getMessage() + " and was caught on line " + e.getStackTrace()[0].getLineNumber() + " in the class " + e.getStackTrace()[0]);
@@ -1419,7 +1423,7 @@ public class MusicPicker {
                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[9])) {
                     if (GameStageHelper.hasStage(player, this.handler.TriggerInfoMap.get("gamestage-" + identifier)[19])) {
                         this.boolMap.put("gamestage-" + identifier,true);
-					this.startMap.putIfAbsent("gamestage-" + identifier,0);
+					    this.startMap.putIfAbsent("gamestage-" + identifier,0);
                         if (this.boolMap.get("gamestage-" + identifier) && this.startMap.get("gamestage-" + identifier) > MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[8])) {
                             if (!events.contains("gamestage-" + identifier)) {
                                 events.add("gamestage-" + identifier);
@@ -1427,7 +1431,7 @@ public class MusicPicker {
                                 dynamicPriorities.put("gamestage-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[0]));
                                 dynamicFadeIn.put("gamestage-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[1]));
                                 dynamicFadeOut.put("gamestage-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[35]));
-                                dynamicDelay.put("gamestage-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[4]));
+                                dynamicDelay.put("gamestage-" + identifier, this.handler.TriggerInfoMap.get("gamestage-" + identifier)[4]);
                                 triggerPersistence.put("gamestage-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[3]));
                                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[33]))
                                     timeSwitch.add("gamestage-" + identifier);
@@ -1440,7 +1444,7 @@ public class MusicPicker {
                             dynamicPriorities.put("gamestage-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[0]));
                             dynamicFadeIn.put("gamestage-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[1]));
                             dynamicFadeOut.put("gamestage-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[35]));
-                            dynamicDelay.put("gamestage-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[4]));
+                            dynamicDelay.put("gamestage-" + identifier, this.handler.TriggerInfoMap.get("gamestage-" + identifier)[4]);
                             if(Boolean.parseBoolean(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[33])) timeSwitch.add("gamestage-" + identifier);
                         }
                     } else {
@@ -1450,7 +1454,7 @@ public class MusicPicker {
                 } else {
                     if (!GameStageHelper.hasStage(player, this.handler.TriggerInfoMap.get("gamestage-" + identifier)[19])) {
                         this.boolMap.put("gamestage-" + identifier,true);
-					this.startMap.putIfAbsent("gamestage-" + identifier,0);
+					    this.startMap.putIfAbsent("gamestage-" + identifier,0);
                         if (this.boolMap.get("gamestage-" + identifier) && this.startMap.get("gamestage-" + identifier) > MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[8])) {
                             if (!events.contains("gamestage-" + identifier)) {
                                 events.add("gamestage-" + identifier);
@@ -1458,7 +1462,7 @@ public class MusicPicker {
                                 dynamicPriorities.put("gamestage-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[0]));
                                 dynamicFadeIn.put("gamestage-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[1]));
                                 dynamicFadeOut.put("gamestage-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[35]));
-                                dynamicDelay.put("gamestage-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[4]));
+                                dynamicDelay.put("gamestage-" + identifier, this.handler.TriggerInfoMap.get("gamestage-" + identifier)[4]);
                                 triggerPersistence.put("gamestage-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[3]));
                                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[33]))
                                     timeSwitch.add("gamestage-" + identifier);
@@ -1471,7 +1475,7 @@ public class MusicPicker {
                             dynamicPriorities.put("gamestage-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[0]));
                             dynamicFadeIn.put("gamestage-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[1]));
                             dynamicFadeOut.put("gamestage-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[35]));
-                            dynamicDelay.put("gamestage-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[4]));
+                            dynamicDelay.put("gamestage-" + identifier, this.handler.TriggerInfoMap.get("gamestage-" + identifier)[4]);
                             if(Boolean.parseBoolean(this.handler.TriggerInfoMap.get("gamestage-" + identifier)[33])) timeSwitch.add("gamestage-" + identifier);
                         }
                     } else {
@@ -1490,13 +1494,13 @@ public class MusicPicker {
             LunarContext lunarContext = ((EnhancedCelestialsWorldData) world).getLunarContext();
             if (lunarContext != null && lunarContext.getCurrentEvent() instanceof BloodMoon) {
                 this.boolMap.put("bloodmoon",true);
-					this.startMap.putIfAbsent("bloodmoon" ,0);
+                this.startMap.putIfAbsent("bloodmoon" ,0);
                 if (this.boolMap.get("bloodmoon") && this.startMap.get("bloodmoon") > MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("bloodmoon")[8])) {
                     dynamicSongs.put("bloodmoon", this.handler.TriggerIdentifierMap.get("bloodmoon").get("_"));
                     dynamicPriorities.put("bloodmoon", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("bloodmoon")[0]));
                     dynamicFadeIn.put("bloodmoon", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("bloodmoon")[1]));
                     dynamicFadeOut.put("bloodmoon", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("bloodmoon")[35]));
-                    dynamicDelay.put("bloodmoon", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("bloodmoon")[4]));
+                    dynamicDelay.put("bloodmoon", this.handler.TriggerInfoMap.get("bloodmoon")[4]);
                     triggerPersistence.put("bloodmoon", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("bloodmoon")[3]));
                     if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("bloodmoon")[33]))
                         timeSwitch.add("bloodmoon");
@@ -1507,7 +1511,7 @@ public class MusicPicker {
                 dynamicPriorities.put("bloodmoon", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("bloodmoon")[0]));
                 dynamicFadeIn.put("bloodmoon", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("bloodmoon")[1]));
                 dynamicFadeOut.put("bloodmoon", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("bloodmoon")[35]));
-                dynamicDelay.put("bloodmoon", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("bloodmoon")[4]));
+                dynamicDelay.put("bloodmoon", this.handler.TriggerInfoMap.get("bloodmoon")[4]);
                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("bloodmoon")[33])) timeSwitch.add("bloodmoon");
                 return true;
             } else {
@@ -1524,13 +1528,13 @@ public class MusicPicker {
             LunarContext lunarContext = ((EnhancedCelestialsWorldData) world).getLunarContext();
             if (lunarContext != null && lunarContext.getCurrentEvent() instanceof HarvestMoon) {
                 this.boolMap.put("harvestmoon",true);
-					this.startMap.putIfAbsent("harvestmoon" ,0);
+                this.startMap.putIfAbsent("harvestmoon" ,0);
                 if (this.boolMap.get("harvestmoon") && this.startMap.get("harvestmoon") > MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("harvestmoon")[8])) {
                     dynamicSongs.put("harvestmoon", this.handler.TriggerIdentifierMap.get("harvestmoon").get("_"));
                     dynamicPriorities.put("harvestmoon", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("harvestmoon")[0]));
                     dynamicFadeIn.put("harvestmoon", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("harvestmoon")[1]));
                     dynamicFadeOut.put("harvestmoon", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("harvestmoon")[35]));
-                    dynamicDelay.put("harvestmoon", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("harvestmoon")[4]));
+                    dynamicDelay.put("harvestmoon", this.handler.TriggerInfoMap.get("harvestmoon")[4]);
                     triggerPersistence.put("harvestmoon", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("harvestmoon")[3]));
                     if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("harvestmoon")[33]))
                         timeSwitch.add("harvestmoon");
@@ -1541,7 +1545,7 @@ public class MusicPicker {
                 dynamicPriorities.put("harvestmoon", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("harvestmoon")[0]));
                 dynamicFadeIn.put("harvestmoon", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("harvestmoon")[1]));
                 dynamicFadeOut.put("harvestmoon", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("harvestmoon")[35]));
-                dynamicDelay.put("harvestmoon", MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("harvestmoon")[4]));
+                dynamicDelay.put("harvestmoon", this.handler.TriggerInfoMap.get("harvestmoon")[4]);
                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("harvestmoon")[33]))
                     timeSwitch.add("harvestmoon");
                 return true;
@@ -1559,13 +1563,13 @@ public class MusicPicker {
             LunarContext lunarContext = ((EnhancedCelestialsWorldData) world).getLunarContext();
             if (lunarContext != null && lunarContext.getCurrentEvent() instanceof BlueMoon) {
                 this.boolMap.put("bluemoon",true);
-					this.startMap.putIfAbsent("bluemoon" ,0);
+                this.startMap.putIfAbsent("bluemoon" ,0);
                 if (this.boolMap.get("bluemoon") && this.startMap.get("bluemoon") > MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("bluemoon")[8])) {
                     dynamicSongs.put("bluemoon", this.handler.TriggerIdentifierMap.get("bluemoon").get("_"));
                     dynamicPriorities.put("bluemoon", Integer.parseInt(this.handler.TriggerInfoMap.get("bluemoon")[0]));
                     dynamicFadeIn.put("bluemoon", Integer.parseInt(this.handler.TriggerInfoMap.get("bluemoon")[1]));
                     dynamicFadeOut.put("bluemoon", Integer.parseInt(this.handler.TriggerInfoMap.get("bluemoon")[35]));
-                    dynamicDelay.put("bluemoon", Integer.parseInt(this.handler.TriggerInfoMap.get("bluemoon")[4]));
+                    dynamicDelay.put("bluemoon", this.handler.TriggerInfoMap.get("bluemoon")[4]);
                     triggerPersistence.put("bluemoon", Integer.parseInt(this.handler.TriggerInfoMap.get("bluemoon")[3]));
                     if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("bluemoon")[33]))
                         timeSwitch.add("bluemoon");
@@ -1577,7 +1581,7 @@ public class MusicPicker {
                 dynamicPriorities.put("bluemoon", Integer.parseInt(this.handler.TriggerInfoMap.get("bluemoon")[0]));
                 dynamicFadeIn.put("bluemoon", Integer.parseInt(this.handler.TriggerInfoMap.get("bluemoon")[1]));
                 dynamicFadeOut.put("bluemoon", Integer.parseInt(this.handler.TriggerInfoMap.get("bluemoon")[35]));
-                dynamicDelay.put("bluemoon", Integer.parseInt(this.handler.TriggerInfoMap.get("bluemoon")[4]));
+                dynamicDelay.put("bluemoon", this.handler.TriggerInfoMap.get("bluemoon")[4]);
                 if(Boolean.parseBoolean(this.handler.TriggerInfoMap.get("bluemoon")[33])) timeSwitch.add("bluemoon");
                 return true;
             } else {
@@ -1606,7 +1610,7 @@ public class MusicPicker {
                                 dynamicPriorities.put("moon-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("moon-" + identifier)[0]));
                                 dynamicFadeIn.put("moon-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("moon-" + identifier)[1]));
                                 dynamicFadeOut.put("moon-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("moon-" + identifier)[35]));
-                                dynamicDelay.put("moon-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("moon-" + identifier)[4]));
+                                dynamicDelay.put("moon-" + identifier, this.handler.TriggerInfoMap.get("moon-" + identifier)[4]);
                                 triggerPersistence.put("moon-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("moon-" + identifier)[3]));
                                 if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("moon-" + identifier)[33]))
                                     timeSwitch.add("moon-" + identifier);
@@ -1619,7 +1623,7 @@ public class MusicPicker {
                             dynamicPriorities.put("moon-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("moon-" + identifier)[0]));
                             dynamicFadeIn.put("moon-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("moon-" + identifier)[1]));
                             dynamicFadeOut.put("moon-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("moon-" + identifier)[35]));
-                            dynamicDelay.put("moon-" + identifier, Integer.parseInt(this.handler.TriggerInfoMap.get("moon-" + identifier)[4]));
+                            dynamicDelay.put("moon-" + identifier, this.handler.TriggerInfoMap.get("moon-" + identifier)[4]);
                             if(Boolean.parseBoolean(this.handler.TriggerInfoMap.get("moon-" + identifier)[33])) timeSwitch.add("moon-" + identifier);
                         }
                     }  else {
@@ -1646,7 +1650,7 @@ public class MusicPicker {
                             dynamicPriorities.put("rainintensity-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("rainintensity-" + identifier)[0]));
                             dynamicFadeIn.put("rainintensity-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("rainintensity-" + identifier)[1]));
                             dynamicFadeOut.put("rainintensity-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("rainintensity-" + identifier)[35]));
-                            dynamicDelay.put("rainintensity-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("rainintensity-" + identifier)[4]));
+                            dynamicDelay.put("rainintensity-" + identifier, this.handler.TriggerInfoMap.get("rainintensity-" + identifier)[4]);
                             triggerPersistence.put("rainintensity-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("rainintensity" + identifier)[3]));
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("rainintensity-" + identifier)[33]))
                                 timeSwitch.add("rainintensity-" + identifier);
@@ -1659,7 +1663,7 @@ public class MusicPicker {
                         dynamicPriorities.put("rainintensity-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("rainintensity-" + identifier)[0]));
                         dynamicFadeIn.put("rainintensity-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("rainintensity-" + identifier)[1]));
                         dynamicFadeOut.put("rainintensity-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("rainintensity-" + identifier)[35]));
-                        dynamicDelay.put("rainintensity-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("rainintensity-" + identifier)[4]));
+                        dynamicDelay.put("rainintensity-" + identifier, this.handler.TriggerInfoMap.get("rainintensity-" + identifier)[4]);
                         if(Boolean.parseBoolean(this.handler.TriggerInfoMap.get("rainintensity-" + identifier)[33])) timeSwitch.add("rainintensity-" + identifier);
                         return "rainintensity-" + identifier;
                     }
@@ -1678,13 +1682,13 @@ public class MusicPicker {
             BetterWeatherWorldData weatherdata = (BetterWeatherWorldData) world;
             if (weatherdata.getWeatherEventContext() != null && weatherdata.getWeatherEventContext().getCurrentEvent() instanceof AcidRain) {
                 this.boolMap.put("acidrain",true);
-					this.startMap.putIfAbsent("acidrain" ,0);
+                this.startMap.putIfAbsent("acidrain" ,0);
                 if (this.boolMap.get("acidrain") && this.startMap.get("acidrain") > MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("acidrain")[8])) {
                     dynamicSongs.put("acidrain", this.handler.TriggerIdentifierMap.get("acidrain").get("_"));
                     dynamicPriorities.put("acidrain", Integer.parseInt(this.handler.TriggerInfoMap.get("acidrain")[0]));
                     dynamicFadeIn.put("acidrain", Integer.parseInt(this.handler.TriggerInfoMap.get("acidrain")[1]));
                     dynamicFadeOut.put("acidrain", Integer.parseInt(this.handler.TriggerInfoMap.get("acidrain")[35]));
-                    dynamicDelay.put("acidrain", Integer.parseInt(this.handler.TriggerInfoMap.get("acidrain")[4]));
+                    dynamicDelay.put("acidrain", this.handler.TriggerInfoMap.get("acidrain")[4]);
                     triggerPersistence.put("acidrain", Integer.parseInt(this.handler.TriggerInfoMap.get("acidrain")[3]));
                     if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("acidrain")[33]))
                         timeSwitch.add("acidrain");
@@ -1696,7 +1700,7 @@ public class MusicPicker {
                 dynamicPriorities.put("acidrain", Integer.parseInt(this.handler.TriggerInfoMap.get("acidrain")[0]));
                 dynamicFadeIn.put("acidrain", Integer.parseInt(this.handler.TriggerInfoMap.get("acidrain")[1]));
                 dynamicFadeOut.put("acidrain", Integer.parseInt(this.handler.TriggerInfoMap.get("acidrain")[35]));
-                dynamicDelay.put("acidrain", Integer.parseInt(this.handler.TriggerInfoMap.get("acidrain")[4]));
+                dynamicDelay.put("acidrain", this.handler.TriggerInfoMap.get("acidrain")[4]);
                 if(Boolean.parseBoolean(this.handler.TriggerInfoMap.get("acidrain")[33])) timeSwitch.add("acidrain");
                 return true;
             } else {
@@ -1713,13 +1717,13 @@ public class MusicPicker {
             BetterWeatherWorldData weatherdata = (BetterWeatherWorldData) world;
             if (weatherdata.getWeatherEventContext() != null && weatherdata.getWeatherEventContext().getCurrentEvent() instanceof Blizzard) {
                 this.boolMap.put("blizzard",true);
-					this.startMap.putIfAbsent("blizzard" ,0);
+                this.startMap.putIfAbsent("blizzard" ,0);
                 if (this.boolMap.get("blizzard") && this.startMap.get("blizzard") > MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("blizzard")[8])) {
                     dynamicSongs.put("blizzard", this.handler.TriggerIdentifierMap.get("blizzard").get("_"));
                     dynamicPriorities.put("blizzard", Integer.parseInt(this.handler.TriggerInfoMap.get("blizzard")[0]));
                     dynamicFadeIn.put("blizzard", Integer.parseInt(this.handler.TriggerInfoMap.get("blizzard")[1]));
                     dynamicFadeOut.put("blizzard", Integer.parseInt(this.handler.TriggerInfoMap.get("blizzard")[35]));
-                    dynamicDelay.put("blizzard", Integer.parseInt(this.handler.TriggerInfoMap.get("blizzard")[4]));
+                    dynamicDelay.put("blizzard", this.handler.TriggerInfoMap.get("blizzard")[4]);
                     triggerPersistence.put("blizzard", Integer.parseInt(this.handler.TriggerInfoMap.get("blizzard")[3]));
                     if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("blizzard")[33]))
                         timeSwitch.add("blizzard");
@@ -1731,7 +1735,7 @@ public class MusicPicker {
                 dynamicPriorities.put("blizzard", Integer.parseInt(this.handler.TriggerInfoMap.get("blizzard")[0]));
                 dynamicFadeIn.put("blizzard", Integer.parseInt(this.handler.TriggerInfoMap.get("blizzard")[1]));
                 dynamicFadeOut.put("blizzard", Integer.parseInt(this.handler.TriggerInfoMap.get("blizzard")[35]));
-                dynamicDelay.put("blizzard", Integer.parseInt(this.handler.TriggerInfoMap.get("blizzard")[4]));
+                dynamicDelay.put("blizzard", this.handler.TriggerInfoMap.get("blizzard")[4]);
                 if(Boolean.parseBoolean(this.handler.TriggerInfoMap.get("blizzard")[33])) timeSwitch.add("blizzard");
                 return true;
             } else {
@@ -1748,13 +1752,13 @@ public class MusicPicker {
             BetterWeatherWorldData weatherdata = (BetterWeatherWorldData) world;
             if (weatherdata.getWeatherEventContext() != null && weatherdata.getWeatherEventContext().getCurrentEvent() instanceof Cloudy) {
                 this.boolMap.put("cloudy",true);
-					this.startMap.putIfAbsent("cloudy" ,0);
+                this.startMap.putIfAbsent("cloudy" ,0);
                 if (this.boolMap.get("cloudy") && this.startMap.get("cloudy") > MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("cloudy")[8])) {
                     dynamicSongs.put("cloudy", this.handler.TriggerIdentifierMap.get("cloudy").get("_"));
                     dynamicPriorities.put("cloudy", Integer.parseInt(this.handler.TriggerInfoMap.get("cloudy")[0]));
                     dynamicFadeIn.put("cloudy", Integer.parseInt(this.handler.TriggerInfoMap.get("cloudy")[1]));
                     dynamicFadeOut.put("cloudy", Integer.parseInt(this.handler.TriggerInfoMap.get("cloudy")[35]));
-                    dynamicDelay.put("cloudy", Integer.parseInt(this.handler.TriggerInfoMap.get("cloudy")[4]));
+                    dynamicDelay.put("cloudy", this.handler.TriggerInfoMap.get("cloudy")[4]);
                     triggerPersistence.put("cloudy", Integer.parseInt(this.handler.TriggerInfoMap.get("cloudy")[3]));
                     if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("cloudy")[33])) timeSwitch.add("cloudy");
                     return true;
@@ -1765,7 +1769,7 @@ public class MusicPicker {
                 dynamicPriorities.put("cloudy", Integer.parseInt(this.handler.TriggerInfoMap.get("cloudy")[0]));
                 dynamicFadeIn.put("cloudy", Integer.parseInt(this.handler.TriggerInfoMap.get("cloudy")[1]));
                 dynamicFadeOut.put("cloudy", Integer.parseInt(this.handler.TriggerInfoMap.get("cloudy")[35]));
-                dynamicDelay.put("cloudy", Integer.parseInt(this.handler.TriggerInfoMap.get("cloudy")[4]));
+                dynamicDelay.put("cloudy", this.handler.TriggerInfoMap.get("cloudy")[4]);
                 if(Boolean.parseBoolean(this.handler.TriggerInfoMap.get("cloudy")[33])) timeSwitch.add("cloudy");
                 return true;
             } else {
@@ -1782,13 +1786,13 @@ public class MusicPicker {
             BetterWeatherWorldData weatherdata = (BetterWeatherWorldData) world;
             if (weatherdata.getWeatherEventContext() != null && weatherdata.getWeatherEventContext().getCurrentEvent() instanceof Rain && !(weatherdata.getWeatherEventContext().getCurrentEvent() instanceof AcidRain)) {
                 this.boolMap.put("lightrain",true);
-					this.startMap.putIfAbsent("lightrain" ,0);
+                this.startMap.putIfAbsent("lightrain" ,0);
                 if (this.boolMap.get("lightrain") && this.startMap.get("lightrain") > MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("lightrain")[8])) {
                     dynamicSongs.put("lightrain", this.handler.TriggerIdentifierMap.get("lightrain").get("_"));
                     dynamicPriorities.put("lightrain", Integer.parseInt(this.handler.TriggerInfoMap.get("lightrain")[0]));
                     dynamicFadeIn.put("lightrain", Integer.parseInt(this.handler.TriggerInfoMap.get("lightrain")[1]));
                     dynamicFadeOut.put("lightrain", Integer.parseInt(this.handler.TriggerInfoMap.get("lightrain")[35]));
-                    dynamicDelay.put("lightrain", Integer.parseInt(this.handler.TriggerInfoMap.get("lightrain")[4]));
+                    dynamicDelay.put("lightrain", this.handler.TriggerInfoMap.get("lightrain")[4]);
                     triggerPersistence.put("lightrain", Integer.parseInt(this.handler.TriggerInfoMap.get("lightrain")[3]));
                     if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("lightrain")[33]))
                         timeSwitch.add("lightrain");
@@ -1800,7 +1804,7 @@ public class MusicPicker {
                 dynamicPriorities.put("lightrain", Integer.parseInt(this.handler.TriggerInfoMap.get("lightrain")[0]));
                 dynamicFadeIn.put("lightrain", Integer.parseInt(this.handler.TriggerInfoMap.get("lightrain")[1]));
                 dynamicFadeOut.put("lightrain", Integer.parseInt(this.handler.TriggerInfoMap.get("lightrain")[35]));
-                dynamicDelay.put("lightrain", Integer.parseInt(this.handler.TriggerInfoMap.get("lightrain")[4]));
+                dynamicDelay.put("lightrain", this.handler.TriggerInfoMap.get("lightrain")[4]);
                 if(Boolean.parseBoolean(this.handler.TriggerInfoMap.get("lightrain")[33])) timeSwitch.add("lightrain");
                 return true;
             } else {
@@ -1829,7 +1833,7 @@ public class MusicPicker {
                             dynamicPriorities.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[0]));
                             dynamicFadeIn.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[1]));
                             dynamicFadeOut.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[35]));
-                            dynamicDelay.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[4]));
+                            dynamicDelay.put("season-" + identifier, this.handler.TriggerInfoMap.get("season-" + identifier)[4]);
                             triggerPersistence.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[3]));
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("season-" + identifier)[33]))
                                 timeSwitch.add("season-" + identifier);
@@ -1845,7 +1849,7 @@ public class MusicPicker {
                             dynamicPriorities.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[0]));
                             dynamicFadeIn.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[1]));
                             dynamicFadeOut.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[35]));
-                            dynamicDelay.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[4]));
+                            dynamicDelay.put("season-" + identifier, this.handler.TriggerInfoMap.get("season-" + identifier)[4]);
                             triggerPersistence.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[3]));
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("season-" + identifier)[33]))
                                 timeSwitch.add("season-" + identifier);
@@ -1861,7 +1865,7 @@ public class MusicPicker {
                             dynamicPriorities.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[0]));
                             dynamicFadeIn.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[1]));
                             dynamicFadeOut.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[35]));
-                            dynamicDelay.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[4]));
+                            dynamicDelay.put("season-" + identifier, this.handler.TriggerInfoMap.get("season-" + identifier)[4]);
                             triggerPersistence.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[3]));
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("season-" + identifier)[33]))
                                 timeSwitch.add("season-" + identifier);
@@ -1877,7 +1881,7 @@ public class MusicPicker {
                             dynamicPriorities.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[0]));
                             dynamicFadeIn.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[1]));
                             dynamicFadeOut.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[35]));
-                            dynamicDelay.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[4]));
+                            dynamicDelay.put("season-" + identifier, this.handler.TriggerInfoMap.get("season-" + identifier)[4]);
                             triggerPersistence.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[3]));
                             if (Boolean.parseBoolean(this.handler.TriggerInfoMap.get("season-" + identifier)[33]))
                                 timeSwitch.add("season-" + identifier);
@@ -1890,7 +1894,7 @@ public class MusicPicker {
                         dynamicPriorities.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[0]));
                         dynamicFadeIn.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[1]));
                         dynamicFadeOut.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[35]));
-                        dynamicDelay.put("season-" + identifier, MusicTriggers.randomInt(this.handler.TriggerInfoMap.get("season-" + identifier)[4]));
+                        dynamicDelay.put("season-" + identifier, this.handler.TriggerInfoMap.get("season-" + identifier)[4]);
                         if(Boolean.parseBoolean(this.handler.TriggerInfoMap.get("season-" + identifier)[33])) timeSwitch.add("season-" + identifier);
                     }
                 } else {
@@ -2033,14 +2037,18 @@ public class MusicPicker {
         private final List<String> currentSongList;
         private final List<String> previousSongList;
         private final List<String> playableTriggers;
+        private final List<String> toggledPlayableTriggers;
         private final List<String> activeTriggers;
+        private final List<String> toggledActiveTriggers;
         public Info(String channel) {
             this.channel = channel;
             this.cloner = new Cloner();
             this.currentSongList = new ArrayList<>();
             this.previousSongList = new ArrayList<>();
             this.playableTriggers = new ArrayList<>();
+            this.toggledPlayableTriggers = new ArrayList<>();
             this.activeTriggers = new ArrayList<>();
+            this.toggledActiveTriggers = new ArrayList<>();
         }
 
         public List<String> getCurrentSongList() {
@@ -2076,6 +2084,34 @@ public class MusicPicker {
             this.activeTriggers.addAll(activeTriggers);
         }
 
+        public void runToggles() {
+            runPlayableToggle();
+            runActiveToggle();
+        }
+
+        private void runPlayableToggle() {
+            this.toggledPlayableTriggers.removeIf(trigger -> !this.playableTriggers.contains(trigger));
+            List<String> toggleList = new ArrayList<>();
+            for(String trigger : this.playableTriggers) if(!this.toggledPlayableTriggers.contains(trigger)) {
+                toggleList.add(trigger);
+                this.toggledPlayableTriggers.add(trigger);
+            }
+            if(!toggleList.isEmpty()) ChannelManager.getChannel(this.channel).runToggle(2,toggleList);
+        }
+
+        private void runActiveToggle() {
+            this.toggledActiveTriggers.removeIf(trigger -> !this.activeTriggers.contains(trigger));
+            List<String> toggleList = new ArrayList<>();
+            for(String trigger : this.activeTriggers) {
+                MusicTriggers.logger.info("Checking active trigger to toggle: "+trigger);
+                if(!this.toggledActiveTriggers.contains(trigger)) {
+                    toggleList.add(trigger);
+                    this.toggledActiveTriggers.add(trigger);
+                }
+            }
+            if(!toggleList.isEmpty()) ChannelManager.getChannel(this.channel).runToggle(3,toggleList);
+        }
+
         public void clearSongLists() {
             this.currentSongList.clear();
             this.previousSongList.clear();
@@ -2085,7 +2121,9 @@ public class MusicPicker {
         public void clear() {
             clearSongLists();
             this.playableTriggers.clear();
+            this.toggledPlayableTriggers.clear();
             this.activeTriggers.clear();
+            this.toggledActiveTriggers.clear();
         }
     }
 
