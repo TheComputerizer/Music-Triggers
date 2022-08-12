@@ -2103,7 +2103,6 @@ public class MusicPicker {
             this.toggledActiveTriggers.removeIf(trigger -> !this.activeTriggers.contains(trigger));
             List<String> toggleList = new ArrayList<>();
             for(String trigger : this.activeTriggers) {
-                MusicTriggers.logger.info("Checking active trigger to toggle: "+trigger);
                 if(!this.toggledActiveTriggers.contains(trigger)) {
                     toggleList.add(trigger);
                     this.toggledActiveTriggers.add(trigger);

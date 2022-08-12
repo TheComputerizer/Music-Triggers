@@ -145,7 +145,6 @@ public class Channel {
     }
 
     public void runToggle(int condition, List<String> triggers) {
-        MusicTriggers.logger.info("running toggles");
         this.toggles.runToggle(condition, triggers);
     }
 

@@ -128,7 +128,6 @@ public class ConfigToggles {
     public void runToggle(int condition, List<String> triggers) {
         List<String> triggerChain = new ArrayList<>();
         for(Trigger trigger : this.toggleMap.keySet()) {
-            MusicTriggers.logger.info("checking toggle set");
             if(!triggers.isEmpty() && trigger.getTriggers(condition)!=null && new HashSet<>(triggers).containsAll(trigger.getTriggers(condition)))
                 for(String targetCondition : this.toggleMap.get(trigger).getConditions()) {
                     if (targetCondition.matches("true"))
