@@ -20,7 +20,7 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "mods.thecomputerizer.musictriggers.MusicTriggersCommon"
+      "mods.thecomputerizer.musictriggers.MusicTriggers"
     ],
     "client": [
       "mods.thecomputerizer.musictriggers.MusicTriggersClient"

@@ -1,6 +1,5 @@
 package mods.thecomputerizer.musictriggers.common;
 
-import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
 import mods.thecomputerizer.musictriggers.common.objects.BlankRecord;
 import mods.thecomputerizer.musictriggers.common.objects.MusicRecorder;
 import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;

@@ -19,7 +19,7 @@ import java.io.File;
 import java.util.Random;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
-public class MusicTriggersCommon implements ModInitializer {
+public class MusicTriggers implements ModInitializer {
     public static final String MODID = "musictriggers";
 
     public static final Logger logger = LogManager.getLogger();
@@ -33,7 +33,7 @@ public class MusicTriggersCommon implements ModInitializer {
         configDir = new File(".", "config/MusicTriggers");
         if (!configDir.exists()) configDir.mkdir();
         for(ConfigChannels.ChannelInfo info : ConfigChannels.parse(new File(configDir,"channels.toml")))
-            ChannelManager.createChannel(info.getChannelName(),info.getMain(),info.getTransitions(),info.getCommands(),info.getRedirect(),FabricLoaderImpl.INSTANCE.getEnvironmentType()== EnvType.CLIENT,info.getPausedByJukeBox(),info.getOverridesNormalMusic());
+            ChannelManager.createChannel(info.getChannelName(),info.getMain(),info.getTransitions(),info.getCommands(),info.getToggles(),info.getRedirect(),FabricLoaderImpl.INSTANCE.getEnvironmentType()== EnvType.CLIENT,info.getPausedByJukeBox(),info.getOverridesNormalMusic());
         ChannelManager.parseConfigFiles();
         Mappings.init();
         CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> TriggerCommand.register(dispatcher));

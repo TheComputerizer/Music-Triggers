@@ -2,7 +2,7 @@ package mods.thecomputerizer.musictriggers.common;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
-import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.packets.PacketReceiveCommand;
 import net.minecraft.command.argument.EntityArgumentType;
@@ -19,7 +19,7 @@ public class TriggerCommand {
                         PacketHandler.sendTo(PacketReceiveCommand.id,PacketReceiveCommand.encode(new PacketReceiveCommand(StringArgumentType.getString(ctx, "identifier"))), ctx.getSource().getPlayer());
                         return 1;
                     } catch (Exception e) {
-                        MusicTriggersCommon.logger.error("Player not specified");
+                        MusicTriggers.logger.error("Player not specified");
                         e.printStackTrace();
                     }
                     return 0;
@@ -31,7 +31,7 @@ public class TriggerCommand {
                                         PacketHandler.sendTo(PacketReceiveCommand.id,PacketReceiveCommand.encode(new PacketReceiveCommand(StringArgumentType.getString(ctx, "identifier"))), EntityArgumentType.getPlayer(ctx,"player"));
                                         return 1;
                                     } catch (Exception e) {
-                                        MusicTriggersCommon.logger.error("Player not specified correctly");
+                                        MusicTriggers.logger.error("Player not specified correctly");
                                         e.printStackTrace();
                                     }
                                     return 0;

@@ -1,18 +1,8 @@
 package mods.thecomputerizer.musictriggers.common;
 
-import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
-import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.loader.impl.FabricLoaderImpl;
-import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.sound.SoundInstance;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
 
 import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
 
 public class ModSounds {
 

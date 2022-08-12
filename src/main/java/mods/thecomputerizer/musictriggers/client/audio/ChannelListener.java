@@ -7,7 +7,7 @@ import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
-import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -41,7 +41,7 @@ public class ChannelListener extends AudioEventAdapter {
 
     @Override
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
-        MusicTriggersCommon.logger.error("Track exception caught! Stopping audio output for channel: "+this.channel);
+        MusicTriggers.logger.error("Track exception caught! Restarting audio output for channel: "+this.channel);
         exception.printStackTrace();
         this.AUDIO_THREAD.setRunAudioLoop(false);
     }
@@ -82,6 +82,9 @@ public class ChannelListener extends AudioEventAdapter {
                             sleep(frameDuration);
                         }
                     }
+                } else {
+                    sleep(250);
+                    this.runAudioLoop = true;
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();

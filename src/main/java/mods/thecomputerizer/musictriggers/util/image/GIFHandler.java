@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.util.image;
 
 import mods.thecomputerizer.musictriggers.libraries.com.madgag.gif.fmsware.GifDecoder;
-import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -17,7 +17,7 @@ public class GIFHandler {
         g.read(FIS);
         for(int i=0;i<g.getFrameCount();i++) {
             BufferedImage image = g.getFrame(i);
-            MusicTriggersCommon.logger.info(image.getWidth());
+            MusicTriggers.logger.info(image.getWidth());
             ImageIO.write(image, "PNG", new File(folder,i+".png"));
         }
         FIS.close();

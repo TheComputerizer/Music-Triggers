@@ -20,7 +20,7 @@ import net.minecraft.world.gen.feature.ConfiguredStructureFeature;
 
 import java.util.*;
 
-import static mods.thecomputerizer.musictriggers.MusicTriggersCommon.stringBreaker;
+import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
 
 public class CalculateFeatures {
 

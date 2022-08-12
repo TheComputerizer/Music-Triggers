@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.gui.screen.Screen;
@@ -30,7 +30,7 @@ public class GuiCurPlaying extends Screen {
         super(new TranslatableText("screen.musictriggers.curplaying"));
         this.parentScreen = parentScreen;
         this.holder = holder;
-        this.background = new Identifier(MusicTriggersCommon.MODID,"textures/block/recorder_side_active.png");
+        this.background = new Identifier(MusicTriggers.MODID,"textures/block/recorder_side_active.png");
     }
 
     @Override
@@ -109,9 +109,9 @@ public class GuiCurPlaying extends Screen {
             InputStream is = this.client.getResourceManager().getResource(new Identifier(sound.getId().toString().replaceAll("\\.","/"))).getInputStream();
             float length = is.available();
             seconds = length/(44100*16*2);
-            MusicTriggersCommon.logger.info("Second length: "+seconds);
+            MusicTriggers.logger.info("Second length: "+seconds);
         } catch (Exception e) {
-            MusicTriggersCommon.logger.error("Could not read size of sound");
+            MusicTriggers.logger.error("Could not read size of sound");
             e.printStackTrace();
         }
         return seconds;
@@ -122,7 +122,7 @@ public class GuiCurPlaying extends Screen {
         try {
             //if(sound!=null) seconds = Math.floor((float) MusicPlayer.curMusicTimer/1000f);
         } catch (Exception e) {
-            MusicTriggersCommon.logger.error("Could not get current position of song");
+            MusicTriggers.logger.error("Could not get current position of song");
             e.printStackTrace();
         }
         return seconds;

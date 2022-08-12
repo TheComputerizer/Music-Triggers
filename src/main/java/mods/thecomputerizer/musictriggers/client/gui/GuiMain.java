@@ -2,17 +2,14 @@ package mods.thecomputerizer.musictriggers.client.gui;
 
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
-import mods.thecomputerizer.musictriggers.client.MusicPicker;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Style;
 import net.minecraft.text.TranslatableText;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,7 +24,7 @@ public class GuiMain extends Screen {
     public GuiMain(ConfigObject holder) {
         super(new TranslatableText("screen.musictriggers.main"));
         this.reload = false;
-        this.background = new Identifier(MusicTriggersCommon.MODID,"textures/block/recorder_side_active.png");
+        this.background = new Identifier(MusicTriggers.MODID,"textures/block/recorder_side_active.png");
         this.holder = holder;
         this.holder.addAllExistingParameters();
     }
@@ -43,13 +40,13 @@ public class GuiMain extends Screen {
 
     @Override
     public boolean charTyped(char typedChar, int keyCode) {
-        MusicTriggersCommon.logger.info("Char: "+typedChar+" Code: "+keyCode);
+        MusicTriggers.logger.info("Char: "+typedChar+" Code: "+keyCode);
         return super.charTyped(typedChar, keyCode);
     }
 
     @Override
     public boolean keyPressed(int keyCode, int i, int j) {
-        MusicTriggersCommon.logger.info("Key Pressed "+keyCode);
+        MusicTriggers.logger.info("Key Pressed "+keyCode);
         return super.keyPressed(keyCode, i, j);
     }
 

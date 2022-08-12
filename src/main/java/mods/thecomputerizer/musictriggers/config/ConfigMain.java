@@ -1,11 +1,12 @@
 package mods.thecomputerizer.musictriggers.config;
 
 import com.moandjiezana.toml.Toml;
-import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.*;
 
 @SuppressWarnings({"ResultOfMethodCallIgnored", "ExplicitArgumentCanBeLambda", "SuspiciousToArrayCall"})
@@ -15,7 +16,7 @@ public class ConfigMain {
     private String CrashHelper;
     public int universalFadeIn = 0;
     public int universalFadeOut = 0;
-    public int universalDelay = 0;
+    public String universalDelay = "0";
     public final Map<String, String> songholder = new HashMap<>();
     public final Map<String, Map<String, String[]>> triggerholder = new HashMap<>();
     public final Map<String, Map<String, String>> triggerMapper = new HashMap<>();
@@ -43,6 +44,7 @@ public class ConfigMain {
             } catch(Exception e) {
                 e.printStackTrace();
             }
+            writeInformationalHeader(file);
         }
         this.file = file;
         this.channel = channel;
@@ -59,11 +61,11 @@ public class ConfigMain {
             if (toml.contains("universal")) {
                 Toml universal = toml.getTable("universal");
                 if (universal.contains("fade_in"))
-                    this.universalFadeIn = MusicTriggersCommon.randomInt(universal.getString("fade_in"));
+                    this.universalFadeIn = MusicTriggers.randomInt(universal.getString("fade_in"));
                 if (universal.contains("fade_out"))
-                    this.universalFadeOut = MusicTriggersCommon.randomInt(universal.getString("fade_out"));
-                if (universal.contains("fade_delay"))
-                    this.universalDelay = MusicTriggersCommon.randomInt(universal.getString("fade_delay"));
+                    this.universalFadeOut = MusicTriggers.randomInt(universal.getString("fade_out"));
+                if (universal.contains("delay"))
+                    this.universalDelay = universal.getString("delay");
             }
             for (String s : songCollector(this.file)) {
                 if (toml.containsTableArray(s)) {
@@ -78,7 +80,7 @@ public class ConfigMain {
                                         this.triggerMapper.get("song" + songCounter).put(triggerID, trigger.getString("name"));
                                         if (Arrays.asList(triggers).contains(this.triggerMapper.get("song" + songCounter).get(triggerID)) || Arrays.asList(allmodtriggers).contains(this.triggerMapper.get("song" + songCounter).get(triggerID))) {
                                             if (!(Arrays.asList(triggers).contains(this.triggerMapper.get("song" + songCounter).get(triggerID)) || Arrays.asList(allmodtriggers).contains(this.triggerMapper.get("song" + songCounter).get(triggerID))))
-                                                MusicTriggersCommon.logger.warn("Trigger " + this.triggerMapper.get("song" + songCounter).get(triggerID) + " exists but is not supported in this version. Song " + s + " will be loaded but unplayable");
+                                                MusicTriggers.logger.warn("Trigger " + this.triggerMapper.get("song" + songCounter).get(triggerID) + " exists but is not supported in this version. Song " + s + " will be loaded but unplayable");
                                             CrashHelper = this.triggerMapper.get("song" + songCounter).get(triggerID);
                                             songholder.put("song" + songCounter, s);
                                             this.triggerholder.putIfAbsent("song" + songCounter, new HashMap<>());
@@ -86,7 +88,7 @@ public class ConfigMain {
                                                     "minecraft", "_", "16", "false", "100", "100", "100",
                                                     "false", "0", "minecraft", "true", "true", "0", "0", "nope",
                                                     "nope", "-111", "false", "_", "true", "-1", "-111", "true",
-                                                    "false", "false", "false", "0", "minecraft"});
+                                                    "false", "false", "false", "0", "minecraft", "true"});
                                             if (trigger.contains("priority"))
                                                 this.triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                             if (trigger.contains("fade_in"))
@@ -104,7 +106,7 @@ public class ConfigMain {
                                             if (trigger.containsTable("zone")) {
                                                 Toml zone = trigger.getTable("zone");
                                                 if (!zone.contains("x_min") || !zone.contains("y_min") || !zone.contains("z_min") || !zone.contains("x_max") || !zone.contains("y_max") || !zone.contains("z_max")) {
-                                                    MusicTriggersCommon.logger.warn("Incorrect format for the zone parameter! Skipping...");
+                                                    MusicTriggers.logger.warn("Incorrect format for the zone parameter! Skipping...");
                                                 } else {
                                                     String coords = zone.getString("x_min");
                                                     coords = coords + "," + zone.getString("y_min");
@@ -175,10 +177,12 @@ public class ConfigMain {
                                                 this.triggerholder.get("song" + songCounter).get(triggerID)[35] = trigger.getString("fade_out");
                                             if (trigger.contains("mob_champion"))
                                                 this.triggerholder.get("song" + songCounter).get(triggerID)[36] = trigger.getString("mob_champion");
+                                            if (trigger.contains("toggled"))
+                                                this.triggerholder.get("song" + songCounter).get(triggerID)[37] = trigger.getString("toggled");
                                         } else
-                                            MusicTriggersCommon.logger.warn("Could not find trigger with name " + triggerID);
+                                            MusicTriggers.logger.warn("Could not find trigger with name " + triggerID + "in channel "+this.channel);
                                     } else
-                                        MusicTriggersCommon.logger.warn("Skipping trigger block because there was no name!");
+                                        MusicTriggers.logger.warn("Skipping trigger block because there was no name in channel "+this.channel+"!");
                                     triggerMapCounter++;
                                 }
                             } else if (song.containsTable("trigger")) {
@@ -188,7 +192,7 @@ public class ConfigMain {
                                     this.triggerMapper.get("song" + songCounter).put(triggerID, trigger.getString("name"));
                                     if (Arrays.asList(triggers).contains(this.triggerMapper.get("song" + songCounter).get(triggerID)) || Arrays.asList(allmodtriggers).contains(this.triggerMapper.get("song" + songCounter).get(triggerID))) {
                                         if (!(Arrays.asList(triggers).contains(this.triggerMapper.get("song" + songCounter).get(triggerID)) || Arrays.asList(allmodtriggers).contains(this.triggerMapper.get("song" + songCounter).get(triggerID))))
-                                            MusicTriggersCommon.logger.warn("Trigger " + this.triggerMapper.get("song" + songCounter).get(triggerID) + " exists but is not supported in this version. Song " + s + " will be loaded but unplayable");
+                                            MusicTriggers.logger.warn("Trigger " + this.triggerMapper.get("song" + songCounter).get(triggerID) + " exists but is not supported in this version. Song " + s + " will be loaded but unplayable");
                                         CrashHelper = this.triggerMapper.get("song" + songCounter).get(triggerID);
                                         songholder.put("song" + songCounter, s);
                                         this.triggerholder.putIfAbsent("song" + songCounter, new HashMap<>());
@@ -196,7 +200,7 @@ public class ConfigMain {
                                                 "minecraft", "_", "16", "false", "100", "100", "100",
                                                 "false", "0", "minecraft", "true", "true", "0", "0", "nope",
                                                 "nope", "-111", "false", "_", "true", "-1", "-111", "true",
-                                                "false", "false", "false", "0", "minecraft"});
+                                                "false", "false", "false", "0", "minecraft", "true"});
                                         if (trigger.contains("priority"))
                                             this.triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                         if (trigger.contains("fade_in"))
@@ -214,7 +218,7 @@ public class ConfigMain {
                                         if (trigger.containsTable("zone")) {
                                             Toml zone = trigger.getTable("zone");
                                             if (!zone.contains("x_min") || !zone.contains("y_min") || !zone.contains("z_min") || !zone.contains("x_max") || !zone.contains("y_max") || !zone.contains("z_max")) {
-                                                MusicTriggersCommon.logger.warn("Incorrect format for the zone parameter! Skipping...");
+                                                MusicTriggers.logger.warn("Incorrect format for the zone parameter! Skipping...");
                                             } else {
                                                 String coords = zone.getString("x_min");
                                                 coords = coords + "," + zone.getString("y_min");
@@ -285,10 +289,12 @@ public class ConfigMain {
                                             this.triggerholder.get("song" + songCounter).get(triggerID)[35] = trigger.getString("fade_out");
                                         if (trigger.contains("mob_champion"))
                                             this.triggerholder.get("song" + songCounter).get(triggerID)[36] = trigger.getString("mob_champion");
-                                    } else MusicTriggersCommon.logger.warn("Could not find trigger with name " + triggerID);
-                                } else MusicTriggersCommon.logger.warn("Skipping trigger block because there was no name!");
+                                        if (trigger.contains("toggled"))
+                                            this.triggerholder.get("song" + songCounter).get(triggerID)[37] = trigger.getString("toggled");
+                                    } else MusicTriggers.logger.warn("Could not find trigger with name " + triggerID + "in channel "+this.channel);
+                                } else MusicTriggers.logger.warn("Skipping trigger block because there was no name in channel "+this.channel+"!");
                             } else
-                                MusicTriggersCommon.logger.warn("Skipping instance of song " + s + " because no triggers were attached to it!");
+                                MusicTriggers.logger.warn("Skipping instance of song " + s + " because no triggers were attached to it!");
                             this.otherinfo.putIfAbsent("song" + songCounter, new String[]{"1", "0", "false", "100", "1", "0", "0"});
                             if (song.contains("pitch"))
                                 this.otherinfo.get("song" + songCounter)[0] = song.getString("pitch");
@@ -310,7 +316,7 @@ public class ConfigMain {
                                     if (link.containsTableArray("trigger")) {
                                         for (Toml trigger : link.getTables("trigger")) {
                                             if (!trigger.contains("song") || !trigger.contains("name"))
-                                                MusicTriggersCommon.logger.warn("Trigger needs a name and a song for linking to work");
+                                                MusicTriggers.logger.warn("Trigger needs a name and a song for linking to work in channel "+this.channel);
                                             else {
                                                 this.triggerlinking.putIfAbsent("song" + songCounter, new HashMap<>());
                                                 this.triggerlinking.get("song" + songCounter).putIfAbsent("song" + songCounter, link.getList("default").toArray(new String[0]));
@@ -355,7 +361,7 @@ public class ConfigMain {
                                     } else if (link.containsTable("trigger")) {
                                         Toml trigger = link.getTable("trigger");
                                         if (!trigger.contains("song") || !trigger.contains("name"))
-                                            MusicTriggersCommon.logger.warn("Trigger needs a name and a song for linking to work");
+                                            MusicTriggers.logger.warn("Trigger needs a name and a song for linking to work in channel "+this.channel);
                                         else {
                                             this.triggerlinking.put("song" + songCounter, new HashMap<>());
                                             this.triggerlinking.get("song" + songCounter).putIfAbsent("song" + songCounter, link.getList("default").toArray(new String[0]));
@@ -396,9 +402,9 @@ public class ConfigMain {
                                             }
                                         }
                                     } else
-                                        MusicTriggersCommon.logger.warn("Song " + s + " was set up for music linking but is not linked to anything!");
+                                        MusicTriggers.logger.warn("Song " + s + " was set up for music linking but is not linked to anything in channel "+this.channel+"!");
                                 } else
-                                    MusicTriggersCommon.logger.warn("Skipping music linking for song " + s + " as there was no default trigger set!");
+                                    MusicTriggers.logger.warn("Skipping music linking for song " + s + " as there was no default trigger set in channel "+this.channel+"!");
                             }
                             int loopIndex = 0;
                             this.loopPoints.putIfAbsent("song" + songCounter, new HashMap<>());
@@ -427,7 +433,7 @@ public class ConfigMain {
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
-                        throw new RuntimeException("Failed to initialize song block from song " + s + " at " + CrashHelper + " (Internally: File " + e.getStackTrace()[0].getFileName() + " at line " + e.getStackTrace()[0].getLineNumber() + ")");
+                        throw new RuntimeException("Failed to initialize song block in channel "+this.channel+" from song " + s + " at " + CrashHelper + " (Internally: File " + e.getStackTrace()[0].getFileName() + " at line " + e.getStackTrace()[0].getLineNumber() + ")");
                     }
                 } else if (toml.containsTable(s)) {
                     try {
@@ -441,7 +447,7 @@ public class ConfigMain {
                                     this.triggerMapper.get("song" + songCounter).put(triggerID, trigger.getString("name"));
                                     if (Arrays.asList(triggers).contains(this.triggerMapper.get("song" + songCounter).get(triggerID)) || Arrays.asList(allmodtriggers).contains(this.triggerMapper.get("song" + songCounter).get(triggerID))) {
                                         if (!(Arrays.asList(triggers).contains(this.triggerMapper.get("song" + songCounter).get(triggerID)) || Arrays.asList(allmodtriggers).contains(this.triggerMapper.get("song" + songCounter).get(triggerID))))
-                                            MusicTriggersCommon.logger.warn("Trigger " + this.triggerMapper.get("song" + songCounter).get(triggerID) + " exists but is not supported in this version. Song " + s + " will be loaded but unplayable");
+                                            MusicTriggers.logger.warn("Trigger " + this.triggerMapper.get("song" + songCounter).get(triggerID) + " exists but is not supported in this version. Song " + s + " will be loaded but unplayable");
                                         CrashHelper = this.triggerMapper.get("song" + songCounter).get(triggerID);
                                         songholder.put("song" + songCounter, s);
                                         this.triggerholder.putIfAbsent("song" + songCounter, new HashMap<>());
@@ -449,7 +455,7 @@ public class ConfigMain {
                                                 "minecraft", "_", "16", "false", "100", "100", "100",
                                                 "false", "0", "minecraft", "true", "true", "0", "0", "nope",
                                                 "nope", "-111", "false", "_", "true", "-1", "-111", "true",
-                                                "false", "false", "false", "0", "minecraft"});
+                                                "false", "false", "false", "0", "minecraft", "true"});
                                         if (trigger.contains("priority"))
                                             this.triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                         if (trigger.contains("fade_in"))
@@ -467,7 +473,7 @@ public class ConfigMain {
                                         if (trigger.containsTable("zone")) {
                                             Toml zone = trigger.getTable("zone");
                                             if (!zone.contains("x_min") || !zone.contains("y_min") || !zone.contains("z_min") || !zone.contains("x_max") || !zone.contains("y_max") || !zone.contains("z_max")) {
-                                                MusicTriggersCommon.logger.warn("Incorrect format for the zone parameter! Skipping...");
+                                                MusicTriggers.logger.warn("Incorrect format for the zone parameter! Skipping...");
                                             } else {
                                                 String coords = zone.getString("x_min");
                                                 coords = coords + "," + zone.getString("y_min");
@@ -538,8 +544,10 @@ public class ConfigMain {
                                             this.triggerholder.get("song" + songCounter).get(triggerID)[35] = trigger.getString("fade_out");
                                         if (trigger.contains("mob_champion"))
                                             this.triggerholder.get("song" + songCounter).get(triggerID)[36] = trigger.getString("mob_champion");
-                                    } else MusicTriggersCommon.logger.warn("Could not find trigger with name " + triggerID);
-                                } else MusicTriggersCommon.logger.warn("Skipping trigger block because there was no name!");
+                                        if (trigger.contains("toggled"))
+                                            this.triggerholder.get("song" + songCounter).get(triggerID)[37] = trigger.getString("toggled");
+                                    } else MusicTriggers.logger.warn("Could not find trigger with name " + triggerID + "in channel "+this.channel);
+                                } else MusicTriggers.logger.warn("Skipping trigger block because there was no name in channel "+this.channel+"!");
                                 triggerMapCounter++;
                             }
                         } else if (song.containsTable("trigger")) {
@@ -549,7 +557,7 @@ public class ConfigMain {
                                 this.triggerMapper.get("song" + songCounter).put(triggerID, trigger.getString("name"));
                                 if (Arrays.asList(triggers).contains(this.triggerMapper.get("song" + songCounter).get(triggerID)) || Arrays.asList(allmodtriggers).contains(this.triggerMapper.get("song" + songCounter).get(triggerID))) {
                                     if (!(Arrays.asList(triggers).contains(this.triggerMapper.get("song" + songCounter).get(triggerID)) || Arrays.asList(allmodtriggers).contains(this.triggerMapper.get("song" + songCounter).get(triggerID))))
-                                        MusicTriggersCommon.logger.warn("Trigger " + this.triggerMapper.get("song" + songCounter).get(triggerID) + " exists but is not supported in this version. Song " + s + " will be loaded but unplayable");
+                                        MusicTriggers.logger.warn("Trigger " + this.triggerMapper.get("song" + songCounter).get(triggerID) + " exists but is not supported in this version. Song " + s + " will be loaded but unplayable");
                                     CrashHelper = this.triggerMapper.get("song" + songCounter).get(triggerID);
                                     songholder.put("song" + songCounter, s);
                                     this.triggerholder.putIfAbsent("song" + songCounter, new HashMap<>());
@@ -557,7 +565,7 @@ public class ConfigMain {
                                             "minecraft", "_", "16", "false", "100", "100", "100",
                                             "false", "0", "minecraft", "true", "true", "0", "0", "nope",
                                             "nope", "-111", "false", "_", "true", "-1", "-111", "true",
-                                            "false", "false", "false", "0", "minecraft"});
+                                            "false", "false", "false", "0", "minecraft", "true"});
                                     if (trigger.contains("priority"))
                                         this.triggerholder.get("song" + songCounter).get(triggerID)[0] = trigger.getString("priority");
                                     if (trigger.contains("fade_in"))
@@ -575,7 +583,7 @@ public class ConfigMain {
                                     if (trigger.containsTable("zone")) {
                                         Toml zone = trigger.getTable("zone");
                                         if (!zone.contains("x_min") || !zone.contains("y_min") || !zone.contains("z_min") || !zone.contains("x_max") || !zone.contains("y_max") || !zone.contains("z_max")) {
-                                            MusicTriggersCommon.logger.warn("Incorrect format for the zone parameter! Skipping...");
+                                            MusicTriggers.logger.warn("Incorrect format for the zone parameter! Skipping...");
                                         } else {
                                             String coords = zone.getString("x_min");
                                             coords = coords + "," + zone.getString("y_min");
@@ -646,10 +654,12 @@ public class ConfigMain {
                                         this.triggerholder.get("song" + songCounter).get(triggerID)[35] = trigger.getString("fade_out");
                                     if (trigger.contains("mob_champion"))
                                         this.triggerholder.get("song" + songCounter).get(triggerID)[36] = trigger.getString("mob_champion");
-                                } else MusicTriggersCommon.logger.warn("Could not find trigger with name " + triggerID);
-                            } else MusicTriggersCommon.logger.warn("Skipping trigger block because there was no name!");
+                                    if (trigger.contains("toggled"))
+                                        this.triggerholder.get("song" + songCounter).get(triggerID)[37] = trigger.getString("toggled");
+                                } else MusicTriggers.logger.warn("Could not find trigger with name " + triggerID + "in channel "+this.channel);
+                            } else MusicTriggers.logger.warn("Skipping trigger block because there was no name in channel "+this.channel+"!");
                         } else
-                            MusicTriggersCommon.logger.warn("Skipping instance of song " + s + " because no triggers were attached to it!");
+                            MusicTriggers.logger.warn("Skipping instance of song " + s + " because no triggers were attached to it!");
                         this.otherinfo.putIfAbsent("song" + songCounter, new String[]{"1", "0", "false", "100", "1", "0", "0"});
                         if (song.contains("pitch"))
                             this.otherinfo.get("song" + songCounter)[0] = song.getString("pitch");
@@ -671,7 +681,7 @@ public class ConfigMain {
                                 if (link.containsTableArray("trigger")) {
                                     for (Toml trigger : link.getTables("trigger")) {
                                         if (!trigger.contains("song") || !trigger.contains("name"))
-                                            MusicTriggersCommon.logger.warn("Trigger needs a name and a song for linking to work");
+                                            MusicTriggers.logger.warn("Trigger needs a name and a song for linking to work in channel "+this.channel);
                                         else {
                                             this.triggerlinking.put("song" + songCounter, new HashMap<>());
                                             this.triggerlinking.get("song" + songCounter).putIfAbsent("song" + songCounter, link.getList("default").toArray(new String[0]));
@@ -715,7 +725,7 @@ public class ConfigMain {
                                 } else if (link.containsTable("trigger")) {
                                     Toml trigger = link.getTable("trigger");
                                     if (!trigger.contains("song") || !trigger.contains("name"))
-                                        MusicTriggersCommon.logger.warn("Trigger needs a name and a song for linking to work");
+                                        MusicTriggers.logger.warn("Trigger needs a name and a song for linking to work in channel "+this.channel);
                                     else {
                                         this.triggerlinking.put("song" + songCounter, new HashMap<>());
                                         this.triggerlinking.get("song" + songCounter).putIfAbsent("song" + songCounter, link.getList("default").toArray(new String[0]));
@@ -756,9 +766,9 @@ public class ConfigMain {
                                         }
                                     }
                                 } else
-                                    MusicTriggersCommon.logger.warn("Song " + s + " was set up for music linking but is not linked to anything!");
+                                    MusicTriggers.logger.warn("Song " + s + " was set up for music linking but is not linked to anything in channel "+this.channel+"!");
                             } else
-                                MusicTriggersCommon.logger.warn("Skipping music linking for song " + s + " as there was no default trigger set!");
+                                MusicTriggers.logger.warn("Skipping music linking for song " + s + " as there was no default trigger set in channel "+this.channel+"!");
                         }
                         int loopIndex = 0;
                         this.loopPoints.putIfAbsent("song" + songCounter, new HashMap<>());
@@ -814,6 +824,20 @@ public class ConfigMain {
             e.printStackTrace();
         }
         return ret;
+    }
+
+    public static void writeInformationalHeader(File toml) {
+        try {
+            String header = """
+                    # Please refer to the wiki page located at https://github.com/TheComputerizer/Music-Triggers/wiki/The-Basics
+                    # or the discord server located at https://discord.gg/FZHXFYp8fc
+                    # for any specific questions you might have regarding the main config file""";
+            FileWriter writer = new FileWriter(toml);
+            writer.write(header);
+            writer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void clearMaps() {

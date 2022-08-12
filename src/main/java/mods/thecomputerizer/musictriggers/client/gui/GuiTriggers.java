@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import mods.thecomputerizer.musictriggers.config.ConfigMain;
@@ -34,7 +34,7 @@ public class GuiTriggers extends Screen {
         this.triggers = new ArrayList<>();
         this.triggers.addAll(Arrays.stream(ConfigMain.triggers).toList());
         this.triggers.addAll(Arrays.stream(ConfigMain.modtriggers).toList());
-        this.background = new Identifier(MusicTriggersCommon.MODID,"textures/block/recorder_side_active.png");
+        this.background = new Identifier(MusicTriggers.MODID,"textures/block/recorder_side_active.png");
     }
 
     @Override

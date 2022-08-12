@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
-import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.ClientSync;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.common.ServerChannelData;
@@ -11,10 +11,9 @@ import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 public class PacketSyncServerInfo {
-    public static final Identifier id = new Identifier(MusicTriggersCommon.MODID, "packet_sync_server_info");
+    public static final Identifier id = new Identifier(MusicTriggers.MODID, "packet_sync_server_info");
     private final List<ServerChannelData> serverChannelData = new ArrayList<>();
 
     public static List<ClientSync> decode(PacketByteBuf buf) {

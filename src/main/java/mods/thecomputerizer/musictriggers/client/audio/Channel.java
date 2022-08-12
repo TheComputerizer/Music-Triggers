@@ -9,16 +9,13 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioReference;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import io.netty.buffer.ByteBuf;
-import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.ClientSync;
 import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.client.MusicPicker;
 import mods.thecomputerizer.musictriggers.common.ServerChannelData;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
-import mods.thecomputerizer.musictriggers.config.ConfigCommands;
-import mods.thecomputerizer.musictriggers.config.ConfigMain;
-import mods.thecomputerizer.musictriggers.config.ConfigTransitions;
-import mods.thecomputerizer.musictriggers.config.Redirect;
+import mods.thecomputerizer.musictriggers.config.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.text.LiteralText;
@@ -40,6 +37,7 @@ public class Channel {
     private ConfigMain main;
     private ConfigTransitions transitions;
     private ConfigCommands commands;
+    private ConfigToggles toggles;
     private Redirect redirect;
     private SoundHandler handler;
     private MusicPicker picker;
@@ -81,6 +79,9 @@ public class Channel {
     private String curLinkNum = "song-0";
     private boolean nullFromLink = false;
     private boolean trackSetChanged = true;
+    private int delayCounter = 0;
+    private String maxDelay = "0";
+    private boolean delayCatch = false;
 
     public Channel(String channel, boolean pausedByJukeBox, boolean overrides) {
         this.channel = channel;
@@ -115,7 +116,7 @@ public class Channel {
         this.canPlayImage = new HashMap<>();
         this.commandsForPacket = new ArrayList<>();
         this.erroredSongDownloads = new ArrayList<>();
-        MusicTriggersCommon.logger.info("Registered sound engine for channel "+channel);
+        MusicTriggers.logger.info("Registered sound engine for channel "+channel);
     }
 
     public String getChannelName() {
@@ -126,13 +127,22 @@ public class Channel {
         return this.main;
     }
 
-    public void passThroughConfigObjects(ConfigMain main, ConfigTransitions transitions, ConfigCommands commands, Redirect redirect, SoundHandler handler) {
+    public void passThroughConfigObjects(ConfigMain main, ConfigTransitions transitions, ConfigCommands commands, ConfigToggles toggles, Redirect redirect, SoundHandler handler) {
         this.main=main;
         this.transitions = transitions;
         this.commands = commands;
+        this.toggles = toggles;
         this.redirect = redirect;
         this.handler = handler;
         this.picker = new MusicPicker(this,this.handler);
+    }
+
+    public void runToggle(int condition, List<String> triggers) {
+        this.toggles.runToggle(condition, triggers);
+    }
+
+    public boolean getToggleStatusForTrigger(String triggerIdentifier) {
+        return this.toggles.getToggle(triggerIdentifier);
     }
 
     public ClientSync getSyncStatus() {
@@ -162,8 +172,8 @@ public class Channel {
             for (String key : musicLinker.keySet()) {
                 if (loopLinker.get(curLinkNum) != null) {
                     for (int i : loopLinker.get(key).keySet()) {
-                        if (loopLinkerCounter.get(key).get(i) < MusicTriggersCommon.randomInt(loopLinker.get(key).get(i)[0]) && MusicTriggersCommon.randomInt(loopLinker.get(key).get(i)[2]) <= getMillis()) {
-                            setMillis(MusicTriggersCommon.randomInt(loopLinker.get(key).get(i)[1]));
+                        if (loopLinkerCounter.get(key).get(i) < MusicTriggers.randomInt(loopLinker.get(key).get(i)[0]) && MusicTriggers.randomInt(loopLinker.get(key).get(i)[2]) <= getMillis()) {
+                            setMillis(MusicTriggers.randomInt(loopLinker.get(key).get(i)[1]));
                             loopLinkerCounter.get(key).put(i, loopLinkerCounter.get(key).get(i) + 1);
                         }
                     }
@@ -204,11 +214,13 @@ public class Channel {
             }
         }
         setVolume(calculatedVolume);
+        if(delayCounter>0) delayCounter-=1;
     }
 
     public void tickSlow() {
         MinecraftClient mc = MinecraftClient.getInstance();
         this.toSend = this.picker.querySongList();
+        this.maxDelay = this.picker.curDelay;
         if (!this.picker.getInfo().getCurrentSongList().isEmpty()) {
             boolean startQuiet = false;
             for (int i : canPlayTitle.keySet()) {
@@ -257,104 +269,114 @@ public class Channel {
             if (this.picker.getInfo().songListChanged()) {
                 if (this.picker.getInfo().getCurrentSongList().size() != 0) changeTrack(mc);
                 else this.trackSetChanged = true;
+                this.delayCounter = 0;
+                this.delayCatch = false;
             } else if (!isPlaying() && mc.options.getSoundVolume(this.category) > 0 && mc.options.getSoundVolume(SoundCategory.MASTER) > 0) {
-                this.triggerLinker.clear();
-                this.musicLinker.clear();
-                this.songNameLinker.clear();
-                this.volumeLinker.clear();
-                this.pitchLinker.clear();
-                EventsClient.GuiCounter = 0;
-                List<String> trimmedList = this.picker.getInfo().getCurrentSongList().stream().filter(track -> !this.oncePerTrigger.contains(track)).collect(Collectors.toList());
-                trimmedList = trimmedList.stream().filter(track -> !this.onceUntilEmpty.contains(track)).collect(Collectors.toList());
-                if (trimmedList.size() >= 1) {
-                    int i = ThreadLocalRandom.current().nextInt(0, trimmedList.size());
-                    if (trimmedList.size() > 1 && this.curTrack != null) {
-                        int total = trimmedList.stream().mapToInt(s -> MusicTriggersCommon.randomInt(this.main.otherinfo.get(s)[3])).sum();
-                        int j;
-                        for (j = 0; j < 1000; j++) {
-                            int r = ThreadLocalRandom.current().nextInt(1, total + 1);
-                            String temp = " ";
-                            for (String s : trimmedList) {
-                                if (r < MusicTriggersCommon.randomInt(this.main.otherinfo.get(s)[3])) {
-                                    temp = s;
+                if (!this.delayCatch) {
+                    this.delayCounter = MusicTriggers.randomInt(this.maxDelay);
+                    this.delayCatch = true;
+                }
+                if (this.delayCounter <= 0) {
+                    this.triggerLinker.clear();
+                    this.musicLinker.clear();
+                    this.songNameLinker.clear();
+                    this.volumeLinker.clear();
+                    this.pitchLinker.clear();
+                    EventsClient.GuiCounter = 0;
+                    List<String> trimmedList = this.picker.getInfo().getCurrentSongList().stream().filter(track -> !this.oncePerTrigger.contains(track)).collect(Collectors.toList());
+                    trimmedList = trimmedList.stream().filter(track -> !this.onceUntilEmpty.contains(track)).collect(Collectors.toList());
+                    if (trimmedList.size() >= 1) {
+                        int i = ThreadLocalRandom.current().nextInt(0, trimmedList.size());
+                        if (trimmedList.size() > 1 && this.curTrack != null) {
+                            int total = trimmedList.stream().mapToInt(s -> MusicTriggers.randomInt(this.main.otherinfo.get(s)[3])).sum();
+                            int j;
+                            for (j = 0; j < 1000; j++) {
+                                int r = ThreadLocalRandom.current().nextInt(1, total + 1);
+                                String temp = " ";
+                                for (String s : trimmedList) {
+                                    if (r < MusicTriggers.randomInt(this.main.otherinfo.get(s)[3])) {
+                                        temp = s;
+                                        break;
+                                    }
+                                    r -= MusicTriggers.randomInt(this.main.otherinfo.get(s)[3]);
+                                }
+                                if (!temp.matches(this.curTrack) && !temp.matches(" ")) {
+                                    this.curTrack = temp;
                                     break;
                                 }
-                                r -= MusicTriggersCommon.randomInt(this.main.otherinfo.get(s)[3]);
                             }
-                            if (!temp.matches(this.curTrack) && !temp.matches(" ")) {
-                                this.curTrack = temp;
-                                break;
-                            }
-                        }
-                        if (j >= 1000)
-                            MusicTriggersCommon.logger.warn("Attempt to get non duplicate song passed 1000 tries! Forcing current song " + this.main.songholder.get(curTrack) + " to play.");
-                    } else curTrack = trimmedList.get(i);
-                    if (this.curTrack != null) {
-                        this.curTrack = curTrack.replaceAll("@", "").replaceAll("#", "");
-                        MusicTriggersCommon.logger.debug(curTrack + " was chosen");
-                        this.curTrackHolder = this.main.songholder.get(curTrack);
-                        MusicTriggersCommon.logger.info("Attempting to play track: " + this.curTrackHolder);
-                        if (this.main.triggerlinking.get(curTrack) != null) {
-                            this.triggerLinker.put("song-" + 0, this.main.triggerlinking.get(this.curTrack).get(this.curTrack));
-                            this.musicLinker.put("song-" + 0, this.loadedTracks.get(this.curTrackHolder));
-                            this.songNameLinker.put("song-" + 0,this.curTrackHolder);
-                            this.pitchLinker.put("song-" + 0, Float.parseFloat(this.main.otherinfo.get(this.curTrack)[0]));
-                            this.volumeLinker.put("song-" + 0, Float.parseFloat(this.main.otherinfo.get(this.curTrack)[4]));
-                            this.saveVolIn = Float.parseFloat(this.main.otherinfo.get(this.curTrack)[4]);
-                            for (int l : this.main.loopPoints.get(this.curTrack).keySet()) {
-                                this.loopLinker.putIfAbsent("song-" + 0, new HashMap<>());
-                                this.loopLinker.get("song-" + 0).put(l, this.main.loopPoints.get(this.curTrack).get(l));
-                                this.loopLinkerCounter.putIfAbsent("song-" + 0, new HashMap<>());
-                                this.loopLinkerCounter.get("song-" + 0).put(l, 0);
-                            }
-                            int linkcounter = 1;
-                            for (String song : this.main.triggerlinking.get(this.curTrack).keySet()) {
-                                if (!song.matches(this.curTrack)) {
-                                    this.triggerLinker.put("song-" + linkcounter, this.main.triggerlinking.get(this.curTrack).get(song));
-                                    this.musicLinker.put("song-" + linkcounter, this.loadedTracks.get(song));
-                                    this.songNameLinker.put("song-" + linkcounter,song);
-                                    this.volumeLinker.put("song-" + linkcounter, Float.parseFloat(this.main.otherlinkinginfo.get(this.curTrack).get(song)[1]));
-                                    this.pitchLinker.put("song-" + linkcounter, Float.parseFloat(this.main.otherlinkinginfo.get(this.curTrack).get(song)[0]));
-                                    if (this.main.linkingLoopPoints.get(this.curTrack) != null && this.main.linkingLoopPoints.get(this.curTrack).get(song) != null) {
-                                        for (int l : this.main.linkingLoopPoints.get(this.curTrack).get(song).keySet()) {
-                                            this.loopLinker.putIfAbsent("song-" + linkcounter, new HashMap<>());
-                                            this.loopLinker.get("song-" + linkcounter).put(l, this.main.linkingLoopPoints.get(this.curTrack).get(song).get(l));
-                                            this.loopLinkerCounter.putIfAbsent("song-" + linkcounter, new HashMap<>());
-                                            this.loopLinkerCounter.get("song-" + linkcounter).put(l, 0);
+                            if (j >= 1000)
+                                MusicTriggers.logger.warn("Attempt to get non duplicate song passed 1000 tries! Forcing current song " + this.main.songholder.get(curTrack) + " to play.");
+                        } else curTrack = trimmedList.get(i);
+                        if (this.curTrack != null) {
+                            this.curTrack = curTrack.replaceAll("@", "").replaceAll("#", "");
+                            MusicTriggers.logger.debug(curTrack + " was chosen");
+                            this.curTrackHolder = this.main.songholder.get(curTrack);
+                            MusicTriggers.logger.info("Attempting to play track: " + this.curTrackHolder);
+                            if (this.main.triggerlinking.get(curTrack) != null) {
+                                this.triggerLinker.put("song-" + 0, this.main.triggerlinking.get(this.curTrack).get(this.curTrack));
+                                this.musicLinker.put("song-" + 0, this.loadedTracks.get(this.curTrackHolder));
+                                this.songNameLinker.put("song-" + 0, this.curTrackHolder);
+                                this.pitchLinker.put("song-" + 0, Float.parseFloat(this.main.otherinfo.get(this.curTrack)[0]));
+                                this.volumeLinker.put("song-" + 0, Float.parseFloat(this.main.otherinfo.get(this.curTrack)[4]));
+                                this.saveVolIn = Float.parseFloat(this.main.otherinfo.get(this.curTrack)[4]);
+                                for (int l : this.main.loopPoints.get(this.curTrack).keySet()) {
+                                    this.loopLinker.putIfAbsent("song-" + 0, new HashMap<>());
+                                    this.loopLinker.get("song-" + 0).put(l, this.main.loopPoints.get(this.curTrack).get(l));
+                                    this.loopLinkerCounter.putIfAbsent("song-" + 0, new HashMap<>());
+                                    this.loopLinkerCounter.get("song-" + 0).put(l, 0);
+                                }
+                                int linkcounter = 1;
+                                for (String song : this.main.triggerlinking.get(this.curTrack).keySet()) {
+                                    if (!song.matches(this.curTrack)) {
+                                        this.triggerLinker.put("song-" + linkcounter, this.main.triggerlinking.get(this.curTrack).get(song));
+                                        this.musicLinker.put("song-" + linkcounter, this.loadedTracks.get(song));
+                                        this.songNameLinker.put("song-" + linkcounter, song);
+                                        this.volumeLinker.put("song-" + linkcounter, Float.parseFloat(this.main.otherlinkinginfo.get(this.curTrack).get(song)[1]));
+                                        this.pitchLinker.put("song-" + linkcounter, Float.parseFloat(this.main.otherlinkinginfo.get(this.curTrack).get(song)[0]));
+                                        if (this.main.linkingLoopPoints.get(this.curTrack) != null && this.main.linkingLoopPoints.get(this.curTrack).get(song) != null) {
+                                            for (int l : this.main.linkingLoopPoints.get(this.curTrack).get(song).keySet()) {
+                                                this.loopLinker.putIfAbsent("song-" + linkcounter, new HashMap<>());
+                                                this.loopLinker.get("song-" + linkcounter).put(l, this.main.linkingLoopPoints.get(this.curTrack).get(song).get(l));
+                                                this.loopLinkerCounter.putIfAbsent("song-" + linkcounter, new HashMap<>());
+                                                this.loopLinkerCounter.get("song-" + linkcounter).put(l, 0);
+                                            }
                                         }
                                     }
+                                    linkcounter++;
                                 }
-                                linkcounter++;
+                            } else {
+                                this.musicLinker.put("song-" + 0, this.loadedTracks.get(this.curTrackHolder));
+                                this.songNameLinker.put("song-" + 0, this.curTrackHolder);
+                                this.saveVolIn = Float.parseFloat(this.main.otherinfo.get(this.curTrack)[4]);
+                                this.volumeLinker.put("song-" + 0, Float.parseFloat(this.main.otherinfo.get(this.curTrack)[4]));
+                                this.pitchLinker.put("song-" + 0, Float.parseFloat(this.main.otherinfo.get(this.curTrack)[0]));
+                                for (int l : this.main.loopPoints.get(this.curTrack).keySet()) {
+                                    this.loopLinker.putIfAbsent("song-" + 0, new HashMap<>());
+                                    this.loopLinker.get("song-" + 0).put(l, this.main.loopPoints.get(this.curTrack).get(l));
+                                    this.loopLinkerCounter.putIfAbsent("song-" + 0, new HashMap<>());
+                                    this.loopLinkerCounter.get("song-" + 0).put(l, 0);
+                                }
                             }
-                        } else {
-                            this.musicLinker.put("song-" + 0, this.loadedTracks.get(this.curTrackHolder));
-                            this.songNameLinker.put("song-" + 0,this.curTrackHolder);
-                            this.saveVolIn = Float.parseFloat(this.main.otherinfo.get(this.curTrack)[4]);
-                            this.volumeLinker.put("song-" + 0, Float.parseFloat(this.main.otherinfo.get(this.curTrack)[4]));
-                            this.pitchLinker.put("song-" + 0, Float.parseFloat(this.main.otherinfo.get(this.curTrack)[0]));
-                            for (int l : this.main.loopPoints.get(this.curTrack).keySet()) {
-                                this.loopLinker.putIfAbsent("song-" + 0, new HashMap<>());
-                                this.loopLinker.get("song-" + 0).put(l, this.main.loopPoints.get(this.curTrack).get(l));
-                                this.loopLinkerCounter.putIfAbsent("song-" + 0, new HashMap<>());
-                                this.loopLinkerCounter.get("song-" + 0).put(l, 0);
+                            if (cards) renderCards(mc);
+                            setPitch(pitchLinker.get("song-0"));
+                            if (!startQuiet) setVolume(volumeLinker.get("song-0"));
+                            playTrack(songNameLinker.get("song-0"), musicLinker.get("song-0"), 0);
+                            if (this.trackSetChanged) this.trackSetChanged = false;
+                            this.curLinkNum = "song-0";
+                            if (MusicTriggers.randomInt(this.main.otherinfo.get(this.curTrack)[1]) == 1)
+                                this.onceUntilEmpty.add(curTrack);
+                            else if (MusicTriggers.randomInt(this.main.otherinfo.get(this.curTrack)[1]) == 2)
+                                this.oncePerTrigger.add(curTrack);
+                            else if (MusicTriggers.randomInt(this.main.otherinfo.get(this.curTrack)[1]) == 3) {
+                                this.trackToDelete = this.curTrack;
+                                this.indexToDelete = i;
+                                this.playedEvents.clear();
+                                this.playedEvents.addAll(this.picker.getInfo().getActiveTriggers());
                             }
-                        }
-                        if (cards) renderCards(mc);
-                        setPitch(pitchLinker.get("song-0"));
-                        if(!startQuiet) setVolume(volumeLinker.get("song-0"));
-                        playTrack(songNameLinker.get("song-0"),musicLinker.get("song-0"),0);
-                        if(this.trackSetChanged) this.trackSetChanged = false;
-                        this.curLinkNum = "song-0";
-                        if (MusicTriggersCommon.randomInt(this.main.otherinfo.get(this.curTrack)[1]) == 1) this.onceUntilEmpty.add(curTrack);
-                        else if (MusicTriggersCommon.randomInt(this.main.otherinfo.get(this.curTrack)[1]) == 2) this.oncePerTrigger.add(curTrack);
-                        else if (MusicTriggersCommon.randomInt(this.main.otherinfo.get(this.curTrack)[1]) == 3) {
-                            this.trackToDelete = this.curTrack;
-                            this.indexToDelete = i;
-                            this.playedEvents.clear();
-                            this.playedEvents.addAll(this.picker.getInfo().getActiveTriggers());
-                        }
-                    } else this.trackSetChanged = true;
-                } else this.onceUntilEmpty.clear();
+                        } else this.trackSetChanged = true;
+                    } else this.onceUntilEmpty.clear();
+                }
             }
         } else {
             EventsClient.IMAGE_CARD = null;
@@ -366,9 +388,8 @@ public class Channel {
         }
     }
 
-    @SuppressWarnings("ConstantConditions")
     public void renderCards(MinecraftClient mc) {
-        MusicTriggersCommon.logger.debug("Finding cards to render");
+        MusicTriggers.logger.debug("Finding cards to render");
         int markForDeletion = -1;
         for (int i : this.transitions.titlecards.keySet()) {
             boolean pass = false;
@@ -378,7 +399,7 @@ public class Channel {
                 canPlayTitle.put(i, false);
             }
             if (pass && mc.player != null) {
-                MusicTriggersCommon.logger.info("displaying title card "+i);
+                MusicTriggers.logger.info("displaying title card "+i);
                 if(!this.transitions.titlecards.get(i).getTitles().isEmpty()) mc.inGameHud.setTitle((new LiteralText(this.transitions.titlecards.get(i).getTitles().get(ThreadLocalRandom.current().nextInt(0, this.transitions.titlecards.get(i).getTitles().size())))).setStyle(Style.EMPTY.withFormatting(Formatting.valueOf(this.transitions.titlecards.get(i).getTitlecolor()))));
                 if(!this.transitions.titlecards.get(i).getSubTitles().isEmpty()) mc.inGameHud.setSubtitle((new LiteralText(this.transitions.titlecards.get(i).getSubTitles().get(ThreadLocalRandom.current().nextInt(0, this.transitions.titlecards.get(i).getSubTitles().size())))).setStyle(Style.EMPTY.withFormatting(Formatting.valueOf(this.transitions.titlecards.get(i).getSubtitlecolor()))));
                 if(this.transitions.titlecards.get(i).getPlayonce()) markForDeletion = i;
@@ -398,14 +419,14 @@ public class Channel {
             }
             if (pass && mc.player != null) {
                 if(this.transitions.imagecards.get(i).getName()!=null) {
-                    MusicTriggersCommon.logger.info("displaying image card " + this.transitions.imagecards.get(i).getName());
+                    MusicTriggers.logger.info("displaying image card " + this.transitions.imagecards.get(i).getName());
                     if (!this.transitions.ismoving.get(i))
-                        EventsClient.IMAGE_CARD = new Identifier(MusicTriggersCommon.MODID, "textures/" + this.transitions.imagecards.get(i).getName() + ".png");
+                        EventsClient.IMAGE_CARD = new Identifier(MusicTriggers.MODID, "textures/" + this.transitions.imagecards.get(i).getName() + ".png");
                     else {
                         EventsClient.pngs = new ArrayList<>();
                         EventsClient.ismoving = true;
                         EventsClient.movingcounter = 0;
-                        File folder = new File(MusicTriggersCommon.configDir,"songs/assets/musictriggers/textures/" + this.transitions.imagecards.get(i).getName());
+                        File folder = new File(MusicTriggers.configDir,"songs/assets/musictriggers/textures/" + this.transitions.imagecards.get(i).getName());
                         File[] listOfPNG = folder.listFiles();
                         assert listOfPNG != null;
                         List<String> temp = new ArrayList<>();
@@ -416,11 +437,11 @@ public class Channel {
                             }
                             int extractInt(String s) {
                                 String num = s.replaceAll("\\D", "");
-                                return num.isEmpty() ? 0 : MusicTriggersCommon.randomInt(num);
+                                return num.isEmpty() ? 0 : MusicTriggers.randomInt(num);
                             }
                         });
                         for (int index = 0; index < temp.size(); index++) {
-                            EventsClient.pngs.add(index, new Identifier(MusicTriggersCommon.MODID, "textures/" + this.transitions.imagecards.get(i).getName() + "/" + temp.get(index) + ".png"));
+                            EventsClient.pngs.add(index, new Identifier(MusicTriggers.MODID, "textures/" + this.transitions.imagecards.get(i).getName() + "/" + temp.get(index) + ".png"));
                         }
                         EventsClient.timer = System.currentTimeMillis();
                     }
@@ -517,15 +538,15 @@ public class Channel {
     }
 
     public void playTrack(String id, AudioTrack track, long milliseconds) {
-        MusicTriggersCommon.logger.info("Playing track from id "+id+" at a millisecond time of "+milliseconds);
+        MusicTriggers.logger.info("Playing track from id "+id+" at a millisecond time of "+milliseconds);
         if(track!=null) {
             track.setPosition(milliseconds);
             try {
-                if (!this.getPlayer().startTrack(track, false)) MusicTriggersCommon.logger.error("Could not start track!");
+                if (!this.getPlayer().startTrack(track, false)) MusicTriggers.logger.error("Could not start track!");
             } catch (IllegalStateException e) {
-                if (!this.getPlayer().startTrack(track.makeClone(), false)) MusicTriggersCommon.logger.error("Could not start track!");
+                if (!this.getPlayer().startTrack(track.makeClone(), false)) MusicTriggers.logger.error("Could not start track!");
             }
-        } else MusicTriggersCommon.logger.error("Tried to play null track with id "+id+"!");
+        } else MusicTriggers.logger.error("Tried to play null track with id "+id+"!");
     }
 
     public boolean isPaused() {
@@ -559,10 +580,10 @@ public class Channel {
                     loadAudioFile(file, ChannelManager.openAudioFiles.get(file));
             }
         } catch (IOException e) {
-            MusicTriggersCommon.logger.error("Could not load one or more local audio files into the sound engine",e);
+            MusicTriggers.logger.error("Could not load one or more local audio files into the sound engine",e);
         }
-        if(!this.erroredSongDownloads.isEmpty()) MusicTriggersCommon.logger.error("Could not read audio from these sources");
-        for(String error : this.erroredSongDownloads) MusicTriggersCommon.logger.error(error);
+        if(!this.erroredSongDownloads.isEmpty()) MusicTriggers.logger.error("Could not read audio from these sources");
+        for(String error : this.erroredSongDownloads) MusicTriggers.logger.error(error);
     }
 
 
@@ -577,30 +598,30 @@ public class Channel {
             public void trackLoaded(AudioTrack track) {
                 if(!Channel.this.loadedTracks.containsKey(id)) {
                     Channel.this.addTrackToMap(id,track);
-                    MusicTriggersCommon.logger.info("Track loaded from url "+url);
-                } else MusicTriggersCommon.logger.warn("Audio file with id "+id+" already exists!");
+                    MusicTriggers.logger.info("Track loaded from url "+url);
+                } else MusicTriggers.logger.warn("Audio file with id "+id+" already exists!");
             }
 
             @Override
             public void playlistLoaded(AudioPlaylist playlist) {
-                MusicTriggersCommon.logger.info("Loaded a playlist from "+url);
+                MusicTriggers.logger.info("Loaded a playlist from "+url);
                 for(int i=1;i<playlist.getTracks().size()+1;i++) {
                     if(!Channel.this.loadedTracks.containsKey(id+"_"+i)) {
                         Channel.this.addTrackToMap(id,playlist.getTracks().get(i));
-                        MusicTriggersCommon.logger.info("Track "+i+" loaded from playlist url "+url);
-                    } else MusicTriggersCommon.logger.warn("Audio file with id "+id+"_"+i+" already exists!");
+                        MusicTriggers.logger.info("Track "+i+" loaded from playlist url "+url);
+                    } else MusicTriggers.logger.warn("Audio file with id "+id+"_"+i+" already exists!");
                 }
             }
 
             @Override
             public void noMatches() {
-                MusicTriggersCommon.logger.error("No audio able to be extracted from url "+url);
+                MusicTriggers.logger.error("No audio able to be extracted from url "+url);
                 Channel.this.erroredSongDownloads.add(id+" -> "+url);
             }
 
             @Override
             public void loadFailed(FriendlyException exception) {
-                MusicTriggersCommon.logger.info("Load failed! "+url);
+                MusicTriggers.logger.info("Load failed! "+url);
                 exception.printStackTrace();
             }
         });
@@ -612,30 +633,30 @@ public class Channel {
             public void trackLoaded(AudioTrack track) {
                 if(!Channel.this.loadedTracks.containsKey(id)) {
                     Channel.this.addTrackToMap(id,track);
-                    MusicTriggersCommon.logger.info("Loaded track from file "+file.getName());
-                } else MusicTriggersCommon.logger.warn("Audio file with id "+id+" already exists!");
+                    MusicTriggers.logger.info("Loaded track from file "+file.getName());
+                } else MusicTriggers.logger.warn("Audio file with id "+id+" already exists!");
             }
 
             @Override
             public void playlistLoaded(AudioPlaylist playlist) {
-                MusicTriggersCommon.logger.info("Loaded track from file "+file.getName());
+                MusicTriggers.logger.info("Loaded track from file "+file.getName());
                 for(int i=1;i<playlist.getTracks().size()+1;i++) {
                     if(!Channel.this.loadedTracks.containsKey(id+"_"+i)) {
                         Channel.this.addTrackToMap(id,playlist.getTracks().get(i));
-                        MusicTriggersCommon.logger.info("Track "+i+" loaded from playlist file "+file.getName());
-                    } else MusicTriggersCommon.logger.warn("Audio file with id "+id+"_"+i+" already exists!");
+                        MusicTriggers.logger.info("Track "+i+" loaded from playlist file "+file.getName());
+                    } else MusicTriggers.logger.warn("Audio file with id "+id+"_"+i+" already exists!");
                 }
             }
 
             @Override
             public void noMatches() {
-                MusicTriggersCommon.logger.error("No audio able to be extracted from file "+file.getName());
+                MusicTriggers.logger.error("No audio able to be extracted from file "+file.getName());
                 Channel.this.erroredSongDownloads.add(id+" -> "+file.getName());
             }
 
             @Override
             public void loadFailed(FriendlyException exception) {
-                MusicTriggersCommon.logger.info("Load failed! "+file.getName());
+                MusicTriggers.logger.info("Load failed! "+file.getName());
                 exception.printStackTrace();
             }
         });
@@ -740,7 +761,7 @@ public class Channel {
         }
         if (songNum == null) {
             if(this.curLinkNum==null) {
-                MusicTriggersCommon.logger.warn("Index of current music was null! Falling back to default fade out volume. You should report this");
+                MusicTriggers.logger.warn("Index of current music was null! Falling back to default fade out volume. You should report this");
                 this.curLinkNum = "song-"+0;
             }
             triggerLinker.clear();
@@ -816,13 +837,15 @@ public class Channel {
         this.main.parse();
         this.transitions.parse();
         this.commands.parse();
-        this.handler.registerSounds(this.main,getChannelName());
+        this.toggles.parse();
+        this.handler.registerSounds(this.main);
     }
 
     private void clearAllListsAndMaps() {
         this.main.clearMaps();
         this.transitions.clearMaps();
         this.commands.commandMap.clear();
+        this.toggles.clearMaps();
         this.handler.clearListsAndMaps();
         this.redirect.urlMap.clear();
         this.picker.clearListsAndMaps();

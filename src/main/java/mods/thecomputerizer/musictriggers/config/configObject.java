@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.config;
 
 import com.rits.cloning.Cloner;
-import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.audio.Channel;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.Mappings;
@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static mods.thecomputerizer.musictriggers.MusicTriggersCommon.stringBreaker;
+import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
 
 public class ConfigObject {
     private final Map<String, String> songholder;
@@ -226,7 +226,7 @@ public class ConfigObject {
         assert listOfFiles != null;
         for(File f : listOfFiles) {
             if(f.isDirectory()) ret.put(f.getName(), true);
-            else if(f.getName().contains(".png") && !f.getName().contains(".png.mcmeta") && Arrays.stream(listOfFiles).collect(Collectors.toList()).contains(new File(f.getPath()+".mcmeta"))) ret.put(f.getName(),true);
+            else if(f.getName().contains(".png") && !f.getName().contains(".png.mcmeta") && Arrays.stream(listOfFiles).toList().contains(new File(f.getPath()+".mcmeta"))) ret.put(f.getName(),true);
             else if(f.getName().contains(".gif")) ret.put(f.getName(), true);
             else if(f.getName().contains(".mp4")) ret.put(f.getName(), true);
             else if(f.getName().contains(".png")) ret.put(f.getName(), false);
@@ -325,7 +325,7 @@ public class ConfigObject {
             this.titlecards.put(index, new ConfigTransitions.Title());
         } else {
             index = this.imagecards.size();
-            MusicTriggersCommon.logger.info(index);
+            MusicTriggers.logger.info(index);
             this.imagecards.put(index, new ConfigTransitions.Image());
             this.imagecards.get(index).setName(name);
             this.ismoving.put(index, ismoving);
@@ -596,7 +596,7 @@ public class ConfigObject {
         this.markLinkingInfoForWriting.get(code).putIfAbsent(song, new ArrayList<>());
         for(int i=0;i<this.otherlinkinginfo.get(code).get(song).length;i++) {
             if(!this.otherlinkinginfo.get(code).get(song)[i].matches(linkingInfoDefaults[i])) {
-                MusicTriggersCommon.logger.info("Code: "+code+" Song: "+song);
+                MusicTriggers.logger.info("Code: "+code+" Song: "+song);
                 if(!this.markLinkingInfoForWriting.get(code).get(song).contains(i)) {
                     this.markLinkingInfoForWriting.get(code).get(song).add(i);
                 }
@@ -722,7 +722,7 @@ public class ConfigObject {
             index-=triggers.size();
             int change;
             if(keyCode==14) change=-10;
-            else if(typedChar=='1' || typedChar=='2' || typedChar=='3' || typedChar=='4' || typedChar=='5' || typedChar=='6' || typedChar=='7' || typedChar=='8' || typedChar=='9') change = MusicTriggersCommon.randomInt(typedChar+"");
+            else if(typedChar=='1' || typedChar=='2' || typedChar=='3' || typedChar=='4' || typedChar=='5' || typedChar=='6' || typedChar=='7' || typedChar=='8' || typedChar=='9') change = MusicTriggers.randomInt(typedChar+"");
             else if(typedChar=='0') change = 10;
             else change = -1;
             switch (index) {
@@ -799,7 +799,7 @@ public class ConfigObject {
         //mainBuilder.append(this.writeUniversal());
         for(int j=0;j<this.songholder.entrySet().size();j++) {
             String code = "song"+j;
-            MusicTriggersCommon.logger.info("writing code: "+code);
+            MusicTriggers.logger.info("writing code: "+code);
             if(this.triggerholder.get(code)!=null && !this.triggerholder.get(code).entrySet().isEmpty()) {
                 mainBuilder.append(formatSongBrackets(this.songholder.get(code))).append("\n");
                 if (this.markSongInfoForWriting.get(code) != null) {
@@ -827,8 +827,8 @@ public class ConfigObject {
                 if (this.triggerlinking.get(code) != null && !getAllSongsForLinking(code).isEmpty()) {
                     mainBuilder.append("\t[").append(this.songholder.get(code)).append(".link]\n");
                     mainBuilder.append(this.formatLinkingDefaults(code)).append("\n");
-                    if(MusicTriggersCommon.randomInt(this.otherinfo.get(code)[5])!=0) mainBuilder.append("\t\tfade_in = \"").append(this.otherinfo.get(code)[5]).append("\"\n");
-                    if(MusicTriggersCommon.randomInt(this.otherinfo.get(code)[6])!=0) mainBuilder.append("\t\tfade_out = \"").append(this.otherinfo.get(code)[6]).append("\"\n");
+                    if(MusicTriggers.randomInt(this.otherinfo.get(code)[5])!=0) mainBuilder.append("\t\tfade_in = \"").append(this.otherinfo.get(code)[5]).append("\"\n");
+                    if(MusicTriggers.randomInt(this.otherinfo.get(code)[6])!=0) mainBuilder.append("\t\tfade_out = \"").append(this.otherinfo.get(code)[6]).append("\"\n");
                     for (Map.Entry<String, String[]> stringEntry : this.triggerlinking.get(code).entrySet()) {
                         String song = stringEntry.getKey();
                         if (!song.matches(code)) {
@@ -954,7 +954,7 @@ public class ConfigObject {
     }
 
     private String formatLinkingTriggers(String code, String song) {
-        List<String> triggers = Arrays.stream(this.triggerlinking.get(code).get(song)).collect(Collectors.toList());
+        List<String> triggers = Arrays.stream(this.triggerlinking.get(code).get(song)).toList();
         StringBuilder triggerbuilder = new StringBuilder();
         triggerbuilder.append("\t\t\tname = [ ");
         for(String trigger : triggers) {

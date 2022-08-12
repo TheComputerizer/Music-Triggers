@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.mixin;
 
-import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import net.minecraft.client.sound.SoundSystem;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.Identifier;
@@ -16,7 +16,7 @@ public class MixinSoundSystem {
 	@Inject(at = @At(value = "HEAD"), method = "stopSounds(Lnet/minecraft/util/Identifier;Lnet/minecraft/sound/SoundCategory;)V", cancellable = true)
 	private void stopSounds(Identifier s, SoundCategory category, CallbackInfo info) {
 		if(category==SoundCategory.MUSIC) {
-			MusicTriggersCommon.logger.warn("Quit trying to stop my music >:(");
+			MusicTriggers.logger.warn("Quit trying to stop my music >:(");
 			info.cancel();
 		}
 	}

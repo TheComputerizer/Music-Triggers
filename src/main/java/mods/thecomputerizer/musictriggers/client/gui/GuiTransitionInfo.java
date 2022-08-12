@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import net.minecraft.client.gui.screen.Screen;
@@ -12,7 +12,6 @@ import net.minecraft.text.Style;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -36,9 +35,9 @@ public class GuiTransitionInfo extends Screen {
         this.holder = holder;
         this.title = title;
         if(create) this.index = this.holder.addTransition(this.title, ismoving, name);
-        MusicTriggersCommon.logger.info(this.index);
+        MusicTriggers.logger.info(this.index);
         this.parameters = this.holder.getAllTransitionParametersAtIndex(this.title, this.index);
-        this.background = new Identifier(MusicTriggersCommon.MODID,"textures/block/recorder_side_active.png");
+        this.background = new Identifier(MusicTriggers.MODID,"textures/block/recorder_side_active.png");
     }
 
     @Override

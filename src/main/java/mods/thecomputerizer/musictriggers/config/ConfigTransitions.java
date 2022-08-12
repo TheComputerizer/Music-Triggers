@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.config;
 
 import com.moandjiezana.toml.Toml;
-import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.audio.Channel;
 import mods.thecomputerizer.musictriggers.util.image.GIFHandler;
 import mods.thecomputerizer.musictriggers.util.image.PNGMcMetaHandler;
@@ -11,6 +11,7 @@ import org.apache.commons.io.FileDeleteStrategy;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,20 +36,35 @@ public class ConfigTransitions {
             } catch(Exception e) {
                 e.printStackTrace();
             }
+            writeInformationalHeader(file);
         }
         this.file = file;
         this.channel = channel;
-        this.CrashHelper = "There was a problem initializing transitions";
+        this.CrashHelper = "There was a problem initializing transitions in channel "+channel.getChannelName();
+    }
+
+    public static void writeInformationalHeader(File toml) {
+        try {
+            String header = """
+                    # Please refer to the wiki page located at https://github.com/TheComputerizer/Music-Triggers/wiki/Title-Cards-&-Image-Cards
+                    # or the discord server located at https://discord.gg/FZHXFYp8fc
+                    # for any specific questions you might have regarding transitions""";
+            FileWriter writer = new FileWriter(toml);
+            writer.write(header);
+            writer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void parse() {
-        CrashHelper = "There was a problem initializing transitions";
+        this.CrashHelper = "There was a problem initializing transitions in channel "+channel.getChannelName();
         int titleCounter = 0;
         int imageCounter = 0;
         try {
             Toml toml = new Toml().read(this.file);
             if (toml.containsTableArray("title")) {
-                CrashHelper = "There was a problem initializing title cards";
+                CrashHelper = "There was a problem initializing title cards in channel "+channel.getChannelName();
                 for (Toml title : toml.getTables("title")) {
                     this.titlecards.putIfAbsent(titleCounter, new Title());
                     if (title.contains("title")) {
@@ -77,7 +93,7 @@ public class ConfigTransitions {
                     titleCounter++;
                 }
             } else if (toml.containsTable("title")) {
-                CrashHelper = "There was a problem initializing title cards";
+                CrashHelper = "There was a problem initializing title cards in channel "+channel.getChannelName();
                 Toml title = toml.getTable("title");
                 this.titlecards.putIfAbsent(titleCounter, new Title());
                 if (title.contains("title")) {
@@ -105,7 +121,7 @@ public class ConfigTransitions {
                 }
             }
             if (toml.containsTableArray("image")) {
-                CrashHelper = "There was a problem initializing image cards";
+                CrashHelper = "There was a problem initializing image cards in channel "+channel.getChannelName();
                 for (Toml image : toml.getTables("image")) {
                     this.imagecards.putIfAbsent(imageCounter, new Image());
                     this.ismoving.putIfAbsent(imageCounter, false);
@@ -113,32 +129,32 @@ public class ConfigTransitions {
                         Toml gif = image.getTable("animation");
                         this.ismoving.put(imageCounter, true);
                         if (gif.contains("delay")) {
-                            this.imagecards.get(imageCounter).setDelay(MusicTriggersCommon.randomInt(gif.getString("delay")));
+                            this.imagecards.get(imageCounter).setDelay(MusicTriggers.randomInt(gif.getString("delay")));
                         }
                         if (gif.contains("split")) {
-                            this.imagecards.get(imageCounter).setSplit(MusicTriggersCommon.randomInt(gif.getString("split")));
+                            this.imagecards.get(imageCounter).setSplit(MusicTriggers.randomInt(gif.getString("split")));
                         }
                         if (gif.contains("frames_skipped")) {
-                            this.imagecards.get(imageCounter).setSkip(MusicTriggersCommon.randomInt(gif.getString("frames_skipped")));
+                            this.imagecards.get(imageCounter).setSkip(MusicTriggers.randomInt(gif.getString("frames_skipped")));
                         }
                     }
                     if (image.contains("name")) {
                         this.imagecards.get(imageCounter).setName(image.getString("name"));
                     }
                     if (image.contains("vertical")) {
-                        this.imagecards.get(imageCounter).setVertical(MusicTriggersCommon.randomInt(image.getString("vertical")));
+                        this.imagecards.get(imageCounter).setVertical(MusicTriggers.randomInt(image.getString("vertical")));
                     }
                     if (image.contains("horizontal")) {
-                        this.imagecards.get(imageCounter).setHorizontal(MusicTriggersCommon.randomInt(image.getString("horizontal")));
+                        this.imagecards.get(imageCounter).setHorizontal(MusicTriggers.randomInt(image.getString("horizontal")));
                     }
                     if (image.contains("scale_x")) {
-                        this.imagecards.get(imageCounter).setScaleX(MusicTriggersCommon.randomInt(image.getString("scale_x")));
+                        this.imagecards.get(imageCounter).setScaleX(MusicTriggers.randomInt(image.getString("scale_x")));
                     }
                     if (image.contains("scale_y")) {
-                        this.imagecards.get(imageCounter).setScaleY(MusicTriggersCommon.randomInt(image.getString("scale_y")));
+                        this.imagecards.get(imageCounter).setScaleY(MusicTriggers.randomInt(image.getString("scale_y")));
                     }
                     if (image.contains("time")) {
-                        this.imagecards.get(imageCounter).setTime(MusicTriggersCommon.randomInt(image.getString("time")));
+                        this.imagecards.get(imageCounter).setTime(MusicTriggers.randomInt(image.getString("time")));
                     }
                     if (image.contains("triggers")) {
                         this.imagecards.get(imageCounter).addTriggers(new ArrayList<>(image.getList("triggers")));
@@ -147,10 +163,10 @@ public class ConfigTransitions {
                         this.imagecards.get(imageCounter).setPlayonce(Boolean.parseBoolean(image.getString("play_once")));
                     }
                     if (image.contains("fade_in")) {
-                        this.imagecards.get(imageCounter).setFadeIn(MusicTriggersCommon.randomInt(image.getString("fade_in")));
+                        this.imagecards.get(imageCounter).setFadeIn(MusicTriggers.randomInt(image.getString("fade_in")));
                     }
                     if (image.contains("fade_out")) {
-                        this.imagecards.get(imageCounter).setFadeOut(MusicTriggersCommon.randomInt(image.getString("fade_out")));
+                        this.imagecards.get(imageCounter).setFadeOut(MusicTriggers.randomInt(image.getString("fade_out")));
                     }
                     if (image.contains("vague")) {
                         boolean parsedVague = Boolean.parseBoolean(image.getString("vague"));
@@ -160,7 +176,7 @@ public class ConfigTransitions {
                     imageCounter++;
                 }
             } else if (toml.containsTable("image")) {
-                CrashHelper = "There was a problem initializing image cards";
+                CrashHelper = "There was a problem initializing image cards in channel "+channel.getChannelName();
                 Toml image = toml.getTable("image");
                 this.imagecards.putIfAbsent(imageCounter, new Image());
                 this.ismoving.putIfAbsent(imageCounter, false);
@@ -168,32 +184,32 @@ public class ConfigTransitions {
                     Toml gif = image.getTable("animation");
                     this.ismoving.put(imageCounter, true);
                     if (gif.contains("delay")) {
-                        this.imagecards.get(imageCounter).setDelay(MusicTriggersCommon.randomInt(gif.getString("delay")));
+                        this.imagecards.get(imageCounter).setDelay(MusicTriggers.randomInt(gif.getString("delay")));
                     }
                     if (gif.contains("split")) {
-                        this.imagecards.get(imageCounter).setSplit(MusicTriggersCommon.randomInt(gif.getString("split")));
+                        this.imagecards.get(imageCounter).setSplit(MusicTriggers.randomInt(gif.getString("split")));
                     }
                     if (gif.contains("frames_skipped")) {
-                        this.imagecards.get(imageCounter).setSkip(MusicTriggersCommon.randomInt(gif.getString("frames_skipped")));
+                        this.imagecards.get(imageCounter).setSkip(MusicTriggers.randomInt(gif.getString("frames_skipped")));
                     }
                 }
                 if (image.contains("name")) {
                     this.imagecards.get(imageCounter).setName(image.getString("name"));
                 }
                 if (image.contains("vertical")) {
-                    this.imagecards.get(imageCounter).setVertical(MusicTriggersCommon.randomInt(image.getString("vertical")));
+                    this.imagecards.get(imageCounter).setVertical(MusicTriggers.randomInt(image.getString("vertical")));
                 }
                 if (image.contains("horizontal")) {
-                    this.imagecards.get(imageCounter).setHorizontal(MusicTriggersCommon.randomInt(image.getString("horizontal")));
+                    this.imagecards.get(imageCounter).setHorizontal(MusicTriggers.randomInt(image.getString("horizontal")));
                 }
                 if (image.contains("scale_x")) {
-                    this.imagecards.get(imageCounter).setScaleX(MusicTriggersCommon.randomInt(image.getString("scale_x")));
+                    this.imagecards.get(imageCounter).setScaleX(MusicTriggers.randomInt(image.getString("scale_x")));
                 }
                 if (image.contains("scale_y")) {
-                    this.imagecards.get(imageCounter).setScaleY(MusicTriggersCommon.randomInt(image.getString("scale_y")));
+                    this.imagecards.get(imageCounter).setScaleY(MusicTriggers.randomInt(image.getString("scale_y")));
                 }
                 if (image.contains("time")) {
-                    this.imagecards.get(imageCounter).setTime(MusicTriggersCommon.randomInt(image.getString("time")));
+                    this.imagecards.get(imageCounter).setTime(MusicTriggers.randomInt(image.getString("time")));
                 }
                 if (image.contains("triggers")) {
                     this.imagecards.get(imageCounter).addTriggers(new ArrayList<>(image.getList("triggers")));
@@ -202,10 +218,10 @@ public class ConfigTransitions {
                     this.imagecards.get(imageCounter).setPlayonce(Boolean.parseBoolean(image.getString("play_once")));
                 }
                 if (image.contains("fade_in")) {
-                    this.imagecards.get(imageCounter).setFadeIn(MusicTriggersCommon.randomInt(image.getString("fade_in")));
+                    this.imagecards.get(imageCounter).setFadeIn(MusicTriggers.randomInt(image.getString("fade_in")));
                 }
                 if (image.contains("fade_out")) {
-                    this.imagecards.get(imageCounter).setFadeOut(MusicTriggersCommon.randomInt(image.getString("fade_out")));
+                    this.imagecards.get(imageCounter).setFadeOut(MusicTriggers.randomInt(image.getString("fade_out")));
                 }
                 if (image.contains("vague")) {
                     boolean parsedVague = Boolean.parseBoolean(image.getString("vague"));
@@ -263,14 +279,14 @@ public class ConfigTransitions {
                         }
                     }
                     if (!folder.exists()) {
-                        MusicTriggersCommon.logger.error("Animated image of " + this.imagecards.get(i).getName() + " does not exist or was not parsed properly");
+                        MusicTriggers.logger.error("Animated image of " + this.imagecards.get(i).getName() + " does not exist or was not parsed properly");
                     }
                     else {
                         if(this.imagecards.get(i).getName()!=null) {
                             File[] listOfPNG = folder.listFiles();
                             assert listOfPNG != null;
                             for (File f : listOfPNG) {
-                                rl = new Identifier(MusicTriggersCommon.MODID, "textures/" + ConfigTransitions.this.imagecards.get(i).getName() + "/" + f.getName());
+                                rl = new Identifier(MusicTriggers.MODID, "textures/" + ConfigTransitions.this.imagecards.get(i).getName() + "/" + f.getName());
                                 try {
                                     BufferedImage image = ImageIO.read(new File("." + "/config/MusicTriggersCommon/songs/assets/musictriggers/textures/" + this.imagecards.get(i).getName() + "/" + f.getName()));
                                     this.imageDimensions.put(rl, new ImageDimensions());
@@ -285,7 +301,7 @@ public class ConfigTransitions {
                 }
             }
             else {
-                rl = new Identifier(MusicTriggersCommon.MODID,"textures/"+this.imagecards.get(i).getName()+".png");
+                rl = new Identifier(MusicTriggers.MODID,"textures/"+this.imagecards.get(i).getName()+".png");
                 try {
                     BufferedImage image = ImageIO.read(new File("." + "/config/MusicTriggersCommon/songs/assets/musictriggers/textures/"+this.imagecards.get(i).getName()+".png"));
                     this.imageDimensions.put(rl, new ImageDimensions());

@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.client.audio;
 
-import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.ClientSync;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.config.*;
@@ -25,6 +25,7 @@ public class ChannelManager {
     private static final HashMap<String, ConfigMain> mainConfigMap = new HashMap<>();
     private static final HashMap<String, ConfigTransitions> transitionsConfigMap = new HashMap<>();
     private static final HashMap<String, ConfigCommands> commandsConfigMap = new HashMap<>();
+    private static final HashMap<String, ConfigToggles> toggleConfigMap = new HashMap<>();
 
     private static final List<String> songsInFolder = new ArrayList<>();
     public static final HashMap<String, File> openAudioFiles = new HashMap<>();
@@ -34,38 +35,40 @@ public class ChannelManager {
     private static int tickCounter = 0;
     public static boolean reloading = false;
 
-    public static void createChannel(String channel, String mainFileName, String transitionsFileName, String commandsFileName, String redirectFileName, boolean clientSide, boolean pausedByJukeBox, boolean overridesNormalMusic) {
+    public static void createChannel(String channel, String mainFileName, String transitionsFileName, String commandsFileName, String togglesFileName, String redirectFileName, boolean clientSide, boolean pausedByJukeBox, boolean overridesNormalMusic) {
         if(getChannel(channel)==null) {
             if(clientSide) {
-                handlerMap.put(channel, new SoundHandler(channel));
+                handlerMap.put(channel, new SoundHandler());
                 channelMap.put(channel, new Channel(channel,pausedByJukeBox,overridesNormalMusic));
-                redirectMap.put(channel, new Redirect(new File(MusicTriggersCommon.configDir,redirectFileName+".txt")));
+                redirectMap.put(channel, new Redirect(new File(MusicTriggers.configDir,redirectFileName+".txt")));
             }
-            mainConfigMap.put(channel,new ConfigMain(new File(MusicTriggersCommon.configDir,mainFileName+".toml"),channel));
+            mainConfigMap.put(channel,new ConfigMain(new File(MusicTriggers.configDir,mainFileName+".toml"),channel));
             if(clientSide) {
-                transitionsConfigMap.put(channel, new ConfigTransitions(new File(MusicTriggersCommon.configDir, transitionsFileName + ".toml"),channelMap.get(channel)));
-                commandsConfigMap.put(channel, new ConfigCommands(new File(MusicTriggersCommon.configDir, commandsFileName + ".toml")));
+                transitionsConfigMap.put(channel, new ConfigTransitions(new File(MusicTriggers.configDir, transitionsFileName + ".toml"),channelMap.get(channel)));
+                commandsConfigMap.put(channel, new ConfigCommands(new File(MusicTriggers.configDir, commandsFileName + ".toml")));
+                toggleConfigMap.put(channel, new ConfigToggles(new File(MusicTriggers.configDir, togglesFileName + ".toml"),channelMap.get(channel), handlerMap.get(channel)));
+                channelMap.get(channel).passThroughConfigObjects(mainConfigMap.get(channel),transitionsConfigMap.get(channel),commandsConfigMap.get(channel),toggleConfigMap.get(channel),redirectMap.get(channel),handlerMap.get(channel));
             }
-            if(clientSide) channelMap.get(channel).passThroughConfigObjects(mainConfigMap.get(channel),transitionsConfigMap.get(channel),commandsConfigMap.get(channel),redirectMap.get(channel),handlerMap.get(channel));
         }
-        else MusicTriggersCommon.logger.error("Channel already exists for category "+channel+"! Cannot assign 2 config files to the same music category.");
+        else MusicTriggers.logger.error("Channel already exists for category "+channel+"! Cannot assign 2 config files to the same music category.");
     }
 
     public static void parseConfigFiles() {
         collectSongs();
         for(ConfigMain toml : mainConfigMap.values()) {
             toml.parse();
-            handlerMap.get(toml.getChannel()).registerSounds(toml,toml.getChannel());
+            handlerMap.get(toml.getChannel()).registerSounds(toml);
         }
         for(Channel channel : channelMap.values()) channel.parseRedirect(redirectMap.get(channel.getChannelName()));
         for(ConfigTransitions transitions: transitionsConfigMap.values()) transitions.parse();
         for(ConfigCommands commands : commandsConfigMap.values()) commands.parse();
-        ConfigDebug.parse(new File(MusicTriggersCommon.configDir,"debug.toml"));
-        ConfigRegistry.parse(new File(MusicTriggersCommon.configDir,"registration.toml"));
+        for(ConfigToggles toggles : toggleConfigMap.values()) toggles.parse();
+        ConfigDebug.parse(new File(MusicTriggers.configDir,"debug.toml"));
+        ConfigRegistry.parse(new File(MusicTriggers.configDir,"registration.toml"));
     }
 
     public static void collectSongs() {
-        File folder = new File(MusicTriggersCommon.configDir,"songs");
+        File folder = new File(MusicTriggers.configDir,"songs");
         if(!folder.exists()) {
             try {
                 folder.createNewFile();
@@ -82,7 +85,7 @@ public class ChannelManager {
             try {
                 for (InputStream stream : openStreams) stream.close();
             } catch (Exception e) {
-                MusicTriggersCommon.logger.error("Could not close one of the open audio streams. Resources may be lost!",e);
+                MusicTriggers.logger.error("Could not close one of the open audio streams. Resources may be lost!",e);
             }
             for (File f : listOfFiles) {
                 curfile = FilenameUtils.getBaseName(f.getName());
@@ -155,7 +158,7 @@ public class ChannelManager {
         try {
             getChannel(sync.getChannel()).sync(sync);
         } catch (NullPointerException exception) {
-            MusicTriggersCommon.logger.error("Channel "+sync.getChannel()+" did not exist and could not be synced!");
+            MusicTriggers.logger.error("Channel "+sync.getChannel()+" did not exist and could not be synced!");
         }
     }
 
@@ -217,7 +220,7 @@ public class ChannelManager {
     }
 
     public static void refreshDebug() {
-        ConfigDebug.parse(new File(MusicTriggersCommon.configDir,"debug.toml"));
+        ConfigDebug.parse(new File(MusicTriggers.configDir,"debug.toml"));
     }
 
     private static void sendUpdatePacket() {

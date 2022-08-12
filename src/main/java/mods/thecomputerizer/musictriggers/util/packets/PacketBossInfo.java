@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
-import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.EventsCommon;
 import mods.thecomputerizer.musictriggers.util.CalculateFeatures;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
@@ -10,10 +10,10 @@ import net.minecraft.util.Identifier;
 
 import java.nio.charset.StandardCharsets;
 
-import static mods.thecomputerizer.musictriggers.MusicTriggersCommon.stringBreaker;
+import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
 
 public class PacketBossInfo {
-    public static final Identifier id = new Identifier(MusicTriggersCommon.MODID, "packet_boss_info");
+    public static final Identifier id = new Identifier(MusicTriggers.MODID, "packet_boss_info");
     private final String s;
 
     public static String decode(PacketByteBuf buf) {

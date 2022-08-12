@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.common;
 
-import mods.thecomputerizer.musictriggers.MusicTriggersCommon;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.objects.MusicRecorder;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
@@ -14,7 +14,7 @@ import net.minecraft.util.registry.Registry;
 
 public class MusicTriggersBlocks {
 
-    public static final Identifier MUSIC_RECORDER_ID = new Identifier(MusicTriggersCommon.MODID,"music_recorder");
+    public static final Identifier MUSIC_RECORDER_ID = new Identifier(MusicTriggers.MODID,"music_recorder");
     public static final Block MUSIC_RECORDER = new MusicRecorder(AbstractBlock.Settings.of(Material.WOOD).strength(5f));
     public static final BlockItem MUSIC_RECORDER_ITEM = new BlockItem(MUSIC_RECORDER, new Item.Settings().rarity(Rarity.EPIC).fireproof().group(ItemGroup.MISC));
 

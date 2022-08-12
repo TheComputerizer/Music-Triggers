@@ -9,16 +9,26 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("ResultOfMethodCallIgnored")
 public class ConfigChannels {
 
     public static void create(File f) {
         try {
-            String sb = "# Example of attaching config files to audio an channel.\n"+
-                    "# Copy and replace the part in brackets with the desired audio channel.\n" +
-                    "# This mod does not create custom audio channels. Here are the acceptable channel names.\n" +
-                    "# master, music, record, weather, block, hostile, neutral, player, ambient, voice\n" +
-                    "# Note that you can nest config files in folders by specifying the folder before it like folder/filename.\n\n" +
-                    "[music]\n\tmain = \"musictriggers\"\n\ttransitions = \"transitions\"\n\tcommands = \"commands\"\n\tredirect = \"redirect\"\n\tpaused_by_jukebox = \"true\"\n\toverrides_normal_music = \"true\"";
+            String sb = """
+                    # Example of attaching config files to audio an channel.
+                    # Copy and replace the part in brackets with the desired audio channel.
+                    # This mod does not create custom audio channels. Here are the acceptable channel names.
+                    # master, music, record, weather, block, hostile, neutral, player, ambient, voice
+                    # Note that you can nest config files in folders by specifying the folder before it like folder/filename.
+
+                    [music]
+                    \tmain = "musictriggers"
+                    \ttransitions = "transitions"
+                    \tcommands = "commands"
+                    \ttoggles = "toggles"
+                    \tredirect = "redirect"
+                    \tpaused_by_jukebox = "true"
+                    \toverrides_normal_music = "true\"""";
             FileWriter writer = new FileWriter(f);
             writer.write(sb);
             writer.close();
@@ -40,7 +50,7 @@ public class ConfigChannels {
         List<ChannelInfo> channels = new ArrayList<>();
         for(String channel : channelCollector(f)) if(toml.contains(channel)) {
             Toml ch = toml.getTable(channel);
-            channels.add(new ChannelInfo(channel,ch.getString("main","musictriggers"),ch.getString("transitions", "transitions"),ch.getString("commands", "commands"),ch.getString("redirect", "redirect"),ch.getString("paused_by_jukebox", "true"),ch.getString("overrides_normal_music", "true")));
+            channels.add(new ChannelInfo(channel,ch.getString("main","musictriggers"),ch.getString("transitions", "transitions"),ch.getString("commands", "commands"),ch.getString("toggles", "toggles"),ch.getString("redirect", "redirect"),ch.getString("paused_by_jukebox", "true"),ch.getString("overrides_normal_music", "true")));
         }
         return channels;
     }
@@ -69,15 +79,17 @@ public class ConfigChannels {
         private final String main;
         private final String transitions;
         private final String commands;
+        private final String toggles;
         private final String redirect;
         private final boolean pausedByJukeBox;
         private final boolean overridesNormalMusic;
 
-        public ChannelInfo(String channelName, String main, String transitions, String commands, String redirect, String pausedByJukeBox, String overridesNormalMusic) {
+        public ChannelInfo(String channelName, String main, String transitions, String commands, String toggles, String redirect, String pausedByJukeBox, String overridesNormalMusic) {
             this.channelName = channelName;
             this.main = main;
             this.transitions = transitions;
             this.commands = commands;
+            this.toggles = toggles;
             this.redirect = redirect;
             this.pausedByJukeBox = Boolean.parseBoolean(pausedByJukeBox);
             this.overridesNormalMusic = Boolean.parseBoolean(overridesNormalMusic);
@@ -97,6 +109,10 @@ public class ConfigChannels {
 
         public String getCommands() {
             return this.commands;
+        }
+
+        public String getToggles() {
+            return this.toggles;
         }
 
         public String getRedirect() {
