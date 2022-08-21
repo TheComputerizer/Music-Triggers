@@ -17,6 +17,7 @@ import net.darkhax.gamestages.GameStageHelper;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.GuiCreateWorld;
 import net.minecraft.client.gui.GuiWinGame;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
@@ -96,7 +97,7 @@ public class MusicPicker {
             return packet;
         }
         if(this.player == null) {
-            if (this.handler.TriggerIdentifierMap.get("menu") != null) {
+            if (this.mc.currentScreen!=null && this.mc.world==null && this.handler.TriggerIdentifierMap.get("menu") != null) {
                 this.getInfo().updatePlayableTriggers(Collections.singletonList("menu"));
                 this.getInfo().updateActiveTriggers(Collections.singletonList("menu"));
                 this.getInfo().updateSongList(this.handler.TriggerIdentifierMap.get("menu").get("_"));

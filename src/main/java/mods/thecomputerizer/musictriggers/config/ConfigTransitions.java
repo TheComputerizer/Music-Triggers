@@ -3,8 +3,9 @@ package mods.thecomputerizer.musictriggers.config;
 import com.moandjiezana.toml.Toml;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.audio.Channel;
-import mods.thecomputerizer.musictriggers.util.image.GIFHandler;
-import mods.thecomputerizer.musictriggers.util.image.PNGMcMetaHandler;
+import mods.thecomputerizer.theimpossiblelibrary.client.visual.GIF;
+import mods.thecomputerizer.theimpossiblelibrary.client.visual.MP4;
+import mods.thecomputerizer.theimpossiblelibrary.client.visual.Renderer;
 import net.minecraft.util.ResourceLocation;
 import org.apache.commons.io.FileDeleteStrategy;
 
@@ -127,14 +128,8 @@ public class ConfigTransitions {
                     if (image.containsTable("animation")) {
                         Toml gif = image.getTable("animation");
                         this.ismoving.put(imageCounter, true);
-                        if (gif.contains("delay")) {
-                            this.imagecards.get(imageCounter).setDelay(MusicTriggers.randomInt(gif.getString("delay")));
-                        }
                         if (gif.contains("split")) {
                             this.imagecards.get(imageCounter).setSplit(MusicTriggers.randomInt(gif.getString("split")));
-                        }
-                        if (gif.contains("frames_skipped")) {
-                            this.imagecards.get(imageCounter).setSkip(MusicTriggers.randomInt(gif.getString("frames_skipped")));
                         }
                     }
                     if (image.contains("name")) {
@@ -145,6 +140,12 @@ public class ConfigTransitions {
                     }
                     if (image.contains("horizontal")) {
                         this.imagecards.get(imageCounter).setHorizontal(MusicTriggers.randomInt(image.getString("horizontal")));
+                    }
+                    if (image.contains("horizontal_preset")) {
+                        this.imagecards.get(imageCounter).setLocationX(image.getString("horizontal_preset"));
+                    }
+                    if (image.contains("vertical_preset")) {
+                        this.imagecards.get(imageCounter).setLocationY(image.getString("vertical_preset"));
                     }
                     if (image.contains("scale_x")) {
                         this.imagecards.get(imageCounter).setScaleX(MusicTriggers.randomInt(image.getString("scale_x")));
@@ -182,14 +183,8 @@ public class ConfigTransitions {
                 if (image.containsTable("animation")) {
                     Toml gif = image.getTable("animation");
                     this.ismoving.put(imageCounter, true);
-                    if (gif.contains("delay")) {
-                        this.imagecards.get(imageCounter).setDelay(MusicTriggers.randomInt(gif.getString("delay")));
-                    }
                     if (gif.contains("split")) {
                         this.imagecards.get(imageCounter).setSplit(MusicTriggers.randomInt(gif.getString("split")));
-                    }
-                    if (gif.contains("frames_skipped")) {
-                        this.imagecards.get(imageCounter).setSkip(MusicTriggers.randomInt(gif.getString("frames_skipped")));
                     }
                 }
                 if (image.contains("name")) {
@@ -230,86 +225,6 @@ public class ConfigTransitions {
             }
         } catch (Exception e) {
             throw new RuntimeException(CrashHelper);
-        }
-        formatImages();
-    }
-
-    private void formatImages() {
-        for (int i : this.imagecards.keySet()) {
-            ResourceLocation rl;
-            if(this.ismoving.get(i)) {
-                if (this.imagecards.get(i).getName() != null) {
-                    String path = "." + "/config/MusicTriggers/songs/assets/musictriggers/textures/" + this.imagecards.get(i).getName();
-                    File folder = new File(path);
-                    File findMP4 = new File(path + ".mp4");
-                    File findGIF = new File(path + ".gif");
-                    File findPng = new File(path + ".png");
-                    File findPngMeta = new File(path + ".png.mcmeta");
-                    if (findMP4.exists()) {
-                        try {
-                            folder.mkdir();
-                            //MP4Handler.splitMP4(findMP4, folder, this.imagecards.get(i).getSkip());
-                            if(!findMP4.delete()) {
-                                FileDeleteStrategy.FORCE.delete(findMP4);
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            throw new RuntimeException("There was a problem breaking down the mp4 named " + this.imagecards.get(i).getName() + ".mp4 (Internally: File " + e.getStackTrace()[0].getFileName() + " at line " + e.getStackTrace()[0].getLineNumber()+")");
-                        }
-                    } else if (findGIF.exists()) {
-                        try {
-                            folder.mkdir();
-                            GIFHandler.splitGif(findGIF, folder);
-                            if(!findGIF.delete()) {
-                                FileDeleteStrategy.FORCE.delete(findGIF);
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            throw new RuntimeException("There was a problem breaking down the gif named " + this.imagecards.get(i).getName() + ".gif (Internally: File " + e.getStackTrace()[0].getFileName() + " at line " + e.getStackTrace()[0].getLineNumber()+")");
-                        }
-                    } else if (findPngMeta.exists()) {
-                        try {
-                            folder.mkdir();
-                            PNGMcMetaHandler.splitPNG(findPng, folder, this.imagecards.get(i).getSplit());
-                            findPng.delete();
-                            findPngMeta.delete();
-                        } catch (Exception e) {
-                            throw new RuntimeException("There was a problem breaking down the png named " + this.imagecards.get(i).getName() + ".png (Internally: File " + e.getStackTrace()[0].getFileName() + " at line " + e.getStackTrace()[0].getLineNumber()+")");
-                        }
-                    }
-                    if (!folder.exists()) {
-                        MusicTriggers.logger.error("Animated image of " + this.imagecards.get(i).getName() + " does not exist or was not parsed properly");
-                    }
-                    else {
-                        if(this.imagecards.get(i).getName()!=null) {
-                            File[] listOfPNG = folder.listFiles();
-                            assert listOfPNG != null;
-                            for (File f : listOfPNG) {
-                                rl = new ResourceLocation(MusicTriggers.MODID, "textures/" + ConfigTransitions.this.imagecards.get(i).getName() + "/" + f.getName());
-                                try {
-                                    BufferedImage image = ImageIO.read(new File("." + "/config/MusicTriggers/songs/assets/musictriggers/textures/" + this.imagecards.get(i).getName() + "/" + f.getName()));
-                                    this.imageDimensions.put(rl, new ImageDimensions());
-                                    this.imageDimensions.get(rl).setWidth(image.getWidth());
-                                    this.imageDimensions.get(rl).setHeight(image.getHeight());
-                                } catch (Exception ex) {
-                                    throw new RuntimeException("Unable to read size of image with resource location " + rl);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            else {
-                rl = new ResourceLocation(MusicTriggers.MODID,"textures/"+this.imagecards.get(i).getName()+".png");
-                try {
-                    BufferedImage image = ImageIO.read(new File("." + "/config/MusicTriggers/songs/assets/musictriggers/textures/"+this.imagecards.get(i).getName()+".png"));
-                    this.imageDimensions.put(rl, new ImageDimensions());
-                    this.imageDimensions.get(rl).setWidth(image.getWidth());
-                    this.imageDimensions.get(rl).setHeight(image.getHeight());
-                } catch(Exception ex) {
-                    throw new RuntimeException("Unable to read size of image with resource location "+ rl);
-                }
-            }
         }
     }
 
@@ -391,12 +306,15 @@ public class ConfigTransitions {
 
     public static class Image {
         private String name;
+        private GIF gif;
+        private MP4 mp4;
         private int vertical;
         private int horizontal;
         private int scalex;
         private int scaley;
         private int time;
-        private int delay;
+        private String locationX;
+        private String locationY;
         private int split;
         private int skip;
         private int fadeIn;
@@ -404,6 +322,7 @@ public class ConfigTransitions {
         private boolean playonce;
         private boolean vague;
         private final List<String> triggers;
+        private boolean initialized;
 
         public Image() {
             this.name = "";
@@ -412,7 +331,8 @@ public class ConfigTransitions {
             this.scalex = 100;
             this.scaley = 100;
             this.time = 750;
-            this.delay = 10;
+            this.locationX = "center";
+            this.locationY = "center";
             this.split = 0;
             this.skip = 4;
             this.fadeIn = 10;
@@ -420,6 +340,7 @@ public class ConfigTransitions {
             this.playonce = false;
             this.vague = false;
             this.triggers = new ArrayList<>();
+            this.initialized = false;
         }
 
         public void setName(String t) {
@@ -428,6 +349,28 @@ public class ConfigTransitions {
 
         public String getName() {
             return this.name;
+        }
+
+        public Object getFormat() {
+            if(this.gif!=null) return this.gif;
+            else if (this.mp4!=null) return this.mp4;
+            return null;
+        }
+
+        public void initialize() {
+            if(this.name.contains(".gif")) {
+                this.gif = Renderer.initializeGif(new ResourceLocation(MusicTriggers.MODID,"textures/"+this.name));
+                this.initialized = true;
+            }
+            else if(this.name.contains(".mp4")) {
+                this.mp4 = Renderer.initializeMp4(new ResourceLocation(MusicTriggers.MODID,"textures/"+this.name));
+                this.initialized = true;
+            }
+            else MusicTriggers.logger.warn("Could not initialize image card "+this.name+"! Is the format correct?");
+        }
+
+        public boolean isInitialized() {
+            return this.initialized;
         }
 
         public void setVertical(int v) {
@@ -470,12 +413,20 @@ public class ConfigTransitions {
             this.time = t;
         }
 
-        public int getDelay() {
-            return this.delay;
+        public String getLocationX() {
+            return this.locationX;
         }
 
-        public void setDelay(int d) {
-            this.delay = d;
+        public void setLocationX(String locationX) {
+            this.locationX = locationX;
+        }
+
+        public String getLocationY() {
+            return locationY;
+        }
+
+        public void setLocationY(String locationY) {
+            this.locationY = locationY;
         }
 
         public int getSplit() {

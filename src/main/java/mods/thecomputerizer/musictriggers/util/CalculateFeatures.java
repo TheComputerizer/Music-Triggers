@@ -31,7 +31,11 @@ public class CalculateFeatures {
 
     public static ServerChannelData calculateServerTriggers(ServerChannelData serverData) {
         allTriggers = serverData.getAllTriggers();
-        if(!serverData.getCurrentSong().matches("placeholder")) EventsCommon.currentSongs.get(serverData.getPlayerUUID()).add(serverData.getCurrentSong());
+        EventsCommon.recordMenu.putIfAbsent(serverData.getPlayerUUID(), new ArrayList<>());
+        EventsCommon.recordMenu.get(serverData.getPlayerUUID()).addAll(serverData.getMenuSongs());
+        EventsCommon.activeTriggerList.get(serverData.getPlayerUUID()).put(serverData.getChannel(), serverData.getActiveTriggers());
+        if(!serverData.getCurrentSong().matches("placeholder"))
+            EventsCommon.currentChannelSongs.get(serverData.getPlayerUUID()).put(serverData.getChannel(), serverData.getCurrentSong());
         for(ServerChannelData.Home home : serverData.getHomeTriggers()) home.setActive(calculateHome(home,serverData.getPlayerUUID()));
         for(ServerChannelData.Structure structure : serverData.getStructureTriggers()) structure.setActive(calculateStruct(structure));
         for(ServerChannelData.Mob mob : serverData.getMobTriggers()) mob.setActive(calculateMob(mob, serverData.getPlayerUUID()));

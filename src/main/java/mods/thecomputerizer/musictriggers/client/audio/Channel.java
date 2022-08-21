@@ -1,17 +1,13 @@
 package mods.thecomputerizer.musictriggers.client.audio;
 
-import com.sedmelluq.discord.lavaplayer.container.ogg.OggContainerProbe;
 import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat;
 import com.sedmelluq.discord.lavaplayer.format.Pcm16AudioDataFormat;
 import com.sedmelluq.discord.lavaplayer.player.*;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
-import com.sedmelluq.discord.lavaplayer.tools.io.MessageInput;
-import com.sedmelluq.discord.lavaplayer.tools.io.PersistentHttpStream;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioReference;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import io.netty.buffer.ByteBuf;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.ClientSync;
@@ -24,21 +20,16 @@ import mods.thecomputerizer.theimpossiblelibrary.client.visual.GIF;
 import mods.thecomputerizer.theimpossiblelibrary.client.visual.MP4;
 import mods.thecomputerizer.theimpossiblelibrary.client.visual.Renderer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.ISound;
-import net.minecraft.client.audio.PositionedSoundRecord;
-import net.minecraft.client.audio.Sound;
-import net.minecraft.client.audio.SoundManager;
+import net.minecraft.client.resources.*;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.input.Keyboard;
 
 import java.io.File;
-import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -572,6 +563,10 @@ public class Channel {
         }
     }
 
+    public AudioTrack getCopyOfTrackFromID(String id) {
+        return this.loadedTracks.get(id).makeClone();
+    }
+
     public boolean isPaused() {
         return this.getPlayer().isPaused();
     }
@@ -651,39 +646,64 @@ public class Channel {
     private void loadFromResourceLocation(String id, ResourceLocation source) {
         try {
             if (!this.loadedTracks.containsKey(id)) {
-                AudioTrack track = this.playerManager.decodeTrack(new MessageInput(Minecraft.getMinecraft().getResourceManager().getResource(source).getInputStream())).decodedTrack;
-                if(track!=null) {
-                    Channel.this.addTrackToMap(id, track);
-                    MusicTriggers.logger.info("Track loaded from resource location " + source);
-                } else MusicTriggers.logger.info("no matches from resource location " + source);
-                    /*
-                    other thing I tried
-
-                    URL url = SoundManager.getURLForSoundResource(source);
-                    this.playerManager.loadItem(new AudioReference(url.toURI().toString(), url.getFile()), new AudioLoadResultHandler() {
-                    @Override
-                    public void trackLoaded(AudioTrack track) {
-                        Channel.this.addTrackToMap(id, track);
-                        MusicTriggers.logger.info("Track loaded from resource location " + source);
+                URL url = null;
+                String first = null;
+                String second = null;
+                if(Minecraft.getMinecraft().mcDefaultResourcePack.resourceExists(source)) {
+                    url = DefaultResourcePack.class.getResource("/assets/" + source.getResourceDomain() + "/" + source.getResourcePath());
+                    if(url!=null) {
+                        first = url.toURI().toString();
+                        second = url.getFile();
+                    } else {
+                        File file = Minecraft.getMinecraft().mcDefaultResourcePack.resourceIndex.getFile(source);
+                        if(file!=null && file.isFile()) {
+                            first = file.getAbsolutePath();
+                            second = file.getName();
+                        }
                     }
-
-                    @Override
-                    public void playlistLoaded(AudioPlaylist playlist) {
-                        MusicTriggers.logger.info("no playlists here");
+                }
+                if(url==null && first==null) {
+                    for (IResourcePack resourcePack : Minecraft.getMinecraft().defaultResourcePacks) {
+                        if (!(resourcePack instanceof DefaultResourcePack)) {
+                            String resourceName = String.format("%s/%s/%s", "assets", source.getResourceDomain(), source.getResourcePath());
+                            if(resourcePack instanceof FolderResourcePack) {
+                                File temp = new File(((FolderResourcePack)resourcePack).resourcePackFile,resourceName);
+                                if(temp.isFile()) {
+                                    first = temp.getAbsolutePath();
+                                    second = temp.getName();
+                                }
+                            } else if (resourcePack instanceof FileResourcePack) {
+                                //TODO
+                                //ZipFile file = ((FileResourcePack)resourcePack).getResourcePackZipFile();
+                                //ZipEntry entry = file.getEntry(resourceName);
+                            }
+                        }
                     }
+                }
+                if(first!=null && second!=null) {
+                    this.playerManager.loadItem(new AudioReference(first, second), new AudioLoadResultHandler() {
+                        @Override
+                        public void trackLoaded(AudioTrack track) {
+                            Channel.this.addTrackToMap(id, track);
+                            MusicTriggers.logger.info("Track loaded from resource location " + source);
+                        }
 
-                    @Override
-                    public void noMatches() {
-                        MusicTriggers.logger.info("no matches from resource location " + source);
-                    }
+                        @Override
+                        public void playlistLoaded(AudioPlaylist playlist) {
+                            MusicTriggers.logger.info("no playlists here");
+                        }
 
-                    @Override
-                    public void loadFailed(FriendlyException exception) {
-                        MusicTriggers.logger.info("Track loaded failed resource location " + source);
-                    }
-                });
+                        @Override
+                        public void noMatches() {
+                            MusicTriggers.logger.info("no matches from resource location " + source);
+                        }
 
-                     */
+                        @Override
+                        public void loadFailed(FriendlyException exception) {
+                            MusicTriggers.logger.info("Track loaded failed resource location " + source);
+                        }
+                    });
+                } else MusicTriggers.logger.warn("Failed to get URI for resource location "+source);
             } else MusicTriggers.logger.warn("Audio file with id " + id + " already exists!");
         } catch (Exception e) {
             MusicTriggers.logger.error("Could not decode track from resource location "+source,e);
@@ -749,6 +769,12 @@ public class Channel {
         for(String song : this.toSend.getMenuSongs()) {
             buf.writeInt(song.length());
             buf.writeCharSequence(song, StandardCharsets.UTF_8);
+        }
+        buf.writeInt(this.picker.getInfo().getActiveTriggers().size());
+        for(String trigger : this.picker.getInfo().getActiveTriggers()) {
+            String fixedTrigger = MusicTriggers.stringBreaker(trigger,"-")[0];
+            buf.writeInt(fixedTrigger.length());
+            buf.writeCharSequence(fixedTrigger, StandardCharsets.UTF_8);
         }
         buf.writeInt(this.picker.getInfo().getPlayableTriggers().size());
         for(String trigger : this.picker.getInfo().getPlayableTriggers()) {

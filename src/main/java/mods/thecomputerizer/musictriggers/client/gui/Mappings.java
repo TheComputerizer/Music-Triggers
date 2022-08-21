@@ -505,7 +505,7 @@ public class Mappings {
         if(index>9) {
             switch (index) {
                 case 10:
-                    builder.append("\t\tdelay = \"").append(image.getDelay()).append("\"\n");
+                    //builder.append("\t\tdelay = \"").append(image.getDelay()).append("\"\n");
                     return;
                 case 11:
                     builder.append("\t\tsplit = \"").append(image.getSplit()).append("\"\n");

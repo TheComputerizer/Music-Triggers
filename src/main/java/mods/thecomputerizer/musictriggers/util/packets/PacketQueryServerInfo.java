@@ -12,6 +12,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,7 +22,8 @@ public class PacketQueryServerInfo implements IMessageHandler<PacketQueryServerI
     public IMessage onMessage(PacketQueryServerInfo.PacketQueryServerInfoMessage message, MessageContext ctx) {
         if(!message.serverChannelData.isEmpty()) {
             List<ServerChannelData> serverChannelData = new ArrayList<>();
-            EventsCommon.currentSongs.put(message.playerUUID(),new ArrayList<>());
+            EventsCommon.currentChannelSongs.put(message.playerUUID(),new HashMap<>());
+            EventsCommon.activeTriggerList.put(message.playerUUID(),new HashMap<>());
             for(ServerChannelData data : message.serverChannelData) {
                 serverChannelData.add(CalculateFeatures.calculateServerTriggers(data));
             }

@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.config;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
+import net.minecraft.util.ResourceLocation;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -12,6 +13,7 @@ public class Redirect {
 
     private final File file;
     public final HashMap<String,String> urlMap = new HashMap<>();
+    public final HashMap<String, ResourceLocation> resourceLocationMap = new HashMap<>();
 
     public Redirect(File file) {
         this.file = file;
@@ -21,10 +23,12 @@ public class Redirect {
         try {
             if(!f.getParentFile().exists()) f.getParentFile().mkdirs();
             String sb = "Format this like name = url\n" +
+                    "If you are trying to redirect to an already registered resource location Format it like name == location instead\n"+
                     "Any lines with Format in the name or = not in the name will not be read in\n" +
                     "Make sure each new entry is on a new line\n" +
-                    "Here is an example\n" +
-                    "thx = https://youtu.be/z3Q4WBpCXhs";
+                    "Here are 2 examples\n" +
+                    "thx = https://youtu.be/z3Q4WBpCXhs\n"+
+                    "title == minecraft:sounds/music/menu/menu1.ogg";
             FileWriter writer = new FileWriter(f);
             writer.write(sb);
             writer.close();
@@ -47,9 +51,16 @@ public class Redirect {
             BufferedReader br = new BufferedReader(new FileReader(this.file));
             String line = br.readLine();
             while (line != null) {
-                if(!line.contains("Format") && line.contains("=")) {
+                if(!line.contains("Format") && line.contains("=") && !line.contains("==")) {
                     String[] broken = MusicTriggers.stringBreaker(line,"=");
                     urlMap.put(broken[0].trim(),broken[1].trim());
+                } else if (!line.contains("Format") && line.contains("==")) {
+                    String[] broken = MusicTriggers.stringBreaker(line,"==");
+                    try {
+                        resourceLocationMap.put(broken[0].trim(), new ResourceLocation(broken[1].trim()));
+                    } catch (Exception ignored) {
+                        MusicTriggers.logger.error("Resource location "+broken[1].trim()+" was invalid!");
+                    }
                 }
                 line = br.readLine();
             }

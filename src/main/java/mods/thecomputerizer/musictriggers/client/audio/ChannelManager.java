@@ -1,11 +1,15 @@
 package mods.thecomputerizer.musictriggers.client.audio;
 
+import com.sedmelluq.discord.lavaplayer.remote.RemoteNodeProcessor;
+import com.sedmelluq.discord.lavaplayer.tools.io.HttpInterface;
+import com.sedmelluq.discord.lavaplayer.tools.io.HttpInterfaceManager;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.ClientSync;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.config.*;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.packets.PacketQueryServerInfo;
+import mods.thecomputerizer.theimpossiblelibrary.util.CustomTick;
 import net.minecraft.block.BlockJukebox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
@@ -13,15 +17,15 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.apache.commons.io.FilenameUtils;
 import org.lwjgl.opengl.Display;
 
 import java.io.File;
-import java.io.InputStream;
 import java.util.*;
 
 public class ChannelManager {
+    private static HttpInterfaceManager httpInterfaceManager;
+    private static JukeboxChannel jukeboxChannel;
     private static final HashMap<String,Channel> channelMap = new HashMap<>();
     private static final HashMap<String, SoundHandler> handlerMap = new HashMap<>();
     private static final HashMap<String, Redirect> redirectMap = new HashMap<>();
@@ -32,14 +36,14 @@ public class ChannelManager {
 
     private static final List<String> songsInFolder = new ArrayList<>();
     public static final HashMap<String, File> openAudioFiles = new HashMap<>();
-    public static final List<InputStream> openStreams = new ArrayList<>();
     private static final List<Channel> wasAlreadyPaused = new ArrayList<>();
 
     private static int tickCounter = 0;
     public static boolean reloading = false;
 
     public static void createChannel(String channel, String mainFileName, String transitionsFileName, String commandsFileName, String togglesFileName, String redirectFileName, boolean clientSide, boolean pausedByJukeBox, boolean overridesNormalMusic) {
-        if(getChannel(channel)==null) {
+        if(channel.matches("jukebox")) MusicTriggers.logger.error("Cannot name a channel jukebox!");
+        else if(getChannel(channel)==null) {
             if(clientSide) {
                 handlerMap.put(channel, new SoundHandler());
                 channelMap.put(channel, new Channel(channel,pausedByJukeBox,overridesNormalMusic));
@@ -56,7 +60,17 @@ public class ChannelManager {
         else MusicTriggers.logger.error("Channel already exists for category "+channel+"! Cannot assign 2 config files to the same music category.");
     }
 
+    public static void createJukeboxChannel() {
+        jukeboxChannel = new JukeboxChannel("jukebox");
+    }
+
+    public static void playCustomJukeboxSong(boolean start, String channel, String id, BlockPos pos) {
+        if(!start) jukeboxChannel.stopTrack();
+        else jukeboxChannel.playTrack(channelMap.get(channel).getCopyOfTrackFromID(id),pos);
+    }
+
     public static void parseConfigFiles() {
+        httpInterfaceManager = RemoteNodeProcessor.createHttpInterfaceManager();
         collectSongs();
         for(ConfigMain toml : mainConfigMap.values()) {
             toml.parse();
@@ -68,6 +82,10 @@ public class ChannelManager {
         for(ConfigToggles toggles : toggleConfigMap.values()) toggles.parse();
         ConfigDebug.parse(new File(MusicTriggers.configDir,"debug.toml"));
         ConfigRegistry.parse(new File(MusicTriggers.configDir,"registration.toml"));
+    }
+
+    public static void readResourceLocations() {
+        for(Channel channel : channelMap.values()) channel.readResourceLocations();
     }
 
     public static void collectSongs() {
@@ -85,11 +103,6 @@ public class ChannelManager {
             String curfile;
             songsInFolder.clear();
             openAudioFiles.clear();
-            try {
-                for (InputStream stream : openStreams) stream.close();
-            } catch (Exception e) {
-                MusicTriggers.logger.error("Could not close one of the open audio streams. Resources may be lost!",e);
-            }
             for (File f : listOfFiles) {
                 curfile = FilenameUtils.getBaseName(f.getName());
                 if (!songsInFolder.contains(curfile)) {
@@ -98,6 +111,10 @@ public class ChannelManager {
                 }
             }
         }
+    }
+
+    public static HttpInterface getInterface() {
+        return httpInterfaceManager.getInterface();
     }
 
     public static Channel getChannel(String channel) {
@@ -182,30 +199,32 @@ public class ChannelManager {
         for(Channel channel : channelMap.values()) channel.reload();
         refreshDebug();
     }
-
-    @SubscribeEvent(priority = EventPriority.HIGH)
-    public static void tickChannels(TickEvent.ClientTickEvent event) {
-        if(event.phase==TickEvent.Phase.END && !reloading) {
-            tickCounter++;
-            if(!Display.isActive()) pauseAllChannels(false);
-            else if(!Minecraft.getMinecraft().isGamePaused()) {
-                if (checkForJukeBox()) {
-                    pauseAllChannels(true);
-                    for (Channel channel : channelMap.values()) if(!channel.isPaused()) channel.tickFast();
-                    if (tickCounter % 5 == 0) {
-                        for (Channel channel : channelMap.values()) if(!channel.isPaused()) channel.tickSlow();
-                        sendUpdatePacket();
-                    }
-                } else {
-                    unPauseAllChannels();
-                    for (Channel channel : channelMap.values()) if(!channel.isPaused()) channel.tickFast();
-                    if (tickCounter % 5 == 0) {
-                        for (Channel channel : channelMap.values()) channel.tickSlow();
-                        sendUpdatePacket();
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void tickChannels(CustomTick event) {
+        jukeboxChannel.checkStopPlaying(reloading);
+        if(!reloading) {
+            if(event.checkTickRate(20)) {
+                tickCounter++;
+                if (!Display.isActive()) pauseAllChannels(false);
+                else if (!Minecraft.getMinecraft().isGamePaused()) {
+                    if (checkForJukeBox()) {
+                        pauseAllChannels(true);
+                        for (Channel channel : channelMap.values()) if (!channel.isPaused()) channel.tickFast();
+                        if (tickCounter % 4 == 0) {
+                            for (Channel channel : channelMap.values()) if (!channel.isPaused()) channel.tickSlow();
+                            sendUpdatePacket();
+                        }
+                    } else {
+                        unPauseAllChannels();
+                        for (Channel channel : channelMap.values()) if (!channel.isPaused()) channel.tickFast();
+                        if (tickCounter % 4 == 0) {
+                            for (Channel channel : channelMap.values()) channel.tickSlow();
+                            sendUpdatePacket();
+                        }
                     }
                 }
+                if(tickCounter>=100) tickCounter=5;
             }
-            if(tickCounter>=100) tickCounter=0;
         }
     }
 

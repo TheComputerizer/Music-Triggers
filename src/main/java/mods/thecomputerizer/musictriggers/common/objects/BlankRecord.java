@@ -17,12 +17,9 @@ public class BlankRecord extends Item {
 
     @SuppressWarnings("NullableProblems")
     @Override
-    public EnumActionResult onItemUse( EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
-    {
+    public EnumActionResult onItemUse( EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
         IBlockState iblockstate = worldIn.getBlockState(pos);
-
-        if (iblockstate.getBlock() instanceof MusicRecorder)
-        {
+        if (iblockstate.getBlock() instanceof MusicRecorder) {
             MusicRecorder mr = (MusicRecorder) iblockstate.getBlock();
             if(!worldIn.isRemote && !iblockstate.getValue(MusicRecorder.HAS_RECORD) && !iblockstate.getValue(MusicRecorder.HAS_DISC)) {
                 ItemStack itemstack = player.getHeldItem(hand);
@@ -31,16 +28,12 @@ public class BlankRecord extends Item {
             }
             return EnumActionResult.SUCCESS;
         }
-        else
-        {
-            return EnumActionResult.PASS;
-        }
+        else return EnumActionResult.PASS;
     }
 
     @SuppressWarnings("NullableProblems")
     @Override
-    public net.minecraftforge.common.IRarity getForgeRarity(ItemStack stack)
-    {
+    public net.minecraftforge.common.IRarity getForgeRarity(ItemStack stack) {
         return EnumRarity.EPIC;
     }
 }

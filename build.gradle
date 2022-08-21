@@ -80,7 +80,8 @@ configurations {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
+    //minecraft
+    minecraft "net.minecraftforge:forge:1.12.2-14.23.5.2860"
 
     //external dependencies
     shade("io.github.kostaskougios:cloning:1.10.3")
@@ -92,10 +93,13 @@ dependencies {
     shade("org.apache.httpcomponents:httpclient:4.5.13")
 
     //mixin
-    implementation fg.deobf("curse.maven:mixin-booter-419286:3687785")
     implementation('org.spongepowered:mixin:0.8.4')
 
-    //mods
+    //required mod dependencies
+    implementation fg.deobf("curse.maven:mixin-booter-419286:3687785")
+    implementation fg.deobf("curse.maven:the-impossible-library-661115:3939939")
+
+    //mod support dependencies
     implementation fg.deobf("curse.maven:codechicken-lib-242818:2779848")
     implementation fg.deobf("curse.maven:bloodmoon-226321:2537917")
     implementation fg.deobf("curse.maven:nyx-349214:3161738")
@@ -133,7 +137,6 @@ processResources {
     filesMatching("mcmod.info") {
         expand "version": project.version, "mcversion": "1.12.2"
     }
-
     inputs.property "version", project.version
     inputs.property "mcversion", "1.12.2"
 }

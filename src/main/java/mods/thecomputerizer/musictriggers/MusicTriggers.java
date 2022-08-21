@@ -7,15 +7,16 @@ import mods.thecomputerizer.musictriggers.client.gui.Mappings;
 import mods.thecomputerizer.musictriggers.common.EventsCommon;
 import mods.thecomputerizer.musictriggers.config.ConfigChannels;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
-import mods.thecomputerizer.musictriggers.util.CustomTick;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
+import mods.thecomputerizer.theimpossiblelibrary.util.CustomTick;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.thread.SidedThreadGroups;
 import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,11 +24,12 @@ import org.apache.logging.log4j.Logger;
 import java.io.File;
 import java.util.Random;
 
-@Mod(modid = MusicTriggers.MODID, name = MusicTriggers.NAME, version = MusicTriggers.VERSION, dependencies = "required-after:mixinbooter")
+@Mod(modid = MusicTriggers.MODID, name = MusicTriggers.NAME, version = MusicTriggers.VERSION, dependencies = MusicTriggers.DEPENDENCIES)
 public class MusicTriggers {
     public static final String MODID = "musictriggers";
     public static final String NAME = "Music Triggers";
     public static final String VERSION = "1.12.2-6.0-EX";
+    public static final String DEPENDENCIES = "required-after:mixinbooter;required-after:theimpossiblelibrary";
     public static Logger logger;
     public static File configDir;
 
@@ -38,8 +40,9 @@ public class MusicTriggers {
         random = new Random();
         configDir = new File(".", "config/MusicTriggers");
         if (!configDir.exists()) configDir.mkdir();
+        ChannelManager.createJukeboxChannel();
         for(ConfigChannels.ChannelInfo info : ConfigChannels.parse(new File(configDir,"channels.toml")))
-            ChannelManager.createChannel(info.getChannelName(),info.getMain(),info.getTransitions(),info.getCommands(),info.getToggles(),info.getRedirect(),Thread.currentThread().getThreadGroup() != SidedThreadGroups.SERVER,info.getPausedByJukeBox(),info.getOverridesNormalMusic());
+            ChannelManager.createChannel(info.getChannelName(),info.getMain(),info.getTransitions(),info.getCommands(),info.getToggles(),info.getRedirect(), FMLCommonHandler.instance().getSide()==Side.CLIENT,info.getPausedByJukeBox(),info.getOverridesNormalMusic());
         ChannelManager.parseConfigFiles();
         Mappings.init();
     }
@@ -50,6 +53,7 @@ public class MusicTriggers {
         if(event.getSide()==Side.CLIENT) {
             MinecraftForge.EVENT_BUS.register(ChannelManager.class);
             MinecraftForge.EVENT_BUS.register(EventsClient.class);
+            CustomTick.addCustomTickEvent(20);
         }
         MinecraftForge.EVENT_BUS.register(EventsCommon.class);
     }
@@ -58,8 +62,12 @@ public class MusicTriggers {
     public void init(FMLInitializationEvent e) {
         if(e.getSide()==Side.CLIENT) {
             ClientRegistry.registerKeyBinding(Channel.GUI);
-            CustomTick.setUp();
         }
+    }
+
+    @EventHandler
+    public void postInit(FMLPostInitializationEvent e) {
+        if(e.getSide()==Side.CLIENT) ChannelManager.readResourceLocations();
     }
 
     public static String[] stringBreaker(String s, String regex) {
