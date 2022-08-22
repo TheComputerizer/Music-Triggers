@@ -21,6 +21,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.GuiScreenEvent;
@@ -38,24 +39,19 @@ import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
+@SuppressWarnings("deprecation")
 @Mod.EventBusSubscriber(modid = MusicTriggers.MODID, value = Side.CLIENT)
 public class EventsClient {
     public static ResourceLocation IMAGE_CARD = null;
-    public static int curImageIndex;
     public static boolean isWorldRendered;
     public static float fadeCount = 1000;
-    public static float startDelayCount = 0;
     public static Boolean activated = false;
     public static long timer=0;
     public static int GuiCounter = 0;
     public static int reloadCounter = 0;
     public static boolean ismoving;
-    public static List<ResourceLocation> pngs = new ArrayList<>();
-    public static int movingcounter = 0;
     public static String lastAdvancement;
     public static boolean advancement;
     public static EntityPlayer PVPTracker;
@@ -132,88 +128,13 @@ public class EventsClient {
         if(e.getType()==RenderGameOverlayEvent.ElementType.ALL && !renderDebug) e.setCanceled(true);
     }
 
-    /*
-    @SubscribeEvent
-    public static void customTick(CustomTick ev) {
-        if(ConfigTransitions.imagecards.get(curImageIndex)!=null) {
-            if (timer > ConfigTransitions.imagecards.get(curImageIndex).getTime()) {
-                activated = false;
-                timer = 0;
-                ismoving = false;
-                movingcounter = 0;
-            }
-            if (ismoving) {
-                if (timer % ConfigTransitions.imagecards.get(curImageIndex).getDelay() == 0) {
-                    movingcounter++;
-                    if (movingcounter >= pngs.size()) movingcounter = 0;
-                }
-                IMAGE_CARD = pngs.get(movingcounter);
-            }
-            if (activated) {
-                timer++;
-                startDelayCount++;
-                if (startDelayCount > 0) {
-                    if (fadeCount > 1) {
-                        fadeCount -= ConfigTransitions.imagecards.get(curImageIndex).getFadeIn();
-                        if (fadeCount < 1) fadeCount = 1;
-                    }
-                }
-            } else {
-                if (fadeCount < 1000) {
-                    fadeCount += ConfigTransitions.imagecards.get(curImageIndex).getFadeOut();
-                    if (fadeCount > 1000) {
-                        fadeCount = 1000;
-                        ismoving = false;
-                    }
-                }
-                startDelayCount = 0;
-            }
-        }
-    }
-
-    @SubscribeEvent
-    public static void imageCards(RenderGameOverlayEvent.Post e) {
-        Minecraft mc = Minecraft.getMinecraft();
-        EntityPlayer player = mc.player;
-        if(e.getType()== RenderGameOverlayEvent.ElementType.ALL) {
-            ScaledResolution res = e.getResolution();
-            if (player != null && ConfigTransitions.imagecards.get(curImageIndex)!=null) {
-                int x = res.getScaledWidth();
-                int y = res.getScaledHeight();
-                Vector4f color = new Vector4f(1, 1, 1, 1);
-                if (fadeCount != 1000 && IMAGE_CARD!=null) {
-                    GlStateManager.enableBlend();
-                    GlStateManager.pushMatrix();
-                    mc.getTextureManager().bindTexture(IMAGE_CARD);
-
-                    float opacity = (int) (17 - (fadeCount / 80));
-                    opacity = (opacity * 1.15f) / 15;
-                    GlStateManager.color(color.getX(), color.getY(), color.getZ(), Math.max(0, Math.min(0.95f, opacity)));
-
-                    float scale_x = (0.25f*((float)y/(float)x))*(ConfigTransitions.imagecards.get(curImageIndex).getScaleX()/100f);
-                    float scale_y = 0.25f*(ConfigTransitions.imagecards.get(curImageIndex).getScaleY()/100f);
-                    GlStateManager.scale(scale_x,scale_y,1f);
-
-                    float posX = ((x*(1f/scale_x))/2f)-(x/2f);
-                    float posY = (y*(1f/scale_y))/8f;
-                    GuiScreen.drawModalRectWithCustomSizedTexture((int)((posX)+(ConfigTransitions.imagecards.get(curImageIndex).getHorizontal()*(1/scale_x))),
-                            (int)((posY)+(ConfigTransitions.imagecards.get(curImageIndex).getVertical()*(1/scale_y))),x,y,x,y,x,y);
-
-                    GlStateManager.color(1F, 1F, 1F, 1);
-                    GlStateManager.popMatrix();
-                }
-            }
-        }
-    }
-     */
-
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent e) {
         if(Channel.GUI.isKeyDown()) {
             BlockPos pos = MusicPicker.roundedPos(Minecraft.getMinecraft().player);
             if(!zone) {
                 //Minecraft.getMinecraft().displayGuiScreen(new GuiMain(ConfigObject.createFromCurrent()));
-                Minecraft.getMinecraft().player.sendMessage(new TextComponentString("\u00A74\u00A7oReloading Music... This may take a while!"));
+                Minecraft.getMinecraft().player.sendMessage(new TextComponentString("\u00A74\u00A7o"+I18n.translateToLocal("misc.musictriggers.reload_start")));
                 reloadCounter = 5;
                 ChannelManager.reloading = true;
             }
@@ -260,7 +181,7 @@ public class EventsClient {
             reloadCounter-=1;
             if(reloadCounter==1) {
                 ChannelManager.reloadAllChannels();
-                Minecraft.getMinecraft().player.sendMessage(new TextComponentString("\u00A7a\u00A7oFinished!"));
+                Minecraft.getMinecraft().player.sendMessage(new TextComponentString("\u00A7a\u00A7o"+I18n.translateToLocal("misc.musictriggers.reload_finished")));
                 IMAGE_CARD = null;
                 fadeCount = 1000;
                 timer = 0;

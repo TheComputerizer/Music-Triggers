@@ -1,16 +1,14 @@
 package mods.thecomputerizer.musictriggers.common.objects;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.config.ConfigMain;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.packets.PacketJukeBoxCustom;
 import net.minecraft.block.BlockJukebox;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.EnumRarity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.stats.StatList;
 import net.minecraft.util.EnumActionResult;
@@ -18,23 +16,21 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Objects;
 
-public class MusicTriggersRecord extends Item {
+@SuppressWarnings("deprecation")
+public class MusicTriggersRecord extends EpicItem {
 
     public MusicTriggersRecord() {
-        for(String trigger : ConfigMain.triggers) {
-            addPropertyOverride(new ResourceLocation(MusicTriggers.MODID, "trigger_"+trigger),
-                    (stack, worldIn, entityIn) -> addTriggerPropertyGetter(trigger,stack));
-        }
-        for(String trigger : ConfigMain.modtriggers) {
-            addPropertyOverride(new ResourceLocation(MusicTriggers.MODID, "trigger_"+trigger),
-                    (stack, worldIn, entityIn) -> addTriggerPropertyGetter(trigger,stack));
-        }
+        addPropertyOverride(new ResourceLocation(MusicTriggers.MODID, "trigger"),
+                (stack, worldIn, entityIn) -> addTriggerPropertyGetter(stack));
     }
 
     @Override
@@ -64,118 +60,115 @@ public class MusicTriggersRecord extends Item {
     }
 
     @Override
-    public String getItemStackDisplayName(ItemStack stack) {
+    @SideOnly(Side.CLIENT)
+    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
         if(stack.hasTagCompound() && Objects.requireNonNull(stack.getTagCompound()).hasKey("trackID"))
-            return stack.getTagCompound().getString("trackID");
-        return "Music Triggers Record";
-    }
-
-    @Override
-    public net.minecraftforge.common.IRarity getForgeRarity(ItemStack stack) {
-        return EnumRarity.EPIC;
+            tooltip.add(I18n.translateToLocal(getUnlocalizedName(stack)+".description")+": "+stack.getTagCompound().getString("trackID"));
+        else tooltip.add(I18n.translateToLocal(getUnlocalizedName(stack)+".blank_description"));
     }
 
     @SideOnly(Side.CLIENT)
-    public float addTriggerPropertyGetter(String trigger, ItemStack stack) {
-        if(stack.getTagCompound()!=null && stack.getTagCompound().hasKey("triggerID") && stack.getTagCompound().getString("triggerID").matches(trigger))
-            return mapTriggerToFloat(trigger);
-        return 1f;
+    public float addTriggerPropertyGetter(ItemStack stack) {
+        if(stack.getTagCompound()!=null && stack.getTagCompound().hasKey("triggerID")) {
+            return mapTriggerToFloat(stack.getTagCompound().getString("triggerID").trim());
+        }
+        return 0f;
     }
 
     private float mapTriggerToFloat(String trigger) {
         switch (trigger) {
             case "acidrain":
-                return 0f;
-            case "biome":
                 return 0.01f;
-            case "blizzard":
+            case "biome":
                 return 0.02f;
-            case "bloodmoon":
+            case "blizzard":
                 return 0.03f;
-            case "bluemoon":
+            case "bloodmoon":
                 return 0.04f;
-            case "cloudy":
+            case "bluemoon":
                 return 0.05f;
-            case "command":
+            case "cloudy":
                 return 0.06f;
-            case "creative":
+            case "command":
                 return 0.07f;
-            case "day":
+            case "creative":
                 return 0.08f;
-            case "dead":
+            case "day":
                 return 0.09f;
-            case "difficulty":
+            case "dead":
                 return 0.1f;
-            case "dimension":
+            case "difficulty":
                 return 0.11f;
-            case "effect":
+            case "dimension":
                 return 0.12f;
-            case "elytra":
+            case "effect":
                 return 0.13f;
-            case "fallingstars":
+            case "elytra":
                 return 0.14f;
-            case "fishing":
+            case "fallingstars":
                 return 0.15f;
-            case "gamestages":
+            case "fishing":
                 return 0.16f;
-            case "generic":
+            case "gamestages":
                 return 0.17f;
-            case "gui":
+            case "generic":
                 return 0.18f;
-            case "harvestmoon":
+            case "gui":
                 return 0.19f;
-            case "height":
+            case "harvestmoon":
                 return 0.2f;
-            case "hurricane":
+            case "height":
                 return 0.21f;
-            case "light":
+            case "hurricane":
                 return 0.22f;
-            case "loading":
+            case "light":
                 return 0.23f;
-            case "lowhp":
+            case "loading":
                 return 0.24f;
-            case "menu":
+            case "lowhp":
                 return 0.25f;
-            case "mob":
+            case "menu":
                 return 0.26f;
-            case "night":
+            case "mob":
                 return 0.27f;
-            case "pet":
+            case "night":
                 return 0.28f;
-            case "pvp":
+            case "pet":
                 return 0.29f;
-            case "raining":
+            case "pvp":
                 return 0.3f;
-            case "rainintensity":
+            case "raining":
                 return 0.31f;
-            case "riding":
+            case "rainintensity":
                 return 0.32f;
-            case "sandstorm":
+            case "riding":
                 return 0.33f;
-            case "season":
+            case "sandstorm":
                 return 0.34f;
-            case "snowing":
+            case "season":
                 return 0.35f;
-            case "spectator":
+            case "snowing":
                 return 0.36f;
-            case "storming":
+            case "spectator":
                 return 0.37f;
-            case "structure":
+            case "storming":
                 return 0.38f;
-            case "sunrise":
+            case "structure":
                 return 0.39f;
-            case "sunset":
+            case "sunrise":
                 return 0.4f;
-            case "tornado":
+            case "sunset":
                 return 0.41f;
-            case "underwater":
+            case "tornado":
                 return 0.42f;
-            case "victory":
+            case "underwater":
                 return 0.43f;
-            case "zones":
+            case "victory":
                 return 0.44f;
+            case "zones":
+                return 0.45f;
             default:
-                return 1f;
+                return 0f;
         }
     }
 
