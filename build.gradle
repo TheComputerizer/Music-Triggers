@@ -96,7 +96,7 @@ dependencies {
     implementation('org.spongepowered:mixin:0.8.4')
 
     //required mod dependencies
-    implementation fg.deobf("curse.maven:mixin-booter-419286:3687785")
+    implementation fg.deobf("curse.maven:mixin-booter-419286:3886235")
     implementation fg.deobf("curse.maven:the-impossible-library-661115:3939939")
 
     //mod support dependencies
@@ -110,6 +110,8 @@ dependencies {
     implementation fg.deobf("curse.maven:serene-seasons-291874:2799213")
     implementation fg.deobf("curse.maven:champions-307152:3177947")
     implementation fg.deobf("curse.maven:jei-238222:3488178")
+    implementation fg.deobf("curse.maven:orelib-307806:2820815")
+    implementation fg.deobf("curse.maven:bookshelf-228525:2836960")
     implementation fg.deobf("net.darkhax.gamestages:GameStages-1.12.2:2.0.98")
 }
 

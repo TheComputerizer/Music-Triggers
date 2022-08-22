@@ -2,7 +2,6 @@ package mods.thecomputerizer.musictriggers.util;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.MusicTriggersBlocks;
-import mods.thecomputerizer.musictriggers.common.MusicTriggersItems;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import mods.thecomputerizer.musictriggers.util.packets.*;
 import net.minecraft.block.Block;
@@ -19,7 +18,6 @@ import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import java.util.Map;
 import java.util.Objects;
 
 import static mods.thecomputerizer.musictriggers.common.MusicTriggersItems.*;
@@ -51,7 +49,7 @@ public final class RegistryHandler {
     @SubscribeEvent
     public static void onModelRegister(ModelRegistryEvent event) {
         if(ConfigRegistry.registerDiscs) {
-            ModelLoader.setCustomModelResourceLocation(MUSIC_TRIGGERS_RECORD, 0, new ModelResourceLocation(Objects.requireNonNull(BLANK_RECORD.getRegistryName()), "inventory"));
+            ModelLoader.setCustomModelResourceLocation(MUSIC_TRIGGERS_RECORD, 0, new ModelResourceLocation(Objects.requireNonNull(MUSIC_TRIGGERS_RECORD.getRegistryName()), "inventory"));
             ModelLoader.setCustomModelResourceLocation(BLANK_RECORD, 0, new ModelResourceLocation(Objects.requireNonNull(BLANK_RECORD.getRegistryName()), "inventory"));
             ModelLoader.setCustomModelResourceLocation(MUSIC_RECORDER, 0, new ModelResourceLocation(Objects.requireNonNull(MUSIC_RECORDER.getRegistryName()), "inventory"));
         }

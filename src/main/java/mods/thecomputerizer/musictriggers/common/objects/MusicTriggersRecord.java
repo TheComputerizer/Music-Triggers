@@ -30,7 +30,13 @@ public class MusicTriggersRecord extends EpicItem {
 
     public MusicTriggersRecord() {
         addPropertyOverride(new ResourceLocation(MusicTriggers.MODID, "trigger"),
-                (stack, worldIn, entityIn) -> addTriggerPropertyGetter(stack));
+                (stack, worldIn, entityIn) -> {
+                    if(stack.getTagCompound()!=null && stack.getTagCompound().hasKey("triggerID")) {
+                        return mapTriggerToFloat(stack.getTagCompound().getString("triggerID"));
+                    }
+                    MusicTriggers.logger.warn("no trigger id for disc");
+                    return 0f;
+                });
     }
 
     @Override
@@ -67,14 +73,6 @@ public class MusicTriggersRecord extends EpicItem {
         else tooltip.add(I18n.translateToLocal(getUnlocalizedName(stack)+".blank_description"));
     }
 
-    @SideOnly(Side.CLIENT)
-    public float addTriggerPropertyGetter(ItemStack stack) {
-        if(stack.getTagCompound()!=null && stack.getTagCompound().hasKey("triggerID")) {
-            return mapTriggerToFloat(stack.getTagCompound().getString("triggerID").trim());
-        }
-        return 0f;
-    }
-
     private float mapTriggerToFloat(String trigger) {
         switch (trigger) {
             case "acidrain":
@@ -100,6 +98,7 @@ public class MusicTriggersRecord extends EpicItem {
             case "difficulty":
                 return 0.11f;
             case "dimension":
+                MusicTriggers.logger.warn("returning 0.12f");
                 return 0.12f;
             case "effect":
                 return 0.13f;
@@ -168,6 +167,7 @@ public class MusicTriggersRecord extends EpicItem {
             case "zones":
                 return 0.45f;
             default:
+                MusicTriggers.logger.warn("returning 0f");
                 return 0f;
         }
     }
