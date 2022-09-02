@@ -97,7 +97,6 @@ dependencies {
 
     //required mod dependencies
     implementation fg.deobf("curse.maven:mixin-booter-419286:3886235")
-    implementation fg.deobf("curse.maven:the-impossible-library-661115:3939939")
 
     //mod support dependencies
     implementation fg.deobf("curse.maven:codechicken-lib-242818:2779848")

@@ -13,12 +13,10 @@ import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.ClientSync;
 import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.client.MusicPicker;
+import mods.thecomputerizer.musictriggers.client.PNG;
 import mods.thecomputerizer.musictriggers.common.ServerChannelData;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.config.*;
-import mods.thecomputerizer.theimpossiblelibrary.client.visual.GIF;
-import mods.thecomputerizer.theimpossiblelibrary.client.visual.MP4;
-import mods.thecomputerizer.theimpossiblelibrary.client.visual.Renderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.*;
 import net.minecraft.client.settings.KeyBinding;
@@ -441,15 +439,21 @@ public class Channel {
                     ConfigTransitions.Image imageCard = this.transitions.imagecards.get(i);
                     if(!imageCard.isInitialized()) imageCard.initialize();
                     if(imageCard.getFormat()!=null) {
+                        if(imageCard.getFormat() instanceof PNG) {
+                            EventsClient.renderPNGToBackground((PNG)imageCard.getFormat(),imageCard.getLocationX(),
+                                    imageCard.getLocationY(),imageCard.getHorizontal(),imageCard.getVertical(),imageCard.getScaleX(),imageCard.getScaleY(),
+                                    imageCard.getTime()*50L);
+                        }
+                        /*
                         if(imageCard.getFormat() instanceof GIF) {
                             Renderer.renderGifToBackground((GIF)imageCard.getFormat(),imageCard.getLocationX(),
                                     imageCard.getLocationY(),imageCard.getHorizontal(),imageCard.getVertical(),imageCard.getScaleX(),imageCard.getScaleY(),
                                     imageCard.getTime()*50L);
-                            MusicTriggers.logger.info("rendering gif!");
                         }
                         else if(imageCard.getFormat() instanceof MP4) Renderer.renderMP4ToBackground((MP4)imageCard.getFormat(),imageCard.getLocationX(),
                                 imageCard.getLocationY(),imageCard.getHorizontal(),imageCard.getVertical(),imageCard.getScaleX(),imageCard.getScaleY(),
                                 imageCard.getTime()*50L);
+                         */
                     }
                     if (this.transitions.imagecards.get(i).getPlayonce()) markForDeletion = i;
                     break;

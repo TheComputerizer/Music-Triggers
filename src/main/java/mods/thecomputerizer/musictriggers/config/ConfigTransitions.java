@@ -2,15 +2,11 @@ package mods.thecomputerizer.musictriggers.config;
 
 import com.moandjiezana.toml.Toml;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.client.PNG;
 import mods.thecomputerizer.musictriggers.client.audio.Channel;
-import mods.thecomputerizer.theimpossiblelibrary.client.visual.GIF;
-import mods.thecomputerizer.theimpossiblelibrary.client.visual.MP4;
-import mods.thecomputerizer.theimpossiblelibrary.client.visual.Renderer;
 import net.minecraft.util.ResourceLocation;
-import org.apache.commons.io.FileDeleteStrategy;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
@@ -306,8 +302,7 @@ public class ConfigTransitions {
 
     public static class Image {
         private String name;
-        private GIF gif;
-        private MP4 mp4;
+        private PNG png;
         private int vertical;
         private int horizontal;
         private int scalex;
@@ -352,18 +347,23 @@ public class ConfigTransitions {
         }
 
         public Object getFormat() {
-            if(this.gif!=null) return this.gif;
-            else if (this.mp4!=null) return this.mp4;
+            if(this.png!=null) return this.png;
             return null;
         }
 
         public void initialize() {
+            /*
             if(this.name.contains(".gif")) {
                 this.gif = Renderer.initializeGif(new ResourceLocation(MusicTriggers.MODID,"textures/"+this.name));
                 this.initialized = true;
             }
             else if(this.name.contains(".mp4")) {
                 this.mp4 = Renderer.initializeMp4(new ResourceLocation(MusicTriggers.MODID,"textures/"+this.name));
+                this.initialized = true;
+            }
+             */
+            if(this.name.contains(".png")) {
+                this.png = EventsClient.initializePng(new ResourceLocation(MusicTriggers.MODID,"textures/"+this.name));
                 this.initialized = true;
             }
             else MusicTriggers.logger.warn("Could not initialize image card "+this.name+"! Is the format correct?");
