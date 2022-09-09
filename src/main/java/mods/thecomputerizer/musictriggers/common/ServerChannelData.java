@@ -21,6 +21,7 @@ public class ServerChannelData {
     private final List<Mob> mobTriggers;
     private final List<Raid> raidTriggers;
 
+    private final List<String> activeTriggers;
     private final List<String> allTriggers;
     private final List<String> menuSongs;
 
@@ -34,8 +35,13 @@ public class ServerChannelData {
         this.structureTriggers = new ArrayList<>();
         this.mobTriggers = new ArrayList<>();
         this.raidTriggers = new ArrayList<>();
+        this.activeTriggers = new ArrayList<>();
         this.allTriggers = new ArrayList<>();
         this.menuSongs = new ArrayList<>();
+    }
+
+    public String getChannel() {
+        return this.channel;
     }
 
     public List<Snow> getSnowTriggers() {
@@ -60,6 +66,10 @@ public class ServerChannelData {
 
     public List<Raid> getRaidTriggers() {
         return this.raidTriggers;
+    }
+
+    public List<String> getActiveTriggers() {
+        return this.activeTriggers;
     }
 
     public List<String> getAllTriggers() {
@@ -92,6 +102,10 @@ public class ServerChannelData {
 
     public void addRaidTrigger(Raid raid) {
         this.raidTriggers.add(raid);
+    }
+
+    public void addActiveTriggerName(String trigger) {
+        this.activeTriggers.add(trigger);
     }
 
     public void addGenericTriggerName(String trigger) {
@@ -145,6 +159,11 @@ public class ServerChannelData {
         for(i=0;i<menuSongsSize;i++) {
             int songLength = buf.readInt();
             data.addMenuSong((String)buf.readCharSequence(songLength, StandardCharsets.UTF_8));
+        }
+        int activeTriggersSize = buf.readInt();
+        for(i=0;i<activeTriggersSize;i++) {
+            int triggerLength = buf.readInt();
+            data.addActiveTriggerName((String)buf.readCharSequence(triggerLength, StandardCharsets.UTF_8));
         }
         int triggerListSize = buf.readInt();
         for(i=0;i<triggerListSize;i++) {

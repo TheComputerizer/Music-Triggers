@@ -1,5 +1,9 @@
 {
-  "item.musictriggers.blank_record": "Blank Record",
+  "item.musictriggers.blank_record": "Blank Music Disc",
+  "item.musictriggers.blank_record.desc": "Can be imbued with a music recorder",
+  "item.musictriggers.music_triggers_record.": "Enhanced Music Disc",
+  "item.musictriggers.music_triggers_record.blank_description": "No track stored",
+  "item.musictriggers.music_triggers_record.desc": "Track",
   "block.musictriggers.music_recorder": "Music Recorder",
   "key.musictriggers.menu": "Open Menu/Mark Zone Corner",
   "key.categories.musictriggers": "Music Triggers",
@@ -47,5 +51,6 @@
   "screen.musictriggers.text.edit_card": "Edit a Song",
   "screen.musictriggers.text.transitions": "Transitions",
   "screen.musictriggers.text.select_trigger": "Select a trigger",
-  "musictriggers.reloading": "Reloading Music... This may take a while!"
+  "misc.musictriggers.reload_start": "Reloading Music... This will not take long...",
+  "misc.musictriggers.reload_finished": "Finished!"
 }

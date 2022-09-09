@@ -26,6 +26,7 @@ public class PacketHandler {
         HANDLER.registerMessage(disc++, PacketQueryServerInfo.class, PacketQueryServerInfo::encode, PacketQueryServerInfo::new, PacketQueryServerInfo::handle);
         HANDLER.registerMessage(disc++, PacketSyncServerInfo.class, PacketSyncServerInfo::encode, PacketSyncServerInfo::new, PacketSyncServerInfo::handle);
         HANDLER.registerMessage(disc++, PacketReceiveCommand.class, PacketReceiveCommand::encode, PacketReceiveCommand::new, PacketReceiveCommand::handle);
+        HANDLER.registerMessage(disc++, PacketJukeBoxCustom.class, PacketJukeBoxCustom::encode, PacketJukeBoxCustom::new, PacketJukeBoxCustom::handle);
     }
 
     public static void sendTo(Object message, ServerPlayerEntity player) {

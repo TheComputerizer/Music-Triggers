@@ -485,7 +485,7 @@ public class ConfigObject {
                 case 9 :
                     return this.imagecards.get(transitionIndex).getVague().toString();
                 case 10 :
-                    return this.imagecards.get(transitionIndex).getDelay()+"";
+                    return null;//this.imagecards.get(transitionIndex).getDelay()+"";
                 case 11 :
                     return this.imagecards.get(transitionIndex).getSplit()+"";
                 case 12 :
@@ -649,7 +649,7 @@ public class ConfigObject {
         ret.add(image.getFadeIn()+"");
         ret.add(image.getFadeOut()+"");
         ret.add(image.getVague()+"");
-        ret.add(image.getDelay()+"");
+        ret.add("");
         ret.add(image.getSplit()+"");
         ret.add(image.getSkip()+"");
         return ret.toArray(new String[0]);
@@ -767,7 +767,7 @@ public class ConfigObject {
                     if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
                     return;
                 case 10:
-                    this.imagecards.get(transitionIndex).setDelay(this.imagecards.get(transitionIndex).getDelay() + change);
+                    //this.imagecards.get(transitionIndex).setDelay(this.imagecards.get(transitionIndex).getDelay() + change);
                     if(!this.markImageInfoForWriting.get(transitionIndex).contains(index)) this.markImageInfoForWriting.get(transitionIndex).add(index);
                     return;
                 case 11:

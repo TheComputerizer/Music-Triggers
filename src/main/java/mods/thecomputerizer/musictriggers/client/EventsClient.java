@@ -1,17 +1,19 @@
 package mods.thecomputerizer.musictriggers.client;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.systems.RenderSystem;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.audio.Channel;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.GuiTriggerInfo;
-import mods.thecomputerizer.musictriggers.common.TriggerCommand;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.packets.PacketBossInfo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.SimpleSound;
+import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -19,7 +21,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
@@ -27,7 +29,6 @@ import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
-import net.minecraftforge.event.CommandEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.AdvancementEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -36,24 +37,20 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 @Mod.EventBusSubscriber(modid = MusicTriggers.MODID, value = Dist.CLIENT)
 public class EventsClient {
     public static ResourceLocation IMAGE_CARD = null;
-    public static int curImageIndex;
     public static boolean isWorldRendered;
     public static float fadeCount = 1000;
-    public static float startDelayCount = 0;
     public static Boolean activated = false;
     public static long timer=0;
     public static int GuiCounter = 0;
     public static int reloadCounter = 0;
     public static boolean ismoving;
-    public static List<ResourceLocation> pngs = new ArrayList<>();
-    public static int movingcounter = 0;
     public static String lastAdvancement;
     public static boolean advancement;
     public static PlayerEntity PVPTracker;
@@ -69,6 +66,7 @@ public class EventsClient {
     public static int z2 = 0;
     private static int bossBarCounter = 0;
     public static final HashMap<String, Boolean> commandMap = new HashMap<>();
+    private static final ArrayList<PNG> renderablePngs = new ArrayList<>();
 
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
@@ -79,22 +77,6 @@ public class EventsClient {
             }
         }
     }
-
-    /*
-    @SubscribeEvent
-    public static void onDamage(LivingDamageEvent e) {
-        if(e.getEntityLiving() instanceof EntityPlayer && e.getSource().getTrueSource() instanceof EntityPlayer) {
-            if (e.getEntityLiving() == MusicPicker.player) {
-                PVPTracker = (EntityPlayer)e.getSource().getTrueSource();
-                MusicPicker.setPVP = true;
-            }
-            else if(e.getSource().getTrueSource() == MusicPicker.player) {
-                PVPTracker = (EntityPlayer)e.getEntityLiving();
-                MusicPicker.setPVP = true;
-            }
-        }
-    }
-     */
 
     @SubscribeEvent
     public static void onAdvancement(AdvancementEvent e) {
@@ -117,80 +99,63 @@ public class EventsClient {
         if(e.getType()==RenderGameOverlayEvent.ElementType.ALL && !renderDebug) e.setCanceled(true);
     }
 
-    /*
-    @SubscribeEvent
-    public static void customTick(CustomTick ev) {
-        if(ConfigTransitions.imagecards.get(curImageIndex)!=null) {
-            if (timer > ConfigTransitions.imagecards.get(curImageIndex).getTime()) {
-                activated = false;
-                timer = 0;
-                ismoving = false;
-                movingcounter = 0;
-            }
-            if (ismoving) {
-                if (timer % ConfigTransitions.imagecards.get(curImageIndex).getDelay() == 0) {
-                    movingcounter++;
-                    if (movingcounter >= pngs.size()) movingcounter = 0;
-                }
-                IMAGE_CARD = pngs.get(movingcounter);
-            }
-            if (activated) {
-                timer++;
-                startDelayCount++;
-                if (startDelayCount > 0) {
-                    if (fadeCount > 1) {
-                        fadeCount -= ConfigTransitions.imagecards.get(curImageIndex).getFadeIn();
-                        if (fadeCount < 1) fadeCount = 1;
-                    }
-                }
-            } else {
-                if (fadeCount < 1000) {
-                    fadeCount += ConfigTransitions.imagecards.get(curImageIndex).getFadeOut();
-                    if (fadeCount > 1000) {
-                        fadeCount = 1000;
-                        ismoving = false;
-                    }
-                }
-                startDelayCount = 0;
-            }
+    //these methods will be here until the impossible library actually functions as it is supposed to
+    //-----------------------------------------------------------------------------------------------
+    public static PNG initializePng(ResourceLocation location) {
+        try {
+            return new PNG(location);
+        } catch (IOException ex) {
+            MusicTriggers.logger.error("Failed to initialize png at resource location "+location,ex);
+        }
+        return null;
+    }
+
+    public static void renderPNGToBackground(PNG png, String horizontal, String vertical, int x, int y, float scaleX, float scaleY, long millis) {
+        if(!renderablePngs.contains(png)) {
+            png.setHorizontal(horizontal);
+            png.setVertical(vertical);
+            png.setX(x);
+            png.setY(y);
+            png.setScaleX(scaleX);
+            png.setScaleY(scaleY);
+            png.setMillis(millis);
+            renderablePngs.add(png);
         }
     }
 
     @SubscribeEvent
     public static void imageCards(RenderGameOverlayEvent.Post e) {
-        Minecraft mc = Minecraft.getMinecraft();
-        EntityPlayer player = mc.player;
         if(e.getType()== RenderGameOverlayEvent.ElementType.ALL) {
-            ScaledResolution res = e.getResolution();
-            if (player != null && ConfigTransitions.imagecards.get(curImageIndex)!=null) {
-                int x = res.getScaledWidth();
-                int y = res.getScaledHeight();
-                Vector4f color = new Vector4f(1, 1, 1, 1);
-                if (fadeCount != 1000 && IMAGE_CARD!=null) {
-                    GlStateManager.enableBlend();
-                    GlStateManager.pushMatrix();
-                    mc.getTextureManager().bindTexture(IMAGE_CARD);
-
-                    float opacity = (int) (17 - (fadeCount / 80));
-                    opacity = (opacity * 1.15f) / 15;
-                    GlStateManager.color(color.getX(), color.getY(), color.getZ(), Math.max(0, Math.min(0.95f, opacity)));
-
-                    float scale_x = (0.25f*((float)y/(float)x))*(ConfigTransitions.imagecards.get(curImageIndex).getScaleX()/100f);
-                    float scale_y = 0.25f*(ConfigTransitions.imagecards.get(curImageIndex).getScaleY()/100f);
-                    GlStateManager.scale(scale_x,scale_y,1f);
-
-                    float posX = ((x*(1f/scale_x))/2f)-(x/2f);
-                    float posY = (y*(1f/scale_y))/8f;
-                    GuiScreen.drawModalRectWithCustomSizedTexture((int)((posX)+(ConfigTransitions.imagecards.get(curImageIndex).getHorizontal()*(1/scale_x))),
-                            (int)((posY)+(ConfigTransitions.imagecards.get(curImageIndex).getVertical()*(1/scale_y))),x,y,x,y,x,y);
-
-                    GlStateManager.color(1F, 1F, 1F, 1);
-                    GlStateManager.popMatrix();
-                }
-            }
+            Minecraft mc = Minecraft.getInstance();
+            int x = mc.getWindow().getGuiScaledWidth();
+            int y = mc.getWindow().getGuiScaledHeight();
+            for(PNG png : renderablePngs) renderPng(png,e.getMatrixStack(),x,y);
         }
     }
-     */
+
+    public static void renderPng(PNG png, MatrixStack matrix, int resolutionX, int resolutionY) {
+        RenderSystem.pushMatrix();
+        RenderSystem.pushTextureAttributes();
+        RenderSystem.enableAlphaTest();
+        RenderSystem.enableBlend();
+        RenderSystem.color4f(1F, 1F, 1F, Math.min(0.95f, 1f));
+        float scaleX  = (0.25f*((float)resolutionY/(float)resolutionX))*png.getScaleX();
+        float scaleY = 0.25f*png.getScaleY();
+        RenderSystem.scalef(scaleX,scaleY,1F);
+        png.loadToManager();
+        int xOffset = 0;
+        int yOffset = 0;
+        if(png.getHorizontal().matches("center")) xOffset = (int) ((resolutionX/2f)-((float)resolutionX*(scaleX/2f)));
+        else if(png.getHorizontal().matches("right")) xOffset = (int) (resolutionX-((float)resolutionX*(scaleX/2f)));
+        if(png.getVertical().matches("center")) yOffset = (int) ((resolutionY/2f)-((float)resolutionY*(scaleY/2f)));
+        else if(png.getVertical().matches("top")) yOffset = (int) (resolutionY-((float)resolutionY*(scaleY/2f)));
+        float posX = (xOffset*(1/scaleX))+png.getX();
+        float posY = (yOffset*(1/scaleY))+png.getY();
+        AbstractGui.blit(matrix,(int)posX, (int)posY,0,0,resolutionX,resolutionY,resolutionX,resolutionY);
+        RenderSystem.popAttributes();
+        RenderSystem.popMatrix();
+    }
+    //-----------------------------------------------------------------------------------------------
 
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent e) {
@@ -198,7 +163,7 @@ public class EventsClient {
             BlockPos pos = MusicPicker.roundedPos(Minecraft.getInstance().player);
             if(!zone) {
                 //Minecraft.getInstance().displayGuiScreen(new GuiMain(ConfigObject.createFromCurrent()));
-                Minecraft.getInstance().player.sendMessage(new StringTextComponent("\u00A74\u00A7oReloading Music! This won't take long..."),Minecraft.getInstance().player.getUUID());
+                Minecraft.getInstance().player.sendMessage(new TranslationTextComponent("\u00A74\u00A7o"+ "misc.musictriggers.reload_start"),Minecraft.getInstance().player.getUUID());
                 reloadCounter = 5;
                 ChannelManager.reloading = true;
             }
@@ -245,7 +210,7 @@ public class EventsClient {
             reloadCounter-=1;
             if(reloadCounter==1) {
                 ChannelManager.reloadAllChannels();
-                if(Minecraft.getInstance().player!=null) Minecraft.getInstance().player.sendMessage(new StringTextComponent("\u00A7a\u00A7oFinished!"),Minecraft.getInstance().player.getUUID());
+                if(Minecraft.getInstance().player!=null) Minecraft.getInstance().player.sendMessage(new TranslationTextComponent("\u00A74\u00A7o"+ "misc.musictriggers.reload_finished"),Minecraft.getInstance().player.getUUID());
                 IMAGE_CARD = null;
                 fadeCount = 1000;
                 timer = 0;

@@ -33,7 +33,11 @@ public class CalculateFeatures {
 
     public static ServerChannelData calculateServerTriggers(ServerChannelData serverData) {
         allTriggers = serverData.getAllTriggers();
-        if(!serverData.getCurrentSong().matches("placeholder")) EventsCommon.currentSongs.get(serverData.getPlayerUUID()).add(serverData.getCurrentSong());
+        EventsCommon.recordMenu.putIfAbsent(serverData.getPlayerUUID(), new ArrayList<>());
+        EventsCommon.recordMenu.get(serverData.getPlayerUUID()).addAll(serverData.getMenuSongs());
+        EventsCommon.activeTriggerList.get(serverData.getPlayerUUID()).put(serverData.getChannel(), serverData.getActiveTriggers());
+        if(!serverData.getCurrentSong().matches("placeholder"))
+            EventsCommon.currentChannelSongs.get(serverData.getPlayerUUID()).put(serverData.getChannel(), serverData.getCurrentSong());
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if(server!=null) {
             ServerPlayerEntity player = server.getPlayerList().getPlayer(serverData.getPlayerUUID());
