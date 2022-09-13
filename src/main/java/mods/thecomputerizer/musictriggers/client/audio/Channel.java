@@ -14,23 +14,34 @@ import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.ClientSync;
 import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.client.MusicPicker;
+import mods.thecomputerizer.musictriggers.client.PNG;
 import mods.thecomputerizer.musictriggers.common.ServerChannelData;
 import mods.thecomputerizer.musictriggers.common.SoundHandler;
 import mods.thecomputerizer.musictriggers.config.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.DefaultClientPackResources;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.*;
+import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.sounds.SoundSource;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.settings.KeyConflictContext;
+import net.minecraftforge.resource.PathResourcePack;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
-import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
@@ -52,7 +63,8 @@ public class Channel {
     private final boolean pausedByJukeBox;
     private final boolean overrides;
     private final AudioPlayerManager playerManager;
-    private final AudioPlayer player;
+    private AudioPlayer player;
+    private ChannelListener listener;
     private final HashMap<String, AudioTrack> loadedTracks;
     private ClientSync sync;
     private MusicPicker.Packeted toSend;
@@ -90,6 +102,7 @@ public class Channel {
     private int delayCounter = 0;
     private String maxDelay = "0";
     private boolean delayCatch = false;
+    private final List<String> playingTriggers;
 
     public Channel(String channel, boolean pausedByJukeBox, boolean overrides) {
         this.channel = channel;
@@ -101,10 +114,8 @@ public class Channel {
         this.playerManager = new DefaultAudioPlayerManager();
         AudioSourceManagers.registerRemoteSources(this.playerManager);
         AudioSourceManagers.registerLocalSource(this.playerManager);
-        this.player = playerManager.createPlayer();
-        this.player.setVolume(100);
+        this.player = refreshPlayer();
         this.loadedTracks = new HashMap<>();
-        new ChannelListener(this.player, FORMAT, this.channel);
         this.playerManager.setFrameBufferDuration(1000);
         this.playerManager.setPlayerCleanupThreshold(Long.MAX_VALUE);
         this.playerManager.getConfiguration().setResamplingQuality(AudioConfiguration.ResamplingQuality.HIGH);
@@ -124,7 +135,19 @@ public class Channel {
         this.canPlayImage = new HashMap<>();
         this.commandsForPacket = new ArrayList<>();
         this.erroredSongDownloads = new ArrayList<>();
+        this.playingTriggers = new ArrayList<>();
         MusicTriggers.logger.info("Registered sound engine for channel "+channel);
+    }
+
+    private AudioPlayer refreshPlayer() {
+        if(this.player!=null) {
+            this.player.destroy();
+            this.listener.stopThread();
+        }
+        AudioPlayer newPlayer = playerManager.createPlayer();
+        newPlayer.setVolume(100);
+        this.listener = new ChannelListener(newPlayer, FORMAT, this.channel);
+        return newPlayer;
     }
 
     public String getChannelName() {
@@ -387,12 +410,7 @@ public class Channel {
                 }
             }
         } else {
-            EventsClient.IMAGE_CARD = null;
-            EventsClient.fadeCount = 1000;
-            EventsClient.timer = 0;
-            EventsClient.activated = false;
-            EventsClient.ismoving = false;
-            if(isPlaying()) stopTrack();
+            if(!fadingIn && !fadingOut && !reverseFade && !new HashSet<>(this.picker.getInfo().getActiveTriggers()).containsAll(this.playingTriggers)) stopTrack();
         }
     }
 
@@ -429,34 +447,15 @@ public class Channel {
             if (pass && mc.player != null) {
                 if(this.transitions.imagecards.get(i).getName()!=null) {
                     MusicTriggers.logger.info("displaying image card " + this.transitions.imagecards.get(i).getName());
-                    if (!this.transitions.ismoving.get(i))
-                        EventsClient.IMAGE_CARD = new ResourceLocation(MusicTriggers.MODID, "textures/" + this.transitions.imagecards.get(i).getName() + ".png");
-                    else {
-                        EventsClient.pngs = new ArrayList<>();
-                        EventsClient.ismoving = true;
-                        EventsClient.movingcounter = 0;
-                        File folder = new File(MusicTriggers.configDir,"songs/assets/musictriggers/textures/" + this.transitions.imagecards.get(i).getName());
-                        File[] listOfPNG = folder.listFiles();
-                        assert listOfPNG != null;
-                        List<String> temp = new ArrayList<>();
-                        for (File f : listOfPNG) temp.add(f.getName().replaceAll(".png", ""));
-                        temp.sort(new Comparator<String>() {
-                            public int compare(String o1, String o2) {
-                                return extractInt(o1) - extractInt(o2);
-                            }
-                            int extractInt(String s) {
-                                String num = s.replaceAll("\\D", "");
-                                return num.isEmpty() ? 0 : MusicTriggers.randomInt(num);
-                            }
-                        });
-                        for (int index = 0; index < temp.size(); index++) {
-                            EventsClient.pngs.add(index, new ResourceLocation(MusicTriggers.MODID, "textures/" + this.transitions.imagecards.get(i).getName() + "/" + temp.get(index) + ".png"));
+                    ConfigTransitions.Image imageCard = this.transitions.imagecards.get(i);
+                    if(!imageCard.isInitialized()) imageCard.initialize();
+                    if(imageCard.getFormat()!=null) {
+                        if (imageCard.getFormat() instanceof PNG) {
+                            EventsClient.renderPNGToBackground((PNG) imageCard.getFormat(), imageCard.getLocationX(),
+                                    imageCard.getLocationY(), imageCard.getHorizontal(), imageCard.getVertical(), imageCard.getScaleX(), imageCard.getScaleY(),
+                                    imageCard.getTime() * 50L);
                         }
-                        EventsClient.timer = System.currentTimeMillis();
                     }
-                    EventsClient.curImageIndex = i;
-                    EventsClient.activated = true;
-
                     if (this.transitions.imagecards.get(i).getPlayonce()) markForDeletion = i;
                     break;
                 }
@@ -552,10 +551,25 @@ public class Channel {
             track.setPosition(milliseconds);
             try {
                 if (!this.getPlayer().startTrack(track, false)) MusicTriggers.logger.error("Could not start track!");
+                else this.playingTriggers.addAll(this.picker.getInfo().getActiveTriggers());
             } catch (IllegalStateException e) {
                 if (!this.getPlayer().startTrack(track.makeClone(), false)) MusicTriggers.logger.error("Could not start track!");
             }
-        } else MusicTriggers.logger.error("Tried to play null track with id "+id+"!");
+        } else {
+            MusicTriggers.logger.error("Track with id "+id+" was null! Attempting to refresh track...");
+            this.loadedTracks.remove(id);
+            if(this.redirect.urlMap.containsKey(id)) loadFromURL(id,this.redirect.urlMap.get(id));
+            else if(this.redirect.resourceLocationMap.containsKey(id)) loadFromResourceLocation(id,this.redirect.resourceLocationMap.get(id));
+            else if(ChannelManager.openAudioFiles.containsKey(id)) loadAudioFile(id,ChannelManager.openAudioFiles.get(id));
+            else {
+                MusicTriggers.logger.error("Track with id "+id+" does not seem to exist! All instances using this song will be removed until reloading.");
+                this.main.songholder.entrySet().removeIf(entry -> entry.getValue().matches(this.curTrackHolder));
+            }
+        }
+    }
+
+    public AudioTrack getCopyOfTrackFromID(String id) {
+        return this.loadedTracks.get(id).makeClone();
     }
 
     public boolean isPaused() {
@@ -583,19 +597,17 @@ public class Channel {
         redirect.parse();
         this.erroredSongDownloads.clear();
         for(String id : redirect.urlMap.keySet()) loadFromURL(id,redirect.urlMap.get(id));
-        try {
-            for (String file : ChannelManager.openAudioFiles.keySet()) {
-                if (this.main.songholder.containsValue(file) && !loadedTracks.containsKey(file))
-                    loadAudioFile(file, ChannelManager.openAudioFiles.get(file));
-            }
-        } catch (IOException e) {
-            MusicTriggers.logger.error("Could not load one or more local audio files into the sound engine",e);
+        for (String file : ChannelManager.openAudioFiles.keySet()) {
+            if (this.main.songholder.containsValue(file) && !loadedTracks.containsKey(file))
+                loadAudioFile(file, ChannelManager.openAudioFiles.get(file));
         }
         if(!this.erroredSongDownloads.isEmpty()) MusicTriggers.logger.error("Could not read audio from these sources");
         for(String error : this.erroredSongDownloads) MusicTriggers.logger.error(error);
     }
 
-
+    public void readResourceLocations() {
+        for(String id : redirect.resourceLocationMap.keySet()) loadFromResourceLocation(id,redirect.resourceLocationMap.get(id));
+    }
 
     public void addTrackToMap(String id, AudioTrack track) {
         this.loadedTracks.put(id, track);
@@ -636,39 +648,121 @@ public class Channel {
         });
     }
 
-    private void loadAudioFile(String id, File file) throws IOException {
-        this.playerManager.loadItem(new AudioReference(file.getPath(),file.getName()), new AudioLoadResultHandler() {
-            @Override
-            public void trackLoaded(AudioTrack track) {
-                if(!Channel.this.loadedTracks.containsKey(id)) {
-                    Channel.this.addTrackToMap(id,track);
-                    MusicTriggers.logger.info("Loaded track from file "+file.getName());
-                } else MusicTriggers.logger.warn("Audio file with id "+id+" already exists!");
-            }
-
-            @Override
-            public void playlistLoaded(AudioPlaylist playlist) {
-                MusicTriggers.logger.info("Loaded track from file "+file.getName());
-                for(int i=1;i<playlist.getTracks().size()+1;i++) {
-                    if(!Channel.this.loadedTracks.containsKey(id+"_"+i)) {
-                        Channel.this.addTrackToMap(id,playlist.getTracks().get(i));
-                        MusicTriggers.logger.info("Track "+i+" loaded from playlist file "+file.getName());
-                    } else MusicTriggers.logger.warn("Audio file with id "+id+"_"+i+" already exists!");
+    private void loadFromResourceLocation(String id, ResourceLocation source) {
+        try {
+            FileSystem zipSystem = null;
+            if (!this.loadedTracks.containsKey(id)) {
+                String namespace = source.getNamespace();
+                String sourcePath = null;
+                String[] sourceFolders = source.getPath().split("/");
+                String name = sourceFolders[sourceFolders.length-1];
+                for(Pack packInfo : Minecraft.getInstance().getResourcePackRepository().getSelectedPacks()) {
+                    PackResources pack = packInfo.open();
+                    if(pack.getNamespaces(PackType.CLIENT_RESOURCES).contains(namespace) && pack.hasResource(PackType.CLIENT_RESOURCES,source)) {
+                        MusicTriggers.logger.info("The resource pack that has " + source + " is " + pack.getName() + " under class " + pack.getClass().getName());
+                        URL url = pack.getClass().getResource("/" + PackType.CLIENT_RESOURCES.getDirectory() + "/" + source.getNamespace() + "/" + source.getPath());
+                        if (url != null && (url.getProtocol().equals("jar") || FolderPackResources.validatePath(new File(url.getFile()), "/" + PackType.CLIENT_RESOURCES.getDirectory() + "/" + source.getNamespace() + "/" + source.getPath())))
+                            sourcePath = url.getPath();
+                        else {
+                            if (pack instanceof AbstractPackResources resourcePack) {
+                                String resource = String.format("%s/%s/%s", PackType.CLIENT_RESOURCES.getDirectory(), source.getNamespace(), source.getPath());
+                                if (pack instanceof PathResourcePack modResource && !(namespace.matches("minecraft") || namespace.matches("realms"))) {
+                                    Path test = modResource.getSource().resolve(resource);
+                                    if(Files.exists(test)) sourcePath = test.toString();
+                                } else if (!(pack instanceof FilePackResources)) {
+                                    File resourceFile = new File(resourcePack.file, resource);
+                                    if (resourceFile.exists() && resourceFile.isFile()) sourcePath = resourceFile.getAbsolutePath();
+                                } else {
+                                    if (zipSystem != null) zipSystem.close();
+                                    URI zip = resourcePack.file.toURI();
+                                    zipSystem = FileSystems.newFileSystem(zip, new HashMap<>());
+                                    Path resourcePath = zipSystem.getPath(resource);
+                                    try {
+                                        URL test = new URL(resourcePath.toUri().toString());
+                                        sourcePath = resourcePath.toAbsolutePath().toString();
+                                        MusicTriggers.logger.info("breaking from zip");
+                                        break;
+                                    } catch (MalformedURLException ignored) {
+                                    }
+                                }
+                            } else if (pack instanceof DefaultClientPackResources vanillaPack) {
+                                File file = vanillaPack.assetIndex.getFile(source);
+                                if (file != null && file.exists()) {
+                                    sourcePath = file.getAbsolutePath();
+                                    MusicTriggers.logger.info("found file uri!");
+                                }
+                            }
+                        }
+                    }
                 }
-            }
+                if(sourcePath!=null) {
+                    this.playerManager.loadItem(new AudioReference(sourcePath, name), new AudioLoadResultHandler() {
+                        @Override
+                        public void trackLoaded(AudioTrack track) {
+                            Channel.this.addTrackToMap(id, track);
+                            MusicTriggers.logger.info("Track loaded from resource location " + source);
+                        }
 
-            @Override
-            public void noMatches() {
-                MusicTriggers.logger.error("No audio able to be extracted from file "+file.getName());
-                Channel.this.erroredSongDownloads.add(id+" -> "+file.getName());
-            }
+                        @Override
+                        public void playlistLoaded(AudioPlaylist playlist) {
+                            MusicTriggers.logger.info("no playlists here");
+                        }
 
-            @Override
-            public void loadFailed(FriendlyException exception) {
-                MusicTriggers.logger.info("Load failed! "+file.getName());
-                exception.printStackTrace();
-            }
-        });
+                        @Override
+                        public void noMatches() {
+                            MusicTriggers.logger.info("no matches from resource location " + source);
+                        }
+
+                        @Override
+                        public void loadFailed(FriendlyException exception) {
+                            MusicTriggers.logger.info("Track loaded failed resource location " + source);
+                        }
+                    });
+                } else MusicTriggers.logger.warn("Failed to get URI for resource location "+source);
+            } else MusicTriggers.logger.warn("Audio file with id " + id + " already exists!");
+            if(zipSystem!=null) zipSystem.close();
+        } catch (Exception e) {
+            MusicTriggers.logger.error("Could not decode track from resource location "+source,e);
+        }
+    }
+
+    private void loadAudioFile(String id, File file) {
+        try {
+            this.playerManager.loadItem(new AudioReference(file.getPath(), file.getName()), new AudioLoadResultHandler() {
+                @Override
+                public void trackLoaded(AudioTrack track) {
+                    if (!Channel.this.loadedTracks.containsKey(id)) {
+                        Channel.this.addTrackToMap(id, track);
+                        MusicTriggers.logger.info("Loaded track from file " + file.getName());
+                    } else MusicTriggers.logger.warn("Audio file with id " + id + " already exists!");
+                }
+
+                @Override
+                public void playlistLoaded(AudioPlaylist playlist) {
+                    MusicTriggers.logger.info("Loaded track from file " + file.getName());
+                    for (int i = 1; i < playlist.getTracks().size() + 1; i++) {
+                        if (!Channel.this.loadedTracks.containsKey(id + "_" + i)) {
+                            Channel.this.addTrackToMap(id, playlist.getTracks().get(i));
+                            MusicTriggers.logger.info("Track " + i + " loaded from playlist file " + file.getName());
+                        } else MusicTriggers.logger.warn("Audio file with id " + id + "_" + i + " already exists!");
+                    }
+                }
+
+                @Override
+                public void noMatches() {
+                    MusicTriggers.logger.error("No audio able to be extracted from file " + file.getName());
+                    Channel.this.erroredSongDownloads.add(id + " -> " + file.getName());
+                }
+
+                @Override
+                public void loadFailed(FriendlyException exception) {
+                    MusicTriggers.logger.info("Load failed! " + file.getName());
+                    exception.printStackTrace();
+                }
+            });
+        } catch (Exception e) {
+            MusicTriggers.logger.error("Could not load track from file "+id,e);
+        }
     }
 
     public void encode(ByteBuf buf) {
@@ -692,6 +786,12 @@ public class Channel {
         for(String song : this.toSend.getMenuSongs()) {
             buf.writeInt(song.length());
             buf.writeCharSequence(song, StandardCharsets.UTF_8);
+        }
+        buf.writeInt(this.picker.getInfo().getActiveTriggers().size());
+        for(String trigger : this.picker.getInfo().getActiveTriggers()) {
+            String fixedTrigger = MusicTriggers.stringBreaker(trigger,"-")[0];
+            buf.writeInt(fixedTrigger.length());
+            buf.writeCharSequence(fixedTrigger, StandardCharsets.UTF_8);
         }
         buf.writeInt(this.picker.getInfo().getPlayableTriggers().size());
         for(String trigger : this.picker.getInfo().getPlayableTriggers()) {
@@ -843,6 +943,7 @@ public class Channel {
 
     private void parseConfigs() {
         parseRedirect(this.redirect);
+        readResourceLocations();
         this.main.parse();
         this.transitions.parse();
         this.commands.parse();
@@ -873,6 +974,7 @@ public class Channel {
         this.canPlayImage.clear();
         this.commandsForPacket.clear();
         this.erroredSongDownloads.clear();
+        this.playingTriggers.clear();
     }
 
     public void reload() {
@@ -889,6 +991,7 @@ public class Channel {
         this.nullFromLink = false;
         this.trackSetChanged = true;
         this.curLinkNum = "song-0";
+        this.player = refreshPlayer();
         parseConfigs();
     }
 }

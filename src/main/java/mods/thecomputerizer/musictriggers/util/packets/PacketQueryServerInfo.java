@@ -9,10 +9,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.server.ServerLifecycleHooks;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Supplier;
 
 public class PacketQueryServerInfo {
@@ -42,10 +39,10 @@ public class PacketQueryServerInfo {
         });
         if (!packet.serverChannelData.isEmpty()) {
             List<ServerChannelData> serverChannelData = new ArrayList<>();
-            EventsCommon.currentSongs.put(packet.playerUUID(), new ArrayList<>());
-            for (ServerChannelData data : packet.serverChannelData) {
+            EventsCommon.currentChannelSongs.put(packet.playerUUID(),new HashMap<>());
+            EventsCommon.activeTriggerList.put(packet.playerUUID(),new HashMap<>());
+            for (ServerChannelData data : packet.serverChannelData)
                 serverChannelData.add(CalculateFeatures.calculateServerTriggers(data));
-            }
             if(ServerLifecycleHooks.getCurrentServer().getPlayerList().getPlayer(packet.playerUUID())!=null)
                 PacketHandler.sendTo(new PacketSyncServerInfo(serverChannelData), Objects.requireNonNull(ServerLifecycleHooks.getCurrentServer().getPlayerList().getPlayer(packet.playerUUID())));
         }

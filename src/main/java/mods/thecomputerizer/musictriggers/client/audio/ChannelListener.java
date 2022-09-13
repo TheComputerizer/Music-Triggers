@@ -16,6 +16,7 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.SourceDataLine;
 
+@SuppressWarnings("deprecation")
 @OnlyIn(value = Dist.CLIENT)
 public class ChannelListener extends AudioEventAdapter {
     private final AudioPlayer audioPlayer;
@@ -31,6 +32,10 @@ public class ChannelListener extends AudioEventAdapter {
         this.AUDIO_THREAD = new AudioOutput(true);
         this.audioPlayer.addListener(this);
         this.AUDIO_THREAD.start();
+    }
+
+    public void stopThread() {
+        this.AUDIO_THREAD.stop();
     }
 
     @Override

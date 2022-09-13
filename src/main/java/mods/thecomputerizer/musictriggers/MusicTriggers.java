@@ -5,11 +5,15 @@ import mods.thecomputerizer.musictriggers.client.audio.Channel;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.Mappings;
 import mods.thecomputerizer.musictriggers.common.EventsCommon;
+import mods.thecomputerizer.musictriggers.common.MusicTriggersItems;
+import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
 import mods.thecomputerizer.musictriggers.config.ConfigChannels;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import mods.thecomputerizer.musictriggers.util.CustomTick;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
+import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.common.MinecraftForge;
@@ -17,6 +21,7 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.logging.log4j.LogManager;
@@ -35,17 +40,19 @@ public class MusicTriggers {
 
     public MusicTriggers() {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::commonsetup);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::commonSetup);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::loadComplete);
         IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
         MinecraftForge.EVENT_BUS.register(this);
         random = new Random();
         configDir = new File(".", "config/MusicTriggers");
         if (!configDir.exists()) configDir.mkdir();
+        ChannelManager.createJukeboxChannel();
         for(ConfigChannels.ChannelInfo info : ConfigChannels.parse(new File(configDir,"channels.toml")))
             ChannelManager.createChannel(info.getChannelName(),info.getMain(),info.getTransitions(),info.getCommands(),info.getToggles(),info.getRedirect(),FMLEnvironment.dist == Dist.CLIENT,info.getPausedByJukeBox(),info.getOverridesNormalMusic());
         ChannelManager.parseConfigFiles();
         Mappings.init();
-        RegistryHandler.init(eventBus);
+        if (ConfigRegistry.registerDiscs) RegistryHandler.init(eventBus);
         if (FMLEnvironment.dist == Dist.CLIENT) {
             MinecraftForge.EVENT_BUS.register(ChannelManager.class);
             MinecraftForge.EVENT_BUS.register(EventsClient.class);
@@ -55,11 +62,23 @@ public class MusicTriggers {
 
     private void clientSetup(final FMLClientSetupEvent ev) {
         ClientRegistry.registerKeyBinding(Channel.GUI);
-        CustomTick.setUp();
+        CustomTick.addCustomTickEvent(20);
+        //music disc texture overrides
+        ev.enqueueWork(() -> ItemProperties.register(MusicTriggersItems.MUSIC_TRIGGERS_RECORD.get(), new ResourceLocation(MODID, "trigger"),
+                (stack, level, living, id) -> {
+                    if (stack.getOrCreateTag().contains("triggerID"))
+                        return MusicTriggersRecord.mapTriggerToFloat(stack.getOrCreateTag().getString("triggerID"));
+                    return 0f;
+                }));
     }
 
-    public void commonsetup(FMLCommonSetupEvent ev) {
+    public void commonSetup(FMLCommonSetupEvent ev) {
         if(!ConfigRegistry.clientSideOnly) PacketHandler.register();
+    }
+
+    public void loadComplete(FMLLoadCompleteEvent ev) {
+        if(FMLEnvironment.dist == Dist.CLIENT)
+            ChannelManager.readResourceLocations();
     }
 
     public static String[] stringBreaker(String s, String regex) {

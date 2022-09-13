@@ -88,7 +88,7 @@ public class MusicPicker {
             return packet;
         }
         if(this.player == null) {
-            if (this.handler.TriggerIdentifierMap.get("menu") != null) {
+            if (this.mc.screen!=null && this.mc.level==null && this.handler.TriggerIdentifierMap.get("menu") != null) {
                 this.getInfo().updatePlayableTriggers(Collections.singletonList("menu"));
                 this.getInfo().updateActiveTriggers(Collections.singletonList("menu"));
                 this.getInfo().updateSongList(this.handler.TriggerIdentifierMap.get("menu").get("_"));
