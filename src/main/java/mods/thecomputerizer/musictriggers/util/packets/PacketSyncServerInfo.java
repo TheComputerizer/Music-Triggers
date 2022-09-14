@@ -12,31 +12,37 @@ import net.minecraft.util.Identifier;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PacketSyncServerInfo {
-    public static final Identifier id = new Identifier(MusicTriggers.MODID, "packet_sync_server_info");
+public class PacketSyncServerInfo implements IPacket {
+    private static final Identifier id = new Identifier(MusicTriggers.MODID, "packet_sync_server_info");
     private final List<ServerChannelData> serverChannelData = new ArrayList<>();
+    private final List<ClientSync> sync = new ArrayList<>();
 
-    public static List<ClientSync> decode(PacketByteBuf buf) {
+    private PacketSyncServerInfo(PacketByteBuf buf) {
         int size = buf.readInt();
-        List<ClientSync> sync = new ArrayList<>();
-        for (int i = 0; i < size; i++) sync.add(new ClientSync(buf));
-        return sync;
+        for (int i = 0; i < size; i++) this.sync.add(new ClientSync(buf));
     }
 
     public PacketSyncServerInfo(List<ServerChannelData> serverChannelData) {
         this.serverChannelData.addAll(serverChannelData);
     }
 
-    public static PacketByteBuf encode(PacketSyncServerInfo packet) {
+    @Override
+    public PacketByteBuf encode() {
         PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeInt(packet.serverChannelData.size());
-        for (ServerChannelData channel : packet.serverChannelData) channel.encode(buf);
+        buf.writeInt(this.serverChannelData.size());
+        for (ServerChannelData channel : this.serverChannelData) channel.encode(buf);
         return buf;
     }
 
     public static void register() {
         ClientPlayNetworking.registerGlobalReceiver(id,(client, handler, buf, responseSender) -> {
-            for (ClientSync sync : decode(buf)) ChannelManager.syncInfoFromServer(sync);
+            PacketSyncServerInfo packet = new PacketSyncServerInfo(buf);
+            for (ClientSync sync : packet.sync) ChannelManager.syncInfoFromServer(sync);
         });
+    }
+
+    @Override
+    public Identifier getID() {
+        return id;
     }
 }

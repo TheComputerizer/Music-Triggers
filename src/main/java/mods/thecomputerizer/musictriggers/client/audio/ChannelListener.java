@@ -14,6 +14,7 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.SourceDataLine;
 
+@SuppressWarnings("ALL")
 public class ChannelListener extends AudioEventAdapter {
     private final AudioPlayer audioPlayer;
     private final AudioDataFormat format;
@@ -28,6 +29,10 @@ public class ChannelListener extends AudioEventAdapter {
         this.AUDIO_THREAD = new AudioOutput(true);
         this.audioPlayer.addListener(this);
         this.AUDIO_THREAD.start();
+    }
+
+    public void stopThread() {
+        this.AUDIO_THREAD.stop();
     }
 
     @Override

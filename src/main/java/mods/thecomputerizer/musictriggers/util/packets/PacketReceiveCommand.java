@@ -9,23 +9,33 @@ import net.minecraft.util.Identifier;
 
 import java.nio.charset.StandardCharsets;
 
-public record PacketReceiveCommand(String identifier) {
-    public static final Identifier id = new Identifier(MusicTriggers.MODID, "packet_receive_command");
-
-    public static String decode(PacketByteBuf buf) {
-        return ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
+public class PacketReceiveCommand implements IPacket {
+    private static final Identifier id = new Identifier(MusicTriggers.MODID, "packet_receive_command");
+    private final String identifier;
+    private PacketReceiveCommand(PacketByteBuf buf) {
+        this.identifier = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
     }
 
-    public static PacketByteBuf encode(PacketReceiveCommand packet) {
+    public PacketReceiveCommand(String identifier) {
+        this.identifier = identifier;
+    }
+
+    @Override
+    public PacketByteBuf encode() {
         PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeCharSequence(packet.identifier, StandardCharsets.UTF_8);
+        buf.writeCharSequence(this.identifier, StandardCharsets.UTF_8);
         return buf;
     }
 
     public static void register() {
         ClientPlayNetworking.registerGlobalReceiver(id, (client, handler, buf, responseSender) -> {
-            String id = decode(buf);
-            if (id != null) EventsClient.commandMap.put(id, true);
+            PacketReceiveCommand packet = new PacketReceiveCommand(buf);
+            if (packet.identifier != null) EventsClient.commandMap.put(packet.identifier, true);
         });
+    }
+
+    @Override
+    public Identifier getID() {
+        return id;
     }
 }

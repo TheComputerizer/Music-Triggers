@@ -16,7 +16,7 @@ public class TriggerCommand {
                 .then(CommandManager.argument("identifier", StringArgumentType.word())
                 .executes((ctx) -> {
                     try {
-                        PacketHandler.sendTo(PacketReceiveCommand.id,PacketReceiveCommand.encode(new PacketReceiveCommand(StringArgumentType.getString(ctx, "identifier"))), ctx.getSource().getPlayer());
+                        PacketHandler.sendTo(new PacketReceiveCommand(StringArgumentType.getString(ctx, "identifier")), ctx.getSource().getPlayer());
                         return 1;
                     } catch (Exception e) {
                         MusicTriggers.logger.error("Player not specified");
@@ -28,7 +28,7 @@ public class TriggerCommand {
                         .then(CommandManager.argument("player", EntityArgumentType.player())
                                 .executes((ctx) -> {
                                     try {
-                                        PacketHandler.sendTo(PacketReceiveCommand.id,PacketReceiveCommand.encode(new PacketReceiveCommand(StringArgumentType.getString(ctx, "identifier"))), EntityArgumentType.getPlayer(ctx,"player"));
+                                        PacketHandler.sendTo(new PacketReceiveCommand(StringArgumentType.getString(ctx, "identifier")), EntityArgumentType.getPlayer(ctx,"player"));
                                         return 1;
                                     } catch (Exception e) {
                                         MusicTriggers.logger.error("Player not specified correctly");

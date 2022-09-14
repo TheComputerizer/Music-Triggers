@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "musictriggers:item/record_high"
+    "layer0": "musictriggers:item/record_loading"
   }
 }

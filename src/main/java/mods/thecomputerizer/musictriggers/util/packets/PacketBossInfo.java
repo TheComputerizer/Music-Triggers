@@ -12,38 +12,43 @@ import java.nio.charset.StandardCharsets;
 
 import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
 
-public class PacketBossInfo {
-    public static final Identifier id = new Identifier(MusicTriggers.MODID, "packet_boss_info");
+public class PacketBossInfo implements IPacket {
+    private static final Identifier id = new Identifier(MusicTriggers.MODID, "packet_boss_info");
     private final String s;
 
-    public static String decode(PacketByteBuf buf) {
-        return ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
+    private PacketBossInfo(PacketByteBuf buf) {
+        this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
     }
 
     public PacketBossInfo(String name, float health) {
         this.s = name+","+health;
     }
 
-    public static PacketByteBuf encode(PacketBossInfo packet) {
+    public PacketByteBuf encode() {
         PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeCharSequence(packet.s, StandardCharsets.UTF_8);
+        buf.writeCharSequence(this.s, StandardCharsets.UTF_8);
         return buf;
     }
 
     public static void register() {
         ServerPlayNetworking.registerGlobalReceiver(id,(server, player, handler, buf, sender) -> {
-            String s = decode(buf);
-            CalculateFeatures.bossInfo.put(getBossName(s), getDataHealth(s));
+            PacketBossInfo packet = new PacketBossInfo(buf);
+            CalculateFeatures.bossInfo.put(packet.getBossName(), packet.getDataHealth());
             EventsCommon.bossTimer = 40;
         });
     }
 
-    public static String getBossName(String s) {
-        if(s==null) return null;
-        return stringBreaker(s,",")[0];
+    private String getBossName() {
+        if(this.s==null) return null;
+        return stringBreaker(this.s,",")[0];
     }
 
-    public static float getDataHealth(String s) {
-        return Float.parseFloat(stringBreaker(s,",")[1]);
+    private float getDataHealth() {
+        return Float.parseFloat(stringBreaker(this.s,",")[1]);
+    }
+
+    @Override
+    public Identifier getID() {
+        return id;
     }
 }

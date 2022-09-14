@@ -7,6 +7,7 @@ import mods.thecomputerizer.musictriggers.common.TriggerCommand;
 import mods.thecomputerizer.musictriggers.config.ConfigChannels;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
+import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
@@ -32,10 +33,12 @@ public class MusicTriggers implements ModInitializer {
         random = new Random();
         configDir = new File(".", "config/MusicTriggers");
         if (!configDir.exists()) configDir.mkdir();
+        ChannelManager.createJukeboxChannel();
         for(ConfigChannels.ChannelInfo info : ConfigChannels.parse(new File(configDir,"channels.toml")))
             ChannelManager.createChannel(info.getChannelName(),info.getMain(),info.getTransitions(),info.getCommands(),info.getToggles(),info.getRedirect(),FabricLoaderImpl.INSTANCE.getEnvironmentType()== EnvType.CLIENT,info.getPausedByJukeBox(),info.getOverridesNormalMusic());
         ChannelManager.parseConfigFiles();
         Mappings.init();
+        if (ConfigRegistry.registerDiscs) RegistryHandler.init();
         CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> TriggerCommand.register(dispatcher));
         if(!ConfigRegistry.clientSideOnly) PacketHandler.registerReceivers();
         setUpCommonEvents();

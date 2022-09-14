@@ -477,7 +477,7 @@ public class Mappings {
     private static void buildIndividualMovingImageOutputForGuiFromIndex(ConfigTransitions.Image image, StringBuilder builder, int index) {
         if(index>9) {
             switch (index) {
-                case 10 -> builder.append("\t\tdelay = \"").append(image.getDelay()).append("\"\n");
+                case 10 -> builder.append("");//builder.append("\t\tdelay = \"").append(image.getDelay()).append("\"\n");
                 case 11 -> builder.append("\t\tsplit = \"").append(image.getSplit()).append("\"\n");
                 case 12 -> builder.append("\t\tframes_skipped = \"").append(image.getSkip()).append("\"\n");
             }

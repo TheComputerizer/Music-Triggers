@@ -31,7 +31,11 @@ public class CalculateFeatures {
 
     public static ServerChannelData calculateServerTriggers(ServerChannelData serverData, MinecraftServer server) {
         allTriggers = serverData.getAllTriggers();
-        if(!serverData.getCurrentSong().matches("placeholder")) EventsCommon.currentSongs.get(serverData.getPlayerUUID()).add(serverData.getCurrentSong());
+        EventsCommon.recordMenu.putIfAbsent(serverData.getPlayerUUID(), new ArrayList<>());
+        EventsCommon.recordMenu.get(serverData.getPlayerUUID()).addAll(serverData.getMenuSongs());
+        EventsCommon.activeTriggerList.get(serverData.getPlayerUUID()).put(serverData.getChannel(), serverData.getActiveTriggers());
+        if(!serverData.getCurrentSong().matches("placeholder"))
+            EventsCommon.currentChannelSongs.get(serverData.getPlayerUUID()).put(serverData.getChannel(), serverData.getCurrentSong());
         if(server!=null) {
             ServerPlayerEntity player = server.getPlayerManager().getPlayer(serverData.getPlayerUUID());
             for (ServerChannelData.Snow snow : serverData.getSnowTriggers())

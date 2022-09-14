@@ -16,18 +16,19 @@ public class PacketHandler {
     public static void registerReceivers() {
         PacketBossInfo.register();
         PacketQueryServerInfo.register();
+        PacketJukeBoxCustom.register();
         if(FabricLoaderImpl.INSTANCE.getEnvironmentType()!=EnvType.SERVER) {
             PacketSyncServerInfo.register();
             PacketReceiveCommand.register();
         }
     }
 
-    public static void sendTo(Identifier id, PacketByteBuf buf, ServerPlayerEntity player) {
-        ServerPlayNetworking.send(player,id,buf);
+    public static void sendTo(IPacket packet, ServerPlayerEntity player) {
+        ServerPlayNetworking.send(player,packet.getID(),packet.encode());
     }
 
     @Environment(EnvType.CLIENT)
-    public static void sendToServer(Identifier id, PacketByteBuf buf) {
-        ClientPlayNetworking.send(id,buf);
+    public static void sendToServer(IPacket packet) {
+        ClientPlayNetworking.send(packet.getID(),packet.encode());
     }
 }

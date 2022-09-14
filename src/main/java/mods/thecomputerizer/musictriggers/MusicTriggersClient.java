@@ -2,6 +2,8 @@ package mods.thecomputerizer.musictriggers;
 
 import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
+import mods.thecomputerizer.musictriggers.common.MusicTriggersItems;
+import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
 import mods.thecomputerizer.musictriggers.util.CustomTick;
 import mods.thecomputerizer.musictriggers.util.events.AdvancementEvent;
 import mods.thecomputerizer.musictriggers.util.events.LivingDamageEvent;
@@ -10,9 +12,12 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientLoginConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.minecraft.client.item.ModelPredicateProviderRegistry;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.Identifier;
 import org.lwjgl.glfw.GLFW;
 
 public class MusicTriggersClient implements ClientModInitializer {
@@ -28,6 +33,11 @@ public class MusicTriggersClient implements ClientModInitializer {
                 GLFW.GLFW_KEY_R,
                 "key.categories.musictriggers"
         ));
+        ModelPredicateProviderRegistry.register(MusicTriggersItems.MUSIC_TRIGGERS_RECORD, new Identifier(MusicTriggers.MODID, "trigger"),
+                (stack, level, living, id) -> {
+                    if (stack.getOrCreateNbt().contains("triggerID"))
+                        return MusicTriggersRecord.mapTriggerToFloat(stack.getOrCreateNbt().getString("triggerID"));
+                    return 0f;});
     }
 
     private static void setUpClientEvents() {
@@ -56,6 +66,8 @@ public class MusicTriggersClient implements ClientModInitializer {
             return ActionResult.PASS;
         }));
 
-        CustomTick.setUp();
+        ServerLifecycleEvents.SERVER_STARTING.register((server) -> ChannelManager.readResourceLocations());
+
+        CustomTick.addCustomTickEvent(20);
     }
 }

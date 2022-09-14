@@ -13,41 +13,47 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
-public class PacketQueryServerInfo {
-    public static final Identifier id = new Identifier(MusicTriggers.MODID, "packet_query_server_info");
+public class PacketQueryServerInfo implements IPacket {
+    private static final Identifier id = new Identifier(MusicTriggers.MODID, "packet_query_server_info");
     private final List<Channel> clientChannels = new ArrayList<>();
+    private final List<ServerChannelData> data = new ArrayList<>();
 
-    public static List<ServerChannelData> decode(PacketByteBuf buf, MinecraftServer server) {
+    public PacketQueryServerInfo(PacketByteBuf buf, MinecraftServer server) {
         int size = buf.readInt();
-        List<ServerChannelData> data = new ArrayList<>();
-        for (int i = 0; i < size; i++) data.add(ServerChannelData.decode(buf, server));
-        return data;
+        for (int i = 0; i < size; i++) this.data.add(ServerChannelData.decode(buf, server));
     }
 
     public PacketQueryServerInfo(List<Channel> clientChannels) {
         this.clientChannels.addAll(clientChannels);
     }
 
-    public static PacketByteBuf encode(PacketQueryServerInfo packet) {
+    @Override
+    public PacketByteBuf encode() {
         PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeInt(packet.clientChannels.size());
-        for (Channel channel : packet.clientChannels) channel.encode(buf);
+        buf.writeInt(this.clientChannels.size());
+        for (Channel channel : this.clientChannels) channel.encode(buf);
         return buf;
     }
 
     public static void register() {
         ServerPlayNetworking.registerGlobalReceiver(id,(server, player, handler, buf, sender) -> {
-            List<ServerChannelData> packetData = decode(buf, server);
-            if (!packetData.isEmpty()) {
+            PacketQueryServerInfo packet = new PacketQueryServerInfo(buf,server);
+            if (!packet.data.isEmpty()) {
                 List<ServerChannelData> serverChannelData = new ArrayList<>();
-                EventsCommon.currentSongs.put(player.getUuid(), new ArrayList<>());
-                for (ServerChannelData data : packetData) {
+                EventsCommon.currentChannelSongs.put(player.getUuid(),new HashMap<>());
+                EventsCommon.activeTriggerList.put(player.getUuid(),new HashMap<>());
+                for (ServerChannelData data : packet.data)
                     serverChannelData.add(CalculateFeatures.calculateServerTriggers(data,server));
-                }
-                PacketHandler.sendTo(PacketSyncServerInfo.id,PacketSyncServerInfo.encode(new PacketSyncServerInfo(serverChannelData)),player);
+                PacketHandler.sendTo(new PacketSyncServerInfo(serverChannelData),player);
             }
         });
+    }
+
+    @Override
+    public Identifier getID() {
+        return id;
     }
 }

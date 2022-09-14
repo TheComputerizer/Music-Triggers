@@ -1,22 +1,3 @@
 accessWidener   v1  named
-accessible field net/minecraft/client/sound/SoundManager soundSystem Lnet/minecraft/client/sound/SoundSystem;
-accessible field net/minecraft/client/sound/SoundSystem sources Ljava/util/Map;
-accessible field net/minecraft/client/sound/SoundSystem channel Lnet/minecraft/client/sound/Channel;
-accessible field net/minecraft/client/sound/SoundSystem soundLoader Lnet/minecraft/client/sound/SoundLoader;
-accessible field net/minecraft/client/sound/SoundSystem sources Ljava/util/Map;
-accessible field net/minecraft/client/sound/Source pointer I
-accessible field net/minecraft/client/sound/Source stream Lnet/minecraft/client/sound/AudioStream;
-accessible method net/minecraft/client/sound/Source getSourceState ()I
-accessible method net/minecraft/client/sound/Source removeProcessedBuffers ()I
-accessible field net/minecraft/client/sound/Channel$SourceManager source Lnet/minecraft/client/sound/Source;
-accessible field net/minecraft/client/sound/OggAudioStream buffer Ljava/nio/ByteBuffer;
-extendable method net/minecraft/client/sound/OggAudioStream readOggFile (Lnet/minecraft/client/sound/OggAudioStream$ChannelList;)Z
-accessible field net/minecraft/client/sound/OggAudioStream pointer J
-extendable method net/minecraft/client/sound/OggAudioStream readHeader ()Z
-extendable method net/minecraft/client/sound/OggAudioStream increaseBufferSize ()V
-extendable method net/minecraft/client/sound/OggAudioStream readChannels (Ljava/nio/FloatBuffer;Lnet/minecraft/client/sound/OggAudioStream$ChannelList;)V
-extendable method net/minecraft/client/sound/OggAudioStream readChannels (Ljava/nio/FloatBuffer;Ljava/nio/FloatBuffer;Lnet/minecraft/client/sound/OggAudioStream$ChannelList;)V
-accessible class net/minecraft/client/sound/OggAudioStream$ChannelList
-accessible class net/minecraft/client/sound/SoundEngine$SourceSetImpl
-accessible field net/minecraft/client/sound/SoundLoader resourceManager Lnet/minecraft/resource/ResourceManager;
-accessible field net/minecraft/client/sound/Channel executor Ljava/util/concurrent/Executor;
+accessible field net/minecraft/resource/AbstractFileResourcePack base Ljava/io/File;
+accessible field net/minecraft/client/resource/DefaultClientResourcePack index Lnet/minecraft/client/resource/ResourceIndex;

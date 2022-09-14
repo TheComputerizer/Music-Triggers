@@ -1,5 +1,7 @@
 package mods.thecomputerizer.musictriggers.client;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.audio.Channel;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.GuiTriggerInfo;
@@ -20,27 +22,24 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 
+import java.io.IOException;
 import java.util.*;
 
 public class EventsClient {
     public static Identifier IMAGE_CARD = null;
-    public static int curImageIndex;
     public static boolean isWorldRendered;
     public static float fadeCount = 1000;
-    public static float startDelayCount = 0;
     public static Boolean activated = false;
     public static long timer=0;
     public static int GuiCounter = 0;
     public static int reloadCounter = 0;
     public static boolean ismoving;
-    public static List<Identifier> pngs = new ArrayList<>();
-    public static int movingcounter = 0;
     public static String lastAdvancement;
     public static boolean advancement;
     public static PlayerEntity PVPTracker;
@@ -56,6 +55,7 @@ public class EventsClient {
     public static int z2 = 0;
     private static int bossBarCounter = 0;
     public static final HashMap<String, Boolean> commandMap = new HashMap<>();
+    private static final ArrayList<PNG> renderablePngs = new ArrayList<>();
 
     public static SoundInstance playSound(SoundInstance sound) {
         if (sound!=null) {
@@ -66,113 +66,73 @@ public class EventsClient {
         }
         return sound;
     }
-
-    /*
-    @SubscribeEvent
-    public static void onDamage(LivingDamageEvent e) {
-        if(e.getEntityLiving() instanceof EntityPlayer && e.getSource().getTrueSource() instanceof EntityPlayer) {
-            if (e.getEntityLiving() == MusicPicker.player) {
-                PVPTracker = (EntityPlayer)e.getSource().getTrueSource();
-                MusicPicker.setPVP = true;
-            }
-            else if(e.getSource().getTrueSource() == MusicPicker.player) {
-                PVPTracker = (EntityPlayer)e.getEntityLiving();
-                MusicPicker.setPVP = true;
-            }
-        }
-    }
-     */
-
     public static void onAdvancement(Advancement a) {
         lastAdvancement = a.getId().toString();
         advancement = true;
     }
 
+    //these methods will be here until the impossible library actually functions as it is supposed to
+    //-----------------------------------------------------------------------------------------------
+    public static PNG initializePng(Identifier location) {
+        try {
+            return new PNG(location);
+        } catch (IOException ex) {
+            MusicTriggers.logger.error("Failed to initialize png at resource location "+location,ex);
+        }
+        return null;
+    }
+
+    public static void renderPNGToBackground(PNG png, String horizontal, String vertical, int x, int y, float scaleX, float scaleY, long millis) {
+        if(!renderablePngs.contains(png)) {
+            png.setHorizontal(horizontal);
+            png.setVertical(vertical);
+            png.setX(x);
+            png.setY(y);
+            png.setScaleX(scaleX);
+            png.setScaleY(scaleY);
+            png.setMillis(millis);
+            renderablePngs.add(png);
+        }
+    }
+
+    public static void imageCards(MatrixStack matrix) {
+        MinecraftClient mc = MinecraftClient.getInstance();
+        int x = mc.getWindow().getScaledWidth();
+        int y = mc.getWindow().getScaledHeight();
+        for (PNG png : renderablePngs) renderPng(png, matrix, x, y);
+    }
+
+    public static void renderPng(PNG png, MatrixStack matrix, int resolutionX, int resolutionY) {
+        matrix.push();
+        RenderSystem.enableBlend();
+        RenderSystem.setShaderColor(1F, 1F, 1F, Math.min(0.95f, 1f));
+        float scaleX  = (0.25f*((float)resolutionY/(float)resolutionX))*png.getScaleX();
+        float scaleY = 0.25f*png.getScaleY();
+        matrix.scale(scaleX,scaleY,1F);
+        png.loadToManager();
+        int xOffset = 0;
+        int yOffset = 0;
+        if(png.getHorizontal().matches("center")) xOffset = (int) ((resolutionX/2f)-((float)resolutionX*(scaleX/2f)));
+        else if(png.getHorizontal().matches("right")) xOffset = (int) (resolutionX-((float)resolutionX*(scaleX/2f)));
+        if(png.getVertical().matches("center")) yOffset = (int) ((resolutionY/2f)-((float)resolutionY*(scaleY/2f)));
+        else if(png.getVertical().matches("top")) yOffset = (int) (resolutionY-((float)resolutionY*(scaleY/2f)));
+        float posX = (xOffset*(1/scaleX))+png.getX();
+        float posY = (yOffset*(1/scaleY))+png.getY();
+        DrawableHelper.drawTexture(matrix,(int)posX, (int)posY,0,0,resolutionX,resolutionY,resolutionX,resolutionY);
+        matrix.pop();
+    }
+    //-----------------------------------------------------------------------------------------------
+
     public static void onDisconnect() {
         isWorldRendered=false;
     }
-
-    /*
-    @SubscribeEvent
-    public static void customTick(CustomTick ev) {
-        if(ConfigTransitions.imagecards.get(curImageIndex)!=null) {
-            if (timer > ConfigTransitions.imagecards.get(curImageIndex).getTime()) {
-                activated = false;
-                timer = 0;
-                ismoving = false;
-                movingcounter = 0;
-            }
-            if (ismoving) {
-                if (timer % ConfigTransitions.imagecards.get(curImageIndex).getDelay() == 0) {
-                    movingcounter++;
-                    if (movingcounter >= pngs.size()) movingcounter = 0;
-                }
-                IMAGE_CARD = pngs.get(movingcounter);
-            }
-            if (activated) {
-                timer++;
-                startDelayCount++;
-                if (startDelayCount > 0) {
-                    if (fadeCount > 1) {
-                        fadeCount -= ConfigTransitions.imagecards.get(curImageIndex).getFadeIn();
-                        if (fadeCount < 1) fadeCount = 1;
-                    }
-                }
-            } else {
-                if (fadeCount < 1000) {
-                    fadeCount += ConfigTransitions.imagecards.get(curImageIndex).getFadeOut();
-                    if (fadeCount > 1000) {
-                        fadeCount = 1000;
-                        ismoving = false;
-                    }
-                }
-                startDelayCount = 0;
-            }
-        }
-    }
-
-    @SubscribeEvent
-    public static void imageCards(RenderGameOverlayEvent.Post e) {
-        Minecraft mc = Minecraft.getMinecraft();
-        EntityPlayer player = mc.player;
-        if(e.getType()== RenderGameOverlayEvent.ElementType.ALL) {
-            ScaledResolution res = e.getResolution();
-            if (player != null && ConfigTransitions.imagecards.get(curImageIndex)!=null) {
-                int x = res.getScaledWidth();
-                int y = res.getScaledHeight();
-                Vector4f color = new Vector4f(1, 1, 1, 1);
-                if (fadeCount != 1000 && IMAGE_CARD!=null) {
-                    GlStateManager.enableBlend();
-                    GlStateManager.pushMatrix();
-                    mc.getTextureManager().bindTexture(IMAGE_CARD);
-
-                    float opacity = (int) (17 - (fadeCount / 80));
-                    opacity = (opacity * 1.15f) / 15;
-                    GlStateManager.color(color.getX(), color.getY(), color.getZ(), Math.max(0, Math.min(0.95f, opacity)));
-
-                    float scale_x = (0.25f*((float)y/(float)x))*(ConfigTransitions.imagecards.get(curImageIndex).getScaleX()/100f);
-                    float scale_y = 0.25f*(ConfigTransitions.imagecards.get(curImageIndex).getScaleY()/100f);
-                    GlStateManager.scale(scale_x,scale_y,1f);
-
-                    float posX = ((x*(1f/scale_x))/2f)-(x/2f);
-                    float posY = (y*(1f/scale_y))/8f;
-                    GuiScreen.drawModalRectWithCustomSizedTexture((int)((posX)+(ConfigTransitions.imagecards.get(curImageIndex).getHorizontal()*(1/scale_x))),
-                            (int)((posY)+(ConfigTransitions.imagecards.get(curImageIndex).getVertical()*(1/scale_y))),x,y,x,y,x,y);
-
-                    GlStateManager.color(1F, 1F, 1F, 1);
-                    GlStateManager.popMatrix();
-                }
-            }
-        }
-    }
-     */
 
     public static void onKeyInput() {
         if(MinecraftClient.getInstance().player!=null) {
             BlockPos pos = MusicPicker.roundedPos(MinecraftClient.getInstance().player);
             if(!zone) {
                 //Minecraft.getInstance().displayGuiScreen(new GuiMain(ConfigObject.createFromCurrent()));
-                MinecraftClient.getInstance().player.sendMessage(new LiteralText("\u00A74\u00A7oReloading Music! This won't take long..."),false);
+                MinecraftClient.getInstance().player.sendMessage(new TranslatableText("\u00A74\u00A7o"+ "misc.musictriggers.reload_start"),false);
                 reloadCounter = 5;
                 ChannelManager.reloading = true;
             }
@@ -218,7 +178,7 @@ public class EventsClient {
             reloadCounter-=1;
             if(reloadCounter==1) {
                 ChannelManager.reloadAllChannels();
-                if(MinecraftClient.getInstance().player!=null) MinecraftClient.getInstance().player.sendMessage(new LiteralText("\u00A7a\u00A7oFinished!"),false);
+                if(MinecraftClient.getInstance().player!=null) MinecraftClient.getInstance().player.sendMessage(new TranslatableText("\u00A74\u00A7o"+ "misc.musictriggers.reload_finished"),false);
                 IMAGE_CARD = null;
                 fadeCount = 1000;
                 timer = 0;
@@ -318,7 +278,7 @@ public class EventsClient {
             Map<UUID, ClientBossBar> bossbars = ((BossBarHudAccessor) ((InGameHudAccessor) MinecraftClient.getInstance().inGameHud).getBossBarHud()).getBossBars();
             for (UUID u : bossbars.keySet()) {
                 ClientBossBar bar = bossbars.get(u);
-                PacketHandler.sendToServer(PacketBossInfo.id,PacketBossInfo.encode(new PacketBossInfo(bar.getName().getString(),bar.getPercent())));
+                PacketHandler.sendToServer(new PacketBossInfo(bar.getName().getString(),bar.getPercent()));
             }
             bossBarCounter = 0;
         }
