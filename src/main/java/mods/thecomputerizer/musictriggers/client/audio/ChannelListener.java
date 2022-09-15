@@ -12,6 +12,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.lwjgl.openal.*;
+import org.lwjgl.system.MemoryUtil;
 
 import javax.sound.sampled.AudioInputStream;
 import java.io.IOException;
@@ -278,12 +279,18 @@ public class ChannelListener extends AudioEventAdapter {
             }
         }
 
+        private ByteBuffer convertByteArray(byte[] buffer) {
+            ByteBuffer ret = MemoryUtil.memAlloc(buffer.length);
+            ret.put(buffer);
+            return ret.flip();
+        }
+
         private void queueBuffers(AudioInputStream stream, byte[] buffer, int num) throws IOException {
             MusicTriggers.logger.info("Queuing {} buffers in channel {}",num,this.channelName);
             for(int i=0;i<num;i++) {
                 if (stream.read(buffer) >= 0) {
                     MusicTriggers.logger.info("Buffer {}",i+1);
-                    ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
+                    ByteBuffer byteBuffer = convertByteArray(buffer);
                     int[] aint = new int[1];
                     AL10.alGenBuffers(aint);
                     if (!checkALError("Generating buffer")) {
@@ -294,6 +301,7 @@ public class ChannelListener extends AudioEventAdapter {
                             OptionalInt.of(aint[0]).ifPresent((optionalBuffer) -> AL10.alSourceQueueBuffers(this.openALSource, new int[]{optionalBuffer}));
                         }
                     }
+                    MemoryUtil.memAlignedFree(byteBuffer);
                 } else {
                     MusicTriggers.logger.fatal("Audio stream ended for channel {}! This should not happen! Attempting to restart.",this.channelName);
                     setRunAudioLoop(false);
