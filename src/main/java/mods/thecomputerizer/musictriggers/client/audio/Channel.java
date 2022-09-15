@@ -536,7 +536,8 @@ public class Channel {
     }
 
     public void setVolume(float volume) {
-        this.getPlayer().setVolume((int)(volume*getChannelVolume()*100));
+        this.listener.setChannelVolume(volume*getChannelVolume());
+        //this.getPlayer().setVolume((int)(volume*getChannelVolume()*100));
     }
 
     private float getChannelVolume() {
@@ -551,7 +552,10 @@ public class Channel {
             track.setPosition(milliseconds);
             try {
                 if (!this.getPlayer().startTrack(track, false)) MusicTriggers.logger.error("Could not start track!");
-                else this.playingTriggers.addAll(this.picker.getInfo().getActiveTriggers());
+                else {
+                    this.playingTriggers.addAll(this.picker.getInfo().getActiveTriggers());
+                    this.listener.playChannelAudio();
+                }
             } catch (IllegalStateException e) {
                 if (!this.getPlayer().startTrack(track.makeClone(), false)) MusicTriggers.logger.error("Could not start track!");
             }
@@ -577,20 +581,20 @@ public class Channel {
     }
 
     public void setPaused(boolean paused, boolean fromJukeBox) {
-        if(fromJukeBox && this.pausedByJukeBox) this.getPlayer().setPaused(paused);
-        else if (!fromJukeBox) this.getPlayer().setPaused(paused);
+        if(!fromJukeBox || this.pausedByJukeBox) {
+            this.getPlayer().setPaused(paused);
+            if(paused) this.listener.pauseChannelAudio();
+            else this.listener.unPauseChannelAudio();
+        }
     }
 
     public void setPitch(float pitch) {
-        setFilters(pitch);
-    }
-
-    private void setFilters(float pitch) {
-        //getPlayer().setFilterFactory((track, format, output) -> {});
+        this.listener.setChannelPitch(pitch);
     }
 
     public void stopTrack() {
         this.getPlayer().stopTrack();
+        this.listener.stopChannelAudio();
     }
 
     public void parseRedirect(Redirect redirect) {
