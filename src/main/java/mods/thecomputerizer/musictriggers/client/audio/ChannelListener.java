@@ -297,11 +297,16 @@ public class ChannelListener extends AudioEventAdapter {
                         MusicTriggers.logger.info("Pushing buffer {} to OpenAL",i+1);
                         AL10.alBufferData(aint[0], AL10.AL_FORMAT_STEREO16, byteBuffer, ChannelListener.this.format.sampleRate);
                         if (!checkALError("Assigning buffer data")) {
-                            MusicTriggers.logger.info("Successfully queuing buffer {}",i+1);
-                            OptionalInt.of(aint[0]).ifPresent((optionalBuffer) -> AL10.alSourceQueueBuffers(this.openALSource, new int[]{optionalBuffer}));
+                            int finalI = i;
+                            OptionalInt.of(aint[0]).ifPresent((optionalBuffer) -> {
+                                AL10.alSourceQueueBuffers(this.openALSource, new int[]{optionalBuffer});
+                                if(checkALError("Actually queuing buffer data"))
+                                    MusicTriggers.logger.info("Successfully queuing buffer {}", finalI +1);
+
+                            });
                         }
                     }
-                    MemoryUtil.memAlignedFree(byteBuffer);
+                    MemoryUtil.memFree(byteBuffer);
                 } else {
                     MusicTriggers.logger.fatal("Audio stream ended for channel {}! This should not happen! Attempting to restart.",this.channelName);
                     setRunAudioLoop(false);
