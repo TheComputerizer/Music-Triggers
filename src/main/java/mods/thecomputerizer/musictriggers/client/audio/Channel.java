@@ -554,7 +554,6 @@ public class Channel {
                 if (!this.getPlayer().startTrack(track, false)) MusicTriggers.logger.error("Could not start track!");
                 else {
                     this.playingTriggers.addAll(this.picker.getInfo().getActiveTriggers());
-                    this.listener.playChannelAudio();
                 }
             } catch (IllegalStateException e) {
                 if (!this.getPlayer().startTrack(track.makeClone(), false)) MusicTriggers.logger.error("Could not start track!");

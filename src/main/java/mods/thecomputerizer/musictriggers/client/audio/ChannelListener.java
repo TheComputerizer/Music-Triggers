@@ -43,10 +43,6 @@ public class ChannelListener extends AudioEventAdapter {
         this.AUDIO_THREAD.stop();
     }
 
-    public void playChannelAudio() {
-        this.AUDIO_THREAD.playChannelAudio();
-    }
-
     public void pauseChannelAudio() {
         this.AUDIO_THREAD.pauseChannelAudio();
     }
@@ -96,6 +92,9 @@ public class ChannelListener extends AudioEventAdapter {
         private long device;
         private long context;
 
+        private float volume;
+        private float pitch;
+
         public AudioOutput(boolean runAudioLoop, String channelName) {
             super("LavaPlayer Audio Thread");
             this.channelName = channelName;
@@ -104,6 +103,8 @@ public class ChannelListener extends AudioEventAdapter {
             this.queueInitialized = false;
             this.errored = false;
             this.defaultDeviceName = "";
+            this.volume = 1f;
+            this.pitch = 1f;
             ALUtil.getStringList(0L, 4115);
             this.defaultDeviceName = ALC10.alcGetString(0L, 4114);
             MusicTriggers.logger.info("initialized thread");
@@ -114,7 +115,10 @@ public class ChannelListener extends AudioEventAdapter {
         }
 
         private int getALState() {
-            return this.initialized && this.runAudioLoop && !this.errored ? 4116 : AL10.alGetSourcei(this.openALSource, 4112);
+            if(!(this.initialized && this.runAudioLoop && !this.errored)) return 4116;
+            int ret = AL10.alGetSourcei(this.openALSource, 4112);
+            checkALError("Getting state of channel audio ("+this.channelName+")");
+            return ret;
         }
 
         private void playChannelAudio() {
@@ -137,20 +141,31 @@ public class ChannelListener extends AudioEventAdapter {
         }
 
         private void stopChannelAudio() {
-            if (this.initialized) {
-                AL10.alSourceStop(this.openALSource);
-                checkALError("Stopping channel audio ("+this.channelName+")");
+            if (this.queueInitialized) {
+                int state = this.getALState();
+                if(state==4115 || state==4114) {
+                    AL10.alSourceStop(this.openALSource);
+                    checkALError("Stopping channel audio (" + this.channelName + ")");
+                }
             }
         }
 
         private void setChannelVolume(float volume) {
-            AL10.alSourcef(this.openALSource, 4106, volume);
-            checkALError("Setting channel volume ("+this.channelName+") to "+volume);
+            this.volume = volume;
+        }
+
+        private void setSourceVolume() {
+            AL10.alSourcef(this.openALSource, 4106, this.volume);
+            checkALError("Setting channel volume ("+this.channelName+") to "+this.volume);
         }
 
         private void setChannelPitch(float pitch) {
-            AL10.alSourcef(this.openALSource, 4099, pitch);
-            checkALError("Setting channel pitch ("+this.channelName+")");
+            this.pitch = pitch;
+        }
+
+        private void setSourcePitch() {
+            AL10.alSourcef(this.openALSource, 4099, this.pitch);
+            checkALError("Setting channel pitch ("+this.channelName+") to "+this.pitch);
         }
 
         private void initializeOpenAL() {
@@ -308,6 +323,9 @@ public class ChannelListener extends AudioEventAdapter {
                                     if(!this.queueInitialized) {
                                         queueBuffers(stream,buffer,3);
                                         this.queueInitialized = true;
+                                        setSourcePitch();
+                                        setSourceVolume();
+                                        playChannelAudio();
                                     } else {
                                         int size = removeProcessedBuffers();
                                         if(size>0) MusicTriggers.logger.info("Successfully processed and removed {} buffers! Attempting to refill the queue.", size);
