@@ -22,7 +22,6 @@ import java.util.OptionalInt;
 @SuppressWarnings("deprecation")
 @OnlyIn(value = Dist.CLIENT)
 public class ChannelListener extends AudioEventAdapter {
-    private static final int OPEN_AL_FORMAT = 4355;
     private final AudioPlayer audioPlayer;
     private final AudioDataFormat format;
 
@@ -289,7 +288,7 @@ public class ChannelListener extends AudioEventAdapter {
                     AL10.alGenBuffers(aint);
                     if (!checkALError("Generating buffer")) {
                         MusicTriggers.logger.info("Pushing buffer {} to OpenAL",i+1);
-                        AL10.alBufferData(aint[0], OPEN_AL_FORMAT, byteBuffer, ChannelListener.this.format.sampleRate);
+                        AL10.alBufferData(aint[0], AL10.AL_FORMAT_STEREO16, byteBuffer, ChannelListener.this.format.sampleRate);
                         if (!checkALError("Assigning buffer data")) {
                             MusicTriggers.logger.info("Successfully queuing buffer {}",i+1);
                             OptionalInt.of(aint[0]).ifPresent((optionalBuffer) -> AL10.alSourceQueueBuffers(this.openALSource, new int[]{optionalBuffer}));
