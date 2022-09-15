@@ -286,7 +286,7 @@ public class ChannelListener extends AudioEventAdapter {
         }
 
         private void queueBuffers(AudioInputStream stream, byte[] buffer, int num) throws IOException {
-            MusicTriggers.logger.info("Queuing {} buffers in channel {}",num,this.channelName);
+            MusicTriggers.logger.info("Queuing {} buffers in channel {} from source id {}",num,this.channelName,this.openALSource);
             for(int i=0;i<num;i++) {
                 if (stream.read(buffer) >= 0) {
                     MusicTriggers.logger.info("Buffer {}",i+1);
