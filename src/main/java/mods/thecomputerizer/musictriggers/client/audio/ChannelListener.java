@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.client.audio;
 
+import com.mojang.blaze3d.audio.SoundBuffer;
 import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat;
 import com.sedmelluq.discord.lavaplayer.format.AudioPlayerInputStream;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
@@ -11,6 +12,8 @@ import mods.thecomputerizer.musictriggers.MusicTriggers;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import org.apache.commons.compress.utils.IOUtils;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.openal.*;
 import org.lwjgl.system.MemoryUtil;
 
@@ -18,6 +21,8 @@ import javax.sound.sampled.AudioInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 import java.util.OptionalInt;
 
 @SuppressWarnings("deprecation")
@@ -39,7 +44,13 @@ public class ChannelListener extends AudioEventAdapter {
         MusicTriggers.logger.info("started thread");
     }
 
+    public void tickThread() {
+        if(!this.AUDIO_THREAD.stopped)
+            this.AUDIO_THREAD.tick();
+    }
+
     public void stopThread() {
+        this.AUDIO_THREAD.stopped = true;
         this.AUDIO_THREAD.stop();
     }
 
@@ -94,6 +105,10 @@ public class ChannelListener extends AudioEventAdapter {
 
         private float volume;
         private float pitch;
+        private final AudioInputStream audioStream;
+        private final ReadableByteChannel channelStream;
+        private boolean stopped;
+        private boolean chill;
 
         public AudioOutput(boolean runAudioLoop, String channelName) {
             super("LavaPlayer Audio Thread");
@@ -107,6 +122,10 @@ public class ChannelListener extends AudioEventAdapter {
             this.pitch = 1f;
             ALUtil.getStringList(0L, 4115);
             this.defaultDeviceName = ALC10.alcGetString(0L, 4114);
+            this.audioStream = AudioPlayerInputStream.createStream(ChannelListener.this.audioPlayer, ChannelListener.this.format, ChannelListener.this.format.frameDuration(), true);
+            this.channelStream = Channels.newChannel(this.audioStream);
+            this.stopped = false;
+            this.chill = false;
             MusicTriggers.logger.info("initialized thread");
         }
 
@@ -117,13 +136,13 @@ public class ChannelListener extends AudioEventAdapter {
         private int getALState() {
             if(!(this.initialized && this.runAudioLoop && !this.errored)) return 4116;
             int ret = AL10.alGetSourcei(this.openALSource, 4112);
-            checkALError("Getting state of channel audio ("+this.channelName+")");
+            checkALError("Getting state of channel audio ("+this.channelName+") "+this.openALSource);
             return ret;
         }
 
         private void playChannelAudio() {
             AL10.alSourcePlay(this.openALSource);
-            checkALError("Playing channel audio ("+this.channelName+")");
+            checkALError("Playing channel audio ("+this.channelName+") "+this.openALSource);
         }
 
         private void pauseChannelAudio() {
@@ -224,6 +243,7 @@ public class ChannelListener extends AudioEventAdapter {
             } return false;
         }
 
+        @SuppressWarnings("SameParameterValue")
         private boolean checkALCError(long id, String message) {
             int i = ALC10.alcGetError(id);
             if (i != 0) {
@@ -269,7 +289,8 @@ public class ChannelListener extends AudioEventAdapter {
         }
 
         private void drainQueuedBuffers() {
-            int i = AL10.alGetSourcei(this.openALSource, 4117);
+            MusicTriggers.logger.info("Hi the queue is draining");
+            int i = AL10.alGetSourcei(this.openALSource, AL10.AL_BUFFERS_QUEUED);
             if(!checkALError("Get queued buffers") && i > 0) {
                 int[] aint = new int[i];
                 AL10.alSourceUnqueueBuffers(this.openALSource, aint);
@@ -285,17 +306,20 @@ public class ChannelListener extends AudioEventAdapter {
             return ret.flip();
         }
 
-        private void queueBuffers(AudioInputStream stream, byte[] buffer, int num) throws IOException {
+        private void queueBuffers(byte[] buffer, int num) throws IOException {
             MusicTriggers.logger.info("Queuing {} buffers in channel {} from source id {}",num,this.channelName,this.openALSource);
             for(int i=0;i<num;i++) {
-                if (stream.read(buffer) >= 0) {
+                //if (this.audioStream.read(buffer) >= 0) {
                     MusicTriggers.logger.info("Buffer {}",i+1);
-                    ByteBuffer byteBuffer = convertByteArray(buffer);
+                    //ByteBuffer byteBuffer = convertByteArray(buffer);
+                    byte[] b = IOUtils.toByteArray(this.audioStream);
+                    ByteBuffer data = BufferUtils.createByteBuffer(b.length).put(b);
+                    data.flip();
                     int[] aint = new int[1];
                     AL10.alGenBuffers(aint);
                     if (!checkALError("Generating buffer")) {
                         MusicTriggers.logger.info("Pushing buffer {} to OpenAL",i+1);
-                        AL10.alBufferData(aint[0], AL10.AL_FORMAT_STEREO16, byteBuffer, ChannelListener.this.format.sampleRate);
+                        AL10.alBufferData(aint[0], AL10.AL_FORMAT_STEREO16, data, ChannelListener.this.format.sampleRate);
                         if (!checkALError("Assigning buffer data")) {
                             int finalI = i;
                             OptionalInt.of(aint[0]).ifPresent((optionalBuffer) -> {
@@ -306,11 +330,19 @@ public class ChannelListener extends AudioEventAdapter {
                             });
                         }
                     }
-                    MemoryUtil.memFree(byteBuffer);
-                } else {
-                    MusicTriggers.logger.fatal("Audio stream ended for channel {}! This should not happen! Attempting to restart.",this.channelName);
-                    setRunAudioLoop(false);
-                }
+                    //MemoryUtil.memFree(byteBuffer);
+                //} else {
+                    //MusicTriggers.logger.fatal("Audio stream ended for channel {}! This should not happen! Attempting to restart.",this.channelName);
+                    //setRunAudioLoop(false);
+                //}
+            }
+        }
+
+        public void tick() {
+            try {
+                if (this.queueInitialized) this.chill = true;
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
 
@@ -320,7 +352,6 @@ public class ChannelListener extends AudioEventAdapter {
                 try {
                     if (this.runAudioLoop) {
                         MusicTriggers.logger.info("start run thread loop ({})",this.channelName);
-                        AudioInputStream stream = AudioPlayerInputStream.createStream(ChannelListener.this.audioPlayer, ChannelListener.this.format, ChannelListener.this.format.frameDuration(), true);
                         int bufferSize = ChannelListener.this.format.chunkSampleCount * ChannelListener.this.format.channelCount * 2;
                         byte[] buffer = new byte[bufferSize];
                         long frameDuration = ChannelListener.this.format.frameDuration();
@@ -331,17 +362,19 @@ public class ChannelListener extends AudioEventAdapter {
                                     this.initialized = true;
                                 }
                             } else {
+                                ALC10.alcMakeContextCurrent(this.context);
                                 if (!ChannelListener.this.audioPlayer.isPaused() && ChannelListener.this.audioPlayer.getPlayingTrack() != null) {
                                     if(!this.queueInitialized) {
-                                        queueBuffers(stream,buffer,3);
+                                        queueBuffers(buffer,1);
                                         this.queueInitialized = true;
                                         setSourcePitch();
                                         setSourceVolume();
                                         playChannelAudio();
-                                    } else {
+                                    } else if(this.chill) {
                                         int size = removeProcessedBuffers();
                                         if(size>0) MusicTriggers.logger.info("Successfully processed and removed {} buffers! Attempting to refill the queue.", size);
-                                        queueBuffers(stream, buffer, size);
+                                        queueBuffers(buffer, size);
+                                        this.chill = false;
                                     }
                                 } else {
                                     if(this.queueInitialized) {
@@ -367,6 +400,7 @@ public class ChannelListener extends AudioEventAdapter {
                 }
             } else {
                 MusicTriggers.logger.fatal("ERROR THROWN IN AUDIO CHANNEL {}",ChannelListener.this.channel);
+                this.stopped = true;
                 stop();
             }
         }

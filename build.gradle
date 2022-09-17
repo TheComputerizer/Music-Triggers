@@ -100,6 +100,7 @@ dependencies {
     implementation fg.deobf("curse.maven:atomicstrykers-infernal-mobs-227875:3736943")
     implementation fg.deobf("curse.maven:champions-307152:3765992")
     implementation fg.deobf("curse.maven:game-stages-268655:3797378")
+    implementation fg.deobf("curse.maven:bookshelf-228525:3961347")
 }
 
 shadowJar {
