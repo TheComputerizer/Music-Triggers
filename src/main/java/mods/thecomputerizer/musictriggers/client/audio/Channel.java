@@ -1,6 +1,5 @@
 package mods.thecomputerizer.musictriggers.client.audio;
 
-import com.mojang.blaze3d.audio.SoundBuffer;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat;
 import com.sedmelluq.discord.lavaplayer.format.Pcm16AudioDataFormat;
@@ -250,7 +249,6 @@ public class Channel {
     }
 
     public void tickSlow() {
-        this.listener.tickThread();
         Minecraft mc = Minecraft.getInstance();
         this.toSend = this.picker.querySongList();
         this.maxDelay = this.picker.curDelay;
@@ -539,7 +537,6 @@ public class Channel {
 
     public void setVolume(float volume) {
         this.getPlayer().setVolume((int)(volume*getChannelVolume()*100));
-        this.listener.setChannelVolume(volume*getChannelVolume());
     }
 
     private float getChannelVolume() {
@@ -584,18 +581,15 @@ public class Channel {
     public void setPaused(boolean paused, boolean fromJukeBox) {
         if(!fromJukeBox || this.pausedByJukeBox) {
             this.getPlayer().setPaused(paused);
-            if(paused) this.listener.pauseChannelAudio();
-            else this.listener.unPauseChannelAudio();
         }
     }
 
     public void setPitch(float pitch) {
-        this.listener.setChannelPitch(pitch);
+        //this.listener.setChannelPitch(pitch);
     }
 
     public void stopTrack() {
         this.getPlayer().stopTrack();
-        this.listener.stopChannelAudio();
     }
 
     public void parseRedirect(Redirect redirect) {
