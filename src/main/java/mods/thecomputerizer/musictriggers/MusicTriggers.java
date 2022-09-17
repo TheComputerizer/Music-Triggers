@@ -29,7 +29,7 @@ public class MusicTriggers {
     public static final String MODID = "musictriggers";
     public static final String NAME = "Music Triggers";
     public static final String VERSION = "1.12.2-6.0-EX";
-    public static final String DEPENDENCIES = "required-after:mixinbooter;required-after:theimpossiblelibrary";
+    public static final String DEPENDENCIES = "required-after:mixinbooter";
     public static Logger logger;
     public static File configDir;
 
