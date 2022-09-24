@@ -136,8 +136,7 @@ public class GuiMain extends GuiScreen {
         }
     }
 
-    protected void overlayBackground(int startY, int endY, int startAlpha, int endAlpha)
-    {
+    protected void overlayBackground(int startY, int endY, int startAlpha, int endAlpha) {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferbuilder = tessellator.getBuffer();
         this.mc.getTextureManager().bindTexture(this.background);

@@ -4,6 +4,7 @@ item.musictriggers.music_triggers_record.name=Enhanced Music Disc
 item.musictriggers.music_triggers_record.blank_description=No track stored
 item.musictriggers.music_triggers_record.description=Track
 tile.musictriggers.music_recorder.name=Music Recorder
+gui.musictriggers.test=Gui test
 key.musictriggers_gui=Open In-Game Config GUI
 key.categories.musictriggers=Music Triggers
 misc.musictriggers.reload_start=Reloading Music... This will not take long...

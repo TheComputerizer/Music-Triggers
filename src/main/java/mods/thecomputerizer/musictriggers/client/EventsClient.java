@@ -4,10 +4,12 @@ import atomicstryker.infernalmobs.common.InfernalMobsCore;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.audio.Channel;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
+import mods.thecomputerizer.musictriggers.client.gui.GuiSuperType;
 import mods.thecomputerizer.musictriggers.client.gui.GuiTriggerInfo;
 import mods.thecomputerizer.musictriggers.common.MusicTriggersItems;
 import mods.thecomputerizer.musictriggers.common.TriggerCommand;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
+import mods.thecomputerizer.musictriggers.config.ConfigObject;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.packets.PacketBossInfo;
 import net.minecraft.client.Minecraft;
@@ -181,10 +183,10 @@ public class EventsClient {
         if(Channel.GUI.isKeyDown()) {
             BlockPos pos = MusicPicker.roundedPos(Minecraft.getMinecraft().player);
             if(!zone) {
-                //Minecraft.getMinecraft().displayGuiScreen(new GuiMain(ConfigObject.createFromCurrent()));
-                Minecraft.getMinecraft().player.sendMessage(new TextComponentString("\u00A74\u00A7o"+I18n.translateToLocal("misc.musictriggers.reload_start")));
-                reloadCounter = 5;
-                ChannelManager.reloading = true;
+                Minecraft.getMinecraft().displayGuiScreen(new GuiSuperType(ConfigObject.createMainButtons()));
+                //Minecraft.getMinecraft().player.sendMessage(new TextComponentString("\u00A74\u00A7o"+I18n.translateToLocal("misc.musictriggers.reload_start")));
+                //reloadCounter = 5;
+                //ChannelManager.reloading = true;
             }
             else if(!firstPass) {
                 x1 = pos.getX();
@@ -224,7 +226,7 @@ public class EventsClient {
 
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent event) {
-        if(!Minecraft.getMinecraft().isGamePaused() && !renderDebug) renderDebug = true;
+        if(!Minecraft.getMinecraft().isGamePaused() && !(Minecraft.getMinecraft().currentScreen instanceof GuiSuperType) && !renderDebug) renderDebug = true;
         if(reloadCounter>0) {
             reloadCounter-=1;
             if(reloadCounter==1) {
