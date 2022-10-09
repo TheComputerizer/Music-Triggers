@@ -9,6 +9,7 @@ import mods.thecomputerizer.musictriggers.config.ConfigChannels;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import mods.thecomputerizer.musictriggers.util.CustomTick;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -30,6 +31,7 @@ public class MusicTriggers {
     public static final String NAME = "Music Triggers";
     public static final String VERSION = "1.12.2-6.0-EX";
     public static final String DEPENDENCIES = "required-after:mixinbooter";
+    public static final ResourceLocation ICON_LOCATION = new ResourceLocation(MusicTriggers.MODID,"textures/logo.png");
     public static Logger logger;
     public static File configDir;
 
@@ -68,6 +70,10 @@ public class MusicTriggers {
     @EventHandler
     public void postInit(FMLPostInitializationEvent e) {
         if(e.getSide()==Side.CLIENT) ChannelManager.readResourceLocations();
+    }
+
+    public static ResourceLocation getIcon(String type, String name) {
+        return new ResourceLocation(MODID,"textures/"+type+"/"+name+".png");
     }
 
     public static String[] stringBreaker(String s, String regex) {

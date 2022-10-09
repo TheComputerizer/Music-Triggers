@@ -183,7 +183,7 @@ public class EventsClient {
         if(Channel.GUI.isKeyDown()) {
             BlockPos pos = MusicPicker.roundedPos(Minecraft.getMinecraft().player);
             if(!zone) {
-                Minecraft.getMinecraft().displayGuiScreen(new GuiSuperType(ConfigObject.createMainButtons()));
+                Minecraft.getMinecraft().displayGuiScreen(ConfigObject.createTestGui());
                 //Minecraft.getMinecraft().player.sendMessage(new TextComponentString("\u00A74\u00A7o"+I18n.translateToLocal("misc.musictriggers.reload_start")));
                 //reloadCounter = 5;
                 //ChannelManager.reloading = true;

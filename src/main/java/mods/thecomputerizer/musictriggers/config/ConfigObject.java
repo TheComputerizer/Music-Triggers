@@ -2,12 +2,11 @@ package mods.thecomputerizer.musictriggers.config;
 
 import com.rits.cloning.Cloner;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.MusicPicker;
 import mods.thecomputerizer.musictriggers.client.audio.Channel;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
+import mods.thecomputerizer.musictriggers.client.gui.GuiSuperType;
+import mods.thecomputerizer.musictriggers.client.gui.GuiType;
 import mods.thecomputerizer.musictriggers.client.gui.Mappings;
-import mods.thecomputerizer.musictriggers.client.gui.RadialButton;
-import net.minecraft.util.ResourceLocation;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -98,11 +97,8 @@ public class ConfigObject {
         return ret;
     }
 
-    public static List<RadialButton> createMainButtons() {
-        return Arrays.asList(new RadialButton(Arrays.asList("1","2","3"),new ResourceLocation(MusicTriggers.MODID,"nonsense"),0),
-        new RadialButton(Arrays.asList("2","3","4"),new ResourceLocation(MusicTriggers.MODID,"nonsense"),0),
-        new RadialButton(Arrays.asList("3","4","5"),new ResourceLocation(MusicTriggers.MODID,"nonsense"),0),
-        new RadialButton(Arrays.asList("4","5","6"),new ResourceLocation(MusicTriggers.MODID,"nonsense"),0));
+    public static GuiSuperType createTestGui() {
+        return new GuiSuperType(null, GuiType.MAIN);
     }
 
     public static ConfigObject createFromChannel(Channel channel) {
