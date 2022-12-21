@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.common;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.common.objects.BlankRecord;
 import mods.thecomputerizer.musictriggers.common.objects.EpicItem;
 import mods.thecomputerizer.musictriggers.common.objects.EpicItemBlock;
@@ -21,8 +21,8 @@ public class MusicTriggersItems {
     private static EpicItem makeEpicItem(final String name, final Supplier<EpicItem> constructor, final Consumer<EpicItem> config) {
         final EpicItem item = constructor.get();
         config.accept(item);
-        item.setUnlocalizedName(MusicTriggers.MODID + "." + name);
-        item.setRegistryName(MusicTriggers.MODID, name);
+        item.setUnlocalizedName(Constants.MODID + "." + name);
+        item.setRegistryName(Constants.MODID, name);
         item.setMaxStackSize(1);
         return item;
     }

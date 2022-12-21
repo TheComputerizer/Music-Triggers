@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.util;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
 import c4.champions.common.capability.CapabilityChampionship;
+import c4.champions.common.capability.IChampionship;
 import mods.thecomputerizer.musictriggers.common.EventsCommon;
 import mods.thecomputerizer.musictriggers.common.ServerChannelData;
 import net.minecraft.entity.EntityList;
@@ -83,7 +84,7 @@ public class CalculateFeatures {
                         if (e.getHealth() / e.getMaxHealth() <= (float) mob.getHealth() / 100F) healthCounter++;
                         infernal = infernalChecker(e,mob.getInfernal());
                         champion = championChecker(e,mob.getChampion());
-                        if (mob.getVictory()) {
+                        if (mob.getVictoryID()>0) {
                             victoryMobs.computeIfAbsent(mob.getTrigger(), k -> new HashMap<>());
                             if (victoryMobs.get(mob.getTrigger()).size() < mob.getMobLevel())
                                 victoryMobs.get(mob.getTrigger()).put(e, mob.getVictoryTimeout());
@@ -139,7 +140,7 @@ public class CalculateFeatures {
                     if (e.getHealth() / e.getMaxHealth() <= mob.getHealth() / 100F) healthCounter++;
                     infernal = infernalChecker(e,mob.getInfernal());
                     champion = championChecker(e,mob.getChampion());
-                    if (mob.getVictory()) {
+                    if (mob.getVictoryID()>0) {
                         victoryMobs.computeIfAbsent(mob.getTrigger(), k -> new HashMap<>());
                         if (victoryMobs.get(mob.getTrigger()).size() < mob.getMobLevel()) {
                             victoryMobs.get(mob.getTrigger()).put(e, mob.getVictoryTimeout());
@@ -169,10 +170,18 @@ public class CalculateFeatures {
 
     private static boolean infernalChecker(EntityLiving m, String s) {
         if(Loader.isModLoaded("infernalmobs")) {
-            if (s == null || s.matches("minecraft")) return true;
-            if (InfernalMobsCore.getMobModifiers(m) != null)
-                return InfernalMobsCore.getMobModifiers(m).getModName().matches(s);
-            return false;
+            if (s == null || s.matches("any")) return true;
+            boolean foundMatch = false;
+            if(InfernalMobsCore.getIsRareEntity(m)) {
+                if(s.matches("ALL")) return true;
+                List<String> names = Arrays.asList(InfernalMobsCore.getMobModifiers(m).getDisplayNames());
+                for(String resource : stringBreaker(s,";"))
+                    if (names.contains(resource)) {
+                        foundMatch = true;
+                        break;
+                    }
+            }
+            return foundMatch;
         }
         return true;
     }
@@ -180,9 +189,8 @@ public class CalculateFeatures {
     private static boolean championChecker(EntityLiving m, String s) {
         if(Loader.isModLoaded("champions")) {
             if (s == null || s.matches("minecraft")) return true;
-            if (CapabilityChampionship.getChampionship(m)!=null)
-                return Objects.requireNonNull(CapabilityChampionship.getChampionship(m)).getName().matches(s);
-            return false;
+            IChampionship champ = CapabilityChampionship.getChampionship(m);
+            return !Objects.isNull(champ) && checkResourceList(champ.getName(), s, true);
         }
         return true;
     }

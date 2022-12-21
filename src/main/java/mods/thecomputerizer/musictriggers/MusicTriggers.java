@@ -1,14 +1,16 @@
 package mods.thecomputerizer.musictriggers;
 
+import com.mojang.realmsclient.gui.ChatFormatting;
+import com.rits.cloning.Cloner;
 import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.client.audio.Channel;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
-import mods.thecomputerizer.musictriggers.client.gui.Mappings;
 import mods.thecomputerizer.musictriggers.common.EventsCommon;
 import mods.thecomputerizer.musictriggers.config.ConfigChannels;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import mods.thecomputerizer.musictriggers.util.CustomTick;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
+import mods.thecomputerizer.theimpossiblelibrary.util.file.LogUtil;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
@@ -19,39 +21,41 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.relauncher.Side;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.commons.io.FileExistsException;
+import org.apache.logging.log4j.Level;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
-@Mod(modid = MusicTriggers.MODID, name = MusicTriggers.NAME, version = MusicTriggers.VERSION, dependencies = MusicTriggers.DEPENDENCIES)
+@Mod(modid = Constants.MODID, name = Constants.NAME, version = Constants.VERSION, dependencies = Constants.DEPENDENCIES)
 public class MusicTriggers {
-    public static final String MODID = "musictriggers";
-    public static final String NAME = "Music Triggers";
-    public static final String VERSION = "1.12.2-6.0-EX";
-    public static final String DEPENDENCIES = "required-after:mixinbooter";
-    public static final ResourceLocation ICON_LOCATION = new ResourceLocation(MusicTriggers.MODID,"textures/logo.png");
-    public static Logger logger;
-    public static File configDir;
-
+    private static LogUtil.ModLogger MOD_LOG;
+    public static List<String> savedMessages = new ArrayList<>();
     private static Random random;
 
-    public MusicTriggers() {
-        logger = LogManager.getLogger(MODID);
+    public MusicTriggers() throws FileExistsException {
+        MOD_LOG = LogUtil.create(Constants.MODID);
         random = new Random();
-        configDir = new File(".", "config/MusicTriggers");
-        if (!configDir.exists()) configDir.mkdir();
-        ChannelManager.createJukeboxChannel();
-        for(ConfigChannels.ChannelInfo info : ConfigChannels.parse(new File(configDir,"channels.toml")))
-            ChannelManager.createChannel(info.getChannelName(),info.getMain(),info.getTransitions(),info.getCommands(),info.getToggles(),info.getRedirect(), FMLCommonHandler.instance().getSide()==Side.CLIENT,info.getPausedByJukeBox(),info.getOverridesNormalMusic());
-        ChannelManager.parseConfigFiles();
-        Mappings.init();
+        if (!Constants.CONFIG_DIR.exists())
+            if(!Constants.CONFIG_DIR.mkdir())
+                throw new FileExistsException("Unable to create file directory at "+Constants.CONFIG_DIR.getPath()+
+                        "! Music Triggers is unable to load any further.");
+        if(FMLCommonHandler.instance().getSide()==Side.CLIENT) {
+            ChannelManager.createJukeboxChannel();
+            ConfigChannels.initialize(new File(Constants.CONFIG_DIR, "channels.toml"));
+            for (ConfigChannels.ChannelInfo info : ConfigChannels.CHANNELS)
+                ChannelManager.createChannel(info.getChannelName(), info.getSoundCategory(), info.getMain(),
+                        info.getTransitions(), info.getCommands(), info.getToggles(), info.getRedirect(), info.getSongsFolder(),
+                        info.getPausedByJukeBox(), info.getOverridesNormalMusic(), info);
+            ChannelManager.parseConfigFiles();
+        }
     }
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        if(!ConfigRegistry.clientSideOnly) RegistryHandler.init();
+        if(!ConfigRegistry.CLIENT_SIDE_ONLY) RegistryHandler.init();
         if(event.getSide()==Side.CLIENT) {
             MinecraftForge.EVENT_BUS.register(ChannelManager.class);
             MinecraftForge.EVENT_BUS.register(EventsClient.class);
@@ -73,18 +77,25 @@ public class MusicTriggers {
     }
 
     public static ResourceLocation getIcon(String type, String name) {
-        return new ResourceLocation(MODID,"textures/"+type+"/"+name+".png");
+        return new ResourceLocation(Constants.MODID,"textures/"+type+"/"+name+".png");
     }
 
     public static String[] stringBreaker(String s, String regex) {
         return s.split(regex);
     }
 
-    public static int randomInt(String toConvert) {
+    public static int randomInt(int max) {
+        return random.nextInt(max);
+    }
+
+    /*
+     * Uses a fallback in case someone decides to add something that is not a number to a number parameter
+     */
+    public static int randomInt(String parameter, String toConvert, int fallback) {
         String[] broken = stringBreaker(toConvert,":");
-        if(broken.length==1) return Integer.parseInt(broken[0]);
-        int min = Integer.parseInt(broken[0]);
-        int max = Integer.parseInt(broken[1]);
+        if(broken.length==1) return parse(parameter, broken[0], fallback);
+        int min = parse(parameter, broken[0], fallback);
+        int max = parse(parameter, broken[1], fallback);
         if(min==max) return min;
         else if(min>max) {
             int temp = max;
@@ -93,5 +104,58 @@ public class MusicTriggers {
         }
         if(max-min<=0) return min;
         return min+random.nextInt(max-min);
+    }
+
+    private static int parse(String parameter, String element, int fallback) {
+        try {
+            return Integer.parseInt(element);
+        } catch (NumberFormatException ignored) {
+            logExternally(Level.WARN,"Invalid element {} for parameter {}! Using fallback {}",element,parameter,
+                    fallback);
+            return fallback;
+        }
+    }
+
+    public static float randomFloat(String parameter, String toConvert, float fallback) {
+        String[] broken = stringBreaker(toConvert,":");
+        if(broken.length==1) return parse(parameter, broken[0], fallback);
+        float min = parse(parameter, broken[0], fallback);
+        float max = parse(parameter, broken[1], fallback);
+        if(min==max) return min;
+        else if(min>max) {
+            float temp = max;
+            max = min;
+            min = temp;
+        }
+        if(max-min<=0) return min;
+        return min+random.nextFloat(max-min);
+    }
+
+    private static float parse(String parameter, String element, float fallback) {
+        try {
+            return Float.parseFloat(element);
+        } catch (NumberFormatException ignored) {
+            logExternally(Level.WARN,"Invalid element {} for parameter {}! Using fallback {}",element,parameter,
+                    fallback);
+            return fallback;
+        }
+    }
+
+    public static void logExternally(Level level, String message, Object ... parameters) {
+        MOD_LOG.log(level, message, parameters);
+        if(level!=Level.DEBUG) savedMessages.add(colorizeLogLevel(level)+ LogUtil.injectParameters(message, parameters));
+    }
+
+    private static String colorizeLogLevel(Level level) {
+        String logLevel = "["+level.toString()+"] ";
+        if(level==Level.DEBUG) return ChatFormatting.GRAY+logLevel;
+        else if(level==Level.INFO) return logLevel;
+        else if(level==Level.WARN) return ChatFormatting.GOLD+logLevel;
+        else if(level==Level.ERROR) return ChatFormatting.RED+logLevel;
+        else return ChatFormatting.DARK_RED+logLevel;
+    }
+
+    public static <T> T clone(final T o) {
+        return Cloner.standard().deepClone(o);
     }
 }

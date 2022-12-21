@@ -1,8 +1,9 @@
 package mods.thecomputerizer.musictriggers.common.objects;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.packets.PacketJukeBoxCustom;
+import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
 import net.minecraft.block.BlockJukebox;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.util.ITooltipFlag;
@@ -16,30 +17,31 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
 
-@SuppressWarnings("deprecation")
 public class MusicTriggersRecord extends EpicItem {
 
     public MusicTriggersRecord() {
-        addPropertyOverride(new ResourceLocation(MusicTriggers.MODID, "trigger"),
+        addPropertyOverride(new ResourceLocation(Constants.MODID, "trigger"),
                 (stack, worldIn, entityIn) -> {
-                    if(stack.getTagCompound()!=null && stack.getTagCompound().hasKey("triggerID")) {
+                    if(stack.getTagCompound()!=null && stack.getTagCompound().hasKey("triggerID"))
                         return mapTriggerToFloat(stack.getTagCompound().getString("triggerID"));
-                    }
                     return 0f;
                 });
     }
 
     @Override
-    public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+    @Nonnull
+    public EnumActionResult onItemUse(@Nonnull EntityPlayer player, World worldIn, @Nonnull BlockPos pos,
+                                      @Nonnull EnumHand hand, @Nonnull EnumFacing facing, float hitX, float hitY,
+                                      float hitZ) {
         IBlockState iblockstate = worldIn.getBlockState(pos);
         if (iblockstate.getBlock() instanceof MusicRecorder) {
             MusicRecorder mr = (MusicRecorder) iblockstate.getBlock();
@@ -58,18 +60,20 @@ public class MusicTriggersRecord extends EpicItem {
                     stack.shrink(1);
                     player.addStat(StatList.RECORD_PLAYED);
                 }
-            }
-            return EnumActionResult.SUCCESS;
-        }
-        else return EnumActionResult.PASS;
+            } return EnumActionResult.SUCCESS;
+        } else return EnumActionResult.PASS;
     }
 
     @Override
     @SideOnly(Side.CLIENT)
-    public void addInformation(ItemStack stack, @Nullable World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
+    public void addInformation(ItemStack stack, @Nullable World worldIn, @Nonnull List<String> tooltip,
+                               @Nonnull ITooltipFlag flagIn) {
         if(stack.hasTagCompound() && Objects.requireNonNull(stack.getTagCompound()).hasKey("trackID"))
-            tooltip.add(I18n.translateToLocal(getUnlocalizedName(stack)+".description")+": "+stack.getTagCompound().getString("trackID"));
-        else tooltip.add(I18n.translateToLocal(getUnlocalizedName(stack)+".blank_description"));
+            tooltip.add(
+                    AssetUtil.extraLang(Constants.MODID,"item","music_triggers_record","description")
+                            +": "+stack.getTagCompound().getString("trackID"));
+        else tooltip.add(
+                AssetUtil.extraLang(Constants.MODID,"item","music_triggers_record","blank_description"));
     }
 
     private float mapTriggerToFloat(String trigger) {

@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.util;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.common.MusicTriggersBlocks;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import mods.thecomputerizer.musictriggers.util.packets.*;
@@ -23,14 +23,14 @@ import java.util.Objects;
 import static mods.thecomputerizer.musictriggers.common.MusicTriggersItems.*;
 
 
-@GameRegistry.ObjectHolder(MusicTriggers.MODID)
-@Mod.EventBusSubscriber(modid = MusicTriggers.MODID)
+@GameRegistry.ObjectHolder(Constants.MODID)
+@Mod.EventBusSubscriber(modid = Constants.MODID)
 public final class RegistryHandler {
     public static SimpleNetworkWrapper network;
 
     @SubscribeEvent
     public static void onRegisterItems(RegistryEvent.Register<Item> e) {
-        if(ConfigRegistry.registerDiscs) {
+        if(ConfigRegistry.REGISTER_DISCS) {
             e.getRegistry().register(BLANK_RECORD);
             e.getRegistry().register(MUSIC_TRIGGERS_RECORD);
             e.getRegistry().register(MUSIC_RECORDER);
@@ -39,7 +39,7 @@ public final class RegistryHandler {
 
     @SubscribeEvent
     public static void registerBlocks(RegistryEvent.Register<Block> e) {
-        if(ConfigRegistry.registerDiscs) {
+        if(ConfigRegistry.REGISTER_DISCS) {
             e.getRegistry().register(MusicTriggersBlocks.MUSIC_RECORDER);
         }
     }
@@ -48,7 +48,7 @@ public final class RegistryHandler {
     @SideOnly(Side.CLIENT)
     @SubscribeEvent
     public static void onModelRegister(ModelRegistryEvent event) {
-        if(ConfigRegistry.registerDiscs) {
+        if(ConfigRegistry.REGISTER_DISCS) {
             ModelLoader.setCustomModelResourceLocation(MUSIC_TRIGGERS_RECORD, 0, new ModelResourceLocation(Objects.requireNonNull(MUSIC_TRIGGERS_RECORD.getRegistryName()), "inventory"));
             ModelLoader.setCustomModelResourceLocation(BLANK_RECORD, 0, new ModelResourceLocation(Objects.requireNonNull(BLANK_RECORD.getRegistryName()), "inventory"));
             ModelLoader.setCustomModelResourceLocation(MUSIC_RECORDER, 0, new ModelResourceLocation(Objects.requireNonNull(MUSIC_RECORDER.getRegistryName()), "inventory"));
@@ -56,7 +56,7 @@ public final class RegistryHandler {
     }
 
     public static void init() {
-        network = NetworkRegistry.INSTANCE.newSimpleChannel(MusicTriggers.MODID);
+        network = NetworkRegistry.INSTANCE.newSimpleChannel(Constants.MODID);
         registerPackets();
     }
 

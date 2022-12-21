@@ -16,9 +16,9 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
+import javax.annotation.Nonnull;
 import java.util.UUID;
 
-@SuppressWarnings("NullableProblems")
 public class MusicRecorder extends Block {
 
     public static final PropertyBool HAS_RECORD = PropertyBool.create("has_record");
@@ -33,7 +33,9 @@ public class MusicRecorder extends Block {
     }
 
     @Override
-    public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
+    public boolean onBlockActivated(@Nonnull World worldIn, @Nonnull BlockPos pos, IBlockState state,
+                                    @Nonnull EntityPlayer playerIn, @Nonnull EnumHand hand, @Nonnull EnumFacing facing,
+                                    float hitX, float hitY, float hitZ) {
         if (state.getValue(HAS_RECORD)) {
             this.dropRecord(worldIn, pos);
             state = state.withProperty(HAS_RECORD, false);
@@ -44,9 +46,7 @@ public class MusicRecorder extends Block {
             state = state.withProperty(HAS_DISC, false);
             worldIn.setBlockState(pos, state, 2);
             return true;
-        } else {
-            return false;
-        }
+        } else return false;
     }
 
     public void insertRecord(World worldIn, BlockPos pos, IBlockState state, ItemStack recordStack, UUID uuid) {
@@ -76,42 +76,44 @@ public class MusicRecorder extends Block {
     }
 
     @Override
-    public void breakBlock(World worldIn, BlockPos pos, IBlockState state) {
+    public void breakBlock(@Nonnull World worldIn, @Nonnull BlockPos pos, @Nonnull IBlockState state) {
         this.dropRecord(worldIn, pos);
         super.breakBlock(worldIn, pos, state);
     }
 
     @Override
-    public void dropBlockAsItemWithChance(World worldIn, BlockPos pos, IBlockState state, float chance, int fortune) {
-        if (!worldIn.isRemote) {
+    public void dropBlockAsItemWithChance(World worldIn, @Nonnull BlockPos pos, @Nonnull IBlockState state,
+                                          float chance, int fortune) {
+        if (!worldIn.isRemote)
             super.dropBlockAsItemWithChance(worldIn, pos, state, chance, 0);
-        }
     }
 
+    //TODO Stop using depreciated methods
     @SuppressWarnings("deprecation")
     @Override
-    public boolean hasComparatorInputOverride(IBlockState state) {
+    public boolean hasComparatorInputOverride(@Nonnull IBlockState state) {
         return true;
     }
 
     @SuppressWarnings("deprecation")
     @Override
-    public int getComparatorInputOverride(IBlockState blockState, World worldIn, BlockPos pos) {
+    public int getComparatorInputOverride(@Nonnull IBlockState blockState, @Nonnull World worldIn, @Nonnull BlockPos pos) {
         ItemStack itemstack = EventsCommon.recordHolder.get(pos);
-        if (!itemstack.isEmpty()) {
+        if (!itemstack.isEmpty())
             return 15;
-        }
         return 0;
     }
 
     @SuppressWarnings("deprecation")
     @Override
-    public EnumBlockRenderType getRenderType(IBlockState state) {
+    @Nonnull
+    public EnumBlockRenderType getRenderType(@Nonnull IBlockState state) {
         return EnumBlockRenderType.MODEL;
     }
 
     @SuppressWarnings("deprecation")
     @Override
+    @Nonnull
     public IBlockState getStateFromMeta(int meta) {
         return this.getDefaultState().withProperty(HAS_RECORD, meta > 0);
     }
@@ -122,6 +124,7 @@ public class MusicRecorder extends Block {
     }
 
     @Override
+    @Nonnull
     protected BlockStateContainer createBlockState() {
         return new BlockStateContainer(this, HAS_RECORD, HAS_DISC);
     }

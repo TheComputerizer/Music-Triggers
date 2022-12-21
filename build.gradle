@@ -19,7 +19,7 @@ apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'maven-publish'
 
-version = '1.12.2-6.0-EX'
+version = '1.12.2-6.0_PUBLIC_BETA'
 group = 'mods.thecomputerizer.musictriggers'
 archivesBaseName = 'musictriggers'
 
@@ -94,6 +94,7 @@ dependencies {
 
     //required mod dependencies
     implementation fg.deobf("curse.maven:mixin-booter-419286:3886235")
+    implementation fg.deobf("curse.maven:the-impossible-library-661115:4175418")
 
     //mod support dependencies
     implementation fg.deobf("curse.maven:codechicken-lib-242818:2779848")
@@ -149,9 +150,9 @@ jar {
             "FMLAT": "musictriggers_at.cfg",
             "Specification-Title": "musictriggers",
             "Specification-Vendor": "The_Computerizer",
-            "Specification-Version": "1.12.2-6.0-EX",
+            "Specification-Version": project.version,
             "Implementation-Title": project.name,
-            "Implementation-Version": "1.12.2-6.0-EX",
+            "Implementation-Version": project.version,
             "Implementation-Vendor" :"musictriggers",
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])

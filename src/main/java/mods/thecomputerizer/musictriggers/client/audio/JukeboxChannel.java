@@ -15,6 +15,7 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.apache.logging.log4j.Level;
 
 import java.util.HashMap;
 import java.util.Objects;
@@ -43,7 +44,7 @@ public class JukeboxChannel {
         this.playerManager.getConfiguration().setResamplingQuality(AudioConfiguration.ResamplingQuality.HIGH);
         this.playerManager.getConfiguration().setOpusEncodingQuality(AudioConfiguration.OPUS_QUALITY_MAX);
         this.playerManager.getConfiguration().setOutputFormat(FORMAT);
-        MusicTriggers.logger.info("Registered jukebox channel "+channel);
+        MusicTriggers.logExternally(Level.INFO,"Registered jukebox channel "+channel);
     }
 
     private AudioPlayer refreshPlayer() {
@@ -93,17 +94,17 @@ public class JukeboxChannel {
     }
 
     public void playTrack(AudioTrack track, BlockPos jukeboxPos) {
-        MusicTriggers.logger.info("Playing track for jukebox");
+        MusicTriggers.logExternally(Level.INFO,"Playing track for jukebox");
         if(track!=null) {
             track.setPosition(0);
             try {
-                if (!this.getPlayer().startTrack(track, false)) MusicTriggers.logger.error("Could not start track!");
+                if (!this.getPlayer().startTrack(track, false)) MusicTriggers.logExternally(Level.ERROR,"Could not start track!");
                 else this.pos = jukeboxPos;
             } catch (IllegalStateException e) {
-                if (!this.getPlayer().startTrack(track.makeClone(), false)) MusicTriggers.logger.error("Could not start track!");
+                if (!this.getPlayer().startTrack(track.makeClone(), false)) MusicTriggers.logExternally(Level.ERROR,"Could not start track!");
             }
         } else {
-            MusicTriggers.logger.error("Could not play disc!");
+            MusicTriggers.logExternally(Level.ERROR,"Could not play disc!");
         }
     }
 

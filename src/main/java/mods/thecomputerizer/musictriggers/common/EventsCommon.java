@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.common;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.common.objects.BlankRecord;
 import mods.thecomputerizer.musictriggers.common.objects.MusicRecorder;
 import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
@@ -18,7 +18,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-@Mod.EventBusSubscriber(modid= MusicTriggers.MODID)
+@Mod.EventBusSubscriber(modid= Constants.MODID)
 public class EventsCommon {
 
     public static HashMap<UUID, HashMap<String, String>> currentChannelSongs = new HashMap<>();
