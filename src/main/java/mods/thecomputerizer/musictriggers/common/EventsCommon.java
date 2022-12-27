@@ -25,6 +25,7 @@ public class EventsCommon {
     public static HashMap<BlockPos, Integer> tickCounter = new HashMap<>();
     public static HashMap<BlockPos, ItemStack> recordHolder = new HashMap<>();
     public static HashMap<BlockPos, UUID> recordUUID = new HashMap<>();
+    public static HashMap<BlockPos, Boolean> recordIsCustom = new HashMap<>();
     public static HashMap<BlockPos, World> recordWorld = new HashMap<>();
     public static HashMap<UUID, List<String>> recordMenu = new HashMap<>();
     public static HashMap<UUID, HashMap<String, List<String>>> activeTriggerList = new HashMap<>();
@@ -66,7 +67,10 @@ public class EventsCommon {
                         currentChannel = (String) values[random.nextInt(currentChannelSongs.get(recordUUID.get(blockPos)).keySet().size())];
                     }
                     if (recordHolder.get(blockPos).getItem() instanceof BlankRecord) {
-                        ItemStack stack = MusicTriggersItems.MUSIC_TRIGGERS_RECORD.getDefaultInstance();
+                        ItemStack stack;
+                        if(recordIsCustom.get(blockPos))
+                            stack = MusicTriggersItems.MUSIC_TRIGGERS_RECORD.getDefaultInstance();
+                        else stack = MusicTriggersItems.CUSTOM_RECORD.getDefaultInstance();
                         NBTTagCompound tag = new NBTTagCompound();
                         tag.setString("channelFrom",currentChannel);
                         tag.setString("trackID",currentChannelSongs.get(recordUUID.get(blockPos)).get(currentChannel));

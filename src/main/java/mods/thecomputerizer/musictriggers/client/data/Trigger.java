@@ -285,6 +285,8 @@ public class Trigger {
 
     private static HashMap<String, BiFunction<Trigger, EntityPlayerSP, Boolean>> setTriggerConditions() {
         HashMap<String, BiFunction<Trigger, EntityPlayerSP, Boolean>> ret = new HashMap<>();
+        ret.put("menu",(trigger,player) -> false);
+        ret.put("generic",(trigger,player) -> false);
         ret.put("time",(trigger,player) -> {
             World world = player.getEntityWorld();
             double time = (double) world.getWorldTime() / 24000.0;
@@ -446,14 +448,6 @@ public class Trigger {
         return Arrays.asList(acceptedParameters.get(name));
     }
 
-    public static List<String> getRequiredParameters(String name) {
-        return Arrays.asList(requiredParameters.get(name));
-    }
-
-    public static List<String> getChoiceParameters(String name) {
-        return Arrays.asList(choiceRequiredParameters.get(name));
-    }
-
     private static void checkAndRemoveEmptyTrigger(String channel, String name) {
         boolean remove = registeredTriggers.get(channel).get(name).isEmpty();
         if(remove) registeredTriggers.get(channel).remove(name);
@@ -471,10 +465,6 @@ public class Trigger {
         return Arrays.asList(acceptedParameters.get(triggerName)).contains("identifier");
     }
 
-    public static List<String> registeredIdentifiers(String channel, String triggerName) {
-        return new ArrayList<>(registeredTriggers.get(channel).get(triggerName).keySet());
-    }
-
     public static Collection<Trigger> getTriggerInstances(String channel, String triggerName) {
         return registeredTriggers.get(channel).get(triggerName).values();
     }
@@ -487,8 +477,13 @@ public class Trigger {
     }
 
     public static boolean isRegistered(String channel, String triggerName) {
-        return !getTriggerInstances(channel, triggerName).isEmpty();
+        return registeredTriggers.get(channel).containsKey(triggerName);
     }
+
+    public static boolean isRegistered(String channel) {
+        return registeredTriggers.containsKey(channel);
+    }
+
 
     public static Trigger parseAndGetTrigger(String channel, String triggerIdentifier) {
         String[] split = triggerIdentifier.split("-",2);
@@ -507,6 +502,19 @@ public class Trigger {
         if(registeredTriggers.get(channel).containsKey(triggerName))
             return registeredTriggers.get(channel).get(triggerName).get("not_accepted");
         return null;
+    }
+
+    public static void removeAudio(String channel, Audio audio) {
+        Trigger attached = null;
+        for(Trigger trigger : attachedAudio.keySet())
+            if(attachedAudio.get(trigger).contains(audio)) {
+                attachedAudio.get(trigger).remove(audio);
+                if(attachedAudio.get(trigger).isEmpty())
+                    attached = trigger;
+                break;
+            }
+        if(Objects.nonNull(attached))
+            parseAndRemoveTrigger(channel,attached.getNameWithID());
     }
 
     public static List<Audio> getPotentialSongs(Trigger trigger) {
@@ -630,7 +638,7 @@ public class Trigger {
 
     public boolean canStart(int fromMap, int fromUniversal) {
         int check = getParameterInt("start_delay");
-        return fromMap>(check>0 ? check : fromUniversal);
+        return fromMap>=(check>0 ? check : fromUniversal);
     }
 
     public boolean handleHeight(int playerY, boolean visibleSky) {
@@ -700,32 +708,31 @@ public class Trigger {
 
     public boolean checkBiome(Biome b, String name, String category, String rainType, float temperature, boolean cold, float rainfall, boolean togglerainfall) {
         if(checkResourceList(Objects.requireNonNull(b.getRegistryName()).toString(),name, false) || name.matches("any")) {
-            if(checkResourceList(b.getTempCategory().toString(),category,false) || category.matches("nope")) {
+            if(checkResourceList(b.getTempCategory().toString(),category,false) || category.matches("any")) {
                 boolean pass = false;
-                if(rainfall==-111f) pass = true;
+                if(rainfall==Float.MIN_VALUE) pass = true;
                 else if(b.getRainfall()>rainfall && togglerainfall) pass = true;
                 else if(b.getRainfall()<rainfall && !togglerainfall) pass = true;
                 if(pass) {
-                    if (rainType.matches("nope")) {
-                        float bt = b.getDefaultTemperature();
-                        if (temperature == -111) return true;
-                        else if (bt >= temperature && !cold) return true;
-                        else return bt <= temperature && cold;
-                    } else if (b.canRain() && rainType.matches("rain")) {
-                        float bt = b.getDefaultTemperature();
-                        if (temperature == -111) return true;
-                        else if (bt >= temperature && !cold) return true;
-                        else return bt <= temperature && cold;
-                    } else if (b.isSnowyBiome() && rainType.matches("snow")) {
-                        float bt = b.getDefaultTemperature();
-                        if (temperature == -111) return true;
-                        else if (bt >= temperature && !cold) return true;
-                        else return bt <= temperature && cold;
-                    }
+                    if (rainType.matches("any"))
+                        return biomeTemp(b,temperature,cold);
+                    else if (rainType.matches("none") && !b.canRain())
+                        return biomeTemp(b,temperature,cold);
+                    else if (b.canRain() && rainType.matches("rain"))
+                        return biomeTemp(b,temperature,cold);
+                    else if (b.isSnowyBiome() && rainType.matches("snow"))
+                        return biomeTemp(b,temperature,cold);
                 }
             }
         }
         return false;
+    }
+
+    private boolean biomeTemp(Biome b, float temperature, boolean cold) {
+        float bt = b.getDefaultTemperature();
+        if (temperature == Float.MIN_VALUE) return true;
+        else if (bt >= temperature && !cold) return true;
+        else return bt <= temperature && cold;
     }
 
     public boolean checkResourceList(String type, String resourceList, boolean match) {
@@ -771,9 +778,9 @@ public class Trigger {
         return getParameterBool("start_toggled");
     }
 
-    public List<String> getAsTomlLines(boolean multi) {
+    public List<String> getAsTomlLines(String songName, boolean multi) {
         List<String> lines = new ArrayList<>();
-        lines.add(multi ? "\t[[trigger]]" : "\t[trigger]");
+        lines.add(multi ? "\t[["+songName+".trigger]]" : "\t["+songName+".trigger]");
         lines.add("\t\tname = \""+this.name+"\"");
         for(Map.Entry<String, String> parameter : this.parameters.entrySet())
             if(!isDefault(parameter.getKey()))

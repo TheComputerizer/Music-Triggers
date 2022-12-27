@@ -12,6 +12,7 @@ import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.logging.log4j.Level;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -225,12 +226,15 @@ public class MusicPicker {
         this.info.updateActiveTriggers(new ArrayList<>());
         try {
             if(!ConfigRegistry.CLIENT_SIDE_ONLY) {
-                for (Trigger trigger : Trigger.getTriggerInstances(this.channel.getChannelName(), "home"))
-                    packet.addHomeTrigger(trigger.makeHomePacket());
-                for (Trigger trigger : Trigger.getTriggerInstances(this.channel.getChannelName(), "structure"))
-                    packet.addStructureTrigger(trigger.makeStructurePacket(player.getPosition().toLong(), player.dimension));
-                for (Trigger trigger : Trigger.getTriggerInstances(this.channel.getChannelName(), "mob"))
-                    packet.addMobTrigger(trigger.makeMobPacket());
+                if (Trigger.isRegistered(this.channel.getChannelName(), "home"))
+                    for (Trigger trigger : Trigger.getTriggerInstances(this.channel.getChannelName(), "home"))
+                        packet.addHomeTrigger(trigger.makeHomePacket());
+                if (Trigger.isRegistered(this.channel.getChannelName(), "structure"))
+                    for (Trigger trigger : Trigger.getTriggerInstances(this.channel.getChannelName(), "structure"))
+                        packet.addStructureTrigger(trigger.makeStructurePacket(player.getPosition().toLong(), player.dimension));
+                if (Trigger.isRegistered(this.channel.getChannelName(), "mob"))
+                    for (Trigger trigger : Trigger.getTriggerInstances(this.channel.getChannelName(), "mob"))
+                        packet.addMobTrigger(trigger.makeMobPacket());
             }
             List<Trigger> events = Trigger.getRegisteredTriggers(this.channel.getChannelName()).stream()
                     .filter(trigger -> trigger.runActivationFunction(player))
@@ -243,7 +247,11 @@ public class MusicPicker {
             return events;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("There was a problem with your "+crashHelper+" trigger! The error was "+
+            if(crashHelper.isEmpty())
+                throw new RuntimeException("There was an uncaught error! This should be reported! The error was "+
+                        e.getMessage()+" and was caught on line "+e.getStackTrace()[0].getLineNumber()+" in the class "+
+                        e.getStackTrace()[0]);
+            else throw new RuntimeException("There was a problem with your "+crashHelper+" trigger! The error was "+
                     e.getMessage()+" and was caught on line "+e.getStackTrace()[0].getLineNumber()+" in the class "+
                     e.getStackTrace()[0]);
         }
@@ -252,12 +260,13 @@ public class MusicPicker {
     private Trigger addPlayableTrigger(Trigger trigger, Universal universalParameters) {
         this.crashHelper = trigger.getNameWithID();
         Trigger ret = null;
+        this.startMap.putIfAbsent(trigger, new MutableInt(0));
+        this.triggerPersistence.putIfAbsent(trigger, new MutableInt(0));
         boolean active = trigger.canStart(this.startMap.get(trigger).getValue(),
                 MusicTriggers.randomInt("universal_start_delay",universalParameters.getStartDelay(),0));
         if (active || this.triggerPersistence.get(trigger).getValue() > 0) {
             ret = trigger;
             this.boolMap.put(trigger, true);
-            this.startMap.putIfAbsent(trigger, new MutableInt(0));
             this.dynamicTemp.add(trigger);
             if (active) {
                 int check = trigger.getParameterInt("persistence");

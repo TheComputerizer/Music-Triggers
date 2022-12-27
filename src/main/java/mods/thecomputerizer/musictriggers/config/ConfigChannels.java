@@ -37,9 +37,9 @@ public class ConfigChannels {
 
     private static void write() {
         List<String> lines = new ArrayList<>();
-        lines.add("# This mod does not create custom audio channels. Here are the acceptable sound categories:\n");
-        lines.add("# master, music, record, weather, block, hostile, neutral, player, ambient, voice\n");
-        lines.add("# Note that you can nest config files in folders by specifying the folder before it like folder/filename.\n");
+        lines.add("# This mod does not create custom audio channels. Here are the acceptable sound categories:");
+        lines.add("# master, music, record, weather, block, hostile, neutral, player, ambient, voice");
+        lines.add("# Note that you can nest config files in folders by specifying the folder before it like folder/filename.");
         lines.add("");
         for(ChannelInfo info : CHANNELS) lines.addAll(writeChannel(info));
         FileUtil.writeLinesToFile(FILE,lines,false);
@@ -47,16 +47,16 @@ public class ConfigChannels {
 
     private static List<String> writeChannel(ChannelInfo info) {
         List<String> lines = new ArrayList<>();
-        lines.add(LogUtil.injectParameters("[{}]\n",info.channelName));
-        lines.add(LogUtil.injectParameters("\tsound_category = \"{}\"\n",info.soundCategory));
-        lines.add(LogUtil.injectParameters("\tmain = \"{}\"\n",info.main));
-        lines.add(LogUtil.injectParameters("\ttransitions = \"{}\"\n",info.transitions));
-        lines.add(LogUtil.injectParameters("\tcommands = \"{}\"\n",info.commands));
-        lines.add(LogUtil.injectParameters("\ttoggles = \"{}\"\n",info.toggles));
-        lines.add(LogUtil.injectParameters("\tredirect = \"{}\"\n",info.redirect));
-        lines.add(LogUtil.injectParameters("\tsongs_folder = \"{}\"\n",info.songsFolder));
-        lines.add(LogUtil.injectParameters("\tpaused_by_jukebox = \"{}\"\n",info.pausedByJukeBox));
-        lines.add(LogUtil.injectParameters("\toverrides_normal_music = \"{}\"\n",info.overridesNormalMusic));
+        lines.add(LogUtil.injectParameters("[{}]",info.channelName));
+        lines.add(LogUtil.injectParameters("\tsound_category = \"{}\"",info.soundCategory));
+        lines.add(LogUtil.injectParameters("\tmain = \"{}\"",info.main));
+        lines.add(LogUtil.injectParameters("\ttransitions = \"{}\"",info.transitions));
+        lines.add(LogUtil.injectParameters("\tcommands = \"{}\"",info.commands));
+        lines.add(LogUtil.injectParameters("\ttoggles = \"{}\"",info.toggles));
+        lines.add(LogUtil.injectParameters("\tredirect = \"{}\"",info.redirect));
+        lines.add(LogUtil.injectParameters("\tsongs_folder = \"{}\"",info.songsFolder));
+        lines.add(LogUtil.injectParameters("\tpaused_by_jukebox = \"{}\"",info.pausedByJukeBox));
+        lines.add(LogUtil.injectParameters("\toverrides_normal_music = \"{}\"",info.overridesNormalMusic));
         return lines;
     }
 
@@ -70,18 +70,21 @@ public class ConfigChannels {
                 String channelName = table.getName();
                 Toml ch = toml.getTable(channelName);
                 channels.add(new ChannelInfo(channelName, ch.getString("sound_category", "music"),
-                        ch.getString("main", channelName+"/musictriggers"),
-                        ch.getString("transitions", "/transitions"),
-                        ch.getString("commands", "/commands"),
-                        ch.getString("toggles", "/toggles"),
-                        ch.getString("redirect", "/redirect"),
+                        ch.getString("main", channelName+"/main"),
+                        ch.getString("transitions", channelName+"/transitions"),
+                        ch.getString("commands", channelName+"/commands"),
+                        ch.getString("toggles", channelName+"/toggles"),
+                        ch.getString("redirect", channelName+"/redirect"),
+                        ch.getString("jukebox", channelName+"/jukebox"),
                         ch.getString("songs_folder", "config/MusicTriggers/songs"),
                         ch.getString("paused_by_jukebox", "true"),
                         ch.getString("overrides_normal_music", "true")));
             }
         }
-        if(channels.isEmpty()) channels.add(new ChannelInfo("music","music","musictriggers","transitions",
-                "commands", "toggles", "redirect", "config/MusicTriggers/songs", "true", "true"));
+        if(channels.isEmpty()) channels.add(new ChannelInfo("music","music",
+                "music/main","music/transitions",
+                "music/commands", "music/toggles", "music/redirect", "music/jukebox",
+                "config/MusicTriggers/songs", "true", "true"));
         return channels;
     }
 
@@ -93,6 +96,7 @@ public class ConfigChannels {
         private final String commands;
         private final String toggles;
         private final String redirect;
+        private final String jukebox;
         private final String songsFolder;
         private final boolean pausedByJukeBox;
         private final boolean overridesNormalMusic;
@@ -109,7 +113,7 @@ public class ConfigChannels {
         }
 
         public ChannelInfo(String channelName, String soundCategory, String main, String transitions, String commands, String toggles,
-                           String redirect, String songFolder, String pausedByJukeBox, String overridesNormalMusic) {
+                           String redirect, String jukebox, String songFolder, String pausedByJukeBox, String overridesNormalMusic) {
             this.channelName = channelName;
             this.soundCategory = soundCategory;
             this.main = main;
@@ -117,6 +121,7 @@ public class ConfigChannels {
             this.commands = commands;
             this.toggles = toggles;
             this.redirect = redirect;
+            this.jukebox = jukebox;
             this.songsFolder = songFolder;
             this.pausedByJukeBox = Boolean.parseBoolean(pausedByJukeBox);
             this.overridesNormalMusic = Boolean.parseBoolean(overridesNormalMusic);
@@ -152,6 +157,12 @@ public class ConfigChannels {
                         configType,path,"redirect",this.channelName);
                 return false;
             }
+            if(path.matches(this.jukebox)) {
+                MusicTriggers.logExternally(Level.ERROR, "Config type {} cannot be {} " +
+                                "as that matches the {} config type of the channel {} which was already registered!",
+                        configType,path,"jukebox",this.channelName);
+                return false;
+            }
             return true;
         }
 
@@ -181,6 +192,10 @@ public class ConfigChannels {
 
         public String getRedirect() {
             return this.redirect;
+        }
+
+        public String getJukebox() {
+            return this.jukebox;
         }
 
         public String getSongsFolder() {

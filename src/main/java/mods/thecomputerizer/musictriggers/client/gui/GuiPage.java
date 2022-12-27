@@ -26,6 +26,7 @@ public class GuiPage extends GuiSuperType {
     private boolean deleteMode;
     private int scrollPos;
     private boolean canScrollDown;
+    private boolean hasEdits;
 
     public GuiPage(GuiSuperType parent, GuiType type, Instance configInstance, String id, List<Icon> icons, boolean buttons) {
         super(parent, type, configInstance);
@@ -51,17 +52,21 @@ public class GuiPage extends GuiSuperType {
         super.initGui();
         if(this.canEdit) {
             String displayName = Translate.guiGeneric(false,"button",this.id + "_add");
-            int width = this.fontRenderer.getStringWidth(displayName)+4;
+            int width = this.fontRenderer.getStringWidth(displayName)+8;
             int left = 96;
-            addTopButton(left, Translate.guiGeneric(false,"button",displayName), width, new ArrayList<>(),
-                    (screen, button) -> Minecraft.getMinecraft().displayGuiScreen(
-                            new GuiPopUp(this,GuiType.POPUP,this.getInstance(),this.id,true,4,
-                            new ArrayList<>(this.icons))),
+            addTopButton(left, displayName, width, new ArrayList<>(),
+                    (screen, button) -> {
+                        Minecraft.getMinecraft().displayGuiScreen(
+                                new GuiPopUp(this,GuiType.POPUP,this.getInstance(),this.id,true,4,
+                                        new ArrayList<>(this.icons)));
+                        this.hasEdits = true;
+                        save();
+                    },
                     this);
             left+=(width+16);
             displayName = Translate.guiGeneric(false,"button","delete_mode");
-            width = this.fontRenderer.getStringWidth(displayName)+4;
-            this.toggleMode = addTopButton(left, Translate.guiGeneric(false,"button",displayName), width,
+            width = this.fontRenderer.getStringWidth(displayName)+8;
+            this.toggleMode = addTopButton(left, displayName, width,
                     Translate.guiNumberedList(3,"button","delete_mode","desc"),
                     (screen, button) -> toggleDeleteMode(!this.deleteMode),this);
         }
@@ -69,7 +74,7 @@ public class GuiPage extends GuiSuperType {
 
     private void toggleDeleteMode(boolean isActive) {
         this.deleteMode = isActive;
-        this.toggleMode.updateDisplayFormat(isActive ? TextFormatting.RED : null);
+        this.toggleMode.updateDisplayFormat(isActive ? TextFormatting.RED : TextFormatting.WHITE);
     }
 
     @Override
@@ -77,7 +82,7 @@ public class GuiPage extends GuiSuperType {
         super.handleMouseInput();
         int scroll = Mouse.getEventDWheel();
         if(scroll!=0) {
-            if(scroll>1 && this.canScrollDown) {
+            if(scroll<1 && this.canScrollDown) {
                 this.scrollPos++;
                 this.canScrollDown = false;
             } else if(this.scrollPos>0) this.scrollPos--;
@@ -94,6 +99,8 @@ public class GuiPage extends GuiSuperType {
                 if(this.deleteMode && icon.canDelete()) {
                     getInstance().deleteChannel(icon.channelName());
                     itr.remove();
+                    this.hasEdits = true;
+                    save();
                 }
                 else icon.onClick(this);
             }
@@ -146,7 +153,8 @@ public class GuiPage extends GuiSuperType {
 
     @Override
     protected void save() {
-
+        if(this.hasEdits)
+            this.madeChange(true);
     }
 
     public static class Icon {
@@ -186,7 +194,7 @@ public class GuiPage extends GuiSuperType {
         }
 
         private boolean canDelete() {
-            return this.canDelete;
+            return this.hover && this.canDelete;
         }
 
         /*
@@ -216,7 +224,10 @@ public class GuiPage extends GuiSuperType {
         }
 
         public void onClick(GuiSuperType parent) {
-            if(this.hover) this.handlerFunction.accept(parent,this.id);
+            if(this.hover) {
+                parent.playGenericClickSound();
+                this.handlerFunction.accept(parent,this.id);
+            }
         }
 
         public boolean getHover() {

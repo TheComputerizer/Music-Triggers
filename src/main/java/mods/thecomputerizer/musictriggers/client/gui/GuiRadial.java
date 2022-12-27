@@ -40,9 +40,9 @@ public class GuiRadial extends GuiSuperType {
     public void drawStuff(int mouseX, int mouseY, float partialTicks) {
         circleButton.render(this.zLevel,mouseX,mouseY);
         GuiUtil.drawColoredRing(new Point2i((int)(((float)this.width)/2f),(int)(((float)this.height)/2f)),
-                new Point2i(35,36),new Point4i(255,255,255,192),100,this.zLevel);
+                new Point2i(35,37),new Point4i(255,255,255,192),100,this.zLevel);
         GuiUtil.drawColoredRing(new Point2i((int)(((float)this.width)/2f),(int)(((float)this.height)/2f)),
-                new Point2i(110,111),new Point4i(255,255,255,192),100,this.zLevel);
+                new Point2i(110,112),new Point4i(255,255,255,192),100,this.zLevel);
     }
 
     @Override

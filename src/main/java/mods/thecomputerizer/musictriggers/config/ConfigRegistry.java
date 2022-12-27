@@ -29,11 +29,11 @@ public class ConfigRegistry {
 
     private static void write() {
         List<String> lines = new ArrayList<>();
-        lines.add("# Register Music Discs\n");
-        lines.add(LogUtil.injectParameters("REGISTER_DISCS = \"{}\"\n",REGISTER_DISCS));
-        lines.add("\n");
-        lines.add("# Client Side Only (Some triggers will not be able to activate)\n");
-        lines.add(LogUtil.injectParameters("CLIENT_SIDE_ONLY = \"{}\"\n",CLIENT_SIDE_ONLY));
+        lines.add("# Register Music Discs");
+        lines.add(LogUtil.injectParameters("REGISTER_DISCS = \"{}\"",REGISTER_DISCS));
+        lines.add("");
+        lines.add("# Client Side Only (Some triggers will not be able to activate)");
+        lines.add(LogUtil.injectParameters("CLIENT_SIDE_ONLY = \"{}\"",CLIENT_SIDE_ONLY));
         FileUtil.writeLinesToFile(FILE,lines,false);
     }
 

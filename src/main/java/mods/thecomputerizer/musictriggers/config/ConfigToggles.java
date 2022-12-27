@@ -32,7 +32,7 @@ public class ConfigToggles {
     public ConfigToggles(File file) {
         boolean exists = file.exists();
         this.file = exists ? file : FileUtil.generateNestedFile(file,false);
-        if(exists) FileUtil.writeLinesToFile(this.file,headerLines(),false);
+        if(!exists) FileUtil.writeLinesToFile(this.file,headerLines(),false);
         this.toggleMap = new HashMap<>();
         this.toggledTriggers = new HashMap<>();
         this.CrashHelper = "There was a problem initializing toggles!";

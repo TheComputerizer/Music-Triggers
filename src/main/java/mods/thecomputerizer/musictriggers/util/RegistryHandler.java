@@ -33,6 +33,7 @@ public final class RegistryHandler {
         if(ConfigRegistry.REGISTER_DISCS) {
             e.getRegistry().register(BLANK_RECORD);
             e.getRegistry().register(MUSIC_TRIGGERS_RECORD);
+            e.getRegistry().register(CUSTOM_RECORD);
             e.getRegistry().register(MUSIC_RECORDER);
         }
     }
@@ -50,6 +51,7 @@ public final class RegistryHandler {
     public static void onModelRegister(ModelRegistryEvent event) {
         if(ConfigRegistry.REGISTER_DISCS) {
             ModelLoader.setCustomModelResourceLocation(MUSIC_TRIGGERS_RECORD, 0, new ModelResourceLocation(Objects.requireNonNull(MUSIC_TRIGGERS_RECORD.getRegistryName()), "inventory"));
+            ModelLoader.setCustomModelResourceLocation(CUSTOM_RECORD, 0, new ModelResourceLocation(Objects.requireNonNull(CUSTOM_RECORD.getRegistryName()), "inventory"));
             ModelLoader.setCustomModelResourceLocation(BLANK_RECORD, 0, new ModelResourceLocation(Objects.requireNonNull(BLANK_RECORD.getRegistryName()), "inventory"));
             ModelLoader.setCustomModelResourceLocation(MUSIC_RECORDER, 0, new ModelResourceLocation(Objects.requireNonNull(MUSIC_RECORDER.getRegistryName()), "inventory"));
         }

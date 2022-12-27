@@ -104,7 +104,7 @@ public class Instance {
                 String extra = id.matches("transitions") ? "titles" : null;
                 Minecraft.getMinecraft().displayGuiScreen(new GuiSelection(screen,GuiType.SELECTION_GENERIC,
                         screen.getInstance(),channel,id,extra,null,
-                        this.channelHolder.getChannel(channel).clickAddButton(channel)));
+                        this.channelHolder.getChannel(channel).clickAddButton(channel,null)));
             }
         }
     }

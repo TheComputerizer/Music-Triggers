@@ -92,7 +92,7 @@ public class GuiPopUp extends GuiSuperType {
     protected void drawStuff(int mouseX, int mouseY, float partialTicks) {
         GuiUtil.drawBox(new Point2i(0,0),this.width,this.height,new Point4i(0,0,0,128),this.zLevel);
         Point2i center = new Point2i(this.width/2,this.height/2);
-        if(this.id.matches("confirmation")) drawConfirmationBox(center,mouseX,mouseY,this.fontRenderer);
+        if(this.id.matches("confirm")) drawConfirmationBox(center,mouseX,mouseY,this.fontRenderer);
         else {
             if (this.canType) drawCanType(center, mouseX, mouseY, this.fontRenderer);
             drawError(center, this.fontRenderer);
@@ -166,7 +166,7 @@ public class GuiPopUp extends GuiSuperType {
         drawSelectionBox(topLeft,width/2,boxHeight,this.isHover);
         color = GuiUtil.WHITE;
         if(this.hoverNo) color = GuiUtil.makeRGBAInt(0,0,0,255);
-        drawCenteredString(font,no, center.x-(width/4),topLeft.y+this.spacing,color);
+        drawCenteredString(font,no, center.x+(width/4),topLeft.y+this.spacing,color);
     }
 
     private void drawSelectionBox(Point2i topLeft, int width, int height, boolean hover) {

@@ -1,11 +1,13 @@
 package mods.thecomputerizer.musictriggers.client.gui.instance;
 
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.Translate;
 import mods.thecomputerizer.musictriggers.client.gui.*;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.LogUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
+import org.apache.logging.log4j.Level;
 
 import java.io.File;
 import java.util.*;
@@ -38,9 +40,7 @@ public class Redirect extends AbstractChannelConfig {
                 "If you are trying to redirect to an already registered resource location Format it like name == location instead",
                 "Any lines with Format in the name or = not present will not be read in",
                 "Make sure each new entry is on a new line",
-                "Here are 2 examples:",
-                "thx = https://youtu.be/z3Q4WBpCXhs",
-                "title == minecraft:sounds/music/menu/menu1.ogg","");
+                "");
     }
 
     @Override
@@ -68,7 +68,7 @@ public class Redirect extends AbstractChannelConfig {
     public List<GuiSelection.Element> getRegisteredSoundInstances(GuiSelection selectionScreen, String channelName) {
         return selectionScreen.getInstance().getRegisteredSounds().stream()
                 .map(sound -> new GuiSelection.Element(selectionScreen, channelName, sound,
-                        Translate.guiGeneric(false,"selection","song_resources"), null,
+                        sound, null,
                         false, 0, (channel, title) -> {
                             GuiRedirect redirect = (GuiRedirect)selectionScreen.getParent();
                             redirect.addInternal(sound);
@@ -83,9 +83,9 @@ public class Redirect extends AbstractChannelConfig {
 
     public void save(Map<String, String> internalRedirectMap, Map<String, String> externalRedirectMap) {
         this.resourceLocationMap.clear();
-        this.urlMap.clear();
         this.resourceLocationMap.putAll(internalRedirectMap.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ResourceLocation(entry.getValue()))));
+        this.urlMap.clear();
         this.urlMap.putAll(externalRedirectMap);
     }
 

@@ -28,7 +28,7 @@ public class ConfigRedirect {
     public ConfigRedirect(File file) {
         boolean exists = file.exists();
         this.FILE = exists ? file : FileUtil.generateNestedFile(file,false);
-        if(exists) FileUtil.writeLinesToFile(this.FILE,headerLines(),false);
+        if(!exists) FileUtil.writeLinesToFile(this.FILE,headerLines(),false);
     }
 
     private List<String> headerLines() {

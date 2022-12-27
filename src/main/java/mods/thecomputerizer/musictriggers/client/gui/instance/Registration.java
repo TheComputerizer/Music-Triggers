@@ -24,9 +24,9 @@ public class Registration extends AbstractConfig {
 
     @Override
     public List<GuiParameters.Parameter> getParameters(GuiType type) {
-        return Arrays.asList(new GuiParameters.Parameter("register_discs",type.getId(),null,this.REGISTER_DISCS,
+        return Arrays.asList(new GuiParameters.Parameter(type.getId(),"register_discs",null,this.REGISTER_DISCS,
                         (element) -> this.REGISTER_DISCS = element),
-                new GuiParameters.Parameter("client_side_only",type.getId(),null,this.CLIENT_SIDE_ONLY,
+                new GuiParameters.Parameter(type.getId(),"client_side_only",null,this.CLIENT_SIDE_ONLY,
                         (element) -> this.CLIENT_SIDE_ONLY = element));
     }
 

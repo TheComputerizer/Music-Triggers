@@ -15,6 +15,7 @@ import java.util.function.Supplier;
 
 public class MusicTriggersItems {
     public static final Item MUSIC_TRIGGERS_RECORD = makeEpicItem("music_triggers_record", MusicTriggersRecord::new, item -> item.setCreativeTab(CreativeTabs.MISC));
+    public static final Item CUSTOM_RECORD = makeEpicItem("custom_record", MusicTriggersRecord::new, item -> item.setCreativeTab(CreativeTabs.MISC));
     public static final Item BLANK_RECORD = makeEpicItem("blank_record", BlankRecord::new, item -> item.setCreativeTab(CreativeTabs.MISC));
     public static final Item MUSIC_RECORDER = makeEpicItemBlock(MusicTriggersBlocks.MUSIC_RECORDER, item -> item.setCreativeTab(CreativeTabs.MISC));
 

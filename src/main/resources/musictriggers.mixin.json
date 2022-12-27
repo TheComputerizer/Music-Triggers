@@ -1,7 +1,7 @@
 {
   "required": true,
   "package": "mods.thecomputerizer.musictriggers.mixin",
-  "refmap": "mixins.musictriggers.refmap.json",
+  "refmap": "musictriggers.mixin.refmap.json",
   "minVersion": "0.8",
   "compatibilityLevel": "JAVA_8",
   "mixins": [],

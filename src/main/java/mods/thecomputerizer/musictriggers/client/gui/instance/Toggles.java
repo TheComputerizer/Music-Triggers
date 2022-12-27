@@ -55,7 +55,7 @@ public class Toggles extends AbstractChannelConfig {
                                 selectionScreen.getInstance(),channel,"toggle_instance",""+entry.getKey(),
                                 Translate.guiGeneric(false,"selection","toggles","instance")
                                         +" "+entry.getKey(),
-                                selectionScreen.getInstance().getChannel(channelName).clickAddButton(channelName)),
+                                selectionScreen.getInstance().getChannel(channelName).clickAddButton(channelName,null)),
                         (channel, id) -> removeToggle(entry.getKey())))
                 .collect(Collectors.toList());
     }

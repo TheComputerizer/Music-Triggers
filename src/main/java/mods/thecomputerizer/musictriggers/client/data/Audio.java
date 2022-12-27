@@ -6,10 +6,7 @@ import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.TomlUtil;
 import org.apache.logging.log4j.Level;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class Audio {
 
@@ -24,14 +21,13 @@ public class Audio {
     private boolean mustFinish;
     private int loadOrder;
 
-    @SuppressWarnings("ConstantConditions")
     public Audio(Toml table, String channel, String name, int loadOrder, int multiIndex) {
         this.name = name;
         this.loadOrder = loadOrder;
         this.doubleBracketIndex = multiIndex;
         this.triggers = new ArrayList<>();
         this.loopMap = new HashMap<>();
-        String[] data = new String[]{"1,1,100,0,false"};
+        String[] data = new String[]{"1","1","100","0","false"};
         if(Objects.nonNull(table)) data = readInfo(table, channel);
         this.volume = readFloat("volume", data[0]);
         this.pitch = readFloat("pitch", data[1]);
@@ -117,15 +113,16 @@ public class Audio {
         List<String> lines = new ArrayList<>();
         if(this.triggers.isEmpty()) return lines;
         lines.add(this.doubleBracketIndex>=0 ? "[["+this.name+"]]" : "["+this.name+"]");
-        lines.add("\tvolume = "+this.volume);
-        lines.add("\tpitch = "+this.pitch);
-        lines.add("\tchance = "+this.chance);
-        lines.add("\tplay_once = "+this.playOnce);
-        lines.add("\tmust_finish = "+this.mustFinish);
+        if(this.volume!=1f) lines.add("\tvolume = "+this.volume);
+        if(this.pitch!=1f) lines.add("\tpitch = "+this.pitch);
+        if(this.chance!=100) lines.add("\tchance = "+this.chance);
+        if(this.playOnce!=0) lines.add("\tplay_once = "+this.playOnce);
+        if(this.mustFinish) lines.add("\tmust_finish = "+true);
         for(Trigger trigger : this.triggers)
-            lines.addAll(trigger.getAsTomlLines(this.triggers.size()>1));
+            lines.addAll(trigger.getAsTomlLines(this.name,this.triggers.size()>1));
         for(Loop loop : this.loopMap.values())
-            lines.addAll(loop.getAsTomlLines(this.loopMap.size()>1));
+            lines.addAll(loop.getAsTomlLines(this.name, this.loopMap.size()>1));
+        lines.add("");
         return lines;
     }
 
@@ -197,11 +194,16 @@ public class Audio {
         if(!this.triggers.contains(trigger)) triggers.add(trigger);
     }
 
+    public Collection<Loop> getLoops() {
+        return this.loopMap.values();
+    }
+
     public static final class Loop {
 
         private final long whenAt;
         private final long setTo;
         private final int num_loops;
+        private int loopsLeft;
 
         private Loop(Toml table) {
             long[] data = readTable(table);
@@ -230,13 +232,32 @@ public class Audio {
             return this.setTo!=this.whenAt || this.num_loops>0;
         }
 
-        public List<String> getAsTomlLines(boolean multi) {
+        public List<String> getAsTomlLines(String songName, boolean multi) {
             List<String> lines = new ArrayList<>();
-            lines.add(multi ? "\t[[loop]]" : "\t[loop]");
+            lines.add(multi ? "\t[["+songName+".loop]]" : "\t["+songName+".loop]");
             lines.add("\t\tfrom = "+this.whenAt);
             lines.add("\t\tto = "+this.setTo);
             lines.add("\t\tnum_loops = "+this.num_loops);
             return lines;
+        }
+
+        public void initialize() {
+            this.loopsLeft = this.num_loops;
+        }
+
+        public long checkForLoop(long from, long total) {
+            if(this.loopsLeft>0) {
+                if(from>=this.whenAt) {
+                    if(this.setTo>=total)
+                        MusicTriggers.logExternally(Level.ERROR,"Tried to set the position of a song at or past" +
+                                "its duration! attempt: {} duration: {}",this.setTo,total);
+                    else {
+                        this.loopsLeft--;
+                        return this.setTo;
+                    }
+                }
+            }
+            return from;
         }
     }
 }

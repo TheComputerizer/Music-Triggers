@@ -114,7 +114,7 @@ public class ChannelInstance {
         else if(group.matches("toggle_instance")) return this.togglesInstance.getToggleInstance(selectionScreen, extra);
         else if(group.matches("toggle_condition")) return this.togglesInstance.getConditionElements(selectionScreen, extra);
         else if(group.matches("songs")) return getPotentialSongs(selectionScreen, channelName);
-        else if(group.matches("potential_triggers")) return getPotentialTriggers(selectionScreen, channelName, group);
+        else if(group.matches("potential_triggers")) return getPotentialTriggers(selectionScreen, channelName, extra);
         else if(group.matches("images")) return getPotentialImages(selectionScreen, channelName);
         return redirectInstance.getRegisteredSoundInstances(selectionScreen,channelName);
     }
@@ -138,7 +138,7 @@ public class ChannelInstance {
                                                     String channelName, int priorityIndex) {
         return songMap.entrySet().stream()
                 .map(entry -> new GuiSelection.Element(selectionScreen, channelName, entry.getKey(),
-                        Translate.guiGeneric(false,"selection",entry.getKey()), Collections.singletonList(entry.getValue()),
+                        Translate.selectionSong(entry.getKey(),"selection",entry.getKey()), Collections.singletonList(entry.getValue()),
                         false, priorityIndex, (channel, songID) -> {
                     this.mainInstance.addSong(entry.getKey());
                     selectionScreen.getParent().parentUpdate();
@@ -237,13 +237,13 @@ public class ChannelInstance {
         Minecraft.getMinecraft().displayGuiScreen(this.redirectInstance.makeGui(parent));
     }
 
-    public TriConsumer<GuiSuperType, String, String> clickAddButton(String channelName) {
+    public TriConsumer<GuiSuperType, String, String> clickAddButton(String channelName, String songID) {
         return (parent, group, extra) -> {
             if(group.matches("main")) Minecraft.getMinecraft().displayGuiScreen(new GuiSelection(parent,
                     GuiType.SELECTION_GENERIC,parent.getInstance(), channelName,"songs",null,
                     Translate.selectionTitle("songs",channelName),null));
             else if(group.matches("triggers")) Minecraft.getMinecraft().displayGuiScreen(new GuiSelection(parent,
-                    GuiType.SELECTION_GENERIC,parent.getInstance(), channelName,"potential_triggers",null,
+                    GuiType.SELECTION_GENERIC,parent.getInstance(), channelName,"potential_triggers",songID,
                     Translate.selectionTitle("potential_triggers",channelName),null));
             else if(group.matches("transitions")) this.transitionsInstance.clickAddButton(parent,group,extra);
             else if(group.matches("commands")) this.commandsInstance.clickAddButton(parent);

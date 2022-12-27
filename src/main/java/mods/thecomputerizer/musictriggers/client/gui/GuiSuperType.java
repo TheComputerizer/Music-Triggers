@@ -3,7 +3,10 @@ package mods.thecomputerizer.musictriggers.client.gui;
 import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.PositionedSoundRecord;
+import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.init.SoundEvents;
 import org.lwjgl.input.Keyboard;
 
 import javax.vecmath.Point2i;
@@ -69,9 +72,7 @@ public abstract class GuiSuperType extends GuiScreen {
             if(!getInstance().hasEdits()) {
                 this.mc.displayGuiScreen(null);
                 if (this.mc.currentScreen == null) this.mc.setIngameFocus();
-            } else {
-                this.mc.displayGuiScreen(new GuiPopUp(this,GuiType.POPUP,getInstance(),"confirm"));
-            }
+            } else this.mc.displayGuiScreen(new GuiPopUp(this,GuiType.POPUP,getInstance(),"confirm"));
         }
     }
 
@@ -108,7 +109,7 @@ public abstract class GuiSuperType extends GuiScreen {
 
     private void recursivelySetApply(GuiSuperType superScreen) {
         for(ButtonSuperType button : superScreen.superButtons)
-            if(button.isApplyButton() && !button.enabled)
+            if(button.isApplyButton())
                 button.setEnable(true);
         if(superScreen.parent!=null) recursivelySetApply(superScreen.parent);
     }
@@ -158,6 +159,8 @@ public abstract class GuiSuperType extends GuiScreen {
     public void saveAndClose(boolean reload) {
         save();
         if(reload) {
+            if(this.configInstance.hasEdits())
+                applyButton();
             EventsClient.initReload();
             this.mc.displayGuiScreen(null);
             Minecraft.getMinecraft().setIngameFocus();
@@ -165,11 +168,18 @@ public abstract class GuiSuperType extends GuiScreen {
     }
 
     public void applyButton() {
-        getInstance().writeAndReload();
+        if(this.parent==null)
+            getInstance().writeAndReload();
+        else this.parent.applyButton();
     }
 
     @Override
     public void onGuiClosed() {
         EventsClient.renderDebug = true;
+    }
+
+    public void playGenericClickSound() {
+        Minecraft.getMinecraft().getSoundHandler().playSound(
+                PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
     }
 }

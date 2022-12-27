@@ -35,8 +35,6 @@ public class Main extends AbstractChannelConfig {
     private void setMaxIndices() {
         this.nextTotalIndex = Collections.max(this.parsedFile.keySet(),
                 Comparator.comparingInt(TomlHolders.Type::getActualIndex)).getActualIndex()+1;
-        MusicTriggers.logExternally(Level.INFO, LogUtil.injectParameters("Set thing to {}",
-                this.nextTotalIndex));
     }
 
     @Override
@@ -110,12 +108,12 @@ public class Main extends AbstractChannelConfig {
             if(type instanceof TomlHolders.Table) {
                 TomlHolders.Table song = (TomlHolders.Table)type;
                 return new GuiSelection.Element(selectionScreen, channelName, ""+song.getIndex(),
-                        Translate.songInstance(song.getIndex(),song.getName()),null,true,
+                        Translate.songInstance(song.getName()),null,true,
                         song.getActualIndex()+1, (channel,songID) -> Minecraft.getMinecraft().displayGuiScreen(
                         new GuiSelection(selectionScreen,GuiType.SONG_TRIGGERS, selectionScreen.getInstance(),
                                 channelName,"triggers",""+song.getIndex(),
-                                songInfoTitle(song.getIndex(),song.getName()),selectionScreen.getInstance().
-                                getChannel(channelName).clickAddButton(channelName))),
+                                songInfoTitle(song.getName()),selectionScreen.getInstance().
+                                getChannel(channelName).clickAddButton(channelName,""+song.getIndex()))),
                         (channel, songID) -> removeSong(this.parsedFile.get(type)));
             } else if(type instanceof TomlHolders.Comment) {
                 TomlHolders.Comment comment = (TomlHolders.Comment)type;
@@ -144,21 +142,25 @@ public class Main extends AbstractChannelConfig {
                         this.universalParameters.getStartDelay(), this.universalParameters::setStartDelay));
     }
 
-    private String songInfoTitle(int index, String fallback) {
-        return Translate.guiGeneric(false,"selection","group","triggers","name")+" "+
-                Translate.songInstance(index,fallback);
+    private String songInfoTitle(String name) {
+        return Translate.guiGeneric(false,"selection","group","triggers")+" "+
+                Translate.songInstance(name);
     }
 
     public List<GuiSelection.Element> getTriggerInstances(GuiSelection selectionScreen, String channelName, String extra) {
         List<GuiSelection.Element> ret = new ArrayList<>();
-        Audio audio = new ArrayList<>(this.parsedFile.values()).get(Integer.parseInt(extra));
+        Audio audio = getAudioFromIndex(extra);
         ret.add(new GuiSelection.Element(selectionScreen, channelName, "song_info",
                 Translate.guiGeneric(false,"selection","song_info"), songInfoHover(audio),false,
                 0, (channel,songID) -> Minecraft.getMinecraft().displayGuiScreen(
                 new GuiParameters(selectionScreen,GuiType.SONG_INFO, selectionScreen.getInstance(),
                         "song_info",audio.getName(),songInfoParameters(audio))), null));
         for(Trigger trigger : audio.getTriggers()) {
-            ret.add(new GuiSelection.Element(selectionScreen, channelName, trigger.getNameWithID(),
+            if(trigger.getName().matches("menu") || trigger.getName().matches("generic"))
+                ret.add(new GuiSelection.Element(selectionScreen, channelName, trigger.getNameWithID(),
+                        Translate.triggerElement(trigger), Translate.triggerElementHover(trigger), false, 0,
+            null,(channel, triggerIdentifier) -> audio.removeTrigger(trigger)));
+            else ret.add(new GuiSelection.Element(selectionScreen, channelName, trigger.getNameWithID(),
                     Translate.triggerElement(trigger), Translate.triggerElementHover(trigger), false, 0,
                     (channel,triggerIdentifier) -> Minecraft.getMinecraft().displayGuiScreen(
                             new GuiParameters(selectionScreen,GuiType.TRIGGER_INFO, selectionScreen.getInstance(),
@@ -177,9 +179,9 @@ public class Main extends AbstractChannelConfig {
     }
 
     private List<String> songInfoHover(Audio audio) {
-        return Arrays.asList(Translate.guiGeneric(false,"parameter","song_info","volume")+ ": "+
+        return Arrays.asList(Translate.guiGeneric(false,"parameter","song_info","volume","name")+ ": "+
                         audio.getVolume(),
-                Translate.guiGeneric(false,"parameter","song_info","pitch")+ ": "+
+                Translate.guiGeneric(false,"parameter","song_info","pitch","name")+ ": "+
                         audio.getPitch());
     }
 
@@ -205,8 +207,16 @@ public class Main extends AbstractChannelConfig {
                 .collect(Collectors.toList());
     }
 
+    private Audio getAudioFromIndex(String index) {
+        int i = Integer.parseInt(index);
+        for(Audio audio : this.parsedFile.values())
+            if(audio.getLoadOrder()==i)
+                return audio;
+        return null;
+    }
+
     public List<Trigger> getTriggers(String index) {
-        return new ArrayList<>(this.parsedFile.values()).get(Integer.parseInt(index)).getTriggers();
+        return getAudioFromIndex(index).getTriggers();
     }
 
     public boolean isSongUsed(String song) {
@@ -220,7 +230,7 @@ public class Main extends AbstractChannelConfig {
     }
 
     public void addSong(String song) {
-        int size = this.parsedFile.values().stream().filter(Objects::nonNull).collect(Collectors.toSet()).size();
+        int size = (int) this.parsedFile.values().stream().filter(Objects::nonNull).count();
         int multi = -1;
         if(this.songNames.contains(song)) {
             multi = 0;
@@ -262,6 +272,7 @@ public class Main extends AbstractChannelConfig {
             if(audioVal.getName().matches(name))
                 return;
         this.songNames.remove(name);
+        this.nextTotalIndex--;
     }
 
     public void removeComment(int tomlIndex) {
@@ -281,5 +292,6 @@ public class Main extends AbstractChannelConfig {
                 }
             }
         }
+        this.nextTotalIndex--;
     }
 }

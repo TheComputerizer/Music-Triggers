@@ -1,11 +1,13 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.Translate;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Redirect;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.text.TextFormatting;
+import org.apache.logging.log4j.Level;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
@@ -35,6 +37,7 @@ public class GuiRedirect extends GuiSuperType {
     private boolean deleteMode;
     private ButtonSuperType viewMode;
     private boolean viewAll;
+    private boolean hasEdits;
     public GuiRedirect(GuiSuperType parent, GuiType type, Instance configInstance, Redirect redirect,
                        Map<String, String> internalRedirectMap, Map<String, String> externalRedirectMap) {
         super(parent, type, configInstance);
@@ -81,23 +84,23 @@ public class GuiRedirect extends GuiSuperType {
         String displayName = Translate.guiGeneric(false,"button","redirect","add_external");
         int width = this.fontRenderer.getStringWidth(displayName)+4;
         int left = 96;
-        addTopButton(left, Translate.guiGeneric(false,"button",displayName), width, new ArrayList<>(),
+        addTopButton(left, displayName, width, new ArrayList<>(),
                 (screen, button) -> addExternal(),this);
         left+=(width+16);
         displayName = Translate.guiGeneric(false,"button","redirect","add_internal");
         width = this.fontRenderer.getStringWidth(displayName)+4;
-        addTopButton(left, Translate.guiGeneric(false,"button",displayName), width, new ArrayList<>(),
+        addTopButton(left, displayName, width, new ArrayList<>(),
                 (screen, button) -> this.redirectInstance.openSoundFinderSelection(this),this);
         left+=(width+16);
         displayName = Translate.guiGeneric(false,"button","delete_mode");
         width = this.fontRenderer.getStringWidth(displayName)+4;
-        this.toggleMode = addTopButton(left, Translate.guiGeneric(false,"button",displayName), width,
+        this.toggleMode = addTopButton(left, displayName, width,
                 Translate.guiNumberedList(3,"button","delete_mode","desc"),
                 (screen, button) -> toggleDeleteMode(!this.deleteMode),this);
         left+=(width+16);
-        displayName = Translate.guiGeneric(false,"button","redirect","view");
+        displayName = Translate.guiGeneric(false,"button","redirect","view_mode");
         width = this.fontRenderer.getStringWidth(displayName)+4;
-        this.viewMode = addTopButton(left, Translate.guiGeneric(false,"button",displayName), width,
+        this.viewMode = addTopButton(left, displayName, width,
                 Translate.guiNumberedList(1,"button","redirect","view_mode","desc"),
                 (screen, button) -> toggleViewMode(!this.viewAll),this);
     }
@@ -108,6 +111,8 @@ public class GuiRedirect extends GuiSuperType {
         this.allKeys.add(temp);
         this.newKeys.add(temp);
         sort();
+        this.hasEdits = true;
+        save();
     }
 
     public void addInternal(String foundVal) {
@@ -116,16 +121,18 @@ public class GuiRedirect extends GuiSuperType {
         this.allKeys.add(temp);
         this.newKeys.add(temp);
         sort();
+        this.hasEdits = true;
+        save();
     }
 
     private void toggleDeleteMode(boolean isActive) {
         this.deleteMode = isActive;
-        this.toggleMode.updateDisplayFormat(isActive ? TextFormatting.RED : null);
+        this.toggleMode.updateDisplayFormat(isActive ? TextFormatting.RED : TextFormatting.WHITE);
     }
 
     private void toggleViewMode(boolean isActive) {
         this.viewAll = isActive;
-        this.viewMode.updateDisplayFormat(isActive ? TextFormatting.RED : null);
+        this.viewMode.updateDisplayFormat(isActive ? TextFormatting.RED : TextFormatting.WHITE);
     }
 
     private void delete(String key) {
@@ -199,6 +206,8 @@ public class GuiRedirect extends GuiSuperType {
             if(internal) this.internalRedirectMap.put(this.selectedElement,value);
             else this.externalRedirectMap.put(this.selectedElement,value);
         }
+        this.hasEdits = true;
+        save();
     }
 
     @Override
@@ -221,11 +230,12 @@ public class GuiRedirect extends GuiSuperType {
         boolean hoverAny = false;
         if(this.viewAll) {
             for (String element : this.allKeys) {
-                boolean internal = this.internalRedirectMap.containsKey(key);
+                boolean internal = this.internalRedirectMap.containsKey(element);
                 boolean hover = mouseHover(new Point2i(0, top), mouseX, mouseY, this.width, fontRenderer.FONT_HEIGHT + this.spacing);
                 boolean left = mouseX<(this.width/2);
                 int textColor = GuiUtil.WHITE;
                 if (hover) {
+                    this.hoverKey = left;
                     hoverAny = true;
                     this.elementHover = element;
                     textColor = GuiUtil.makeRGBAInt(192, 192, 192, 255);

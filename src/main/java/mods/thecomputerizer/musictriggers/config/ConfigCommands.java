@@ -24,7 +24,7 @@ public class ConfigCommands {
     public ConfigCommands(File file) {
         boolean exists = file.exists();
         this.file = exists ? file : FileUtil.generateNestedFile(file,false);
-        if(exists) FileUtil.writeLinesToFile(this.file,headerLines(),false);
+        if(!exists) FileUtil.writeLinesToFile(this.file,headerLines(),false);
     }
 
     public List<String> headerLines() {

@@ -37,21 +37,21 @@ public class Debug extends AbstractConfig {
 
     @Override
     public List<GuiParameters.Parameter> getParameters(GuiType type) {
-        return Arrays.asList(new GuiParameters.Parameter("show_debug",type.getId(),null,this.SHOW_DEBUG,
+        return Arrays.asList(new GuiParameters.Parameter(type.getId(),"show_debug",null,this.SHOW_DEBUG,
                         (element) -> this.SHOW_DEBUG = element),
-                new GuiParameters.Parameter("current_song_only",type.getId(),null,this.CURRENT_SONG_ONLY,
+                new GuiParameters.Parameter(type.getId(),"current_song_only",null,this.CURRENT_SONG_ONLY,
                         (element) -> this.CURRENT_SONG_ONLY = element),
-                new GuiParameters.Parameter("log_level",type.getId(),null,this.LOG_LEVEL,
+                new GuiParameters.Parameter(type.getId(),"log_level",null,this.LOG_LEVEL,
                         (element) -> this.LOG_LEVEL = element),
-                new GuiParameters.Parameter("play_normal_music",type.getId(),null,this.PLAY_NORMAL_MUSIC,
+                new GuiParameters.Parameter(type.getId(),"play_normal_music",null,this.PLAY_NORMAL_MUSIC,
                         (element) -> this.PLAY_NORMAL_MUSIC = element),
-                new GuiParameters.Parameter("reverse_priority",type.getId(),null,this.REVERSE_PRIORITY,
+                new GuiParameters.Parameter(type.getId(),"reverse_priority",null,this.REVERSE_PRIORITY,
                         (element) -> this.REVERSE_PRIORITY = element),
-                new GuiParameters.Parameter("combine_pools",type.getId(),null,this.COMBINE_EQUAL_PRIORITY,
+                new GuiParameters.Parameter(type.getId(),"combine_pools",null,this.COMBINE_EQUAL_PRIORITY,
                         (element) -> this.COMBINE_EQUAL_PRIORITY = element),
-                new GuiParameters.Parameter("blocked_mod_music",type.getId(),null,
+                new GuiParameters.Parameter(type.getId(),"blocked_mod_music",null,
                         (element) -> this.BLOCKED_MOD_MUSIC = element.toArray(new String[0]),this.BLOCKED_MOD_MUSIC),
-                new GuiParameters.Parameter("blocked_mod_records",type.getId(),null,
+                new GuiParameters.Parameter(type.getId(),"blocked_mod_records",null,
                         (element) -> this.BLOCKED_MOD_RECORDS = element.toArray(new String[0]),this.BLOCKED_MOD_RECORDS));
     }
 

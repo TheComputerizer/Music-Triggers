@@ -34,6 +34,7 @@ public class GuiSelection extends GuiSuperType {
     private int sortType;
     private ButtonSuperType transitionMode;
     private String transitionView;
+    private boolean hasEdits;
 
     public GuiSelection(GuiSuperType parent, GuiType type, Instance configInstance, String channel, String group,
                         String extra, String customTitle, TriConsumer<GuiSuperType, String, String> onAdd) {
@@ -53,9 +54,9 @@ public class GuiSelection extends GuiSuperType {
     @Override
     public void setWorldAndResolution(@Nonnull Minecraft mc, int width, int height) {
         super.setWorldAndResolution(mc, width, height);
-        int textSlot = mc.fontRenderer.FONT_HEIGHT+this.spacing;
+        int textSlot = mc.fontRenderer.FONT_HEIGHT+(this.spacing*2);
         int totalHeight = this.height-((this.spacing*3)+textSlot+48);
-        int runningHeight = textSlot;
+        int runningHeight = (textSlot*2)-this.spacing;
         int runningTotal = 1;
         while(runningHeight+textSlot<totalHeight) {
             runningTotal++;
@@ -70,35 +71,46 @@ public class GuiSelection extends GuiSuperType {
     public void initGui() {
         super.initGui();
         resetElements();
+        int index = Integer.MIN_VALUE;
+        for(Element element : this.elements) {
+            if(index==Integer.MIN_VALUE)
+                index = element.getIndex();
+            else index = element.adjustOriginalIndex(index);
+        }
         String displayName;
         int width;
         int left = 96;
         if(this.onAdd!=null) {
             displayName = Translate.guiGeneric(false,"button",this.group+"_add");
-            width = this.fontRenderer.getStringWidth(displayName)+4;
-            addTopButton(left, Translate.guiGeneric(false,"button",displayName), width, new ArrayList<>(),
-                    (screen, button) -> this.onAdd.accept(this,this.group,this.extra),this);
+            width = this.fontRenderer.getStringWidth(displayName)+8;
+            addTopButton(left, displayName, width, new ArrayList<>(),
+                    (screen, button) -> {
+                        this.onAdd.accept(this,this.group,this.extra);
+                        this.hasEdits = true;
+                        save();
+                    },this);
             left+=(width+16);
-            displayName = Translate.guiGeneric(false,"button",this.group+"_toggle_delete");
-            width = this.fontRenderer.getStringWidth(displayName)+4;
-            this.toggleMode = addTopButton(left, Translate.guiGeneric(false,"button",displayName), width,
+            displayName = Translate.guiGeneric(false,"button","delete_mode");
+            width = this.fontRenderer.getStringWidth(displayName)+8;
+            this.toggleMode = addTopButton(left, displayName, width,
                     Translate.guiNumberedList(3,"button","delete_mode","desc"),
                     (screen, button) -> toggleDeleteMode(!this.deleteMode),this);
             left+=(width+16);
         }
-        if(extra.matches("titles")) {
-            displayName = Translate.guiGeneric(false,"button",this.group+"_transition_titles");
-            width = this.fontRenderer.getStringWidth(displayName)+4;
-            this.transitionMode = addTopButton(left, Translate.guiGeneric(false,"button",displayName),
-                    width, Translate.guiNumberedList(3,"button","delete_mode","desc"),
+        if(Objects.nonNull(this.extra) && this.extra.matches("titles")) {
+            displayName = Translate.guiGeneric(false,"button","transition_titles");
+            width = this.fontRenderer.getStringWidth(displayName)+8;
+            this.transitionMode = addTopButton(left, displayName,
+                    width, Translate.guiNumberedList(3,"button","transition_titles","desc"),
                     (screen, button) -> transitionsView(),this);
             left+=(width+16);
         }
         displayName = Translate.guiGeneric(false,"button","sort","original");
-        width = this.fontRenderer.getStringWidth(displayName)+4;
-        this.sortMode = addTopButton(left, Translate.guiGeneric(false,"button",displayName), width,
+        width = this.fontRenderer.getStringWidth(displayName)+8;
+        this.sortMode = addTopButton(left, displayName, width,
                 Translate.guiNumberedList(3,"button","sort","desc"), (screen, button) ->
-                        button.updateBaseTextAndFormatting(this.fontRenderer,toggleSortMode()),this);
+                        button.updateBaseTextAndFormatting(this.fontRenderer,toggleSortMode(),TextFormatting.WHITE),
+                this);
     }
 
     public boolean isTitleView() {
@@ -109,12 +121,12 @@ public class GuiSelection extends GuiSuperType {
         if(this.transitionView.matches("titles")) this.transitionView = "images";
         else transitionView = "titles";
         this.transitionMode.updateBaseTextAndFormatting(this.fontRenderer,
-                Translate.guiGeneric(false,"button",this.group+"_transition_images"));
+                Translate.guiGeneric(false,"button","transition_images"),TextFormatting.WHITE);
     }
 
     private void toggleDeleteMode(boolean isActive) {
         this.deleteMode = isActive;
-        this.toggleMode.updateDisplayFormat(isActive ? TextFormatting.RED : null);
+        this.toggleMode.updateDisplayFormat(isActive ? TextFormatting.RED : TextFormatting.WHITE);
     }
 
     private String toggleSortMode() {
@@ -128,9 +140,11 @@ public class GuiSelection extends GuiSuperType {
         super.handleMouseInput();
         int scroll = Mouse.getEventDWheel();
         if(scroll!=0) {
-            if(scroll>1 && this.canScrollDown) {
-                this.scrollPos++;
-                this.canScrollDown = this.numElements+this.scrollPos < this.elements.size();
+            if(scroll<1) {
+                if (this.canScrollDown) {
+                    this.scrollPos++;
+                    this.canScrollDown = this.numElements + this.scrollPos < this.elements.size();
+                }
             } else if(this.scrollPos>0) {
                 this.scrollPos--;
                 this.canScrollDown = true;
@@ -144,18 +158,20 @@ public class GuiSelection extends GuiSuperType {
         if (mouseButton == 0 && this.elementHover>=0) {
             Element element = this.elements.get(this.elementHover);
             if(this.deleteMode) {
-                element.onDelete();
-                this.elements.remove(element);
-            }
-            else element.onClick();
+                if (element.onDelete()) {
+                    this.elements.remove(element);
+                    this.hasEdits = true;
+                    save();
+                }
+            } else element.onClick();
         }
     }
 
     private void resetElements() {
         this.elements.clear();
-        if(this.extra.matches("titles"))
-            this.elements.addAll(this.getInstance().getElementGroup(this,this.channel,this.group,this.extra));
-        else this.elements.addAll(this.getInstance().transitionsSpecialCase(this,this.channel,this.transitionView));
+        if(Objects.nonNull(this.extra) && this.extra.matches("titles"))
+            this.elements.addAll(this.getInstance().transitionsSpecialCase(this,this.channel,this.transitionView));
+        else this.elements.addAll(this.getInstance().getElementGroup(this,this.channel,this.group,this.extra));
     }
 
     public String sortElements() {
@@ -184,20 +200,24 @@ public class GuiSelection extends GuiSuperType {
         top+=(fontRenderer.FONT_HEIGHT+this.spacing+this.verticalSpace);
         boolean hoverAny = false;
         int index = 0;
+        int bottom = this.height-(this.spacing+24);
         for(Element element : this.elements) {
-            boolean hover = mouseHover(new Point2i(0, top), mouseX, mouseY, this.width, fontRenderer.FONT_HEIGHT + this.spacing);
-            int textColor = GuiUtil.WHITE;
-            if(hover) {
-                hoverAny = true;
-                this.elementHover = index;
-                textColor = GuiUtil.makeRGBAInt(0,0,0,255);
-                GuiUtil.drawBox(new Point2i(0,top),this.width,fontRenderer.FONT_HEIGHT+this.spacing*2,
-                        new Point4i(64,64,46,96),this.zLevel);
-                drawHoveringText(element.getHoverLines(),mouseX,mouseY);
+            if(index>=this.scrollPos) {
+                boolean hover = mouseHover(new Point2i(0, top), mouseX, mouseY, this.width, fontRenderer.FONT_HEIGHT + this.spacing);
+                int textColor = GuiUtil.WHITE;
+                if (hover) {
+                    hoverAny = true;
+                    this.elementHover = index;
+                    textColor = GuiUtil.makeRGBAInt(0, 0, 0, 255);
+                    GuiUtil.drawBox(new Point2i(0, top), this.width, fontRenderer.FONT_HEIGHT + this.spacing * 2,
+                            new Point4i(64, 64, 46, 96), this.zLevel);
+                    drawHoveringText(element.getHoverLines(), mouseX, mouseY);
+                }
+                top += this.spacing;
+                drawCenteredString(this.fontRenderer, element.getDisplay(), centerX, top, textColor);
+                top += (this.spacing + this.fontRenderer.FONT_HEIGHT);
+                if ((bottom - top) < (this.spacing + this.fontRenderer.FONT_HEIGHT)) break;
             }
-            top+=this.spacing;
-            drawCenteredString(this.fontRenderer,element.getDisplay(),centerX,top,textColor);
-            top+=this.spacing;
             index++;
         }
         if(!hoverAny) this.elementHover = -1;
@@ -212,7 +232,7 @@ public class GuiSelection extends GuiSuperType {
         int scrollBarHeight = (int)((this.height-48)*ratio);
         int emptyHeight = this.height-48-scrollBarHeight;
         int perIndex = emptyHeight/(this.elements.size()-this.numElements);
-        int top = 24+(perIndex*this.scrollPos);
+        int top = 24+this.spacing+(perIndex*this.scrollPos);
         int x = this.width-1;
         Point2i start = new Point2i(x, top);
         Point2i end = new Point2i(x, top+scrollBarHeight);
@@ -226,7 +246,8 @@ public class GuiSelection extends GuiSuperType {
 
     @Override
     protected void save() {
-
+        if(this.hasEdits)
+            this.madeChange(true);
     }
 
     public static class Element {
@@ -237,7 +258,7 @@ public class GuiSelection extends GuiSuperType {
         private final String display;
         private final List<String> hoverText;
         private final boolean isSong;
-        private final int index;
+        private int index;
         private final BiConsumer<String, String> onClick;
         private final BiConsumer<String, String> onDelete;
 
@@ -256,6 +277,11 @@ public class GuiSelection extends GuiSuperType {
             this.onDelete = onDelete;
         }
 
+        public int adjustOriginalIndex(int previous) {
+            if(this.index<=previous) this.index = previous+1;
+            return this.index;
+        }
+
         public int getIndex() {
             return this.index;
         }
@@ -272,8 +298,9 @@ public class GuiSelection extends GuiSuperType {
             if(this.onClick!=null) this.onClick.accept(this.channel,this.id);
         }
 
-        public void onDelete() {
+        public boolean onDelete() {
             if(this.onDelete!=null) this.onDelete.accept(this.channel,this.id);
+            return Objects.nonNull(this.onDelete);
         }
     }
 }

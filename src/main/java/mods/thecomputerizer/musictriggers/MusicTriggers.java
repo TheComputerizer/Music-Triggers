@@ -46,9 +46,7 @@ public class MusicTriggers {
             ChannelManager.createJukeboxChannel();
             ConfigChannels.initialize(new File(Constants.CONFIG_DIR, "channels.toml"));
             for (ConfigChannels.ChannelInfo info : ConfigChannels.CHANNELS)
-                ChannelManager.createChannel(info.getChannelName(), info.getSoundCategory(), info.getMain(),
-                        info.getTransitions(), info.getCommands(), info.getToggles(), info.getRedirect(), info.getSongsFolder(),
-                        info.getPausedByJukeBox(), info.getOverridesNormalMusic(), info);
+                ChannelManager.createChannel(info);
             ChannelManager.parseConfigFiles();
         }
     }
@@ -127,8 +125,9 @@ public class MusicTriggers {
             max = min;
             min = temp;
         }
-        if(max-min<=0) return min;
-        return min+random.nextFloat(max-min);
+        float h = max-min;
+        if(h<=0) return min;
+        return min+(random.nextFloat()*h);
     }
 
     private static float parse(String parameter, String element, float fallback) {

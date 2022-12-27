@@ -24,8 +24,8 @@ public class ButtonSuperType extends GuiButtonExt {
         this.parentScreen = parent;
         this.isApply = isApply;
         if(isApply) {
-            this.visible = parent.getInstance().hasEdits();
             this.enabled = parent.getInstance().hasEdits();
+            this.visible = parent.getInstance().hasEdits();
         }
         this.baseDisplayString = displayString;
     }
@@ -35,8 +35,8 @@ public class ButtonSuperType extends GuiButtonExt {
     }
 
     public void setEnable(boolean is) {
-        this.visible = is;
         this.enabled = is;
+        this.visible = is;
     }
 
     public void updateBaseTextAndFormatting(FontRenderer font, String newDisplay, TextFormatting ... formatSettings) {

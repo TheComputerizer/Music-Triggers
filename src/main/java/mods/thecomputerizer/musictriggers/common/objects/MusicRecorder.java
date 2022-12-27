@@ -54,8 +54,16 @@ public class MusicRecorder extends Block {
         EventsCommon.recordHolder.put(pos, recordStack.copy());
         EventsCommon.recordUUID.put(pos, uuid);
         EventsCommon.tickCounter.put(pos, 0);
-        if(recordStack.getItem() instanceof BlankRecord) worldIn.setBlockState(pos, state.withProperty(HAS_RECORD, Boolean.TRUE), 2);
-        else worldIn.setBlockState(pos, state.withProperty(HAS_DISC, Boolean.TRUE), 2);
+        if(recordStack.getItem() instanceof BlankRecord) {
+            worldIn.setBlockState(pos, state.withProperty(HAS_RECORD, Boolean.TRUE), 2);
+            EventsCommon.recordIsCustom.put(pos, false);
+        }
+        else {
+            worldIn.setBlockState(pos, state.withProperty(HAS_DISC, Boolean.TRUE), 2);
+            if(recordStack.getItem() instanceof CustomRecord)
+                EventsCommon.recordIsCustom.put(pos, true);
+            else EventsCommon.recordIsCustom.put(pos, false);
+        }
     }
 
     private void dropRecord(World worldIn, BlockPos pos) {

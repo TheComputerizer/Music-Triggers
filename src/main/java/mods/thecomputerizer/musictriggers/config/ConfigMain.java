@@ -7,12 +7,10 @@ import mods.thecomputerizer.musictriggers.client.data.Universal;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Main;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.logging.log4j.Level;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 public class ConfigMain {
@@ -29,7 +27,7 @@ public class ConfigMain {
     public ConfigMain(File file) {
         boolean exists = file.exists();
         this.file = exists ? file : FileUtil.generateNestedFile(file,false);
-        if(exists) FileUtil.writeLinesToFile(this.file,headerLines(),false);
+        if(!exists) FileUtil.writeLinesToFile(this.file,headerLines(),false);
         this.universalParameters = null;
     }
 
@@ -40,6 +38,7 @@ public class ConfigMain {
     }
 
     public void parse(String channel) {
+        MusicTriggers.logExternally(Level.INFO,"Reading main config file");
         Toml toml = new Toml().read(this.file);
         for (TomlHolders.Type type : TomlHolders.readCompleteToml(this.file)) {
             if(type instanceof TomlHolders.Table) {
@@ -69,6 +68,7 @@ public class ConfigMain {
                 }
             }
         }
+        if(Objects.isNull(this.universalParameters)) this.universalParameters = new Universal(null);
         for(Audio audio : parsedFile.values())
             audio.initializeTriggerPersistence(channel);
     }

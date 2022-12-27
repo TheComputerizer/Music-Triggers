@@ -1,14 +1,14 @@
 package mods.thecomputerizer.musictriggers.client;
 
 import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
 import net.minecraft.client.resources.I18n;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.logging.log4j.Level;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -54,10 +54,12 @@ public class Translate {
     public static String parameter(String ... stuff) {
         String key = guiGeneric(true,stuff);
         return I18n.hasKey(key) ? libHook(key,null) :
-        guiGeneric(false,Arrays.copyOf(stuff, stuff.length-1));
+        guiGeneric(false,ArrayUtils.remove(stuff,3));
     }
 
     public static List<String> triggerElementHover(Trigger trigger) {
+        if(trigger.getName().matches("menu") || trigger.getName().matches("generic"))
+            return new ArrayList<>();
         if(trigger.hasID())
             return Arrays.asList(guiGeneric(false,"trigger","identifier")+ ": "+trigger.getRegID(),
                     guiGeneric(false,"trigger","priority")+ ": "+trigger.getParameterInt("priority"));
@@ -72,8 +74,8 @@ public class Translate {
     /*
         Allows for custom song names to display or uses the registered name if no key is set
     */
-    public static String songInstance(int index, String fallback) {
-        return libHook(buildLangKey("audio","song"+index,"name"),fallback);
+    public static String songInstance(String name) {
+        return libHook(buildLangKey("audio",name,"name"),name);
     }
 
     /*
@@ -96,8 +98,13 @@ public class Translate {
         Does not accept a fallback input.
     */
     public static List<String> guiNumberedList(int numLines, String ... elements) {
-        return IntStream.range(0, numLines).mapToObj(i -> libHook(guiGeneric(true,elements)+i,null))
+        return IntStream.range(0, numLines).mapToObj(i -> libHook(guiGeneric(true,elements)+(i+1),null))
                 .collect(Collectors.toList());
+    }
+
+    public static String selectionSong(String song, String ... elements) {
+        String key = buildLangKey("gui",elements);
+        return I18n.hasKey(key) ? libHook(key,null) : song;
     }
 
     /*
@@ -121,8 +128,10 @@ public class Translate {
         int checkMax = 1;
         for(String extra : fixed) {
             builder.append(extra);
-            checkMax++;
-            if(checkMax<fixed.size()) builder.append(".");
+            if(checkMax<fixed.size()) {
+                builder.append(".");
+                checkMax++;
+            }
         }
         return builder.toString();
     }

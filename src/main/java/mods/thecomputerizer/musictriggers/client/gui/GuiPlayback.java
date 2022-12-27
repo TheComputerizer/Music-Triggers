@@ -8,6 +8,7 @@ import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
 
 import javax.vecmath.Point2i;
 import java.util.List;
+import java.util.Objects;
 
 public class GuiPlayback extends GuiRadial {
 
@@ -43,14 +44,16 @@ public class GuiPlayback extends GuiRadial {
 
     @Override
     public void drawStuff(int mouseX, int mouseY, float partialTicks) {
-        super.drawStuff(mouseX, mouseY, partialTicks);
-        Point2i center = new Point2i(this.width / 2, this.height / 2);
-        String display = "Playback unavailable";
-        if(ChannelManager.channelExists(this.currentChannel)) {
-            Channel channel = ChannelManager.getChannel(this.currentChannel);
-            updateProgressBar(channel);
-            display = channel.formatPlayback();
-        } else this.radialBar.setProgress(1f);
-        drawCenteredString(this.fontRenderer,display,center.x,center.y, GuiUtil.WHITE);
+        if(Objects.nonNull(this.radialBar)) {
+            super.drawStuff(mouseX, mouseY, partialTicks);
+            Point2i center = new Point2i(this.width / 2, this.height / 2);
+            String display = "Playback unavailable";
+            if (ChannelManager.channelExists(this.currentChannel)) {
+                Channel channel = ChannelManager.getChannel(this.currentChannel);
+                updateProgressBar(channel);
+                display = channel.formatPlayback();
+            } else this.radialBar.setProgress(1f);
+            drawCenteredString(this.fontRenderer, display, center.x, center.y, GuiUtil.WHITE);
+        }
     }
 }

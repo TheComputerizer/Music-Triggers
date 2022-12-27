@@ -64,9 +64,11 @@ public class GuiParameters extends GuiSuperType {
         super.handleMouseInput();
         int scroll = Mouse.getEventDWheel();
         if(scroll!=0) {
-            if(scroll>1 && this.canScrollDown) {
-                this.scrollPos++;
-                this.canScrollDown = false;
+            if(scroll<1) {
+                if(this.canScrollDown) {
+                    this.scrollPos++;
+                    this.canScrollDown = false;
+                }
             } else if(this.scrollPos>0) this.scrollPos--;
         }
     }
@@ -154,7 +156,7 @@ public class GuiParameters extends GuiSuperType {
         for(Parameter parameter : this.parameters) {
             parameter.save();
             if(parameter.hasEdits())
-                madeChange(true);
+                madeChange(!(this.id.matches("debug") || this.id.matches("registration")));
         }
     }
 
@@ -208,8 +210,8 @@ public class GuiParameters extends GuiSuperType {
         private Parameter(String id, String trigger, String extra, boolean isCheckBox, boolean initialCheckBox,
                          String initialValue, List<String> initialList, int initialInt, Consumer<Boolean> boolSave,
                           Consumer<String> stringSave, Consumer<Integer> intSave, Consumer<List<String>> listSave) {
-            this.display = Translate.parameter(id,trigger,extra,"name");
-            this.description = Translate.parameter(id,trigger,extra,"desc");
+            this.display = Translate.parameter("parameter",id,trigger,extra,"name");
+            this.description = Translate.parameter("parameter",id,trigger,extra,"desc");
             this.isCheckBox = isCheckBox;
             this.boolSave = boolSave;
             this.stringSave = stringSave;
@@ -252,10 +254,16 @@ public class GuiParameters extends GuiSuperType {
         private void toggleCheckBox() {
             this.hasEdits = true;
             this.isChecked = !this.isChecked;
+            this.saveScreen();
         }
 
         public void onClick(boolean wasRightSide) {
-            if(wasRightSide) this.selected = this.displayHover;
+            if(wasRightSide) {
+                this.selected = this.displayHover;
+                this.valueSelected = false;
+                this.listSelected = -1;
+                this.intSelected = false;
+            }
             else if(this.selected) {
                 if(this.checkBoxHover) toggleCheckBox();
                 this.valueSelected = this.valueHover;
@@ -270,6 +278,7 @@ public class GuiParameters extends GuiSuperType {
                     if(!this.value.isEmpty()) this.value = this.value.substring(0,this.value.length()-1);
                 } else this.value+=c;
                 this.hasEdits = true;
+                this.saveScreen();
             } else if(this.listSelected>=0) {
                 String val = this.listValues.get(this.listSelected);
                 if(backspace) {
@@ -277,6 +286,7 @@ public class GuiParameters extends GuiSuperType {
                 } else val+=c;
                 this.listValues.set(this.listSelected,val);
                 this.hasEdits = true;
+                this.saveScreen();
             } else if(this.intSelected && isNumber) {
                 String asString = ""+this.intVal;
                 if(backspace) {
@@ -285,6 +295,7 @@ public class GuiParameters extends GuiSuperType {
                 if(asString.isEmpty() || asString.matches("-")) this.intVal = 0;
                 else this.intVal = Integer.parseInt(asString);
                 this.hasEdits = true;
+                this.saveScreen();
             }
         }
 
@@ -297,10 +308,12 @@ public class GuiParameters extends GuiSuperType {
                 GuiUtil.bufferSquareTexture(new Point2i((int)(topLeft.x+center),(int)(topLeft.y+center)),center,
                         getCheckboxTexture());
             } else if(Objects.nonNull(this.value)) {
-                Point2i textCorner = new Point2i(topLeft.x+2,topLeft.y+2);
                 int width = fontRenderer.getStringWidth(this.value)+4;
                 int height = fontRenderer.FONT_HEIGHT+4;
-                this.valueHover = mouseX>topLeft.x && mouseX<topLeft.x+width && mouseY>topLeft.y && mouseY<topLeft.y+height;
+                this.valueHover = mouseX>topLeft.x && mouseX<topLeft.x+(width*2) && mouseY>topLeft.y && mouseY<topLeft.y+(height*2);
+                topLeft.setX(topLeft.x/2);
+                topLeft.setY(topLeft.y/2);
+                Point2i textCorner = new Point2i(topLeft.x+2,topLeft.y+2);
                 GlStateManager.pushMatrix();
                 GlStateManager.enableBlend();
                 GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
@@ -318,7 +331,6 @@ public class GuiParameters extends GuiSuperType {
                 }
                 GlStateManager.popMatrix();
             } else if(Objects.nonNull(this.listSave)) {
-                Point2i textCorner = new Point2i(topLeft.x+2,topLeft.y+2);
                 int width = 0;
                 int height = fontRenderer.FONT_HEIGHT+4;
                 boolean listHover;
@@ -328,6 +340,9 @@ public class GuiParameters extends GuiSuperType {
                 GlStateManager.pushMatrix();
                 GlStateManager.scale(2f, 2f, 2f);
                 int index = 0;
+                topLeft.setX(topLeft.y/2);
+                topLeft.setY(topLeft.y/2);
+                Point2i textCorner = new Point2i(topLeft.x+2,topLeft.y+2);
                 for(String value : this.listValues) {
                     width = fontRenderer.getStringWidth(value)+4;
                     listHover = mouseX>topLeft.x && mouseX<topLeft.x+width && mouseY>topLeft.y && mouseY<topLeft.y+height;
@@ -348,10 +363,12 @@ public class GuiParameters extends GuiSuperType {
                 }
                 GlStateManager.popMatrix();
             } else {
-                Point2i textCorner = new Point2i(topLeft.x+2,topLeft.y+2);
                 int width = fontRenderer.getStringWidth(""+this.intVal)+4;
                 int height = fontRenderer.FONT_HEIGHT+4;
-                this.intHover = mouseX>topLeft.x && mouseX<topLeft.x+width && mouseY>topLeft.y && mouseY<topLeft.y+height;
+                this.intHover = mouseX>topLeft.x && mouseX<topLeft.x+(width*2) && mouseY>topLeft.y && mouseY<topLeft.y+(height*2);
+                topLeft.setX(topLeft.x/2);
+                topLeft.setY(topLeft.y/2);
+                Point2i textCorner = new Point2i(topLeft.x+2,topLeft.y+2);
                 GlStateManager.pushMatrix();
                 GlStateManager.enableBlend();
                 GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
@@ -382,6 +399,11 @@ public class GuiParameters extends GuiSuperType {
 
         public boolean hasEdits() {
             return this.hasEdits;
+        }
+
+        private void saveScreen() {
+            if(Minecraft.getMinecraft().currentScreen instanceof GuiSuperType)
+                ((GuiSuperType)Minecraft.getMinecraft().currentScreen).save();
         }
 
         public void save() {

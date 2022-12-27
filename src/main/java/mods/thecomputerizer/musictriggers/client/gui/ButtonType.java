@@ -17,7 +17,7 @@ import java.util.function.BiConsumer;
 public enum ButtonType {
     BACK(16,8,64,16,"back",0,false,(parent, button) ->
             parent.saveAndClose(false),ButtonSuperType::new),
-    APPLY(-16,8,64,16,"apply_changes",2,true,(parent, button) ->
+    APPLY(-16,8,96,16,"apply_changes",2,true,(parent, button) ->
             parent.applyButton(),ButtonSuperType::new),
     LOG("log",2, 0.25f, null, (screen, button) ->
             ((GuiSuperType)screen).saveAndDisplay(
@@ -128,9 +128,9 @@ public enum ButtonType {
     public ButtonSuperType getNormalButton(int id, GuiSuperType parent) {
         int adjustedX = this.x;
         int adjustedY = this.y;
-        if(adjustedX<0) adjustedX = parent.width+adjustedX+this.width;
+        if(adjustedX<0) adjustedX = parent.width+adjustedX-this.width;
         else if(adjustedX==69) adjustedX = (int)((((float)parent.width)/2f)-(((float)this.width)/2f));
-        if(adjustedY<0) adjustedY = parent.width+adjustedY+this.width;
+        if(adjustedY<0) adjustedY = parent.width+adjustedY-this.width;
         else if(adjustedY==69) adjustedY = (int)((((float)parent.width)/2f)-(((float)this.width)/2f));
         return this.normalCreatorFunction.apply(id,adjustedX,adjustedY,this.width,this.height,
                 Translate.guiGeneric(false,"button",this.name),
