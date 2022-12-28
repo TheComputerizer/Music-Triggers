@@ -1,10 +1,7 @@
 package mods.thecomputerizer.musictriggers.common;
 
 import mods.thecomputerizer.musictriggers.Constants;
-import mods.thecomputerizer.musictriggers.common.objects.BlankRecord;
-import mods.thecomputerizer.musictriggers.common.objects.EpicItem;
-import mods.thecomputerizer.musictriggers.common.objects.EpicItemBlock;
-import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
+import mods.thecomputerizer.musictriggers.common.objects.*;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
@@ -15,7 +12,7 @@ import java.util.function.Supplier;
 
 public class MusicTriggersItems {
     public static final Item MUSIC_TRIGGERS_RECORD = makeEpicItem("music_triggers_record", MusicTriggersRecord::new, item -> item.setCreativeTab(CreativeTabs.MISC));
-    public static final Item CUSTOM_RECORD = makeEpicItem("custom_record", MusicTriggersRecord::new, item -> item.setCreativeTab(CreativeTabs.MISC));
+    public static final Item CUSTOM_RECORD = makeEpicItem("custom_record", CustomRecord::new, item -> item.setCreativeTab(CreativeTabs.MISC));
     public static final Item BLANK_RECORD = makeEpicItem("blank_record", BlankRecord::new, item -> item.setCreativeTab(CreativeTabs.MISC));
     public static final Item MUSIC_RECORDER = makeEpicItemBlock(MusicTriggersBlocks.MUSIC_RECORDER, item -> item.setCreativeTab(CreativeTabs.MISC));
 

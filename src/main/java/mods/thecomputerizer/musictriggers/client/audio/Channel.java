@@ -308,16 +308,16 @@ public class Channel {
                     this.curTrack = null;
                     this.playingTriggers.clear();
                 }
-            } else if(this.curTrack!=null) {
-                if(!this.curTrack.mustFinish()
+            } else if(!this.fadingOut && !this.fadingIn && Objects.nonNull(this.curTrack)) {
+                if (!this.curTrack.mustFinish()
                         && (!this.playingTriggers.equals(this.picker.getInfo().getActiveTriggers())
                         || this.picker.getInfo().getActiveTriggers().isEmpty())) {
-                    if(this.picker.getInfo().getCurrentSongList().contains(this.curTrack)) {
+                    if (this.picker.getInfo().getCurrentSongList().contains(this.curTrack)) {
                         this.playingTriggers.clear();
                         this.playingTriggers.addAll(this.picker.getInfo().getActiveTriggers());
                     } else stopTrack(true);
                 }
-            } else stopTrack(true);
+            } else if(Objects.isNull(this.curTrack)) stopTrack(true);
             for (Trigger playable : this.picker.getInfo().getPlayableTriggers()) {
                 if (!this.picker.getInfo().getActiveTriggers().contains(playable))
                     if (playable.getParameterBool("toggle_inactive_playable"))
@@ -528,8 +528,8 @@ public class Channel {
 
     private float getChannelVolume() {
         float master = Minecraft.getMinecraft().gameSettings.getSoundLevel(SoundCategory.MASTER);
-        if(SoundCategory.getByName(this.name)==SoundCategory.MASTER) return master;
-        else return master*Minecraft.getMinecraft().gameSettings.getSoundLevel(SoundCategory.getByName(this.name));
+        if(getCategory()==SoundCategory.MASTER) return master;
+        else return master*Minecraft.getMinecraft().gameSettings.getSoundLevel(getCategory());
     }
 
     public void playTrack(Audio audio, long milliseconds) {
@@ -545,6 +545,7 @@ public class Channel {
             } catch (IllegalStateException e) {
                 if (!this.getPlayer().startTrack(track.makeClone(), false))
                     MusicTriggers.logExternally(Level.ERROR, "Could not start track!");
+                else this.curTrack = audio;
             }
         } else {
             MusicTriggers.logExternally(Level.ERROR, "Track with id "+id+" was null! Attempting to refresh track...");

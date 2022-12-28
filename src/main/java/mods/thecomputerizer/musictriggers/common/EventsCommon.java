@@ -67,10 +67,7 @@ public class EventsCommon {
                         currentChannel = (String) values[random.nextInt(currentChannelSongs.get(recordUUID.get(blockPos)).keySet().size())];
                     }
                     if (recordHolder.get(blockPos).getItem() instanceof BlankRecord) {
-                        ItemStack stack;
-                        if(recordIsCustom.get(blockPos))
-                            stack = MusicTriggersItems.MUSIC_TRIGGERS_RECORD.getDefaultInstance();
-                        else stack = MusicTriggersItems.CUSTOM_RECORD.getDefaultInstance();
+                        ItemStack stack = MusicTriggersItems.MUSIC_TRIGGERS_RECORD.getDefaultInstance();
                         NBTTagCompound tag = new NBTTagCompound();
                         tag.setString("channelFrom",currentChannel);
                         tag.setString("trackID",currentChannelSongs.get(recordUUID.get(blockPos)).get(currentChannel));
@@ -78,7 +75,10 @@ public class EventsCommon {
                         stack.setTagCompound(tag);
                         recordHolder.put(blockPos, stack);
                     } else if (recordMenu.get(recordUUID.get(blockPos)) != null && !recordMenu.get(recordUUID.get(blockPos)).isEmpty() && recordWorld.get(blockPos).getBlockState(blockPos).getValue(MusicRecorder.HAS_DISC)) {
-                        ItemStack stack = MusicTriggersItems.MUSIC_TRIGGERS_RECORD.getDefaultInstance();
+                        ItemStack stack;
+                        if(recordIsCustom.get(blockPos))
+                            stack = MusicTriggersItems.MUSIC_TRIGGERS_RECORD.getDefaultInstance();
+                        else stack = MusicTriggersItems.CUSTOM_RECORD.getDefaultInstance();
                         NBTTagCompound tag = new NBTTagCompound();
                         tag.setString("channelFrom",currentChannel);
                         tag.setString("trackID",randomMenuSong);
