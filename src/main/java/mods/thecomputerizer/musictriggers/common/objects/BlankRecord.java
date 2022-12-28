@@ -6,6 +6,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
 import net.minecraft.util.ActionResultType;
 
+import javax.annotation.Nonnull;
 import java.util.Objects;
 
 public class BlankRecord extends Item {
@@ -15,6 +16,7 @@ public class BlankRecord extends Item {
     }
 
     @Override
+    @Nonnull
     public ActionResultType useOn(ItemUseContext ctx) {
         BlockState blockstate = ctx.getLevel().getBlockState(ctx.getClickedPos());
         if (blockstate.getBlock() instanceof MusicRecorder) {

@@ -19,7 +19,7 @@ import net.minecraft.world.World;
 
 import java.util.UUID;
 
-@SuppressWarnings("NullableProblems")
+@SuppressWarnings({"NullableProblems", "deprecation"})
 public class MusicRecorder extends Block {
 
     public static final BooleanProperty HAS_RECORD = BlockStateProperties.HAS_RECORD;
@@ -52,8 +52,16 @@ public class MusicRecorder extends Block {
         EventsCommon.recordHolder.put(pos, recordStack.copy());
         EventsCommon.recordUUID.put(pos, uuid);
         EventsCommon.tickCounter.put(pos, 0);
-        if(recordStack.getItem() instanceof BlankRecord) worldIn.setBlock(pos, state.setValue(HAS_RECORD, Boolean.TRUE), 2);
-        else worldIn.setBlock(pos, state.setValue(HAS_DISC, Boolean.TRUE), 2);
+        if(recordStack.getItem() instanceof BlankRecord) {
+            worldIn.setBlock(pos, state.setValue(HAS_RECORD, Boolean.TRUE), 2);
+            EventsCommon.recordIsCustom.put(pos, false);
+        }
+        else {
+            worldIn.setBlock(pos, state.setValue(HAS_DISC, Boolean.TRUE), 2);
+            if(recordStack.getItem() instanceof CustomRecord)
+                EventsCommon.recordIsCustom.put(pos, true);
+            else EventsCommon.recordIsCustom.put(pos, false);
+        }
     }
 
     private void dropRecord(World worldIn, BlockPos pos) {

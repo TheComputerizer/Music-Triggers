@@ -19,6 +19,7 @@ public class MixinBlueSkiesMusic {
 
     @Inject(at = @At(value = "HEAD"), method = "func_110550_d", cancellable = true)
     private void tick(CallbackInfo info) {
-        if(Arrays.asList(ConfigDebug.blockedmods).contains(BlueSkies.MODID) && (!ConfigDebug.SilenceIsBad || ChannelManager.canAnyChannelOverrideMusic())) info.cancel();
+        if(Arrays.asList(ConfigDebug.BLOCKED_MOD_MUSIC).contains(BlueSkies.MODID) &&
+                (!ConfigDebug.PLAY_NORMAL_MUSIC || ChannelManager.canAnyChannelOverrideMusic())) info.cancel();
     }
 }

@@ -19,6 +19,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 
@@ -29,6 +30,7 @@ public class MusicTriggersRecord extends Item {
     }
 
     @Override
+    @Nonnull
     public ActionResultType useOn(ItemUseContext ctx) {
         BlockState state = ctx.getLevel().getBlockState(ctx.getClickedPos());
         if (state.getBlock() instanceof MusicRecorder) {

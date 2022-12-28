@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.util;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.util.packets.*;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.ResourceLocation;
@@ -15,7 +15,7 @@ public class PacketHandler {
 
     private  static  final  String  PROTOCOL_VERSION  =  "1.0" ;
     private static final SimpleChannel HANDLER = NetworkRegistry.ChannelBuilder
-            .named(new ResourceLocation(MusicTriggers.MODID, "main"))
+            .named(new ResourceLocation(Constants.MODID, "main"))
             .clientAcceptedVersions ( PROTOCOL_VERSION :: equals)
             .serverAcceptedVersions ( PROTOCOL_VERSION :: equals)
             .networkProtocolVersion (() ->  PROTOCOL_VERSION )

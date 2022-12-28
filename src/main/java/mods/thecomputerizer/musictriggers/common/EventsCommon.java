@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.common;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.common.objects.BlankRecord;
 import mods.thecomputerizer.musictriggers.common.objects.MusicRecorder;
 import mods.thecomputerizer.musictriggers.common.objects.MusicTriggersRecord;
@@ -19,13 +19,14 @@ import net.minecraftforge.fml.common.Mod;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-@Mod.EventBusSubscriber(modid= MusicTriggers.MODID)
+@Mod.EventBusSubscriber(modid= Constants.MODID)
 public class EventsCommon {
 
     public static HashMap<UUID, HashMap<String, String>> currentChannelSongs = new HashMap<>();
     public static HashMap<BlockPos, Integer> tickCounter = new HashMap<>();
     public static HashMap<BlockPos, ItemStack> recordHolder = new HashMap<>();
     public static HashMap<BlockPos, UUID> recordUUID = new HashMap<>();
+    public static HashMap<BlockPos, Boolean> recordIsCustom = new HashMap<>();
     public static HashMap<BlockPos, World> recordWorld = new HashMap<>();
     public static HashMap<UUID, List<String>> recordMenu = new HashMap<>();
     public static HashMap<UUID, HashMap<String, List<String>>> activeTriggerList = new HashMap<>();
@@ -76,12 +77,16 @@ public class EventsCommon {
                     }
                     if (recordHolder.get(blockPos).getItem() instanceof BlankRecord) {
                         ItemStack stack = MusicTriggersItems.MUSIC_TRIGGERS_RECORD.get().getDefaultInstance();
+
                         stack.getOrCreateTag().putString("channelFrom",currentChannel);
                         stack.getOrCreateTag().putString("trackID",currentChannelSongs.get(recordUUID.get(blockPos)).get(currentChannel));
                         stack.getOrCreateTag().putString("triggerID",activeTriggerList.get(recordUUID.get(blockPos)).get(currentChannel).get(random.nextInt(activeTriggerList.get(recordUUID.get(blockPos)).get(currentChannel).size())));
                         recordHolder.put(blockPos, stack);
                     } else if (recordMenu.get(recordUUID.get(blockPos)) != null && !recordMenu.get(recordUUID.get(blockPos)).isEmpty() && recordWorld.get(blockPos).getBlockState(blockPos).getValue(MusicRecorder.HAS_DISC)) {
-                        ItemStack stack = MusicTriggersItems.MUSIC_TRIGGERS_RECORD.get().getDefaultInstance();
+                        ItemStack stack;
+                        if(recordIsCustom.get(blockPos))
+                            stack = MusicTriggersItems.CUSTOM_RECORD.get().getDefaultInstance();
+                        else stack = MusicTriggersItems.MUSIC_TRIGGERS_RECORD.get().getDefaultInstance();
                         stack.getOrCreateTag().putString("channelFrom",currentChannel);
                         stack.getOrCreateTag().putString("trackID",randomMenuSong);
                         stack.getOrCreateTag().putString("triggerID","menu");

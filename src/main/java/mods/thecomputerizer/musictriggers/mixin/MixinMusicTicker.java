@@ -14,6 +14,6 @@ public class MixinMusicTicker {
 
     @Inject(at = @At(value = "HEAD"), method = "func_73660_a()V", cancellable = true)
     private void update(CallbackInfo info) {
-        if(!ConfigDebug.SilenceIsBad || ChannelManager.canAnyChannelOverrideMusic()) info.cancel();
+        if(!ConfigDebug.PLAY_NORMAL_MUSIC || ChannelManager.canAnyChannelOverrideMusic()) info.cancel();
     }
 }

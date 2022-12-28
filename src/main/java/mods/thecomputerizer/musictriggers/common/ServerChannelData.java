@@ -382,7 +382,6 @@ public class ServerChannelData {
         private final int targettingPercentage;
         private final int health;
         private final int healthPercentage;
-        private final boolean victory;
         private final int victoryID;
         private final String infernal;
         private final int mobLevel;
@@ -390,7 +389,7 @@ public class ServerChannelData {
         private final String nbtKey;
         private final String champion;
 
-        public Mob(String triggerID, String mobName, int range, boolean targetting, int targettingPercentage, int health, int healthPercentage, boolean victory, int victoryID, String infernal, int mobLevel, int victoryTimeout, String nbtKey, String champion) {
+        public Mob(String triggerID, String mobName, int range, boolean targetting, int targettingPercentage, int health, int healthPercentage, int victoryID, String infernal, int mobLevel, int victoryTimeout, String nbtKey, String champion) {
             this.triggerID = triggerID;
             this.mobName = mobName;
             this.range = range;
@@ -398,7 +397,6 @@ public class ServerChannelData {
             this.targettingPercentage = targettingPercentage;
             this.health = health;
             this.healthPercentage = healthPercentage;
-            this.victory = victory;
             this.victoryID = victoryID;
             this.infernal = infernal;
             this.mobLevel = mobLevel;
@@ -433,10 +431,6 @@ public class ServerChannelData {
 
         public int getHealthPercentage() {
             return this.healthPercentage;
-        }
-
-        public boolean getVictory() {
-            return this.victory;
         }
 
         public int getVictoryID() {
@@ -493,7 +487,7 @@ public class ServerChannelData {
             int nbtLength = buf.readInt();
             int championLength = buf.readInt();
             return new Mob((String) buf.readCharSequence(triggerLength, StandardCharsets.UTF_8), (String) buf.readCharSequence(nameLength, StandardCharsets.UTF_8),
-                    buf.readInt(), buf.readBoolean(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readBoolean(), buf.readInt(), (String) buf.readCharSequence(infernalLength, StandardCharsets.UTF_8),
+                    buf.readInt(), buf.readBoolean(), buf.readInt(), buf.readInt(), buf.readInt(), buf.readInt(), (String) buf.readCharSequence(infernalLength, StandardCharsets.UTF_8),
                     buf.readInt(), buf.readInt(), (String) buf.readCharSequence(nbtLength, StandardCharsets.UTF_8), (String) buf.readCharSequence(championLength, StandardCharsets.UTF_8));
         }
     }

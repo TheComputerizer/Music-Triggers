@@ -82,16 +82,19 @@ public class CalculateFeatures {
 
     private static boolean checkBiome(Biome curBiome, ServerChannelData.Biome biome) {
         if(curBiome.getRegistryName()!=null) {
-            if (biome.getBiome().matches("minecraft") || checkResourceList(curBiome.getRegistryName().toString(), biome.getBiome(), false)) {
-                if (biome.getCategory().matches("nope") || checkResourceList(curBiome.getBiomeCategory().getName(), biome.getCategory(), false)) {
-                    if (biome.getRainType().matches("nope") || curBiome.getPrecipitation().getName().contains(biome.getRainType())) {
+            if (biome.getBiome().matches("any")
+                    || checkResourceList(curBiome.getRegistryName().toString(), biome.getBiome(), false)) {
+                if (biome.getCategory().matches("any")
+                        || checkResourceList(curBiome.getBiomeCategory().getName(), biome.getCategory(), false)) {
+                    if (biome.getRainType().matches("any")
+                            || curBiome.getPrecipitation().getName().contains(biome.getRainType())) {
                         boolean pass = false;
-                        if (biome.getRainfall() == -111f) pass = true;
+                        if (biome.getRainfall()==Float.MIN_VALUE) pass = true;
                         else if (curBiome.getDownfall() > biome.getRainfall() && biome.isTogglerainfall()) pass = true;
                         else if (curBiome.getDownfall() < biome.getRainfall() && !biome.isTogglerainfall()) pass = true;
                         if (pass) {
                             float bt = curBiome.getBaseTemperature();
-                            if (biome.getTemperature() == -111) return true;
+                            if (biome.getTemperature()==Float.MIN_VALUE) return true;
                             else if (bt >= biome.getTemperature() && !biome.isCold()) return true;
                             else return bt <= biome.getTemperature() && biome.isCold();
                         }
@@ -148,7 +151,7 @@ public class CalculateFeatures {
                             if (e.getHealth() / e.getMaxHealth() <= (float) mob.getHealth() / 100F) healthCounter++;
                             infernal = infernalChecker(e, mob.getInfernal());
                             champion = championChecker(e, mob.getChampion());
-                            if (mob.getVictory()) {
+                            if (mob.getVictoryID()>0) {
                                 victoryMobs.computeIfAbsent(mob.getTrigger(), k -> new HashMap<>());
                                 if (victoryMobs.get(mob.getTrigger()).size() < mob.getMobLevel())
                                     victoryMobs.get(mob.getTrigger()).put(e, mob.getVictoryTimeout());
@@ -204,7 +207,7 @@ public class CalculateFeatures {
                         if (e.getHealth() / e.getMaxHealth() <= mob.getHealth() / 100F) healthCounter++;
                         infernal = infernalChecker(e, mob.getInfernal());
                         champion = championChecker(e, mob.getChampion());
-                        if (mob.getVictory()) {
+                        if (mob.getVictoryID()>0) {
                             victoryMobs.computeIfAbsent(mob.getTrigger(), k -> new HashMap<>());
                             if (victoryMobs.get(mob.getTrigger()).size() < mob.getMobLevel()) {
                                 victoryMobs.get(mob.getTrigger()).put(e, mob.getVictoryTimeout());
@@ -235,16 +238,26 @@ public class CalculateFeatures {
 
     private static boolean infernalChecker(LivingEntity m, String s) {
         if (ModList.get().isLoaded("infernalmobs")) {
-            if (s == null || s.matches("minecraft")) return true;
-            if(InfernalMobsCore.getMobModifiers(m)!=null) return InfernalMobsCore.getMobModifiers(m).getModName().matches(s);
-            return false;
+            if (s == null || s.matches("any")) return true;
+            boolean foundMatch = false;
+            if(InfernalMobsCore.getIsRareEntity(m)) {
+                if(s.matches("ALL")) return true;
+                List<String> names = Arrays.asList(InfernalMobsCore.getMobModifiers(m).getDisplayNames());
+                for(String resource : stringBreaker(s,";"))
+                    if (names.contains(resource)) {
+                        foundMatch = true;
+                        break;
+                    }
+            }
+            return foundMatch;
         }
         return true;
     }
 
+    @SuppressWarnings("deprecation")
     private static boolean championChecker(LivingEntity m, String s) {
         if (ModList.get().isLoaded("champions")) {
-            if (s == null || s.matches("minecraft")) return true;
+            if (s == null || s.matches("any")) return true;
             if(ChampionCapability.getCapability(m).isPresent() && ChampionCapability.getCapability(m).resolve().isPresent()) {
                 for(IAffix afix : ChampionCapability.getCapability(m).resolve().get().getServer().getAffixes()) {
                     return afix.getIdentifier().matches(s);
