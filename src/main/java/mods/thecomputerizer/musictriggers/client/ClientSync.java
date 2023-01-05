@@ -35,16 +35,20 @@ public class ClientSync {
         for(i=0;i<homeSize;i++) homeResult = new Home(buf.readBoolean());
         this.biomeResults = new HashMap<>();
         int biomeSize = buf.readInt();
-        for(i=0;i<biomeSize;i++) biomeResults.put((String) buf.readCharSequence(buf.readInt(), StandardCharsets.UTF_8), new Biome(buf.readBoolean(),(String) buf.readCharSequence(buf.readInt(), StandardCharsets.UTF_8)));
+        for(i=0;i<biomeSize;i++) biomeResults.put((String) buf.readCharSequence(buf.readInt(), StandardCharsets.UTF_8),
+                new Biome(buf.readBoolean(),(String) buf.readCharSequence(buf.readInt(), StandardCharsets.UTF_8)));
         this.structureResults = new HashMap<>();
         int structureSize = buf.readInt();
-        for(i=0;i<structureSize;i++) structureResults.put((String) buf.readCharSequence(buf.readInt(), StandardCharsets.UTF_8), new Structure(buf.readBoolean()));
+        for(i=0;i<structureSize;i++) structureResults.put((String) buf.readCharSequence(buf.readInt(), StandardCharsets.UTF_8),
+                new Structure(buf.readBoolean()));
         this.mobResults = new HashMap<>();
         int mobSize = buf.readInt();
-        for(i=0;i<mobSize;i++) mobResults.put((String) buf.readCharSequence(buf.readInt(), StandardCharsets.UTF_8), new Mob(buf.readBoolean(), buf.readBoolean()));
+        for(i=0;i<mobSize;i++) mobResults.put((String) buf.readCharSequence(buf.readInt(), StandardCharsets.UTF_8),
+                new Mob(buf.readBoolean(), buf.readBoolean()));
         this.raidResults = new HashMap<>();
         int raidSize = buf.readInt();
-        for(i=0;i<raidSize;i++) raidResults.put((String) buf.readCharSequence(buf.readInt(), StandardCharsets.UTF_8), new Raid(buf.readBoolean()));
+        for(i=0;i<raidSize;i++) raidResults.put((String) buf.readCharSequence(buf.readInt(), StandardCharsets.UTF_8),
+                new Raid(buf.readBoolean()));
     }
 
     public String getChannel() {

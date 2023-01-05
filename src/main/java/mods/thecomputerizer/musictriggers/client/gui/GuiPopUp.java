@@ -9,7 +9,8 @@ import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.contents.LiteralContents;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nonnull;
@@ -43,7 +44,7 @@ public class GuiPopUp extends GuiSuperType {
         this.id = id;
         this.title = Translate.guiGeneric(false,"popup",id,"name");
         this.hoverText = Translate.guiNumberedList(descLines,"button",id+"_add").stream()
-                .map(TextComponent::new).collect(Collectors.toList());
+                .map(line -> MutableComponent.create(new LiteralContents(line))).collect(Collectors.toList());
         this.icons = icons;
         this.spacing = 16;
         this.value = "channel_name";

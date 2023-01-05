@@ -4,10 +4,11 @@ import atomicstryker.infernalmobs.common.InfernalMobsCore;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.EventsCommon;
 import mods.thecomputerizer.musictriggers.common.ServerChannelData;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -17,13 +18,11 @@ import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.raid.Raid;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.levelgen.feature.ConfiguredStructureFeature;
+import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.server.ServerLifecycleHooks;
 import org.apache.logging.log4j.Level;
-import top.theillusivec4.champions.api.IAffix;
-import top.theillusivec4.champions.common.capability.ChampionCapability;
 
 import java.util.*;
 
@@ -77,23 +76,24 @@ public class CalculateFeatures {
 
     public static boolean calculateBiome(ServerChannelData.Biome biome, MinecraftServer server, ServerPlayer player) {
         if(player!=null) {
-            MusicTriggers.logExternally(Level.WARN,"gimme the biome");
             ServerLevel world = server.getLevel(player.level.dimension());
             if (Objects.nonNull(world)) {
                 BlockPos pos = roundedPos(player);
                 Holder<Biome> curBiomeHolder = world.getBiome(pos);
-                if(curBiomeHolder.value().getRegistryName()!=null) biome.setCurrentBiome(Objects.requireNonNull(curBiomeHolder.value().getRegistryName()).toString());
-                return checkBiome(curBiomeHolder, biome);
+                if(curBiomeHolder.unwrapKey().isPresent()) {
+                    ResourceLocation id = curBiomeHolder.unwrapKey().get().location();
+                    biome.setCurrentBiome(id.toString());
+                    return checkBiome(curBiomeHolder, id, biome);
+                }
             }
         } return false;
     }
 
-    @SuppressWarnings("deprecation")
-    private static boolean checkBiome(Holder<Biome> curBiomeHolder, ServerChannelData.Biome biome) {
-        if(curBiomeHolder.value().getRegistryName()!=null) {
+    private static boolean checkBiome(Holder<Biome> curBiomeHolder, ResourceLocation id, ServerChannelData.Biome biome) {
+        if(Objects.nonNull(id)) {
             if (biome.getBiome().matches("any") ||
-                    checkResourceList(Objects.requireNonNull(curBiomeHolder.value().getRegistryName()).toString(), biome.getBiome(), false)) {
-                if (biome.getCategory().matches("any") || checkResourceList(Biome.getBiomeCategory(curBiomeHolder).getName(), biome.getCategory(), false)) {
+                    checkResourceList(id.toString(), biome.getBiome(), false)) {
+                //if (biome.getCategory().matches("any") || checkResourceList(Biome.(curBiomeHolder).getName(), biome.getCategory(), false)) {
                     if (biome.getRainType().matches("any") || curBiomeHolder.value().getPrecipitation().getName().contains(biome.getRainType())) {
                         boolean pass = false;
                         if (biome.getRainfall()==Float.MIN_VALUE) pass = true;
@@ -106,7 +106,7 @@ public class CalculateFeatures {
                             else return bt <= biome.getTemperature() && biome.isCold();
                         }
                     }
-                }
+                //}
             }
         }
         return false;
@@ -117,10 +117,10 @@ public class CalculateFeatures {
             ServerLevel world = server.getLevel(player.level.dimension());
             if (Objects.nonNull(world)) {
                 BlockPos pos = roundedPos(player);
-                for (ConfiguredStructureFeature<?, ?> feature : world.getChunkAt(pos).getAllReferences().keySet()) {
-                    if (world.structureFeatureManager().getStructureAt(pos, feature).isValid()) {
-                        if(feature.feature.getRegistryName()!=null) {
-                            structure.setCurrentStructure(feature.feature.getRegistryName().toString());
+                for (Structure feature : world.getChunkAt(pos).getAllReferences().keySet()) {
+                    if (world.structureManager().getStructureAt(pos, feature).isValid()) {
+                        if(Registry.STRUCTURE_TYPES.getKey(feature.type())!=null) {
+                            structure.setCurrentStructure(Objects.requireNonNull(Registry.STRUCTURE_TYPES.getKey(feature.type())).toString());
                             return checkResourceList(structure.getCurrentStructure(), structure.getStructure(), false);
                         }
                     }
@@ -129,6 +129,7 @@ public class CalculateFeatures {
         } return false;
     }
 
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
     public static boolean calculateMob(ServerChannelData.Mob mob, MinecraftServer server, ServerPlayer player) {
         boolean pass = false;
         boolean victoryRet = false;
@@ -142,7 +143,6 @@ public class CalculateFeatures {
                 int trackingCounter = 0;
                 int healthCounter = 0;
                 boolean infernal = true;
-                boolean champion = true;
                 if (mob.getName().matches("MOB") || stringBreaker(mob.getName(), ";")[0].matches("MOB")) {
                     List<Mob> mobsWithBlacklist = new ArrayList<>();
                     for (Iterator<Mob> it = mobList.iterator(); it.hasNext(); ) {
@@ -152,12 +152,11 @@ public class CalculateFeatures {
                             it.remove();
                             isMonster = false;
                         }
-                        if (isMonster && checkMobBlacklist(e, mob.getName())) {
+                        if (isMonster && checkMobBlacklist(e, mob.getName(), server)) {
                             mobsWithBlacklist.add(e);
                             if (e.getTarget() instanceof Player) trackingCounter++;
                             if (e.getHealth() / e.getMaxHealth() <= (float) mob.getHealth() / 100F) healthCounter++;
                             infernal = infernalChecker(e, mob.getInfernal());
-                            champion = championChecker(e, mob.getChampion());
                             if (mob.getVictoryID()>0) {
                                 victoryMobs.computeIfAbsent(mob.getTrigger(), k -> new HashMap<>());
                                 if (victoryMobs.get(mob.getTrigger()).size() < mob.getMobLevel())
@@ -167,7 +166,7 @@ public class CalculateFeatures {
                     }
                     if (mobsWithBlacklist.size() >= mob.getMobLevel() &&
                             ((!mob.getTargetting() || (float) trackingCounter / mob.getMobLevel() >= mob.getTargettingPercentage() / 100F) &&
-                                    infernal && champion &&
+                                    infernal &&
                                     (float) healthCounter / mob.getMobLevel() >= mob.getHealthPercentage() / 100F)) {
                         pass = true;
                     }
@@ -204,9 +203,9 @@ public class CalculateFeatures {
                     List<Mob > mobListSpecific = new ArrayList<>();
                     for (LivingEntity e : mobTempList) {
                         if ((checkResourceList(e.getDisplayName().getString(), mob.getName(), true) ||
-                                checkResourceList(Objects.requireNonNull(
-                                        e.getType().getRegistryName()).toString(), mob.getName(), false)) &&
-                                nbtChecker(e, mob.getNbtKey())) {
+                                checkResourceList(Objects.requireNonNull(server.registryAccess().registry(
+                                        Registry.ENTITY_TYPE_REGISTRY).get().getKey(e.getType())).toString(),
+                                        mob.getName(), false)) && nbtChecker(e, mob.getNbtKey())) {
                             mobCounter++;
                             mobListSpecific.add((Mob) e);
                         }
@@ -215,7 +214,6 @@ public class CalculateFeatures {
                         if (e.getTarget() instanceof Player) trackingCounter++;
                         if (e.getHealth() / e.getMaxHealth() <= mob.getHealth() / 100F) healthCounter++;
                         infernal = infernalChecker(e, mob.getInfernal());
-                        champion = championChecker(e, mob.getChampion());
                         if (mob.getVictoryID()>0) {
                             victoryMobs.computeIfAbsent(mob.getTrigger(), k -> new HashMap<>());
                             if (victoryMobs.get(mob.getTrigger()).size() < mob.getMobLevel()) {
@@ -225,7 +223,7 @@ public class CalculateFeatures {
                     }
                     if (mobCounter >= mob.getMobLevel() && ((!mob.getTargetting() ||
                             (float) trackingCounter / mob.getMobLevel() >= mob.getTargettingPercentage() / 100F) &&
-                            infernal && champion && (float) healthCounter / mob.getMobLevel() >= mob.getHealthPercentage() / 100F)) {
+                            infernal && (float) healthCounter / mob.getMobLevel() >= mob.getHealthPercentage() / 100F)) {
                         pass = true;
                     }
                     if (victoryMobs.get(mob.getTrigger()) != null) {
@@ -267,20 +265,6 @@ public class CalculateFeatures {
         return true;
     }
 
-    @SuppressWarnings("deprecation")
-    private static boolean championChecker(LivingEntity m, String s) {
-        if (ModList.get().isLoaded("champions")) {
-            if (Objects.isNull(s) || s.matches("minecraft")) return true;
-            if(ChampionCapability.getCapability(m).isPresent() && ChampionCapability.getCapability(m).resolve().isPresent()) {
-                for(IAffix afix : ChampionCapability.getCapability(m).resolve().get().getServer().getAffixes()) {
-                    return afix.getIdentifier().matches(s);
-                }
-            }
-            return false;
-        }
-        return true;
-    }
-
     private static boolean nbtChecker(LivingEntity e, String nbt) {
         String[] splitNBT = nbt.split(":");
         if(splitNBT.length==1) return e.serializeNBT().contains(nbt) || nbt.matches("_");
@@ -309,11 +293,14 @@ public class CalculateFeatures {
         return false;
     }
 
-    public static boolean checkMobBlacklist(Mob e, String resourceList) {
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
+    public static boolean checkMobBlacklist(Mob e, String resourceList, MinecraftServer server) {
         for(String resource : stringBreaker(resourceList,";")) {
             if(!resource.matches("MOB")) {
                 if (e.getName().getString().matches(resource)) return false;
-                else if (Objects.requireNonNull(e.getType().getRegistryName()).toString().contains(resource)) return false;
+                else if (Objects.requireNonNull(server.registryAccess().registry(
+                        Registry.ENTITY_TYPE_REGISTRY).get().getKey(e.getType())).toString().contains(resource))
+                    return false;
             }
         }
         return true;

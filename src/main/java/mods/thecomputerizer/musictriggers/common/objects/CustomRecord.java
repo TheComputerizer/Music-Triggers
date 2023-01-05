@@ -4,6 +4,7 @@ import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -27,10 +28,11 @@ public class CustomRecord extends MusicTriggersRecord {
     public void appendHoverText(ItemStack stack, @Nullable Level level, @NotNull List<Component> components,
                                 @NotNull TooltipFlag flag) {
         if(stack.getOrCreateTag().contains("trackID"))
-            components.add(AssetUtil.customLang("record.musictriggers.custom_record."+
+            components.add(MutableComponent.create(AssetUtil.customLang("record.musictriggers.custom_record."+
                     ChannelManager.getChannel(stack.getOrCreateTag().getString("channelFrom")).getRecordMap()
-                            .get(stack.getOrCreateTag().getString("trackID")),false));
-        else components.add(AssetUtil.extraLang(Constants.MODID,"item","music_triggers_record","blank_description"));
+                            .get(stack.getOrCreateTag().getString("trackID")),false)));
+        else components.add(MutableComponent.create(AssetUtil.extraLang(
+                Constants.MODID,"item","music_triggers_record","blank_description")));
     }
 
     public static float mapTriggerToFloat(String channel, String song) {

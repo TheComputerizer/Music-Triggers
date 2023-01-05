@@ -4,6 +4,7 @@ import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
 import net.minecraft.locale.Language;
+import net.minecraft.network.chat.MutableComponent;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.*;
@@ -140,7 +141,7 @@ public class Translate {
     */
     private static String libHook(String key, String fallback) {
         if(Language.getInstance().has(key) || fallback==null)
-            return AssetUtil.customLang(key,false).getString();
+            return MutableComponent.create(AssetUtil.customLang(key,false)).getString();
         return fallback;
     }
 }

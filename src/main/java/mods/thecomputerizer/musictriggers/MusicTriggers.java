@@ -18,7 +18,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.ClientRegistry;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
@@ -43,6 +43,7 @@ public class MusicTriggers {
     private static Random random;
 
     public MusicTriggers() throws FileExistsException {
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::keyBindSetup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::commonSetup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::loadComplete);
@@ -70,8 +71,11 @@ public class MusicTriggers {
         ChannelManager.reloading = false;
     }
 
+    private void keyBindSetup(final RegisterKeyMappingsEvent ev) {
+        ev.register(Channel.GUI);
+    }
+
     private void clientSetup(final FMLClientSetupEvent ev) {
-        ClientRegistry.registerKeyBinding(Channel.GUI);
         CustomTick.addCustomTickEvent(20);
         //music disc texture overrides
         ev.enqueueWork(() -> ItemProperties.register(MusicTriggersItems.MUSIC_TRIGGERS_RECORD.get(), new ResourceLocation(Constants.MODID, "trigger"),

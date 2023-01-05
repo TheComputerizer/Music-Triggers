@@ -9,6 +9,8 @@ import mods.thecomputerizer.musictriggers.config.ConfigChannels;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.util.RandomSource;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -149,10 +151,11 @@ public class Instance {
     }
 
     public List<String> findAllRegisteredSounds() {
+        RandomSource random = SoundInstance.createUnseededRandom();
         return Minecraft.getInstance().getSoundManager().registry.values().stream()
                 .map(accessor -> accessor.list)
                 .flatMap(Collection::stream)
-                .map(accessor -> accessor.getSound().getPath().toString())
+                .map(accessor -> accessor.getSound(random).getPath().toString())
                 .distinct().sorted().collect(Collectors.toList());
     }
 }

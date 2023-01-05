@@ -8,7 +8,8 @@ import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.contents.LiteralContents;
 import net.minecraft.sounds.SoundEvents;
 import org.lwjgl.glfw.GLFW;
 
@@ -43,7 +44,7 @@ public abstract class GuiSuperType extends Screen {
     protected final int spacing;
 
     public GuiSuperType(GuiSuperType parent, GuiType type, Instance configInstance) {
-        super(new TextComponent(type.getId()));
+        super(MutableComponent.create(new LiteralContents(type.getId())));
         this.parent = parent;
         this.type = type;
         this.configInstance = configInstance;

@@ -24,13 +24,14 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.DefaultClientPackResources;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.contents.LiteralContents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.sounds.SoundSource;
 import net.minecraftforge.client.settings.KeyConflictContext;
-import net.minecraftforge.resource.PathResourcePack;
+import net.minecraftforge.resource.PathPackResources;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -396,12 +397,12 @@ public class Channel {
             if (pass && mc.player != null) {
                 MusicTriggers.logExternally(Level.INFO,"displaying title card {}",i);
                 if(!this.transitions.titlecards.get(i).getTitles().isEmpty())
-                    mc.gui.setTitle((new TextComponent(this.transitions.titlecards.get(i).getTitles()
+                    mc.gui.setTitle(MutableComponent.create(new LiteralContents(this.transitions.titlecards.get(i).getTitles()
                             .get(ThreadLocalRandom.current().nextInt(0, this.transitions.titlecards.get(i)
                                     .getTitles().size())))).withStyle(ChatFormatting.getByName(
                                             this.transitions.titlecards.get(i).getTitlecolor())));
                 if(!this.transitions.titlecards.get(i).getSubTitles().isEmpty())
-                    mc.gui.setSubtitle((new TextComponent(this.transitions.titlecards.get(i)
+                    mc.gui.setSubtitle(MutableComponent.create(new LiteralContents(this.transitions.titlecards.get(i)
                             .getSubTitles().get(ThreadLocalRandom.current().nextInt(0,
                                     this.transitions.titlecards.get(i).getSubTitles().size())))).withStyle(
                             ChatFormatting.getByName(this.transitions.titlecards.get(i).getSubtitlecolor())));
@@ -707,7 +708,7 @@ public class Channel {
                             if (pack instanceof AbstractPackResources resourcePack) {
                                 String resource = String.format("%s/%s/%s", PackType.CLIENT_RESOURCES.getDirectory(),
                                         source.getNamespace(), source.getPath());
-                                if (pack instanceof PathResourcePack modResource &&
+                                if (pack instanceof PathPackResources modResource &&
                                         !(namespace.matches("minecraft") || namespace.matches("realms"))) {
                                     Path test = modResource.getSource().resolve(resource);
                                     if(Files.exists(test)) sourcePath = test.toString();

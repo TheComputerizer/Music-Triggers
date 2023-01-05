@@ -18,47 +18,25 @@ apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'maven-publish'
 
-version = '1.18.2-6.0_PUBLIC_BETA'
+version = '1.19.2-6.0_PUBLIC_BETA'
 group = 'mods.thecomputerizer.musictriggers'
 archivesBaseName = 'musictriggers'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
-println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 minecraft {
-    mappings channel: 'official', version: '1.18.2'
+    mappings channel: 'official', version: '1.19.2'
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
     runs {
         client {
             workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'debug'
-            mods {
-                examplemod {
-                    source sourceSets.main
-                }
-            }
         }
+
         server {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'debug'
-            mods {
-                examplemod {
-                    source sourceSets.main
-                }
-            }
-        }
-        data {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-            args '--mod', 'examplemod', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
-            mods {
-                examplemod {
-                    source sourceSets.main
-                }
-            }
         }
     }
 }
@@ -87,7 +65,7 @@ configurations {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.18.2-40.2.0'
+    minecraft 'net.minecraftforge:forge:1.19.2-43.2.2'
 
     //external dependencies
     shade("io.github.kostaskougios:cloning:1.10.3")
@@ -96,14 +74,13 @@ dependencies {
     shade("org.apache.commons:commons-lang3:3.12.0") //this has to be shaded and relocated separately
 
     // required mod dependencies
-    implementation fg.deobf("curse.maven:the-impossible-library-661115:4299275")
+    implementation fg.deobf("curse.maven:the-impossible-library-661115:4300749")
 
     //mods
-    implementation fg.deobf("curse.maven:serene-seasons-291874:3723230")
-    implementation fg.deobf("curse.maven:atomicstrykers-infernal-mobs-227875:3736943")
-    implementation fg.deobf("curse.maven:champions-307152:3765992")
-    implementation fg.deobf("curse.maven:game-stages-268655:3797378")
-    implementation fg.deobf("curse.maven:bookshelf-228525:3961347")
+    implementation fg.deobf("curse.maven:serene-seasons-291874:4037228")
+    implementation fg.deobf("curse.maven:atomicstrykers-infernal-mobs-227875:4141773")
+    implementation fg.deobf("curse.maven:game-stages-268655:3943057")
+    implementation fg.deobf("curse.maven:bookshelf-228525:4153136")
 }
 
 shadowJar {
@@ -159,3 +136,6 @@ publishing {
     }
 }
 tasks.assemble.dependsOn shadowJar
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}

@@ -368,9 +368,9 @@ public class Trigger {
             boolean pass = false;
             MusicPicker.effectList.clear();
             for (MobEffectInstance p : player.getActiveEffects()) {
-                if(Objects.nonNull(p.getEffect().getRegistryName())) {
-                    MusicPicker.effectList.add(p.getEffect().getRegistryName().toString());
-                    if (trigger.checkResourceList(p.getEffect().getRegistryName().toString(), trigger.getResource(), false))
+                if(Objects.nonNull(ForgeRegistries.MOB_EFFECTS.getKey(p.getEffect()))) {
+                    MusicPicker.effectList.add(Objects.requireNonNull(ForgeRegistries.MOB_EFFECTS.getKey(p.getEffect())).toString());
+                    if (trigger.checkResourceList(Objects.requireNonNull(ForgeRegistries.MOB_EFFECTS.getKey(p.getEffect())).toString(), trigger.getResource(), false))
                         pass = true;
                 }
             }
@@ -712,8 +712,8 @@ public class Trigger {
         if(Objects.nonNull(player.getVehicle())) return false;
         else if(resource.matches("any")) return true;
         else if(checkResourceList(Objects.requireNonNull(player.getVehicle()).getName().getString(),resource,true)) return true;
-        else if (Objects.isNull(ForgeRegistries.ENTITIES.getKey(player.getVehicle().getType()))) return false;
-        return checkResourceList(Objects.requireNonNull(ForgeRegistries.ENTITIES.getKey(player.getVehicle().getType())).toString(),resource,false);
+        else if (Objects.isNull(ForgeRegistries.ENTITY_TYPES.getKey(player.getVehicle().getType()))) return false;
+        return checkResourceList(Objects.requireNonNull(ForgeRegistries.ENTITY_TYPES.getKey(player.getVehicle().getType())).toString(),resource,false);
     }
 
     public boolean checkStat(String statName, int level) {
@@ -727,64 +727,64 @@ public class Trigger {
             }
             if (statName.contains("mined")) {
                 for (Stat<Block> stat : Stats.BLOCK_MINED) {
-                    if (stat.getValue().getRegistryName() != null &&
-                            checkStatResourceList(stat.getValue().getRegistryName().toString(), statName, "mined") &&
+                    if (ForgeRegistries.BLOCKS.containsValue(stat.getValue()) &&
+                            checkStatResourceList(Objects.requireNonNull(ForgeRegistries.BLOCKS.getKey(stat.getValue())).toString(), statName, "mined") &&
                             mc.player.getStats().getValue(Stats.BLOCK_MINED.get(stat.getValue())) > level)
                         return true;
                 }
             }
             if (statName.contains("crafted")) {
                 for (Stat<Item> stat : Stats.ITEM_CRAFTED) {
-                    if (stat.getValue().getRegistryName() != null &&
-                            checkStatResourceList(stat.getValue().getRegistryName().toString(), statName, "crafted") &&
+                    if (ForgeRegistries.ITEMS.containsValue(stat.getValue()) &&
+                            checkStatResourceList(Objects.requireNonNull(ForgeRegistries.ITEMS.getKey(stat.getValue())).toString(), statName, "crafted") &&
                             mc.player.getStats().getValue(Stats.ITEM_CRAFTED.get(stat.getValue())) > level)
                         return true;
                 }
             }
             if (statName.contains("used")) {
                 for (Stat<Item> stat : Stats.ITEM_USED) {
-                    if (stat.getValue().getRegistryName() != null &&
-                            checkStatResourceList(stat.getValue().getRegistryName().toString(), statName, "used") &&
+                    if (ForgeRegistries.ITEMS.containsValue(stat.getValue()) &&
+                            checkStatResourceList(Objects.requireNonNull(ForgeRegistries.ITEMS.getKey(stat.getValue())).toString(), statName, "used") &&
                             mc.player.getStats().getValue(Stats.ITEM_USED.get(stat.getValue())) > level)
                         return true;
                 }
             }
             if (statName.contains("broken")) {
                 for (Stat<Item> stat : Stats.ITEM_BROKEN) {
-                    if (stat.getValue().getRegistryName() != null &&
-                            checkStatResourceList(stat.getValue().getRegistryName().toString(), statName, "broken") &&
+                    if (ForgeRegistries.ITEMS.containsValue(stat.getValue()) &&
+                            checkStatResourceList(Objects.requireNonNull(ForgeRegistries.ITEMS.getKey(stat.getValue())).toString(), statName, "broken") &&
                             mc.player.getStats().getValue(Stats.ITEM_BROKEN.get(stat.getValue())) > level)
                         return true;
                 }
             }
             if (statName.contains("picked_up")) {
                 for (Stat<Item> stat : Stats.ITEM_PICKED_UP) {
-                    if (stat.getValue().getRegistryName() != null &&
-                            checkStatResourceList(stat.getValue().getRegistryName().toString(), statName, "picked_up") &&
+                    if (ForgeRegistries.ITEMS.containsValue(stat.getValue()) &&
+                            checkStatResourceList(Objects.requireNonNull(ForgeRegistries.ITEMS.getKey(stat.getValue())).toString(), statName, "picked_up") &&
                             mc.player.getStats().getValue(Stats.ITEM_PICKED_UP.get(stat.getValue())) > level)
                         return true;
                 }
             }
             if (statName.contains("dropped")) {
                 for (Stat<Item> stat : Stats.ITEM_DROPPED) {
-                    if (stat.getValue().getRegistryName() != null &&
-                            checkStatResourceList(stat.getValue().getRegistryName().toString(), statName, "dropped") &&
+                    if (ForgeRegistries.ITEMS.containsValue(stat.getValue()) &&
+                            checkStatResourceList(Objects.requireNonNull(ForgeRegistries.ITEMS.getKey(stat.getValue())).toString(), statName, "dropped") &&
                             mc.player.getStats().getValue(Stats.ITEM_DROPPED.get(stat.getValue())) > level)
                         return true;
                 }
             }
             if (statName.contains("killed")) {
                 for (Stat<EntityType<?>> stat : Stats.ENTITY_KILLED) {
-                    if (stat.getValue().getRegistryName() != null &&
-                            checkStatResourceList(stat.getValue().getRegistryName().toString(), statName, "killed") &&
+                    if (ForgeRegistries.ENTITY_TYPES.containsValue(stat.getValue()) &&
+                            checkStatResourceList(Objects.requireNonNull(ForgeRegistries.ENTITY_TYPES.getKey(stat.getValue())).toString(), statName, "killed") &&
                             mc.player.getStats().getValue(Stats.ENTITY_KILLED.get(stat.getValue())) > level)
                         return true;
                 }
             }
             if (statName.contains("killed_by")) {
                 for (Stat<EntityType<?>> stat : Stats.ENTITY_KILLED_BY) {
-                    if (stat.getValue().getRegistryName() != null &&
-                            checkStatResourceList(stat.getValue().getRegistryName().toString(), statName, "killed_by") &&
+                    if (ForgeRegistries.ENTITY_TYPES.containsValue(stat.getValue()) &&
+                            checkStatResourceList(Objects.requireNonNull(ForgeRegistries.ENTITY_TYPES.getKey(stat.getValue())).toString(), statName, "killed_by") &&
                             mc.player.getStats().getValue(Stats.ENTITY_KILLED_BY.get(stat.getValue())) > level)
                         return true;
                 }
