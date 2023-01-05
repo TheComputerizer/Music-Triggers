@@ -29,3 +29,10 @@
         versionRange="[1.16.5,1.17)"
         ordering="NONE"
         side="BOTH"
+
+      [[dependencies.musictriggers]]
+        modId="theimpossiblelibrary"
+        mandatory=true
+        versionRange="[1.16.5-0.1.9-hf,)"
+        ordering="NONE"
+        side="BOTH"
