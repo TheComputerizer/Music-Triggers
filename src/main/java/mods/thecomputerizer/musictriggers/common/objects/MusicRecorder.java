@@ -51,8 +51,16 @@ public class MusicRecorder extends Block {
         EventsCommon.recordHolder.put(pos, recordStack.copy());
         EventsCommon.recordUUID.put(pos, uuid);
         EventsCommon.tickCounter.put(pos, 0);
-        if(recordStack.getItem() instanceof BlankRecord) worldIn.setBlock(pos, state.setValue(HAS_RECORD, Boolean.TRUE), 2);
-        else worldIn.setBlock(pos, state.setValue(HAS_DISC, Boolean.TRUE), 2);
+        if(recordStack.getItem() instanceof BlankRecord) {
+            worldIn.setBlock(pos, state.setValue(HAS_RECORD, Boolean.TRUE), 2);
+            EventsCommon.recordIsCustom.put(pos, false);
+        }
+        else {
+            worldIn.setBlock(pos, state.setValue(HAS_DISC, Boolean.TRUE), 2);
+            if(recordStack.getItem() instanceof CustomRecord)
+                EventsCommon.recordIsCustom.put(pos, true);
+            else EventsCommon.recordIsCustom.put(pos, false);
+        }
     }
 
     private void dropRecord(Level worldIn, BlockPos pos) {
@@ -65,7 +73,8 @@ public class MusicRecorder extends Block {
                 double d1 = (double) (worldIn.random.nextFloat() * 0.7F) + 0.06000000238418579D + 0.6D;
                 double d2 = (double) (worldIn.random.nextFloat() * 0.7F) + 0.15000000596046448D;
                 ItemStack itemstack1 = itemstack.copy();
-                ItemEntity itemEntity = new ItemEntity(worldIn, (double) pos.getX() + d0, (double) pos.getY() + d1, (double) pos.getZ() + d2, itemstack1);
+                ItemEntity itemEntity = new ItemEntity(worldIn, (double) pos.getX() + d0,
+                        (double) pos.getY() + d1, (double) pos.getZ() + d2, itemstack1);
                 itemEntity.setDefaultPickUpDelay();
                 worldIn.addFreshEntity(itemEntity);
             }

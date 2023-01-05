@@ -30,11 +30,11 @@ public class MusicTriggersRecord extends Item {
     }
 
     @Override
-    public InteractionResult useOn(UseOnContext ctx) {
+    public @NotNull InteractionResult useOn(UseOnContext ctx) {
         BlockState state = ctx.getLevel().getBlockState(ctx.getClickedPos());
-        if (state.getBlock() instanceof MusicRecorder) {
-            MusicRecorder mr = (MusicRecorder) state.getBlock();
-            if(!ctx.getLevel().isClientSide && ctx.getPlayer()!=null && !state.getValue(MusicRecorder.HAS_RECORD) && !state.getValue(MusicRecorder.HAS_DISC)) {
+        if (state.getBlock() instanceof MusicRecorder mr) {
+            if(!ctx.getLevel().isClientSide && ctx.getPlayer()!=null && !state.getValue(MusicRecorder.HAS_RECORD) &&
+                    !state.getValue(MusicRecorder.HAS_DISC)) {
                 ItemStack stack = ctx.getPlayer().getItemInHand(ctx.getHand());
                 mr.insertRecord(ctx.getLevel(),ctx.getClickedPos(),state,stack,ctx.getPlayer().getUUID());
                 stack.shrink(1);
@@ -45,7 +45,9 @@ public class MusicTriggersRecord extends Item {
                 ItemStack stack = ctx.getPlayer().getItemInHand(ctx.getHand());
                 if(stack.getOrCreateTag().contains("trackID") && stack.getOrCreateTag().contains("channelFrom")) {
                     ((JukeboxBlock) Blocks.JUKEBOX).setRecord(ctx.getLevel(),ctx.getClickedPos(),state,stack);
-                    PacketHandler.sendTo(new PacketJukeBoxCustom(ctx.getClickedPos(),stack.getOrCreateTag().getString("channelFrom"),stack.getOrCreateTag().getString("trackID")),(ServerPlayer) ctx.getPlayer());
+                    PacketHandler.sendTo(new PacketJukeBoxCustom(
+                            ctx.getClickedPos(),stack.getOrCreateTag().getString("channelFrom"),
+                            stack.getOrCreateTag().getString("trackID")),(ServerPlayer) ctx.getPlayer());
                     stack.shrink(1);
                     ctx.getPlayer().awardStat(Stats.PLAY_RECORD);
                 }
@@ -55,9 +57,11 @@ public class MusicTriggersRecord extends Item {
     }
 
     @OnlyIn(Dist.CLIENT)
-    public void appendHoverText(ItemStack stack, @Nullable Level world, @NotNull List<Component> components, @NotNull TooltipFlag flag) {
+    public void appendHoverText(ItemStack stack, @Nullable Level level, @NotNull List<Component> components,
+                                @NotNull TooltipFlag flag) {
         if(stack.getOrCreateTag().contains("trackID"))
-            components.add(new TextComponent(getDescription().getString()+": "+stack.getOrCreateTag().getString("trackID")));
+            components.add(new TextComponent(getDescription().getString()+": "+
+                    stack.getOrCreateTag().getString("trackID")));
         else components.add(new TranslatableComponent("item.musictriggers.music_triggers_record.blank_description"));
     }
 

@@ -3,46 +3,53 @@ package mods.thecomputerizer.musictriggers.util.packets;
 import mods.thecomputerizer.musictriggers.common.EventsCommon;
 import mods.thecomputerizer.musictriggers.util.CalculateFeatures;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.server.ServerLifecycleHooks;
+import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Supplier;
-
-import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
 
 public class PacketBossInfo {
 
-    private final String s;
+    private final String name;
+    private final float health;
+    private final String playerUUID;
 
     public PacketBossInfo(FriendlyByteBuf buf) {
-        this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
+        this.name = ((String) buf.readCharSequence(buf.readInt(), StandardCharsets.UTF_8));
+        this.health = buf.readFloat();
+        this.playerUUID = ((String) buf.readCharSequence(buf.readInt(), StandardCharsets.UTF_8));
     }
 
-    public PacketBossInfo(String name, float health) {
-        this.s = name+","+health;
+    public PacketBossInfo(String name, float health, String playerUUID) {
+        this.name = name;
+        this.health = health;
+        this.playerUUID = playerUUID;
     }
 
     public static void encode(PacketBossInfo packet, FriendlyByteBuf buf) {
-        buf.writeCharSequence(packet.s, StandardCharsets.UTF_8);
+        buf.writeInt(packet.name.length());
+        buf.writeCharSequence(packet.name, StandardCharsets.UTF_8);
+        buf.writeFloat(packet.health);
+        buf.writeInt(packet.playerUUID.length());
+        buf.writeCharSequence(packet.playerUUID, StandardCharsets.UTF_8);
     }
 
     public static void handle(final PacketBossInfo packet, Supplier<NetworkEvent.Context> context) {
         NetworkEvent.Context ctx = context.get();
-        ctx.enqueueWork(() -> {
-        });
-
-        CalculateFeatures.bossInfo.put(packet.getBossName(), packet.getDataHealth());
-        EventsCommon.bossTimer = 40;
-
+        ctx.enqueueWork(() -> {});
+        UUID uuid = UUID.fromString(packet.playerUUID);
+        ServerPlayer player = ServerLifecycleHooks.getCurrentServer().getPlayerList().getPlayer(uuid);
+        if(Objects.nonNull(player)) {
+            CalculateFeatures.perPlayerBossInfo.putIfAbsent(uuid, new HashMap<>());
+            CalculateFeatures.perPlayerBossInfo.get(uuid).put(packet.name, packet.health);
+            EventsCommon.bossTimers.put(uuid, new MutableInt(40));
+        }
         ctx.setPacketHandled(true);
-    }
-
-    public String getBossName() {
-        if(s==null) return null;
-        return stringBreaker(s,",")[0];
-    }
-
-    public float getDataHealth() {
-        return Float.parseFloat(stringBreaker(s,",")[1]);
     }
 }

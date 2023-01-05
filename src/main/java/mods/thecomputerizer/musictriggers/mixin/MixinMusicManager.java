@@ -13,6 +13,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinMusicManager {
     @Inject(at = @At(value = "HEAD"), method = "m_120183_()V", cancellable = true)
     private void tick(CallbackInfo info) {
-        if(!ConfigDebug.SilenceIsBad || !ChannelManager.canAnyChannelOverrideMusic()) info.cancel();
+        if(!ConfigDebug.PLAY_NORMAL_MUSIC || ChannelManager.overridingMusicIsPlaying()) info.cancel();
     }
 }

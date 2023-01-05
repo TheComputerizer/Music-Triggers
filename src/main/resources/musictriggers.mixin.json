@@ -5,8 +5,7 @@
   "refmap": "musictriggers.refmap.json",
   "mixins": [],
   "client": [
-    "MixinMusicManager",
-    "MixinSoundEngine"
+    "MixinMusicManager"
   ],
   "injectors": {
     "defaultRequire": 1

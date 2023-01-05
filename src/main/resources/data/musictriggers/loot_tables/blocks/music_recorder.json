@@ -2,10 +2,9 @@
     "pools": [
     {
 		"rolls": 1,
-		"entries": [
-		{
-			"type": "item",
-			"name": "musictriggers:music_recorder"
-		}]
+		"entries": [{
+        		    "type": "minecraft:item",
+        			"name": "musictriggers:music_recorder"
+        		}]
 	}]
 }
