@@ -1,11 +1,11 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.util.Identifier;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 
 public interface IPacket {
 
-    Identifier getID();
+    ResourceLocation getID();
 
-    PacketByteBuf encode();
+    FriendlyByteBuf encode();
 }

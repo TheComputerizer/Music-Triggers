@@ -12,8 +12,8 @@
     "homepage": "https://www.curseforge.com/minecraft/mc-mods/music-triggers"
   },
 
-  "license": "CC0-1.0",
-  "icon": "assets/musictriggers/icon.png",
+  "license": "MIT",
+  "icon": "assets/musictriggers/textures/logo.png",
 
   "accessWidener" : "musictriggers.accesswidener",
 
@@ -31,10 +31,11 @@
   ],
 
   "depends": {
-    "fabricloader": ">=0.11.3",
+    "fabricloader": ">=0.14.6",
     "fabric": "*",
-    "minecraft": "1.18.x",
-    "java": ">=17"
+    "minecraft": "~1.18.2",
+    "java": ">=17",
+    "theimpossiblelibrary": "*"
   },
   "suggests": {
     "another-mod": "*"

@@ -2,21 +2,21 @@ package mods.thecomputerizer.musictriggers.common.objects;
 
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.packets.PacketJukeBoxCustom;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.JukeboxBlock;
-import net.minecraft.client.item.TooltipContext;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUsageContext;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.stat.Stats;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
-import net.minecraft.util.ActionResult;
-import net.minecraft.world.World;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.stats.Stats;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.JukeboxBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,43 +24,43 @@ import java.util.List;
 
 public class MusicTriggersRecord extends Item {
 
-    public MusicTriggersRecord(Item.Settings s) {
+    public MusicTriggersRecord(Item.Properties s) {
         super(s);
     }
 
     @Override
-    public @NotNull ActionResult useOnBlock(ItemUsageContext ctx) {
-        BlockState state = ctx.getWorld().getBlockState(ctx.getBlockPos());
+    public @NotNull InteractionResult useOn(UseOnContext ctx) {
+        BlockState state = ctx.getLevel().getBlockState(ctx.getClickedPos());
         if (state.getBlock() instanceof MusicRecorder mr) {
-            if(!ctx.getWorld().isClient && ctx.getPlayer()!=null && !state.get(MusicRecorder.HAS_RECORD) && !state.get(MusicRecorder.HAS_DISC)) {
-                ItemStack stack = ctx.getPlayer().getStackInHand(ctx.getHand());
-                mr.insertRecord(ctx.getWorld(),ctx.getBlockPos(),state,stack,ctx.getPlayer().getUuid());
-                stack.decrement(1);
+            if(!ctx.getLevel().isClientSide && ctx.getPlayer()!=null && !state.getValue(MusicRecorder.HAS_RECORD) && !state.getValue(MusicRecorder.HAS_DISC)) {
+                ItemStack stack = ctx.getPlayer().getItemInHand(ctx.getHand());
+                mr.insertRecord(ctx.getLevel(),ctx.getClickedPos(),state,stack,ctx.getPlayer().getUUID());
+                stack.shrink(1);
             }
-            return ActionResult.SUCCESS;
-        } else if (state.getBlock() instanceof JukeboxBlock && !(Boolean)state.get(JukeboxBlock.HAS_RECORD)) {
-            if (!ctx.getWorld().isClient && ctx.getPlayer()!=null) {
-                ItemStack stack = ctx.getPlayer().getStackInHand(ctx.getHand());
-                if(stack.getOrCreateNbt().contains("trackID") && stack.getOrCreateNbt().contains("channelFrom")) {
-                    ((JukeboxBlock) Blocks.JUKEBOX).setRecord(ctx.getWorld(),ctx.getBlockPos(),state,stack);
-                    PacketHandler.sendTo(new PacketJukeBoxCustom(ctx.getBlockPos(),stack.getOrCreateNbt().getString("channelFrom"),stack.getOrCreateNbt().getString("trackID")),(ServerPlayerEntity) ctx.getPlayer());
-                    stack.decrement(1);
-                    ctx.getPlayer().incrementStat(Stats.PLAY_RECORD);
+            return InteractionResult.SUCCESS;
+        } else if (state.getBlock() instanceof JukeboxBlock && !(Boolean)state.getValue(JukeboxBlock.HAS_RECORD)) {
+            if (!ctx.getLevel().isClientSide && ctx.getPlayer()!=null) {
+                ItemStack stack = ctx.getPlayer().getItemInHand(ctx.getHand());
+                if(stack.getOrCreateTag().contains("trackID") && stack.getOrCreateTag().contains("channelFrom")) {
+                    ((JukeboxBlock) Blocks.JUKEBOX).setRecord(ctx.getLevel(),ctx.getClickedPos(),state,stack);
+                    PacketHandler.sendTo(new PacketJukeBoxCustom(ctx.getClickedPos(),stack.getOrCreateTag().getString("channelFrom"),stack.getOrCreateTag().getString("trackID")),(ServerPlayer) ctx.getPlayer());
+                    stack.shrink(1);
+                    ctx.getPlayer().awardStat(Stats.PLAY_RECORD);
                 }
             }
-            return ActionResult.SUCCESS;
-        } else return super.useOnBlock(ctx);
+            return InteractionResult.SUCCESS;
+        } else return super.useOn(ctx);
     }
 
     @Override
-    public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-        if(stack.getOrCreateNbt().contains("trackID"))
-            tooltip.add(new LiteralText(getDescription().getString()+": "+stack.getOrCreateNbt().getString("trackID")));
-        else tooltip.add(new TranslatableText("item.musictriggers.music_triggers_record.blank_description"));
+    public void appendHoverText(ItemStack stack, @Nullable Level world, List<Component> tooltip, TooltipFlag context) {
+        if(stack.getOrCreateTag().contains("trackID"))
+            tooltip.add(new TextComponent(getDescription().getString()+": "+stack.getOrCreateTag().getString("trackID")));
+        else tooltip.add(new TranslatableComponent("item.musictriggers.music_triggers_record.blank_description"));
     }
 
-    public MutableText getDescription() {
-        return new TranslatableText(this.getTranslationKey() + ".desc");
+    public MutableComponent getDescription() {
+        return new TranslatableComponent(this.getDescriptionId() + ".desc");
     }
 
     public static float mapTriggerToFloat(String trigger) {

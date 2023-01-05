@@ -8,13 +8,16 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import org.apache.logging.log4j.Level;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.SourceDataLine;
 
-@SuppressWarnings("ALL")
+@Environment(EnvType.CLIENT)
 public class ChannelListener extends AudioEventAdapter {
     private final AudioPlayer audioPlayer;
     private final AudioDataFormat format;
@@ -31,6 +34,7 @@ public class ChannelListener extends AudioEventAdapter {
         this.AUDIO_THREAD.start();
     }
 
+    @SuppressWarnings("deprecation")
     public void stopThread() {
         this.AUDIO_THREAD.stop();
     }
@@ -46,7 +50,8 @@ public class ChannelListener extends AudioEventAdapter {
 
     @Override
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
-        MusicTriggers.logger.error("Track exception caught! Restarting audio output for channel: "+this.channel);
+        MusicTriggers.logExternally(Level.ERROR,"Track exception caught! Restarting audio output for channel: {}",
+                this.channel);
         exception.printStackTrace();
         this.AUDIO_THREAD.setRunAudioLoop(false);
     }

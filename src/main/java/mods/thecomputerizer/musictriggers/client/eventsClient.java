@@ -1,38 +1,40 @@
 package mods.thecomputerizer.musictriggers.client;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.audio.Channel;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
-import mods.thecomputerizer.musictriggers.client.gui.GuiTriggerInfo;
+import mods.thecomputerizer.musictriggers.client.data.Trigger;
+import mods.thecomputerizer.musictriggers.client.gui.GuiSuperType;
+import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.musictriggers.mixin.BossBarHudAccessor;
 import mods.thecomputerizer.musictriggers.mixin.InGameHudAccessor;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.packets.PacketBossInfo;
-import net.minecraft.advancement.Advancement;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.gui.hud.ClientBossBar;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.client.sound.SoundInstance;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.TranslatableText;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.LightType;
-import net.minecraft.world.World;
+import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
+import net.minecraft.ChatFormatting;
+import net.minecraft.advancements.Advancement;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.components.LerpingBossEvent;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.LightLayer;
+import org.apache.logging.log4j.Level;
 
-import java.io.IOException;
 import java.util.*;
 
 public class EventsClient {
-    public static Identifier IMAGE_CARD = null;
+    public static ResourceLocation IMAGE_CARD = null;
     public static boolean isWorldRendered;
     public static float fadeCount = 1000;
     public static Boolean activated = false;
@@ -42,11 +44,10 @@ public class EventsClient {
     public static boolean ismoving;
     public static String lastAdvancement;
     public static boolean advancement;
-    public static PlayerEntity PVPTracker;
+    public static Player PVPTracker;
     public static boolean renderDebug = true;
     public static boolean zone = false;
     public static boolean firstPass = false;
-    public static GuiTriggerInfo parentScreen = null;
     public static int x1 = 0;
     public static int y1 = 0;
     public static int z1 = 0;
@@ -55,93 +56,70 @@ public class EventsClient {
     public static int z2 = 0;
     private static int bossBarCounter = 0;
     public static final HashMap<String, Boolean> commandMap = new HashMap<>();
-    private static final ArrayList<PNG> renderablePngs = new ArrayList<>();
 
     public static SoundInstance playSound(SoundInstance sound) {
-        if (sound!=null) {
-            for (String s : ConfigDebug.blockedmods) {
-                if (sound.getId().getNamespace().contains(s) && sound.getCategory() == SoundCategory.MUSIC && !(ChannelManager.canAnyChannelOverrideMusic() && ConfigDebug.SilenceIsBad))
-                    return new PositionedSoundInstance(sound.getId(), SoundCategory.MUSIC, Float.MIN_VALUE*1000, 1F, false, 0, SoundInstance.AttenuationType.LINEAR, 0,0,0, false);
+        SimpleSoundInstance silenced = new SimpleSoundInstance(sound.getLocation(), SoundSource.MUSIC, Float.MIN_VALUE*1000, 1F,
+                false, 0, SoundInstance.Attenuation.NONE, 0.0D, 0.0D, 0.0D, true);
+        for(String s : ConfigDebug.BLOCKED_MOD_MUSIC) {
+            if(sound.getLocation().toString().contains(s) && sound.getSource()==SoundSource.MUSIC) {
+                if(!ConfigDebug.PLAY_NORMAL_MUSIC || ChannelManager.overridingMusicIsPlaying()) return silenced;
+            }
+        }
+        for(String s : ConfigDebug.BLOCKED_MOD_RECORDS) {
+            if(sound.getLocation().toString().contains(s) && sound.getSource()==SoundSource.RECORDS) {
+                if(!ConfigDebug.PLAY_NORMAL_MUSIC || ChannelManager.overridingMusicIsPlaying()) return silenced;
             }
         }
         return sound;
     }
-    public static void onAdvancement(Advancement a) {
-        lastAdvancement = a.getId().toString();
+
+    public static void onAdvancement(Advancement adv) {
+        lastAdvancement = adv.getId().toString();
         advancement = true;
     }
 
-    //these methods will be here until the impossible library actually functions as it is supposed to
-    //-----------------------------------------------------------------------------------------------
-    public static PNG initializePng(Identifier location) {
-        try {
-            return new PNG(location);
-        } catch (IOException ex) {
-            MusicTriggers.logger.error("Failed to initialize png at resource location "+location,ex);
-        }
-        return null;
+    public static boolean commandHelper(Trigger trigger) {
+        String id = trigger.getParameter("identifier");
+        return commandMap.containsKey(id) && commandMap.get(id);
     }
 
-    public static void renderPNGToBackground(PNG png, String horizontal, String vertical, int x, int y, float scaleX, float scaleY, long millis) {
-        if(!renderablePngs.contains(png)) {
-            png.setHorizontal(horizontal);
-            png.setVertical(vertical);
-            png.setX(x);
-            png.setY(y);
-            png.setScaleX(scaleX);
-            png.setScaleY(scaleY);
-            png.setMillis(millis);
-            renderablePngs.add(png);
-        }
+    public static void commandFinish(Trigger trigger) {
+        String id = trigger.getParameter("identifier");
+        commandMap.put(id,false);
     }
-
-    public static void imageCards(MatrixStack matrix) {
-        MinecraftClient mc = MinecraftClient.getInstance();
-        int x = mc.getWindow().getScaledWidth();
-        int y = mc.getWindow().getScaledHeight();
-        for (PNG png : renderablePngs) renderPng(png, matrix, x, y);
-    }
-
-    public static void renderPng(PNG png, MatrixStack matrix, int resolutionX, int resolutionY) {
-        matrix.push();
-        RenderSystem.enableBlend();
-        RenderSystem.setShaderColor(1F, 1F, 1F, Math.min(0.95f, 1f));
-        float scaleX  = (0.25f*((float)resolutionY/(float)resolutionX))*png.getScaleX();
-        float scaleY = 0.25f*png.getScaleY();
-        matrix.scale(scaleX,scaleY,1F);
-        png.loadToManager();
-        int xOffset = 0;
-        int yOffset = 0;
-        if(png.getHorizontal().matches("center")) xOffset = (int) ((resolutionX/2f)-((float)resolutionX*(scaleX/2f)));
-        else if(png.getHorizontal().matches("right")) xOffset = (int) (resolutionX-((float)resolutionX*(scaleX/2f)));
-        if(png.getVertical().matches("center")) yOffset = (int) ((resolutionY/2f)-((float)resolutionY*(scaleY/2f)));
-        else if(png.getVertical().matches("top")) yOffset = (int) (resolutionY-((float)resolutionY*(scaleY/2f)));
-        float posX = (xOffset*(1/scaleX))+png.getX();
-        float posY = (yOffset*(1/scaleY))+png.getY();
-        DrawableHelper.drawTexture(matrix,(int)posX, (int)posY,0,0,resolutionX,resolutionY,resolutionX,resolutionY);
-        matrix.pop();
-    }
-    //-----------------------------------------------------------------------------------------------
 
     public static void onDisconnect() {
         isWorldRendered=false;
     }
 
+    public static void initReload() {
+        Component reload = AssetUtil.genericLang(Constants.MODID,"misc","reload_start").withStyle(ChatFormatting.RED)
+                        .withStyle(ChatFormatting.ITALIC);
+        if(Objects.nonNull(Minecraft.getInstance().player))
+            Minecraft.getInstance().player.sendMessage(reload,Minecraft.getInstance().player.getUUID());
+        reloadCounter = 5;
+        ChannelManager.reloading = true;
+        MusicTriggers.savedMessages.clear();
+        MusicTriggers.logExternally(Level.INFO,"Reloading Music...");
+    }
+
+
     public static void onKeyInput() {
-        if(MinecraftClient.getInstance().player!=null) {
-            BlockPos pos = MusicPicker.roundedPos(MinecraftClient.getInstance().player);
+        if(Minecraft.getInstance().player!=null) {
+            //BlockPos pos = MusicPicker.roundedPos(Minecraft.getMinecraft().player);
             if(!zone) {
-                //Minecraft.getInstance().displayGuiScreen(new GuiMain(ConfigObject.createFromCurrent()));
-                MinecraftClient.getInstance().player.sendMessage(new TranslatableText("\u00A74\u00A7o"+ "misc.musictriggers.reload_start"),false);
-                reloadCounter = 5;
-                ChannelManager.reloading = true;
+                Minecraft.getInstance().setScreen(Instance.createTestGui());
+                //Minecraft.getMinecraft().player.sendMessage(new TextComponentString("\u00A74\u00A7o"+I18n.translateToLocal("misc.musictriggers.reload_start")));
+                //reloadCounter = 5;
+                //ChannelManager.reloading = true;
             }
+            /*
             else if(!firstPass) {
                 x1 = pos.getX();
                 y1 = pos.getY();
                 z1 = pos.getZ();
                 firstPass = true;
-                MinecraftClient.getInstance().getSoundManager().play(new PositionedSoundInstance(SoundEvents.BLOCK_ANVIL_BREAK, SoundCategory.MUSIC, 1f, 1f, pos));
+                Minecraft.getMinecraft().getSoundHandler().playSound(new PositionedSoundRecord(SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.MUSIC, 1f, 1f, pos));
             } else {
                 x2 = pos.getX();
                 y2 = pos.getY();
@@ -164,21 +142,25 @@ public class EventsClient {
                 }
                 firstPass = false;
                 zone = false;
-                MinecraftClient.getInstance().getSoundManager().play(new PositionedSoundInstance(SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.MUSIC, 1f, 1f, pos));
+                Minecraft.getMinecraft().getSoundHandler().playSound(new PositionedSoundRecord(SoundEvents.BLOCK_ANVIL_BREAK, SoundCategory.MUSIC, 1f, 1f, pos));
                 String compiledZoneCoords = x1+","+y1+","+z1+","+x2+","+y2+","+z2;
                 parentScreen.holder.editTriggerInfoParameter(parentScreen.songCode, parentScreen.trigger, parentScreen.scrollingSongs.index, compiledZoneCoords);
-                MinecraftClient.getInstance().setScreen(parentScreen);
+                Minecraft.getMinecraft().displayGuiScreen(parentScreen);
             }
+             */
         }
     }
 
     public static void onTick() {
-        if(!MinecraftClient.getInstance().isPaused() && !renderDebug) renderDebug = true;
+        if(!Minecraft.getInstance().isPaused() && !(Minecraft.getInstance().screen instanceof GuiSuperType) && !renderDebug) renderDebug = true;
         if(reloadCounter>0) {
             reloadCounter-=1;
             if(reloadCounter==1) {
                 ChannelManager.reloadAllChannels();
-                if(MinecraftClient.getInstance().player!=null) MinecraftClient.getInstance().player.sendMessage(new TranslatableText("\u00A74\u00A7o"+ "misc.musictriggers.reload_finished"),false);
+                Component reload = AssetUtil.genericLang(Constants.MODID,"misc","reload_finished")
+                        .withStyle(ChatFormatting.GREEN).withStyle(ChatFormatting.ITALIC);
+                if(Objects.nonNull(Minecraft.getInstance().player))
+                    Minecraft.getInstance().player.sendMessage(reload,Minecraft.getInstance().player.getUUID());
                 IMAGE_CARD = null;
                 fadeCount = 1000;
                 timer = 0;
@@ -190,101 +172,115 @@ public class EventsClient {
     }
 
     @SuppressWarnings("ConstantConditions")
-    public static void debugInfo(MatrixStack matrix) {
-        if (ConfigDebug.ShowDebugInfo && renderDebug) {
-            List<String> left = new ArrayList<>();
-            left.add("Music Triggers Debug Information");
+    public static void debugInfo(PoseStack matrix) {
+        if(ConfigDebug.SHOW_DEBUG && renderDebug) {
+            List<String> lines = new ArrayList<>();
+            lines.add("Music Triggers Debug Information");
             for(Channel channel : ChannelManager.getAllChannels())
-                if(channel.currentSongName()!=null)
-                    left.add("Channel["+channel.getChannelName()+"] Current Song: "+channel.currentSongName());
-            if(!ConfigDebug.ShowJustCurSong) {
+                if(channel.curPlayingName()!=null)
+                    lines.add("Channel["+channel.getChannelName()+"] Current Song: "+channel.curPlayingName());
+            if(!ConfigDebug.CURRENT_SONG_ONLY) {
                 int displayCount = 0;
                 for(Channel channel : ChannelManager.getAllChannels()) {
-                    if(!channel.formatSongTime().matches("No song playing")) left.add("Channel["+channel.getChannelName()+"] Current Song Time: " + channel.formatSongTime());
-                    if(channel.formattedFadeOutTime()!=null) left.add("Channel["+channel.getChannelName()+"] Fading Out: "+channel.formattedFadeOutTime());
-                    if(channel.formattedFadeInTime()!=null) left.add("Channel["+channel.getChannelName()+"] Fading In: "+channel.formattedFadeInTime());
+                    if(!channel.formatSongTime().matches("No song playing")) lines.add("Channel["+channel.getChannelName()+"] Current Song Time: " + channel.formatSongTime());
+                    if(channel.formattedFadeOutTime()!=null) lines.add("Channel["+channel.getChannelName()+"] Fading Out: "+channel.formattedFadeOutTime());
+                    if(channel.formattedFadeInTime()!=null) lines.add("Channel["+channel.getChannelName()+"] Fading In: "+channel.formattedFadeInTime());
                 }
                 for(Channel channel : ChannelManager.getAllChannels()) {
                     if (!channel.getPlayableTriggers().isEmpty()) {
                         StringBuilder s = new StringBuilder();
-                        for (String trigger : channel.getPlayableTriggers()) {
-                            if (MinecraftClient.getInstance().textRenderer.getWidth(s + " " + trigger) > 0.75f * MinecraftClient.getInstance().getWindow().getScaledWidth()) {
+                        for (Trigger trigger : channel.getPlayableTriggers()) {
+                            String name = trigger.getNameWithID();
+                            if (Minecraft.getInstance().font.width(s + " " + name) > 0.75f *
+                                    Minecraft.getInstance().getWindow().getGuiScaledWidth()) {
                                 if (displayCount == 0) {
-                                    left.add("Channel["+channel.getChannelName()+"] Playable Events: " + s);
+                                    lines.add("Channel["+channel.getChannelName()+"] Playable Events: " + s);
                                     displayCount++;
-                                } else left.add(s.toString());
+                                } else lines.add(s.toString());
                                 s = new StringBuilder();
                             }
-                            s.append(" ").append(trigger);
+                            s.append(" ").append(name);
                         }
-                        if (displayCount == 0) left.add("Channel["+channel.getChannelName()+"] Playable Events: " + s);
-                        else left.add(s.toString());
+                        if (displayCount == 0) lines.add("Channel["+channel.getChannelName()+"] Playable Events: " + s);
+                        else lines.add(s.toString());
                     }
                     displayCount = 0;
                 }
                 StringBuilder sm = new StringBuilder();
                 sm.append("minecraft");
-                for (String ev : ConfigDebug.blockedmods) {
-                    if(MinecraftClient.getInstance().textRenderer.getWidth(sm+" "+ev)>0.75f*MinecraftClient.getInstance().getWindow().getScaledWidth()) {
+                for (String ev : ConfigDebug.BLOCKED_MOD_MUSIC) {
+                    if(Minecraft.getInstance().font.width(sm+" "+ev)>0.75f*Minecraft.getInstance().getWindow().getGuiScaledWidth()) {
                         if(displayCount==0) {
-                            left.add("Blocked Mods: " + sm);
+                            lines.add("Blocked Mods: " + sm);
                             displayCount++;
-                        } else left.add(sm.toString());
+                        } else lines.add(sm.toString());
                         sm = new StringBuilder();
                     }
                     sm.append(" ").append(ev);
                 }
-                if(displayCount==0) left.add("Blocked Mods: " + sm);
-                else left.add(sm.toString());
+                if(displayCount==0) lines.add("Blocked Mods: " + sm);
+                else lines.add(sm.toString());
                 displayCount=0;
-                PlayerEntity player = MinecraftClient.getInstance().player;
-                World world = player.world;
-                if(player!=null && world!=null) {
-                    left.add("Current Biome: " + world.getBiome(MusicPicker.roundedPos(player)).getKey().get().getValue().toString());
-                    left.add("Current Dimension: " + player.world.getRegistryKey().getValue().toString());
-                    left.add("Current Total Light: " + world.getLightLevel(MusicPicker.roundedPos(player), 0));
-                    left.add("Current Block Light: " + world.getLightLevel(LightType.BLOCK, MusicPicker.roundedPos(player)));
+                Minecraft mc = Minecraft.getInstance();
+                Player player = mc.player;
+                net.minecraft.world.level.Level level = player.level;
+                if(player!=null && level!=null) {
+                    lines.add("Current Biome: " + level.getBiome(roundedPos(player)).unwrapKey().get().location());
+                    lines.add("Current Dimension: " + level.dimension().location());
+                    lines.add("Current Total Light: " + level.getRawBrightness(roundedPos(player), 0));
+                    lines.add("Current Block Light: " + level.getBrightness(LightLayer.BLOCK, roundedPos(player)));
                     if (MusicPicker.effectList != null && !MusicPicker.effectList.isEmpty()) {
                         StringBuilder se = new StringBuilder();
                         for (String ev : MusicPicker.effectList) {
-                            if(MinecraftClient.getInstance().textRenderer.getWidth(se+" "+ev)>0.75f*MinecraftClient.getInstance().getWindow().getScaledWidth()) {
+                            if(Minecraft.getInstance().font.width(se+" "+ev)>0.75f*Minecraft.getInstance().getWindow().getGuiScaledWidth()) {
                                 if(displayCount==0) {
-                                    left.add("Effect List: " + se);
+                                    lines.add("Effect List: " + se);
                                     displayCount++;
-                                } else left.add(se.toString());
+                                } else lines.add(se.toString());
                                 se = new StringBuilder();
                             }
                             se.append(" ").append(ev);
                         }
-                        if(displayCount==0) left.add("Effect List: " + se);
-                        else left.add(se.toString());
+                        if(displayCount==0) lines.add("Effect List: " + se);
+                        else lines.add(se.toString());
                     }
-                    if (getLivingFromEntity(MinecraftClient.getInstance().targetedEntity) != null) left.add("Music Triggers Current Entity Name: "+getLivingFromEntity(MinecraftClient.getInstance().targetedEntity).getName().getString());
-                    if (MinecraftClient.getInstance().currentScreen != null) left.add("Music Triggers current GUI: "+MinecraftClient.getInstance().currentScreen);
+                    if(Minecraft.getInstance().crosshairPickEntity != null) {
+                        if (getLivingFromEntity(Minecraft.getInstance().crosshairPickEntity) != null)
+                            lines.add("Current Entity Name: " + getLivingFromEntity(Minecraft.getInstance()
+                                    .crosshairPickEntity).getName());
+                    }
                 }
             }
             int top = 2;
-            for (String msg : left)
-            {
-                DrawableHelper.fill(matrix, 1, top - 1, 2 + MinecraftClient.getInstance().textRenderer.getWidth(msg) + 1, top + MinecraftClient.getInstance().textRenderer.fontHeight - 1, -1873784752);
-                MinecraftClient.getInstance().textRenderer.draw(matrix, msg, 2, top, 14737632);
-                top += MinecraftClient.getInstance().textRenderer.fontHeight;
+            for (String msg : lines) {
+                GuiComponent.fill(matrix, 1, top - 1, 2 + Minecraft.getInstance().font.width(msg) + 1,
+                        top + Minecraft.getInstance().font.lineHeight - 1, -1873784752);
+                Minecraft.getInstance().font.draw(matrix, msg, 2, top, 14737632);
+                top += Minecraft.getInstance().font.lineHeight;
             }
         }
     }
+
+    private static BlockPos roundedPos(Player p) {
+        return new BlockPos((Math.round(p.getX() * 2) / 2.0), (Math.round(p.getY() * 2) / 2.0), (Math.round(p.getZ() * 2) / 2.0));
+    }
+
 
     public static void renderBoss() {
-        if (bossBarCounter % 11 == 0) {
-            Map<UUID, ClientBossBar> bossbars = ((BossBarHudAccessor) ((InGameHudAccessor) MinecraftClient.getInstance().inGameHud).getBossBarHud()).getBossBars();
-            for (UUID u : bossbars.keySet()) {
-                ClientBossBar bar = bossbars.get(u);
-                PacketHandler.sendToServer(new PacketBossInfo(bar.getName().getString(),bar.getPercent()));
+        if(Objects.nonNull(Minecraft.getInstance().player)) {
+            if (bossBarCounter % 11 == 0) {
+                Map<UUID, LerpingBossEvent> bossbars =
+                        ((BossBarHudAccessor) ((InGameHudAccessor) Minecraft.getInstance().gui).getBossOverlay()).getEvents();
+                for (UUID u : bossbars.keySet()) {
+                    LerpingBossEvent bar = bossbars.get(u);
+                    PacketHandler.sendToServer(new PacketBossInfo(bar.getName().getString(),bar.getProgress(),
+                            Minecraft.getInstance().player.getStringUUID()));
+                }
+                bossBarCounter = 0;
             }
-            bossBarCounter = 0;
+            bossBarCounter++;
         }
-        bossBarCounter++;
     }
-
     private static LivingEntity getLivingFromEntity(Entity e) {
         if (e instanceof LivingEntity) return (LivingEntity) e;
         return null;

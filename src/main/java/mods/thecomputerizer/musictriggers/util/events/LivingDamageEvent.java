@@ -2,21 +2,21 @@ package mods.thecomputerizer.musictriggers.util.events;
 
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.util.ActionResult;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.LivingEntity;
 
 public interface LivingDamageEvent {
     Event<LivingDamageEvent> EVENT = EventFactory.createArrayBacked(LivingDamageEvent.class,
             (listeners) -> (entity, damageSource) -> {
                 for (LivingDamageEvent listener : listeners) {
-                    ActionResult result = listener.interact(entity, damageSource);
-                    if(result != ActionResult.PASS) {
+                    InteractionResult result = listener.interact(entity, damageSource);
+                    if(result != InteractionResult.PASS) {
                         return result;
                     }
                 }
-                return ActionResult.PASS;
+                return InteractionResult.PASS;
             });
 
-    ActionResult interact(LivingEntity entity, DamageSource damageSource);
+    InteractionResult interact(LivingEntity entity, DamageSource damageSource);
 }

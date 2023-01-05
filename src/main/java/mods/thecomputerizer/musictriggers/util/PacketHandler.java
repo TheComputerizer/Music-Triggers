@@ -6,9 +6,7 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Identifier;
+import net.minecraft.server.level.ServerPlayer;
 
 
 public class PacketHandler {
@@ -23,7 +21,7 @@ public class PacketHandler {
         }
     }
 
-    public static void sendTo(IPacket packet, ServerPlayerEntity player) {
+    public static void sendTo(IPacket packet, ServerPlayer player) {
         ServerPlayNetworking.send(player,packet.getID(),packet.encode());
     }
 

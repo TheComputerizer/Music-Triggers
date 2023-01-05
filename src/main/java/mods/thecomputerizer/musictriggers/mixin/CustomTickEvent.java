@@ -2,18 +2,18 @@ package mods.thecomputerizer.musictriggers.mixin;
 
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
-import net.minecraft.util.ActionResult;
+import net.minecraft.world.InteractionResult;
 
 public interface CustomTickEvent {
 
     Event<CustomTickEvent> EVENT = EventFactory.createArrayBacked(CustomTickEvent.class,
             (listeners) -> () -> {
                 for (CustomTickEvent listener : listeners) {
-                    ActionResult result = listener.interact();
-                    if(result != ActionResult.PASS) return result;
+                    InteractionResult result = listener.interact();
+                    if(result != InteractionResult.PASS) return result;
                 }
-                return ActionResult.PASS;
+                return InteractionResult.PASS;
             });
 
-    ActionResult interact();
+    InteractionResult interact();
 }

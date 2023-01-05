@@ -9,8 +9,7 @@
     "MixinAdvancementEvent",
     "MixinLivingDamageEvent",
     "MixinMusicTracker",
-    "MixinPlaySoundEvent",
-    "MixinSoundSystem"
+    "MixinPlaySoundEvent"
   ],
   "client": [],
   "injectors": {

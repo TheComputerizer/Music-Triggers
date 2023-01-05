@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.client.audio.Channel;
 import mods.thecomputerizer.musictriggers.common.EventsCommon;
 import mods.thecomputerizer.musictriggers.common.ServerChannelData;
@@ -8,20 +8,19 @@ import mods.thecomputerizer.musictriggers.util.CalculateFeatures;
 import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.Identifier;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 public class PacketQueryServerInfo implements IPacket {
-    private static final Identifier id = new Identifier(MusicTriggers.MODID, "packet_query_server_info");
+    private static final ResourceLocation id = new ResourceLocation(Constants.MODID, "packet_query_server_info");
     private final List<Channel> clientChannels = new ArrayList<>();
     private final List<ServerChannelData> data = new ArrayList<>();
 
-    public PacketQueryServerInfo(PacketByteBuf buf, MinecraftServer server) {
+    public PacketQueryServerInfo(FriendlyByteBuf buf, MinecraftServer server) {
         int size = buf.readInt();
         for (int i = 0; i < size; i++) this.data.add(ServerChannelData.decode(buf, server));
     }
@@ -31,8 +30,8 @@ public class PacketQueryServerInfo implements IPacket {
     }
 
     @Override
-    public PacketByteBuf encode() {
-        PacketByteBuf buf = PacketByteBufs.create();
+    public FriendlyByteBuf encode() {
+        FriendlyByteBuf buf = PacketByteBufs.create();
         buf.writeInt(this.clientChannels.size());
         for (Channel channel : this.clientChannels) channel.encode(buf);
         return buf;
@@ -43,8 +42,8 @@ public class PacketQueryServerInfo implements IPacket {
             PacketQueryServerInfo packet = new PacketQueryServerInfo(buf,server);
             if (!packet.data.isEmpty()) {
                 List<ServerChannelData> serverChannelData = new ArrayList<>();
-                EventsCommon.currentChannelSongs.put(player.getUuid(),new HashMap<>());
-                EventsCommon.activeTriggerList.put(player.getUuid(),new HashMap<>());
+                EventsCommon.currentChannelSongs.put(player.getUUID(),new HashMap<>());
+                EventsCommon.activeTriggerList.put(player.getUUID(),new HashMap<>());
                 for (ServerChannelData data : packet.data)
                     serverChannelData.add(CalculateFeatures.calculateServerTriggers(data,server));
                 PacketHandler.sendTo(new PacketSyncServerInfo(serverChannelData),player);
@@ -53,7 +52,7 @@ public class PacketQueryServerInfo implements IPacket {
     }
 
     @Override
-    public Identifier getID() {
+    public ResourceLocation getID() {
         return id;
     }
 }

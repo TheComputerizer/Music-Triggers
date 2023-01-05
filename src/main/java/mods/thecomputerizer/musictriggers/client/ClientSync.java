@@ -66,7 +66,7 @@ public class ClientSync {
 
     public String getCurrentBiomeForBiomeTrigger(String triggerID) {
         this.biomeResults.putIfAbsent(triggerID, new Biome(false, null));
-        return this.biomeResults.get(triggerID).currentBiome();
+        return this.biomeResults.get(triggerID).getCurrentBiome();
     }
 
     public boolean isStructureTriggerActive(String triggerID) {
@@ -81,7 +81,7 @@ public class ClientSync {
 
     public boolean getVictoryStatusForMobTrigger(String triggerID) {
         this.mobResults.putIfAbsent(triggerID, new Mob(false, false));
-        return this.mobResults.get(triggerID).victory();
+        return this.mobResults.get(triggerID).getVictory();
     }
 
     public boolean isRaidTriggerActive(String triggerID) {
@@ -89,45 +89,87 @@ public class ClientSync {
         return this.raidResults.get(triggerID).isActive();
     }
 
-    public record Snow(boolean pass) {
+    public static class Snow {
+        private final boolean pass;
 
-        public boolean isActive() {
-                return this.pass;
-            }
+        public Snow(boolean pass) {
+            this.pass = pass;
         }
 
-    public record Home(boolean pass) {
-
         public boolean isActive() {
-                return this.pass;
-            }
+            return this.pass;
+        }
+    }
+
+    public static class Home {
+        private final boolean pass;
+
+        public Home(boolean pass) {
+            this.pass = pass;
         }
 
-    public record Biome(boolean pass, String currentBiome) {
-
         public boolean isActive() {
-                return this.pass;
-            }
+            return this.pass;
+        }
+    }
+
+    public static class Biome {
+        private final boolean pass;
+        private final String currentBiome;
+
+        public Biome(boolean pass, String currentBiome) {
+            this.pass = pass;
+            this.currentBiome = currentBiome;
         }
 
-    public record Structure(boolean pass) {
-
         public boolean isActive() {
-                return this.pass;
-            }
+            return this.pass;
         }
 
-    public record Mob(boolean pass, boolean victory) {
+        public String getCurrentBiome() {
+            return this.currentBiome;
+        }
+    }
 
-        public boolean isActive() {
-                return this.pass;
-            }
+    public static class Structure {
+        private final boolean pass;
+
+        public Structure(boolean pass) {
+            this.pass = pass;
         }
 
-    public record Raid(boolean pass) {
+        public boolean isActive() {
+            return this.pass;
+        }
+    }
+
+    public static class Mob {
+        private final boolean pass;
+        private final boolean victory;
+
+        public Mob(boolean pass, boolean victory) {
+            this.pass = pass;
+            this.victory = victory;
+        }
 
         public boolean isActive() {
-                return this.pass;
-            }
+            return this.pass;
         }
+
+        public boolean getVictory() {
+            return this.victory;
+        }
+    }
+
+    public static class Raid {
+        private final boolean pass;
+
+        public Raid(boolean pass) {
+            this.pass = pass;
+        }
+
+        public boolean isActive() {
+            return this.pass;
+        }
+    }
 }

@@ -1,3 +1,8 @@
 accessWidener   v1  named
-accessible field net/minecraft/resource/AbstractFileResourcePack base Ljava/io/File;
-accessible field net/minecraft/client/resource/DefaultClientResourcePack index Lnet/minecraft/client/resource/ResourceIndex;
+accessible field net/minecraft/client/resources/DefaultClientPackResources assetIndex Lnet/minecraft/client/resources/AssetIndex;
+accessible field net/minecraft/server/packs/AbstractPackResources file Ljava/io/File;
+accessible field net/minecraft/client/sounds/SoundManager registry Ljava/util/Map;
+accessible field net/minecraft/client/sounds/WeighedSoundEvents list Ljava/util/List;
+accessible field net/minecraft/client/gui/components/AbstractWidget message Lnet/minecraft/network/chat/Component;
+accessible field net/minecraft/client/gui/screens/Screen renderables Ljava/util/List;
+accessible method net/minecraft/client/renderer/item/ItemProperties register (Lnet/minecraft/world/item/Item;Lnet/minecraft/resources/ResourceLocation;Lnet/minecraft/client/renderer/item/ClampedItemPropertyFunction;)V

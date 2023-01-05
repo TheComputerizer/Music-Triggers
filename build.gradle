@@ -3,12 +3,11 @@
 //file:noinspection GradlePackageVersionRange
 //file:noinspection GroovyUnusedAssignment
 plugins {
-	id 'fabric-loom' version '0.11-SNAPSHOT'
+	id 'fabric-loom' version '0.12-SNAPSHOT'
 	id 'maven-publish'
 }
 
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -31,7 +30,7 @@ repositories {
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	mappings loom.officialMojangMappings()
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
@@ -50,6 +49,7 @@ dependencies {
 	include (implementation("org.apache.commons:commons-lang3:3.12.0"))
 
 	//mods
+	modImplementation "curse.maven:the-impossible-library-661115:4300743"
 	modImplementation "curse.maven:cloth-config-319057:3641132"
 	modImplementation "curse.maven:modmenu-308702:3570652"
 }

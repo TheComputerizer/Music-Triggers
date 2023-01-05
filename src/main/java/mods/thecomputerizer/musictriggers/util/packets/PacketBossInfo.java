@@ -1,54 +1,56 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.common.EventsCommon;
 import mods.thecomputerizer.musictriggers.util.CalculateFeatures;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.util.Identifier;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.nio.charset.StandardCharsets;
-
-import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
+import java.util.HashMap;
 
 public class PacketBossInfo implements IPacket {
-    private static final Identifier id = new Identifier(MusicTriggers.MODID, "packet_boss_info");
-    private final String s;
+    private static final ResourceLocation id = new ResourceLocation(Constants.MODID, "packet_boss_info");
+    private final String name;
+    private final float health;
+    private final String playerUUID;
 
-    private PacketBossInfo(PacketByteBuf buf) {
-        this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
+    private PacketBossInfo(FriendlyByteBuf buf) {
+        this.name = ((String) buf.readCharSequence(buf.readInt(), StandardCharsets.UTF_8));
+        this.health = buf.readFloat();
+        this.playerUUID = ((String) buf.readCharSequence(buf.readInt(), StandardCharsets.UTF_8));
     }
 
-    public PacketBossInfo(String name, float health) {
-        this.s = name+","+health;
+    public PacketBossInfo(String name, float health, String playerUUID) {
+        this.name = name;
+        this.health = health;
+        this.playerUUID = playerUUID;
     }
 
-    public PacketByteBuf encode() {
-        PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeCharSequence(this.s, StandardCharsets.UTF_8);
+    public FriendlyByteBuf encode() {
+        FriendlyByteBuf buf = PacketByteBufs.create();
+        buf.writeInt(this.name.length());
+        buf.writeCharSequence(this.name, StandardCharsets.UTF_8);
+        buf.writeFloat(this.health);
+        buf.writeInt(this.playerUUID.length());
+        buf.writeCharSequence(this.playerUUID, StandardCharsets.UTF_8);
         return buf;
     }
 
     public static void register() {
         ServerPlayNetworking.registerGlobalReceiver(id,(server, player, handler, buf, sender) -> {
             PacketBossInfo packet = new PacketBossInfo(buf);
-            CalculateFeatures.bossInfo.put(packet.getBossName(), packet.getDataHealth());
-            EventsCommon.bossTimer = 40;
+            CalculateFeatures.perPlayerBossInfo.putIfAbsent(player.getUUID(), new HashMap<>());
+            CalculateFeatures.perPlayerBossInfo.get(player.getUUID()).put(packet.name, packet.health);
+            EventsCommon.bossTimers.put(player.getUUID(), new MutableInt(40));
         });
     }
 
-    private String getBossName() {
-        if(this.s==null) return null;
-        return stringBreaker(this.s,",")[0];
-    }
-
-    private float getDataHealth() {
-        return Float.parseFloat(stringBreaker(this.s,",")[1]);
-    }
-
     @Override
-    public Identifier getID() {
+    public ResourceLocation getID() {
         return id;
     }
 }

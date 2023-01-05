@@ -1,28 +1,27 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import java.nio.charset.StandardCharsets;
 
 public class PacketJukeBoxCustom implements IPacket {
 
-    private static final Identifier id = new Identifier(MusicTriggers.MODID, "packet_jukebox_custom");
+    private static final ResourceLocation id = new ResourceLocation(Constants.MODID, "packet_jukebox_custom");
     private final BlockPos pos;
     private final boolean start;
     private final String channel;
     private final String trackID;
 
-    private PacketJukeBoxCustom(PacketByteBuf buf) {
+    private PacketJukeBoxCustom(FriendlyByteBuf buf) {
         this.start = buf.readBoolean();
         this.channel = (String) buf.readCharSequence(buf.readInt(), StandardCharsets.UTF_8);
         this.trackID = (String) buf.readCharSequence(buf.readInt(), StandardCharsets.UTF_8);
-        if(this.start) this.pos = BlockPos.fromLong(buf.readLong());
+        if(this.start) this.pos = BlockPos.of(buf.readLong());
         else this.pos = null;
     }
 
@@ -34,8 +33,8 @@ public class PacketJukeBoxCustom implements IPacket {
     }
 
     @Override
-    public PacketByteBuf encode() {
-        PacketByteBuf buf = PacketByteBufs.create();
+    public FriendlyByteBuf encode() {
+        FriendlyByteBuf buf = PacketByteBufs.create();
         buf.writeBoolean(this.start);
         buf.writeInt(this.channel.length());
         buf.writeCharSequence(this.channel, StandardCharsets.UTF_8);
@@ -53,7 +52,7 @@ public class PacketJukeBoxCustom implements IPacket {
     }
 
     @Override
-    public Identifier getID() {
+    public ResourceLocation getID() {
         return id;
     }
 }
