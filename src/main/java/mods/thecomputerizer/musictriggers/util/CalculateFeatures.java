@@ -77,7 +77,6 @@ public class CalculateFeatures {
 
     public static boolean calculateBiome(ServerChannelData.Biome biome, MinecraftServer server, ServerPlayer player) {
         if(player!=null) {
-            MusicTriggers.logExternally(Level.WARN,"gimme the biome");
             ServerLevel world = server.getLevel(player.level.dimension());
             if (Objects.nonNull(world)) {
                 BlockPos pos = roundedPos(player);
