@@ -24,7 +24,8 @@ import net.fabricmc.api.Environment;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.DefaultClientPackResources;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.contents.LiteralContents;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.repository.Pack;
@@ -273,18 +274,18 @@ public class Channel {
     }
 
     public void tickSlow() {
-        if(checkAudio() && Trigger.isRegistered(this.name)) {
+        if (checkAudio() && Trigger.isRegistered(this.name)) {
             this.toSend = this.picker.querySongList(this.main.universalParameters);
             if (!isPlaying()) {
-                if(!this.picker.getInfo().getActiveTriggers().isEmpty()) {
-                    if(this.playingTriggers.isEmpty()) {
+                if (!this.picker.getInfo().getActiveTriggers().isEmpty()) {
+                    if (this.playingTriggers.isEmpty()) {
                         this.delayCounter = MusicTriggers.randomInt("trigger_delay", this.picker.triggerDelay, 0);
                         this.delayCatch = true;
                         this.playingTriggers.addAll(this.picker.getInfo().getActiveTriggers());
                         onTriggerStart();
                     }
-                    if(this.playingTriggers.equals(this.picker.getInfo().getActiveTriggers())) {
-                        if(!this.delayCatch) {
+                    if (this.playingTriggers.equals(this.picker.getInfo().getActiveTriggers())) {
+                        if (!this.delayCatch) {
                             this.delayCounter = MusicTriggers.randomInt("song_delay", this.picker.songDelay, 0);
                             this.delayCatch = true;
                         }
@@ -299,8 +300,8 @@ public class Channel {
                                 setVolume(this.saveVolIn);
                                 playTrack(audio, 0);
                                 delayCatch = false;
-                                if(audio.getPlayOnce()==1) this.onceUntilEmpty.add(audio);
-                                if(audio.getPlayOnce()==2) this.oncePerTrigger.add(audio);
+                                if (audio.getPlayOnce() == 1) this.onceUntilEmpty.add(audio);
+                                if (audio.getPlayOnce() == 2) this.oncePerTrigger.add(audio);
                             } else MusicTriggers.logExternally(Level.INFO, "Audio was null!");
                         }
                     } else {
@@ -314,7 +315,7 @@ public class Channel {
                     this.curTrack = null;
                     this.playingTriggers.clear();
                 }
-            } else if(!this.fadingOut && !this.fadingIn && Objects.nonNull(this.curTrack)) {
+            } else if (!this.fadingOut && !this.fadingIn && Objects.nonNull(this.curTrack)) {
                 if (!this.curTrack.mustFinish()
                         && (!this.playingTriggers.equals(this.picker.getInfo().getActiveTriggers())
                         || this.picker.getInfo().getActiveTriggers().isEmpty())) {
@@ -323,7 +324,7 @@ public class Channel {
                         this.playingTriggers.addAll(this.picker.getInfo().getActiveTriggers());
                     } else stopTrack(true);
                 }
-            } else if(Objects.isNull(this.curTrack)) stopTrack(true);
+            } else if (Objects.isNull(this.curTrack)) stopTrack(true);
             for (Trigger playable : this.picker.getInfo().getPlayableTriggers()) {
                 if (!this.picker.getInfo().getActiveTriggers().contains(playable))
                     if (playable.getParameterBool("toggle_inactive_playable"))
@@ -373,7 +374,6 @@ public class Channel {
         return null;
     }
 
-    @SuppressWarnings("ConstantConditions")
     public void renderCards() {
         Minecraft mc = Minecraft.getInstance();
         MusicTriggers.logExternally(Level.DEBUG, "Finding cards to render");
@@ -391,12 +391,12 @@ public class Channel {
             if (pass && mc.player != null) {
                 MusicTriggers.logExternally(Level.INFO,"displaying title card {}",i);
                 if(!this.transitions.titlecards.get(i).getTitles().isEmpty())
-                    mc.gui.setTitle((new TextComponent(this.transitions.titlecards.get(i).getTitles()
+                    mc.gui.setTitle(MutableComponent.create(new LiteralContents(this.transitions.titlecards.get(i).getTitles()
                             .get(ThreadLocalRandom.current().nextInt(0, this.transitions.titlecards.get(i)
                                     .getTitles().size())))).withStyle(ChatFormatting.getByName(
                                             this.transitions.titlecards.get(i).getTitlecolor())));
                 if(!this.transitions.titlecards.get(i).getSubTitles().isEmpty())
-                    mc.gui.setSubtitle((new TextComponent(this.transitions.titlecards.get(i)
+                    mc.gui.setSubtitle(MutableComponent.create(new LiteralContents(this.transitions.titlecards.get(i)
                             .getSubTitles().get(ThreadLocalRandom.current().nextInt(0,
                                     this.transitions.titlecards.get(i).getSubTitles().size())))).withStyle(
                             ChatFormatting.getByName(this.transitions.titlecards.get(i).getSubtitlecolor())));
@@ -520,7 +520,8 @@ public class Channel {
     }
 
     private boolean checkAudio() {
-        return Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER) > 0
+        return Objects.nonNull(Minecraft.getInstance().options) &&
+                Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER) > 0
                 && Minecraft.getInstance().options.getSoundSourceVolume(this.category) > 0;
     }
 

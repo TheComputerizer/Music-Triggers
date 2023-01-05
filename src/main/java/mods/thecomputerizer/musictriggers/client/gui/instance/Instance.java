@@ -9,8 +9,10 @@ import mods.thecomputerizer.musictriggers.config.ConfigChannels;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.util.RandomSource;
 
-import javax.annotation.Nullable;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -66,12 +68,12 @@ public class Instance {
         return this.hasChanges;
     }
 
-    public AbstractConfig getModule(GuiType type, @Nullable String channel) {
+    public AbstractConfig getModule(GuiType type, String channel) {
         if(Objects.isNull(channel)) return this.moduleMap.get(type);
         return this.channelHolder.getChannel(channel).getModule(type);
     }
 
-    public List<GuiParameters.Parameter> getParameters(GuiType type, @Nullable String channel) {
+    public List<GuiParameters.Parameter> getParameters(GuiType type, String channel) {
         return getModule(type, channel).getParameters(type);
     }
 
@@ -149,10 +151,11 @@ public class Instance {
     }
 
     public List<String> findAllRegisteredSounds() {
+        RandomSource random = SoundInstance.createUnseededRandom();
         return Minecraft.getInstance().getSoundManager().registry.values().stream()
                 .map(accessor -> accessor.list)
                 .flatMap(Collection::stream)
-                .map(accessor -> accessor.getSound().getPath().toString())
+                .map(accessor -> accessor.getSound(random).getPath().toString())
                 .distinct().sorted().collect(Collectors.toList());
     }
 }

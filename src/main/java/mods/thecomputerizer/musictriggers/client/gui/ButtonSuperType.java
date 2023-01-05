@@ -5,9 +5,9 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.contents.LiteralContents;
 
-import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -22,8 +22,9 @@ public class ButtonSuperType extends Button {
     public ButtonSuperType(int xPos, int yPos, int width, int height, String displayString,
                            List<String> hoverText, BiConsumer<GuiSuperType, ButtonSuperType> handler,
                            GuiSuperType parent, boolean isApply) {
-        super(xPos, yPos, width, height, new TextComponent(displayString), null);
-        this.hoverLines = hoverText.stream().map(TextComponent::new).collect(Collectors.toList());
+        super(xPos, yPos, width, height, MutableComponent.create(new LiteralContents(displayString)), null);
+        this.hoverLines = hoverText.stream().map(line -> MutableComponent.create(new LiteralContents(line)))
+                .collect(Collectors.toList());
         this.handlerFunction = handler;
         this.parentScreen = parent;
         this.isApply = isApply;
@@ -53,14 +54,14 @@ public class ButtonSuperType extends Button {
 
     public void updateDisplayFormat(ChatFormatting ... formatSettings) {
         if(Objects.isNull(formatSettings)) {
-            this.message = new TextComponent(this.baseDisplayString);
+            this.message = MutableComponent.create(new LiteralContents(this.baseDisplayString));
             return;
         }
         StringBuilder builder = new StringBuilder();
         for(ChatFormatting format : formatSettings)
             builder.append(format.toString());
         builder.append(this.baseDisplayString);
-        this.message = new TextComponent(builder.toString());
+        this.message = MutableComponent.create(new LiteralContents(builder.toString()));
     }
 
 
@@ -70,7 +71,7 @@ public class ButtonSuperType extends Button {
     }
 
     @Override
-    public void renderButton(@Nonnull PoseStack matrix, int mouseX, int mouseY, float partial) {
+    public void renderButton(PoseStack matrix, int mouseX, int mouseY, float partial) {
         super.renderButton(matrix, mouseX, mouseY, partial);
         if(isHovering(mouseX, mouseY)) this.parentScreen.renderComponentTooltip(matrix,this.hoverLines,mouseX,mouseY);
     }

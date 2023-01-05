@@ -6,6 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -16,7 +17,7 @@ import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.raid.Raid;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.levelgen.feature.ConfiguredStructureFeature;
+import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.phys.AABB;
 import java.util.*;
 
@@ -73,17 +74,20 @@ public class CalculateFeatures {
             if (world != null) {
                 BlockPos pos = roundedPos(player);
                 Holder<Biome> curBiomeHolder = world.getBiome(pos);
-                if(curBiomeHolder.unwrapKey().isPresent() && curBiomeHolder.unwrapKey().get().location()!=null) biome.setCurrentBiome(Objects.requireNonNull(curBiomeHolder.unwrapKey().get().location()).toString());
-                return checkBiome(curBiomeHolder, biome);
+                if(curBiomeHolder.unwrapKey().isPresent()) {
+                    ResourceLocation id = curBiomeHolder.unwrapKey().get().location();
+                    biome.setCurrentBiome(id.toString());
+                    return checkBiome(curBiomeHolder, id, biome);
+                }
             }
         } return false;
     }
 
-    @SuppressWarnings("deprecation")
-    private static boolean checkBiome(Holder<Biome> curBiomeHolder, ServerChannelData.Biome biome) {
-        if(curBiomeHolder.unwrapKey().isPresent() && curBiomeHolder.unwrapKey().get().location()!=null) {
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
+    private static boolean checkBiome(Holder<Biome> curBiomeHolder, ResourceLocation id, ServerChannelData.Biome biome) {
+        if(Objects.nonNull(id)) {
             if (biome.getBiome().matches("any") || checkResourceList(Objects.requireNonNull(curBiomeHolder.unwrapKey().get().location()).toString(), biome.getBiome(), false)) {
-                if (biome.getCategory().matches("any") || checkResourceList(Biome.getBiomeCategory(curBiomeHolder).getName(), biome.getCategory(), false)) {
+                //if (biome.getCategory().matches("any") || checkResourceList(Biome.getBiomeCategory(curBiomeHolder).getName(), biome.getCategory(), false)) {
                     if (biome.getRainType().matches("any") || curBiomeHolder.value().getPrecipitation().getName().contains(biome.getRainType())) {
                         boolean pass = false;
                         if (biome.getRainfall() == Float.MIN_VALUE) pass = true;
@@ -96,7 +100,7 @@ public class CalculateFeatures {
                             else return bt <= biome.getTemperature() && biome.isCold();
                         }
                     }
-                }
+                //}
             }
         }
         return false;
@@ -107,10 +111,10 @@ public class CalculateFeatures {
             ServerLevel world = server.getLevel(player.level.dimension());
             if (world != null) {
                 BlockPos pos = roundedPos(player);
-                for (ConfiguredStructureFeature<?,?> feature : world.getChunk(pos).getAllReferences().keySet()) {
-                    if (world.structureFeatureManager().getStructureAt(pos, feature).canBeReferenced()) {
-                        if(Registry.STRUCTURE_FEATURE.getKey(feature.feature)!=null) {
-                            structure.setCurrentStructure(Objects.requireNonNull(Registry.STRUCTURE_FEATURE.getKey(feature.feature)).toString());
+                for (Structure feature : world.getChunkAt(pos).getAllReferences().keySet()) {
+                    if (world.structureManager().getStructureAt(pos, feature).isValid()) {
+                        if(Registry.STRUCTURE_TYPES.getKey(feature.type())!=null) {
+                            structure.setCurrentStructure(Objects.requireNonNull(Registry.STRUCTURE_TYPES.getKey(feature.type())).toString());
                             return checkResourceList(structure.getCurrentStructure(), structure.getStructure(), false);
                         }
                     }
@@ -119,6 +123,7 @@ public class CalculateFeatures {
         } return false;
     }
 
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
     public static boolean calculateMob(ServerChannelData.Mob mob, MinecraftServer server, ServerPlayer player) {
         boolean pass = false;
         boolean victoryRet = false;
@@ -140,7 +145,7 @@ public class CalculateFeatures {
                             it.remove();
                             isMonster = false;
                         }
-                        if (isMonster && checkMobBlacklist(e, mob.getName())) {
+                        if (isMonster && checkMobBlacklist(e, mob.getName(), server)) {
                             mobsWithBlacklist.add(e);
                             if (e.getTarget() instanceof Player) trackingCounter++;
                             if (e.getHealth() / e.getMaxHealth() <= (float) mob.getHealth() / 100F) healthCounter++;
@@ -188,7 +193,10 @@ public class CalculateFeatures {
                     int mobCounter = 0;
                     List<Mob> mobListSpecific = new ArrayList<>();
                     for (LivingEntity e : mobTempList) {
-                        if ((checkResourceList(e.getDisplayName().getString(), mob.getName(), true) || checkResourceList(Objects.requireNonNull(e.getType().getDescription()).getString(), mob.getName(), false)) && nbtChecker(e, mob.getNbtKey())) {
+                        if ((checkResourceList(e.getDisplayName().getString(), mob.getName(), true) ||
+                                checkResourceList(Objects.requireNonNull(server.registryAccess().registry(
+                                                Registry.ENTITY_TYPE_REGISTRY).get().getKey(e.getType())).toString(),
+                                        mob.getName(), false)) && nbtChecker(e, mob.getNbtKey())) {
                             mobCounter++;
                             mobListSpecific.add((Mob) e);
                         }
@@ -263,11 +271,14 @@ public class CalculateFeatures {
         return false;
     }
 
-    public static boolean checkMobBlacklist(Mob e, String resourceList) {
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
+    public static boolean checkMobBlacklist(Mob e, String resourceList, MinecraftServer server) {
         for(String resource : stringBreaker(resourceList,";")) {
             if(!resource.matches("MOB")) {
                 if (e.getName().getString().matches(resource)) return false;
-                else if (Objects.requireNonNull(e.getType().getDescription()).getString().contains(resource)) return false;
+                else if (Objects.requireNonNull(server.registryAccess().registry(
+                        Registry.ENTITY_TYPE_REGISTRY).get().getKey(e.getType())).toString().contains(resource))
+                    return false;
             }
         }
         return true;

@@ -28,7 +28,6 @@ import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.AABB;
 import org.apache.logging.log4j.Level;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -509,7 +508,7 @@ public class Trigger {
         return this.name;
     }
 
-    @Nullable
+
     public String getRegID() {
         return hasID() ? getParameter("identifier") : "not_accepted";
     }

@@ -4,8 +4,8 @@ import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.packets.PacketJukeBoxCustom;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.contents.LiteralContents;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionResult;
@@ -42,8 +42,9 @@ public class MusicTriggersRecord extends Item {
             if (!ctx.getLevel().isClientSide && ctx.getPlayer()!=null) {
                 ItemStack stack = ctx.getPlayer().getItemInHand(ctx.getHand());
                 if(stack.getOrCreateTag().contains("trackID") && stack.getOrCreateTag().contains("channelFrom")) {
-                    ((JukeboxBlock) Blocks.JUKEBOX).setRecord(ctx.getLevel(),ctx.getClickedPos(),state,stack);
-                    PacketHandler.sendTo(new PacketJukeBoxCustom(ctx.getClickedPos(),stack.getOrCreateTag().getString("channelFrom"),stack.getOrCreateTag().getString("trackID")),(ServerPlayer) ctx.getPlayer());
+                    ((JukeboxBlock) Blocks.JUKEBOX).setRecord(ctx.getPlayer(),ctx.getLevel(),ctx.getClickedPos(),state,stack);
+                    PacketHandler.sendTo(new PacketJukeBoxCustom(ctx.getClickedPos(),stack.getOrCreateTag().getString("channelFrom"),
+                            stack.getOrCreateTag().getString("trackID")),(ServerPlayer) ctx.getPlayer());
                     stack.shrink(1);
                     ctx.getPlayer().awardStat(Stats.PLAY_RECORD);
                 }
@@ -55,12 +56,14 @@ public class MusicTriggersRecord extends Item {
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level world, List<Component> tooltip, TooltipFlag context) {
         if(stack.getOrCreateTag().contains("trackID"))
-            tooltip.add(new TextComponent(getDescription().getString()+": "+stack.getOrCreateTag().getString("trackID")));
-        else tooltip.add(new TranslatableComponent("item.musictriggers.music_triggers_record.blank_description"));
+            tooltip.add(MutableComponent.create(new LiteralContents(getDescription().getString()+": "+
+                    stack.getOrCreateTag().getString("trackID"))));
+        else tooltip.add(MutableComponent.create(
+                new TranslatableContents("item.musictriggers.music_triggers_record.blank_description")));
     }
 
     public MutableComponent getDescription() {
-        return new TranslatableComponent(this.getDescriptionId() + ".desc");
+        return MutableComponent.create(new TranslatableContents(this.getDescriptionId() + ".desc"));
     }
 
     public static float mapTriggerToFloat(String trigger) {

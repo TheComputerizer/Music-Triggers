@@ -150,7 +150,7 @@ public class ServerChannelData {
         if(commandsSize!=0) {
             for(i=0;i<commandsSize;i++) {
                 int commandLength = buf.readInt();
-                server.getCommands().performCommand(server.createCommandSourceStack(), (String)buf.readCharSequence(commandLength, StandardCharsets.UTF_8));
+                server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), (String)buf.readCharSequence(commandLength, StandardCharsets.UTF_8));
             }
         }
         int menuSongsSize = buf.readInt();

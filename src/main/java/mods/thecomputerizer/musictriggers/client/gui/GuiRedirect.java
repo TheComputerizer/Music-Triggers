@@ -10,7 +10,8 @@ import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.contents.LiteralContents;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
@@ -301,9 +302,10 @@ public class GuiRedirect extends GuiSuperType {
             return Stream.of(Translate.guiGeneric(false, "redirect", type),
                     Translate.guiGeneric(false, "redirect", "is_used") + " " +
                             (this.redirectInstance.isSongEntryUsed(getInstance(), key)))
-                    .map(TextComponent::new).collect(Collectors.toList());
+                    .map(line -> MutableComponent.create(new LiteralContents(line))).collect(Collectors.toList());
         return Stream.of(type.matches("internal") ? this.internalRedirectMap.get(key) :
-                this.externalRedirectMap.get(key)).map(TextComponent::new).collect(Collectors.toList());
+                        this.externalRedirectMap.get(key)).map(line -> MutableComponent.create(new LiteralContents(line)))
+                .collect(Collectors.toList());
     }
 
     @Override

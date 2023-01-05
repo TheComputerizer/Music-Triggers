@@ -6,13 +6,13 @@ import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
 
@@ -24,13 +24,14 @@ public class CustomRecord extends MusicTriggersRecord {
 
     @Override
     @Environment(EnvType.CLIENT)
-    public void appendHoverText(ItemStack stack, @Nullable Level level, @NotNull List<Component> components,
+    public void appendHoverText(ItemStack stack, Level level, @NotNull List<Component> components,
                                 @NotNull TooltipFlag flag) {
         if(stack.getOrCreateTag().contains("trackID"))
-            components.add(AssetUtil.customLang("record.musictriggers.custom_record."+
+            components.add(MutableComponent.create(AssetUtil.customLang("record.musictriggers.custom_record."+
                     ChannelManager.getChannel(stack.getOrCreateTag().getString("channelFrom")).getRecordMap()
-                            .get(stack.getOrCreateTag().getString("trackID")),false));
-        else components.add(AssetUtil.extraLang(Constants.MODID,"item","music_triggers_record","blank_description"));
+                            .get(stack.getOrCreateTag().getString("trackID")),false)));
+        else components.add(MutableComponent.create(AssetUtil.extraLang(
+                Constants.MODID,"item","music_triggers_record","blank_description")));
     }
 
     public static float mapTriggerToFloat(String channel, String song) {

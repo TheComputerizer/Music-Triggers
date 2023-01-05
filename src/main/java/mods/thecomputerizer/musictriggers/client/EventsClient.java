@@ -23,6 +23,7 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
@@ -58,16 +59,19 @@ public class EventsClient {
     public static final HashMap<String, Boolean> commandMap = new HashMap<>();
 
     public static SoundInstance playSound(SoundInstance sound) {
-        SimpleSoundInstance silenced = new SimpleSoundInstance(sound.getLocation(), SoundSource.MUSIC, Float.MIN_VALUE*1000, 1F,
-                false, 0, SoundInstance.Attenuation.NONE, 0.0D, 0.0D, 0.0D, true);
-        for(String s : ConfigDebug.BLOCKED_MOD_MUSIC) {
-            if(sound.getLocation().toString().contains(s) && sound.getSource()==SoundSource.MUSIC) {
-                if(!ConfigDebug.PLAY_NORMAL_MUSIC || ChannelManager.overridingMusicIsPlaying()) return silenced;
+        if(Objects.nonNull(sound)) {
+            SimpleSoundInstance silenced = new SimpleSoundInstance(sound.getLocation(), SoundSource.MUSIC,
+                    Float.MIN_VALUE * 1000, 1F, SoundInstance.createUnseededRandom(), false,
+                    0, SoundInstance.Attenuation.NONE, 0.0D, 0.0D, 0.0D, true);
+            for (String s : ConfigDebug.BLOCKED_MOD_MUSIC) {
+                if (sound.getLocation().toString().contains(s) && sound.getSource() == SoundSource.MUSIC) {
+                    if (!ConfigDebug.PLAY_NORMAL_MUSIC || ChannelManager.overridingMusicIsPlaying()) return silenced;
+                }
             }
-        }
-        for(String s : ConfigDebug.BLOCKED_MOD_RECORDS) {
-            if(sound.getLocation().toString().contains(s) && sound.getSource()==SoundSource.RECORDS) {
-                if(!ConfigDebug.PLAY_NORMAL_MUSIC || ChannelManager.overridingMusicIsPlaying()) return silenced;
+            for (String s : ConfigDebug.BLOCKED_MOD_RECORDS) {
+                if (sound.getLocation().toString().contains(s) && sound.getSource() == SoundSource.RECORDS) {
+                    if (!ConfigDebug.PLAY_NORMAL_MUSIC || ChannelManager.overridingMusicIsPlaying()) return silenced;
+                }
             }
         }
         return sound;
@@ -93,10 +97,10 @@ public class EventsClient {
     }
 
     public static void initReload() {
-        Component reload = AssetUtil.genericLang(Constants.MODID,"misc","reload_start").withStyle(ChatFormatting.RED)
-                        .withStyle(ChatFormatting.ITALIC);
+        Component reload = MutableComponent.create(AssetUtil.genericLang(Constants.MODID,"misc","reload_start"))
+                .withStyle(ChatFormatting.RED).withStyle(ChatFormatting.ITALIC);
         if(Objects.nonNull(Minecraft.getInstance().player))
-            Minecraft.getInstance().player.sendMessage(reload,Minecraft.getInstance().player.getUUID());
+            Minecraft.getInstance().player.sendSystemMessage(reload);
         reloadCounter = 5;
         ChannelManager.reloading = true;
         MusicTriggers.savedMessages.clear();
@@ -157,10 +161,10 @@ public class EventsClient {
             reloadCounter-=1;
             if(reloadCounter==1) {
                 ChannelManager.reloadAllChannels();
-                Component reload = AssetUtil.genericLang(Constants.MODID,"misc","reload_finished")
+                Component reload = MutableComponent.create(AssetUtil.genericLang(Constants.MODID,"misc","reload_finished"))
                         .withStyle(ChatFormatting.GREEN).withStyle(ChatFormatting.ITALIC);
                 if(Objects.nonNull(Minecraft.getInstance().player))
-                    Minecraft.getInstance().player.sendMessage(reload,Minecraft.getInstance().player.getUUID());
+                    Minecraft.getInstance().player.sendSystemMessage(reload);
                 IMAGE_CARD = null;
                 fadeCount = 1000;
                 timer = 0;

@@ -8,7 +8,7 @@ import mods.thecomputerizer.musictriggers.util.PacketHandler;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.LogUtil;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.resources.ResourceLocation;
@@ -33,7 +33,7 @@ public class MusicTriggers implements ModInitializer {
                 throw new RuntimeException("Unable to create file directory at "+Constants.CONFIG_DIR.getPath()+
                         "! Music Triggers is unable to load any further.");
         if (ConfigRegistry.REGISTER_DISCS) RegistryHandler.init();
-        CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> TriggerCommand.register(dispatcher));
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> TriggerCommand.register(dispatcher));
         if(!ConfigRegistry.CLIENT_SIDE_ONLY) PacketHandler.registerReceivers();
         setUpCommonEvents();
     }

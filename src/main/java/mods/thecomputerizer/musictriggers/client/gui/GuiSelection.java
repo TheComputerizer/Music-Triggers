@@ -9,7 +9,8 @@ import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.contents.LiteralContents;
 import org.apache.logging.log4j.util.TriConsumer;
 
 import java.util.*;
@@ -268,7 +269,8 @@ public class GuiSelection extends GuiSuperType {
             List<String> hoverString = isSong ? Translate.songHover(id.charAt(id.length()-1),
                     parent.getInstance().getTriggers(channel,id)) :
                     (Objects.isNull(hoverText) ? new ArrayList<>() : hoverText);
-            this.hoverText = hoverString.stream().map(TextComponent::new).collect(Collectors.toList());
+            this.hoverText = hoverString.stream().map(line -> MutableComponent.create(new LiteralContents(line)))
+                    .collect(Collectors.toList());
             this.index = index;
             this.onClick = onClick;
             this.onDelete = onDelete;

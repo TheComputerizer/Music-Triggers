@@ -11,7 +11,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.util.TriConsumer;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 public enum GuiType {
@@ -68,27 +67,27 @@ public enum GuiType {
         this(id, null, null, null, null, null, null, buttonHolders,
                 null, null, 0, null);
     }
-    GuiType(String id, @Nullable ResourceLocation iconLocation, @Nullable ResourceLocation altIconLocation,
+    GuiType(String id, ResourceLocation iconLocation, ResourceLocation altIconLocation,
             List<String> tooltips, Float resolution, Float iconIncrease, ButtonType[] buttonHolders,
             ProgressCreator<Integer, Integer, Float, Integer, TriConsumer<Screen, RadialProgressBar, Vector3f>, RadialProgressBar> progressBar,
-            @Nullable RadialElement.CreatorFunction<Screen, ResourceLocation, ResourceLocation, RadialProgressBar,
+            RadialElement.CreatorFunction<Screen, ResourceLocation, ResourceLocation, RadialProgressBar,
                     Integer, Integer, Integer, Integer, Integer, String, List<String>, Float, Float, ButtonType[],
                     RadialElement> circleConstructor, Integer progressRes, TriConsumer<Screen, RadialProgressBar, Vector3f> progressClick) {
         this(id, iconLocation, altIconLocation, null, tooltips, resolution, iconIncrease, buttonHolders,
                 null, circleConstructor, progressRes, progressClick);
     }
-    GuiType(String id, ResourceLocation iconLocation, @Nullable ResourceLocation altIconLocation,
+    GuiType(String id, ResourceLocation iconLocation, ResourceLocation altIconLocation,
             List<String> tooltips, Float resolution, Float iconIncrease, ButtonType[] buttonHolders,
-            @Nullable RadialElement.CreatorFunction<Screen, ResourceLocation, ResourceLocation, RadialProgressBar,
+            RadialElement.CreatorFunction<Screen, ResourceLocation, ResourceLocation, RadialProgressBar,
                     Integer, Integer, Integer, Integer, Integer, String, List<String>, Float, Float, ButtonType[],
                     RadialElement> circleConstructor) {
         this(id, iconLocation, altIconLocation, null, tooltips, resolution, iconIncrease,
                 buttonHolders, null, circleConstructor, 0, null);
     }
-    GuiType(String id, @Nullable ResourceLocation iconLocation, @Nullable ResourceLocation altIconLocation,
-            @Nullable String text, List<String> tooltips, Float resolution, Float iconIncrease, ButtonType[] buttonHolders,
-            @Nullable ProgressCreator<Integer, Integer, Float, Integer, TriConsumer<Screen, RadialProgressBar, Vector3f>, RadialProgressBar> progressBar,
-            @Nullable RadialElement.CreatorFunction<Screen, ResourceLocation, ResourceLocation, RadialProgressBar,
+    GuiType(String id, ResourceLocation iconLocation, ResourceLocation altIconLocation,
+            String text, List<String> tooltips, Float resolution, Float iconIncrease, ButtonType[] buttonHolders,
+            ProgressCreator<Integer, Integer, Float, Integer, TriConsumer<Screen, RadialProgressBar, Vector3f>, RadialProgressBar> progressBar,
+            RadialElement.CreatorFunction<Screen, ResourceLocation, ResourceLocation, RadialProgressBar,
                     Integer, Integer, Integer, Integer, Integer, String, List<String>, Float, Float, ButtonType[],
                     RadialElement> circleConstructor, Integer progressRes, TriConsumer<Screen, RadialProgressBar, Vector3f> progressClick) {
         this.id = id;
@@ -109,7 +108,7 @@ public enum GuiType {
         return this.id;
     }
 
-    public RadialElement getCircleForType(Screen parentScreen, Integer[] loc, @Nullable RadialProgressBar bar) {
+    public RadialElement getCircleForType(Screen parentScreen, Integer[] loc, RadialProgressBar bar) {
         if(this.circleConstructor==null) return null;
         return this.circleConstructor.apply(parentScreen, this.iconLocation, this.altIconLocation, bar, loc[0], loc[1],
                 loc[2], loc[3], loc[4], this.text, this.tooltips, this.resolution, this.iconIncrease, this.buttonHolders);

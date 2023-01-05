@@ -9,7 +9,6 @@ import mods.thecomputerizer.theimpossiblelibrary.util.file.LogUtil;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -76,7 +75,7 @@ public enum ButtonType {
                 null,null,0,0f,null,null,
                 null,null,null);
     }
-    ButtonType(String iconName, int lines, Float hoverInc, @Nullable String centerText, BiConsumer<Screen, RadialButton> radialClick,
+    ButtonType(String iconName, int lines, Float hoverInc, String centerText, BiConsumer<Screen, RadialButton> radialClick,
                RadialButton.CreatorFunction<List<String>, ResourceLocation, ResourceLocation, Float, String,
                        BiConsumer<Screen, RadialButton>, RadialButton> creatorFunction) {
         this(0,0,0,0,null,0,false,null,null,

@@ -3,7 +3,7 @@
 //file:noinspection GradlePackageVersionRange
 //file:noinspection GroovyUnusedAssignment
 plugins {
-	id 'fabric-loom' version '0.12-SNAPSHOT'
+	id 'fabric-loom' version '1.0-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -49,7 +49,7 @@ dependencies {
 	include (implementation("org.apache.commons:commons-lang3:3.12.0"))
 
 	//mods
-	modImplementation "curse.maven:the-impossible-library-661115:4300743"
+	modImplementation "curse.maven:the-impossible-library-661115:4300744"
 	modImplementation "curse.maven:cloth-config-319057:3641132"
 	modImplementation "curse.maven:modmenu-308702:3570652"
 }
