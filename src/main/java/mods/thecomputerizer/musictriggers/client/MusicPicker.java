@@ -11,6 +11,7 @@ import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
+import net.minecraft.client.gui.screen.MainMenuScreen;
 import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.util.*;
@@ -30,6 +31,7 @@ public class MusicPicker {
 
     public static final List<String> effectList = new ArrayList<>();
 
+    private boolean hasLoaded = false;
     public int fadeIn = 0;
     public int fadeOut = 0;
     public String triggerDelay = "0";
@@ -54,13 +56,26 @@ public class MusicPicker {
         Minecraft mc = Minecraft.getInstance();
         ClientPlayerEntity player = mc.player;
         if(player == null) {
-            Trigger menu = Trigger.getTriggerWithNoID(this.channel.getChannelName(),"menu");
-            if (mc.screen!=null && mc.level==null && Objects.nonNull(menu)) {
-                this.getInfo().updatePlayableTriggers(Collections.singletonList(menu));
-                this.getInfo().updateActiveTriggers(Collections.singletonList(menu));
-                this.getInfo().updateSongList(Trigger.getPotentialSongs(menu));
-                this.info.runToggles();
-                return packet;
+            if(Objects.nonNull(mc.screen)) {
+                if(mc.screen instanceof MainMenuScreen || Objects.nonNull(mc.level)) this.hasLoaded = true;
+                Trigger menu = Trigger.getTriggerWithNoID(this.channel.getChannelName(), "menu");
+                if (mc.level == null && Objects.nonNull(menu)) {
+                    this.getInfo().updatePlayableTriggers(Collections.singletonList(menu));
+                    this.getInfo().updateActiveTriggers(Collections.singletonList(menu));
+                    this.getInfo().updateSongList(Trigger.getPotentialSongs(menu));
+                    this.info.runToggles();
+                    return packet;
+                }
+            }
+            if(!this.hasLoaded) {
+                Trigger loading = Trigger.getTriggerWithNoID(this.channel.getChannelName(), "loading");
+                if (Objects.nonNull(loading)) {
+                    this.getInfo().updatePlayableTriggers(Collections.singletonList(loading));
+                    this.getInfo().updateActiveTriggers(Collections.singletonList(loading));
+                    this.getInfo().updateSongList(Trigger.getPotentialSongs(loading));
+                    this.info.runToggles();
+                    return packet;
+                }
             }
         } else {
             packet.setMenuSongs(allMenuSongs());

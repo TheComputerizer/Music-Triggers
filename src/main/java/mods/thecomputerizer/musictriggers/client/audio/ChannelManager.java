@@ -30,7 +30,7 @@ public class ChannelManager {
     public static final HashMap<String, File[]> openAudioFiles = new HashMap<>();
 
     private static int tickCounter = 0;
-    public static boolean reloading = false;
+    public static boolean reloading = true;
 
     public static void createChannel(ConfigChannels.ChannelInfo blueprint) {
         if(verifyChannelParameters(blueprint.getChannelName(), blueprint.getMain(), blueprint.getTransitions(),

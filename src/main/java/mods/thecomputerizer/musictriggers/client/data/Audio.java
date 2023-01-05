@@ -89,6 +89,7 @@ public class Audio {
     private int readLoop(Toml loopTable, int index) {
         Loop readLoop = new Loop(loopTable);
         if (readLoop.isValid()) {
+            readLoop.initialize();
             this.loopMap.put(index, readLoop);
             index++;
         } else {

@@ -298,11 +298,14 @@ public class EventsClient {
 
     @SubscribeEvent
     public static void renderBoss(RenderGameOverlayEvent.BossInfo e) {
-        if (bossBarCounter % 11 == 0) {
-            PacketHandler.sendToServer(new PacketBossInfo(e.getBossInfo().getName().getString(), e.getBossInfo().getPercent()));
-            bossBarCounter = 0;
+        if(Objects.nonNull(Minecraft.getInstance().player)) {
+            if (bossBarCounter % 11 == 0) {
+                PacketHandler.sendToServer(new PacketBossInfo(e.getBossInfo().getName().getString(),
+                        e.getBossInfo().getPercent(),Minecraft.getInstance().player.getStringUUID()));
+                bossBarCounter = 0;
+            }
+            bossBarCounter++;
         }
-        bossBarCounter++;
     }
 
     private static String infernalChecker(@Nullable LivingEntity m) {

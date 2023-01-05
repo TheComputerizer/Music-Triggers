@@ -14,6 +14,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.gen.feature.structure.Structure;
+import net.minecraft.world.raid.Raid;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.server.ServerLifecycleHooks;
@@ -29,7 +30,7 @@ public class CalculateFeatures {
     public static List<String> allTriggers = new ArrayList<>();
 
     public static HashMap<String, Map<LivingEntity, Integer>> victoryMobs = new HashMap<>();
-    public static HashMap<String, Float> bossInfo = new HashMap<>();
+    public static HashMap<UUID, HashMap<String, Float>> perPlayerBossInfo = new HashMap<>();
 
     public static ServerChannelData calculateServerTriggers(ServerChannelData serverData) {
         allTriggers = serverData.getAllTriggers();
@@ -51,6 +52,8 @@ public class CalculateFeatures {
                 structure.setActive(calculateStructure(structure, server, player));
             for (ServerChannelData.Mob mob : serverData.getMobTriggers())
                 mob.setActive(calculateMob(mob, server, player));
+            for (ServerChannelData.Raid raid : serverData.getRaidTriggers())
+                raid.setActive(calculateRaid(raid, server, player));
         }
         return serverData;
     }
@@ -177,21 +180,20 @@ public class CalculateFeatures {
                         }
                     }
                 } else if (mob.getName().matches("BOSS") || stringBreaker(mob.getName(), ";")[0].matches("BOSS")) {
-                    HashMap<String, Float> tempBoss = bossInfo;
-                    if (!bossInfo.isEmpty()) {
+                    perPlayerBossInfo.putIfAbsent(player.getUUID(), new HashMap<>());
+                    HashMap<String, Float> infoMap = perPlayerBossInfo.get(player.getUUID());
+                    if (!infoMap.isEmpty() && EventsCommon.bossTimers.containsKey(player.getUUID())) {
                         List<String> correctBosses = new ArrayList<>();
-                        for (String name : tempBoss.keySet()) {
+                        for (String name : infoMap.keySet()) {
                             if (checkResourceList(name, mob.getName(), true)) {
                                 correctBosses.add(name);
-                                if (mob.getHealth() / 100f >= bossInfo.get(name)) healthCounter++;
+                                if (mob.getHealth() / 100f >= infoMap.get(name)) healthCounter++;
                             }
                         }
-                        if (correctBosses.size() >= mob.getMobLevel() && (float) healthCounter / bossInfo.size() <= 100f / mob.getHealthPercentage()) {
+                        if (correctBosses.size() >= mob.getMobLevel() &&
+                                (float) healthCounter / infoMap.size() <= 100f / mob.getHealthPercentage())
                             pass = true;
-                        }
-                        for (String name : tempBoss.keySet()) {
-                            if (tempBoss.get(name) <= 0f) bossInfo.remove(name);
-                        }
+                        infoMap.entrySet().removeIf(entry -> entry.getValue()<=0f);
                     }
                 } else {
                     int mobCounter = 0;
@@ -234,6 +236,17 @@ public class CalculateFeatures {
         }
         mob.setVictory(victoryRet);
         return pass;
+    }
+
+    private static boolean calculateRaid(ServerChannelData.Raid data, MinecraftServer server, ServerPlayerEntity player) {
+        if(Objects.nonNull(player)) {
+            ServerWorld level = server.getLevel(player.level.dimension());
+            if (Objects.nonNull(level)) {
+                Raid raid = level.getRaidAt(player.blockPosition());
+                return Objects.nonNull(raid) && raid.getGroupsSpawned() >= data.getWave();
+            }
+        }
+        return false;
     }
 
     private static boolean infernalChecker(LivingEntity m, String s) {

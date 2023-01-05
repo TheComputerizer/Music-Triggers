@@ -70,6 +70,7 @@ public class MusicTriggers {
             MinecraftForge.EVENT_BUS.register(EventsClient.class);
         }
         MinecraftForge.EVENT_BUS.register(EventsCommon.class);
+        ChannelManager.reloading = false;
     }
 
     private void clientSetup(final FMLClientSetupEvent ev) {
@@ -86,7 +87,8 @@ public class MusicTriggers {
                 new ResourceLocation(Constants.MODID, "custom_record"),
                 (stack, worldIn, entityIn) -> {
                     if (stack.getOrCreateTag().contains("triggerID"))
-                        return CustomRecord.mapTriggerToFloat(stack.getOrCreateTag().getString("triggerID"));
+                        return CustomRecord.mapTriggerToFloat(stack.getOrCreateTag().getString("channelFrom"),
+                                stack.getOrCreateTag().getString("triggerID"));
                     return 0f;
                 }));
     }
