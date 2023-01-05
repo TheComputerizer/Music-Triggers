@@ -3,56 +3,61 @@ package mods.thecomputerizer.musictriggers.util.packets;
 import io.netty.buffer.ByteBuf;
 import mods.thecomputerizer.musictriggers.common.EventsCommon;
 import mods.thecomputerizer.musictriggers.util.CalculateFeatures;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Objects;
+import java.util.UUID;
 
-public class PacketBossInfo implements IMessageHandler<PacketBossInfo.packetBossInfoMessage, IMessage> {
+public class PacketBossInfo implements IMessageHandler<PacketBossInfo.PacketBossInfoMessage, IMessage> {
 
+    @SuppressWarnings("ConstantConditions")
     @Override
-    public IMessage onMessage(PacketBossInfo.packetBossInfoMessage message, MessageContext ctx)
-    {
-        if(message.getBossName()==null) {
-            return null;
+    public IMessage onMessage(PacketBossInfoMessage message, MessageContext ctx) {
+        if(Objects.isNull(message.name)) return null;
+        UUID uuid = UUID.fromString(message.playerUUID);
+        EntityPlayerMP player = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUUID(uuid);
+        if(Objects.nonNull(player)) {
+            CalculateFeatures.perPlayerBossInfo.putIfAbsent(uuid, new HashMap<>());
+            CalculateFeatures.perPlayerBossInfo.get(uuid).put(message.name, message.health);
+            EventsCommon.bossTimers.put(uuid, new MutableInt(40));
         }
-        CalculateFeatures.bossInfo.put(message.getBossName(),message.getDataHealth());
-        EventsCommon.bossTimer = 40;
         return null;
     }
 
-    public static class packetBossInfoMessage implements IMessage {
-        String s;
+    public static class PacketBossInfoMessage implements IMessage {
+        private String name;
+        private float health;
+        private String playerUUID;
 
-        public packetBossInfoMessage() {}
+        public PacketBossInfoMessage() {}
 
-        public packetBossInfoMessage(String name, float health) {
-            this.s = name+","+health;
+        public PacketBossInfoMessage(String name, float health, String playerUUID) {
+            this.name = name;
+            this.health = health;
+            this.playerUUID = playerUUID;
         }
 
         @Override
         public void fromBytes(ByteBuf buf) {
-            this.s = ((String) buf.readCharSequence(buf.readableBytes(), StandardCharsets.UTF_8));
+            this.name = ((String) buf.readCharSequence(buf.readInt(), StandardCharsets.UTF_8));
+            this.health = buf.readFloat();
+            this.playerUUID = ((String) buf.readCharSequence(buf.readInt(), StandardCharsets.UTF_8));
         }
 
         @Override
-        public void toBytes(ByteBuf buf)
-        {
-            buf.writeCharSequence(s, StandardCharsets.UTF_8);
-        }
-        public String getBossName() {
-            if(s==null) {
-                return null;
-            }
-            return stringBreaker(s)[0];
-        }
-        public float getDataHealth() {
-            return Float.parseFloat(stringBreaker(s)[1]);
-        }
-
-        public static String[] stringBreaker(String s) {
-            return s.split(",");
+        public void toBytes(ByteBuf buf) {
+            buf.writeInt(this.name.length());
+            buf.writeCharSequence(this.name, StandardCharsets.UTF_8);
+            buf.writeFloat(this.health);
+            buf.writeInt(this.playerUUID.length());
+            buf.writeCharSequence(this.playerUUID, StandardCharsets.UTF_8);
         }
     }
 }

@@ -1,9 +1,9 @@
 package mods.thecomputerizer.musictriggers.client.audio;
 
-import com.google.common.util.concurrent.MoreExecutors;
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.ClientSync;
+import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.musictriggers.config.ConfigChannels;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
@@ -20,15 +20,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.apache.logging.log4j.Level;
-import org.lwjgl.LWJGLException;
 import org.lwjgl.opengl.Display;
 
 import java.io.File;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.function.Supplier;
 
 public class ChannelManager {
     private static JukeboxChannel jukeboxChannel;
@@ -38,7 +33,7 @@ public class ChannelManager {
     private static final List<Channel> wasAlreadyPaused = new ArrayList<>();
 
     private static int tickCounter = 0;
-    public static boolean reloading = false;
+    public static boolean reloading = true;
 
     public static void createChannel(ConfigChannels.ChannelInfo blueprint) {
         if(verifyChannelParameters(blueprint.getChannelName(), blueprint.getMain(), blueprint.getTransitions(),
@@ -173,6 +168,7 @@ public class ChannelManager {
     }
 
     public static void reloadAllChannels() {
+        Trigger.clearInitialized();
         collectSongs();
         for(Channel channel : channelMap.values()) channel.reload();
         refreshDebug();

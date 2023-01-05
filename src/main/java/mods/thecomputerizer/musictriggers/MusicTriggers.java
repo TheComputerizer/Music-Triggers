@@ -60,6 +60,7 @@ public class MusicTriggers {
             CustomTick.addCustomTickEvent(20);
         }
         MinecraftForge.EVENT_BUS.register(EventsCommon.class);
+        ChannelManager.reloading = false;
     }
 
     @EventHandler

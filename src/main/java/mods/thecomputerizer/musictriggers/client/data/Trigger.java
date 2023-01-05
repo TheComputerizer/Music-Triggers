@@ -49,17 +49,17 @@ import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
 
 public class Trigger {
 
-    private static final String[] allTriggers = new String[]{"menu","generic","difficulty","time","light","height",
-            "raining","storming","snowing","lowhp","dead","creative","spectator","riding","pet","underwater","elytra",
-            "fishing","drowning","home","dimension","biome","structure","mob","victory","gui","effect","zones","pvp",
-            "advancement","statistic","command","gamestage","bloodmoon","harvestmoon","fallingstars",
-            "rainintensity","tornado","hurricane","sandstorm","season","raid","bluemoon","moon","acidrain","blizzard","cloudy",
-            "lightrain"};
-    private static final String[] acceptedTriggers = new String[]{"menu","generic","difficulty","time","light","height",
-            "raining","storming","snowing","lowhp","dead", "creative","spectator","riding","pet","underwater","elytra",
-            "fishing","drowning","home", "dimension","biome", "structure","mob","victory","gui","effect","zones","pvp",
-            "advancement","statistic","command","gamestage","bloodmoon","harvestmoon","fallingstars",
-            "rainintensity","tornado","hurricane","sandstorm","season"};
+    private static final String[] allTriggers = new String[]{"loading","menu","generic","difficulty","time","light",
+            "height","raining","storming","snowing","lowhp","dead","creative","spectator","riding","pet","underwater",
+            "elytra","fishing","drowning","home","dimension","biome","structure","mob","victory","gui","effect","zones",
+            "pvp", "advancement","statistic","command","gamestage","bloodmoon","harvestmoon","fallingstars",
+            "rainintensity","tornado","hurricane","sandstorm","season","raid","bluemoon","moon","acidrain","blizzard",
+            "cloudy","lightrain"};
+    private static final String[] acceptedTriggers = new String[]{"loading","menu","generic","difficulty","time","light",
+            "height","raining","storming","snowing","lowhp","dead", "creative","spectator","riding","pet","underwater",
+            "elytra","fishing","drowning","home", "dimension","biome", "structure","mob","victory","gui","effect","zones",
+            "pvp","advancement","statistic","command","gamestage","bloodmoon","harvestmoon","fallingstars","rainintensity",
+            "tornado","hurricane","sandstorm","season"};
     private static final String[] modTriggers = new String[]{"gamestage","bloodmoon","harvestmoon","fallingstars",
             "rainintensity","tornado","hurricane","sandstorm","season"};
     private static final String[] allParameters = new String[]{"priority","identifier","fade_in","fade_out",
@@ -115,6 +115,7 @@ public class Trigger {
 
     private static HashMap<String, String[]> setAcceptedParameters() {
         HashMap<String, String[]> ret = new HashMap<>();
+        ret.put("loading",new String[]{});
         ret.put("menu",new String[]{});
         ret.put("generic",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled"});
         ret.put("difficulty",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay","level",
@@ -285,6 +286,7 @@ public class Trigger {
 
     private static HashMap<String, BiFunction<Trigger, EntityPlayerSP, Boolean>> setTriggerConditions() {
         HashMap<String, BiFunction<Trigger, EntityPlayerSP, Boolean>> ret = new HashMap<>();
+        ret.put("loading",(trigger,player) -> false);
         ret.put("menu",(trigger,player) -> false);
         ret.put("generic",(trigger,player) -> false);
         ret.put("time",(trigger,player) -> {

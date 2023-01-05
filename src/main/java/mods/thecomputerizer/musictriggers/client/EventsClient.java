@@ -42,6 +42,7 @@ import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
+import java.util.Objects;
 
 @SuppressWarnings("deprecation")
 @Mod.EventBusSubscriber(modid = Constants.MODID, value = Side.CLIENT)
@@ -283,11 +284,15 @@ public class EventsClient {
 
     @SubscribeEvent
     public static void renderBoss(RenderGameOverlayEvent.BossInfo e) {
-        if (bossBarCounter % 11 == 0) {
-            RegistryHandler.network.sendToServer(new PacketBossInfo.packetBossInfoMessage(e.getBossInfo().getName().getUnformattedText(), e.getBossInfo().getPercent()));
-            bossBarCounter = 0;
+        if(Objects.nonNull(Minecraft.getMinecraft().player)) {
+            if (bossBarCounter % 11 == 0) {
+                RegistryHandler.network.sendToServer(new PacketBossInfo.PacketBossInfoMessage(
+                        e.getBossInfo().getName().getUnformattedText(), e.getBossInfo().getPercent(),
+                        Minecraft.getMinecraft().player.getUniqueID().toString()));
+                bossBarCounter = 0;
+            }
+            bossBarCounter++;
         }
-        bossBarCounter++;
     }
 
     private static String infernalChecker(@Nullable EntityLiving m) {

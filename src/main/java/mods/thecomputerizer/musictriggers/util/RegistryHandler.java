@@ -64,7 +64,7 @@ public final class RegistryHandler {
 
     private static void registerPackets() {
         int id = 0;
-        network.registerMessage(PacketBossInfo.class, PacketBossInfo.packetBossInfoMessage.class, id++, Side.SERVER);
+        network.registerMessage(PacketBossInfo.class, PacketBossInfo.PacketBossInfoMessage.class, id++, Side.SERVER);
         network.registerMessage(PacketQueryServerInfo.class, PacketQueryServerInfo.PacketQueryServerInfoMessage.class, id++, Side.SERVER);
         network.registerMessage(PacketSyncServerInfo.class, PacketSyncServerInfo.PacketSyncServerInfoMessage.class, id++, Side.CLIENT);
         network.registerMessage(PacketJukeBoxCustom.class, PacketJukeBoxCustom.PacketJukeBoxCustomMessage.class, id, Side.CLIENT);
