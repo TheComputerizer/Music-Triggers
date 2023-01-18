@@ -6,6 +6,7 @@ import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 
+import javax.annotation.Nonnull;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -19,16 +20,17 @@ public class MusicTriggersItems {
     private static EpicItem makeEpicItem(final String name, final Supplier<EpicItem> constructor, final Consumer<EpicItem> config) {
         final EpicItem item = constructor.get();
         config.accept(item);
-        item.setUnlocalizedName(Constants.MODID + "." + name);
+        item.setRegistryName(Constants.MODID + "." + name);
         item.setRegistryName(Constants.MODID, name);
         item.setMaxStackSize(1);
         return item;
     }
 
-    private static EpicItemBlock makeEpicItemBlock(final Block constructor, final Consumer<EpicItemBlock> config) {
+    @SuppressWarnings("SameParameterValue")
+    private static EpicItemBlock makeEpicItemBlock(final @Nonnull Block constructor, final Consumer<EpicItemBlock> config) {
         final EpicItemBlock item = new EpicItemBlock(constructor);
         config.accept(item);
-        item.setUnlocalizedName(constructor.getUnlocalizedName());
+        item.setRegistryName(Objects.requireNonNull(constructor.getRegistryName()));
         item.setRegistryName(Objects.requireNonNull(constructor.getRegistryName()));
         item.setMaxStackSize(1);
         return item;

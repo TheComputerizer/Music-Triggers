@@ -1,6 +1,5 @@
 package mods.thecomputerizer.musictriggers.client.gui.instance;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.Translate;
 import mods.thecomputerizer.musictriggers.client.data.Audio;
 import mods.thecomputerizer.musictriggers.client.data.Trigger;
@@ -8,9 +7,7 @@ import mods.thecomputerizer.musictriggers.client.data.Universal;
 import mods.thecomputerizer.musictriggers.client.gui.*;
 import mods.thecomputerizer.musictriggers.config.TomlHolders;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
-import mods.thecomputerizer.theimpossiblelibrary.util.file.LogUtil;
 import net.minecraft.client.Minecraft;
-import org.apache.logging.log4j.Level;
 
 import java.io.File;
 import java.util.*;

@@ -331,7 +331,7 @@ public class GuiParameters extends GuiSuperType {
                 }
                 GlStateManager.popMatrix();
             } else if(Objects.nonNull(this.listSave)) {
-                int width = 0;
+                int width;
                 int height = fontRenderer.FONT_HEIGHT+4;
                 boolean listHover;
                 GlStateManager.pushMatrix();

@@ -1,4 +1,5 @@
 //file:noinspection GroovyUnusedAssignment
+//file:noinspection GroovyAssignabilityCheck
 
 buildscript {
     repositories {
@@ -19,14 +20,14 @@ apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'maven-publish'
 
-version = '1.12.2-6.0_PUBLIC_BETA'
+version = '1.12.2-6.0'
 group = 'mods.thecomputerizer.musictriggers'
 archivesBaseName = 'musictriggers'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 
 minecraft {
-    mappings channel: 'snapshot', version: '20171003-1.12'
+    mappings channel: 'stable', version: '39-1.12'
     accessTransformer = file('src/main/resources/META-INF/musictriggers_at.cfg')
     runs {
         client {
@@ -34,7 +35,6 @@ minecraft {
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'debug'
         }
-
         server {
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'debug'
@@ -133,12 +133,18 @@ reobf {
         mappings = createMcpToSrg.output
     }
 }
+
 processResources {
-    filesMatching("mcmod.info") {
-        expand "version": project.version, "mcversion": "1.12.2"
-    }
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     inputs.property "version", project.version
     inputs.property "mcversion", "1.12.2"
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+        expand 'version': project.version, 'mcversion': "1.12.2"
+    }
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
 }
 
 mixin {

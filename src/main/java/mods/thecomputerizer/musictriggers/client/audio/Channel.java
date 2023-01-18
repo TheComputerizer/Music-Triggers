@@ -670,13 +670,13 @@ public class Channel {
                 URL url = null;
                 String first = null;
                 String second = null;
-                if(Minecraft.getMinecraft().mcDefaultResourcePack.resourceExists(source)) {
-                    url = DefaultResourcePack.class.getResource("/assets/" + source.getResourceDomain() + "/" + source.getResourcePath());
+                if(Minecraft.getMinecraft().defaultResourcePack.resourceExists(source)) {
+                    url = DefaultResourcePack.class.getResource("/assets/" + source.getNamespace() + "/" + source.getPath());
                     if(url!=null) {
                         first = url.toURI().toString();
                         second = url.getFile();
                     } else {
-                        File file = Minecraft.getMinecraft().mcDefaultResourcePack.resourceIndex.getFile(source);
+                        File file = Minecraft.getMinecraft().defaultResourcePack.resourceIndex.getFile(source);
                         if(file!=null && file.isFile()) {
                             first = file.getAbsolutePath();
                             second = file.getName();
@@ -686,7 +686,7 @@ public class Channel {
                 if(url==null && first==null) {
                     for (IResourcePack resourcePack : Minecraft.getMinecraft().defaultResourcePacks) {
                         if (!(resourcePack instanceof DefaultResourcePack)) {
-                            String resourceName = String.format("%s/%s/%s", "assets", source.getResourceDomain(), source.getResourcePath());
+                            String resourceName = String.format("%s/%s/%s", "assets", source.getNamespace(), source.getPath());
                             if(resourcePack instanceof FolderResourcePack) {
                                 File temp = new File(((FolderResourcePack)resourcePack).resourcePackFile,resourceName);
                                 if(temp.isFile()) {

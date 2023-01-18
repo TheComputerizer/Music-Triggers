@@ -1,8 +1,5 @@
 package mods.thecomputerizer.musictriggers.config;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
-import org.apache.logging.log4j.Level;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;

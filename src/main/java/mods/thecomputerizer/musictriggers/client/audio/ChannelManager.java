@@ -200,7 +200,7 @@ public class ChannelManager {
         if(player!=null)
             for (int x = player.chunkCoordX - 3; x <= player.chunkCoordX + 3; x++)
                 for (int z = player.chunkCoordZ - 3; z <= player.chunkCoordZ + 3; z++) {
-                    Map<BlockPos, TileEntity> currentChunkTE = player.getEntityWorld().getChunkFromChunkCoords(x, z).getTileEntityMap();
+                    Map<BlockPos, TileEntity> currentChunkTE = player.getEntityWorld().getChunk(x, z).getTileEntityMap();
                     for (TileEntity te : currentChunkTE.values())
                         if (te instanceof BlockJukebox.TileEntityJukebox && te.getBlockMetadata() != 0)
                             return true;

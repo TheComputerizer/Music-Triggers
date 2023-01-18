@@ -4,6 +4,9 @@ import net.minecraft.block.Block;
 import net.minecraft.item.EnumRarity;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.common.IRarity;
+
+import javax.annotation.Nonnull;
 
 public class EpicItemBlock extends ItemBlock {
     public EpicItemBlock(Block block) {
@@ -11,7 +14,8 @@ public class EpicItemBlock extends ItemBlock {
     }
 
     @Override
-    public net.minecraftforge.common.IRarity getForgeRarity(ItemStack stack) {
+    @Nonnull
+    public IRarity getForgeRarity(@Nonnull ItemStack stack) {
         return EnumRarity.EPIC;
     }
 }

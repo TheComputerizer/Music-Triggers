@@ -15,7 +15,7 @@ public class MusicTriggersBlocks {
     private static Block makeBlock(final String name, final Supplier<Block> constructor, final Consumer<Block> config) {
         final Block block = constructor.get();
         config.accept(block);
-        block.setUnlocalizedName(Constants.MODID + "." + name);
+        block.setRegistryName(Constants.MODID + "." + name);
         block.setRegistryName(Constants.MODID, name);
         return block;
     }
