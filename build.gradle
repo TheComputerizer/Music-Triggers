@@ -94,11 +94,12 @@ dependencies {
     implementation('org.spongepowered:mixin:0.8.4')
 
     //required mod dependencies
-    implementation fg.deobf("curse.maven:mixin-booter-419286:3886235")
+    implementation fg.deobf("curse.maven:mixin-booter-419286:4090558")
     implementation fg.deobf("curse.maven:the-impossible-library-661115:4175418")
 
     //mod support dependencies
-    implementation fg.deobf("curse.maven:codechicken-lib-242818:2779848")
+    implementation fg.deobf("curse.maven:had-enough-items-557549:4109510")
+    //implementation fg.deobf("curse.maven:codechicken-lib-242818:2779848")
     implementation fg.deobf("curse.maven:bloodmoon-226321:2537917")
     implementation fg.deobf("curse.maven:nyx-349214:3161738")
     implementation fg.deobf("curse.maven:weather-storms-tornadoes-237746:2596867")
@@ -107,7 +108,6 @@ dependencies {
     implementation fg.deobf("curse.maven:coroutil-237749:2902920")
     implementation fg.deobf("curse.maven:serene-seasons-291874:2799213")
     implementation fg.deobf("curse.maven:champions-307152:3177947")
-    implementation fg.deobf("curse.maven:jei-238222:3488178")
     implementation fg.deobf("curse.maven:orelib-307806:2820815")
     implementation fg.deobf("curse.maven:bookshelf-228525:2836960")
     implementation fg.deobf("net.darkhax.gamestages:GameStages-1.12.2:2.0.98")
@@ -118,6 +118,7 @@ shadowJar {
     relocate 'org.slf4j', 'mods.thecomputerizer.musictriggers.libraries.sljf4'
     relocate 'org.apache.commons', 'mods.thecomputerizer.musictriggers.libraries.apache.commons'
     relocate 'org.apache.http', 'mods.thecomputerizer.musictriggers.libraries.apache.http'
+    relocate 'com.moandjiezana.toml', 'mods.thecomputerizer.musictriggers.libraries.moandjiezana.toml'
     //not strictly necessary relocation
     relocate 'junit', 'mods.thecomputerizer.musictriggers.libraries.junit'
     relocate 'net.sourceforge', 'mods.thecomputerizer.musictriggers.libraries.sourceforge'
