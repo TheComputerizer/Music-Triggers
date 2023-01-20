@@ -25,3 +25,10 @@ run_server
 
 # Files from Forge MDK
 forge*changelog.txt
+
+# mcp mappings
+mcp
+*.csv
+
+# this file
+.gitignore
