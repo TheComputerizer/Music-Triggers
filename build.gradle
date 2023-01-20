@@ -30,14 +30,22 @@ minecraft {
     mappings channel: 'stable', version: '39-1.12'
     accessTransformer = file('src/main/resources/META-INF/musictriggers_at.cfg')
     runs {
+        def args = [
+                '-Dfml.coreMods.load=org.orecruncher.dsurround.mixins.TransformLoader',
+                '-Dfml.coreMods.load=zone.rong.mixinbooter.MixinBooterPlugin',
+                '-Dmixin.hotSwap=true',
+                '-Dmixin.checks.interfaces=true'
+        ]
         client {
             workingDirectory project.file('run')
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'debug'
+            jvmArgs args
         }
         server {
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'debug'
+            jvmArgs args
         }
     }
 }
@@ -99,7 +107,6 @@ dependencies {
 
     //mod support dependencies
     implementation fg.deobf("curse.maven:had-enough-items-557549:4109510")
-    //implementation fg.deobf("curse.maven:codechicken-lib-242818:2779848")
     implementation fg.deobf("curse.maven:bloodmoon-226321:2537917")
     implementation fg.deobf("curse.maven:nyx-349214:3161738")
     implementation fg.deobf("curse.maven:weather-storms-tornadoes-237746:2596867")
