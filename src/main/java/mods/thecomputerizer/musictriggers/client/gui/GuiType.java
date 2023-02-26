@@ -30,21 +30,14 @@ public enum GuiType {
     REGISTRATION("registration", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
     CHANNEL("channel", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
     MAIN_CONFIG("main_config", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
-    SONG_TRIGGERS("song_triggers", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
     TRANSITIONS("transitions", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
     COMMANDS("commands", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
     TOGGLES("toggles", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
     REDIRECT("redirect", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
-    SONGS("songs", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
-    IMAGES("images", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
+    JUKEBOX("jukebox", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
     CHANNEL_INFO("channel_info", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
     SELECTION_GENERIC("selection_generic", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
-    SONG_INFO("song_info", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
-    TRIGGER_INFO("trigger_info", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
-    TITLE_INFO("title_info", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
-    IMAGE_INFO("image_info", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
-    COMMAND_INFO("command_info", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
-    TOGGLE_INFO("toggle_info", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
+    PARAMETER_GENERIC("parameter_generic", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
     POPUP("popup", new ButtonType[]{});
 
     private static final Map<String, GuiType> GUI_TYPES = Maps.newHashMap();
@@ -75,7 +68,7 @@ public enum GuiType {
                     Integer, Integer, Integer, Integer, Integer, String, List<String>, Float, Float, ButtonType[],
                     RadialElement> circleConstructor, Integer progressRes, TriConsumer<GuiScreen, RadialProgressBar, Point2i> progressClick) {
         this(id, iconLocation, altIconLocation, null, tooltips, resolution, iconIncrease, buttonHolders,
-                null, circleConstructor, progressRes, progressClick);
+                progressBar, circleConstructor, progressRes, progressClick);
     }
     GuiType(String id, ResourceLocation iconLocation, @Nullable ResourceLocation altIconLocation,
             List<String> tooltips, Float resolution, Float iconIncrease, ButtonType[] buttonHolders,

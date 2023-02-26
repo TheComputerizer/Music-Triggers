@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.common.objects;
 
-import mods.thecomputerizer.musictriggers.common.EventsCommon;
 import net.minecraft.block.Block;
+import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyBool;
@@ -9,7 +9,9 @@ import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
@@ -17,9 +19,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 import javax.annotation.Nonnull;
-import java.util.UUID;
+import javax.annotation.Nullable;
 
-public class MusicRecorder extends Block {
+public class MusicRecorder extends Block implements ITileEntityProvider {
 
     public static final PropertyBool HAS_RECORD = PropertyBool.create("has_record");
     public static final PropertyBool HAS_DISC = PropertyBool.create("has_disc");
@@ -49,36 +51,34 @@ public class MusicRecorder extends Block {
         } else return false;
     }
 
-    public void insertRecord(World worldIn, BlockPos pos, IBlockState state, ItemStack recordStack, UUID uuid) {
-        EventsCommon.recordWorld.put(pos,worldIn);
-        EventsCommon.recordHolder.put(pos, recordStack.copy());
-        EventsCommon.recordUUID.put(pos, uuid);
-        EventsCommon.tickCounter.put(pos, 0);
-        if(recordStack.getItem() instanceof BlankRecord) {
-            worldIn.setBlockState(pos, state.withProperty(HAS_RECORD, Boolean.TRUE), 2);
-            EventsCommon.recordIsCustom.put(pos, false);
-        }
-        else {
-            worldIn.setBlockState(pos, state.withProperty(HAS_DISC, Boolean.TRUE), 2);
-            if(recordStack.getItem() instanceof CustomRecord)
-                EventsCommon.recordIsCustom.put(pos, true);
-            else EventsCommon.recordIsCustom.put(pos, false);
+    public void insertRecord(World worldIn, BlockPos pos, IBlockState state, ItemStack recordStack, EntityPlayerMP player) {
+        if(recordStack.getItem() instanceof BlankRecord || recordStack.getItem() instanceof MusicTriggersRecord) {
+            TileEntity entity = worldIn.getTileEntity(pos);
+            if(entity instanceof MusicRecorderEntity) {
+                MusicRecorderEntity recorderEntity = (MusicRecorderEntity)entity;
+                if(recorderEntity.isEmpty()) {
+                    recorderEntity.insertRecord(recordStack,player);
+                    PropertyBool propertyBool = recordStack.getItem() instanceof BlankRecord ? HAS_RECORD : HAS_DISC;
+                    worldIn.setBlockState(pos, state.withProperty(propertyBool, Boolean.TRUE), 2);
+                }
+            }
         }
     }
 
-    private void dropRecord(World worldIn, BlockPos pos) {
+    public void dropRecord(World worldIn, BlockPos pos) {
         if (!worldIn.isRemote) {
-            EventsCommon.recordHolder.putIfAbsent(pos,ItemStack.EMPTY);
-            ItemStack itemstack = EventsCommon.recordHolder.get(pos);
-            if (!itemstack.isEmpty()) {
-                EventsCommon.recordHolder.put(pos,ItemStack.EMPTY);
-                double d0 = (double) (worldIn.rand.nextFloat() * 0.7F) + 0.15000000596046448D;
-                double d1 = (double) (worldIn.rand.nextFloat() * 0.7F) + 0.06000000238418579D + 0.6D;
-                double d2 = (double) (worldIn.rand.nextFloat() * 0.7F) + 0.15000000596046448D;
-                ItemStack itemstack1 = itemstack.copy();
-                EntityItem entityitem = new EntityItem(worldIn, (double) pos.getX() + d0, (double) pos.getY() + d1, (double) pos.getZ() + d2, itemstack1);
-                entityitem.setDefaultPickupDelay();
-                worldIn.spawnEntity(entityitem);
+            TileEntity entity = worldIn.getTileEntity(pos);
+            if(entity instanceof MusicRecorderEntity) {
+                MusicRecorderEntity recorderEntity = (MusicRecorderEntity)entity;
+                if(!recorderEntity.isEmpty()) {
+                    double d0 = (double) (worldIn.rand.nextFloat() * 0.7F) + 0.15000000596046448D;
+                    double d1 = (double) (worldIn.rand.nextFloat() * 0.7F) + 0.06000000238418579D + 0.6D;
+                    double d2 = (double) (worldIn.rand.nextFloat() * 0.7F) + 0.15000000596046448D;
+                    EntityItem entityitem = new EntityItem(worldIn, (double) pos.getX() + d0,
+                            (double) pos.getY() + d1, (double) pos.getZ() + d2, recorderEntity.setDropped());
+                    entityitem.setDefaultPickupDelay();
+                    worldIn.spawnEntity(entityitem);
+                }
             }
         }
     }
@@ -106,10 +106,8 @@ public class MusicRecorder extends Block {
     @SuppressWarnings("deprecation")
     @Override
     public int getComparatorInputOverride(@Nonnull IBlockState blockState, @Nonnull World worldIn, @Nonnull BlockPos pos) {
-        ItemStack itemstack = EventsCommon.recordHolder.get(pos);
-        if (!itemstack.isEmpty())
-            return 15;
-        return 0;
+        TileEntity entity = worldIn.getTileEntity(pos);
+        return entity instanceof MusicRecorderEntity && !((MusicRecorderEntity)entity).isEmpty() ? 15 : 0;
     }
 
     @SuppressWarnings("deprecation")
@@ -135,5 +133,11 @@ public class MusicRecorder extends Block {
     @Nonnull
     protected BlockStateContainer createBlockState() {
         return new BlockStateContainer(this, HAS_RECORD, HAS_DISC);
+    }
+
+    @Nullable
+    @Override
+    public TileEntity createNewTileEntity(@Nonnull World worldIn, int meta) {
+        return new MusicRecorderEntity();
     }
 }

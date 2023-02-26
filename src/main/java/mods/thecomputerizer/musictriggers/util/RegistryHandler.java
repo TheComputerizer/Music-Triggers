@@ -1,12 +1,15 @@
 package mods.thecomputerizer.musictriggers.util;
 
 import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.MusicTriggersBlocks;
+import mods.thecomputerizer.musictriggers.common.objects.MusicRecorderEntity;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import mods.thecomputerizer.musictriggers.util.packets.*;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.event.RegistryEvent;
@@ -42,6 +45,7 @@ public final class RegistryHandler {
     public static void registerBlocks(RegistryEvent.Register<Block> e) {
         if(ConfigRegistry.REGISTER_DISCS) {
             e.getRegistry().register(MusicTriggersBlocks.MUSIC_RECORDER);
+            GameRegistry.registerTileEntity(MusicRecorderEntity.class,new ResourceLocation(Constants.MODID,"tile.music_recorder"));
         }
     }
 
@@ -50,10 +54,14 @@ public final class RegistryHandler {
     @SubscribeEvent
     public static void onModelRegister(ModelRegistryEvent event) {
         if(ConfigRegistry.REGISTER_DISCS) {
-            ModelLoader.setCustomModelResourceLocation(MUSIC_TRIGGERS_RECORD, 0, new ModelResourceLocation(Objects.requireNonNull(MUSIC_TRIGGERS_RECORD.getRegistryName()), "inventory"));
-            ModelLoader.setCustomModelResourceLocation(CUSTOM_RECORD, 0, new ModelResourceLocation(Objects.requireNonNull(CUSTOM_RECORD.getRegistryName()), "inventory"));
-            ModelLoader.setCustomModelResourceLocation(BLANK_RECORD, 0, new ModelResourceLocation(Objects.requireNonNull(BLANK_RECORD.getRegistryName()), "inventory"));
-            ModelLoader.setCustomModelResourceLocation(MUSIC_RECORDER, 0, new ModelResourceLocation(Objects.requireNonNull(MUSIC_RECORDER.getRegistryName()), "inventory"));
+            ModelLoader.setCustomModelResourceLocation(MUSIC_TRIGGERS_RECORD, 0,
+                    new ModelResourceLocation(Objects.requireNonNull(MUSIC_TRIGGERS_RECORD.getRegistryName()), "inventory"));
+            ModelLoader.setCustomModelResourceLocation(CUSTOM_RECORD, 0,
+                    new ModelResourceLocation(Objects.requireNonNull(CUSTOM_RECORD.getRegistryName()), "inventory"));
+            ModelLoader.setCustomModelResourceLocation(BLANK_RECORD, 0,
+                    new ModelResourceLocation(Objects.requireNonNull(BLANK_RECORD.getRegistryName()), "inventory"));
+            ModelLoader.setCustomModelResourceLocation(MUSIC_RECORDER, 0,
+                    new ModelResourceLocation(Objects.requireNonNull(MUSIC_RECORDER.getRegistryName()), "normal"));
         }
     }
 
@@ -64,9 +72,10 @@ public final class RegistryHandler {
 
     private static void registerPackets() {
         int id = 0;
-        network.registerMessage(PacketBossInfo.class, PacketBossInfo.PacketBossInfoMessage.class, id++, Side.SERVER);
-        network.registerMessage(PacketQueryServerInfo.class, PacketQueryServerInfo.PacketQueryServerInfoMessage.class, id++, Side.SERVER);
-        network.registerMessage(PacketSyncServerInfo.class, PacketSyncServerInfo.PacketSyncServerInfoMessage.class, id++, Side.CLIENT);
-        network.registerMessage(PacketJukeBoxCustom.class, PacketJukeBoxCustom.PacketJukeBoxCustomMessage.class, id, Side.CLIENT);
+        Constants.MAIN_LOG.error("REGISTER PACKETS");
+        network.registerMessage(PacketInitChannels.class, PacketInitChannels.Message.class, id++, Side.SERVER);
+        network.registerMessage(PacketDynamicChannelInfo.class, PacketDynamicChannelInfo.Message.class, id++, Side.SERVER);
+        network.registerMessage(PacketSyncServerInfo.class, PacketSyncServerInfo.Message.class, id++, Side.CLIENT);
+        network.registerMessage(PacketJukeBoxCustom.class, PacketJukeBoxCustom.Message.class, id, Side.CLIENT);
     }
 }

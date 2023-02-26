@@ -1,7 +1,6 @@
 //file:noinspection GroovyUnusedAssignment
 //file:noinspection GroovyAssignabilityCheck
 
-
 plugins {
     id 'net.minecraftforge.gradle' version '5.1+'
     id 'com.github.johnrengelman.shadow' version '7.1.+'
@@ -28,17 +27,25 @@ minecraft {
     mappings channel: 'stable', version: '39-1.12'
     accessTransformer = file('src/main/resources/META-INF/musictriggers_at.cfg')
     runs {
+        def args = [
+                "-Dmixin.debug.export=true",
+                '-Dmixin.hotSwap=true',
+                '-Dmixin.checks.interfaces=true'
+        ]
         client {
             workingDirectory project.file('run')
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'debug'
+            jvmArgs args
         }
         server {
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'debug'
+            jvmArgs args
         }
     }
 }
+
 
 repositories {
     google()
@@ -46,8 +53,12 @@ repositories {
     maven {
         url = uri('https://www.cursemaven.com')
         content {
-            includeGroup "curse.maven"
+            includeGroup 'curse.maven'
         }
+    }
+    maven {
+        name = 'Sponge'
+        url = uri('https://repo.spongepowered.org/maven')
     }
     maven {
         url = uri('https://maven.blamejared.com')
@@ -58,15 +69,13 @@ repositories {
     maven {
         url = uri('https://jitpack.io')
     }
-}
-
-sourceSets.main.resources { srcDir 'src/main/resources' }
-
-sourceSets {
-    main
+    flatDir {
+        dirs 'build/libs'
+    }
 }
 
 configurations {
+    shade
     shade
     implementation.extendsFrom(shade)
     shadow.extendsFrom shade
@@ -74,42 +83,61 @@ configurations {
 
 dependencies {
     //minecraft
-    minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
+    minecraft('net.minecraftforge:forge:1.12.2-14.23.5.2860')
 
     //external dependencies
     shade('io.github.kostaskougios:cloning:1.10.3')
-    shade('com.moandjiezana.toml:toml4j:0.7.2') { exclude group: 'com.google.code.gson', module: 'gson' }
-    shade('com.github.walkyst:lavaplayer-fork:1.3.97.1') { exclude module: 'httpclient' }
+    shade('com.github.walkyst:lavaplayer-fork:1.3.97.1') {
+        exclude module: 'commons-lang3'
+        exclude module: 'httpcore'
+        exclude module: 'httpclient'
+    }
 
-    //libraries that need to be included and relocated
+    //libraries that need to be included separately for relocation
     shade('org.apache.httpcomponents:httpcore:4.4.15')
     shade('org.apache.httpcomponents:httpclient:4.5.14')
     shade('org.apache.commons:commons-lang3:3.12.0')
 
     //mixin
-    implementation('org.spongepowered:mixin:0.8.4')
+    shade('org.spongepowered:mixin:0.8.5') {
+        exclude module: 'asm-commons'
+        exclude module: 'asm-tree'
+        exclude module: 'commons-io'
+        exclude module: 'gson'
+        exclude module: 'guava'
+        exclude module: 'launchwrapper'
+        exclude module: 'log4j-core'
+    }
+    annotationProcessor('org.spongepowered:mixin:0.8.5:processor')
 
     //required mod dependencies
-    implementation fg.deobf('curse.maven:mixin-booter-419286:4090558')
-    implementation fg.deobf('curse.maven:the-impossible-library-661115:4271826')
+    //implementation(fg.deobf('curse.maven:the-impossible-library-661115:4373081'))
+    //local versions of required dependencies for testing
+    implementation name: 'theimpossiblelibrary-1.12.2-0.2.1'
 
     //mod support dependencies
-    implementation fg.deobf('curse.maven:had-enough-items-557549:4109510')
-    implementation fg.deobf('curse.maven:bloodmoon-226321:2537917')
-    implementation fg.deobf('curse.maven:nyx-349214:3161738')
-    implementation fg.deobf('curse.maven:atomicstrykers-infernal-mobs-227875:3431758')
-    implementation fg.deobf('curse.maven:coroutil-237749:2902920')
-    implementation fg.deobf('curse.maven:weather-storms-tornadoes-237746:2596867')
-    implementation fg.deobf('curse.maven:serene-seasons-291874:2799213')
-    implementation fg.deobf('curse.maven:champions-307152:3177947')
-    implementation fg.deobf('curse.maven:bookshelf-228525:2836960')
-    implementation fg.deobf('net.darkhax.gamestages:GameStages-1.12.2:2.0.98')
+    implementation(fg.deobf('curse.maven:bloodmoon-226321:2537917'))
+    implementation(fg.deobf('curse.maven:nyx-349214:3161738'))
+    implementation(fg.deobf('curse.maven:atomicstrykers-infernal-mobs-227875:3431758'))
+    implementation(fg.deobf('curse.maven:coroutil-237749:2902920'))
+    implementation(fg.deobf('curse.maven:weather-storms-tornadoes-237746:2596867'))
+    implementation(fg.deobf('curse.maven:serene-seasons-291874:2799213'))
+    implementation(fg.deobf('curse.maven:champions-307152:3177947'))
+    implementation(fg.deobf('net.darkhax.gamestages:GameStages-1.12.2:2.0.98'))
+
     //idk whats wrong with the mod but i cant get it to work in a dev environment
-    compileOnly(fg.deobf('curse.maven:orelib-307806:2820815'))
     compileOnly(fg.deobf('curse.maven:dynamic-surroundings-238891:3497269'))
+
+    //only needed for runtime
+    runtimeOnly(fg.deobf('curse.maven:bookshelf-228525:2836960'))
+    runtimeOnly(fg.deobf('curse.maven:orelib-307806:2820815'))
+    runtimeOnly(fg.deobf('curse.maven:had-enough-items-557549:4109510'))
 }
 
 shadowJar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    exclude 'LICENSE.txt', 'META-INF/MANIFSET.MF', 'META-INF/maven/**', 'META-INF/*.RSA', 'META-INF/*.SF',
+            'META-INF/services/*.Processor', 'module-info.class'
     //necessary relocation
     relocate 'org.slf4j', 'mods.thecomputerizer.musictriggers.libraries.sljf4'
     relocate 'org.apache.commons', 'mods.thecomputerizer.musictriggers.libraries.apache.commons'
@@ -132,7 +160,7 @@ reobf {
 }
 
 processResources {
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     inputs.property 'version', project.version
     inputs.property 'mcversion', '1.12.2'
     from(sourceSets.main.resources.srcDirs) {
@@ -145,21 +173,16 @@ processResources {
 }
 
 mixin {
-    add sourceSets.main, "musictriggers.mixin.refmap.json"
-    disableAnnotationProcessorCheck()
+    add sourceSets.main, 'musictriggers.refmap.json'
 }
 
 jar {
     manifest {
         attributes([
-            "FMLAT": "musictriggers_at.cfg",
-            "Specification-Title": "musictriggers",
-            "Specification-Vendor": "The_Computerizer",
-            "Specification-Version": project.version,
-            "Implementation-Title": project.name,
-            "Implementation-Version": project.version,
-            "Implementation-Vendor" :"musictriggers",
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+            'FMLAT': 'musictriggers_at.cfg',
+            'FMLCorePlugin': 'mods.thecomputerizer.musictriggers.core.MixinLoaderPlugin',
+            'FMLCorePluginContainsFMLMod': 'true',
+            'ForceLoadAsMod': 'true'
         ])
     }
 }

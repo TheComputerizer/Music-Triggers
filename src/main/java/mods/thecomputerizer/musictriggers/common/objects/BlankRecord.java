@@ -5,6 +5,7 @@ import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
@@ -25,20 +26,22 @@ public class BlankRecord extends EpicItem {
 
     @Override
     @Nonnull
-    public EnumActionResult onItemUse(@Nonnull EntityPlayer player, World worldIn, @Nonnull BlockPos pos,
+    public EnumActionResult onItemUse(@Nonnull EntityPlayer player, @Nonnull World worldIn, @Nonnull BlockPos pos,
                                       @Nonnull EnumHand hand, @Nonnull EnumFacing facing, float hitX, float hitY,
                                       float hitZ) {
-        IBlockState iblockstate = worldIn.getBlockState(pos);
-        if (iblockstate.getBlock() instanceof MusicRecorder) {
-            MusicRecorder mr = (MusicRecorder) iblockstate.getBlock();
-            if(!worldIn.isRemote && !iblockstate.getValue(MusicRecorder.HAS_RECORD) && !iblockstate.getValue(MusicRecorder.HAS_DISC)) {
-                ItemStack itemstack = player.getHeldItem(hand);
-                mr.insertRecord(worldIn,pos,iblockstate,itemstack,player.getUniqueID());
-                itemstack.shrink(1);
+        if(player instanceof EntityPlayerMP) {
+            IBlockState iblockstate = worldIn.getBlockState(pos);
+            if (iblockstate.getBlock() instanceof MusicRecorder) {
+                MusicRecorder mr = (MusicRecorder) iblockstate.getBlock();
+                if (!worldIn.isRemote && !iblockstate.getValue(MusicRecorder.HAS_RECORD) && !iblockstate.getValue(MusicRecorder.HAS_DISC)) {
+                    ItemStack itemstack = player.getHeldItem(hand);
+                    mr.insertRecord(worldIn, pos, iblockstate, itemstack, (EntityPlayerMP)player);
+                    itemstack.shrink(1);
+                }
+                return EnumActionResult.SUCCESS;
             }
-            return EnumActionResult.SUCCESS;
         }
-        else return EnumActionResult.PASS;
+        return EnumActionResult.PASS;
     }
 
     @Override

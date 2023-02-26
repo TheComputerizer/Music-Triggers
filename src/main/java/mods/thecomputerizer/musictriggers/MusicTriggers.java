@@ -1,15 +1,15 @@
 package mods.thecomputerizer.musictriggers;
 
-import com.mojang.realmsclient.gui.ChatFormatting;
 import com.rits.cloning.Cloner;
 import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.client.audio.Channel;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.common.EventsCommon;
-import mods.thecomputerizer.musictriggers.config.ConfigChannels;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import mods.thecomputerizer.musictriggers.util.CustomTick;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
+import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
+import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.LogUtil;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
@@ -25,30 +25,26 @@ import org.apache.commons.io.FileExistsException;
 import org.apache.logging.log4j.Level;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Objects;
 import java.util.Random;
 
 @Mod(modid = Constants.MODID, name = Constants.NAME, version = Constants.VERSION, dependencies = Constants.DEPENDENCIES)
 public class MusicTriggers {
     private static LogUtil.ModLogger MOD_LOG;
-    public static List<String> savedMessages = new ArrayList<>();
+    public static final LinkedHashMap<String, Integer> savedMessages = new LinkedHashMap<>();
     private static Random random;
 
-    public MusicTriggers() throws FileExistsException {
+    public MusicTriggers() throws IOException {
         MOD_LOG = LogUtil.create(Constants.MODID);
         random = new Random();
         if (!Constants.CONFIG_DIR.exists())
             if(!Constants.CONFIG_DIR.mkdir())
                 throw new FileExistsException("Unable to create file directory at "+Constants.CONFIG_DIR.getPath()+
                         "! Music Triggers is unable to load any further.");
-        if(FMLCommonHandler.instance().getSide()==Side.CLIENT) {
-            ChannelManager.createJukeboxChannel();
-            ConfigChannels.initialize(new File(Constants.CONFIG_DIR, "channels.toml"));
-            for (ConfigChannels.ChannelInfo info : ConfigChannels.CHANNELS)
-                ChannelManager.createChannel(info);
-            ChannelManager.parseConfigFiles();
-        }
+        if(FMLCommonHandler.instance().getSide()==Side.CLIENT)
+            ChannelManager.initialize(configFile("channels","toml"),true);
     }
 
     @EventHandler
@@ -65,9 +61,7 @@ public class MusicTriggers {
 
     @EventHandler
     public void init(FMLInitializationEvent e) {
-        if(e.getSide()==Side.CLIENT) {
-            ClientRegistry.registerKeyBinding(Channel.GUI);
-        }
+        if(e.getSide()==Side.CLIENT) ClientRegistry.registerKeyBinding(Channel.GUI);
     }
 
     @EventHandler
@@ -76,7 +70,8 @@ public class MusicTriggers {
     }
 
     public static ResourceLocation getIcon(String type, String name) {
-        return new ResourceLocation(Constants.MODID,"textures/"+type+"/"+name+".png");
+        return Objects.nonNull(type) ? new ResourceLocation(Constants.MODID,"textures/"+type+"/"+name+".png") :
+                new ResourceLocation(Constants.MODID,"textures/"+name);
     }
 
     public static String[] stringBreaker(String s, String regex) {
@@ -143,19 +138,22 @@ public class MusicTriggers {
 
     public static void logExternally(Level level, String message, Object ... parameters) {
         MOD_LOG.log(level, message, parameters);
-        if(level!=Level.DEBUG) savedMessages.add(colorizeLogLevel(level)+ LogUtil.injectParameters(message, parameters));
+        savedMessages.put("["+level.toString()+"] "+LogUtil.injectParameters(message, parameters),colorizeLogLevel(level));
     }
 
-    private static String colorizeLogLevel(Level level) {
-        String logLevel = "["+level.toString()+"] ";
-        if(level==Level.DEBUG) return ChatFormatting.GRAY+logLevel;
-        else if(level==Level.INFO) return logLevel;
-        else if(level==Level.WARN) return ChatFormatting.GOLD+logLevel;
-        else if(level==Level.ERROR) return ChatFormatting.RED+logLevel;
-        else return ChatFormatting.DARK_RED+logLevel;
+    private static int colorizeLogLevel(Level level) {
+        if(level==Level.DEBUG) return GuiUtil.makeRGBAInt(200,200,200,255);
+        else if(level==Level.INFO) return GuiUtil.WHITE;
+        else if(level==Level.WARN) return GuiUtil.makeRGBAInt(255,215,0,255);
+        else if(level==Level.ERROR) return GuiUtil.makeRGBAInt(255,0,0,255);
+        return GuiUtil.makeRGBAInt(100,0,0,255);
     }
 
     public static <T> T clone(final T o) {
         return Cloner.standard().deepClone(o);
+    }
+
+    public static File configFile(String path, String extension) {
+        return FileUtil.generateNestedFile(new File(Constants.CONFIG_DIR,path+"."+extension),false);
     }
 }

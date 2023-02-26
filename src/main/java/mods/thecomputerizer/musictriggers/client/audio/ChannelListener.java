@@ -23,9 +23,9 @@ public class ChannelListener extends AudioEventAdapter {
     private final AudioDataFormat format;
 
     private final AudioOutput AUDIO_THREAD;
-    private final String channel;
+    private final Channel channel;
 
-    public ChannelListener(AudioPlayer audioPlayer, AudioDataFormat format, String channel) {
+    public ChannelListener(AudioPlayer audioPlayer, AudioDataFormat format, Channel channel) {
         this.audioPlayer = audioPlayer;
         this.format = format;
         this.channel = channel;
@@ -34,17 +34,14 @@ public class ChannelListener extends AudioEventAdapter {
         this.AUDIO_THREAD.start();
     }
 
-    public void stopThread() {
-        this.AUDIO_THREAD.stop();
-    }
-
     @Override
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
-
+        this.channel.markUpdated();
     }
 
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
+        this.channel.markUpdated();
     }
 
     @Override
@@ -52,6 +49,7 @@ public class ChannelListener extends AudioEventAdapter {
         MusicTriggers.logExternally(Level.ERROR,"Track exception caught! Restarting audio output for channel {}",this.channel);
         exception.printStackTrace();
         this.AUDIO_THREAD.setRunAudioLoop(false);
+        this.channel.markUpdated();
     }
 
     @SuppressWarnings("BusyWait")

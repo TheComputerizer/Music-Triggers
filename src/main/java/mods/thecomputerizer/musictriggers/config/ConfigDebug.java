@@ -1,13 +1,18 @@
 package mods.thecomputerizer.musictriggers.config;
 
-import com.moandjiezana.toml.Toml;
+import libraries.com.moandjiezana.toml.Toml;
+import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Debug;
+import mods.thecomputerizer.theimpossiblelibrary.common.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.util.TextUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.LogUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.TomlUtil;
+import org.apache.logging.log4j.Level;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,8 +30,14 @@ public class ConfigDebug {
     public static String[] BLOCKED_MOD_RECORDS = {};
 
     public static Debug copyToGui() {
-        return new Debug(FILE, SHOW_DEBUG, CURRENT_SONG_ONLY, LOG_LEVEL, PLAY_NORMAL_MUSIC, REVERSE_PRIORITY,
-                COMBINE_EQUAL_PRIORITY, BLOCKED_MOD_MUSIC, BLOCKED_MOD_RECORDS);
+        Holder holder = Holder.makeEmpty();
+        try {
+            holder = TomlUtil.readFully(FILE);
+        } catch (IOException ex) {
+            MusicTriggers.logExternally(Level.ERROR, "Caught exception when reading debug config for the GUI");
+            Constants.MAIN_LOG.error("Caught exception when reading debug config for the GUI",ex);
+        }
+        return new Debug(holder);
     }
 
     public static void initialize(File f) {
@@ -56,10 +67,10 @@ public class ConfigDebug {
         lines.add(LogUtil.injectParameters("COMBINE_EQUAL_PRIORITY = \"{}\"",COMBINE_EQUAL_PRIORITY));
         lines.add("");
         lines.add("# A list of mod ids to block audio in the Music category from so there is no overlap in music playing during events from other mods");
-        lines.add(LogUtil.injectParameters("BLOCKED_MOD_MUSIC = {}", TextUtil.compileCollection(BLOCKED_MOD_MUSIC)));
+        lines.add(LogUtil.injectParameters("BLOCKED_MOD_MUSIC = {}", TextUtil.compileCollection((Object[])BLOCKED_MOD_MUSIC)));
         lines.add("");
         lines.add("# A list of mod ids to block audio in the Records category from so there is no overlap in records playing during events from other mods");
-        lines.add(LogUtil.injectParameters("BLOCKED_MOD_RECORDS = {}",TextUtil.compileCollection(BLOCKED_MOD_RECORDS)));
+        lines.add(LogUtil.injectParameters("BLOCKED_MOD_RECORDS = {}",TextUtil.compileCollection((Object[])BLOCKED_MOD_RECORDS)));
         FileUtil.writeLinesToFile(FILE,lines,false);
     }
 
@@ -75,17 +86,15 @@ public class ConfigDebug {
         BLOCKED_MOD_RECORDS = TomlUtil.readGenericArray(toml,"BLOCKED_MOD_RECORDS",BLOCKED_MOD_RECORDS);
     }
 
-    public static void update(boolean show_debug, boolean current_song_only, String log_level, boolean play_normal_music,
-                              boolean reversePriority, boolean combinePools, String[] blocked_mod_music,
-                              String[] blocked_mod_records) {
-        SHOW_DEBUG = show_debug;
-        CURRENT_SONG_ONLY = current_song_only;
-        LOG_LEVEL = log_level;
-        PLAY_NORMAL_MUSIC = play_normal_music;
-        REVERSE_PRIORITY = reversePriority;
-        COMBINE_EQUAL_PRIORITY = combinePools;
-        BLOCKED_MOD_MUSIC = blocked_mod_music;
-        BLOCKED_MOD_RECORDS = blocked_mod_records;
+    public static void update(Holder data) {
+        SHOW_DEBUG = data.getValOrDefault("SHOW_DEBUG",false);
+        CURRENT_SONG_ONLY = data.getValOrDefault("CURRENT_SONG_ONLY",false);
+        LOG_LEVEL = data.getValOrDefault("LOG_LEVEL","INFO");
+        PLAY_NORMAL_MUSIC = data.getValOrDefault("PLAY_NORMAL_MUSIC",false);
+        REVERSE_PRIORITY = data.getValOrDefault("REVERSE_PRIORITY",false);
+        COMBINE_EQUAL_PRIORITY = data.getValOrDefault("COMBINE_EQUAL_PRIORITY",false);
+        BLOCKED_MOD_MUSIC = data.getValOrDefault("BLOCKED_MOD_MUSIC",new ArrayList<String>()).toArray(new String[]{});
+        BLOCKED_MOD_RECORDS = data.getValOrDefault("BLOCKED_MOD_RECORDS",new ArrayList<String>()).toArray(new String[]{});
         write();
     }
 }

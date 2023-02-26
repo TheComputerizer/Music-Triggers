@@ -1,12 +1,17 @@
 package mods.thecomputerizer.musictriggers.config;
 
-import com.moandjiezana.toml.Toml;
+import libraries.com.moandjiezana.toml.Toml;
+import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Registration;
+import mods.thecomputerizer.theimpossiblelibrary.common.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.LogUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.TomlUtil;
+import org.apache.logging.log4j.Level;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +23,14 @@ public class ConfigRegistry {
     public static boolean CLIENT_SIDE_ONLY = false;
 
     public static Registration copyToGui() {
-        return new Registration(FILE, REGISTER_DISCS, CLIENT_SIDE_ONLY);
+        Holder holder = Holder.makeEmpty();
+        try {
+            holder = TomlUtil.readFully(FILE);
+        } catch (IOException ex) {
+            MusicTriggers.logExternally(Level.ERROR, "Caught exception when reading registration config for the GUI");
+            Constants.MAIN_LOG.error("Caught exception when reading registration config for the GUI",ex);
+        }
+        return new Registration(holder);
     }
 
     public static void initialize(File f) {
@@ -43,13 +55,7 @@ public class ConfigRegistry {
         CLIENT_SIDE_ONLY = TomlUtil.readIfExists(toml,"CLIENT_SIDE_ONLY",CLIENT_SIDE_ONLY);
     }
 
-    public static void write(boolean registerDiscs, boolean clientSide) {
-        List<String> lines = new ArrayList<>();
-        lines.add("# Register Music Discs\n");
-        lines.add(LogUtil.injectParameters("REGISTER_DISCS = \"{}\"\n",registerDiscs));
-        lines.add("\n");
-        lines.add("# Client Side Only (Some triggers will not be able to activate)\n");
-        lines.add(LogUtil.injectParameters("CLIENT_SIDE_ONLY = \"{}\"\n",clientSide));
-        FileUtil.writeLinesToFile(FILE,lines,false);
+    public static void write(Holder data) {
+        FileUtil.writeLinesToFile(FILE,data.toLines(),false);
     }
 }

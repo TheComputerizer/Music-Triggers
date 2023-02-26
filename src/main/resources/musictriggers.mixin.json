@@ -1,10 +1,13 @@
 {
   "required": true,
   "package": "mods.thecomputerizer.musictriggers.mixin",
-  "refmap": "musictriggers.mixin.refmap.json",
+  "refmap": "musictriggers.refmap.json",
+  "target": "@env(DEFAULT)",
   "minVersion": "0.8",
   "compatibilityLevel": "JAVA_8",
-  "mixins": [],
+  "mixins": [
+    "MixinBossInfoServer"
+  ],
   "client": [
     "MixinMusicTicker"
   ]

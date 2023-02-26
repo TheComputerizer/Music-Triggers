@@ -3,43 +3,43 @@ package mods.thecomputerizer.musictriggers.util.packets;
 import io.netty.buffer.ByteBuf;
 import mods.thecomputerizer.musictriggers.client.ClientSync;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
-import mods.thecomputerizer.musictriggers.common.ServerChannelData;
+import mods.thecomputerizer.theimpossiblelibrary.util.NetworkUtil;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-public class PacketSyncServerInfo implements IMessageHandler<PacketSyncServerInfo.PacketSyncServerInfoMessage, IMessage> {
+public class PacketSyncServerInfo implements IMessageHandler<PacketSyncServerInfo.Message, IMessage> {
 
     @Override
-    public IMessage onMessage(PacketSyncServerInfo.PacketSyncServerInfoMessage message, MessageContext ctx) {
+    public IMessage onMessage(PacketSyncServerInfo.Message message, MessageContext ctx) {
         for(ClientSync sync : message.clientReturnInfo) ChannelManager.syncInfoFromServer(sync);
         return null;
     }
 
-    public static class PacketSyncServerInfoMessage implements IMessage {
-        private final List<ServerChannelData> serverChannelData = new ArrayList<>();
-        private final List<ClientSync> clientReturnInfo = new ArrayList<>();
+    public static class Message implements IMessage {
+        private Map<String, Map<String, Boolean>> triggerStatus;
+        private List<ClientSync> clientReturnInfo = new ArrayList<>();
 
-        public PacketSyncServerInfoMessage() {
+        public Message() {
         }
 
-        public PacketSyncServerInfoMessage(List<ServerChannelData> serverChannelData) {
-            this.serverChannelData.addAll(serverChannelData);
+        public Message(Map<String, Map<String, Boolean>> triggerStatus) {
+            this.triggerStatus = triggerStatus;
         }
 
         @Override
         public void fromBytes(ByteBuf buf) {
-            int size = buf.readInt();
-            for(int i=0;i<size;i++) this.clientReturnInfo.add(new ClientSync(buf));
+            this.clientReturnInfo = NetworkUtil.readGenericList(buf,ClientSync::new);
         }
 
         @Override
         public void toBytes(ByteBuf buf) {
-            buf.writeInt(this.serverChannelData.size());
-            for (ServerChannelData channel : this.serverChannelData) channel.encode(buf);
+            NetworkUtil.writeGenericMap(buf,this.triggerStatus,NetworkUtil::writeString, (buf1, map) ->
+                    NetworkUtil.writeGenericMap(buf1,map,NetworkUtil::writeString,ByteBuf::writeBoolean));
         }
     }
 }

@@ -1,37 +1,26 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.client.config.GuiButtonExt;
+import org.apache.logging.log4j.util.TriConsumer;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.function.BiConsumer;
 
 public class ButtonSuperType extends GuiButtonExt {
     private final List<String> hoverLines;
-    private final BiConsumer<GuiSuperType, ButtonSuperType> handlerFunction;
-    private final GuiSuperType parentScreen;
-    private final boolean isApply;
-    private String baseDisplayString;
-    public ButtonSuperType(int id, int xPos, int yPos, int width, int height, String displayString,
-                           List<String> hoverText, BiConsumer<GuiSuperType, ButtonSuperType> handler,
-                           GuiSuperType parent, boolean isApply) {
+    private final TriConsumer<GuiSuperType, ButtonSuperType, Integer> onClick;
+    private final int numModes;
+    private int mode;
+    public ButtonSuperType(int id, int xPos, int yPos, int width, int height, int numModes, String displayString,
+                           List<String> hoverText, TriConsumer<GuiSuperType, ButtonSuperType, Integer> onClick,
+                           boolean isEnabled) {
         super(id, xPos, yPos, width, height, displayString);
         this.hoverLines = hoverText;
-        this.handlerFunction = handler;
-        this.parentScreen = parent;
-        this.isApply = isApply;
-        if(isApply) {
-            this.enabled = parent.getInstance().hasEdits();
-            this.visible = parent.getInstance().hasEdits();
-        }
-        this.baseDisplayString = displayString;
-    }
-
-    public boolean isApplyButton() {
-        return this.isApply;
+        this.numModes = numModes;
+        this.mode = 1;
+        this.onClick = onClick;
+        this.enabled = isEnabled;
+        this.visible = isEnabled;
     }
 
     public void setEnable(boolean is) {
@@ -39,24 +28,8 @@ public class ButtonSuperType extends GuiButtonExt {
         this.visible = is;
     }
 
-    public void updateBaseTextAndFormatting(FontRenderer font, String newDisplay, TextFormatting ... formatSettings) {
-        //int prevWidth = this.width;
-        //int newWidth = font.getStringWidth(newDisplay);
-        this.width = font.getStringWidth(newDisplay)+4;
-        this.baseDisplayString = newDisplay;
-        updateDisplayFormat(formatSettings);
-    }
-
-    public void updateDisplayFormat(TextFormatting ... formatSettings) {
-        if(Objects.isNull(formatSettings)) {
-            this.displayString = this.baseDisplayString;
-            return;
-        }
-        StringBuilder builder = new StringBuilder();
-        for(TextFormatting format : formatSettings)
-            builder.append(format.toString());
-        builder.append(this.baseDisplayString);
-        this.displayString = builder.toString();
+    public void updateDisplay(String newDisplay) {
+        this.displayString = newDisplay;
     }
 
 
@@ -65,18 +38,22 @@ public class ButtonSuperType extends GuiButtonExt {
                 && mouseY>=this.y && mouseY<this.y+this.height;
     }
 
-    @Override
-    public void drawButton(Minecraft mc, int mouseX, int mouseY, float partial) {
-        super.drawButton(mc, mouseX, mouseY, partial);
-        if(isHovering(mouseX, mouseY)) this.parentScreen.drawHoveringText(this.hoverLines,mouseX,mouseY);
+    public List<String> getHoverText(int mouseX, int mouseY) {
+        return isHovering(mouseX, mouseY) ? this.hoverLines : new ArrayList<>();
     }
 
-    public void handle() {
-        this.handlerFunction.accept(this.parentScreen,this);
+    public void handle(GuiSuperType parent) {
+        incrementMode();
+        this.onClick.accept(parent,this,this.mode);
+    }
+
+    public void incrementMode() {
+        this.mode++;
+        if(this.mode>this.numModes) this.mode = 1;
     }
 
     @FunctionalInterface
-    public interface CreatorFunction<I, X, Y, W, H, D, L, F, P, A, B> {
-        B apply(I id, X x, Y y, W width, H height, D display, L lines, F function, P parent, A apply);
+    public interface CreatorFunction<I, X, Y, W, H, M, D, L, F, A, B> {
+        B apply(I id, X x, Y y, W width, H height, M Modes, D display, L lines, F function, A enabled);
     }
 }

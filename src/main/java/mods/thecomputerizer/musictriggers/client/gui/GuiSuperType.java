@@ -1,52 +1,53 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.EventsClient;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
-import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.*;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ChatAllowedCharacters;
+import net.minecraftforge.client.event.RenderTooltipEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.client.config.GuiUtils;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.util.TriConsumer;
 import org.lwjgl.input.Keyboard;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.vecmath.Point2i;
 import javax.vecmath.Point4i;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.*;
 
 public abstract class GuiSuperType extends GuiScreen {
 
-    protected static final List<Integer> blacklistedKeys = Stream.of(Keyboard.KEY_LSHIFT, Keyboard.KEY_RSHIFT,
-            Keyboard.KEY_TAB, Keyboard.KEY_CAPITAL, Keyboard.KEY_LMETA, Keyboard.KEY_RMETA, Keyboard.KEY_END, Keyboard.KEY_UP,
-            Keyboard.KEY_DOWN, Keyboard.KEY_LEFT, Keyboard.KEY_RIGHT, Keyboard.KEY_F2, Keyboard.KEY_F3, Keyboard.KEY_F4,
-            Keyboard.KEY_F5, Keyboard.KEY_F6, Keyboard.KEY_F7, Keyboard.KEY_F8, Keyboard.KEY_F9, Keyboard.KEY_F10,
-            Keyboard.KEY_F11, Keyboard.KEY_F12, Keyboard.KEY_F13, Keyboard.KEY_F14, Keyboard.KEY_F15, Keyboard.KEY_F16,
-            Keyboard.KEY_F17, Keyboard.KEY_F18, Keyboard.KEY_F19, Keyboard.KEY_FUNCTION, Keyboard.KEY_APPS,
-            Keyboard.KEY_POWER, Keyboard.KEY_SLEEP, Keyboard.KEY_CLEAR, Keyboard.KEY_HOME, Keyboard.KEY_PAUSE,
-            Keyboard.KEY_PRIOR, Keyboard.KEY_INSERT, Keyboard.KEY_DELETE, Keyboard.KEY_NUMPADENTER, Keyboard.KEY_LMENU,
-            Keyboard.KEY_RMENU, Keyboard.KEY_SYSRQ, Keyboard.KEY_STOP, Keyboard.KEY_SCROLL, Keyboard.KEY_NUMLOCK,
-            Keyboard.KEY_RETURN, Keyboard.KEY_LCONTROL, Keyboard.KEY_RCONTROL, Keyboard.KEY_NEXT, Keyboard.KEY_NONE,
-            Keyboard.KEY_ESCAPE).collect(Collectors.toList());
-    protected static final List<Integer> numberKeys = Stream.of(Keyboard.KEY_BACK, Keyboard.KEY_1, Keyboard.KEY_2,
-            Keyboard.KEY_3, Keyboard.KEY_4, Keyboard.KEY_5, Keyboard.KEY_6, Keyboard.KEY_7, Keyboard.KEY_8,
-            Keyboard.KEY_9, Keyboard.KEY_0, Keyboard.KEY_NUMPAD1, Keyboard.KEY_NUMPAD2, Keyboard.KEY_NUMPAD3,
-            Keyboard.KEY_NUMPAD4, Keyboard.KEY_NUMPAD5, Keyboard.KEY_NUMPAD6, Keyboard.KEY_NUMPAD7, Keyboard.KEY_NUMPAD8,
-            Keyboard.KEY_NUMPAD9, Keyboard.KEY_NUMPAD0, Keyboard.KEY_SUBTRACT).collect(Collectors.toList());
     protected final GuiSuperType parent;
     protected final GuiType type;
     private final Instance configInstance;
     private final List<ButtonSuperType> superButtons;
-    protected final int spacing;
+    private final String channel;
+    private ButtonSuperType applyButton;
+    protected int spacing;
     private int buttonIDCounter;
+    protected GuiTextField searchBar;
+    protected boolean isInitialized;
 
     public GuiSuperType(GuiSuperType parent, GuiType type, Instance configInstance) {
+        this(parent,type,configInstance,null);
+    }
+
+    public GuiSuperType(GuiSuperType parent, GuiType type, Instance configInstance, @Nullable String channel) {
         this.parent = parent;
         this.type = type;
         this.configInstance = configInstance;
+        this.channel = channel;
         this.superButtons = new ArrayList<>();
         this.spacing = 16;
+        this.isInitialized = false;
     }
 
     public Instance getInstance() {
@@ -55,6 +56,10 @@ public abstract class GuiSuperType extends GuiScreen {
 
     public GuiSuperType getParent() {
         return this.parent;
+    }
+
+    public String getChannel() {
+        return this.channel;
     }
 
     public Point4i white(int alpha) {
@@ -73,6 +78,12 @@ public abstract class GuiSuperType extends GuiScreen {
                 if (this.mc.currentScreen == null) this.mc.setIngameFocus();
             } else this.mc.displayGuiScreen(new GuiPopUp(this,GuiType.POPUP,getInstance(),"confirm"));
         }
+        this.searchBar.textboxKeyTyped(typedChar, keyCode);
+        updateSearch();
+    }
+
+    protected boolean isKeyValid(char c, int keyCode) {
+        return ChatAllowedCharacters.isAllowedCharacter(c) || keyCode == Keyboard.KEY_BACK;
     }
 
     protected String backspace(String value) {
@@ -82,22 +93,68 @@ public abstract class GuiSuperType extends GuiScreen {
 
     @Override
     public void initGui() {
+        this.superButtons.clear();
+        switch (Minecraft.getMinecraft().gameSettings.guiScale) {
+            case 0: {
+                this.spacing = 10;
+                break;
+            }
+            case 1: {
+                this.spacing = 24;
+                break;
+            }
+            case 2: {
+                this.spacing = 16;
+                break;
+            }
+            case 3: {
+                this.spacing = 12;
+                break;
+            }
+        }
         EventsClient.renderDebug = false;
-        for(ButtonType buttonHolder : this.type.getButtonHolders())
-            if(buttonHolder.isNormal())
-                addSuperButton(buttonHolder.getNormalButton(this.buttonIDCounter++, this));
+        for (ButtonType buttonHolder : this.type.getButtonHolders()) {
+            if (buttonHolder.isNormal()) {
+                ButtonSuperType button = buttonHolder.getNormalButton(this.buttonIDCounter++, this);
+                if(buttonHolder.getID().contains("apply"))
+                    this.applyButton = button;
+                addSuperButton(button);
+            }
+        }
+        if(this.configInstance.hasEdits() && Objects.nonNull(this.applyButton)) this.applyButton.setEnable(true);
+        this.searchBar = new GuiTextField(this.buttonIDCounter++, this.fontRenderer, this.width / 4, 8,
+                this.width / 2, 16);
+        this.searchBar.setMaxStringLength(32500);
+        this.searchBar.setVisible(false);
+        this.searchBar.setEnabled(false);
+        this.searchBar.setText("");
     }
 
-    protected ButtonSuperType addTopButton(int x, String name, int width, List<String> hoverText,
-                                BiConsumer<GuiSuperType, ButtonSuperType> handler, GuiSuperType parent) {
-        ButtonSuperType newButton = new ButtonSuperType(this.buttonIDCounter++,x,8,width,16, name,hoverText,
-                handler,parent,false);
-        this.addSuperButton(newButton);
-        return newButton;
+    protected void enableSearch() {
+        this.searchBar.setEnabled(true);
+        this.searchBar.setVisible(true);
     }
 
-    protected void addSuperButton(ButtonSuperType button) {
-        this.buttonList.add(button);
+    protected boolean checkSearch(String toCheck) {
+        return toCheck.toLowerCase().contains(this.searchBar.getText().toLowerCase());
+    }
+
+    protected void updateSearch() {
+
+    }
+
+    public ButtonSuperType createBottomButton(String name, int width, int modes, List<String> hoverText,
+                                                 TriConsumer<GuiSuperType, ButtonSuperType, Integer> handler) {
+        return new ButtonSuperType(this.buttonIDCounter++,0, this.height-24,width,16, modes,name,
+                hoverText, handler,true);
+    }
+
+    private void addSuperButton(ButtonSuperType button) {
+        this.superButtons.add(button);
+    }
+
+    protected void addSuperButton(ButtonSuperType button, int x) {
+        if(x>=0) button.x=x;
         this.superButtons.add(button);
     }
 
@@ -107,10 +164,8 @@ public abstract class GuiSuperType extends GuiScreen {
     }
 
     private void recursivelySetApply(GuiSuperType superScreen) {
-        for(ButtonSuperType button : superScreen.superButtons)
-            if(button.isApplyButton())
-                button.setEnable(true);
-        if(superScreen.parent!=null) recursivelySetApply(superScreen.parent);
+        this.applyButton.setEnable(true);
+        if(Objects.nonNull(superScreen.parent)) recursivelySetApply(superScreen.parent);
     }
 
     @Override
@@ -124,11 +179,20 @@ public abstract class GuiSuperType extends GuiScreen {
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         this.drawDefaultBackground();
         drawStuff(mouseX, mouseY, partialTicks);
-        super.drawScreen(mouseX, mouseY, partialTicks);
+        for(ButtonSuperType superButton : this.superButtons)
+            superButton.drawButton(this.mc,mouseX,mouseY,partialTicks);
+        this.searchBar.drawTextBox();
+        for(ButtonSuperType superButton : this.superButtons) {
+            if(Minecraft.getMinecraft().currentScreen == this) {
+                List<String> hoverText = superButton.getHoverText(mouseX,mouseY);
+                if(!hoverText.isEmpty()) drawHoveringText(hoverText,mouseX,mouseY);
+            }
+        }
     }
 
-    protected boolean mouseHover(Point2i topLeft, int mouseX, int mouseY, int width, int height) {
-        return mouseX>=topLeft.x && mouseX<topLeft.x+width && mouseY>=topLeft.y && mouseY<topLeft.y+height;
+    public boolean mouseHover(Point2i topLeft, int mouseX, int mouseY, int width, int height) {
+        return Minecraft.getMinecraft().currentScreen == this &&
+                mouseX>=topLeft.x && mouseX<topLeft.x+width && mouseY>=topLeft.y && mouseY<topLeft.y+height;
     }
 
     @Override
@@ -138,10 +202,11 @@ public abstract class GuiSuperType extends GuiScreen {
                 if (superButton.mousePressed(this.mc, mouseX, mouseY)) {
                     this.selectedButton = superButton;
                     superButton.playPressSound(this.mc.getSoundHandler());
-                    superButton.handle();
+                    superButton.handle(this);
                 }
             }
         }
+        this.searchBar.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     public void saveAndDisplay(GuiSuperType next) {
@@ -160,16 +225,18 @@ public abstract class GuiSuperType extends GuiScreen {
         if(reload) {
             if(this.configInstance.hasEdits())
                 applyButton();
+            MusicTriggers.logExternally(Level.INFO,"No in-game changes were detected - Loading file changes");
             EventsClient.initReload();
-            this.mc.displayGuiScreen(null);
             Minecraft.getMinecraft().setIngameFocus();
         } else this.mc.displayGuiScreen(this.parent);
     }
 
     public void applyButton() {
-        if(this.parent==null)
-            getInstance().writeAndReload();
-        else this.parent.applyButton();
+        if(Objects.nonNull(this.parent)) {
+            Minecraft.getMinecraft().displayGuiScreen(this.parent);
+            this.parent.applyButton();
+        }
+        else this.getInstance().writeAndReload();
     }
 
     @Override
@@ -180,5 +247,106 @@ public abstract class GuiSuperType extends GuiScreen {
     public void playGenericClickSound() {
         Minecraft.getMinecraft().getSoundHandler().playSound(
                 PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+    }
+
+    //Forges drawHoveringText implementation but without disabling lighting
+    @Override
+    public void drawHoveringText(List<String> textLines, int x, int y, @Nonnull FontRenderer font) {
+        if (!textLines.isEmpty()) {
+            RenderTooltipEvent.Pre event = new RenderTooltipEvent.Pre(ItemStack.EMPTY, textLines, x, y, this.width,
+                    this.height, -1, font);
+            if (MinecraftForge.EVENT_BUS.post(event)) return;
+            x = event.getX();
+            y = event.getY();
+            font = event.getFontRenderer();
+
+            GlStateManager.disableRescaleNormal();
+            GlStateManager.disableDepth();
+            int tooltipTextWidth = 0;
+            for (String textLine : textLines) {
+                int textLineWidth = font.getStringWidth(textLine);
+                if (textLineWidth > tooltipTextWidth) tooltipTextWidth = textLineWidth;
+            }
+            boolean needsWrap = false;
+            int titleLinesCount = 1;
+            int tooltipX = x + 12;
+            if (tooltipX + tooltipTextWidth + 4 > this.width) {
+                tooltipX = x - 16 - tooltipTextWidth;
+                if (tooltipX < 4) {// if the tooltip doesn't fit on the screen
+                    if (x > this.width / 2) tooltipTextWidth = x - 12 - 8;
+                    else tooltipTextWidth = this.width - 16 - x;
+                    needsWrap = true;
+                }
+            }
+            if (needsWrap) {
+                int wrappedTooltipWidth = 0;
+                List<String> wrappedTextLines = new ArrayList<>();
+                for (int i = 0; i < textLines.size(); i++) {
+                    String textLine = textLines.get(i);
+                    List<String> wrappedLine = font.listFormattedStringToWidth(textLine, tooltipTextWidth);
+                    if (i == 0) titleLinesCount = wrappedLine.size();
+                    for (String line : wrappedLine) {
+                        int lineWidth = font.getStringWidth(line);
+                        if (lineWidth > wrappedTooltipWidth) wrappedTooltipWidth = lineWidth;
+                        wrappedTextLines.add(line);
+                    }
+                }
+                tooltipTextWidth = wrappedTooltipWidth;
+                textLines = wrappedTextLines;
+                if (x > this.width / 2) tooltipX = x - 16 - tooltipTextWidth;
+                else tooltipX = x + 12;
+            }
+            int tooltipY = y - 12;
+            int tooltipHeight = 8;
+            if (textLines.size() > 1) {
+                tooltipHeight += (textLines.size() - 1) * 10;
+                if (textLines.size() > titleLinesCount)
+                    tooltipHeight += 2; // gap between title lines and next lines
+            }
+            if (tooltipY < 4) tooltipY = 4;
+            else if (tooltipY + tooltipHeight + 4 > this.height)
+                tooltipY = this.height - tooltipHeight - 4;
+            final int zLevel = 300;
+            int backgroundColor = 0xF0100010;
+            int borderColorStart = 0x505000FF;
+            int borderColorEnd = (borderColorStart & 0xFEFEFE) >> 1 | borderColorStart & 0xFF000000;
+            RenderTooltipEvent.Color colorEvent = new RenderTooltipEvent.Color(ItemStack.EMPTY, textLines, tooltipX, tooltipY,
+                    font, backgroundColor, borderColorStart, borderColorEnd);
+            MinecraftForge.EVENT_BUS.post(colorEvent);
+            backgroundColor = colorEvent.getBackground();
+            borderColorStart = colorEvent.getBorderStart();
+            borderColorEnd = colorEvent.getBorderEnd();
+            GuiUtils.drawGradientRect(zLevel, tooltipX - 3, tooltipY - 4, tooltipX + tooltipTextWidth + 3,
+                    tooltipY - 3, backgroundColor, backgroundColor);
+            GuiUtils.drawGradientRect(zLevel, tooltipX - 3, tooltipY + tooltipHeight + 3, tooltipX + tooltipTextWidth + 3,
+                    tooltipY + tooltipHeight + 4, backgroundColor, backgroundColor);
+            GuiUtils.drawGradientRect(zLevel, tooltipX - 3, tooltipY - 3, tooltipX + tooltipTextWidth + 3,
+                    tooltipY + tooltipHeight + 3, backgroundColor, backgroundColor);
+            GuiUtils.drawGradientRect(zLevel, tooltipX - 4, tooltipY - 3, tooltipX - 3,
+                    tooltipY + tooltipHeight + 3, backgroundColor, backgroundColor);
+            GuiUtils.drawGradientRect(zLevel, tooltipX + tooltipTextWidth + 3, tooltipY - 3, tooltipX + tooltipTextWidth + 4,
+                    tooltipY + tooltipHeight + 3, backgroundColor, backgroundColor);
+            GuiUtils.drawGradientRect(zLevel, tooltipX - 3, tooltipY - 3 + 1, tooltipX - 3 + 1,
+                    tooltipY + tooltipHeight + 3 - 1, borderColorStart, borderColorEnd);
+            GuiUtils.drawGradientRect(zLevel, tooltipX + tooltipTextWidth + 2, tooltipY - 3 + 1, tooltipX + tooltipTextWidth + 3,
+                    tooltipY + tooltipHeight + 3 - 1, borderColorStart, borderColorEnd);
+            GuiUtils.drawGradientRect(zLevel, tooltipX - 3, tooltipY - 3, tooltipX + tooltipTextWidth + 3,
+                    tooltipY - 3 + 1, borderColorStart, borderColorStart);
+            GuiUtils.drawGradientRect(zLevel, tooltipX - 3, tooltipY + tooltipHeight + 2, tooltipX + tooltipTextWidth + 3,
+                    tooltipY + tooltipHeight + 3, borderColorEnd, borderColorEnd);
+            MinecraftForge.EVENT_BUS.post(new RenderTooltipEvent.PostBackground(ItemStack.EMPTY, textLines, tooltipX, tooltipY,
+                    font, tooltipTextWidth, tooltipHeight));
+            int tooltipTop = tooltipY;
+            for (int lineNumber = 0; lineNumber < textLines.size(); ++lineNumber) {
+                String line = textLines.get(lineNumber);
+                font.drawStringWithShadow(line, (float)tooltipX, (float)tooltipY, -1);
+                if (lineNumber + 1 == titleLinesCount) tooltipY += 2;
+                tooltipY += 10;
+            }
+            MinecraftForge.EVENT_BUS.post(new RenderTooltipEvent.PostText(ItemStack.EMPTY, textLines, tooltipX, tooltipTop,
+                    font, tooltipTextWidth, tooltipHeight));
+            GlStateManager.enableDepth();
+            GlStateManager.enableRescaleNormal();
+        }
     }
 }

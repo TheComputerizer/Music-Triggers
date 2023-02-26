@@ -6,6 +6,7 @@ import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.LogUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
+import org.apache.logging.log4j.util.TriConsumer;
 
 import java.io.File;
 import java.util.*;
@@ -15,9 +16,9 @@ public class Redirect extends AbstractChannelConfig {
     private final Map<String,String> urlMap;
     private final Map<String, ResourceLocation> resourceLocationMap;
 
-    public Redirect(File configFile, String channelName, Map<String,String> urlMap,
+    public Redirect(String channelName, Map<String,String> urlMap,
                     Map<String, ResourceLocation> resourceLocationMap) {
-        super(configFile,channelName);
+        super(channelName);
         this.urlMap = urlMap;
         this.resourceLocationMap = resourceLocationMap;
     }
@@ -52,39 +53,80 @@ public class Redirect extends AbstractChannelConfig {
         FileUtil.writeLinesToFile(file,lines,false);
     }
 
-    public GuiRedirect makeGui(GuiSuperType parent) {
-        return new GuiRedirect(parent,GuiType.REDIRECT,parent.getInstance(),this,internalSongs(),
-                externalSongs());
+    public List<GuiSelection.Element> getRedirectElements() {
+        List<GuiSelection.Element> elements = new ArrayList<>();
+        int index = 0;
+        for(Map.Entry<String, String> externalEntry : this.urlMap.entrySet()) {
+            elements.add(new GuiSelection.DualElement(externalEntry.getKey(),externalEntry.getValue(),index,
+                    Translate.singletonHover("selection","redirect","external"),
+                    Translate.singletonHover("selection","redirect","external"),
+                    (newKey) -> this.urlMap.remove(externalEntry.getKey()),(key, val) -> {
+                this.urlMap.remove(externalEntry.getKey());
+                this.urlMap.put(key,val);
+            }));
+            index++;
+        }
+        for(Map.Entry<String, ResourceLocation> internalEntry : this.resourceLocationMap.entrySet()) {
+            elements.add(new GuiSelection.DualElement(internalEntry.getKey(),internalEntry.getValue().toString(),index,
+                    Translate.singletonHover("selection","redirect","internal"),
+                    Translate.singletonHover("selection","redirect","internal"),
+                    (newKey) -> this.resourceLocationMap.remove(internalEntry.getKey()),(key, val) -> {
+                this.resourceLocationMap.remove(internalEntry.getKey());
+                this.resourceLocationMap.put(key,new ResourceLocation(val));
+            }));
+            index++;
+        }
+        return elements;
     }
 
-    public void openSoundFinderSelection(GuiRedirect parent) {
-        Minecraft.getMinecraft().displayGuiScreen(new GuiSelection(parent,GuiType.SELECTION_GENERIC,
-                parent.getInstance(),getChannelName(),"song_resources",null,
-                Translate.guiGeneric(false,"selection","group","song_resources"), null));
+    public ButtonSuperType[] redirectButtons(GuiSuperType grandfather, List<String> registeredSounds) {
+        List<ButtonSuperType> buttons = new ArrayList<>();
+        String displayName = Translate.guiGeneric(false, "button", "add_internal");
+        int width = Minecraft.getMinecraft().fontRenderer.getStringWidth(displayName)+8;
+        List<String> hoverText = Translate.singletonHover("button","add_internal","hover");
+        TriConsumer<GuiSuperType, ButtonSuperType, Integer> onClick = (parent, button, type) -> {
+            Minecraft.getMinecraft().displayGuiScreen(new GuiSelection(parent,GuiType.SELECTION_GENERIC,
+                    parent.getInstance(), Translate.guiGeneric(false,"selection","song_resources"),
+                    false,true,() -> getRegisteredSoundElements(parent,registeredSounds)));
+            parent.parentUpdate();
+        };
+        buttons.add(grandfather.createBottomButton(displayName,width,1,hoverText,onClick));
+        displayName = Translate.guiGeneric(false, "button", "add_external");
+        width = Minecraft.getMinecraft().fontRenderer.getStringWidth(displayName)+8;
+        hoverText = Translate.singletonHover("button","add_external","hover");
+        onClick = (parent, button, type) -> {
+            int i = 0;
+            String temp = "temp" + i;
+            while (this.urlMap.containsKey(temp)) {
+                i++;
+                temp = "temp" + i;
+            }
+            this.urlMap.put(temp,"url");
+            parent.parentUpdate();
+        };
+        buttons.add(grandfather.createBottomButton(displayName,width,1,hoverText,onClick));
+        return buttons.toArray(new ButtonSuperType[]{});
     }
 
-    public List<GuiSelection.Element> getRegisteredSoundInstances(GuiSelection selectionScreen, String channelName) {
-        return selectionScreen.getInstance().getRegisteredSounds().stream()
-                .map(sound -> new GuiSelection.Element(selectionScreen, channelName, sound,
-                        sound, null,
-                        false, 0, (channel, title) -> {
-                            GuiRedirect redirect = (GuiRedirect)selectionScreen.getParent();
-                            redirect.addInternal(sound);
-                            Minecraft.getMinecraft().displayGuiScreen(redirect);
-                        },null))
-                .collect(Collectors.toList());
-    }
-
-    public boolean isSongEntryUsed(Instance instance, String song){
-        return instance.isSongEntryUsed(getChannelName(),song);
-    }
-
-    public void save(Map<String, String> internalRedirectMap, Map<String, String> externalRedirectMap) {
-        this.resourceLocationMap.clear();
-        this.resourceLocationMap.putAll(internalRedirectMap.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ResourceLocation(entry.getValue()))));
-        this.urlMap.clear();
-        this.urlMap.putAll(externalRedirectMap);
+    public List<GuiSelection.Element> getRegisteredSoundElements(GuiSuperType grandfather, List<String> registeredSounds) {
+        List<GuiSelection.Element> elements = new ArrayList<>();
+        int index = 0;
+        for(String sound : registeredSounds) {
+            elements.add(new GuiSelection.MonoElement("registered_sound",index,sound,new ArrayList<>(),
+                    (parent) -> {
+                        int i = 0;
+                        String temp = "temp" + i;
+                        while (this.resourceLocationMap.containsKey(temp)) {
+                            i++;
+                            temp = "temp" + i;
+                        }
+                        this.resourceLocationMap.put(temp, new ResourceLocation(sound));
+                        grandfather.parentUpdate();
+                        Minecraft.getMinecraft().displayGuiScreen(grandfather);
+                    }));
+            index++;
+        }
+        return elements;
     }
 
     public Map<String,String> externalSongs() {

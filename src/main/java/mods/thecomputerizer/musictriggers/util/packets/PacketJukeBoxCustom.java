@@ -9,24 +9,24 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 import java.nio.charset.StandardCharsets;
 
-public class PacketJukeBoxCustom implements IMessageHandler<PacketJukeBoxCustom.PacketJukeBoxCustomMessage, IMessage> {
+public class PacketJukeBoxCustom implements IMessageHandler<PacketJukeBoxCustom.Message, IMessage> {
 
     @Override
-    public IMessage onMessage(PacketJukeBoxCustom.PacketJukeBoxCustomMessage message, MessageContext ctx) {
+    public IMessage onMessage(Message message, MessageContext ctx) {
         ChannelManager.playCustomJukeboxSong(message.start, message.channel, message.id, message.pos);
         return null;
     }
 
-    public static class PacketJukeBoxCustomMessage implements IMessage {
+    public static class Message implements IMessage {
         private BlockPos pos;
         private boolean start;
         private String channel;
         private String id;
 
-        public PacketJukeBoxCustomMessage() {
+        public Message() {
         }
 
-        public PacketJukeBoxCustomMessage(BlockPos pos, String channel, String id) {
+        public Message(BlockPos pos, String channel, String id) {
             this.start = pos!=null;
             this.pos = pos;
             this.channel = channel;

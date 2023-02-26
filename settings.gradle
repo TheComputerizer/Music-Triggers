@@ -10,7 +10,7 @@ pluginManagement {
             url 'https://maven.gofancy.wtf/releases'
         }
         maven {
-            name 'sponge'
+            name 'Sponge'
             url 'https://repo.spongepowered.org/repository/maven-public/'
         }
     }

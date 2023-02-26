@@ -8,12 +8,15 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@SuppressWarnings("ALL")
-@Mixin(value = MusicTicker.class)
+/*
+ * This is what stops vanilla music from overlapping when necessary
+ * The max priority ensures that this wins over other mods that mixin into the same class
+ */
+@Mixin(value = MusicTicker.class, priority = Integer.MAX_VALUE)
 public class MixinMusicTicker {
 
-    @Inject(at = @At(value = "HEAD"), method = "func_73660_a()V", cancellable = true)
-    private void update(CallbackInfo info) {
+    @Inject(at = @At(value = "HEAD"), method = "update", cancellable = true)
+    private void musictriggers_update(CallbackInfo info) {
         if(!ConfigDebug.PLAY_NORMAL_MUSIC || ChannelManager.canAnyChannelOverrideMusic()) info.cancel();
     }
 }

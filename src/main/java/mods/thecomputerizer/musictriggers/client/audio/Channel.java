@@ -14,17 +14,26 @@ import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.ClientSync;
 import mods.thecomputerizer.musictriggers.client.MusicPicker;
 import mods.thecomputerizer.musictriggers.client.data.Audio;
+import mods.thecomputerizer.musictriggers.client.data.Toggle;
 import mods.thecomputerizer.musictriggers.client.data.Trigger;
-import mods.thecomputerizer.musictriggers.common.ServerChannelData;
-import mods.thecomputerizer.musictriggers.config.*;
-import mods.thecomputerizer.theimpossiblelibrary.client.render.PNG;
-import mods.thecomputerizer.theimpossiblelibrary.client.render.Renderer;
+import mods.thecomputerizer.musictriggers.client.gui.instance.*;
+import mods.thecomputerizer.musictriggers.common.ServerData;
+import mods.thecomputerizer.musictriggers.config.ConfigJukebox;
+import mods.thecomputerizer.musictriggers.config.ConfigRedirect;
+import mods.thecomputerizer.theimpossiblelibrary.common.toml.Holder;
+import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.common.toml.Variable;
+import mods.thecomputerizer.theimpossiblelibrary.util.NetworkUtil;
+import mods.thecomputerizer.theimpossiblelibrary.util.TextUtil;
+import mods.thecomputerizer.theimpossiblelibrary.util.file.TomlUtil;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.*;
+import net.minecraft.client.resources.DefaultResourcePack;
+import net.minecraft.client.resources.FileResourcePack;
+import net.minecraft.client.resources.FolderResourcePack;
+import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
-import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.commons.io.FilenameUtils;
@@ -33,33 +42,27 @@ import org.apache.logging.log4j.Level;
 import org.lwjgl.input.Keyboard;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 @SideOnly(value = Side.CLIENT)
 public class Channel {
     public static final KeyBinding GUI = new KeyBinding("key.musictriggers.gui", Keyboard.KEY_R, "key.categories.musictriggers");
     private static final AudioDataFormat FORMAT = new Pcm16AudioDataFormat(2, 48000, 960, true);
-    private final String name;
+    private final Table info;
     private final SoundCategory category;
-    private final ConfigMain main;
-    private final ConfigTransitions transitions;
-    private final ConfigCommands commands;
-    private final ConfigToggles toggles;
+    private final Data data;
     private final ConfigRedirect redirect;
     private final ConfigJukebox jukebox;
     private final MusicPicker picker;
     private final boolean canBePausedByJukeBox;
     private final boolean overrides;
     private final AudioPlayerManager playerManager;
-    private AudioPlayer player;
-    private ChannelListener listener;
+    private final AudioPlayer player;
     private final HashMap<String, AudioTrack> loadedTracks;
     private ClientSync sync;
-    private MusicPicker.Packeted toSend;
     private final List<String> commandsForPacket;
     private final List<String> erroredSongDownloads;
     private final String localFolderPath;
@@ -75,26 +78,30 @@ public class Channel {
     private Audio curTrack;
     private final List<Audio> oncePerTrigger;
     private final List<Audio> onceUntilEmpty;
-    public final Map<Integer, Boolean> canPlayTitle;
-    public final Map<Integer, Boolean> canPlayImage;
     private int delayCounter = 0;
     private boolean delayCatch = false;
     private final List<Trigger> playingTriggers;
     private boolean pausedByJukebox = false;
+    private boolean changedStatus = false;
 
-    public Channel(String name, String category, boolean pausedByJukeBox, boolean overrides, String main,
-                   String transitions, String commands, String toggles, String redirect, String jukebox, String localFolder) {
-        this.name = name;
+    public Channel(Table info) throws IOException {
+        for(String filePath : collectFilePaths(info))
+            if(!ChannelManager.verifyOtherFilePath(filePath))
+                throw new IOException("Config path in channel "+info.getName()+" cannot be "+filePath+" as that " +
+                        "matches the path of a config file in an already registered channel!");
+        this.info = info;
+        String category = info.getValOrDefault("sound_category","music");
         this.category = SoundCategory.getSoundCategoryNames().contains(category) ?
                 SoundCategory.getByName(category) : SoundCategory.MUSIC;
-        this.canBePausedByJukeBox = pausedByJukeBox;
-        this.overrides = overrides;
-        this.sync = new ClientSync(name);
-        this.toSend = new MusicPicker.Packeted();
+        this.canBePausedByJukeBox = info.getValOrDefault("paused_by_jukebox",true);
+        this.overrides = info.getValOrDefault("overrides_normal_music",true);
+        this.sync = new ClientSync(info.getName());
         this.playerManager = new DefaultAudioPlayerManager();
         AudioSourceManagers.registerRemoteSources(this.playerManager);
         AudioSourceManagers.registerLocalSource(this.playerManager);
-        this.player = refreshPlayer();
+        this.player = this.playerManager.createPlayer();
+        this.player.setVolume(100);
+        new ChannelListener(this.player, FORMAT, this);
         this.loadedTracks = new HashMap<>();
         this.playerManager.setFrameBufferDuration(1000);
         this.playerManager.setPlayerCleanupThreshold(Long.MAX_VALUE);
@@ -103,20 +110,37 @@ public class Channel {
         this.playerManager.getConfiguration().setOutputFormat(FORMAT);
         this.oncePerTrigger = new ArrayList<>();
         this.onceUntilEmpty = new ArrayList<>();
-        this.canPlayTitle = new HashMap<>();
-        this.canPlayImage = new HashMap<>();
         this.commandsForPacket = new ArrayList<>();
         this.erroredSongDownloads = new ArrayList<>();
         this.playingTriggers = new ArrayList<>();
-        this.main = new ConfigMain(new File(Constants.CONFIG_DIR,main+".toml"));
-        this.transitions = new ConfigTransitions(new File(Constants.CONFIG_DIR,transitions+".toml"));
-        this.commands = new ConfigCommands(new File(Constants.CONFIG_DIR,commands+".toml"));
-        this.toggles = new ConfigToggles(new File(Constants.CONFIG_DIR,toggles+".toml"));
-        this.redirect = new ConfigRedirect(new File(Constants.CONFIG_DIR,redirect+".txt"));
-        this.jukebox = new ConfigJukebox(new File(Constants.CONFIG_DIR,jukebox+".txt"));
+        this.data = new Data(TomlUtil.readFully(MusicTriggers.configFile(
+                info.getValOrDefault("main", info.getName() + "/main"),"toml")),
+                TomlUtil.readFully(MusicTriggers.configFile(
+                        info.getValOrDefault("transitions", info.getName() + "/transitions"),"toml")),
+                TomlUtil.readFully(MusicTriggers.configFile(
+                        info.getValOrDefault("commands", info.getName() + "/commands"),"toml")),
+                TomlUtil.readFully(MusicTriggers.configFile(
+                        info.getValOrDefault("toggles", info.getName() + "/toggles"),"toml")));
+        this.redirect = new ConfigRedirect(MusicTriggers.configFile(
+                info.getValOrDefault("redirect", info.getName() + "/redirect"),"txt"));
+        this.jukebox = new ConfigJukebox(MusicTriggers.configFile(
+                info.getValOrDefault("jukebox", info.getName() + "/jukebox"),"txt"));
         this.picker = new MusicPicker(this);
-        this.localFolderPath = localFolder;
-        MusicTriggers.logExternally(Level.INFO, "Registered sound engine channel "+ name);
+        this.localFolderPath = info.getValOrDefault("songs_folder", "config/MusicTriggers/songs");
+        MusicTriggers.logExternally(Level.INFO, "Registered sound engine channel "+ info.getName());
+    }
+
+    private List<String> collectFilePaths(Table info) {
+        return Arrays.asList(info.getValOrDefault("main", info.getName() + "/main"),
+                info.getValOrDefault("transitions", info.getName() + "/transitions"),
+                info.getValOrDefault("commands", info.getName() + "/commands"),
+                info.getValOrDefault("toggles", info.getName() + "/toggles"),
+                info.getValOrDefault("redirect", info.getName() + "/redirect"),
+                info.getValOrDefault("jukebox", info.getName() + "/jukebox"));
+    }
+
+    public boolean verifyOtherFilePath(String path) {
+        return !collectFilePaths(this.info).contains(path);
     }
 
     public SoundCategory getCategory() {
@@ -131,68 +155,29 @@ public class Channel {
         return this.jukebox.recordMap;
     }
 
-    private AudioPlayer refreshPlayer() {
-        if(this.player!=null) {
-            this.player.destroy();
-            this.listener.stopThread();
-        }
-        AudioPlayer newPlayer = playerManager.createPlayer();
-        newPlayer.setVolume(100);
-        this.listener = new ChannelListener(newPlayer, FORMAT, this.name);
-        return newPlayer;
-    }
-
     public String getChannelName() {
-        return this.name;
-    }
-
-    public ConfigMain getMainConfig() {
-        return this.main;
-    }
-
-    public ConfigTransitions getTransitionsConfig() {
-        return this.transitions;
-    }
-
-    public ConfigCommands getCommandsConfig() {
-        return this.commands;
-    }
-
-    public ConfigToggles getTogglesConfig() {
-        return this.toggles;
-    }
-
-    public ConfigRedirect getRedirect() {
-        return this.redirect;
+        return this.info.getName();
     }
 
     public void runToggle(int condition, List<Trigger> triggers) {
-        this.toggles.runToggle(condition, triggers);
-    }
-
-    public void forceToggle(Trigger trigger, boolean on, boolean flip) {
-        if(flip) this.toggles.forceToggle(trigger, invertToggle(trigger));
-        else this.toggles.forceToggle(trigger, on);
-    }
-
-    public boolean defaultToggle(Trigger trigger) {
-        return trigger.defaultToggle();
-    }
-
-    public boolean invertToggle(Trigger trigger) {
-        return !this.toggles.getToggle(trigger, defaultToggle(trigger));
+        for(Toggle toggle : this.data.toggleList)
+            toggle.runToggle(condition, triggers);
     }
 
     public ClientSync getSyncStatus() {
         return this.sync;
     }
 
-    public boolean overridesNormalMusic() {
-        return this.overrides;
+    public void markUpdated() {
+        this.changedStatus = true;
     }
 
-    public void initializeTriggerPersistence(Trigger trigger) {
-        this.picker.initializePersistence(trigger);
+    public boolean needsUpdatePacket() {
+        return this.changedStatus;
+    }
+
+    public boolean overridesNormalMusic() {
+        return this.overrides;
     }
 
     public boolean getVictory(int id) {
@@ -200,17 +185,17 @@ public class Channel {
     }
 
     private void checkLoops() {
-        if(Objects.nonNull(this.curTrack)) {
+        if(Objects.nonNull(this.curTrack) && Objects.nonNull(getCurPlaying())) {
             for(Audio.Loop loop : this.curTrack.getLoops()) {
                 long posCapture = this.getMillis();
                 long setTo = loop.checkForLoop(posCapture,this.getTotalMillis());
-                if(posCapture!=setTo) this.setMillis(setTo);
+                if(posCapture!=setTo) setMillis(setTo);
             }
         }
     }
 
     public void tickFast() {
-        if(checkAudio() && Trigger.isRegistered(this.name)) {
+        if(checkAudio() && !this.data.registeredAudio.isEmpty()) {
             for (Trigger trigger : this.picker.boolMap.keySet()) {
                 this.picker.startMap.putIfAbsent(trigger, new MutableInt(0));
                 if (this.picker.boolMap.get(trigger)) this.picker.startMap.get(trigger).increment();
@@ -267,8 +252,8 @@ public class Channel {
     }
 
     public void tickSlow() {
-        if(checkAudio() && Trigger.isRegistered(this.name)) {
-            this.toSend = this.picker.querySongList(this.main.universalParameters);
+        if(checkAudio() && !this.data.registeredAudio.isEmpty()) {
+            this.picker.querySongList(this.data.universalTriggerParameters);
             if (!isPlaying()) {
                 if(!this.picker.getInfo().getActiveTriggers().isEmpty()) {
                     if(this.playingTriggers.isEmpty()) {
@@ -321,28 +306,17 @@ public class Channel {
             for (Trigger playable : this.picker.getInfo().getPlayableTriggers()) {
                 if (!this.picker.getInfo().getActiveTriggers().contains(playable))
                     if (playable.getParameterBool("toggle_inactive_playable"))
-                        forceToggle(playable, false, false);
+                        playable.setToggle(false);
             }
         } else clearSongs();
     }
 
     private void onTriggerStart() {
-        for (int i : canPlayTitle.keySet()) {
-            if (!this.canPlayTitle.get(i) && !new HashSet<>(this.picker.getInfo().getPlayableTriggers()).containsAll(this.transitions.titlecards.get(i).getTriggers()))
-                this.canPlayTitle.put(i, true);
-        }
-        for (int i : this.canPlayImage.keySet()) {
-            if (!this.canPlayImage.get(i) &&
-                    !this.transitions.imagecards.get(i).getTriggers().isEmpty() &&
-                    !new HashSet<>(this.picker.getInfo().getPlayableTriggers()).containsAll(this.transitions.imagecards.get(i).getTriggers()))
-                this.canPlayImage.put(i, true);
-        }
         this.commandsForPacket.clear();
-        for (String command : this.commands.commandMap.keySet()) {
-            if (this.commands.commandMap.get(command).equals(this.picker.getInfo().getActiveTriggers()))
+        for (String command : this.data.commandMap.keySet()) {
+            if (this.data.commandMap.get(command).equals(this.picker.getInfo().getActiveTriggers()))
                 this.commandsForPacket.add(command);
         }
-
         renderCards();
     }
 
@@ -371,69 +345,19 @@ public class Channel {
 
     @SuppressWarnings("ConstantConditions")
     public void renderCards() {
-        Minecraft mc = Minecraft.getMinecraft();
         MusicTriggers.logExternally(Level.DEBUG, "Finding cards to render");
-        int markForDeletion = -1;
-        for (int i : this.transitions.titlecards.keySet()) {
-            boolean pass = false;
-            if(new HashSet<>(this.picker.titleCardEvents).containsAll(this.transitions.titlecards.get(i).getTriggers()) && new HashSet<>(this.transitions.titlecards.get(i).getTriggers()).containsAll(this.picker.getInfo().getActiveTriggers())) pass=true;
-            else if(this.transitions.titlecards.get(i).getVague() && new HashSet<>(this.picker.getInfo().getPlayableTriggers()).containsAll(this.transitions.titlecards.get(i).getTriggers()) && canPlayTitle.get(i)) {
-                pass=true;
-                canPlayTitle.put(i, false);
-            }
-            if (pass && mc.player != null) {
-                MusicTriggers.logExternally(Level.INFO, "displaying title card "+i);
-                if(!this.transitions.titlecards.get(i).getTitles().isEmpty()) mc.ingameGUI.displayTitle(TextFormatting.getValueByName(this.transitions.titlecards.get(i).getTitlecolor()).toString()+ this.transitions.titlecards.get(i).getTitles().get(ThreadLocalRandom.current().nextInt(0, this.transitions.titlecards.get(i).getTitles().size())), null, 5, 20, 20);
-                if(!this.transitions.titlecards.get(i).getSubTitles().isEmpty()) mc.ingameGUI.displayTitle(null, TextFormatting.getValueByName(this.transitions.titlecards.get(i).getSubtitlecolor()).toString()+ this.transitions.titlecards.get(i).getSubTitles().get(ThreadLocalRandom.current().nextInt(0, this.transitions.titlecards.get(i).getSubTitles().size())), 5, 20, 20);
-                if(this.transitions.titlecards.get(i).getPlayonce()) markForDeletion = i;
-                break;
-            }
-        }
-        if(markForDeletion!=-1) {
-            this.transitions.titlecards.remove(markForDeletion);
-            markForDeletion = -1;
-        }
-        for (int i : this.transitions.imagecards.keySet()) {
-            boolean pass = false;
-            if(!this.transitions.imagecards.get(i).getTriggers().isEmpty()) {
-                if (new HashSet<>(this.picker.titleCardEvents).containsAll(this.transitions.imagecards.get(i).getTriggers()) &&
-                        new HashSet<>(this.transitions.imagecards.get(i).getTriggers()).containsAll(this.picker.getInfo().getActiveTriggers()))
-                    pass = true;
-                else if (this.transitions.imagecards.get(i).getVague() &&
-                        new HashSet<>(this.picker.getInfo().getPlayableTriggers()).containsAll(this.transitions.imagecards.get(i).getTriggers()) &&
-                        canPlayImage.get(i)) {
-                    pass = true;
-                    canPlayImage.put(i, false);
+        for (Table table : this.data.titleCards.keySet())
+            if(this.data.canPlayTitle(table,table.getValOrDefault("vague",false))) {
+                synchronized(ChannelManager.tickingRenderables) {
+                    ChannelManager.addRenderable(true,table);
                 }
             }
-            if (pass && mc.player != null) {
-                if(this.transitions.imagecards.get(i).getName()!=null) {
-                    MusicTriggers.logExternally(Level.INFO, "displaying image card " + this.transitions.imagecards.get(i).getName());
-                    ConfigTransitions.Image imageCard = this.transitions.imagecards.get(i);
-                    if(!imageCard.isInitialized()) imageCard.initialize();
-                    if(imageCard.getFormat()!=null) {
-                        if(imageCard.getFormat() instanceof PNG) {
-                            Renderer.renderPNGToBackground((PNG)imageCard.getFormat(),imageCard.getLocationX(),
-                                    imageCard.getLocationY(),imageCard.getHorizontal(),imageCard.getVertical(),imageCard.getScaleX(),imageCard.getScaleY(),
-                                    imageCard.getTime()*50L);
-                        }
-                        /*
-                        if(imageCard.getFormat() instanceof GIF) {
-                            Renderer.renderGifToBackground((GIF)imageCard.getFormat(),imageCard.getLocationX(),
-                                    imageCard.getLocationY(),imageCard.getHorizontal(),imageCard.getVertical(),imageCard.getScaleX(),imageCard.getScaleY(),
-                                    imageCard.getTime()*50L);
-                        }
-                        else if(imageCard.getFormat() instanceof MP4) Renderer.renderMP4ToBackground((MP4)imageCard.getFormat(),imageCard.getLocationX(),
-                                imageCard.getLocationY(),imageCard.getHorizontal(),imageCard.getVertical(),imageCard.getScaleX(),imageCard.getScaleY(),
-                                imageCard.getTime()*50L);
-                         */
-                    }
-                    if (this.transitions.imagecards.get(i).getPlayonce()) markForDeletion = i;
-                    break;
+        for (Table table : this.data.imageCards.keySet())
+            if(this.data.canPlayImage(table,table.getValOrDefault("vague",false))) {
+                synchronized(ChannelManager.tickingRenderables) {
+                    ChannelManager.addRenderable(false,table);
                 }
             }
-        }
-        if(markForDeletion!=-1) this.transitions.imagecards.get(markForDeletion).setName(null);
     }
 
     public String formatPlayback() {
@@ -518,6 +442,7 @@ public class Channel {
     }
 
     public void setMillis(long milliseconds) {
+        MusicTriggers.logExternally(Level.WARN, "Found loop! Setting track time to {}",milliseconds);
         getCurPlaying().setPosition(milliseconds);
     }
 
@@ -537,13 +462,13 @@ public class Channel {
         AudioTrack track = this.loadedTracks.get(audio.getName());
         MusicTriggers.logExternally(Level.INFO, "Playing track from id "+id+" at a millisecond time of "+milliseconds);
         if(track!=null) {
-            track.setPosition(milliseconds);
             try {
                 if (!this.getPlayer().startTrack(track, false))
                     MusicTriggers.logExternally(Level.ERROR, "Could not start track!");
                 else this.curTrack = audio;
             } catch (IllegalStateException e) {
-                if (!this.getPlayer().startTrack(track.makeClone(), false))
+                AudioTrack cloned = track.makeClone();
+                if (!this.getPlayer().startTrack(cloned, false))
                     MusicTriggers.logExternally(Level.ERROR, "Could not start track!");
                 else this.curTrack = audio;
             }
@@ -555,8 +480,8 @@ public class Channel {
             else {
                 MusicTriggers.logExternally(Level.ERROR, "Track with id "+id+" does not seem to exist! All " +
                         "instances using this song will be removed until reloading.");
-                this.main.parsedFile.entrySet().removeIf(entry -> entry.getValue()==audio);
-                Trigger.removeAudio(this.name,audio);
+                this.data.registeredAudio.remove(audio);
+                for(List<Audio> pool : this.data.songPools.values()) pool.remove(audio);
             }
         }
     }
@@ -727,7 +652,9 @@ public class Channel {
                 } else MusicTriggers.logExternally(Level.WARN, "Failed to get URI for resource location "+source);
             } else MusicTriggers.logExternally(Level.WARN, "Audio file with id " + id + " already exists!");
         } catch (Exception e) {
-            MusicTriggers.logExternally(Level.ERROR, "Could not decode track from resource location "+source,e);
+            MusicTriggers.logExternally(Level.ERROR, "Could not decode track from resource location {}! See the main log for the full error",source);
+            Constants.MAIN_LOG.error("Could not decode track from resource location",e);
+            e.printStackTrace();
         }
     }
 
@@ -766,74 +693,26 @@ public class Channel {
                 }
             });
         } catch (Exception e) {
-            MusicTriggers.logExternally(Level.ERROR, "Could not load track from file {}"+id,e);
+            MusicTriggers.logExternally(Level.ERROR, "Could not load track from file {}! See the main log for the full error",id);
+            Constants.MAIN_LOG.error("Could not load track from file",e);
+            e.printStackTrace();
         }
     }
 
-    public void encode(ByteBuf buf) {
-        String channelName = this.getChannelName();
-        String name = Objects.isNull(this.curTrack) ? null : this.curTrack.getName();
-        String uuid = Minecraft.getMinecraft().player.getUniqueID().toString();
-        if(name==null) name = "placeholder";
-        buf.writeInt(channelName.length());
-        buf.writeInt(uuid.length());
-        buf.writeInt(name.length());
-        buf.writeCharSequence(channelName, StandardCharsets.UTF_8);
-        buf.writeCharSequence(uuid, StandardCharsets.UTF_8);
-        buf.writeCharSequence(name, StandardCharsets.UTF_8);
-        buf.writeInt(this.commandsForPacket.size());
-        for(String command : this.commandsForPacket) {
-            buf.writeInt(command.length());
-            buf.writeCharSequence(command, StandardCharsets.UTF_8);
-        }
-        buf.writeInt(this.toSend.getMenuSongs().size());
-        for(Audio audio : this.toSend.getMenuSongs()) {
-            buf.writeInt(audio.getName().length());
-            buf.writeCharSequence(audio.getName(), StandardCharsets.UTF_8);
-        }
-        buf.writeInt(this.picker.getInfo().getActiveTriggers().size());
-        for(Trigger trigger : this.picker.getInfo().getActiveTriggers()) {
-            buf.writeInt(trigger.getName().length());
-            buf.writeCharSequence(trigger.getName(), StandardCharsets.UTF_8);
-        }
-        buf.writeInt(this.picker.getInfo().getPlayableTriggers().size());
-        for(Trigger trigger : this.picker.getInfo().getPlayableTriggers()) {
-            buf.writeInt(trigger.getNameWithID().length());
-            buf.writeCharSequence(trigger.getNameWithID(), StandardCharsets.UTF_8);
-        }
-        buf.writeInt(this.toSend.getHomeTriggers().size());
-        for(ServerChannelData.Home home : this.toSend.getHomeTriggers()) buf.writeInt(home.getRange());
-        buf.writeInt(this.toSend.getStructureTriggers().size());
-        for(ServerChannelData.Structure structure : this.toSend.getStructureTriggers()) {
-            buf.writeInt(structure.getTrigger().length());
-            buf.writeInt(structure.getStructure().length());
-            buf.writeCharSequence(structure.getTrigger(), StandardCharsets.UTF_8);
-            buf.writeCharSequence(structure.getStructure(), StandardCharsets.UTF_8);
-            buf.writeLong(structure.getPos().toLong());
-            buf.writeInt(structure.getDimension());
-        }
-        buf.writeInt(this.toSend.getMobTriggers().size());
-        for(ServerChannelData.Mob mob : this.toSend.getMobTriggers()) {
-            buf.writeInt(mob.getTrigger().length());
-            buf.writeInt(mob.getName().length());
-            buf.writeInt(mob.getInfernal().length());
-            buf.writeInt(mob.getNbtKey().length());
-            buf.writeInt(mob.getChampion().length());
-            buf.writeCharSequence(mob.getTrigger(), StandardCharsets.UTF_8);
-            buf.writeCharSequence(mob.getName(), StandardCharsets.UTF_8);
-            buf.writeInt(mob.getRange());
-            buf.writeBoolean(mob.getTargetting());
-            buf.writeInt(mob.getTargettingPercentage());
-            buf.writeInt(mob.getHealth());
-            buf.writeInt(mob.getHealthPercentage());
-            buf.writeInt(mob.getVictoryID());
-            buf.writeCharSequence(mob.getInfernal(), StandardCharsets.UTF_8);
-            buf.writeInt(mob.getMobLevel());
-            buf.writeInt(mob.getVictoryTimeout());
-            buf.writeCharSequence(mob.getNbtKey(), StandardCharsets.UTF_8);
-            buf.writeCharSequence(mob.getChampion(), StandardCharsets.UTF_8);
-        }
+    public void initializeServerData(ServerData serverData) {
+        serverData.addChannelInfo(getChannelName(),this.data.serverTriggers,this.data.menuSongs);
+    }
 
+    public void encodeDynamic(ByteBuf buf) {
+        NetworkUtil.writeString(buf,getChannelName());
+        NetworkUtil.writeGenericList(buf,this.commandsForPacket,NetworkUtil::writeString);
+        boolean playingSong = Objects.nonNull(this.curTrack);
+        buf.writeBoolean(playingSong);
+        if(playingSong) {
+            NetworkUtil.writeString(buf,this.curTrack.getName());
+            NetworkUtil.writeString(buf,this.picker.getInfo().highestPriorityActive().getName());
+        }
+        this.changedStatus = false;
     }
 
     public void sync(ClientSync fromServer) {
@@ -859,41 +738,221 @@ public class Channel {
     public void parseConfigs(boolean startup) {
         parseRedirect(this.redirect);
         if(!startup) readResourceLocations();
-        this.main.parse(this.name);
-        this.transitions.parse(this.name);
-        this.commands.parse(this.name);
-        this.toggles.parse(this.name);
         this.jukebox.parse();
     }
 
-    private void clearAllListsAndMaps() {
-        this.main.clearMaps();
-        this.transitions.clearMaps();
-        this.commands.commandMap.clear();
-        this.toggles.clearMaps();
-        this.redirect.urlMap.clear();
-        this.picker.clearListsAndMaps();
-        this.loadedTracks.clear();
-        this.oncePerTrigger.clear();
-        this.onceUntilEmpty.clear();
-        this.canPlayTitle.clear();
-        this.canPlayImage.clear();
-        this.commandsForPacket.clear();
-        this.erroredSongDownloads.clear();
-        this.playingTriggers.clear();
+    public Trigger getSimpleTrigger(String name) {
+        return this.data.registeredTriggerMap.get(name).get("not_accepted");
     }
 
-    public void reload() {
-        clearAllListsAndMaps();
-        this.fadingIn = false;
-        this.fadingOut = false;
-        this.reverseFade = false;
-        this.tempFadeIn = 0;
-        this.tempFadeOut = 0;
-        this.savedFadeOut = 0;
-        this.saveVolIn = 1;
-        this.saveVolOut = 1;
-        this.player = refreshPlayer();
-        parseConfigs(false);
+    public List<Trigger> getRegisteredTriggers() {
+        return this.data.registeredTriggers;
+    }
+
+    public List<Audio> getSongPool(Trigger trigger) {
+        return this.data.songPools.get(trigger);
+    }
+
+    public ChannelInstance createGuiData() {
+        return new ChannelInstance(this.info,new Main(getChannelName(),this.data.main),
+                new Transitions(getChannelName(),this.data.transitions),new Commands(getChannelName(),this.data.commands),
+                new Toggles(getChannelName(),this.data.toggles),
+                new Redirect(getChannelName(),this.redirect.urlMap,this.redirect.resourceLocationMap),
+                new Jukebox(getChannelName(),this.getRecordMap()));
+    }
+
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+    class Data {
+        private final Holder main;
+        private final Holder transitions;
+        private final Holder commands;
+        private final Holder toggles;
+        private final HashMap<String, HashMap<String, Trigger>> registeredTriggerMap;
+        private final List<Trigger> registeredTriggers;
+        private final List<Table> serverTriggers;
+        private final List<Audio> registeredAudio;
+        private final List<String> menuSongs;
+        private final HashMap<Trigger, List<Audio>> songPools;
+        private Optional<Table> universalTriggerParameters;
+        private Optional<Table> universalAudioParameters;
+        private final Map<Table, List<Trigger>> titleCards;
+        private final Map<Table, List<Trigger>> imageCards;
+        private final Map<String, List<Trigger>> commandMap;
+        private final List<Toggle> toggleList;
+
+        Data(Holder main, Holder transitions, Holder commands, Holder toggles) {
+            this.main = main;
+            this.transitions = transitions;
+            this.commands = commands;
+            this.toggles = toggles;
+            this.registeredTriggers = new ArrayList<>();
+            this.serverTriggers = new ArrayList<>();
+            this.registeredTriggerMap = parseTriggers(main.getTableByName("triggers"));
+            this.menuSongs = new ArrayList<>();
+            this.songPools = new HashMap<>();
+            this.registeredAudio = parseAudio(main.getTableByName("songs"));
+            this.titleCards = transitions.getTablesByName("title").stream().filter(table -> table.hasVar("triggers") &&
+                            checkTriggerListParameter(table,"title card")).collect(Collectors.toMap(table -> table,
+                    this::triggerList));
+            this.imageCards = transitions.getTablesByName("image").stream().filter(table -> table.hasVar("triggers"))
+                    .filter(table -> {
+                        if(!table.hasVar("name")) {
+                            MusicTriggers.logExternally(Level.ERROR, "Image card in " +
+                                    "channel {} is missing a file name and will be skipped!",info.getName());
+                            return false;
+                        }
+                        return checkTriggerListParameter(table,"image card "+
+                                table.getValOrDefault("name", "default"));
+                    }).collect(Collectors.toMap(table -> table,this::triggerList));
+            this.commandMap = commands.getTablesByName("command").stream()
+                    .filter(table -> table.hasVar("literal") && table.hasVar("triggers") &&
+                            checkTriggerListParameter(table,"command with literal "+
+                                    table.getValOrDefault("literal", "literally")))
+                    .collect(Collectors.toMap(table -> table.getValOrDefault("literal", "literally"),
+                            table -> table.getValOrDefault("triggers", new ArrayList<String>()).stream().distinct()
+                                    .map(triggerName -> {
+                                        for(Trigger trigger : this.registeredTriggers)
+                                            if(trigger.getNameWithID().matches(triggerName))
+                                                return trigger;
+                                        return null;
+                                    }).filter(Objects::nonNull).collect(Collectors.toList())));
+            this.toggleList = toggles.getTablesByName("toggle").stream().map(table -> new Toggle(table,this.registeredTriggers))
+                    .filter(Toggle::isValid).collect(Collectors.toList());
+        }
+
+        private HashMap<String, HashMap<String, Trigger>> parseTriggers(Table triggers) {
+            HashMap<String, HashMap<String, Trigger>> ret = new HashMap<>();
+            if(Objects.nonNull(triggers)) {
+                for (Table trigger : triggers.getChildren().values()) {
+                    if(!trigger.getName().matches("universal")) {
+                        ret.putIfAbsent(trigger.getName(), new HashMap<>());
+                        String id = getIDOrFiller(trigger.getName(), trigger);
+                        if (id.matches("missing_id")) MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Trigger " +
+                                "{} is missing a required identifier or id parameter and will be skipped!", info.getName(), trigger.getName());
+                        else {
+                            if (ret.get(trigger.getName()).containsKey(id)) {
+                                if (!id.matches("not_accepted"))
+                                    MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Identifier {} for trigger {} " +
+                                            "has already been defined and cannot be redefined", info.getName(), id, trigger.getName());
+                                else MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Trigger {} " +
+                                        "has already been defined and cannot be redefined", info.getName(), trigger.getName());
+                            } else {
+                                Optional<Trigger> createdTrigger = createTrigger(trigger);
+                                if (createdTrigger.isPresent()) {
+                                    String name = trigger.getName();
+                                    ret.get(name).put(id, createdTrigger.get());
+                                    registeredTriggers.add(createdTrigger.get());
+                                    if(name.matches("home") || name.matches("mob") || name.matches("structure"))
+                                        serverTriggers.add(trigger);
+                                    logRegister(trigger.getName(), id);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            this.universalTriggerParameters = Objects.isNull(triggers) ? Optional.empty() : triggers.hasTable("universal") ?
+                    Optional.of(triggers.getTableByName("universal")) : Optional.empty();
+            return ret;
+        }
+
+        private Optional<Trigger> createTrigger(Table triggerTable) {
+            Trigger trigger = new Trigger(triggerTable.getName(), info.getName());
+            for (Variable parameter : triggerTable.getVars()) {
+                if (!Trigger.isParameterAccepted(trigger.getName(),parameter.getName()))
+                    MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Parameter {} is not accepted for " +
+                            "trigger {} so it will be skipped!", info.getName(), parameter, triggerTable.getName());
+                else {
+                    if(parameter.getName().matches("resource_name") || parameter.getName().matches("infernal") ||
+                            parameter.getName().matches("champion")) {
+                        Optional<List<?>> potentialList = parameter.getAsList();
+                        if(potentialList.isPresent()) {
+                            List<String> list = potentialList.get().stream().map(Object::toString).collect(Collectors.toList());
+                            trigger.setParameter(parameter.getName(), TextUtil.listToString(list,";"));
+                        }
+                    }
+                    else trigger.setParameter(parameter.getName(),parameter.get().toString());
+                }
+            }
+            return trigger.hasAllRequiredParameters() ? Optional.of(trigger) : Optional.empty();
+        }
+
+        private void logRegister(String triggerName, String id) {
+            if(id.matches("not_accepted"))
+                MusicTriggers.logExternally(Level.INFO,"Channel[{}] - Registered trigger {}",
+                        info.getName(),triggerName);
+            else MusicTriggers.logExternally(Level.INFO,"Channel[{}] - Registered instance of trigger {} with " +
+                    "identifier {}", info.getName(),triggerName,id);
+        }
+
+        private String getIDOrFiller(String name, Table trigger) {
+            if(!Trigger.isParameterAccepted(name,"identifier"))
+                return "not_accepted";
+            return trigger.getValOrDefault("identifier",trigger.getValOrDefault("id","missing_id"));
+        }
+
+        private List<Audio> parseAudio(Table songs) {
+            List<Audio> ret = new ArrayList<>();
+            if(Objects.nonNull(songs)) {
+                for (Table audio : songs.getChildren().values()) {
+                    if(!audio.getName().matches("universal")) {
+                        Audio potential = new Audio(audio, this.registeredTriggers);
+                        if (potential.getTriggers().isEmpty())
+                            MusicTriggers.logExternally(Level.WARN, "No valid triggers were registered for audio {} so " +
+                                    "it has been skipped!", audio.getName());
+                        else {
+                            ret.add(potential);
+                            for (Trigger trigger : potential.getTriggers()) {
+                                this.songPools.putIfAbsent(trigger, new ArrayList<>());
+                                this.songPools.get(trigger).add(potential);
+                            }
+                            if(potential.getTriggers().stream().anyMatch(trigger -> trigger.getName().matches("menu")))
+                                this.menuSongs.add(potential.getName());
+                        }
+                    }
+                }
+            }
+            this.universalAudioParameters = Objects.isNull(songs) ? Optional.empty() : songs.hasTable("universal") ?
+                    Optional.of(songs.getTableByName("universal")) : Optional.empty();
+            return ret;
+        }
+
+        private boolean checkTriggerListParameter(Table table, String type) {
+            String cap = type.substring(0, 1).toUpperCase() + type.substring(1);
+            List<String> triggers = table.getValOrDefault("triggers", new ArrayList<>());
+            if(triggers.isEmpty()) {
+                MusicTriggers.logExternally(Level.ERROR, "{} in channel {} " +
+                        "needs to be assigned to 1 or more triggers to be parsed correctly!",cap,info.getName());
+                return false;
+            }
+            for(String trigger : triggers) {
+                if(!this.registeredTriggers.stream().map(Trigger::getNameWithID)
+                        .collect(Collectors.toList()).contains(trigger)) {
+                    MusicTriggers.logExternally(Level.ERROR, "Trigger {} for {} " +
+                            "in channel {} did not exist! Command will be skipped.", trigger,type,info.getName());
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private List<Trigger> triggerList(Table table) {
+            return table.getValOrDefault("triggers", new ArrayList<String>()).stream().map(name -> {
+                for(Trigger trigger : this.registeredTriggers)
+                    if(trigger.getNameWithID().matches(name))
+                        return trigger;
+                return null;
+            }).filter(Objects::nonNull).distinct().collect(Collectors.toList());
+        }
+
+        private boolean canPlayTitle(Table table, boolean vague) {
+            return vague ? new HashSet<>(picker.getInfo().getPlayableTriggers()).containsAll(titleCards.get(table)) :
+                    new HashSet<>(picker.getInfo().getActiveTriggers()).containsAll(titleCards.get(table));
+        }
+
+        private boolean canPlayImage(Table table, boolean vague) {
+            return vague ? new HashSet<>(picker.getInfo().getPlayableTriggers()).containsAll(imageCards.get(table)) :
+                    new HashSet<>(picker.getInfo().getActiveTriggers()).containsAll(imageCards.get(table));
+        }
     }
 }

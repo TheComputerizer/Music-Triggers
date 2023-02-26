@@ -39,29 +39,33 @@ public class MusicTriggersRecord extends EpicItem {
 
     @Override
     @Nonnull
-    public EnumActionResult onItemUse(@Nonnull EntityPlayer player, World worldIn, @Nonnull BlockPos pos,
+    public EnumActionResult onItemUse(@Nonnull EntityPlayer player, @Nonnull World worldIn, @Nonnull BlockPos pos,
                                       @Nonnull EnumHand hand, @Nonnull EnumFacing facing, float hitX, float hitY,
                                       float hitZ) {
-        IBlockState iblockstate = worldIn.getBlockState(pos);
-        if (iblockstate.getBlock() instanceof MusicRecorder) {
-            MusicRecorder mr = (MusicRecorder) iblockstate.getBlock();
-            if(!worldIn.isRemote && !iblockstate.getValue(MusicRecorder.HAS_RECORD) && !iblockstate.getValue(MusicRecorder.HAS_DISC)) {
-                ItemStack itemstack = player.getHeldItem(hand);
-                mr.insertRecord(worldIn,pos,iblockstate,itemstack,player.getUniqueID());
-                itemstack.shrink(1);
-            }
-            return EnumActionResult.SUCCESS;
-        } else if (iblockstate.getBlock() instanceof BlockJukebox && !(Boolean)iblockstate.getValue(BlockJukebox.HAS_RECORD)) {
-            if (!worldIn.isRemote) {
+        if(player instanceof EntityPlayerMP) {
+            IBlockState iblockstate = worldIn.getBlockState(pos);
+            if (iblockstate.getBlock() instanceof MusicRecorder) {
+                MusicRecorder mr = (MusicRecorder) iblockstate.getBlock();
+                if (!iblockstate.getValue(MusicRecorder.HAS_RECORD) && !iblockstate.getValue(MusicRecorder.HAS_DISC)) {
+                    ItemStack itemstack = player.getHeldItem(hand);
+                    mr.insertRecord(worldIn, pos, iblockstate, itemstack, (EntityPlayerMP) player);
+                    itemstack.shrink(1);
+                }
+                return EnumActionResult.SUCCESS;
+            } else if (iblockstate.getBlock() instanceof BlockJukebox && !(Boolean) iblockstate.getValue(BlockJukebox.HAS_RECORD)) {
                 ItemStack stack = player.getHeldItem(hand);
-                if(stack.getTagCompound()!=null && stack.getTagCompound().hasKey("trackID") && stack.getTagCompound().hasKey("channelFrom")) {
+                if(stack.getTagCompound() != null && stack.getTagCompound().hasKey("trackID") &&
+                        stack.getTagCompound().hasKey("channelFrom")) {
                     ((BlockJukebox) Blocks.JUKEBOX).insertRecord(worldIn, pos, iblockstate, stack);
-                    RegistryHandler.network.sendTo(new PacketJukeBoxCustom.PacketJukeBoxCustomMessage(pos,stack.getTagCompound().getString("channelFrom"),stack.getTagCompound().getString("trackID")),(EntityPlayerMP) player);
+                    RegistryHandler.network.sendTo(new PacketJukeBoxCustom.Message(pos,
+                            stack.getTagCompound().getString("channelFrom"), stack.getTagCompound().getString("trackID")), (EntityPlayerMP) player);
                     stack.shrink(1);
                     player.addStat(StatList.RECORD_PLAYED);
                 }
-            } return EnumActionResult.SUCCESS;
-        } else return EnumActionResult.PASS;
+                return EnumActionResult.SUCCESS;
+            }
+        }
+        return EnumActionResult.PASS;
     }
 
     @Override
@@ -94,7 +98,7 @@ public class MusicTriggersRecord extends EpicItem {
                 return 0.07f;
             case "creative":
                 return 0.08f;
-            case "day":
+            case "time":
                 return 0.09f;
             case "dead":
                 return 0.1f;
@@ -132,42 +136,36 @@ public class MusicTriggersRecord extends EpicItem {
                 return 0.26f;
             case "mob":
                 return 0.27f;
-            case "night":
-                return 0.28f;
             case "pet":
-                return 0.29f;
+                return 0.28f;
             case "pvp":
-                return 0.3f;
+                return 0.29f;
             case "raining":
-                return 0.31f;
+                return 0.3f;
             case "rainintensity":
-                return 0.32f;
+                return 0.31f;
             case "riding":
-                return 0.33f;
+                return 0.32f;
             case "sandstorm":
-                return 0.34f;
+                return 0.33f;
             case "season":
-                return 0.35f;
+                return 0.34f;
             case "snowing":
-                return 0.36f;
+                return 0.35f;
             case "spectator":
-                return 0.37f;
+                return 0.36f;
             case "storming":
-                return 0.38f;
+                return 0.37f;
             case "structure":
-                return 0.39f;
-            case "sunrise":
-                return 0.4f;
-            case "sunset":
-                return 0.41f;
+                return 0.38f;
             case "tornado":
-                return 0.42f;
+                return 0.39f;
             case "underwater":
-                return 0.43f;
+                return 0.4f;
             case "victory":
-                return 0.44f;
+                return 0.41f;
             case "zones":
-                return 0.45f;
+                return 0.42f;
             default:
                 return 0f;
         }

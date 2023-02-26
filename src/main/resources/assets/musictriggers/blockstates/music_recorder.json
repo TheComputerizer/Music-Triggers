@@ -1,19 +1,9 @@
 {
     "variants": {
-        "normal": [
-             { "model": "musictriggers:music_recorder" }
-        ],
-		"has_disc=true,has_record=true": [
-                     { "model": "musictriggers:music_recorder_inverted" }
-        ],
-		"has_disc=true,has_record=false": [
-                     { "model": "musictriggers:music_recorder_inverted" }
-        ],
-        "has_disc=false,has_record=true": [
-                     { "model": "musictriggers:music_recorder_active" }
-        ],
-        "has_disc=false,has_record=false": [
-                     { "model": "musictriggers:music_recorder" }
-        ]
+        "normal": { "model": "musictriggers:music_recorder" },
+        "has_disc=false,has_record=false": { "model": "musictriggers:music_recorder" },
+        "has_disc=false,has_record=true": { "model": "musictriggers:music_recorder_active" },
+        "has_disc=true,has_record=false": { "model": "musictriggers:music_recorder_inverted" },
+        "has_disc=true,has_record=true": { "model": "musictriggers:music_recorder_inverted" }
     }
 }

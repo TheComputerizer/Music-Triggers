@@ -22,7 +22,6 @@ public class GuiPage extends GuiSuperType {
     private final String id;
     private final List<Icon> icons;
     private final boolean canEdit;
-    private ButtonSuperType toggleMode;
     private boolean deleteMode;
     private int scrollPos;
     private boolean canScrollDown;
@@ -53,28 +52,27 @@ public class GuiPage extends GuiSuperType {
         if(this.canEdit) {
             String displayName = Translate.guiGeneric(false,"button",this.id + "_add");
             int width = this.fontRenderer.getStringWidth(displayName)+8;
-            int left = 96;
-            addTopButton(left, displayName, width, new ArrayList<>(),
-                    (screen, button) -> {
+            int left = 16;
+            addSuperButton(createBottomButton(displayName, width, 1, new ArrayList<>(),
+                    (screen, button, mode) -> {
                         Minecraft.getMinecraft().displayGuiScreen(
                                 new GuiPopUp(this,GuiType.POPUP,this.getInstance(),this.id,true,4,
                                         new ArrayList<>(this.icons)));
                         this.hasEdits = true;
                         save();
-                    },
-                    this);
+                    }),left);
             left+=(width+16);
-            displayName = Translate.guiGeneric(false,"button","delete_mode");
-            width = this.fontRenderer.getStringWidth(displayName)+8;
-            this.toggleMode = addTopButton(left, displayName, width,
-                    Translate.guiNumberedList(3,"button","delete_mode","desc"),
-                    (screen, button) -> toggleDeleteMode(!this.deleteMode),this);
+            displayName = Translate.guiGeneric(false, "button", "delete_mode");
+            width = this.fontRenderer.getStringWidth(displayName) + 8;
+            String finalDisplayName = displayName;
+            addSuperButton(createBottomButton(displayName, width, 2,
+                    Translate.guiNumberedList(3, "button", "delete_mode", "desc"),
+                    (screen, button, mode) -> {
+                        this.deleteMode = mode > 1;
+                        TextFormatting color = mode == 1 ? TextFormatting.WHITE : TextFormatting.RED;
+                        button.updateDisplay(color + finalDisplayName);
+                    }), left);
         }
-    }
-
-    private void toggleDeleteMode(boolean isActive) {
-        this.deleteMode = isActive;
-        this.toggleMode.updateDisplayFormat(isActive ? TextFormatting.RED : TextFormatting.WHITE);
     }
 
     @Override
@@ -124,29 +122,32 @@ public class GuiPage extends GuiSuperType {
                 topLeft.setY(top);
             }
             else topLeft.setX(left+(this.spacing*7));
-            icon.drawIcon(topLeft,this.spacing,mouseX,mouseY,black(192),this.zLevel);
+            icon.drawIcon(topLeft,this.spacing,mouseX,mouseY,black(192),this.zLevel,
+                    Minecraft.getMinecraft().currentScreen == this);
             if(!isLeft) top+=this.spacing*7;
             isLeft = !isLeft;
         }
     }
 
     private void drawLeftSide(int top) {
-        int textHeight = this.fontRenderer.FONT_HEIGHT;
-        int centerX = this.width/2;
-        int left = this.spacing;
-        int textX = left+(this.spacing/2);
-        for(Icon icon : this.icons) {
-            if(icon.getHover()) {
-                GuiUtil.drawLine(new Point2i(left, top), new Point2i(centerX, top), white(128), 1f, this.zLevel);
-                top += this.spacing;
-                drawString(fontRenderer, icon.getDisplay(), textX, top, GuiUtil.WHITE);
-                top += (textHeight + this.spacing);
-                GuiUtil.drawLine(new Point2i(left, top), new Point2i(centerX, top), white(128), 1f, this.zLevel);
-                top += this.spacing;
-                top = GuiUtil.drawMultiLineString(this,icon.getDescription(),textX,centerX,top,textHeight+(this.spacing/2)
-                )+(this.spacing/2);
-                GuiUtil.drawLine(new Point2i(left, top), new Point2i(centerX, top), white(128), 1f, this.zLevel);
-                break;
+        if(Minecraft.getMinecraft().currentScreen==this) {
+            int textHeight = this.fontRenderer.FONT_HEIGHT;
+            int centerX = this.width / 2;
+            int left = this.spacing;
+            int textX = left + (this.spacing / 2);
+            for (Icon icon : this.icons) {
+                if (icon.getHover()) {
+                    GuiUtil.drawLine(new Point2i(left, top), new Point2i(centerX, top), white(128), 1f, this.zLevel);
+                    top += this.spacing;
+                    drawString(fontRenderer, icon.getDisplay(), textX, top, GuiUtil.WHITE);
+                    top += (textHeight + this.spacing);
+                    GuiUtil.drawLine(new Point2i(left, top), new Point2i(centerX, top), white(128), 1f, this.zLevel);
+                    top += this.spacing;
+                    top = GuiUtil.drawMultiLineString(this.fontRenderer, icon.getDescription(), textX, centerX, top, textHeight + (this.spacing / 2),
+                            100, 0, GuiUtil.WHITE) + (this.spacing / 2);
+                    GuiUtil.drawLine(new Point2i(left, top), new Point2i(centerX, top), white(128), 1f, this.zLevel);
+                    break;
+                }
             }
         }
     }
@@ -208,12 +209,12 @@ public class GuiPage extends GuiSuperType {
             return mouseX>topLeft.x && mouseX<(topLeft.x+sideLength) && mouseY>topLeft.y && mouseY<(topLeft.y+sideLength);
         }
 
-        public void drawIcon(Point2i topLeft, int spacing, int mouseX, int mouseY, Point4i color, float zLevel) {
+        public void drawIcon(Point2i topLeft, int spacing, int mouseX, int mouseY, Point4i color, float zLevel, boolean curScreen) {
             GuiUtil.drawBoxOutline(topLeft,spacing*6,spacing*6,new Point4i(255,255,255,192),
                     1f,zLevel);
             Point2i backgroundTopLeft = new Point2i(topLeft.x+(spacing/2),topLeft.y+(spacing/2));
             Point2i iconCenter = new Point2i((int)(backgroundTopLeft.x+(spacing*2.5f)),(int)(backgroundTopLeft.y+(spacing*2.5f)));
-            this.hover = isHovering(mouseX,mouseY,backgroundTopLeft,spacing*5);
+            this.hover = curScreen && isHovering(mouseX,mouseY,backgroundTopLeft,spacing*5);
             if(hover) {
                 GuiUtil.drawBox(backgroundTopLeft,spacing*5,spacing*5,GuiUtil.reverseColors(color),zLevel);
                 GuiUtil.bufferSquareTexture(iconCenter,spacing*1.5f,this.hoverTexture);

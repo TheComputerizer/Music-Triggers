@@ -49,7 +49,7 @@ public class GuiPopUp extends GuiSuperType {
     protected void keyTyped(char c, int key) {
         if (key == Keyboard.KEY_ESCAPE) this.mc.displayGuiScreen(this.parent);
         if (this.canType) {
-            if (!blacklistedKeys.contains(key)) {
+            if (isKeyValid(c, key)) {
                 if (key == Keyboard.KEY_BACK) this.value = backspace(this.value);
                 else this.value += c;
             }
@@ -131,7 +131,7 @@ public class GuiPopUp extends GuiSuperType {
         this.isHover = mouseHover(topLeft,mouseX,mouseY,width,boxHeight);
         drawSelectionBox(topLeft,width,boxHeight,this.isHover);
         int color = GuiUtil.WHITE;
-        if(this.isHover) color = GuiUtil.makeRGBAInt(0,0,0,255);
+        if(this.isHover) color = GuiUtil.makeRGBAInt(200,200,200,255);
         drawCenteredString(font,this.value, center.x,topLeft.y+this.spacing,color);
         topLeft.setY(topLeft.y+boxHeight);
         if(this.isHover) drawHoveringText(this.hoverText,mouseX,mouseY);
@@ -147,7 +147,7 @@ public class GuiPopUp extends GuiSuperType {
     }
 
     private void drawConfirmationBox(Point2i center, int mouseX, int mouseY, FontRenderer font) {
-        int width = font.getStringWidth(this.title);
+        int width = font.getStringWidth(this.title)+4;
         int totalHeight = (font.FONT_HEIGHT*2)+(this.spacing*4);
         int boxHeight = font.FONT_HEIGHT+(this.spacing*2);
         Point2i topLeft = new Point2i(center.x-(width/2),center.y-(totalHeight/2));
@@ -157,15 +157,15 @@ public class GuiPopUp extends GuiSuperType {
         String yes = Translate.guiGeneric(false,"popup","yes");
         String no = Translate.guiGeneric(false,"popup","no");
         this.hoverYes = mouseHover(topLeft,mouseX,mouseY,width/2,boxHeight);
-        drawSelectionBox(topLeft,width/2,boxHeight,this.isHover);
+        drawSelectionBox(topLeft,width/2,boxHeight,this.hoverYes);
         int color = GuiUtil.WHITE;
-        if(this.hoverYes) color = GuiUtil.makeRGBAInt(0,0,0,255);
+        if(this.hoverYes) color = GuiUtil.makeRGBAInt(200,200,200,255);
         drawCenteredString(font,yes, center.x-(width/4),topLeft.y+this.spacing,color);
         topLeft.setX(center.x);
         this.hoverNo = mouseHover(topLeft,mouseX,mouseY,width/2,boxHeight);
-        drawSelectionBox(topLeft,width/2,boxHeight,this.isHover);
+        drawSelectionBox(topLeft,width/2,boxHeight,this.hoverNo);
         color = GuiUtil.WHITE;
-        if(this.hoverNo) color = GuiUtil.makeRGBAInt(0,0,0,255);
+        if(this.hoverNo) color = GuiUtil.makeRGBAInt(200,200,200,255);
         drawCenteredString(font,no, center.x+(width/4),topLeft.y+this.spacing,color);
     }
 

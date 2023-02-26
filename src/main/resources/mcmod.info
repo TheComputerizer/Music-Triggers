@@ -11,6 +11,6 @@
   "credits": "The_Computerizer",
   "logoFile": "",
   "screenshots": [],
-  "dependencies": ["mixinbooter"]
+  "dependencies": ["theimpossiblelibrary"]
 }
 ]
