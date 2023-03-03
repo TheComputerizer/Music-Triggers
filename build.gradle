@@ -111,9 +111,9 @@ dependencies {
     annotationProcessor('org.spongepowered:mixin:0.8.5:processor')
 
     //required mod dependencies
-    //implementation(fg.deobf('curse.maven:the-impossible-library-661115:4373081'))
+    implementation(fg.deobf('curse.maven:the-impossible-library-661115:4418997'))
     //local versions of required dependencies for testing
-    implementation name: 'theimpossiblelibrary-1.12.2-0.2.1'
+    //implementation name: 'theimpossiblelibrary-1.12.2-0.2.2'
 
     //mod support dependencies
     implementation(fg.deobf('curse.maven:bloodmoon-226321:2537917'))
@@ -135,21 +135,14 @@ dependencies {
 }
 
 shadowJar {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    exclude 'LICENSE.txt', 'META-INF/MANIFSET.MF', 'META-INF/maven/**', 'META-INF/*.RSA', 'META-INF/*.SF',
-            'META-INF/services/*.Processor', 'module-info.class'
     //necessary relocation
-    relocate 'org.slf4j', 'mods.thecomputerizer.musictriggers.libraries.sljf4'
-    relocate 'org.apache.commons', 'mods.thecomputerizer.musictriggers.libraries.apache.commons'
-    relocate 'org.apache.http', 'mods.thecomputerizer.musictriggers.libraries.apache.http'
-    relocate 'com.moandjiezana.toml', 'mods.thecomputerizer.musictriggers.libraries.moandjiezana.toml'
-    //not strictly necessary relocation
-    relocate 'junit', 'mods.thecomputerizer.musictriggers.libraries.junit'
-    relocate 'net.sourceforge', 'mods.thecomputerizer.musictriggers.libraries.sourceforge'
-    relocate 'javazoom.jl', 'mods.thecomputerizer.musictriggers.libraries.jl'
-    relocate 'com.alibaba', 'mods.thecomputerizer.musictriggers.libraries.alibaba'
+    relocate 'org.slf4j', 'libraries.sljf4'
+    relocate 'org.apache.commons', 'libraries.apache.commons'
+    relocate 'org.apache.http', 'libraries.apache.http'
+    exclude 'org/spongepowered/asm/launch/MixinLaunchPlugin.class'
     configurations = [project.configurations.shadow]
     classifier ''
+    mergeServiceFiles()
 }
 
 reobf {
@@ -182,7 +175,8 @@ jar {
             'FMLAT': 'musictriggers_at.cfg',
             'FMLCorePlugin': 'mods.thecomputerizer.musictriggers.core.MixinLoaderPlugin',
             'FMLCorePluginContainsFMLMod': 'true',
-            'ForceLoadAsMod': 'true'
+            'ForceLoadAsMod': 'true',
+            'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker'
         ])
     }
 }

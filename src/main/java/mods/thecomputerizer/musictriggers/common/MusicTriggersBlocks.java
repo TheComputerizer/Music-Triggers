@@ -18,6 +18,7 @@ public class MusicTriggersBlocks {
         final Block block = constructor.get();
         config.accept(block);
         block.setRegistryName(Constants.MODID, name);
+        block.setTranslationKey(Constants.MODID+"."+name);
         return block;
     }
 }

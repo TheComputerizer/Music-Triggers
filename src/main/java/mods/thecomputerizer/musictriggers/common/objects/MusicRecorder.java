@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.common.objects;
 
+import mods.thecomputerizer.musictriggers.common.MusicTriggersItems;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.MapColor;
@@ -9,12 +10,9 @@ import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -34,38 +32,24 @@ public class MusicRecorder extends Block implements ITileEntityProvider {
         setResistance(1F);
     }
 
-    @Override
-    public boolean onBlockActivated(@Nonnull World worldIn, @Nonnull BlockPos pos, IBlockState state,
-                                    @Nonnull EntityPlayer playerIn, @Nonnull EnumHand hand, @Nonnull EnumFacing facing,
-                                    float hitX, float hitY, float hitZ) {
-        if (state.getValue(HAS_RECORD)) {
-            this.dropRecord(worldIn, pos);
-            state = state.withProperty(HAS_RECORD, false);
-            worldIn.setBlockState(pos, state, 2);
-            return true;
-        } else if(state.getValue(HAS_DISC)) {
-            this.dropRecord(worldIn, pos);
-            state = state.withProperty(HAS_DISC, false);
-            worldIn.setBlockState(pos, state, 2);
-            return true;
-        } else return false;
-    }
-
-    public void insertRecord(World worldIn, BlockPos pos, IBlockState state, ItemStack recordStack, EntityPlayerMP player) {
-        if(recordStack.getItem() instanceof BlankRecord || recordStack.getItem() instanceof MusicTriggersRecord) {
-            TileEntity entity = worldIn.getTileEntity(pos);
-            if(entity instanceof MusicRecorderEntity) {
-                MusicRecorderEntity recorderEntity = (MusicRecorderEntity)entity;
-                if(recorderEntity.isEmpty()) {
-                    recorderEntity.insertRecord(recordStack,player);
-                    PropertyBool propertyBool = recordStack.getItem() instanceof BlankRecord ? HAS_RECORD : HAS_DISC;
-                    worldIn.setBlockState(pos, state.withProperty(propertyBool, Boolean.TRUE), 2);
+    public void insertRecord(World worldIn, BlockPos pos, ItemStack recordStack, EntityPlayer player) {
+        if (!worldIn.isRemote) {
+            if (recordStack.getItem()==MusicTriggersItems.BLANK_RECORD || recordStack.getItem()==MusicTriggersItems.MUSIC_TRIGGERS_RECORD) {
+                int meta = recordStack.getItem()==MusicTriggersItems.BLANK_RECORD ? 1 : 2;
+                TileEntity entity = worldIn.getTileEntity(pos);
+                if (entity instanceof MusicRecorderEntity) {
+                    MusicRecorderEntity recorderEntity = (MusicRecorderEntity) entity;
+                    if (recorderEntity.isEmpty()) {
+                        recorderEntity.validate();
+                        recorderEntity.insertRecord(recordStack, player);
+                        set(worldIn,pos,meta);
+                    }
                 }
             }
         }
     }
 
-    public void dropRecord(World worldIn, BlockPos pos) {
+    public void dropRecord(World worldIn, BlockPos pos, boolean broken) {
         if (!worldIn.isRemote) {
             TileEntity entity = worldIn.getTileEntity(pos);
             if(entity instanceof MusicRecorderEntity) {
@@ -79,13 +63,24 @@ public class MusicRecorder extends Block implements ITileEntityProvider {
                     entityitem.setDefaultPickupDelay();
                     worldIn.spawnEntity(entityitem);
                 }
+                if(!broken) set(worldIn,pos,0);
             }
+        }
+    }
+
+    private void set(World world, BlockPos pos, int meta) {
+        IBlockState state = getStateFromMeta(meta);
+        TileEntity tile = world.getTileEntity(pos);
+        world.setBlockState(pos,state);
+        if(tile instanceof MusicRecorderEntity) {
+            tile.validate();
+            world.setTileEntity(pos,tile);
         }
     }
 
     @Override
     public void breakBlock(@Nonnull World worldIn, @Nonnull BlockPos pos, @Nonnull IBlockState state) {
-        this.dropRecord(worldIn, pos);
+        this.dropRecord(worldIn, pos, true);
         super.breakBlock(worldIn, pos, state);
     }
 
@@ -121,12 +116,12 @@ public class MusicRecorder extends Block implements ITileEntityProvider {
     @Override
     @Nonnull
     public IBlockState getStateFromMeta(int meta) {
-        return this.getDefaultState().withProperty(HAS_RECORD, meta > 0);
+        return this.getDefaultState().withProperty(HAS_RECORD, meta==1).withProperty(HAS_DISC, meta==2);
     }
 
     @Override
     public int getMetaFromState(IBlockState state) {
-        return state.getValue(HAS_RECORD) ? 1 : 0;
+        return state.getValue(HAS_RECORD) ? 1 : state.getValue(HAS_DISC) ? 2 : 0;
     }
 
     @Override

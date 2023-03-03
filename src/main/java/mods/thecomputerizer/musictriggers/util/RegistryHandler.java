@@ -1,11 +1,13 @@
 package mods.thecomputerizer.musictriggers.util;
 
 import mods.thecomputerizer.musictriggers.Constants;
-import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.common.MusicTriggersBlocks;
 import mods.thecomputerizer.musictriggers.common.objects.MusicRecorderEntity;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
-import mods.thecomputerizer.musictriggers.util.packets.*;
+import mods.thecomputerizer.musictriggers.util.packets.PacketDynamicChannelInfo;
+import mods.thecomputerizer.musictriggers.util.packets.PacketInitChannels;
+import mods.thecomputerizer.musictriggers.util.packets.PacketJukeBoxCustom;
+import mods.thecomputerizer.musictriggers.util.packets.PacketSyncServerInfo;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
@@ -72,7 +74,6 @@ public final class RegistryHandler {
 
     private static void registerPackets() {
         int id = 0;
-        Constants.MAIN_LOG.error("REGISTER PACKETS");
         network.registerMessage(PacketInitChannels.class, PacketInitChannels.Message.class, id++, Side.SERVER);
         network.registerMessage(PacketDynamicChannelInfo.class, PacketDynamicChannelInfo.Message.class, id++, Side.SERVER);
         network.registerMessage(PacketSyncServerInfo.class, PacketSyncServerInfo.Message.class, id++, Side.CLIENT);

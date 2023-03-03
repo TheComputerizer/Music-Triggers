@@ -89,7 +89,7 @@ public class Toggles extends AbstractChannelConfig {
         int index = 0;
         for (Table from : toggle.getTablesByName("from")) {
             elements.add(new GuiSelection.MonoElement("from", index,
-                    toggle.getValOrDefault("condition",-1).toString(),
+                    from.getValOrDefault("condition",-1).toString(),
                     Translate.hoverLinesTrigger(from),
                     (parent) -> Minecraft.getMinecraft().displayGuiScreen(
                             new GuiParameters(parent, GuiType.PARAMETER_GENERIC,
@@ -105,7 +105,7 @@ public class Toggles extends AbstractChannelConfig {
         List<GuiSelection.Element> elements = new ArrayList<>();
         for (Table to : toggle.getTablesByName("to")) {
             elements.add(new GuiSelection.MonoElement("to", index,
-                    toggle.getValOrDefault("condition","missing_condition"),
+                    to.getValOrDefault("condition","missing_condition"),
                     Translate.hoverLinesTarget(to),
                     (parent) -> Minecraft.getMinecraft().displayGuiScreen(
                             new GuiParameters(parent, GuiType.PARAMETER_GENERIC,
@@ -144,8 +144,8 @@ public class Toggles extends AbstractChannelConfig {
                 registeredFromCon.add(condition);
         }
         List<String> registeredToCon = new ArrayList<>();
-        for(Table from : toggle.getTablesByName("from")) {
-            String condition = from.getValOrDefault("condition","no");
+        for(Table to : toggle.getTablesByName("to")) {
+            String condition = to.getValOrDefault("condition","no");
             if(!registeredToCon.contains(condition) && targetCon.contains(condition))
                 registeredToCon.add(condition);
         }
@@ -165,7 +165,7 @@ public class Toggles extends AbstractChannelConfig {
                 elements.add(new GuiSelection.MonoElement("target_condition",index,
                         Translate.guiGeneric(false,"selection","toggle_condition","target")+" "+con,
                         hoverLinesCondition(toggle),(parent) -> {
-                    this.fileData.addVariable(this.fileData.addTable(toggle,"from"),"condition",con);
+                    this.fileData.addVariable(this.fileData.addTable(toggle,"to"),"condition",con);
                     grandfather.parentUpdate();
                     Minecraft.getMinecraft().displayGuiScreen(grandfather);
                 }));
@@ -191,13 +191,13 @@ public class Toggles extends AbstractChannelConfig {
 
     public List<GuiParameters.Parameter> triggerParameters(Table trigger) {
         return Arrays.asList(new GuiParameters.Parameter("toggle", "trigger_play_once",
-                        trigger.getOrCreateVar("play_once",false)),
+                        this.fileData.getOrCreateVar(trigger,"play_once",false)),
                 new GuiParameters.Parameter("toggle", "trigger_triggers",
-                        trigger.getOrCreateVar("triggers",new ArrayList<String>())));
+                        this.fileData.getOrCreateVar(trigger,"triggers",new ArrayList<String>())));
     }
 
     public List<GuiParameters.Parameter> targetParameters(Table target) {
         return Collections.singletonList(new GuiParameters.Parameter("toggle", "target_triggers",
-                target.getOrCreateVar("triggers", new ArrayList<String>())));
+                this.fileData.getOrCreateVar(target,"triggers", new ArrayList<String>())));
     }
 }

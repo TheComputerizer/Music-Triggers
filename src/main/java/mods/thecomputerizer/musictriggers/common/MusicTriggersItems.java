@@ -24,6 +24,7 @@ public class MusicTriggersItems {
         final EpicItem item = constructor.get();
         config.accept(item);
         item.setRegistryName(Constants.MODID, name);
+        item.setTranslationKey(Constants.MODID+"."+name);
         item.setMaxStackSize(1);
         return item;
     }
@@ -33,6 +34,7 @@ public class MusicTriggersItems {
         final EpicItemBlock item = new EpicItemBlock(constructor);
         config.accept(item);
         item.setRegistryName(Objects.requireNonNull(constructor.getRegistryName()));
+        item.setTranslationKey(constructor.getTranslationKey());
         item.setMaxStackSize(1);
         return item;
     }

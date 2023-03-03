@@ -253,7 +253,7 @@ public class Trigger {
         ret.put("resource_name","any");
         ret.put("start_toggled","true");
         ret.put("not","false");
-        ret.put("passive_persistence","true");
+        ret.put("passive_persistence","false");
         ret.put("toggle_inactive_playable","false");
         ret.put("detection_range","16");
         ret.put("mob_targeting","true");

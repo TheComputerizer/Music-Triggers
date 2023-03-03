@@ -159,8 +159,10 @@ public abstract class GuiSuperType extends GuiScreen {
     }
 
     public void madeChange(boolean needReload) {
-        recursivelySetApply(this);
-        getInstance().madeChanges(needReload);
+        if(!this.applyButton.enabled) {
+            recursivelySetApply(this);
+            getInstance().madeChanges(needReload);
+        }
     }
 
     private void recursivelySetApply(GuiSuperType superScreen) {
@@ -215,7 +217,7 @@ public abstract class GuiSuperType extends GuiScreen {
     }
 
     public void parentUpdate() {
-
+        madeChange(true);
     }
 
     protected abstract void save();
@@ -232,6 +234,7 @@ public abstract class GuiSuperType extends GuiScreen {
     }
 
     public void applyButton() {
+        save();
         if(Objects.nonNull(this.parent)) {
             Minecraft.getMinecraft().displayGuiScreen(this.parent);
             this.parent.applyButton();

@@ -5,7 +5,6 @@ import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
@@ -29,14 +28,13 @@ public class BlankRecord extends EpicItem {
     public EnumActionResult onItemUse(@Nonnull EntityPlayer player, @Nonnull World worldIn, @Nonnull BlockPos pos,
                                       @Nonnull EnumHand hand, @Nonnull EnumFacing facing, float hitX, float hitY,
                                       float hitZ) {
-        if(player instanceof EntityPlayerMP) {
-            IBlockState iblockstate = worldIn.getBlockState(pos);
-            if (iblockstate.getBlock() instanceof MusicRecorder) {
-                MusicRecorder mr = (MusicRecorder) iblockstate.getBlock();
-                if (!worldIn.isRemote && !iblockstate.getValue(MusicRecorder.HAS_RECORD) && !iblockstate.getValue(MusicRecorder.HAS_DISC)) {
+        if(!worldIn.isRemote) {
+            IBlockState state = worldIn.getBlockState(pos);
+            if (state.getBlock() instanceof MusicRecorder) {
+                MusicRecorder mr = (MusicRecorder) state.getBlock();
+                if (!state.getValue(MusicRecorder.HAS_RECORD) && !state.getValue(MusicRecorder.HAS_DISC)) {
                     ItemStack itemstack = player.getHeldItem(hand);
-                    mr.insertRecord(worldIn, pos, iblockstate, itemstack, (EntityPlayerMP)player);
-                    itemstack.shrink(1);
+                    mr.insertRecord(worldIn, pos, itemstack, player);
                 }
                 return EnumActionResult.SUCCESS;
             }
@@ -48,6 +46,6 @@ public class BlankRecord extends EpicItem {
     @SideOnly(Side.CLIENT)
     public void addInformation(@Nonnull ItemStack stack, @Nullable World worldIn, List<String> tooltip,
                                @Nonnull ITooltipFlag flagIn) {
-        tooltip.add(AssetUtil.extraLang(Constants.MODID,"item","blank_record","description"));
+        tooltip.add(AssetUtil.extraLang(Constants.MODID,"item","blank_record","description",false));
     }
 }

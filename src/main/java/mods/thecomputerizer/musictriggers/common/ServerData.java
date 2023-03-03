@@ -4,16 +4,13 @@ import atomicstryker.infernalmobs.common.InfernalMobsCore;
 import c4.champions.common.capability.CapabilityChampionship;
 import c4.champions.common.capability.IChampionship;
 import io.netty.buffer.ByteBuf;
-import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.MusicPicker;
-import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.packets.PacketSyncServerInfo;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.TomlPart;
 import mods.thecomputerizer.theimpossiblelibrary.util.NetworkUtil;
-import mods.thecomputerizer.theimpossiblelibrary.util.file.LogUtil;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.boss.EntityDragon;
@@ -38,12 +35,21 @@ import java.util.stream.Collectors;
 
 public class ServerData {
     private static final Map<String, ServerData> SERVER_DATA = new HashMap<>();
+    private static final Map<String, List<BossInfoServer>> QUEUED_BOSS_BARS = new HashMap<>();
     private static final List<String> NBT_MODES = Arrays.asList("KEY_PRESENT","VAL_PRESENT","GREATER","LESSER","EQUAL","INVERT");
+    private static final List<String> TRIGGER_HOLDERS = Arrays.asList("difficulty","time","light","height","riding",
+            "dimension","biome","structure","mob","victory","gui","zones","pvp","advancement","statistic","command",
+            "gamestage","rainintensity","tornado","moon","season");
 
     public static void initializePlayerChannels(ByteBuf buf) {
         ServerData data = new ServerData(buf);
+        if(SERVER_DATA.containsKey(data.playerUUID.toString()))
+            data.bossInfo.addAll(SERVER_DATA.get(data.playerUUID.toString()).bossInfo);
         SERVER_DATA.put(data.playerUUID.toString(),data);
-        MusicTriggers.logExternally(Level.INFO, "Initialized server-side information for player with UUID {}",data.playerUUID);
+        if(data.isValid() && QUEUED_BOSS_BARS.containsKey(data.playerUUID.toString())) {
+            data.bossInfo.addAll(QUEUED_BOSS_BARS.get(data.playerUUID.toString()));
+            QUEUED_BOSS_BARS.remove(data.playerUUID.toString());
+        }
     }
 
     public static void decodeDynamicInfo(ByteBuf buf) {
@@ -71,18 +77,27 @@ public class ServerData {
 
     public static void addBossBarTracking(UUID playerUUID, BossInfoServer info) {
         ServerData data = SERVER_DATA.get(playerUUID.toString());
-        if(data.isValid()) data.bossInfo.add(info);
+        if(Objects.nonNull(data)) {
+            if (data.isValid()) data.bossInfo.add(info);
+        } else {
+            QUEUED_BOSS_BARS.putIfAbsent(playerUUID.toString(),new ArrayList<>());
+            if(!QUEUED_BOSS_BARS.get(playerUUID.toString()).contains(info))
+                QUEUED_BOSS_BARS.get(playerUUID.toString()).add(info);
+        }
     }
 
     public static void removeBossBarTracking(UUID playerUUID, BossInfoServer info) {
         ServerData data = SERVER_DATA.get(playerUUID.toString());
-        if(data.isValid()) data.bossInfo.remove(info);
+        if(Objects.nonNull(data)) {
+            if (data.isValid()) data.bossInfo.remove(info);
+        } else if(QUEUED_BOSS_BARS.containsKey(playerUUID.toString()))
+            QUEUED_BOSS_BARS.get(playerUUID.toString()).remove(info);
     }
 
-    public static boolean recordAudioData(UUID playerUUID, ItemStack recordStack) {
+    public static ItemStack recordAudioData(UUID playerUUID, ItemStack recordStack) {
         ServerData data = SERVER_DATA.get(playerUUID.toString());
         if(data.isValid()) return data.recordAudioData(recordStack);
-        return false;
+        return ItemStack.EMPTY;
     }
 
     private final Map<String, List<Table>> mappedTriggers;
@@ -98,9 +113,8 @@ public class ServerData {
     private final Map<String, String> currentTriggers = new HashMap<>();
     public ServerData(ByteBuf buf) {
         this.mappedTriggers = NetworkUtil.readGenericMap(buf, NetworkUtil::readString, buf1 ->
-                NetworkUtil.readGenericList(buf1,buf2 -> TomlPart.TABLE.decode(buf2,null))
-                .stream().filter(Table.class::isInstance).map(Table.class::cast)
-                .filter(table -> table.getLevel()==2).collect(Collectors.toList()));
+                NetworkUtil.readGenericList(buf1,buf2 -> TomlPart.getByID(NetworkUtil.readString(buf2)).decode(buf2,null))
+                .stream().filter(Table.class::isInstance).map(Table.class::cast).collect(Collectors.toList()));
         this.allTriggers = mappedTriggers.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
         this.menuSongs = NetworkUtil.readGenericMap(buf,NetworkUtil::readString,
                 buf1 -> NetworkUtil.readGenericList(buf1,NetworkUtil::readString));
@@ -123,7 +137,6 @@ public class ServerData {
     }
 
     public void addChannelInfo(String channel, List<Table> triggers, List<String> menuSongs) {
-        Constants.MAIN_LOG.error("ADDING {} TRIGGERS AND {} MENU SONGS TO CHANNEL {}",triggers.size(),menuSongs.size(),channel);
         this.mappedTriggers.put(channel,triggers);
         this.menuSongs.put(channel,menuSongs);
     }
@@ -133,6 +146,7 @@ public class ServerData {
                 NetworkUtil.writeGenericList(buf1,list,(buf2, table) -> table.write(buf2)));
         NetworkUtil.writeGenericMap(buf,this.menuSongs,NetworkUtil::writeString,(buf1, list) ->
                 NetworkUtil.writeGenericList(buf1,list,NetworkUtil::writeString));
+        NetworkUtil.writeString(buf, Minecraft.getMinecraft().player.getUniqueID().toString());
     }
 
     private void updateDynamicInfo(String channel, List<String> commands, String playing, String trigger) {
@@ -147,8 +161,8 @@ public class ServerData {
         }
     }
 
-    private boolean recordAudioData(ItemStack recordStack) {
-        if (this.currentSongs.isEmpty() || this.currentTriggers.isEmpty()) return false;
+    private ItemStack recordAudioData(ItemStack recordStack) {
+        if (this.currentSongs.isEmpty() || this.currentTriggers.isEmpty()) return ItemStack.EMPTY;
         int index = ThreadLocalRandom.current().nextInt(this.currentSongs.size());
         String channel = null;
         for (String ch : this.currentSongs.keySet()) {
@@ -158,24 +172,24 @@ public class ServerData {
             }
             index--;
         }
-        if (Objects.isNull(channel)) return false;
-        if (recordStack.getItem() == MusicTriggersItems.BLANK_RECORD) {
-            recordStack = new ItemStack(MusicTriggersItems.MUSIC_TRIGGERS_RECORD);
+        if (Objects.isNull(channel)) return ItemStack.EMPTY;
+        ItemStack ret = new ItemStack(MusicTriggersItems.MUSIC_TRIGGERS_RECORD);
+        if (recordStack.getItem()==MusicTriggersItems.BLANK_RECORD) {
             NBTTagCompound tag = new NBTTagCompound();
             tag.setString("channelFrom", channel);
             tag.setString("trackID", this.currentSongs.get(channel));
             tag.setString("triggerID", this.currentTriggers.get(channel));
-            recordStack.writeToNBT(tag);
-            return true;
+            ret.setTagCompound(tag);
+            return ret;
         }
-        if (this.menuSongs.get(channel).isEmpty()) return false;
+        if (this.menuSongs.get(channel).isEmpty()) return ItemStack.EMPTY;
         index = ThreadLocalRandom.current().nextInt(this.menuSongs.get(channel).size());
         NBTTagCompound tag = new NBTTagCompound();
         tag.setString("channelFrom", channel);
         tag.setString("trackID", this.menuSongs.get(channel).get(index));
         tag.setString("triggerID", "menu");
-        recordStack.writeToNBT(tag);
-        return true;
+        ret.setTagCompound(tag);
+        return ret;
     }
 
     private void runChecks() {
@@ -227,8 +241,7 @@ public class ServerData {
 
     private String triggerWithID(Table trigger) {
         String name = trigger.getName();
-        String id = Trigger.isParameterAccepted(name,"identifier") ?
-                trigger.getValOrDefault("identifier","not_set") : null;
+        String id = TRIGGER_HOLDERS.contains(name) ? trigger.getValOrDefault("identifier","not_set") : null;
         if(Objects.nonNull(id) && id.matches("not_set")) return null;
         return Objects.nonNull(id) ? name+"-"+id : name;
     }
@@ -261,11 +274,9 @@ public class ServerData {
         int health = mobTrigger.getValOrDefault("health",100);
         int hordeHealth = mobTrigger.getValOrDefault("horde_health_percentage",0);
         String nbt = mobTrigger.getValOrDefault("mob_nbt","any");
-        List<Class<? extends EntityLiving>> types = !resources.contains("MOB") && !checkTarget ?
-                Collections.singletonList(EntityLiving.class) : Arrays.asList(EntityMob.class, EntityDragon.class);
         if (resources.contains("BOSS")) {
             List<BossInfoServer> correctBosses = this.bossInfo.stream().filter(
-                    info -> partiallyMatches(info.getName().getUnformattedText(),resources)).collect(Collectors.toList());
+                    info -> resources.size()==1 || partiallyMatches(info.getName().getUnformattedText(),resources)).collect(Collectors.toList());
             BossInfoServer[] passedBosses = new BossInfoServer[num];
             for (int i = 0; i < num; i++) {
                 if (i >= correctBosses.size())
@@ -274,20 +285,19 @@ public class ServerData {
             }
             return checkBossHealth(passedBosses, health, hordeHealth);
         }
-        return checkMobs(player,pos,num,range,types,whitelist,blacklist,infernal,champion,checkTarget,hordeTarget,health,hordeHealth,nbt);
+        return checkMobs(player,pos,num,range,whitelist,blacklist,infernal,champion,checkTarget,hordeTarget,health,hordeHealth,nbt);
     }
 
-    private boolean checkMobs(EntityPlayerMP player, BlockPos pos, int num, int range, List<Class<? extends EntityLiving>> types,
-                              List<String> whiteList, List<String> blackList, List<String> infernal,
-                              List<String> champion, boolean target, int hordeTarget, int health, int hordeHealth, String nbt) {
+    private boolean checkMobs(EntityPlayerMP player, BlockPos pos, int num, int range, List<String> whiteList,
+                              List<String> blackList, List<String> infernal, List<String> champion, boolean target,
+                              int hordeTarget, int health, int hordeHealth, String nbt) {
         if(num<=0) return false;
         EntityLiving[] passedEntities = new EntityLiving[num];
         AxisAlignedBB box = new AxisAlignedBB(pos.getX()-range,pos.getY()-range,pos.getZ()-range,
                 pos.getX()+range,pos.getY()+range,pos.getZ()+range);
         List<EntityLiving> livingWithBlacklist = player.getServerWorld().getEntitiesWithinAABB(
                 EntityLiving.class,box,e -> checkEntityName(e,whiteList,blackList));
-        livingWithBlacklist.removeIf(living -> !types.contains(living.getClass()) || !checkNBT(living,nbt) ||
-                !checkModExtensions(living,infernal,champion));
+        livingWithBlacklist.removeIf(living -> !checkNBT(living,nbt) || !checkModExtensions(living,infernal,champion));
         for(int i=0;i<num;i++) {
             if(i>=livingWithBlacklist.size())
                 return false;
@@ -298,6 +308,7 @@ public class ServerData {
 
     private boolean checkEntityName(EntityLiving entity, List<String> whiteList, List<String> blackList) {
         if(whiteList.isEmpty() && blackList.isEmpty()) return true;
+        if(blackList.contains("MOB") &&!(entity instanceof EntityMob) && !(entity instanceof EntityDragon)) return false;
         String displayName = entity.getName();
         ResourceLocation id = EntityList.getKey(entity);
         if(!whiteList.isEmpty())
@@ -448,8 +459,9 @@ public class ServerData {
             if (!champion.isEmpty() && !champion.contains("any")) {
                 IChampionship champ = CapabilityChampionship.getChampionship(entity);
                 if(Objects.isNull(champ)) return false;
-                else if(!champion.contains("ALL")) return false;
-                else if(!partiallyMatches(champ.getName(),champion)) return false;
+                else if(Objects.nonNull(champ.getName()))
+                    if(!champion.contains("ALL"))
+                        if(!partiallyMatches(champ.getName(),champion)) return false;
             }
         }
         if(Loader.isModLoaded("infernalmobs")) {
@@ -461,8 +473,8 @@ public class ServerData {
                         if(partiallyMatches(name,infernal))
                             return true;
                 }
+                return false;
             }
-            return false;
         }
         return true;
     }

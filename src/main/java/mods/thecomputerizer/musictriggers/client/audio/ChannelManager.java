@@ -88,7 +88,7 @@ public class ChannelManager {
         collectSongs();
         for(Channel channel : channelMap.values()) channel.parseConfigs(startup);
         ConfigDebug.initialize(new File(Constants.CONFIG_DIR,"debug.toml"));
-        ConfigRegistry.initialize(new File(Constants.CONFIG_DIR,"registration.toml"));
+        if(!startup) initializeServerInfo();
     }
 
     public static void readResourceLocations() {
@@ -165,6 +165,8 @@ public class ChannelManager {
     }
 
     public static void reloadAllChannels() {
+        for(Channel channel : channelMap.values())
+            channel.clear();
         channelMap.clear();
         try {
             initialize(channelsConfig,false);
@@ -244,7 +246,8 @@ public class ChannelManager {
             List<Channel> updatedChannels = new ArrayList<>();
             for(Channel channel : channelMap.values())
                 if(channel.needsUpdatePacket()) updatedChannels.add(channel);
-            RegistryHandler.network.sendToServer(new PacketDynamicChannelInfo.Message(updatedChannels));
+            if(!updatedChannels.isEmpty())
+                RegistryHandler.network.sendToServer(new PacketDynamicChannelInfo.Message(updatedChannels));
         }
     }
 

@@ -43,6 +43,7 @@ public class MusicTriggers {
             if(!Constants.CONFIG_DIR.mkdir())
                 throw new FileExistsException("Unable to create file directory at "+Constants.CONFIG_DIR.getPath()+
                         "! Music Triggers is unable to load any further.");
+        ConfigRegistry.initialize(new File(Constants.CONFIG_DIR,"registration.toml"),FMLCommonHandler.instance().getSide()==Side.CLIENT);
         if(FMLCommonHandler.instance().getSide()==Side.CLIENT)
             ChannelManager.initialize(configFile("channels","toml"),true);
     }
@@ -54,9 +55,9 @@ public class MusicTriggers {
             MinecraftForge.EVENT_BUS.register(ChannelManager.class);
             MinecraftForge.EVENT_BUS.register(EventsClient.class);
             CustomTick.addCustomTickEvent(20);
+            ChannelManager.reloading = false;
         }
         MinecraftForge.EVENT_BUS.register(EventsCommon.class);
-        ChannelManager.reloading = false;
     }
 
     @EventHandler
@@ -138,7 +139,7 @@ public class MusicTriggers {
 
     public static void logExternally(Level level, String message, Object ... parameters) {
         MOD_LOG.log(level, message, parameters);
-        savedMessages.put("["+level.toString()+"] "+LogUtil.injectParameters(message, parameters),colorizeLogLevel(level));
+        savedMessages.put("["+String.format("%-5s",level.toString())+"] "+LogUtil.injectParameters(message, parameters),colorizeLogLevel(level));
     }
 
     private static int colorizeLogLevel(Level level) {

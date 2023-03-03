@@ -34,6 +34,10 @@ public class ChannelListener extends AudioEventAdapter {
         this.AUDIO_THREAD.start();
     }
 
+    public void stop() {
+        this.AUDIO_THREAD.stop();
+    }
+
     @Override
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
         this.channel.markUpdated();

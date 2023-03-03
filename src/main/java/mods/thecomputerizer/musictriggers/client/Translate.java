@@ -182,7 +182,7 @@ public class Translate {
      * Hover translation for a toggle instance.
     */
     public static List<String> hoverLinesToggle(Table toggle) {
-        return Arrays.asList(guiGeneric(false,"selection","toggles","load_order")+" "+toggle.getArrIndex(),
+        return Arrays.asList(guiGeneric(false,"selection","toggle","load_order")+" "+toggle.getArrIndex(),
                 toggle.getTablesByName("from").size()+" "+
                         guiGeneric(false,"selection","toggles","from"),
                 toggle.getTablesByName("to").size()+" "+
@@ -193,7 +193,7 @@ public class Translate {
      * Hover translation for a trigger within a toggle instance.
     */
     public static List<String> hoverLinesTrigger(Table trigger) {
-        return Arrays.asList(guiGeneric(false, "toggle", "load_order") + " " + trigger.getParent().getArrIndex(),
+        return Arrays.asList(guiGeneric(false, "selection","toggle", "load_order") + " " + trigger.getParent().getArrIndex(),
                 guiGeneric(false, "toggle", "triggers") + " " +
                         toggleTriggers(trigger.getValOrDefault("triggers", new ArrayList<>())));
     }
@@ -202,7 +202,7 @@ public class Translate {
      * Hover translation for a target within a toggle instance.
     */
     public static List<String> hoverLinesTarget(Table target) {
-        return Arrays.asList(guiGeneric(false, "toggle", "load_order") + " " + target.getParent().getArrIndex(),
+        return Arrays.asList(guiGeneric(false, "selection","toggle", "load_order") + " " + target.getParent().getArrIndex(),
                 guiGeneric(false, "toggle", "triggers") + " " +
                         toggleTriggers(target.getValOrDefault("triggers", new ArrayList<>())));
     }

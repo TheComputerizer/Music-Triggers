@@ -36,7 +36,7 @@ public class CustomRecord extends MusicTriggersRecord {
                             ChannelManager.getChannel(stack.getTagCompound().getString("channelFrom")).getRecordMap()
                                     .get(stack.getTagCompound().getString("trackID"))));
         else tooltip.add(
-                AssetUtil.extraLang(Constants.MODID,"item","music_triggers_record","blank_description"));
+                AssetUtil.extraLang(Constants.MODID,"item","music_triggers_record","blank_description",false));
     }
 
     private float mapTriggerToFloat(String channel, String song) {

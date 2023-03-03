@@ -22,10 +22,9 @@ public class MusicPicker {
 
     public final HashMap<Trigger, MutableInt> triggerPersistence = new HashMap<>();
     public final HashMap<Trigger, MutableInt> startMap = new HashMap<>();
-    public final HashMap<Trigger, Boolean> boolMap = new HashMap<>();
     public final HashMap<Integer, Boolean> victory = new HashMap<>();
     public final List<Trigger> dynamicTemp = new ArrayList<>();
-    public final List<Trigger> timeSwitch = new ArrayList<>();
+    public final List<Trigger> removePersistentPlayable = new ArrayList<>();
 
     public static final List<String> effectList = new ArrayList<>();
 
@@ -48,6 +47,7 @@ public class MusicPicker {
     public void querySongList(Optional<Table> universal) {
         Minecraft mc = Minecraft.getMinecraft();
         EntityPlayerSP player = mc.player;
+        this.getInfo().updatePlayableTriggers(new ArrayList<>());
         if(player == null) {
             if(Objects.nonNull(mc.currentScreen)) {
                 if(mc.currentScreen instanceof GuiMainMenu || Objects.nonNull(mc.world)) this.hasLoaded = true;
@@ -74,11 +74,12 @@ public class MusicPicker {
             List<Audio> activeSongs = comboChecker(priorityHandler(playableTriggers(player,universal),universal));
             if (!activeSongs.isEmpty()) {
                 this.getInfo().updatePlayableTriggers(this.dynamicTemp);
-                for (Trigger trigger : timeSwitch) {
-                    if (!this.getInfo().getActiveTriggers().contains(trigger) && triggerPersistence.get(trigger).getValue() > 0)
-                        triggerPersistence.get(trigger).setValue(0);
-                }
-                this.timeSwitch.clear();
+                this.getInfo().updateActiveTriggers(activeSongs.stream().map(Audio::getTriggers).flatMap(Collection::stream)
+                        .distinct().collect(Collectors.toList()));
+                for (Trigger trigger : this.removePersistentPlayable)
+                    if (!this.getInfo().getActiveTriggers().contains(trigger) && this.triggerPersistence.containsKey(trigger))
+                        this.triggerPersistence.get(trigger).setValue(0);
+                this.removePersistentPlayable.clear();
                 this.dynamicTemp.clear();
                 this.getInfo().updateSongList(activeSongs);
                 this.info.runToggles();
@@ -107,10 +108,13 @@ public class MusicPicker {
                 return;
             }
         }
-        this.getInfo().updatePlayableTriggers(new ArrayList<>());
         this.getInfo().updateActiveTriggers(new ArrayList<>());
         this.getInfo().updateSongList(new ArrayList<>());
         this.info.runToggles();
+        this.triggerDelay = "0";
+        this.songDelay = "0";
+        this.fadeIn = 0;
+        this.fadeOut = 0;
     }
 
     private List<Audio> comboChecker(Trigger priorityTrigger) {
@@ -153,7 +157,6 @@ public class MusicPicker {
         for(Audio audio : combinations)
             if(audio.getTriggers().size()==longestCombination) nextCombinations.add(audio);
         if(nextCombinations.size()<combinations.size()) return recursiveCombination(nextPriority,nextCombinations);
-        this.getInfo().updateActiveTriggers(combinations.get(0).getTriggers());
         return combinations;
     }
 
@@ -163,6 +166,9 @@ public class MusicPicker {
     }
 
     public Trigger priorityHandler(List<Trigger> playableTriggers, Optional<Table> universal) {
+        playableTriggers.removeIf(Objects::isNull);
+        this.dynamicTemp.clear();
+        this.dynamicTemp.addAll(playableTriggers);
         Trigger priorityTrigger = priorityHandler(playableTriggers);
         if(Objects.isNull(priorityTrigger)) return null;
         this.triggerDelay = priorityTrigger.getParameter("trigger_delay");
@@ -175,15 +181,13 @@ public class MusicPicker {
         if (this.fadeIn == 0) this.fadeIn = universal.map(table -> MusicTriggers.randomInt("universal_fade_in",
                 table.getValOrDefault("fade_in", "0"), 0)).orElse(0);
         this.fadeOut = priorityTrigger.getParameterInt("fade_out");
-        if (this.fadeOut == 0) this.fadeIn = universal.map(table -> MusicTriggers.randomInt("universal_fade_out",
+        if (this.fadeOut == 0) this.fadeOut = universal.map(table -> MusicTriggers.randomInt("universal_fade_out",
                 table.getValOrDefault("fade_out", "0"), 0)).orElse(0);
         return priorityTrigger;
     }
 
     private Trigger priorityHandler(List<Trigger> playableTriggers) {
         if(playableTriggers.isEmpty()) return null;
-        this.dynamicTemp.clear();
-        this.dynamicTemp.addAll(playableTriggers);
         Trigger priorityTrigger = ConfigDebug.REVERSE_PRIORITY ? Collections.min(this.dynamicTemp,
                 Comparator.comparingInt(trigger -> trigger.getParameterInt("priority"))) : Collections.max(this.dynamicTemp,
                 Comparator.comparingInt(trigger -> trigger.getParameterInt("priority")));
@@ -200,11 +204,12 @@ public class MusicPicker {
     public List<Trigger> playableTriggers(EntityPlayerSP player, Optional<Table> universal) {
         crashHelper = "";
         try {
-            List<Trigger> events = this.channel.getRegisteredTriggers().stream()
-                    .filter(trigger -> trigger.runActivationFunction(player))
-                    .map(trigger -> addPlayableTrigger(trigger, universal))
+            List<Trigger> events = this.channel.getRegisteredTriggers().stream().filter(this::nonStaticTrigger)
+                    .map(trigger -> addPlayableTrigger(trigger, universal, trigger.runActivationFunction(player)))
                     .filter(Objects::nonNull).distinct().collect(Collectors.toList());
             events.removeIf(trigger -> !trigger.isToggled());
+            for(Map.Entry<Trigger, MutableInt> persistentEntry : this.triggerPersistence.entrySet())
+                if(!events.contains(persistentEntry.getKey())) persistentEntry.getValue().setValue(0);
             this.info.updatePlayableTriggers(events);
             return events;
         } catch (Exception e) {
@@ -213,33 +218,42 @@ public class MusicPicker {
                 throw new RuntimeException("There was an uncaught error! This should be reported! The error was "+
                         e.getMessage()+" and was caught on line "+e.getStackTrace()[0].getLineNumber()+" in the class "+
                         e.getStackTrace()[0]);
-            else throw new RuntimeException("There was a problem with your "+crashHelper+" trigger! The error was "+
+            else throw new RuntimeException("There was a problem with your "+this.crashHelper+" trigger! The error was "+
                     e.getMessage()+" and was caught on line "+e.getStackTrace()[0].getLineNumber()+" in the class "+
                     e.getStackTrace()[0]);
         }
     }
 
-    private Trigger addPlayableTrigger(Trigger trigger, Optional<Table> universal) {
+    private boolean nonStaticTrigger(Trigger trigger) {
+        String name = trigger.getName();
+        return !name.matches("menu") && !name.matches("generic") && !name.matches("loading");
+    }
+
+    private Trigger addPlayableTrigger(Trigger trigger, Optional<Table> universal, boolean isActive) {
         this.crashHelper = trigger.getNameWithID();
         Trigger ret = null;
-        this.startMap.putIfAbsent(trigger, new MutableInt(0));
         this.triggerPersistence.putIfAbsent(trigger, new MutableInt(0));
-        boolean active = trigger.canStart(this.startMap.get(trigger).getValue(),
-                universal.map(table -> MusicTriggers.randomInt("universal_start_delay",
-                        table.getValOrDefault("start_delay", "0"), 0)).orElse(0));
-        if (active || this.triggerPersistence.get(trigger).getValue() > 0) {
-            ret = trigger;
-            this.boolMap.put(trigger, true);
-            this.dynamicTemp.add(trigger);
-            if (active) {
-                int check = trigger.getParameterInt("persistence");
-                check = check>0 ? check :
-                        universal.map(table -> MusicTriggers.randomInt("universal_persistence",
-                                table.getValOrDefault("persistence", "0"), 0)).orElse(0);
-                this.triggerPersistence.get(trigger).setValue(check);
+        boolean persistent = this.triggerPersistence.get(trigger).getValue()>0;
+        if(isActive || persistent) {
+            if (!this.startMap.containsKey(trigger)) {
+                int start = trigger.getParameterInt("start_delay");
+                if (start == 0) start = universal.map(table -> MusicTriggers.randomInt("universal_start_delay",
+                        table.getValOrDefault("start_delay", "0"), 0)).orElse(0);
+                this.startMap.put(trigger, new MutableInt(start));
             }
-            if (trigger.getParameterBool("passive_persistence")) this.timeSwitch.add(trigger);
-        } else this.boolMap.put(trigger, false);
+            if (this.startMap.get(trigger).getValue() <= 0) {
+                ret = trigger;
+                this.dynamicTemp.add(trigger);
+                if (isActive) {
+                    int check = trigger.getParameterInt("persistence");
+                    check = check > 0 ? check :
+                            universal.map(table -> MusicTriggers.randomInt("universal_persistence",
+                                    table.getValOrDefault("persistence", "0"), 0)).orElse(0);
+                    this.triggerPersistence.get(trigger).setValue(check);
+                }
+                if (!trigger.getParameterBool("passive_persistence")) this.removePersistentPlayable.add(trigger);
+            }
+        }
         return ret;
     }
 
@@ -261,7 +275,7 @@ public class MusicPicker {
             this.channel = channel;
             this.currentSongList = new ArrayList<>();
             this.previousSongList = new ArrayList<>();
-            this.playableTriggers = new ArrayList<>();
+            this.playableTriggers = Collections.synchronizedList(new ArrayList<>());
             this.toggledPlayableTriggers = new ArrayList<>();
             this.activeTriggers = new ArrayList<>();
             this.toggledActiveTriggers = new ArrayList<>();
@@ -283,12 +297,16 @@ public class MusicPicker {
         }
 
         public List<Trigger> getPlayableTriggers() {
-            return this.playableTriggers;
+            synchronized(this.playableTriggers) {
+                return this.playableTriggers;
+            }
         }
 
         public void updatePlayableTriggers(List<Trigger> newTriggers) {
-            this.playableTriggers.clear();
-            this.playableTriggers.addAll(newTriggers);
+            synchronized(this.playableTriggers) {
+                this.playableTriggers.clear();
+                this.playableTriggers.addAll(newTriggers);
+            }
         }
 
         public List<Trigger> getActiveTriggers() {
@@ -296,6 +314,7 @@ public class MusicPicker {
         }
 
         public Trigger highestPriorityActive() {
+            if(this.activeTriggers.isEmpty()) return null;
             return ConfigDebug.REVERSE_PRIORITY ?
                     Collections.min(this.activeTriggers,Comparator.comparingInt(trigger -> trigger.getParameterInt("priority"))) :
                     Collections.max(this.activeTriggers,Comparator.comparingInt(trigger -> trigger.getParameterInt("priority")));
@@ -312,13 +331,16 @@ public class MusicPicker {
         }
 
         private void runPlayableToggle() {
-            this.toggledPlayableTriggers.removeIf(trigger -> !this.playableTriggers.contains(trigger));
-            List<Trigger> toggleList = new ArrayList<>();
-            for(Trigger trigger : this.playableTriggers) if(!this.toggledPlayableTriggers.contains(trigger)) {
-                toggleList.add(trigger);
-                this.toggledPlayableTriggers.add(trigger);
+            synchronized(this.playableTriggers) {
+                this.toggledPlayableTriggers.removeIf(trigger -> !this.playableTriggers.contains(trigger));
+                List<Trigger> toggleList = new ArrayList<>();
+                for (Trigger trigger : this.playableTriggers)
+                    if (!this.toggledPlayableTriggers.contains(trigger)) {
+                        toggleList.add(trigger);
+                        this.toggledPlayableTriggers.add(trigger);
+                    }
+                if (!toggleList.isEmpty()) ChannelManager.getChannel(this.channel).runToggle(2, toggleList);
             }
-            if(!toggleList.isEmpty()) ChannelManager.getChannel(this.channel).runToggle(2,toggleList);
         }
 
         private void runActiveToggle() {
@@ -340,11 +362,13 @@ public class MusicPicker {
         }
 
         public void clear() {
-            clearSongLists();
-            this.playableTriggers.clear();
-            this.toggledPlayableTriggers.clear();
-            this.activeTriggers.clear();
-            this.toggledActiveTriggers.clear();
+            synchronized(this.playableTriggers) {
+                clearSongLists();
+                this.playableTriggers.clear();
+                this.toggledPlayableTriggers.clear();
+                this.activeTriggers.clear();
+                this.toggledActiveTriggers.clear();
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.common.objects;
 
 import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.common.MusicTriggersBlocks;
 import mods.thecomputerizer.musictriggers.util.RegistryHandler;
 import mods.thecomputerizer.musictriggers.util.packets.PacketJukeBoxCustom;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
@@ -39,31 +40,32 @@ public class MusicTriggersRecord extends EpicItem {
 
     @Override
     @Nonnull
-    public EnumActionResult onItemUse(@Nonnull EntityPlayer player, @Nonnull World worldIn, @Nonnull BlockPos pos,
+    public EnumActionResult onItemUse(@Nonnull EntityPlayer player, @Nonnull World world, @Nonnull BlockPos pos,
                                       @Nonnull EnumHand hand, @Nonnull EnumFacing facing, float hitX, float hitY,
                                       float hitZ) {
-        if(player instanceof EntityPlayerMP) {
-            IBlockState iblockstate = worldIn.getBlockState(pos);
-            if (iblockstate.getBlock() instanceof MusicRecorder) {
-                MusicRecorder mr = (MusicRecorder) iblockstate.getBlock();
-                if (!iblockstate.getValue(MusicRecorder.HAS_RECORD) && !iblockstate.getValue(MusicRecorder.HAS_DISC)) {
-                    ItemStack itemstack = player.getHeldItem(hand);
-                    mr.insertRecord(worldIn, pos, iblockstate, itemstack, (EntityPlayerMP) player);
-                    itemstack.shrink(1);
-                }
-                return EnumActionResult.SUCCESS;
-            } else if (iblockstate.getBlock() instanceof BlockJukebox && !(Boolean) iblockstate.getValue(BlockJukebox.HAS_RECORD)) {
+        IBlockState state = world.getBlockState(pos);
+        if(state.getBlock()==MusicTriggersBlocks.MUSIC_RECORDER && !state.getValue(MusicRecorder.HAS_RECORD)
+                && !state.getValue(MusicRecorder.HAS_DISC)) {
+            if (!world.isRemote) {
+                MusicRecorder mr = (MusicRecorder) state.getBlock();
                 ItemStack stack = player.getHeldItem(hand);
-                if(stack.getTagCompound() != null && stack.getTagCompound().hasKey("trackID") &&
+                mr.insertRecord(world, pos, stack, player);
+                stack.shrink(1);
+            }
+            return EnumActionResult.SUCCESS;
+        } else if (state.getBlock() == Blocks.JUKEBOX && !state.getValue(BlockJukebox.HAS_RECORD)) {
+            if (!world.isRemote) {
+                ItemStack stack = player.getHeldItem(hand);
+                if (stack.getTagCompound() != null && stack.getTagCompound().hasKey("trackID") &&
                         stack.getTagCompound().hasKey("channelFrom")) {
-                    ((BlockJukebox) Blocks.JUKEBOX).insertRecord(worldIn, pos, iblockstate, stack);
+                    ((BlockJukebox) state.getBlock()).insertRecord(world, pos, state, stack);
                     RegistryHandler.network.sendTo(new PacketJukeBoxCustom.Message(pos,
                             stack.getTagCompound().getString("channelFrom"), stack.getTagCompound().getString("trackID")), (EntityPlayerMP) player);
                     stack.shrink(1);
                     player.addStat(StatList.RECORD_PLAYED);
                 }
-                return EnumActionResult.SUCCESS;
             }
+            return EnumActionResult.SUCCESS;
         }
         return EnumActionResult.PASS;
     }
@@ -74,10 +76,10 @@ public class MusicTriggersRecord extends EpicItem {
                                @Nonnull ITooltipFlag flagIn) {
         if(stack.hasTagCompound() && Objects.requireNonNull(stack.getTagCompound()).hasKey("trackID"))
             tooltip.add(
-                    AssetUtil.extraLang(Constants.MODID,"item","music_triggers_record","description")
+                    AssetUtil.extraLang(Constants.MODID,"item","music_triggers_record","description",false)
                             +": "+stack.getTagCompound().getString("trackID"));
         else tooltip.add(
-                AssetUtil.extraLang(Constants.MODID,"item","music_triggers_record","blank_description"));
+                AssetUtil.extraLang(Constants.MODID,"item","music_triggers_record","blank_description",false));
     }
 
     private float mapTriggerToFloat(String trigger) {

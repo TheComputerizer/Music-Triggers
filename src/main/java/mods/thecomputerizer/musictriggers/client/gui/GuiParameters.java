@@ -3,7 +3,6 @@ package mods.thecomputerizer.musictriggers.client.gui;
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.client.Translate;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
-import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Variable;
@@ -239,7 +238,6 @@ public class GuiParameters extends GuiSuperType {
         private boolean displayHover;
         private boolean selected;
         private boolean varHover;
-        private boolean varSelected;
         private boolean hasEdits;
         private int descLines;
         private int scrollPos;
@@ -297,24 +295,26 @@ public class GuiParameters extends GuiSuperType {
             if(Minecraft.getMinecraft().currentScreen==parent) {
                 if (wasRightSide) {
                     this.selected = this.displayHover;
-                    this.varSelected = false;
                     if (this.selected)
                         this.descLines = GuiUtil.howManyLinesWillThisBe(parent.mc.fontRenderer, this.description, left,
                                 right, top, spacing);
                 } else if(this.selected) {
-                    if(this.var.getAsBool(true).isPresent()) toggleCheckBox();
-                    if(this.var instanceof List<?>) {
-                        GuiSuperType next = this.var.getName().matches("triggers") ?
-                                parent.getInstance().createMultiSelectTriggerScreen(parent, parent.getChannel(),
-                                        (elements) -> {
-                                    this.getListValues().clear();
-                                    this.getListValues().addAll(elements.stream().map(this::makeTriggerString)
-                                            .filter(Objects::nonNull).collect(Collectors.toList()));
-                                        }) : new GuiParameterList(parent,GuiType.PARAMETER_GENERIC,
-                                parent.getInstance(),this);
-                        Minecraft.getMinecraft().displayGuiScreen(next);
+                    if(this.varHover) {
+                        if (this.var.getAsBool(true).isPresent()) toggleCheckBox();
+                        else if (this.var.get() instanceof List<?>) {
+                            GuiSuperType next = this.var.getName().matches("triggers") ?
+                                    parent.getInstance().createMultiSelectTriggerScreen(parent, parent.getChannel(),
+                                            (elements) -> {
+                                                this.setList(elements.stream().map(this::makeTriggerString)
+                                                        .filter(Objects::nonNull).collect(Collectors.toList()));
+                                                this.hasEdits = true;
+                                                parent.save();
+                                            }) : new GuiParameterList(parent, GuiType.PARAMETER_GENERIC,
+                                    parent.getInstance(), this);
+                            parent.playGenericClickSound();
+                            Minecraft.getMinecraft().displayGuiScreen(next);
+                        }
                     }
-                    this.varSelected = this.varHover;
                 }
             }
         }
@@ -322,20 +322,14 @@ public class GuiParameters extends GuiSuperType {
         private String makeTriggerString(GuiSelection.Element element) {
             Table parent = this.var.getParent();
             if(Objects.isNull(parent)) return null;
-            if(element instanceof GuiSelection.MonoElement) {
-                GuiSelection.MonoElement mono = (GuiSelection.MonoElement) element;
-                if(!Trigger.isParameterAccepted(mono.getID(),"identifier"))
-                    return mono.getID();
-                String id = parent.getValOrDefault("identifier","not_set");
-                id = id.matches("not_set") ? parent.getValOrDefault("id","not_set") : id;
-                return mono.getID()+"-"+id;
-            }
+            if(element instanceof GuiSelection.MonoElement)
+                return ((GuiSelection.MonoElement) element).getID();
             return null;
         }
 
         public void onType(boolean backspace, char c) {
-            if(this.varSelected) {
-                Optional<String> optional = this.var.getAsString();
+            if(this.selected) {
+                Optional<String> optional = this.var.getAsString(true);
                 if(optional.isPresent()) {
                     String val = optional.get();
                     if (backspace) {
@@ -376,7 +370,7 @@ public class GuiParameters extends GuiSuperType {
                 Point2i textCorner = new Point2i(topLeft.x+2,topLeft.y+2);
                 GlStateManager.pushMatrix();
                 GlStateManager.scale(2f, 2f, 2f);
-                char extra = this.varSelected ? ChannelManager.blinker : ' ';
+                char extra = this.selected ? ChannelManager.blinker : ' ';
                 if(this.varHover) {
                     GuiUtil.drawBoxWithOutline(topLeft, width, height, new Point4i(255, 255, 255, 192),
                             new Point4i(0, 0, 0, 192), 1f, zLevel);
@@ -426,9 +420,12 @@ public class GuiParameters extends GuiSuperType {
                 ((GuiSuperType)Minecraft.getMinecraft().currentScreen).save();
         }
 
-        public List<String> getListValues() {
-            return this.var.getAsList().orElse(new ArrayList<>()).stream().filter(Objects::nonNull)
-                    .map(Object::toString).collect(Collectors.toList());
+        public void setList(List<String> list) {
+            this.var.set(list);
+        }
+
+        public List<String> getList() {
+            return ((List<?>)this.var.get()).stream().map(Objects::toString).collect(Collectors.toList());
         }
     }
 }

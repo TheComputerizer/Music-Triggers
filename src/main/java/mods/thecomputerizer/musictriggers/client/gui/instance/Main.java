@@ -7,6 +7,7 @@ import mods.thecomputerizer.musictriggers.client.gui.*;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Comment;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.common.toml.VarMatcher;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.util.TriConsumer;
@@ -46,6 +47,30 @@ public class Main extends AbstractChannelConfig {
     protected void write(String newFilePath) {
         File file = FileUtil.generateNestedFile("config/MusicTriggers/"+newFilePath+".toml",true);
         List<String> lines = new ArrayList<>();
+        for(String triggerName : getOrCreateTable(null,"triggers").getTableNames()) {
+            if(Trigger.getAcceptedTriggers().contains(triggerName)) {
+                for(Table trigger : getOrCreateTable(null,"triggers").getTablesByName(triggerName)) {
+                    VarMatcher matcher = new VarMatcher();
+                    for(String parameter : Trigger.getAcceptedParameters(triggerName))
+                        matcher.addCondition(parameter,val -> !val.toString().matches(Trigger.getDefaultParameter(parameter)));
+                    trigger.addMatcher(matcher);
+                }
+            }
+        }
+        for(String songName : getOrCreateTable(null,"songs").getTableNames()) {
+            for (Table song : getOrCreateTable(null, "songs").getTablesByName(songName)) {
+                VarMatcher matcher = new VarMatcher();
+                matcher.addCondition("volume",(val -> !((val instanceof Number && ((Number) val).floatValue()==1f) ||
+                        val.toString().matches("1.0"))));
+                matcher.addCondition("pitch",(val -> !((val instanceof Number && ((Number) val).floatValue()==1f) ||
+                        val.toString().matches("1.0"))));
+                matcher.addCondition("chance",(val -> !((val instanceof Number && ((Number) val).intValue()==100) ||
+                        val.toString().matches("100"))));
+                matcher.addCondition("play_once",(val -> !((val instanceof Number && ((Number) val).intValue()==0) ||
+                        val.toString().matches("0"))));
+                song.addMatcher(matcher);
+            }
+        }
         List<String> fromData = this.fileData.toLines();
         if(fromData.stream().noneMatch(headerLines()::contains)) lines.addAll(headerLines());
         lines.addAll(this.fileData.toLines());
@@ -91,18 +116,29 @@ public class Main extends AbstractChannelConfig {
     public GuiSelection createMultiSelectTriggerScreen(GuiSuperType parent, Consumer<List<GuiSelection.Element>> multiSelectHandler) {
         return new GuiSelection(parent,GuiType.SELECTION_GENERIC, parent.getInstance(),
                 Translate.guiGeneric(false,"selection","multi_triggers"),false,true,true,
-                this::multiSelectTriggerElements,multiSelectHandler);
+                this::multiSelectTriggerElements,multiSelectHandler,potentialTriggerButtons(parent));
     }
 
     public List<GuiSelection.Element> multiSelectTriggerElements() {
         List<GuiSelection.Element> elements = new ArrayList<>();
         int index = 0;
         for(Table trigger : getOrCreateTable(null,"triggers").getChildren().values()) {
-            elements.add(new GuiSelection.MonoElement("multi_trigger",index, Translate.songInstance(trigger.getName()),
-                    Translate.triggerElementHover(trigger)));
-            index++;
+            if(Trigger.getAcceptedTriggers().contains(trigger.getName())) {
+                elements.add(new GuiSelection.MonoElement(makeTriggerID(trigger),
+                        index, Translate.songInstance(trigger.getName()), Translate.triggerElementHover(trigger)));
+                index++;
+            }
         }
         return elements;
+    }
+
+    private String makeTriggerID(Table trigger) {
+        if(!Trigger.getAcceptedTriggers().contains(trigger.getName())) return "unknown_trigger";
+        if(!Trigger.isParameterAccepted(trigger.getName(),"identifier"))
+            return trigger.getName();
+        String id = trigger.getValOrDefault("identifier","not_set");
+        id = id.matches("not_set") ? trigger.getValOrDefault("id","not_set") : id;
+        return trigger.getName()+"-"+id;
     }
 
     public List<GuiSelection.Element> mainElements() {
@@ -156,23 +192,28 @@ public class Main extends AbstractChannelConfig {
     private List<GuiParameters.Parameter> universalTriggerParameters() {
         Table universal = getOrCreateTable(getOrCreateTable(null, "triggers"), "universal");
         return Arrays.asList(new GuiParameters.Parameter("universal", "fade_in",
-                        universal.getOrCreateVar("fade_in", "0")),
+                        this.fileData.getOrCreateVar(universal,"fade_in", "0")),
                 new GuiParameters.Parameter("universal", "fade_out",
-                        universal.getOrCreateVar("fade_out", "0")),
+                        this.fileData.getOrCreateVar(universal,"fade_out", "0")),
                 new GuiParameters.Parameter("universal", "persistence",
-                        universal.getOrCreateVar("persistence", "0")),
+                        this.fileData.getOrCreateVar(universal,"persistence", "0")),
                 new GuiParameters.Parameter("universal", "trigger_delay",
-                        universal.getOrCreateVar("trigger_delay", "0")),
+                        this.fileData.getOrCreateVar(universal,"trigger_delay", "0")),
                 new GuiParameters.Parameter("universal", "song_delay",
-                        universal.getOrCreateVar("song_delay", "0")),
+                        this.fileData.getOrCreateVar(universal,"song_delay", "0")),
                 new GuiParameters.Parameter("universal", "start_delay",
-                        universal.getOrCreateVar("start_delay", "0")));
+                        this.fileData.getOrCreateVar(universal,"start_delay", "0")));
     }
 
     public List<GuiParameters.Parameter> triggerInfoParameters(Table trigger) {
         return Trigger.getAcceptedParameters(trigger.getName())
-                .stream().map(parameter -> new GuiParameters.Parameter("trigger_info",parameter,trigger.getName()
-                        ,trigger.getOrCreateVar(parameter,Trigger.getDefaultParameter(parameter))))
+                .stream().map(parameter -> {
+                    String defVal = Trigger.getDefaultParameter(parameter);
+                    Object actualDefVal = parameter.matches("resource_name") || parameter.matches("infernal") ||
+                            parameter.matches("champion") ? Arrays.asList(defVal.split(";")) : defVal;
+                    return new GuiParameters.Parameter("trigger_info",parameter,trigger.getName()
+                            ,this.fileData.getOrCreateVar(trigger,parameter,actualDefVal));
+                })
                 .collect(Collectors.toList());
     }
 
@@ -183,8 +224,8 @@ public class Main extends AbstractChannelConfig {
         List<String> hoverText = Translate.singletonHover("button","add_trigger","hover");
         TriConsumer<GuiSuperType, ButtonSuperType, Integer> onClick = (parent, button, type) ->
                 Minecraft.getMinecraft().displayGuiScreen(new GuiSelection(parent,GuiType.SELECTION_GENERIC, parent.getInstance(),
-                Translate.guiGeneric(false,"selection","group","potential_triggers"),false,true,
-                this::getPotentialTriggers,potentialTriggerButtons(parent)));
+                Translate.guiGeneric(false,"selection","group","potential_triggers")+" "+getChannelName(),
+                        false,true, this::getPotentialTriggers));
         buttons.add(grandfather.createBottomButton(displayName,width,1,hoverText,onClick));
         return buttons.toArray(new ButtonSuperType[]{});
     }
@@ -194,7 +235,12 @@ public class Main extends AbstractChannelConfig {
         int index = 0;
         for(String trigger : Trigger.getAcceptedTriggers()) {
             elements.add(new GuiSelection.MonoElement(trigger,index,Translate.guiGeneric(false,"trigger",trigger),
-                    Translate.potentialTriggerHover(trigger, hasTrigger(trigger),allIdentifiersOfTrigger(trigger))));
+                    Translate.potentialTriggerHover(trigger, hasTrigger(trigger),allIdentifiersOfTrigger(trigger)),
+                    parent -> {
+                        this.fileData.addTable(getOrCreateTable(null,"triggers"),trigger);
+                        parent.getParent().parentUpdate();
+                        Minecraft.getMinecraft().displayGuiScreen(parent.getParent());
+                    }));
             index++;
         }
         return elements;
@@ -204,7 +250,7 @@ public class Main extends AbstractChannelConfig {
         List<ButtonSuperType> buttons = new ArrayList<>();
         String displayName = Translate.guiGeneric(false, "button", "confirm_triggers");
         int width = Minecraft.getMinecraft().fontRenderer.getStringWidth(displayName)+8;
-        List<String> hoverText = Translate.singletonHover("button","confirm_multiselect","hover");
+        List<String> hoverText = Translate.singletonHover("button","confirm_triggers","hover");
         TriConsumer<GuiSuperType, ButtonSuperType, Integer> onClick = (parent, button, type) -> {
             parent.parentUpdate();
             grandfather.parentUpdate();
@@ -250,13 +296,13 @@ public class Main extends AbstractChannelConfig {
     private List<GuiParameters.Parameter> universalSongParameters() {
         Table universal = getOrCreateTable(getOrCreateTable(null,"songs"),"universal");
         return Arrays.asList(new GuiParameters.Parameter("universal","volume",
-                        universal.getOrCreateVar("volume",1f)),
+                        this.fileData.getOrCreateVar(universal,"volume",1f)),
                 new GuiParameters.Parameter("universal","pitch",
-                        universal.getOrCreateVar("pitch",1f)),
+                        this.fileData.getOrCreateVar(universal,"pitch",1f)),
                 new GuiParameters.Parameter("universal","play_once",
-                        universal.getOrCreateVar("play_once",0)),
+                        this.fileData.getOrCreateVar(universal,"play_once",0)),
                 new GuiParameters.Parameter("universal","must_finish",
-                        universal.getOrCreateVar("must_finish",false)));
+                        this.fileData.getOrCreateVar(universal,"must_finish",false)));
     }
 
     public ButtonSuperType[] songInstancesButtons(GuiSuperType grandfather) {
@@ -266,8 +312,8 @@ public class Main extends AbstractChannelConfig {
         List<String> hoverText = Translate.singletonHover("button","add_song","hover");
         TriConsumer<GuiSuperType, ButtonSuperType, Integer> onClick = (parent, button, type) ->
                 Minecraft.getMinecraft().displayGuiScreen(new GuiSelection(parent,GuiType.SELECTION_GENERIC, parent.getInstance(),
-                Translate.guiGeneric(false,"selection","group","potential_songs"),false,true,
-                () -> parent.getInstance().getChannel(getChannelName()).getPotentialSongs(parent)));
+                Translate.guiGeneric(false,"selection","group","potential_songs")+" "+getChannelName(),
+                        false,true, () -> parent.getInstance().getChannel(getChannelName()).getPotentialSongs(parent)));
         buttons.add(grandfather.createBottomButton(displayName,width,1,hoverText,onClick));
         return buttons.toArray(new ButtonSuperType[]{});
     }
@@ -292,9 +338,7 @@ public class Main extends AbstractChannelConfig {
     }
 
     public List<GuiParameters.Parameter> songInfoParameters(Table audio) {
-        return Arrays.asList(new GuiParameters.Parameter("song_info","load_order",
-                        this.fileData.getOrCreateVar(audio,"load_order",audio.getMaxIndex(false,false))),
-                new GuiParameters.Parameter("song_info","triggers",
+        return Arrays.asList(new GuiParameters.Parameter("song_info","triggers",
                         this.fileData.getOrCreateVar(audio,"triggers",new ArrayList<String>())),
                 new GuiParameters.Parameter("song_info","volume",
                         this.fileData.getOrCreateVar(audio,"volume",1f)),
@@ -314,7 +358,10 @@ public class Main extends AbstractChannelConfig {
         int width = Minecraft.getMinecraft().fontRenderer.getStringWidth(displayName)+8;
         List<String> hoverText = Translate.singletonHover("button","add_loop","hover");
         TriConsumer<GuiSuperType, ButtonSuperType, Integer> onClick =
-                (parent, button, type) -> this.fileData.addTable(song,"loop");
+                (parent, button, type) -> {
+                    this.fileData.addTable(song,"loop");
+                    parent.parentUpdate();
+                };
         buttons.add(grandfather.createBottomButton(displayName,width,1,hoverText,onClick));
         return buttons.toArray(new ButtonSuperType[]{});
     }

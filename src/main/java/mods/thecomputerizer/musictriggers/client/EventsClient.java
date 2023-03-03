@@ -55,14 +55,21 @@ public class EventsClient {
     public static String lastAdvancement;
     public static boolean advancement;
     public static boolean renderDebug = true;
-    public static boolean zone = false;
     public static final HashMap<String, Boolean> commandMap = new HashMap<>();
 
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
-        PositionedSoundRecord silenced = new PositionedSoundRecord(e.getSound().getSoundLocation(), SoundCategory.MUSIC, Float.MIN_VALUE*1000, 1F, false, 1, ISound.AttenuationType.LINEAR, 0F, 0F, 0F);
+        PositionedSoundRecord silenced = new PositionedSoundRecord(e.getSound().getSoundLocation(), SoundCategory.MUSIC,
+                Float.MIN_VALUE*1000, 1F, false, 1, ISound.AttenuationType.LINEAR, 0F, 0F, 0F);
         for(String s : ConfigDebug.BLOCKED_MOD_MUSIC) {
             if(e.getSound().getSoundLocation().toString().contains(s) && e.getSound().getCategory()==SoundCategory.MUSIC) {
+                if(!(!ChannelManager.canAnyChannelOverrideMusic() && ConfigDebug.PLAY_NORMAL_MUSIC)) e.setResultSound(silenced);
+            }
+        }
+        silenced = new PositionedSoundRecord(e.getSound().getSoundLocation(), SoundCategory.RECORDS,
+                Float.MIN_VALUE*1000, 1F, false, 1, ISound.AttenuationType.LINEAR, 0F, 0F, 0F);
+        for(String s : ConfigDebug.BLOCKED_MOD_RECORDS) {
+            if(e.getSound().getSoundLocation().toString().contains(s) && e.getSound().getCategory()==SoundCategory.RECORDS) {
                 if(!(!ChannelManager.canAnyChannelOverrideMusic() && ConfigDebug.PLAY_NORMAL_MUSIC)) e.setResultSound(silenced);
             }
         }
@@ -93,19 +100,16 @@ public class EventsClient {
     }
 
     @SubscribeEvent
-    public static void clientConnected(FMLNetworkEvent.ClientConnectedToServerEvent e) {
-        isWorldRendered=true;
-        Constants.MAIN_LOG.error("INITIALIZING SERVER INFO");
-        ChannelManager.initializeServerInfo();
-    }
-
-    @SubscribeEvent
     public static void clientDisconnected(FMLNetworkEvent.ClientDisconnectionFromServerEvent e) {
         isWorldRendered=false;
     }
 
     @SubscribeEvent
     public static void cancelRenders(RenderGameOverlayEvent.Pre e) {
+        if(!isWorldRendered) {
+            ChannelManager.initializeServerInfo();
+            isWorldRendered = true;
+        }
         if(e.getType()==RenderGameOverlayEvent.ElementType.ALL && !renderDebug) e.setCanceled(true);
     }
 
@@ -121,47 +125,7 @@ public class EventsClient {
 
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent e) {
-        if(Channel.GUI.isKeyDown()) {
-            //BlockPos pos = MusicPicker.roundedPos(Minecraft.getMinecraft().player);
-            if(!zone) {
-                Minecraft.getMinecraft().displayGuiScreen(Instance.createGui());
-            }
-            /*
-            else if(!firstPass) {
-                x1 = pos.getX();
-                y1 = pos.getY();
-                z1 = pos.getZ();
-                firstPass = true;
-                Minecraft.getMinecraft().getSoundHandler().playSound(new PositionedSoundRecord(SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.MUSIC, 1f, 1f, pos));
-            } else {
-                x2 = pos.getX();
-                y2 = pos.getY();
-                z2 = pos.getZ();
-                int temp;
-                if(x1>x2) {
-                    temp=x1;
-                    x1=x2;
-                    x2=temp;
-                }
-                if(y1>y2) {
-                    temp=y1;
-                    y1=y2;
-                    y2=temp;
-                }
-                if(z1>z2) {
-                    temp=z1;
-                    z1=z2;
-                    z2=temp;
-                }
-                firstPass = false;
-                zone = false;
-                Minecraft.getMinecraft().getSoundHandler().playSound(new PositionedSoundRecord(SoundEvents.BLOCK_ANVIL_BREAK, SoundCategory.MUSIC, 1f, 1f, pos));
-                String compiledZoneCoords = x1+","+y1+","+z1+","+x2+","+y2+","+z2;
-                parentScreen.holder.editTriggerInfoParameter(parentScreen.songCode, parentScreen.trigger, parentScreen.scrollingSongs.index, compiledZoneCoords);
-                Minecraft.getMinecraft().displayGuiScreen(parentScreen);
-            }
-             */
-        }
+        if(Channel.GUI.isKeyDown()) Minecraft.getMinecraft().displayGuiScreen(Instance.createGui());
     }
 
     @SubscribeEvent
@@ -203,22 +167,24 @@ public class EventsClient {
                         e.getLeft().add("Channel[" + channel.getChannelName() + "] Fading Out: " + channel.formattedFadeOutTime());
                     if (channel.formattedFadeInTime() != null)
                         e.getLeft().add("Channel[" + channel.getChannelName() + "] Fading In: " + channel.formattedFadeInTime());
-                    if (!channel.getPlayableTriggers().isEmpty()) {
-                        StringBuilder s = new StringBuilder();
-                        for (Trigger trigger : channel.getPlayableTriggers()) {
-                            String name = trigger.getNameWithID();
-                            if (Minecraft.getMinecraft().fontRenderer.getStringWidth(s + " " + name) > 0.75f * (new ScaledResolution(Minecraft.getMinecraft())).getScaledWidth()) {
-                                if (displayCount == 0) {
-                                    e.getLeft().add("Channel[" + channel.getChannelName() + "] Playable Events: " + s);
-                                    displayCount++;
-                                } else e.getLeft().add(s.toString());
-                                s = new StringBuilder();
+                    synchronized(channel.getPlayableTriggers()) {
+                        if (!channel.getPlayableTriggers().isEmpty()) {
+                            StringBuilder s = new StringBuilder();
+                            for (Trigger trigger : channel.getPlayableTriggers()) {
+                                String name = trigger.getNameWithID();
+                                if (Minecraft.getMinecraft().fontRenderer.getStringWidth(s + " " + name) > 0.75f * (new ScaledResolution(Minecraft.getMinecraft())).getScaledWidth()) {
+                                    if (displayCount == 0) {
+                                        e.getLeft().add("Channel[" + channel.getChannelName() + "] Playable Events: " + s);
+                                        displayCount++;
+                                    } else e.getLeft().add(s.toString());
+                                    s = new StringBuilder();
+                                }
+                                s.append(" ").append(name);
                             }
-                            s.append(" ").append(name);
+                            if (displayCount == 0)
+                                e.getLeft().add("Channel[" + channel.getChannelName() + "] Playable Events: " + s);
+                            else e.getLeft().add(s.toString());
                         }
-                        if (displayCount == 0)
-                            e.getLeft().add("Channel[" + channel.getChannelName() + "] Playable Events: " + s);
-                        else e.getLeft().add(s.toString());
                     }
                 }
             }

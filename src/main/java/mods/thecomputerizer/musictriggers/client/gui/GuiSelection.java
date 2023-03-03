@@ -1,6 +1,5 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
-import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.client.Translate;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
@@ -22,6 +21,7 @@ import java.util.function.Supplier;
 public class GuiSelection extends GuiSuperType {
 
     private final Supplier<List<Element>> elementSupplier;
+    private List<Element> elementCache;
     private final Consumer<List<Element>> multiSelectHandler;
     private final List<Element> searchedElements;
     private final List<Element> selectedElements;
@@ -81,9 +81,10 @@ public class GuiSelection extends GuiSuperType {
     @Override
     public void initGui() {
         super.initGui();
+        this.elementCache = this.elementSupplier.get();
         enableSearch();
         int index = Integer.MIN_VALUE;
-        for (Element element : this.elementSupplier.get()) {
+        for (Element element : this.elementCache) {
             if (index == Integer.MIN_VALUE)
                 index = element.getIndex();
             else index = element.adjustOriginalIndex(index);
@@ -110,7 +111,6 @@ public class GuiSelection extends GuiSuperType {
             addSuperButton(createBottomButton(displayName, width, 3,
                     Translate.guiNumberedList(3, "button", "sort", "desc"),
                     (screen, button, mode) -> {
-                        Constants.MAIN_LOG.error("Mode for sort button {}",mode);
                         this.sortType = mode - 1;
                         TextFormatting color = mode == 1 ? TextFormatting.WHITE : mode == 2 ? TextFormatting.GRAY : TextFormatting.DARK_GRAY;
                         button.updateDisplay(color + sortElements());
@@ -147,7 +147,10 @@ public class GuiSelection extends GuiSuperType {
             Element element = this.searchedElements.get(this.elementHover);
             if(this.deleteMode) {
                 if(element.onDelete(mouseX<=this.width/2)) {
+                    playGenericClickSound();
                     this.hasEdits = true;
+                    this.searchedElements.remove(element);
+                    this.elementCache.remove(element);
                     save();
                 }
             } else {
@@ -160,8 +163,10 @@ public class GuiSelection extends GuiSuperType {
                         element.setSelected(true);
                     }
                 }
-                for (Element element1 : searchedElements)
-                    element1.onClick(this, element1 == this.searchedElements.get(this.elementHover), mouseX <= this.width / 2);
+                else {
+                    for (Element element1 : searchedElements)
+                        element1.onClick(this, mouseX <= this.width / 2);
+                }
             }
         }
     }
@@ -170,15 +175,16 @@ public class GuiSelection extends GuiSuperType {
     protected void keyTyped(char c, int key) {
         super.keyTyped(c, key);
         if(isKeyValid(c, key))
-            for(Element element : this.searchedElements)
-                element.onType(key == Keyboard.KEY_BACK,c);
+            for(Element element : this.searchedElements) {
+                if(element.onType(key == Keyboard.KEY_BACK, c)) this.hasEdits = true;
+            }
         updateSearch();
     }
 
     @Override
     protected void updateSearch() {
         this.searchedElements.clear();
-        for(Element element : this.elementSupplier.get())
+        for(Element element : this.elementCache)
             if(checkSearch(element))
                 this.searchedElements.add(element);
         calculateScrollSize();
@@ -254,13 +260,16 @@ public class GuiSelection extends GuiSuperType {
 
     @Override
     public void parentUpdate() {
+        super.parentUpdate();
         if(Objects.nonNull(this.multiSelectHandler)) this.multiSelectHandler.accept(this.selectedElements);
+        save();
+        this.elementCache = this.elementSupplier.get();
         updateSearch();
     }
 
     @Override
     protected void save() {
-        for(Element element: this.elementSupplier.get()) element.onSave();
+        for(Element element: this.elementCache) element.onSave();
         if(this.hasEdits)
             this.madeChange(true);
         updateSearch();
@@ -269,6 +278,8 @@ public class GuiSelection extends GuiSuperType {
     public static abstract class Element {
         private int index;
         protected boolean isSelected;
+
+        protected boolean hover;
 
         public Element(int index) {
             this.index = index;
@@ -286,6 +297,10 @@ public class GuiSelection extends GuiSuperType {
 
         public void setSelected(boolean selected) {}
 
+        public boolean isHover() {
+            return this.hover;
+        }
+
         public abstract boolean renderElement(GuiSuperType parent, FontRenderer font, int mouseX, int mouseY,
                                               MutableInt top, int spacing, float zLevel);
 
@@ -293,9 +308,9 @@ public class GuiSelection extends GuiSuperType {
 
         public abstract List<String> getHoverLines(boolean isLeft);
 
-        public abstract void onType(boolean backspace, char c);
+        public abstract boolean onType(boolean backspace, char c);
 
-        public abstract void onClick(GuiSelection parent, boolean hover, boolean isLeft);
+        public abstract void onClick(GuiSelection parent, boolean isLeft);
 
         public abstract boolean onDelete(boolean isLeft);
 
@@ -346,7 +361,7 @@ public class GuiSelection extends GuiSuperType {
         public boolean renderElement(GuiSuperType parent, FontRenderer font, int mouseX, int mouseY, MutableInt top,
                                      int spacing, float zLevel) {
             boolean hover = parent.mouseHover(new Point2i(0, top.getValue()),mouseX,mouseY,
-                    parent.width,font.FONT_HEIGHT+spacing);
+                    parent.width,font.FONT_HEIGHT+spacing*2);
             boolean isLeft = mouseX<=parent.width/2;
             int textColor = GuiUtil.WHITE;
             if (hover || this.multiSelect) {
@@ -356,6 +371,7 @@ public class GuiSelection extends GuiSuperType {
             }
             parent.drawCenteredString(font,getDisplay(isLeft),parent.width/2, top.addAndGet(spacing), textColor);
             top.add(spacing+font.FONT_HEIGHT);
+            this.hover = hover;
             return hover;
         }
 
@@ -370,11 +386,16 @@ public class GuiSelection extends GuiSuperType {
         }
 
         @Override
-        public void onType(boolean backspace, char c) {}
+        public boolean onType(boolean backspace, char c) {
+            return false;
+        }
 
         @Override
-        public void onClick(GuiSelection parent, boolean hover, boolean isLeft) {
-            if(hover && Objects.nonNull(this.onClick)) this.onClick.accept(parent);
+        public void onClick(GuiSelection parent, boolean isLeft) {
+            if(this.hover && Objects.nonNull(this.onClick)) {
+                this.onClick.accept(parent);
+                parent.playGenericClickSound();
+            }
             this.isSelected = hover;
         }
 
@@ -414,7 +435,7 @@ public class GuiSelection extends GuiSuperType {
         public boolean renderElement(GuiSuperType parent, FontRenderer font, int mouseX, int mouseY, MutableInt top,
                                      int spacing, float zLevel) {
             boolean hover = parent.mouseHover(new Point2i(0, top.getValue()),mouseX,mouseY,
-                    parent.width,font.FONT_HEIGHT+spacing);
+                    parent.width,font.FONT_HEIGHT+spacing*2);
             boolean isLeft = mouseX<=parent.width/2;
             int keyColor = GuiUtil.WHITE;
             int valColor = GuiUtil.WHITE;
@@ -432,8 +453,9 @@ public class GuiSelection extends GuiSuperType {
                 }
             }
             parent.drawCenteredString(font,getDisplay(true)+keyExtra,parent.width/4, top.addAndGet(spacing), keyColor);
-            parent.drawCenteredString(font,getDisplay(false)+valExtra,parent.width-(parent.width/4), top.addAndGet(spacing), valColor);
+            parent.drawCenteredString(font,getDisplay(false)+valExtra,parent.width-(parent.width/4), top.getValue(), valColor);
             top.add(spacing+font.FONT_HEIGHT);
+            this.hover = hover;
             return hover;
         }
 
@@ -448,25 +470,36 @@ public class GuiSelection extends GuiSuperType {
         }
 
         @Override
-        public void onType(boolean backspace, char c) {
+        public boolean onType(boolean backspace, char c) {
             if(this.isSelected) {
                 if (this.keySelected) {
                     if (backspace) {
-                        if (!this.key.isEmpty())
+                        if (!this.key.isEmpty()) {
                             this.key = this.key.substring(0, this.key.length() - 1);
-                    } else this.key += c;
+                            return true;
+                        }
+                    } else {
+                        this.key += c;
+                        return true;
+                    }
                 } else {
                     if (backspace) {
-                        if (!this.val.isEmpty())
+                        if (!this.val.isEmpty()) {
                             this.val = this.val.substring(0, this.val.length() - 1);
-                    } else this.val += c;
+                            return true;
+                        }
+                    } else {
+                        this.val += c;
+                        return true;
+                    }
                 }
             }
+            return false;
         }
 
         @Override
-        public void onClick(GuiSelection parent, boolean hover, boolean isLeft) {
-            this.isSelected = hover;
+        public void onClick(GuiSelection parent, boolean isLeft) {
+            this.isSelected = this.hover;
             this.keySelected = isLeft;
         }
 

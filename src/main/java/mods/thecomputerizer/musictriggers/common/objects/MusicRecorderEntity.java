@@ -3,7 +3,7 @@ package mods.thecomputerizer.musictriggers.common.objects;
 import mods.thecomputerizer.musictriggers.common.MusicTriggersBlocks;
 import mods.thecomputerizer.musictriggers.common.ServerData;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -15,7 +15,7 @@ import java.util.Random;
 public class MusicRecorderEntity extends TileEntity implements ITickable {
 
     private final Random random;
-    private EntityPlayerMP player;
+    private EntityPlayer player;
     private ItemStack record = ItemStack.EMPTY;
     private int counter;
 
@@ -28,9 +28,10 @@ public class MusicRecorderEntity extends TileEntity implements ITickable {
         return this.record == ItemStack.EMPTY;
     }
 
-    public void insertRecord(ItemStack recordStack, EntityPlayerMP player) {
-        this.record = recordStack;
-        this.counter = this.random.nextInt(5600);
+    public void insertRecord(ItemStack recordStack, EntityPlayer player) {
+        this.record = recordStack.copy();
+        recordStack.setCount(0);
+        this.counter = this.random.nextInt(600);
         this.player = player;
     }
 
@@ -43,12 +44,14 @@ public class MusicRecorderEntity extends TileEntity implements ITickable {
     }
 
     private void record() {
-        if(ServerData.recordAudioData(this.player.getUniqueID(),this.record)) {
+        ItemStack stack = ServerData.recordAudioData(this.player.getUniqueID(),this.record);
+        if(stack != ItemStack.EMPTY) {
             IBlockState state = this.world.getBlockState(this.pos);
             if(state.getBlock()==MusicTriggersBlocks.MUSIC_RECORDER) {
+                this.record = stack;
                 this.world.playSound(null,this.pos, SoundEvents.ENTITY_LIGHTNING_THUNDER, SoundCategory.BLOCKS,
                         1f,1f);
-                ((MusicRecorder) state.getBlock()).dropRecord(this.world, this.pos);
+                ((MusicRecorder) state.getBlock()).dropRecord(this.world, this.pos, false);
             }
         }
         else insertRecord(this.record,this.player);

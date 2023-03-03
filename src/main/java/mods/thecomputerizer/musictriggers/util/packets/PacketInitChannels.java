@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.util.packets;
 
 import io.netty.buffer.ByteBuf;
-import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.common.ServerData;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -11,7 +10,6 @@ public class PacketInitChannels implements IMessageHandler<PacketInitChannels.Me
 
     @Override
     public IMessage onMessage(PacketInitChannels.Message message, MessageContext ctx) {
-        Constants.MAIN_LOG.error("ON MESSAGE SIDE {}",ctx.side);
         return null;
     }
 
@@ -22,19 +20,16 @@ public class PacketInitChannels implements IMessageHandler<PacketInitChannels.Me
         public Message() {}
 
         public Message(ServerData channelData) {
-            Constants.MAIN_LOG.error("SENDING SERVER DATA");
             this.data = channelData;
         }
 
         @Override
         public void fromBytes(ByteBuf buf) {
-            Constants.MAIN_LOG.error("DECODING SERVER DATA");
             ServerData.initializePlayerChannels(buf);
         }
 
         @Override
         public void toBytes(ByteBuf buf) {
-            Constants.MAIN_LOG.error("ENCODING SERVER DATA");
             this.data.encodeForServer(buf);
         }
     }

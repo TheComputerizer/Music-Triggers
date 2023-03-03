@@ -60,8 +60,8 @@ public class Redirect extends AbstractChannelConfig {
             elements.add(new GuiSelection.DualElement(externalEntry.getKey(),externalEntry.getValue(),index,
                     Translate.singletonHover("selection","redirect","external"),
                     Translate.singletonHover("selection","redirect","external"),
-                    (newKey) -> this.urlMap.remove(externalEntry.getKey()),(key, val) -> {
-                this.urlMap.remove(externalEntry.getKey());
+                    (newKey) -> this.urlMap.entrySet().remove(externalEntry),(key, val) -> {
+                this.urlMap.entrySet().remove(externalEntry);
                 this.urlMap.put(key,val);
             }));
             index++;
@@ -70,8 +70,8 @@ public class Redirect extends AbstractChannelConfig {
             elements.add(new GuiSelection.DualElement(internalEntry.getKey(),internalEntry.getValue().toString(),index,
                     Translate.singletonHover("selection","redirect","internal"),
                     Translate.singletonHover("selection","redirect","internal"),
-                    (newKey) -> this.resourceLocationMap.remove(internalEntry.getKey()),(key, val) -> {
-                this.resourceLocationMap.remove(internalEntry.getKey());
+                    (newKey) -> this.resourceLocationMap.entrySet().remove(internalEntry),(key, val) -> {
+                this.resourceLocationMap.entrySet().remove(internalEntry);
                 this.resourceLocationMap.put(key,new ResourceLocation(val));
             }));
             index++;
