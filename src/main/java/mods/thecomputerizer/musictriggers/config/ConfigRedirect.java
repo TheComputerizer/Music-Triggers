@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.config;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.gui.instance.Redirect;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.Level;
@@ -19,11 +18,6 @@ public class ConfigRedirect {
     private final File FILE;
     public final Map<String,String> urlMap = new HashMap<>();
     public final Map<String, ResourceLocation> resourceLocationMap = new HashMap<>();
-
-    public Redirect copyToGui(String channelName) {
-        return new Redirect(this.FILE,channelName,MusicTriggers.clone(this.urlMap),
-                MusicTriggers.clone(this.resourceLocationMap));
-    }
 
     public ConfigRedirect(File file) {
         boolean exists = file.exists();

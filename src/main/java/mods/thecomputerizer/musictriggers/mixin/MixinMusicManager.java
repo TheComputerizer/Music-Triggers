@@ -8,11 +8,15 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@SuppressWarnings({"UnresolvedMixinReference", "MixinAnnotationTarget"})
-@Mixin(value = MusicManager.class, remap = false)
+/**
+ * This is what stops vanilla music from overlapping when necessary
+ * The max priority ensures that this wins over other mods that mixin into the same class
+ */
+@Mixin(value = MusicManager.class, priority = Integer.MAX_VALUE)
 public class MixinMusicManager {
-    @Inject(at = @At(value = "HEAD"), method = "m_120183_()V", cancellable = true)
-    private void tick(CallbackInfo info) {
-        if(!ConfigDebug.PLAY_NORMAL_MUSIC || ChannelManager.overridingMusicIsPlaying()) info.cancel();
+
+    @Inject(at = @At(value = "HEAD"), method = "tick", cancellable = true)
+    private void musictriggers_tick(CallbackInfo info) {
+        if(!ConfigDebug.PLAY_NORMAL_MUSIC || ChannelManager.canAnyChannelOverrideMusic()) info.cancel();
     }
 }

@@ -1,11 +1,10 @@
 package mods.thecomputerizer.musictriggers.client.data;
 
-import com.moandjiezana.toml.Toml;
+
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.client.ClientEvents;
 import mods.thecomputerizer.musictriggers.client.MusicPicker;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
-import mods.thecomputerizer.musictriggers.common.ServerChannelData;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import net.darkhax.gamestages.GameStageHelper;
 import net.minecraft.client.Minecraft;
@@ -32,13 +31,12 @@ import org.apache.logging.log4j.Level;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 
 import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
 
+@SuppressWarnings({"BooleanMethodIsAlwaysInverted", "unused"})
 public class Trigger {
 
     private static final String[] allTriggers = new String[]{"loading","menu","generic","difficulty","time","light",
@@ -50,9 +48,10 @@ public class Trigger {
     private static final String[] acceptedTriggers = new String[]{"loading","menu","generic","difficulty","time","light",
             "height","raining","storming","snowing","lowhp","dead", "creative","spectator","riding","pet","underwater",
             "elytra","fishing","drowning","home", "dimension","biome", "structure","mob","victory","gui","effect","zones",
-            "pvp","advancement","statistic","command","raid","gamestage","season"};
-    private static final String[] modtriggers = new String[]
-            {"gamestage","season"};
+            "pvp","advancement","statistic","command","gamestage","bloodmoon","harvestmoon","fallingstars","rainintensity",
+            "tornado","hurricane","sandstorm","season"};
+    private static final String[] modTriggers = new String[]{"gamestage","bloodmoon","harvestmoon","fallingstars",
+            "rainintensity","tornado","hurricane","sandstorm","season"};
     private static final String[] allParameters = new String[]{"priority","identifier","fade_in","fade_out",
             "trigger_delay","song_delay","level","persistence","start_delay","time_bundle","start_hour","end_hour",
             "lowest_day_number","highest_day_number","zone_min_x","zone_max_x","zone_min_y","zone_max_y","zone_min_z",
@@ -62,165 +61,163 @@ public class Trigger {
             "biome_category","rain_type","biome_temperature","check_lower_temp","biome_rainfall","check_higher_rainfall",
             "check_for_sky","check_above_level"};
     private static final HashMap<String, String> defaultParameterMap = setDefaultParameters();
-    private static final HashMap<String, String[]> acceptedParameters = setAcceptedParameters();
-    private static final HashMap<String, String[]> requiredParameters = setRequiredParameters();
-    private static final HashMap<String, String[]> choiceRequiredParameters = setChoiceRequiredParameters();
+    private static final HashMap<String, List<String>> acceptedParameters = setAcceptedParameters();
+    private static final HashMap<String, List<String>> requiredParameters = setRequiredParameters();
+    private static final HashMap<String, List<String>> choiceRequiredParameters = setChoiceRequiredParameters();
     private static final HashMap<String, BiFunction<Trigger, LocalPlayer, Boolean>> triggerConditions = setTriggerConditions();
-    private static final HashMap<String, HashMap<String, HashMap<String, Trigger>>> registeredTriggers = new HashMap<>();
-    private static final HashMap<Trigger, List<Audio>> attachedAudio = new HashMap<>();
 
-    private static HashMap<String, String[]> setRequiredParameters() {
-        HashMap<String, String[]> ret = new HashMap<>();
-        ret.put("difficulty",new String[]{"identifier","level"});
-        ret.put("time",new String[]{"identifier"});
-        ret.put("light",new String[]{"identifier","level"});
-        ret.put("height",new String[]{"identifier","level"});
-        ret.put("riding",new String[]{"identifier"});
-        ret.put("dimension",new String[]{"identifier","resource_name"});
-        ret.put("biome",new String[]{"identifier"});
-        ret.put("structure",new String[]{"identifier","resource_name"});
-        ret.put("mob",new String[]{"identifier","level","resource_name"});
-        ret.put("victory",new String[]{"identifier","persistence","victory_id"});
-        ret.put("gui",new String[]{"identifier","resource_name"});
-        ret.put("effect",new String[]{"identifier","resource_name"});
-        ret.put("zones",new String[]{"identifier"});
-        ret.put("pvp",new String[]{"identifier","persistence"});
-        ret.put("advancement",new String[]{"identifier","persistence","resource_name"});
-        ret.put("statistic",new String[]{"identifier","resource_name"});
-        ret.put("command",new String[]{"identifier","persistence"});
-        ret.put("gamestage",new String[]{"identifier","resource_name"});
-        ret.put("rainintensity",new String[]{"identifier"});
-        ret.put("tornado",new String[]{"identifier","level"});
-        ret.put("moon",new String[]{"identifier","resource_name"});
-        ret.put("season",new String[]{"identifier","level"});
+    private static HashMap<String, List<String>> setRequiredParameters() {
+        HashMap<String, List<String>> ret = new HashMap<>();
+        ret.put("difficulty",Arrays.asList("identifier","level"));
+        ret.put("time", Collections.singletonList("identifier"));
+        ret.put("light",Arrays.asList("identifier","level"));
+        ret.put("height",Arrays.asList("identifier","level"));
+        ret.put("riding", Collections.singletonList("identifier"));
+        ret.put("dimension",Arrays.asList("identifier","resource_name"));
+        ret.put("biome", Collections.singletonList("identifier"));
+        ret.put("structure",Arrays.asList("identifier","resource_name"));
+        ret.put("mob",Arrays.asList("identifier","level","resource_name"));
+        ret.put("victory",Arrays.asList("identifier","persistence","victory_id"));
+        ret.put("gui",Arrays.asList("identifier","resource_name"));
+        ret.put("effect",Arrays.asList("identifier","resource_name"));
+        ret.put("zones", Collections.singletonList("identifier"));
+        ret.put("pvp",Arrays.asList("identifier","persistence"));
+        ret.put("advancement",Arrays.asList("identifier","persistence","resource_name"));
+        ret.put("statistic",Arrays.asList("identifier","resource_name"));
+        ret.put("command",Arrays.asList("identifier","persistence"));
+        ret.put("gamestage",Arrays.asList("identifier","resource_name"));
+        ret.put("rainintensity", Collections.singletonList("identifier"));
+        ret.put("tornado",Arrays.asList("identifier","level"));
+        ret.put("moon",Arrays.asList("identifier","resource_name"));
+        ret.put("season",Arrays.asList("identifier","level"));
         return ret;
     }
 
-    private static HashMap<String, String[]> setChoiceRequiredParameters() {
-        HashMap<String, String[]> ret = new HashMap<>();
-        ret.put("time",new String[]{"time_bundle","start_hour"});
-        ret.put("biome",new String[]{"resource_name","biome_category","rain_type","biome_temperature","biome_rainfall"});
-        ret.put("zones",new String[]{"zone_min_x","zone_max_x","zone_min_y","zone_max_y","zone_min_z","zone_max_z"});
+    private static HashMap<String, List<String>> setChoiceRequiredParameters() {
+        HashMap<String, List<String>> ret = new HashMap<>();
+        ret.put("time",Arrays.asList("time_bundle","start_hour"));
+        ret.put("biome",Arrays.asList("resource_name","biome_category","rain_type","biome_temperature","biome_rainfall"));
+        ret.put("zones",Arrays.asList("zone_min_x","zone_max_x","zone_min_y","zone_max_y","zone_min_z","zone_max_z"));
         return ret;
     }
 
-    private static HashMap<String, String[]> setAcceptedParameters() {
-        HashMap<String, String[]> ret = new HashMap<>();
-        ret.put("loading",new String[]{});
-        ret.put("menu",new String[]{});
-        ret.put("generic",new String[]{"fade_in","fade_out","trigger_delay","song_delay","start_toggled"});
-        ret.put("difficulty",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay","level",
-                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("time",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
+    private static HashMap<String, List<String>> setAcceptedParameters() {
+        HashMap<String, List<String>> ret = new HashMap<>();
+        ret.put("loading",new ArrayList<>());
+        ret.put("menu",new ArrayList<>());
+        ret.put("generic",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled"));
+        ret.put("difficulty",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay","level",
+                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("time",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
                 "start_toggled","not","persistence","start_delay","time_bundle","start_hour","end_hour",
-                "passive_persistence","toggle_inactive_playable","moon_phase","lowest_day_number","highest_day_number"});
-        ret.put("light",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay","level",
+                "passive_persistence","toggle_inactive_playable","moon_phase","lowest_day_number","highest_day_number"));
+        ret.put("light",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay","level",
                 "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable",
-                "light_type"});
-        ret.put("height",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay","level",
+                "light_type"));
+        ret.put("height",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay","level",
                 "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable",
-                "check_for_sky","check_above_level"});
-        ret.put("raining",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("storming",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("snowing",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("lowhp",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","level",
-                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("dead",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("creative",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("spectator",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("riding",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
+                "check_for_sky","check_above_level"));
+        ret.put("raining",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
+                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("storming",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
+                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("snowing",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
+                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("lowhp",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","level",
+                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("dead",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
+                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("creative",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
+                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("spectator",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
+                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("riding",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
                 "start_toggled","not","persistence","resource_name","start_delay","passive_persistence",
-                "toggle_inactive_playable"});
-        ret.put("pet",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable","detection_range"});
-        ret.put("underwater",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("elytra",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("fishing",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("drowning",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","level",
-                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("home",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay", "start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable","detection_range"});
-        ret.put("dimension",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
+                "toggle_inactive_playable"));
+        ret.put("pet",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
+                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable","detection_range"));
+        ret.put("underwater",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
+                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("elytra",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
+                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("fishing",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
+                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("drowning",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","level",
+                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("home",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay", "start_toggled",
+                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable","detection_range"));
+        ret.put("dimension",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
                 "resource_name","start_toggled","not","persistence","start_delay","passive_persistence",
-                "toggle_inactive_playable"});
-        ret.put("biome",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
+                "toggle_inactive_playable"));
+        ret.put("biome",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
                 "resource_name","start_toggled","not","persistence","start_delay","passive_persistence",
                 "toggle_inactive_playable","biome_category","rain_type","biome_temperature","check_lower_temp",
-                "biome_rainfall","check_higher_rainfall"});
-        ret.put("structure",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
+                "biome_rainfall","check_higher_rainfall"));
+        ret.put("structure",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
                 "resource_name","start_toggled","not","persistence","start_delay","passive_persistence",
-                "toggle_inactive_playable"});
-        ret.put("mob",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay","level",
+                "toggle_inactive_playable"));
+        ret.put("mob",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay","level",
                 "persistence","start_delay","resource_name","start_toggled","not","passive_persistence",
                 "toggle_inactive_playable","detection_range","mob_targeting","health","horde_targeting_percentage",
-                "horde_health_percentage","mob_nbt","infernal","champion","victory_id","victory_timeout"});
-        ret.put("victory",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
+                "horde_health_percentage","mob_nbt","infernal","champion","victory_id","victory_timeout"));
+        ret.put("victory",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
                 "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable",
-                "victory_id"});
-        ret.put("gui",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
+                "victory_id"));
+        ret.put("gui",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
                 "resource_name","start_toggled","not","persistence","start_delay","passive_persistence",
-                "toggle_inactive_playable"});
-        ret.put("effect",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
+                "toggle_inactive_playable"));
+        ret.put("effect",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
                 "resource_name","start_toggled","not","persistence","start_delay","passive_persistence",
-                "toggle_inactive_playable"});
-        ret.put("zones",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
+                "toggle_inactive_playable"));
+        ret.put("zones",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
                 "start_toggled","not","persistence","start_delay","zone_min_x","zone_max_x","zone_min_y",
-                "zone_max_y","zone_min_z","zone_max_z","passive_persistence","toggle_inactive_playable"});
-        ret.put("pvp",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
+                "zone_max_y","zone_min_z","zone_max_z","passive_persistence","toggle_inactive_playable"));
+        ret.put("pvp",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
                 "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable",
-                "victory_id","victory_timeout"});
-        ret.put("advancement",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
+                "victory_id","victory_timeout"));
+        ret.put("advancement",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
                 "resource_name","start_toggled","not","persistence","start_delay","passive_persistence",
-                "toggle_inactive_playable"});
-        ret.put("statistic",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
+                "toggle_inactive_playable"));
+        ret.put("statistic",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
                 "level","resource_name","start_toggled","not","persistence","start_delay","passive_persistence",
-                "toggle_inactive_playable","check_above_level"});
-        ret.put("command",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
-                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("gamestage",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
+                "toggle_inactive_playable","check_above_level"));
+        ret.put("command",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
+                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("gamestage",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
                 "resource_name","start_toggled","not","persistence","start_delay","passive_persistence",
-                "toggle_inactive_playable","is_whitelist"});
-        ret.put("bloodmoon",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("harvestmoon",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("fallingstars",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("rainintensity",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
-                "level","start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("tornado",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay","level",
+                "toggle_inactive_playable","is_whitelist"));
+        ret.put("bloodmoon",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
+                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("harvestmoon",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
+                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("fallingstars",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
+                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("rainintensity",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
+                "level","start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("tornado",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay","level",
                 "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable",
-                "detection_range"});
-        ret.put("hurricane",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable","detection_range"});
-        ret.put("sandstorm",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable","detection_range"});
-        ret.put("season",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay","level",
-                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("raid",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay","level",
-                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("bluemoon",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("moon",new String[]{"priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
+                "detection_range"));
+        ret.put("hurricane",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
+                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable","detection_range"));
+        ret.put("sandstorm",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
+                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable","detection_range"));
+        ret.put("season",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay","level",
+                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("raid",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay","level",
+                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("bluemoon",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
+                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("moon",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
                 "start_toggled","resource_name","not","persistence","start_delay","passive_persistence",
-                "toggle_inactive_playable"});
-        ret.put("acidrain",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("blizzard",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("cloudy",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
-        ret.put("lightrain",new String[]{"priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"});
+                "toggle_inactive_playable"));
+        ret.put("acidrain",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
+                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("blizzard",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
+                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("cloudy",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
+                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
+        ret.put("lightrain",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
+                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
         return ret;
     }
 
@@ -249,7 +246,7 @@ public class Trigger {
         ret.put("resource_name","any");
         ret.put("start_toggled","true");
         ret.put("not","false");
-        ret.put("passive_persistence","true");
+        ret.put("passive_persistence","false");
         ret.put("toggle_inactive_playable","false");
         ret.put("detection_range","16");
         ret.put("mob_targeting","true");
@@ -323,7 +320,7 @@ public class Trigger {
         ret.put("fishing",(trigger,player) -> player.fishing != null && player.fishing.isInWaterOrBubble());
         ret.put("raining",(trigger,player) -> player.level.isRaining());
         ret.put("snowing",(trigger,player) ->
-                ChannelManager.getChannel(trigger.channel).getSyncStatus().isSnowTriggerActive());
+                ChannelManager.getChannel(trigger.channel).getSyncStatus().isTriggerActive(trigger));
         ret.put("storming",(trigger,player) -> player.level.isThundering());
         ret.put("lowhp",(trigger,player) -> trigger.handleHP(player.getHealth(), player.getMaxHealth()));
         ret.put("dead",(trigger,player) -> player.getHealth() <= 0f || player.isDeadOrDying());
@@ -331,12 +328,12 @@ public class Trigger {
         ret.put("creative",(trigger,player) -> player.isCreative());
         ret.put("riding",(trigger,player) -> trigger.checkRiding(trigger.getResource(),player));
         ret.put("underwater",(trigger,player) ->
-                        (player.level.getBlockState(trigger.roundedPos(player)).getMaterial() == Material.WATER ||
-                                player.level.getBlockState(trigger.roundedPos(player)).getMaterial() == Material.WATER_PLANT ||
-                                player.level.getBlockState(trigger.roundedPos(player)).getMaterial() == Material.REPLACEABLE_WATER_PLANT)
-                                && (player.level.getBlockState(trigger.roundedPos(player).above()).getMaterial() == Material.WATER ||
-                                player.level.getBlockState(trigger.roundedPos(player).above()).getMaterial() == Material.WATER_PLANT ||
-                                player.level.getBlockState(trigger.roundedPos(player).above()).getMaterial() == Material.REPLACEABLE_WATER_PLANT));
+                (player.level.getBlockState(trigger.roundedPos(player)).getMaterial() == Material.WATER ||
+                        player.level.getBlockState(trigger.roundedPos(player)).getMaterial() == Material.WATER_PLANT ||
+                        player.level.getBlockState(trigger.roundedPos(player)).getMaterial() == Material.REPLACEABLE_WATER_PLANT)
+                        && (player.level.getBlockState(trigger.roundedPos(player).above()).getMaterial() == Material.WATER ||
+                        player.level.getBlockState(trigger.roundedPos(player).above()).getMaterial() == Material.WATER_PLANT ||
+                        player.level.getBlockState(trigger.roundedPos(player).above()).getMaterial() == Material.REPLACEABLE_WATER_PLANT));
         ret.put("pet",(trigger,player) -> {
             boolean pass = false;
             for (LivingEntity ent : player.level.getEntitiesOfClass(LivingEntity.class,
@@ -351,15 +348,15 @@ public class Trigger {
         ret.put("drowning",(trigger,player) -> player.getAirSupply() < trigger.getParameterInt("level"));
         ret.put("pvp",(trigger,player) -> false); //TODO
         ret.put("home",(trigger,player) -> !ConfigRegistry.CLIENT_SIDE_ONLY &&
-                ChannelManager.getChannel(trigger.channel).getSyncStatus().isHomeTriggerActive());
+                ChannelManager.getChannel(trigger.channel).getSyncStatus().isTriggerActive(trigger));
         ret.put("dimension",(trigger,player) -> trigger.checkResourceList(player.level.dimension().location().toString(),
                 trigger.getResource(), false));
         ret.put("biome",(trigger,player) ->
-                ChannelManager.getChannel(trigger.channel).getSyncStatus().isBiomeTriggerActive(trigger.getNameWithID()));
+                ChannelManager.getChannel(trigger.channel).getSyncStatus().isTriggerActive(trigger));
         ret.put("structure",(trigger,player) -> !ConfigRegistry.CLIENT_SIDE_ONLY &&
-                ChannelManager.getChannel(trigger.channel).getSyncStatus().isStructureTriggerActive(trigger.getNameWithID()));
+                ChannelManager.getChannel(trigger.channel).getSyncStatus().isTriggerActive(trigger));
         ret.put("mob",(trigger,player) -> !ConfigRegistry.CLIENT_SIDE_ONLY &&
-                ChannelManager.getChannel(trigger.channel).getSyncStatus().isMobTriggerActive(trigger.getNameWithID()));
+                ChannelManager.getChannel(trigger.channel).getSyncStatus().isTriggerActive(trigger));
         ret.put("zones",(trigger,player) -> {
             BlockPos pos = player.blockPosition();
             return trigger.zoneHelper(pos.getX(),pos.getY(),pos.getZ());
@@ -368,9 +365,10 @@ public class Trigger {
             boolean pass = false;
             MusicPicker.effectList.clear();
             for (MobEffectInstance p : player.getActiveEffects()) {
-                if(Objects.nonNull(ForgeRegistries.MOB_EFFECTS.getKey(p.getEffect()))) {
-                    MusicPicker.effectList.add(Objects.requireNonNull(ForgeRegistries.MOB_EFFECTS.getKey(p.getEffect())).toString());
-                    if (trigger.checkResourceList(Objects.requireNonNull(ForgeRegistries.MOB_EFFECTS.getKey(p.getEffect())).toString(), trigger.getResource(), false))
+                if(ForgeRegistries.MOB_EFFECTS.containsValue(p.getEffect())) {
+                    String name = ForgeRegistries.MOB_EFFECTS.getKey(p.getEffect()).toString();
+                    MusicPicker.effectList.add(name);
+                    if (trigger.checkResourceList(name, trigger.getResource(), false))
                         pass = true;
                 }
             }
@@ -391,20 +389,20 @@ public class Trigger {
         });
         ret.put("advancement",(trigger,player) -> {
             String resource = trigger.getResource();
-            boolean pass = (EventsClient.advancement && trigger.checkResourceList(EventsClient.lastAdvancement,resource,false)) ||
+            boolean pass = (ClientEvents.advancement && trigger.checkResourceList(ClientEvents.lastAdvancement,resource,false)) ||
                     resource.matches("any");
-            if(pass) EventsClient.advancement = false;
+            if(pass) ClientEvents.advancement = false;
             return pass;
         });
         ret.put("statistic",(trigger,player) ->
                 trigger.checkStat(trigger.getResource(),trigger.getParameterInt("level")));
         ret.put("command",(trigger,player) -> {
-            boolean pass = EventsClient.commandHelper(trigger);
-            if(pass) EventsClient.commandFinish(trigger);
+            boolean pass = ClientEvents.commandHelper(trigger);
+            if(pass) ClientEvents.commandFinish(trigger);
             return pass;
         });
         ret.put("raid",(trigger,player) -> !ConfigRegistry.CLIENT_SIDE_ONLY &&
-                ChannelManager.getChannel(trigger.channel).getSyncStatus().isRaidTriggerActive(trigger.getNameWithID()));
+                ChannelManager.getChannel(trigger.channel).getSyncStatus().isTriggerActive(trigger));
         ret.put("gamestage",(trigger,player) -> ModList.get().isLoaded("gamestages") &&
                 trigger.whitelistHelper(GameStageHelper.hasAnyOf(
                         player,trigger.parseGamestageList(trigger.getResource()))));
@@ -413,98 +411,32 @@ public class Trigger {
         return ret;
     }
 
-    public static List<String> getAcceptedParameters(String name) {
-        return Arrays.asList(acceptedParameters.get(name));
-    }
-
-    private static void checkAndRemoveEmptyTrigger(String channel, String name) {
-        boolean remove = registeredTriggers.get(channel).get(name).isEmpty();
-        if(remove) registeredTriggers.get(channel).remove(name);
-    }
-
-    public static List<String> getAllTriggers() {
-        return Arrays.asList(allTriggers);
-    }
-
     public static List<String> getAcceptedTriggers() {
         return Arrays.asList(acceptedTriggers);
     }
 
-    public static boolean acceptsID(String triggerName) {
-        return Arrays.asList(acceptedParameters.get(triggerName)).contains("identifier");
+    public static List<String> getAcceptedParameters(String trigger) {
+        return acceptedParameters.get(trigger);
     }
 
-    public static Collection<Trigger> getTriggerInstances(String channel, String triggerName) {
-        return registeredTriggers.get(channel).get(triggerName).values();
+    public static boolean isParameterAccepted(String trigger, String parameter) {
+        return acceptedParameters.get(trigger).contains(parameter);
     }
 
-    public static List<Trigger> getRegisteredTriggers(String channel) {
-        return new ArrayList<>(registeredTriggers.get(channel).values()).stream()
-                .map(HashMap::values)
-                .flatMap(Collection::stream)
-                .distinct().collect(Collectors.toList());
-    }
-
-    public static boolean isRegistered(String channel, String triggerName) {
-        return registeredTriggers.get(channel).containsKey(triggerName);
-    }
-
-    public static boolean isRegistered(String channel) {
-        return registeredTriggers.containsKey(channel);
-    }
-
-
-    public static Trigger parseAndGetTrigger(String channel, String triggerIdentifier) {
-        String[] split = triggerIdentifier.split("-",2);
-        return split.length==1 ? getTriggerWithNoID(channel, triggerIdentifier) :
-                registeredTriggers.get(channel).get(split[0]).get(split[1]);
-    }
-
-    public static void parseAndRemoveTrigger(String channel, String triggerIdentifier) {
-        String[] split = triggerIdentifier.split("-", 2);
-        String id = split.length==1 ? "not_accepted" : split[1];
-        registeredTriggers.get(channel).get(split[0]).remove(id);
-        checkAndRemoveEmptyTrigger(channel,split[0]);
-    }
-
-    public static Trigger getTriggerWithNoID(String channel, String triggerName) {
-        if(registeredTriggers.get(channel).containsKey(triggerName))
-            return registeredTriggers.get(channel).get(triggerName).get("not_accepted");
-        return null;
-    }
-
-    public static void removeAudio(String channel, Audio audio) {
-        Trigger attached = null;
-        for(Trigger trigger : attachedAudio.keySet())
-            if(attachedAudio.get(trigger).contains(audio)) {
-                attachedAudio.get(trigger).remove(audio);
-                if(attachedAudio.get(trigger).isEmpty())
-                    attached = trigger;
-                break;
-            }
-        if(Objects.nonNull(attached))
-            parseAndRemoveTrigger(channel,attached.getNameWithID());
-    }
-
-    public static List<Audio> getPotentialSongs(Trigger trigger) {
-        return attachedAudio.get(trigger);
-    }
-
-    public static void clearInitialized() {
-        registeredTriggers.clear();
-        attachedAudio.clear();
+    public static String getDefaultParameter(String parameter) {
+        return defaultParameterMap.get(parameter);
     }
 
     private final String channel;
     private final String name;
     private final HashMap<String, String> parameters;
-    private final List<String> acceptedList;
+    private boolean isToggled;
 
-    private Trigger(String name, String channel) {
+    public Trigger(String name, String channel) {
         this.name = name;
         this.channel = channel;
-        this.acceptedList = Arrays.stream(acceptedParameters.get(name)).collect(Collectors.toList());
         this.parameters = buildDefaultParameters(name);
+        this.isToggled = false;
     }
 
     private HashMap<String, String> buildDefaultParameters(String trigger) {
@@ -513,29 +445,7 @@ public class Trigger {
         return ret;
     }
 
-    public String getName() {
-        return this.name;
-    }
-
-    @Nullable
-    public String getRegID() {
-        return hasID() ? getParameter("identifier") : "not_accepted";
-    }
-
-    public String getNameWithID() {
-        if(hasID()) return this.name+"-"+getParameter("identifier");
-        return getName();
-    }
-
-    public void setParameter(String parameter, String value) {
-        this.parameters.put(parameter, value);
-    }
-
-    private boolean isDefault(String parameter) {
-        return this.parameters.get(parameter).matches(defaultParameterMap.get(parameter));
-    }
-
-    private boolean hasAllRequiredParameters() {
+    public boolean hasAllRequiredParameters() {
         if(requiredParameters.containsKey(this.name)) {
             for(String parameter : requiredParameters.get(this.name)) {
                 if(isDefault(parameter)) {
@@ -559,16 +469,30 @@ public class Trigger {
                 return false;
             }
         }
+        this.isToggled = getParameterBool("start_toggled");
         return true;
     }
 
-    public boolean hasID() {
-        return this.acceptedList.contains("identifier");
+    public String getName() {
+        return this.name;
     }
 
-    private boolean hasIDSet() {
-        return !this.acceptedList.contains("identifier") || (this.acceptedList.contains("identifier") &&
-                !this.parameters.get("identifier").matches("not_set"));
+    public String getNameWithID() {
+        if(hasID()) return this.name+"-"+getParameter("identifier");
+        return getName();
+    }
+
+    public void setParameter(String parameter, String value) {
+        if(parameter.matches("id")) parameter = "identifier";
+        this.parameters.put(parameter, value);
+    }
+
+    private boolean isDefault(String parameter) {
+        return this.parameters.get(parameter).matches(defaultParameterMap.get(parameter));
+    }
+
+    public boolean hasID() {
+        return isParameterAccepted(this.name,"identifier");
     }
 
     public String getParameter(String parameter) {
@@ -621,36 +545,6 @@ public class Trigger {
 
     public String getResource() {
         return getParameter("resource_name");
-    }
-
-    public ServerChannelData.Snow makeSnowPacket() {
-        return new ServerChannelData.Snow();
-    }
-
-    public ServerChannelData.Home makeHomePacket() {
-        return new ServerChannelData.Home(getParameterInt("detection_range"));
-    }
-
-    public ServerChannelData.Biome makeBiomePacket() {
-        return new ServerChannelData.Biome(getNameWithID(),getResource(),getParameter("biome_category"),
-                getParameter("rain_type"),getParameterFloat("biome_temperature"),getParameterBool("check_lower_temp"),
-                getParameterFloat("biome_rainfall"),getParameterBool("check_higher_rainfall"));
-    }
-
-    public ServerChannelData.Structure makeStructurePacket() {
-        return new ServerChannelData.Structure(getNameWithID(),getResource());
-    }
-
-    public ServerChannelData.Mob makeMobPacket() {
-        return new ServerChannelData.Mob(getNameWithID(),getResource(),getParameterInt("detection_range"),
-                getParameterBool("mob_targeting"),getParameterInt("horde_targeting_percentage"),
-                getParameterInt("health"),getParameterInt("horde_health_percentage"),getParameterInt("victory_id"),
-                getParameter("infernal"),getParameterInt("level"),getParameterInt("victory_timeout"),
-                getParameter("mob_nbt"),getParameter("champion"));
-    }
-
-    public ServerChannelData.Raid makeRaidPacket() {
-        return new ServerChannelData.Raid(getNameWithID(),getParameterInt("level"));
     }
 
     public boolean zoneHelper(int x, int y, int z) {
@@ -728,7 +622,7 @@ public class Trigger {
             if (statName.contains("mined")) {
                 for (Stat<Block> stat : Stats.BLOCK_MINED) {
                     if (ForgeRegistries.BLOCKS.containsValue(stat.getValue()) &&
-                            checkStatResourceList(Objects.requireNonNull(ForgeRegistries.BLOCKS.getKey(stat.getValue())).toString(), statName, "mined") &&
+                            checkStatResourceList(ForgeRegistries.BLOCKS.getKey(stat.getValue()).toString(), statName, "mined") &&
                             mc.player.getStats().getValue(Stats.BLOCK_MINED.get(stat.getValue())) > level)
                         return true;
                 }
@@ -736,7 +630,7 @@ public class Trigger {
             if (statName.contains("crafted")) {
                 for (Stat<Item> stat : Stats.ITEM_CRAFTED) {
                     if (ForgeRegistries.ITEMS.containsValue(stat.getValue()) &&
-                            checkStatResourceList(Objects.requireNonNull(ForgeRegistries.ITEMS.getKey(stat.getValue())).toString(), statName, "crafted") &&
+                            checkStatResourceList(ForgeRegistries.ITEMS.getKey(stat.getValue()).toString(), statName, "crafted") &&
                             mc.player.getStats().getValue(Stats.ITEM_CRAFTED.get(stat.getValue())) > level)
                         return true;
                 }
@@ -744,7 +638,7 @@ public class Trigger {
             if (statName.contains("used")) {
                 for (Stat<Item> stat : Stats.ITEM_USED) {
                     if (ForgeRegistries.ITEMS.containsValue(stat.getValue()) &&
-                            checkStatResourceList(Objects.requireNonNull(ForgeRegistries.ITEMS.getKey(stat.getValue())).toString(), statName, "used") &&
+                            checkStatResourceList(ForgeRegistries.ITEMS.getKey(stat.getValue()).toString(), statName, "used") &&
                             mc.player.getStats().getValue(Stats.ITEM_USED.get(stat.getValue())) > level)
                         return true;
                 }
@@ -752,7 +646,7 @@ public class Trigger {
             if (statName.contains("broken")) {
                 for (Stat<Item> stat : Stats.ITEM_BROKEN) {
                     if (ForgeRegistries.ITEMS.containsValue(stat.getValue()) &&
-                            checkStatResourceList(Objects.requireNonNull(ForgeRegistries.ITEMS.getKey(stat.getValue())).toString(), statName, "broken") &&
+                            checkStatResourceList(ForgeRegistries.ITEMS.getKey(stat.getValue()).toString(), statName, "broken") &&
                             mc.player.getStats().getValue(Stats.ITEM_BROKEN.get(stat.getValue())) > level)
                         return true;
                 }
@@ -760,7 +654,7 @@ public class Trigger {
             if (statName.contains("picked_up")) {
                 for (Stat<Item> stat : Stats.ITEM_PICKED_UP) {
                     if (ForgeRegistries.ITEMS.containsValue(stat.getValue()) &&
-                            checkStatResourceList(Objects.requireNonNull(ForgeRegistries.ITEMS.getKey(stat.getValue())).toString(), statName, "picked_up") &&
+                            checkStatResourceList(ForgeRegistries.ITEMS.getKey(stat.getValue()).toString(), statName, "picked_up") &&
                             mc.player.getStats().getValue(Stats.ITEM_PICKED_UP.get(stat.getValue())) > level)
                         return true;
                 }
@@ -768,7 +662,7 @@ public class Trigger {
             if (statName.contains("dropped")) {
                 for (Stat<Item> stat : Stats.ITEM_DROPPED) {
                     if (ForgeRegistries.ITEMS.containsValue(stat.getValue()) &&
-                            checkStatResourceList(Objects.requireNonNull(ForgeRegistries.ITEMS.getKey(stat.getValue())).toString(), statName, "dropped") &&
+                            checkStatResourceList(ForgeRegistries.ITEMS.getKey(stat.getValue()).toString(), statName, "dropped") &&
                             mc.player.getStats().getValue(Stats.ITEM_DROPPED.get(stat.getValue())) > level)
                         return true;
                 }
@@ -776,7 +670,7 @@ public class Trigger {
             if (statName.contains("killed")) {
                 for (Stat<EntityType<?>> stat : Stats.ENTITY_KILLED) {
                     if (ForgeRegistries.ENTITY_TYPES.containsValue(stat.getValue()) &&
-                            checkStatResourceList(Objects.requireNonNull(ForgeRegistries.ENTITY_TYPES.getKey(stat.getValue())).toString(), statName, "killed") &&
+                            checkStatResourceList(ForgeRegistries.ENTITY_TYPES.getKey(stat.getValue()).toString(), statName, "killed") &&
                             mc.player.getStats().getValue(Stats.ENTITY_KILLED.get(stat.getValue())) > level)
                         return true;
                 }
@@ -784,7 +678,7 @@ public class Trigger {
             if (statName.contains("killed_by")) {
                 for (Stat<EntityType<?>> stat : Stats.ENTITY_KILLED_BY) {
                     if (ForgeRegistries.ENTITY_TYPES.containsValue(stat.getValue()) &&
-                            checkStatResourceList(Objects.requireNonNull(ForgeRegistries.ENTITY_TYPES.getKey(stat.getValue())).toString(), statName, "killed_by") &&
+                            checkStatResourceList(ForgeRegistries.ENTITY_TYPES.getKey(stat.getValue()).toString(), statName, "killed_by") &&
                             mc.player.getStats().getValue(Stats.ENTITY_KILLED_BY.get(stat.getValue())) > level)
                         return true;
                 }
@@ -793,77 +687,11 @@ public class Trigger {
         return false;
     }
 
-    public boolean defaultToggle() {
-        return getParameterBool("start_toggled");
+    public boolean isToggled() {
+        return this.isToggled;
     }
 
-    public List<String> getAsTomlLines(String songName, boolean multi) {
-        List<String> lines = new ArrayList<>();
-        lines.add(multi ? "\t[["+songName+".trigger]]" : "\t["+songName+".trigger]");
-        lines.add("\t\tname = \""+this.name+"\"");
-        for(Map.Entry<String, String> parameter : this.parameters.entrySet())
-            if(!isDefault(parameter.getKey()))
-                lines.add("\t\t"+parameter.getKey()+" = \""+parameter.getValue()+"\"");
-        return lines;
-    }
-
-    private static void logRegister(String channel, String triggerName, String id, String songName) {
-        if(id.matches("not_accepted"))
-            MusicTriggers.logExternally(Level.INFO,"Registered trigger {} to song {} in channel {}",
-                    triggerName,songName,channel);
-        else MusicTriggers.logExternally(Level.INFO,"Registered instance of trigger {} with identifier {} to "+
-                        "song {} in channel {}", triggerName,id,songName,channel);
-    }
-
-    private static String getIDOrFiller(String name, Toml triggerTable) {
-        if(!Arrays.stream(acceptedParameters.get(name)).toList().contains("identifier"))
-            return "not_accepted";
-        if(!triggerTable.contains("id") && !triggerTable.contains("identifier")) return "missing_id";
-        if(triggerTable.contains("identifier")) return triggerTable.getString("identifier");
-        return triggerTable.getString("id");
-    }
-
-    public static Trigger createOrGetInstance(String name, String channel, Audio audio, Toml triggerTable) {
-        registeredTriggers.putIfAbsent(channel, new HashMap<>());
-        registeredTriggers.get(channel).putIfAbsent(name, new HashMap<>());
-        String id = getIDOrFiller(name, triggerTable);
-        if(id.matches("missing_id")) return null;
-        else if(registeredTriggers.get(channel).get(name).containsKey(id)) {
-            logRegister(channel,name,id,audio.getName());
-            Trigger trigger = registeredTriggers.get(channel).get(name).get(id);
-            attachedAudio.putIfAbsent(trigger, new ArrayList<>());
-            attachedAudio.get(trigger).add(audio);
-            return registeredTriggers.get(channel).get(name).get(id);
-        }
-        Trigger trigger = new Trigger(name,channel);
-        for (String parameter : allParameters) {
-            if (triggerTable.contains(parameter)) {
-                if (!trigger.acceptedList.contains(parameter))
-                    MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Parameter {} is not accepted for "+
-                            "trigger {} so it will be skipped!",channel,parameter,name);
-                else trigger.setParameter(parameter,triggerTable.getString(parameter));
-            }
-        }
-        if(!trigger.hasIDSet() && triggerTable.contains("id"))
-            trigger.setParameter("identifier", triggerTable.getString("id"));
-        if(trigger.hasAllRequiredParameters()) {
-            registeredTriggers.get(channel).get(name).put(id,trigger);
-            attachedAudio.putIfAbsent(trigger, new ArrayList<>());
-            attachedAudio.get(trigger).add(audio);
-            logRegister(channel,name,id,audio.getName());
-            return trigger;
-        }
-        return null;
-    }
-
-    public static Trigger createEmptyForGui(String triggerName, String channel) {
-        return new Trigger(triggerName,channel);
-    }
-
-    public static Trigger createEmptyWithIDForGui(String channel, String triggerIdentifier) {
-        String[] split = triggerIdentifier.split("-",2);
-        Trigger trigger = new Trigger(triggerIdentifier,channel);
-        if(split.length!=1) trigger.setParameter("identifier",split[1]);
-        return trigger;
+    public void setToggle(boolean state) {
+        this.isToggled = state;
     }
 }

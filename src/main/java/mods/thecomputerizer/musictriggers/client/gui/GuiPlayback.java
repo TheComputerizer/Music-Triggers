@@ -46,6 +46,7 @@ public class GuiPlayback extends GuiRadial {
     @Override
     public void drawStuff(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
         if(Objects.nonNull(this.radialBar)) {
+            super.drawStuff(matrix, mouseX, mouseY, partialTicks);
             Vector3f center = new Vector3f(((float)this.width) / 2, ((float)this.height) / 2, 0);
             String display = "Playback unavailable";
             if (ChannelManager.channelExists(this.currentChannel)) {
@@ -53,7 +54,7 @@ public class GuiPlayback extends GuiRadial {
                 updateProgressBar(channel);
                 display = channel.formatPlayback();
             } else this.radialBar.setProgress(1f);
-            drawCenteredString(matrix, this.font, display, (int)center.x(), (int)center.y(), GuiUtil.WHITE);
+            drawCenteredString(matrix,this.font, display, (int)center.x(), (int)center.y(), GuiUtil.WHITE);
         }
     }
 }
