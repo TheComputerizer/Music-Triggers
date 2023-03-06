@@ -266,7 +266,7 @@ public class ServerData {
         List<String> whitelist = !resources.contains("MOB") && !resources.contains("BOSS") ? resources : new ArrayList<>();
         List<String> blacklist = !resources.contains("MOB") && !resources.contains("BOSS") ? new ArrayList<>() : resources;
         List<String> infernal = mobTrigger.getValOrDefault("infernal",new ArrayList<>());
-        List<String> champion = mobTrigger.getValOrDefault("infernal",new ArrayList<>());
+        List<String> champion = mobTrigger.getValOrDefault("champion",new ArrayList<>());
         boolean checkTarget = mobTrigger.getValOrDefault("mob_targeting",false);
         int hordeTarget = mobTrigger.getValOrDefault("horde_targeting_percentage",0);
         int num = mobTrigger.getValOrDefault("level",1);
