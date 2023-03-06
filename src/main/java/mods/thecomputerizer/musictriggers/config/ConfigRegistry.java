@@ -42,11 +42,11 @@ public class ConfigRegistry {
     private static void write(boolean client) {
         List<String> lines = new ArrayList<>();
         lines.add("# Register Music Discs");
-        lines.add(LogUtil.injectParameters("REGISTER_DISCS = \"{}\"",REGISTER_DISCS));
+        lines.add(LogUtil.injectParameters("REGISTER_DISCS = {}",REGISTER_DISCS));
         if(client) {
             lines.add("");
             lines.add("# Client Side Only (Some triggers will not be able to activate)");
-            lines.add(LogUtil.injectParameters("CLIENT_SIDE_ONLY = \"{}\"", CLIENT_SIDE_ONLY));
+            lines.add(LogUtil.injectParameters("CLIENT_SIDE_ONLY = {}", CLIENT_SIDE_ONLY));
         }
         FileUtil.writeLinesToFile(FILE,lines,false);
     }
@@ -57,7 +57,9 @@ public class ConfigRegistry {
         if(client) CLIENT_SIDE_ONLY = TomlUtil.readIfExists(toml,"CLIENT_SIDE_ONLY",CLIENT_SIDE_ONLY);
     }
 
-    public static void write(Holder data) {
-        FileUtil.writeLinesToFile(FILE,data.toLines(),false);
+    public static void update(Holder data) {
+        REGISTER_DISCS = data.getValOrDefault("REGISTER_DISCS",true);
+        CLIENT_SIDE_ONLY = data.getValOrDefault("CLIENT_SIDE_ONLY",false);
+        write(true);
     }
 }

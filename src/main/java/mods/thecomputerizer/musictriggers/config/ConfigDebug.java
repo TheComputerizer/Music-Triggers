@@ -49,22 +49,22 @@ public class ConfigDebug {
     public static void write() {
         List<String> lines = new ArrayList<>();
         lines.add("# Show the debug info");
-        lines.add(LogUtil.injectParameters("SHOW_DEBUG = \"{}\"",SHOW_DEBUG));
+        lines.add(LogUtil.injectParameters("SHOW_DEBUG = {}",SHOW_DEBUG));
         lines.add("");
         lines.add("# If SHOW_DEBUG is set to true, but you only want to see the song name");
-        lines.add(LogUtil.injectParameters("CURRENT_SONG_ONLY = \"{}\"",CURRENT_SONG_ONLY));
+        lines.add(LogUtil.injectParameters("CURRENT_SONG_ONLY = {}",CURRENT_SONG_ONLY));
         lines.add("");
         lines.add("# The lowest level of logging (DEBUG/INFO/WARN/ERROR/FATAL) to include in the GUI log visualizer");
         lines.add(LogUtil.injectParameters("LOG_LEVEL = \"{}\"",LOG_LEVEL));
         lines.add("");
         lines.add("# Allows vanilla and blocked music to play when there is music from Music Triggers already playing");
-        lines.add(LogUtil.injectParameters("PLAY_NORMAL_MUSIC = \"{}\"",PLAY_NORMAL_MUSIC));
+        lines.add(LogUtil.injectParameters("PLAY_NORMAL_MUSIC = {}",PLAY_NORMAL_MUSIC));
         lines.add("");
         lines.add("# Reverses the priority checker in the case of multiple triggers being able to play at once so the lowest priority wins instead of the highest");
-        lines.add(LogUtil.injectParameters("REVERSE_PRIORITY = \"{}\"",REVERSE_PRIORITY));
+        lines.add(LogUtil.injectParameters("REVERSE_PRIORITY = {}",REVERSE_PRIORITY));
         lines.add("");
         lines.add("# Allows for the combination of song pools in the case of multiple triggers with the same priority value being able to play at once");
-        lines.add(LogUtil.injectParameters("COMBINE_EQUAL_PRIORITY = \"{}\"",COMBINE_EQUAL_PRIORITY));
+        lines.add(LogUtil.injectParameters("COMBINE_EQUAL_PRIORITY = {}",COMBINE_EQUAL_PRIORITY));
         lines.add("");
         lines.add("# A list of mod ids to block audio in the Music category from so there is no overlap in music playing during events from other mods");
         lines.add(LogUtil.injectParameters("BLOCKED_MOD_MUSIC = {}", TextUtil.compileCollection((Object[])BLOCKED_MOD_MUSIC)));

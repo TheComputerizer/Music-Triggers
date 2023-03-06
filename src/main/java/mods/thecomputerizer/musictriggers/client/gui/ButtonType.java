@@ -184,14 +184,6 @@ public enum ButtonType {
                 new GuiPage(screen, type, configInstance, type.getId(), configInstance.getPageIcons(type), canEdit));
     }
 
-    private static void guiParameterShortcut(GuiSuperType screen, GuiType type, String channel) {
-        Instance configInstance = screen.getInstance();
-        screen.saveAndDisplay(
-                new GuiParameters(screen, type, configInstance, channel+":"+type.getId(),
-                        Translate.guiGeneric(false,"titles",type.getId(),"name"),
-                        configInstance.getParameters(type, channel)));
-    }
-
     public static ResourceLocation getIcons(String name, boolean hover) {
         String base = "textures/gui/{}/{}.png";
         return AssetUtil.getAltResource(Constants.MODID,LogUtil.injectParameters(base,"black_icons",name),

@@ -210,7 +210,7 @@ public class Main extends AbstractChannelConfig {
                 .stream().map(parameter -> {
                     String defVal = Trigger.getDefaultParameter(parameter);
                     Object actualDefVal = parameter.matches("resource_name") || parameter.matches("infernal") ||
-                            parameter.matches("champion") ? Arrays.asList(defVal.split(";")) : defVal;
+                            parameter.matches("champion") || parameter.matches("biome_category") ? Arrays.asList(defVal.split(";")) : defVal;
                     return new GuiParameters.Parameter("trigger_info",parameter,trigger.getName()
                             ,this.fileData.getOrCreateVar(trigger,parameter,actualDefVal));
                 })

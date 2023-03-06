@@ -61,7 +61,7 @@ public class Channel {
     private final AudioPlayer player;
     private final ChannelListener listener;
     private final HashMap<String, AudioTrack> loadedTracks;
-    private ClientSync sync;
+    private final ClientSync sync;
     private final List<String> commandsForPacket;
     private final List<String> erroredSongDownloads;
     private final String localFolderPath;
@@ -785,7 +785,7 @@ public class Channel {
     }
 
     public void sync(ClientSync fromServer) {
-        this.sync = fromServer;
+        this.sync.merge(fromServer);
     }
 
     private void changeTrack() {
@@ -959,7 +959,7 @@ public class Channel {
                             "trigger {} so it will be skipped!", info.getName(), parameter, triggerTable.getName());
                 else {
                     if(parameter.getName().matches("resource_name") || parameter.getName().matches("infernal") ||
-                            parameter.getName().matches("champion")) {
+                            parameter.getName().matches("champion") || parameter.getName().matches("biome_category")) {
                         Optional<List<?>> potentialList = parameter.getAsList();
                         if(potentialList.isPresent()) {
                             List<String> list = potentialList.get().stream().map(Object::toString).collect(Collectors.toList());

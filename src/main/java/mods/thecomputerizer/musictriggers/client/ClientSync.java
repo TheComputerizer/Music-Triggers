@@ -22,6 +22,10 @@ public class ClientSync {
         this.triggerStatus = NetworkUtil.readGenericMap(buf,NetworkUtil::readString,ByteBuf::readBoolean);
     }
 
+    public void merge(ClientSync statusUpdate) {
+        triggerStatus.putAll(statusUpdate.triggerStatus);
+    }
+
     public String getChannel() {
         return this.channel;
     }

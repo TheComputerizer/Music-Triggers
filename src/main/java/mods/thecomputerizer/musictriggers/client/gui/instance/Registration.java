@@ -39,6 +39,6 @@ public class Registration extends AbstractConfig {
 
     @Override
     protected void write(String path) {
-        ConfigRegistry.write(this.fileData);
+        ConfigRegistry.update(this.fileData);
     }
 }
