@@ -3,8 +3,8 @@
     {
 		"rolls": 1,
 		"entries": [{
-        		    "type": "minecraft:item",
-        			"name": "musictriggers:music_recorder"
-        		}]
+		    "type": "minecraft:item",
+			"name": "musictriggers:music_recorder"
+		}]
 	}]
 }

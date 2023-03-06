@@ -10,5 +10,5 @@ public class Constants {
     public static final String MODID = "musictriggers";
     public static final ResourceLocation ICON_LOCATION = new ResourceLocation(MODID,"textures/logo.png");
     public static final Logger MAIN_LOG = LogManager.getLogger();
-    public static File CONFIG_DIR = new File(".", "config/MusicTriggers");
+    public static final File CONFIG_DIR = new File("config/MusicTriggers");
 }

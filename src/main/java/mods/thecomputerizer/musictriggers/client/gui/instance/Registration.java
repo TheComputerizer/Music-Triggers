@@ -5,29 +5,26 @@ import mods.thecomputerizer.musictriggers.client.gui.GuiPage;
 import mods.thecomputerizer.musictriggers.client.gui.GuiParameters;
 import mods.thecomputerizer.musictriggers.client.gui.GuiType;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
+import mods.thecomputerizer.theimpossiblelibrary.common.toml.Holder;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class Registration extends AbstractConfig {
-    private boolean REGISTER_DISCS;
-    private boolean CLIENT_SIDE_ONLY;
+    private final Holder fileData;
 
-    public Registration(File configFile, boolean discs, boolean client) {
-        super(configFile);
-        this.REGISTER_DISCS = discs;
-        this.CLIENT_SIDE_ONLY = client;
+    public Registration(Holder fileData) {
+        this.fileData = fileData;
     }
 
     @Override
     public List<GuiParameters.Parameter> getParameters(GuiType type) {
-        return Arrays.asList(new GuiParameters.Parameter(type.getId(),"register_discs",null,this.REGISTER_DISCS,
-                        (element) -> this.REGISTER_DISCS = element),
-                new GuiParameters.Parameter(type.getId(),"client_side_only",null,this.CLIENT_SIDE_ONLY,
-                        (element) -> this.CLIENT_SIDE_ONLY = element));
+        return Arrays.asList(new GuiParameters.Parameter(type.getId(),"register_discs",
+                        this.fileData.getOrCreateVar(null,"REGISTER_DISCS",true)),
+                new GuiParameters.Parameter(type.getId(),"client_side_only",
+                        this.fileData.getOrCreateVar(null,"CLIENT_SIDE_ONLY",false)));
     }
 
     @Override
@@ -42,11 +39,6 @@ public class Registration extends AbstractConfig {
 
     @Override
     protected void write(String path) {
-        ConfigRegistry.write(this.REGISTER_DISCS,this.CLIENT_SIDE_ONLY);
-    }
-
-    public void save(boolean discs, boolean client) {
-        this.REGISTER_DISCS = discs;
-        this.CLIENT_SIDE_ONLY = client;
+        ConfigRegistry.update(this.fileData);
     }
 }

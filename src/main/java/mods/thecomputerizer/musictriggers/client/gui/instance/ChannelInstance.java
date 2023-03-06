@@ -1,62 +1,35 @@
 package mods.thecomputerizer.musictriggers.client.gui.instance;
 
-import mods.thecomputerizer.musictriggers.Constants;
-import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.Translate;
-import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.musictriggers.client.gui.*;
-import mods.thecomputerizer.theimpossiblelibrary.util.file.LogUtil;
+import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
 import net.minecraft.client.Minecraft;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.util.TriConsumer;
 
 import java.io.File;
-import java.net.URI;
-import java.net.URL;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ChannelInstance {
-    private final String channelName;
+    private final Table info;
     private final HashMap<GuiType, AbstractChannelConfig> moduleMap;
-    private String soundCategory;
     private final Main mainInstance;
-    private String mainPath;
     private final Transitions transitionsInstance;
-    private String transitionsPath;
     private final Commands commandsInstance;
-    private String commandsPath;
     private final Toggles togglesInstance;
-    private String togglesPath;
     private final Redirect redirectInstance;
-    private String redirectPath;
-    private String songsFolderPath;
-    private boolean pausedByJukeBox;
-    private boolean overridesNormalMusic;
+    private final Jukebox jukeboxInstance;
 
-    public ChannelInstance(String channelName, String category, Main main, String mainPath, Transitions transitions,
-                           String transitionsPath, Commands commands, String commandsPath, Toggles toggles,
-                           String togglesPath, Redirect redirect, String redirectPath, String songsFolder, boolean paused,
-                           boolean overrides) {
-        this.channelName = channelName;
-        this.soundCategory = category;
+    public ChannelInstance(Table info, Main main, Transitions transitions, Commands commands, Toggles toggles,
+                           Redirect redirect, Jukebox jukebox) {
+        this.info = info;
         this.mainInstance = main;
-        this.mainPath = mainPath;
         this.transitionsInstance = transitions;
-        this.transitionsPath = transitionsPath;
         this.commandsInstance = commands;
-        this.commandsPath = commandsPath;
         this.togglesInstance = toggles;
-        this.togglesPath = togglesPath;
         this.redirectInstance = redirect;
-        this.redirectPath = redirectPath;
-        this.songsFolderPath = songsFolder;
-        this.pausedByJukeBox = paused;
-        this.overridesNormalMusic = overrides;
+        this.jukeboxInstance = jukebox;
         this.moduleMap = createModuleMap();
     }
 
@@ -67,6 +40,7 @@ public class ChannelInstance {
         ret.put(GuiType.COMMANDS,this.commandsInstance);
         ret.put(GuiType.TOGGLES,this.togglesInstance);
         ret.put(GuiType.REDIRECT,this.redirectInstance);
+        ret.put(GuiType.JUKEBOX,this.jukeboxInstance);
         return ret;
     }
 
@@ -78,80 +52,92 @@ public class ChannelInstance {
         List<GuiPage.Icon> ret = new ArrayList<>();
         ret.add(ButtonType.CHANNEL_INFO.getIconButton("edit",false));
         List<AbstractChannelConfig> ordered = Arrays.asList(this.mainInstance,this.transitionsInstance,this.commandsInstance,
-                this.togglesInstance,this.redirectInstance);
+                this.togglesInstance,this.redirectInstance,this.jukeboxInstance);
         for(AbstractChannelConfig config : ordered) ret.addAll(config.getPageIcons(channel));
         return ret;
     }
 
+    public GuiSelection createMultiSelectTriggerScreen(GuiSuperType parent, Consumer<List<GuiSelection.Element>> multiSelectHandler) {
+        return this.mainInstance.createMultiSelectTriggerScreen(parent, multiSelectHandler);
+    }
+
+    public void openChannelScreen(GuiPage parent, String channel, String id, List<String> registeredSounds) {
+        GuiSuperType next;
+        if(id.matches("edit"))
+            next = new GuiParameters(parent,GuiType.CHANNEL_INFO, parent.getInstance(),channel,
+                    Translate.guiGeneric(false,"titles","channel_info") +": "+channel,
+                    channelInfoParameters());
+        else if(id.matches("main")) next = new GuiSelection(parent,GuiType.SELECTION_GENERIC, parent.getInstance(),
+                Translate.guiGeneric(false,"selection","group","main")+" "+channel,false,false,
+                this.mainInstance::mainElements);
+        else if(id.matches("transitions")) next = new GuiSelection(parent,GuiType.SELECTION_GENERIC, parent.getInstance(),
+                Translate.guiGeneric(false,"selection","group","transitions")+" "+channel,true,true,
+                this.transitionsInstance::getVariableElements,this.transitionsInstance.transitionInstanceButtons(parent));
+        else if(id.matches("commands")) next = new GuiSelection(parent,GuiType.SELECTION_GENERIC, parent.getInstance(),
+                Translate.guiGeneric(false,"selection","group","commands")+" "+channel,true,true,
+                this.commandsInstance::getCommandElements,this.commandsInstance.commandInstanceButtons(parent));
+        else if(id.matches("toggles")) next = new GuiSelection(parent,GuiType.SELECTION_GENERIC, parent.getInstance(),
+                Translate.guiGeneric(false,"selection","group","toggles")+" "+channel,true,true,
+                this.togglesInstance::getTogglesElements,this.togglesInstance.toggleInstancesButtons(parent));
+        else if(id.matches("redirect")) next = new GuiSelection(parent,GuiType.SELECTION_GENERIC, parent.getInstance(),
+                Translate.guiGeneric(false,"selection","group","redirect")+" "+channel,true,true,
+                this.redirectInstance::getRedirectElements,this.redirectInstance.redirectButtons(parent,registeredSounds));
+        else {
+            next = new GuiSelection(parent,GuiType.SELECTION_GENERIC, parent.getInstance(),
+                    Translate.guiGeneric(false,"selection","group","jukebox")+" "+channel,true,true,
+                    this.jukeboxInstance::getJukeboxElements,this.jukeboxInstance.jukeboxButtons(parent));
+        }
+        Minecraft.getInstance().setScreen(next);
+    }
+
     public List<GuiParameters.Parameter> channelInfoParameters() {
-        return Arrays.asList(new GuiParameters.Parameter("channel_info","sound_category",null,this.soundCategory,
-                        (element) -> this.soundCategory = element),
-                new GuiParameters.Parameter("channel_info","main_path",null,this.mainPath,
-                        (element) -> this.mainPath = element),
-                new GuiParameters.Parameter("channel_info","transitions_path",null,this.transitionsPath,
-                        (element) -> this.transitionsPath = element),
-                new GuiParameters.Parameter("channel_info","commands_path",null,this.commandsPath,
-                        (element) -> this.commandsPath = element),
-                new GuiParameters.Parameter("channel_info","toggles_path",null,this.togglesPath,
-                        (element) -> this.togglesPath = element),
-                new GuiParameters.Parameter("channel_info","redirect_path",null,this.redirectPath,
-                        (element) -> this.redirectPath = element),
-                new GuiParameters.Parameter("channel_info","audio_folder",null,this.songsFolderPath,
-                        (element) -> this.songsFolderPath = element),
-                new GuiParameters.Parameter("channel_info","paused_by_jukebox",null,this.pausedByJukeBox,
-                        (element) -> this.pausedByJukeBox = element),
-                new GuiParameters.Parameter("channel_info","overrides_default_music",null,this.overridesNormalMusic,
-                        (element) -> this.overridesNormalMusic = element));
+        return Arrays.asList(new GuiParameters.Parameter("channel_info","sound_category",
+                        this.info.getOrCreateVar("sound_category","music")),
+                new GuiParameters.Parameter("channel_info","main_path",
+                        this.info.getOrCreateVar("main",info.getName()+"/main")),
+                new GuiParameters.Parameter("channel_info","transitions_path",
+                        this.info.getOrCreateVar("transitions",info.getName()+"/transitions")),
+                new GuiParameters.Parameter("channel_info","commands_path",
+                        this.info.getOrCreateVar("commands",info.getName()+"/commands")),
+                new GuiParameters.Parameter("channel_info","toggles_path",
+                        this.info.getOrCreateVar("toggles",info.getName()+"/toggles")),
+                new GuiParameters.Parameter("channel_info","redirect_path",
+                        this.info.getOrCreateVar("redirect",info.getName()+"/redirect")),
+                new GuiParameters.Parameter("channel_info","jukebox_path",
+                        this.info.getOrCreateVar("jukebox",info.getName()+"/jukebox")),
+                new GuiParameters.Parameter("channel_info","audio_folder",
+                        this.info.getOrCreateVar("songs_folder","config/MusicTriggers/songs")),
+                new GuiParameters.Parameter("channel_info","paused_by_jukebox",
+                        this.info.getOrCreateVar("paused_by_jukebox",true)),
+                new GuiParameters.Parameter("channel_info","overrides_default_music",
+                        this.info.getOrCreateVar("overrides_normal_music",true)));
     }
 
-    public List<GuiSelection.Element> getElementGroup(GuiSelection selectionScreen, String channelName,
-                                                      String group, String extra) {
-        if(group.matches("main")) return this.mainInstance.getSongInstances(selectionScreen, channelName);
-        else if(group.matches("triggers")) return this.mainInstance.getTriggerInstances(selectionScreen, channelName, extra);
-        else if(group.matches("transitions")) return this.transitionsInstance.getTitleCardInstances(selectionScreen, channelName);
-        else if(group.matches("commands")) return this.commandsInstance.getCommandInstances(selectionScreen, channelName);
-        else if(group.matches("toggles")) return this.togglesInstance.getToggleInstances(selectionScreen, channelName);
-        else if(group.matches("toggle_instance")) return this.togglesInstance.getToggleInstance(selectionScreen, extra);
-        else if(group.matches("toggle_condition")) return this.togglesInstance.getConditionElements(selectionScreen, extra);
-        else if(group.matches("songs")) return getPotentialSongs(selectionScreen, channelName);
-        else if(group.matches("potential_triggers")) return getPotentialTriggers(selectionScreen, channelName, extra);
-        else if(group.matches("images")) return getPotentialImages(selectionScreen, channelName);
-        return redirectInstance.getRegisteredSoundInstances(selectionScreen,channelName);
-    }
-
-    public List<GuiSelection.Element> getPotentialSongs(GuiSelection selectionScreen, String channel) {
-        return Stream.of(makeSongList(getFolderSongs(),selectionScreen,channel,0),
-                        makeSongList(this.redirectInstance.internalSongs(),selectionScreen,channel,1),
-                        makeSongList(this.redirectInstance.externalSongs(),selectionScreen,channel,2))
+    public List<GuiSelection.Element> getPotentialSongs(GuiSuperType grandfather) {
+        return Stream.of(makeSongList(getFolderSongs(),grandfather,0),
+                        makeSongList(this.redirectInstance.internalSongs(),grandfather,1),
+                        makeSongList(this.redirectInstance.externalSongs(),grandfather,2))
                 .flatMap(Collection::stream)
                 .sorted(Comparator.comparingInt(GuiSelection.Element::getIndex))
                 .collect(Collectors.toList());
     }
 
-    public List<GuiSelection.Element> transitionsSpecialCase(GuiSelection selectionScreen, String viewMode) {
-        if(viewMode.matches("titles"))
-            return transitionsInstance.getTitleCardInstances(selectionScreen,this.channelName);
-        return transitionsInstance.getImageCardInstances(selectionScreen,this.channelName);
-    }
-
-    private List<GuiSelection.Element> makeSongList(Map<String, String> songMap, GuiSelection selectionScreen,
-                                                    String channelName, int priorityIndex) {
+    private List<GuiSelection.Element> makeSongList(Map<String, String> songMap, GuiSuperType grandfather, int priorityIndex) {
         return songMap.entrySet().stream()
-                .map(entry -> new GuiSelection.Element(selectionScreen, channelName, entry.getKey(),
-                        Translate.selectionSong(entry.getKey(),"selection",entry.getKey()), Collections.singletonList(entry.getValue()),
-                        false, priorityIndex, (channel, songID) -> {
-                    this.mainInstance.addSong(entry.getKey());
-                    selectionScreen.getParent().parentUpdate();
-                    Minecraft.getInstance().setScreen(selectionScreen.getParent());
-                }, null))
-                .collect(Collectors.toList());
+                .map(entry -> new GuiSelection.MonoElement(entry.getKey(),priorityIndex,
+                        Translate.selectionSong(entry.getKey(),"selection",entry.getKey()),
+                        Collections.singletonList(entry.getValue()),(parent) -> {
+                    this.mainInstance.getFileData().addTable(this.mainInstance.getOrCreateTable(null,"songs"),entry.getKey());
+                    grandfather.parentUpdate();
+                    Minecraft.getInstance().setScreen(grandfather);
+                })).collect(Collectors.toList());
     }
 
     private Map<String, String> getFolderSongs() {
-        File[] files = new File(this.songsFolderPath).listFiles();
+        File[] files = new File(this.info.getValOrDefault("songs_folder","config/MusicTriggers/songs")).listFiles();
         if(files!=null)
-            return Arrays.stream(files)
-                    .collect(Collectors.toMap(file -> noEXT(file.getName()),file -> this.songsFolderPath));
+            return Arrays.stream(files).collect(Collectors.toMap(file -> noEXT(file.getName()),
+                    file -> this.info.getValOrDefault("songs_folder","config/MusicTriggers/songs")));
         return new HashMap<>();
     }
 
@@ -159,116 +145,15 @@ public class ChannelInstance {
         return filename.substring(0, filename.lastIndexOf('.'));
     }
 
-    public List<GuiSelection.Element> getPotentialImages(GuiSelection selectionScreen, String channel) {
-        return findImageResources().stream()
-                .map(image -> new GuiSelection.Element(selectionScreen,channel,"image",
-                        Translate.guiGeneric(false,"selection","image"),
-                        Collections.singletonList(LogUtil.injectParameters("assets/{}/textures", Constants.MODID)),
-                        false,0, (channelName, id) -> {
-                    this.transitionsInstance.addImageCard(image);
-                    selectionScreen.getParent().parentUpdate();
-                    Minecraft.getInstance().setScreen(selectionScreen.getParent());
-                },null))
-                .collect(Collectors.toList());
-    }
-
-    public List<String> findImageResources() {
-        String initial_path = LogUtil.injectParameters("assets/{}/textures", Constants.MODID);
-        Path found_path = null;
-        try {
-            URL url = MusicTriggers.class.getResource(initial_path);
-            if (url != null) {
-                URI uri = url.toURI();
-                if (uri.getScheme().matches("file")) {
-                    url = MusicTriggers.class.getResource(initial_path);
-                    if (url != null) found_path = Paths.get(url.toURI());
-                } else found_path = FileSystems.newFileSystem(uri,new HashMap<>()).getPath(initial_path);
-            }
-        } catch (Exception e) {
-            MusicTriggers.logExternally(Level.ERROR,"Unable to get calculate base path for image cards with error: ",e);
-        }
-        if(found_path!=null) {
-            File[] images = (new File(found_path.toUri())).listFiles();
-            if(images!=null)
-                return Arrays.stream(images).map(File::getName).filter(name -> name.contains(".")).collect(Collectors.toList());
-            else MusicTriggers.logExternally(Level.ERROR,"The path for image cards was successfully found, but the files were unable to be obtained");
-        } else MusicTriggers.logExternally(Level.ERROR,"The base path for image cards did not seem to exist");
-        return new ArrayList<>();
-    }
-
-    public List<GuiSelection.Element> getPotentialTriggers(GuiSelection selectionScreen, String channel, String songID) {
-        return Trigger.getAcceptedTriggers().stream()
-                .map(trigger -> new GuiSelection.Element(selectionScreen, channel, trigger,
-                        Translate.triggerName(trigger), potentialTriggerHover(trigger),
-                        false, 0, (channelName, triggerID) -> {
-                    this.mainInstance.addTrigger(songID,triggerID);
-                    selectionScreen.getParent().parentUpdate();
-                    Minecraft.getInstance().setScreen(selectionScreen.getParent());
-                }, null))
-                .collect(Collectors.toList());
-    }
-
-    private List<String> potentialTriggerHover(String triggerName) {
-        List<String> translated = new ArrayList<>();
-        boolean needsID = Trigger.acceptsID(triggerName);
-        if(needsID)
-            translated.add(Translate.guiGeneric(false,"selection","trigger","needs_id"));
-        if(!this.mainInstance.hasTrigger(triggerName))
-            translated.add(Translate.guiGeneric(false,"selection","trigger","not_registered"));
-        else {
-            if(needsID)
-                translated.add(Translate.condenseIdentifiers(
-                        this.mainInstance.allIdentifiersOfTrigger(triggerName), "selection","trigger",
-                        "registered_id"));
-            else translated.add(Translate.guiGeneric(false,"selection","trigger","is_registered"));
-        }
-        return translated;
-    }
-
-    public List<Trigger> getTriggers(String song) {
-        return this.mainInstance.getTriggers(song);
-    }
-
-    public boolean isSongUsed(String song) {
-        return this.mainInstance.isSongUsed(song);
-    }
-
-    public void openRedirectGui(GuiSuperType parent) {
-        Minecraft.getInstance().setScreen(this.redirectInstance.makeGui(parent));
-    }
-
-    public TriConsumer<GuiSuperType, String, String> clickAddButton(String channelName, String songID) {
-        return (parent, group, extra) -> {
-            if(group.matches("main")) Minecraft.getInstance().setScreen(new GuiSelection(parent,
-                    GuiType.SELECTION_GENERIC,parent.getInstance(), channelName,"songs",null,
-                    Translate.selectionTitle("songs",channelName),null));
-            else if(group.matches("triggers")) Minecraft.getInstance().setScreen(new GuiSelection(parent,
-                    GuiType.SELECTION_GENERIC,parent.getInstance(), channelName,"potential_triggers",songID,
-                    Translate.selectionTitle("potential_triggers",channelName),null));
-            else if(group.matches("transitions")) this.transitionsInstance.clickAddButton(parent,group,extra);
-            else if(group.matches("commands")) this.commandsInstance.clickAddButton(parent);
-            else this.togglesInstance.clickAddButton(parent,group,extra);
-        };
-    }
-
     public List<String> write() {
-        List<String> lines = new ArrayList<>();
-        lines.add(LogUtil.injectParameters("[{}]\n",this.channelName));
-        lines.add(LogUtil.injectParameters("\tsound_category = \"{}\"\n",this.soundCategory));
-        lines.add(LogUtil.injectParameters("\tmain = \"{}\"\n",this.mainPath));
-        lines.add(LogUtil.injectParameters("\ttransitions = \"{}\"\n",this.transitionsPath));
-        lines.add(LogUtil.injectParameters("\tcommands = \"{}\"\n",this.commandsPath));
-        lines.add(LogUtil.injectParameters("\ttoggles = \"{}\"\n",this.togglesPath));
-        lines.add(LogUtil.injectParameters("\tredirect = \"{}\"\n",this.redirectPath));
-        lines.add(LogUtil.injectParameters("\tsongs_folder = \"{}\"\n",this.songsFolderPath));
-        lines.add(LogUtil.injectParameters("\tpaused_by_jukebox = \"{}\"\n",this.pausedByJukeBox));
-        lines.add(LogUtil.injectParameters("\toverrides_normal_music = \"{}\"\n",this.overridesNormalMusic));
+        List<String> lines = new ArrayList<>(this.info.toLines());
         lines.add("");
-        this.mainInstance.write(this.mainPath);
-        this.transitionsInstance.write(this.transitionsPath);
-        this.commandsInstance.write(this.commandsPath);
-        this.togglesInstance.write(this.togglesPath);
-        this.redirectInstance.write(this.redirectPath);
+        this.mainInstance.write(this.info.getValOrDefault("main",this.info.getName()+"/main"));
+        this.transitionsInstance.write(this.info.getValOrDefault("transitions",this.info.getName()+"/transitions"));
+        this.commandsInstance.write(this.info.getValOrDefault("commands",this.info.getName()+"/commands"));
+        this.togglesInstance.write(this.info.getValOrDefault("toggles",this.info.getName()+"/toggles"));
+        this.redirectInstance.write(this.info.getValOrDefault("redirect",this.info.getName()+"/redirect"));
+        this.jukeboxInstance.write(this.info.getValOrDefault("jukebox",this.info.getName()+"/jukebox"));
         return lines;
     }
 }

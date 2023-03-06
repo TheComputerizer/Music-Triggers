@@ -1,40 +1,36 @@
+//file:noinspection GroovyUnusedAssignment
 //file:noinspection GroovyAssignabilityCheck
-//file:noinspection GrDeprecatedAPIUsage
-buildscript {
-    repositories {
-        maven { url = 'https://maven.minecraftforge.net' }
-        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
-        mavenCentral()
-        gradlePluginPortal()
-    }
-    dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
-        classpath group: 'gradle.plugin.com.github.johnrengelman', name: 'shadow', version: '7.1.2'
-        classpath group: 'org.spongepowered', name: 'mixingradle', version: '0.7-SNAPSHOT'
-    }
-}
-apply plugin: 'net.minecraftforge.gradle'
-apply plugin: 'org.spongepowered.mixin'
-apply plugin: 'com.github.johnrengelman.shadow'
-apply plugin: 'maven-publish'
 
-version = '1.18.2-6.0_PUBLIC_BETA'
+plugins {
+    id 'net.minecraftforge.gradle' version '5.1+'
+    id 'com.github.johnrengelman.shadow' version '7.1.+'
+    id 'org.spongepowered.mixin' version '0.7.+'
+    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
+}
+
+version = '1.18.2-6.0'
 group = 'mods.thecomputerizer.musictriggers'
 archivesBaseName = 'musictriggers'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
-println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 minecraft {
-    mappings channel: 'official', version: '1.18.2'
+    mappings channel: 'parchment', version: '2022.11.06-1.18.2'
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
     runs {
+        def mixinStuff = [
+                '-Dmixin.debug.export=true',
+                '-Dmixin.hotSwap=true',
+                '-Dmixin.checks.interfaces=true',
+                '-mixin.config="musictriggers.mixin.json"'
+        ]
         client {
             workingDirectory project.file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
+            args mixinStuff
             mods {
-                examplemod {
+                musictriggers {
                     source sourceSets.main
                 }
             }
@@ -43,8 +39,9 @@ minecraft {
             workingDirectory project.file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
+            args mixinStuff
             mods {
-                examplemod {
+                musictriggers {
                     source sourceSets.main
                 }
             }
@@ -55,7 +52,7 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
             args '--mod', 'examplemod', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
             mods {
-                examplemod {
+                musictriggers {
                     source sourceSets.main
                 }
             }
@@ -68,6 +65,13 @@ repositories {
         url = 'https://www.cursemaven.com'
         content {
             includeGroup "curse.maven"
+        }
+    }
+    maven {
+        name = 'Modrinth'
+        url = 'https://api.modrinth.com/maven'
+        content {
+            includeGroup 'maven.modrinth'
         }
     }
     maven {
@@ -87,32 +91,44 @@ configurations {
 }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.18.2-40.2.0'
+    minecraft 'net.minecraftforge:forge:1.18.2-40.2.1'
 
     //external dependencies
-    shade("io.github.kostaskougios:cloning:1.10.3")
-    implementation("com.moandjiezana.toml:toml4j:0.7.2") { exclude group: 'com.google.code.gson', module: 'gson' }
-    shade("com.github.walkyst:lavaplayer-fork:1.3.97.1")
-    shade("org.apache.commons:commons-lang3:3.12.0") //this has to be shaded and relocated separately
+    shade('io.github.kostaskougios:cloning:1.10.3')
+    shade('com.github.walkyst:lavaplayer-fork:1.3.97.1') {
+        exclude module: 'commons-lang3'
+        exclude module: 'httpcore'
+        exclude module: 'httpclient'
+    }
 
-    // required mod dependencies
-    implementation fg.deobf("curse.maven:the-impossible-library-661115:4300747")
+    //libraries that need to be included separately for relocation
+    shade('org.apache.httpcomponents:httpcore:4.4.15')
+    shade('org.apache.httpcomponents:httpclient:4.5.14')
+    shade('org.apache.commons:commons-lang3:3.12.0')
+
+    //required mod dependencies
+    implementation fg.deobf('maven.modrinth:the-impossible-library:1.18.2-0.2.2')
+
+    //mixin
+    annotationProcessor('org.spongepowered:mixin:0.8.5:processor')
 
     //mods
     implementation fg.deobf("curse.maven:serene-seasons-291874:3723230")
     implementation fg.deobf("curse.maven:atomicstrykers-infernal-mobs-227875:3736943")
     implementation fg.deobf("curse.maven:champions-307152:3765992")
     implementation fg.deobf("curse.maven:game-stages-268655:3797378")
-    implementation fg.deobf("curse.maven:bookshelf-228525:3961347")
+
+    runtimeOnly(fg.deobf("curse.maven:bookshelf-228525:3961347"))
 }
 
 shadowJar {
     //necessary relocation
-    relocate 'org.slf4j', 'mods.thecomputerizer.musictriggers.libraries.sljf4'
-    relocate 'org.apache.commons', 'mods.thecomputerizer.musictriggers.libraries.apache.commons'
-    relocate 'org.apache.http', 'mods.thecomputerizer.musictriggers.libraries.apache.http'
+    relocate 'org.slf4j', 'libraries.sljf4'
+    relocate 'org.apache.commons', 'libraries.apache.commons'
+    relocate 'org.apache.http', 'libraries.apache.http'
     configurations = [project.configurations.shadow]
     classifier ''
+    mergeServiceFiles()
 }
 
 
@@ -127,16 +143,19 @@ mixin {
     add sourceSets.main, "musictriggers.refmap.json"
 }
 
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    from (sourceSets.main.resources.srcDirs) {
+        include 'META-INF/mods.toml'
+        expand 'version': project.version
+    }
+}
+
 jar {
     manifest {
         attributes([
-                "Specification-Title"     : "musictriggers",
-                "Specification-Vendor"    : "The_Computerizer",
                 "Specification-Version"   : project.version,
                 "Implementation-Title"    : project.name,
-                "Implementation-Version"  : project.jar.archiveVersion,
-                "Implementation-Vendor"   : "The_Computerizer",
-                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
                 "TweakClass": "org.spongepowered.asm.launch.MixinTweaker",
                 "TweakOrder": 0,
                 "MixinConfigs": "musictriggers.mixin.json"
@@ -146,16 +165,4 @@ jar {
 
 jar.finalizedBy('reobfJar')
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifact jar
-        }
-    }
-    repositories {
-        maven {
-            url "file://${project.projectDir}/mcmodsrepo"
-        }
-    }
-}
 tasks.assemble.dependsOn shadowJar

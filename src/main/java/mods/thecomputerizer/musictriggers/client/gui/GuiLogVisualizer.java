@@ -1,32 +1,96 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Vector3f;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
+import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
+import net.minecraft.client.Minecraft;
+
+import java.util.Map;
 
 public class GuiLogVisualizer extends GuiSuperType {
 
-    private int spacing;
+    private int scrollPos;
+    private int numElements;
+    private boolean canScroll;
+    private boolean canScrollUp;
 
     public GuiLogVisualizer(GuiSuperType parent, GuiType type, Instance configInstance) {
         super(parent, type, configInstance);
+        this.spacing = Minecraft.getInstance().font.lineHeight/2;
+    }
+
+    private void calculateScrollSize() {
+        this.scrollPos = 0;
+        int textSlot = Minecraft.getInstance().font.lineHeight+this.spacing;
+        int totalHeight = this.height-40;
+        int runningHeight = textSlot;
+        int runningTotal = 1;
+        while(runningHeight+textSlot<totalHeight) {
+            runningTotal++;
+            runningHeight+=textSlot;
+        }
+        this.numElements = runningTotal;
+        this.canScroll = this.numElements < MusicTriggers.savedMessages.size();
+        this.canScrollUp = this.canScroll;
+        if(!this.canScroll) this.numElements = MusicTriggers.savedMessages.size();
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scroll) {
+        if(this.canScroll) {
+            if (scroll != 0) {
+                if (scroll >= 1) {
+                    if (this.canScrollUp) {
+                        this.scrollPos++;
+                        this.canScrollUp = this.scrollPos + this.numElements + 1 < MusicTriggers.savedMessages.size();
+                        return true;
+                    }
+                } else if (this.scrollPos > 0) {
+                    this.scrollPos--;
+                    this.canScrollUp = true;
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Override
     public void init() {
         super.init();
-        this.spacing = (int)(this.font.lineHeight*1.5);
+        calculateScrollSize();
     }
 
     @Override
     protected void drawStuff(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
-        int y = this.height-20;
-        int index = MusicTriggers.savedMessages.size()-1;
-        while(y>20 && index>=0) {
-            drawString(matrix,this.font,MusicTriggers.savedMessages.get(index),20,y,14737632);
-            index--;
-            y-=this.spacing;
+        int textSpacing = this.font.lineHeight+this.spacing;
+        int y = this.canScroll ? 32 : this.height-(this.numElements*textSpacing);
+        int skip = this.canScroll ? MusicTriggers.savedMessages.size()-this.numElements-this.scrollPos : 0;
+        int finish = this.numElements;
+        for(Map.Entry<String, Integer> logEntry : MusicTriggers.savedMessages.entrySet()) {
+            if(skip>0) skip--;
+            else {
+                if(finish>0) {
+                    drawString(matrix, this.font, logEntry.getKey(), 16, y, logEntry.getValue());
+                    y += textSpacing;
+                    finish--;
+                }
+            }
         }
+        if(this.canScroll) drawScrollBar();
+    }
+
+    private void drawScrollBar() {
+        float indices = MusicTriggers.savedMessages.size()-this.numElements;
+        float perIndex = this.height/indices;
+        int top = (int)(perIndex*(indices-this.scrollPos-1));
+        int x = this.width-1;
+        Vector3f start = new Vector3f(x, top, 0);
+        if(perIndex<1) perIndex = 1;
+        Vector3f end = new Vector3f(x, (int)(top+perIndex), 0);
+        GuiUtil.drawLine(start,end,white(192), 2f, this.getBlitOffset());
     }
 
     @Override
