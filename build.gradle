@@ -153,7 +153,7 @@ reobf {
 }
 
 processResources {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     inputs.property 'version', project.version
     inputs.property 'mcversion', '1.12.2'
     from(sourceSets.main.resources.srcDirs) {

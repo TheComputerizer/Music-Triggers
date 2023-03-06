@@ -9,7 +9,7 @@
   "updateUrl": "",
   "authorList": ["The_Computerizer"],
   "credits": "The_Computerizer",
-  "logoFile": "",
+  "logoFile": "musictriggers_logo",
   "screenshots": [],
   "dependencies": ["theimpossiblelibrary"]
 }
