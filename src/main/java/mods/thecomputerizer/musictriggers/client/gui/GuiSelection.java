@@ -2,61 +2,74 @@ package mods.thecomputerizer.musictriggers.client.gui;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import mods.thecomputerizer.musictriggers.client.Translate;
+import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.util.SharedConstants;
 import net.minecraft.util.math.vector.Vector2f;
 import net.minecraft.util.math.vector.Vector4f;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
-import org.apache.logging.log4j.util.TriConsumer;
+import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.logging.log4j.util.BiConsumer;
+import org.lwjgl.glfw.GLFW;
 
-import javax.annotation.Nonnull;
 import java.util.*;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class GuiSelection extends GuiSuperType {
 
-    private final List<Element> elements;
-    private final String channel;
-    private final String group;
-    private final String extra;
+    private final Supplier<List<Element>> elementSupplier;
+    private List<Element> elementCache;
+    private final Consumer<List<Element>> multiSelectHandler;
+    private final List<Element> searchedElements;
+    private final List<Element> selectedElements;
     private final String customTitle;
-    private final TriConsumer<GuiSuperType, String, String> onAdd;
+    private final boolean canDelete;
+    private final boolean canSort;
+    private final boolean canMultiSelect;
+    private final ButtonSuperType[] bottomButtons;
     private int numElements;
     private int verticalSpace;
     private int scrollPos;
     private boolean canScrollDown;
     private int elementHover;
-    private ButtonSuperType toggleMode;
-    private boolean deleteMode;
-    private ButtonSuperType sortMode;
     private int sortType;
-    private ButtonSuperType transitionMode;
-    private String transitionView;
+    private boolean deleteMode;
     private boolean hasEdits;
 
-    public GuiSelection(GuiSuperType parent, GuiType type, Instance configInstance, String channel, String group,
-                        String extra, String customTitle, TriConsumer<GuiSuperType, String, String> onAdd) {
+    public GuiSelection(GuiSuperType parent, GuiType type, Instance configInstance, String customTitle, boolean canDelete,
+                        boolean canSort, Supplier<List<Element>> elementSupplier, ButtonSuperType ... bottomButtons) {
+        this(parent,type,configInstance,customTitle,canDelete,canSort,false,elementSupplier,null,bottomButtons);
+    }
+
+    public GuiSelection(GuiSuperType parent, GuiType type, Instance configInstance, String customTitle,
+                        boolean canDelete, boolean canSort, boolean canMultiSelect,
+                        Supplier<List<Element>> elementSupplier, Consumer<List<Element>> multiSelectHandler,
+                        ButtonSuperType ... bottomButtons) {
         super(parent, type, configInstance);
-        this.elements = new ArrayList<>();
-        this.channel = channel;
-        this.group = group;
-        this.extra = extra;
-        this.customTitle = Objects.nonNull(customTitle) ? customTitle : Translate.selectionTitle(group, channel);
-        this.onAdd = onAdd;
+        this.elementSupplier = elementSupplier;
+        this.multiSelectHandler = multiSelectHandler;
+        this.searchedElements = new ArrayList<>();
+        this.selectedElements = new ArrayList<>();
+        this.customTitle = customTitle;
+        this.canDelete = canDelete;
+        this.canSort = canSort;
+        this.canMultiSelect = canMultiSelect;
+        this.bottomButtons = bottomButtons;
         this.elementHover = -1;
         this.deleteMode = false;
         this.sortType = 0;
-        this.transitionView = extra;
     }
 
-    @Override
-    public void init(@Nonnull Minecraft mc, int width, int height) {
-        super.init(mc, width, height);
-        int textSlot = mc.font.lineHeight+(this.spacing*2);
+    private void calculateScrollSize() {
+        this.scrollPos = 0;
+        int textSlot = Minecraft.getInstance().font.lineHeight +(this.spacing*2);
         int totalHeight = this.height-((this.spacing*3)+textSlot+48);
         int runningHeight = (textSlot*2)-this.spacing;
         int runningTotal = 1;
@@ -65,76 +78,54 @@ public class GuiSelection extends GuiSuperType {
             runningHeight+=textSlot;
         }
         this.numElements = runningTotal;
-        this.canScrollDown = this.numElements < this.elements.size();
+        this.canScrollDown = this.numElements < this.searchedElements.size();
         this.verticalSpace = (totalHeight-runningHeight)/2;
     }
 
     @Override
     public void init() {
         super.init();
-        resetElements();
+        this.elementCache = this.elementSupplier.get();
+        enableSearch();
         int index = Integer.MIN_VALUE;
-        for(Element element : this.elements) {
-            if(index==Integer.MIN_VALUE)
+        for (Element element : this.elementCache) {
+            if (index == Integer.MIN_VALUE)
                 index = element.getIndex();
             else index = element.adjustOriginalIndex(index);
         }
         String displayName;
         int width;
-        int left = 96;
-        if(this.onAdd!=null) {
-            displayName = Translate.guiGeneric(false,"button",this.group+"_add");
-            width = this.font.width(displayName)+8;
-            addTopButton(left, displayName, width, new ArrayList<>(),
-                    (screen, button) -> {
-                        this.onAdd.accept(this,this.group,this.extra);
-                        this.hasEdits = true;
-                        save();
-                    },this);
-            left+=(width+16);
-            displayName = Translate.guiGeneric(false,"button","delete_mode");
-            width = this.font.width(displayName)+8;
-            this.toggleMode = addTopButton(left, displayName, width,
-                    Translate.guiNumberedList(3,"button","delete_mode","desc"),
-                    (screen, button) -> toggleDeleteMode(!this.deleteMode),this);
-            left+=(width+16);
+        int left = 16;
+        if(this.canDelete) {
+            displayName = Translate.guiGeneric(false, "button", "delete_mode");
+            width = this.font.width(displayName) + 8;
+            String finalDisplayName = displayName;
+            addSuperButton(createBottomButton(displayName, width, 2,
+                    Translate.guiNumberedList(3, "button", "delete_mode", "desc"),
+                    (screen, button, mode) -> {
+                        TextFormatting color = mode == 1 ? TextFormatting.WHITE : TextFormatting.RED;
+                        this.deleteMode = color==TextFormatting.RED;
+                        button.updateDisplay(color + finalDisplayName);
+                    }), left);
+            left += (width + 16);
         }
-        if(Objects.nonNull(this.extra) && this.extra.matches("titles")) {
-            displayName = Translate.guiGeneric(false,"button","transition_titles");
-            width = this.font.width(displayName)+8;
-            this.transitionMode = addTopButton(left, displayName,
-                    width, Translate.guiNumberedList(3,"button","transition_titles","desc"),
-                    (screen, button) -> transitionsView(),this);
-            left+=(width+16);
+        if(this.canSort) {
+            displayName = Translate.guiGeneric(false, "button", "sort", "original");
+            width = this.font.width(displayName) + 8;
+            addSuperButton(createBottomButton(displayName, width, 3,
+                    Translate.guiNumberedList(3, "button", "sort", "desc"),
+                    (screen, button, mode) -> {
+                        this.sortType = mode - 1;
+                        TextFormatting color = mode == 1 ? TextFormatting.WHITE : mode == 2 ? TextFormatting.GRAY : TextFormatting.DARK_GRAY;
+                        button.updateDisplay(color + sortElements());
+                    }), left);
+            left += (width + 16);
         }
-        displayName = Translate.guiGeneric(false,"button","sort","original");
-        width = this.font.width(displayName)+8;
-        this.sortMode = addTopButton(left, displayName, width,
-                Translate.guiNumberedList(3,"button","sort","desc"), (screen, button) ->
-                        button.updateBaseTextAndFormatting(this.font,toggleSortMode(),TextFormatting.WHITE),
-                this);
-    }
-
-    public boolean isTitleView() {
-        return this.transitionView!=null && this.transitionView.matches("titles");
-    }
-
-    private void transitionsView() {
-        if(this.transitionView.matches("titles")) this.transitionView = "images";
-        else transitionView = "titles";
-        this.transitionMode.updateBaseTextAndFormatting(this.font,
-                Translate.guiGeneric(false,"button","transition_images"),TextFormatting.WHITE);
-    }
-
-    private void toggleDeleteMode(boolean isActive) {
-        this.deleteMode = isActive;
-        this.toggleMode.updateDisplayFormat(isActive ? TextFormatting.RED : TextFormatting.WHITE);
-    }
-
-    private String toggleSortMode() {
-        this.sortType++;
-        if(this.sortType>2) this.sortType = 0;
-        return sortElements();
+        for(ButtonSuperType button : this.bottomButtons) {
+            addSuperButton(button,left);
+            left += (button.getWidth() + 16);
+        }
+        updateSearch();
     }
 
     @Override
@@ -143,7 +134,7 @@ public class GuiSelection extends GuiSuperType {
             if(scroll<1) {
                 if (this.canScrollDown) {
                     this.scrollPos++;
-                    this.canScrollDown = this.numElements + this.scrollPos < this.elements.size();
+                    this.canScrollDown = this.numElements + this.scrollPos + 1 < this.searchedElements.size();
                 }
             } else if(this.scrollPos>0) {
                 this.scrollPos--;
@@ -156,34 +147,92 @@ public class GuiSelection extends GuiSuperType {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+        super.mouseClicked(mouseX, mouseY, mouseButton);
         if (mouseButton == 0 && this.elementHover>=0) {
-            Element element = this.elements.get(this.elementHover);
+            Element element = this.searchedElements.get(this.elementHover);
             if(this.deleteMode) {
-                if (element.onDelete()) {
-                    this.elements.remove(element);
+                if(element.onDelete(mouseX<=((float)this.width)/2)) {
+                    playGenericClickSound();
                     this.hasEdits = true;
+                    this.searchedElements.remove(element);
+                    this.elementCache.remove(element);
                     save();
+                    return true;
                 }
-            } else element.onClick();
+            } else {
+                if (this.canMultiSelect) {
+                    if (this.selectedElements.contains(element)) {
+                        this.selectedElements.remove(element);
+                        element.setSelected(false);
+                    } else {
+                        this.selectedElements.add(element);
+                        element.setSelected(true);
+                    }
+                }
+                else {
+                    for (Element element1 : searchedElements)
+                        element1.onClick(this, mouseX <= ((float)this.width) / 2);
+                }
+                return true;
+            }
+            return false;
         }
         return super.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
-    private void resetElements() {
-        this.elements.clear();
-        if(Objects.nonNull(this.extra) && this.extra.matches("titles"))
-            this.elements.addAll(this.getInstance().transitionsSpecialCase(this,this.channel,this.transitionView));
-        else this.elements.addAll(this.getInstance().getElementGroup(this,this.channel,this.group,this.extra));
+    @Override
+    public boolean keyPressed(int keyCode, int x, int y) {
+        if (super.keyPressed(keyCode, x, y)) return true;
+        if(keyCode == GLFW.GLFW_KEY_BACKSPACE) {
+            for (Element element : this.searchedElements) {
+                if (element.onType(true, ' ')) {
+                    this.hasEdits = true;
+                    updateSearch();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean charTyped(char c, int mod) {
+        if(super.charTyped(c, mod)) return true;
+        if(SharedConstants.isAllowedChatCharacter(c)) {
+            for (Element element : this.searchedElements) {
+                if (element.onType(false, c)) {
+                    this.hasEdits = true;
+                    updateSearch();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    @Override
+    protected void updateSearch() {
+        this.searchedElements.clear();
+        for(Element element : this.elementCache)
+            if(checkSearch(element))
+                this.searchedElements.add(element);
+        calculateScrollSize();
+    }
+
+    private boolean checkSearch(Element element) {
+        if(element instanceof MonoElement)
+            return checkSearch(element.getDisplay(false));
+        else return checkSearch(element.getDisplay(true)) || checkSearch(element.getDisplay(false));
     }
 
     public String sortElements() {
         if(this.sortType<=0) {
-            this.elements.sort(Comparator.comparingInt(Element::getIndex));
+            this.searchedElements.sort(Comparator.comparingInt(Element::getIndex));
             return Translate.guiGeneric(false,"button","sort","original");
         }
-        this.elements.sort(Comparator.comparing(Element::getDisplay));
+        this.searchedElements.sort(Comparator.comparing(element -> element.getDisplay(true)));
         if(this.sortType>1) {
-            Collections.reverse(this.elements);
+            Collections.reverse(this.searchedElements);
             return Translate.guiGeneric(false,"button","sort","reverse");
         }
         return Translate.guiGeneric(false,"button","sort","alphabetical");
@@ -191,34 +240,23 @@ public class GuiSelection extends GuiSuperType {
 
     @Override
     protected void drawStuff(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
-        int centerX = this.width/2;
-        int top = this.spacing+24;
-        GuiUtil.drawBox(new Vector2f(0,top),this.width,this.height-this.spacing*2-48,black(196),this.getBlitOffset());
-        Vector2f start = new Vector2f(0, top);
-        Vector2f end = new Vector2f(this.width, top);
+        MutableInt top = new MutableInt(this.spacing+24);
+        GuiUtil.drawBox(new Vector2f(0,top.getValue()),this.width,this.height-this.spacing*2-48,black(196),this.getBlitOffset());
+        Vector2f start = new Vector2f(0, top.getValue());
+        Vector2f end = new Vector2f(this.width, top.getValue());
         GuiUtil.drawLine(start,end,white(192), 1f, this.getBlitOffset());
-        top+=this.spacing;
-        drawCenteredString(matrix,this.font,this.customTitle,centerX,top,GuiUtil.WHITE);
-        top+=(font.lineHeight+this.spacing+this.verticalSpace);
+        drawCenteredString(matrix,this.font,this.customTitle,this.width/2,top.addAndGet(this.spacing),GuiUtil.WHITE);
+        top.add(font.lineHeight+this.spacing+this.verticalSpace);
         boolean hoverAny = false;
         int index = 0;
         int bottom = this.height-(this.spacing+24);
-        for(Element element : this.elements) {
+        for(Element element : this.searchedElements) {
             if(index>=this.scrollPos) {
-                boolean hover = mouseHover(new Vector2f(0, top), mouseX, mouseY, this.width, font.lineHeight + this.spacing);
-                int textColor = GuiUtil.WHITE;
-                if (hover) {
+                if(element.renderElement(matrix,this,this.font,mouseX,mouseY,top,this.spacing,this.getBlitOffset())) {
                     hoverAny = true;
                     this.elementHover = index;
-                    textColor = GuiUtil.makeRGBAInt(0, 0, 0, 255);
-                    GuiUtil.drawBox(new Vector2f(0, top), this.width, font.lineHeight + this.spacing * 2,
-                            new Vector4f(64, 64, 46, 96), this.getBlitOffset());
-                    renderComponentTooltip(matrix,element.getHoverLines(), mouseX, mouseY);
                 }
-                top += this.spacing;
-                drawCenteredString(matrix, this.font, element.getDisplay(), centerX, top, textColor);
-                top += (this.spacing + this.font.lineHeight);
-                if ((bottom - top) < (this.spacing + this.font.lineHeight)) break;
+                if ((bottom - top.getValue()) < (this.spacing + this.font.lineHeight)) break;
             }
             index++;
         }
@@ -226,58 +264,55 @@ public class GuiSelection extends GuiSuperType {
         start = new Vector2f(start.x,this.height-this.spacing-24);
         end = new Vector2f(end.x,this.height-this.spacing-24);
         GuiUtil.drawLine(start,end,white(192), 1f, this.getBlitOffset());
-        if(this.elements.size()>this.numElements) drawScrollBar();
+        if(this.searchedElements.size()>this.numElements) drawScrollBar();
+        if(hoverAny) {
+            for (Element element : this.searchedElements) {
+                if(element==this.searchedElements.get(this.elementHover)) {
+                    List<ITextComponent> hoverLines = element.getHoverLines(mouseX <= this.width / 2);
+                    if(!hoverLines.isEmpty()) renderComponentTooltip(matrix,hoverLines, mouseX, mouseY);
+                }
+            }
+        }
     }
 
     private void drawScrollBar() {
-        float ratio = ((float)this.numElements)/((float)this.elements.size());
-        int scrollBarHeight = (int)((this.height-48)*ratio);
-        int emptyHeight = this.height-48-scrollBarHeight;
-        int perIndex = emptyHeight/(this.elements.size()-this.numElements);
-        int top = 24+this.spacing+(perIndex*this.scrollPos);
+        float height = this.height-(this.spacing*2)-48;
+        float indices = this.searchedElements.size()-this.numElements;
+        float perIndex = height/indices;
+        int top = (int)(24+spacing+(perIndex*this.scrollPos));
         int x = this.width-1;
         Vector2f start = new Vector2f(x, top);
-        Vector2f end = new Vector2f(x, top+scrollBarHeight);
+        if(perIndex<1) perIndex = 1;
+        Vector2f end = new Vector2f(x, (int)(top+perIndex));
         GuiUtil.drawLine(start,end,white(192), 2f, this.getBlitOffset());
     }
 
     @Override
     public void parentUpdate() {
-        resetElements();
+        super.parentUpdate();
+        if(Objects.nonNull(this.multiSelectHandler)) this.multiSelectHandler.accept(this.selectedElements);
+        save();
+        this.elementCache = this.elementSupplier.get();
+        updateSearch();
     }
 
     @Override
     protected void save() {
+        for(Element element: this.elementCache) element.onSave();
         if(this.hasEdits)
             this.madeChange(true);
+        updateSearch();
     }
 
-    public static class Element {
-
-        private final GuiSelection parent;
-        private final String channel;
-        private final String id;
-        private final String display;
-        private final List<ITextComponent> hoverText;
-        private final boolean isSong;
+    public static abstract class Element {
         private int index;
-        private final BiConsumer<String, String> onClick;
-        private final BiConsumer<String, String> onDelete;
+        protected boolean isSelected;
 
-        public Element(GuiSelection parent, String channel, String id, String display, List<String> hoverText, boolean isSong,
-                       int index, BiConsumer<String, String> onClick, BiConsumer<String, String> onDelete) {
-            this.parent = parent;
-            this.channel = channel;
-            this.id = id;
-            this.isSong = isSong;
-            this.display = display;
-            List<String> hoverString = isSong ? Translate.songHover(id.charAt(id.length()-1),
-                    parent.getInstance().getTriggers(channel,id)) :
-                    (Objects.isNull(hoverText) ? new ArrayList<>() : hoverText);
-            this.hoverText = hoverString.stream().map(StringTextComponent::new).collect(Collectors.toList());
+        protected boolean hover;
+
+        public Element(int index) {
             this.index = index;
-            this.onClick = onClick;
-            this.onDelete = onDelete;
+            this.isSelected = false;
         }
 
         public int adjustOriginalIndex(int previous) {
@@ -289,21 +324,228 @@ public class GuiSelection extends GuiSuperType {
             return this.index;
         }
 
-        public String getDisplay() {
+        public void setSelected(boolean selected) {}
+
+        public boolean isHover() {
+            return this.hover;
+        }
+
+        public abstract boolean renderElement(MatrixStack matrix, GuiSuperType parent, FontRenderer font, int mouseX, int mouseY,
+                                              MutableInt top, int spacing, float zLevel);
+
+        public abstract String getDisplay(boolean isLeft);
+
+        public abstract List<ITextComponent> getHoverLines(boolean isLeft);
+
+        public abstract boolean onType(boolean backspace, char c);
+
+        public abstract void onClick(GuiSelection parent, boolean isLeft);
+
+        public abstract boolean onDelete(boolean isLeft);
+
+        public abstract void onSave();
+    }
+
+    public static class MonoElement extends Element {
+        private final String id;
+        private final String display;
+        private final List<ITextComponent> hoverText;
+        private final Consumer<GuiSelection> onClick;
+        private final Consumer<String> onDelete;
+        private boolean multiSelect;
+
+        public MonoElement(String id, int index, String display, Consumer<String> onDelete) {
+            this(id,index,display,new ArrayList<>(),null,onDelete);
+        }
+
+        public MonoElement(String id, int index, String display, List<String> hoverText) {
+            this(id,index,display,hoverText,null,null);
+        }
+
+        public MonoElement(String id, int index, String display, List<String> hoverText, Consumer<GuiSelection> onClick) {
+            this(id,index,display,hoverText,onClick,null);
+        }
+
+        public MonoElement(String id, int index, String display, List<String> hoverText, Consumer<GuiSelection> onClick,
+                           Consumer<String> onDelete) {
+            super(index);
+            this.id = id;
+            this.display = display;
+            this.hoverText = hoverText.stream().map(StringTextComponent::new).collect(Collectors.toList());
+            this.onClick = onClick;
+            this.onDelete = onDelete;
+            this.multiSelect = false;
+        }
+
+        public String getID() {
+            return this.id;
+        }
+
+        @Override
+        public void setSelected(boolean selected) {
+            this.multiSelect = selected;
+        }
+
+        @Override
+        public boolean renderElement(MatrixStack matrix, GuiSuperType parent, FontRenderer font, int mouseX, int mouseY, MutableInt top,
+                                     int spacing, float zLevel) {
+            boolean hover = parent.mouseHover(new Vector2f(0, top.getValue()),mouseX,mouseY,
+                    parent.width,font.lineHeight+spacing*2);
+            boolean isLeft = mouseX<=parent.width/2;
+            int textColor = GuiUtil.WHITE;
+            if (hover || this.multiSelect) {
+                textColor = GuiUtil.makeRGBAInt(200, 200, 200, 255);
+                GuiUtil.drawBox(new Vector2f(0, top.getValue()), parent.width, font.lineHeight+spacing*2,
+                        new Vector4f(64, 64, 46, 96), zLevel);
+            }
+            drawCenteredString(matrix,font,getDisplay(isLeft),parent.width/2, top.addAndGet(spacing), textColor);
+            top.add(spacing+font.lineHeight);
+            this.hover = hover;
+            return hover;
+        }
+
+        @Override
+        public String getDisplay(boolean isLeft) {
             return this.display;
         }
 
-        public List<ITextComponent> getHoverLines() {
+        @Override
+        public List<ITextComponent> getHoverLines(boolean isLeft) {
             return this.hoverText;
         }
 
-        public void onClick() {
-            if(this.onClick!=null) this.onClick.accept(this.channel,this.id);
+        @Override
+        public boolean onType(boolean backspace, char c) {
+            return false;
         }
 
-        public boolean onDelete() {
-            if(this.onDelete!=null) this.onDelete.accept(this.channel,this.id);
-            return Objects.nonNull(this.onDelete);
+        @Override
+        public void onClick(GuiSelection parent, boolean isLeft) {
+            if(this.hover && Objects.nonNull(this.onClick)) {
+                this.onClick.accept(parent);
+                parent.playGenericClickSound();
+            }
+            this.isSelected = hover;
+        }
+
+        @Override
+        public boolean onDelete(boolean isLeft) {
+            if(Objects.isNull(this.onDelete)) return false;
+            this.onDelete.accept(this.id);
+            return true;
+        }
+
+        @Override
+        public void onSave() {}
+    }
+
+    public static class DualElement extends Element {
+        private String key;
+        private String val;
+        private final List<ITextComponent> hoverTextKey;
+        private final List<ITextComponent> hoverTextVal;
+        private final Consumer<String> onDelete;
+        private final BiConsumer<String, String> onSave;
+        private boolean keySelected;
+
+        public DualElement(String key, String val, int index, List<String> hoverTextKey, List<String> hoverTextVal,
+                           Consumer<String> onDelete, BiConsumer<String, String> onSave) {
+            super(index);
+            this.key = key;
+            this.val = val;
+            this.hoverTextKey = hoverTextKey.stream().map(StringTextComponent::new).collect(Collectors.toList());
+            this.hoverTextVal = hoverTextVal.stream().map(StringTextComponent::new).collect(Collectors.toList());
+            this.onDelete = onDelete;
+            this.onSave = onSave;
+            this.keySelected = false;
+        }
+
+        @Override
+        public boolean renderElement(MatrixStack matrix, GuiSuperType parent, FontRenderer font, int mouseX, int mouseY, MutableInt top,
+                                     int spacing, float zLevel) {
+            boolean hover = parent.mouseHover(new Vector2f(0, top.getValue()),mouseX,mouseY,
+                    parent.width,font.lineHeight+spacing*2);
+            boolean isLeft = mouseX<=parent.width/2;
+            int keyColor = GuiUtil.WHITE;
+            int valColor = GuiUtil.WHITE;
+            char keyExtra = this.isSelected && this.keySelected ? ChannelManager.blinker : ' ';
+            char valExtra = this.isSelected  && !this.keySelected ? ChannelManager.blinker : ' ';
+            if (hover) {
+                if(isLeft) {
+                    keyColor = GuiUtil.makeRGBAInt(200, 200, 200, 255);
+                    GuiUtil.drawBox(new Vector2f(0, top.getValue()), parent.width/2, font.lineHeight + spacing * 2,
+                            new Vector4f(64, 64, 46, 96), zLevel);
+                } else {
+                    valColor = GuiUtil.makeRGBAInt(200, 200, 200, 255);
+                    GuiUtil.drawBox(new Vector2f(((float)parent.width)/2, top.getValue()), parent.width/2, font.lineHeight + spacing * 2,
+                            new Vector4f(64, 64, 46, 96), zLevel);
+                }
+            }
+            drawCenteredString(matrix,font,getDisplay(true)+keyExtra,parent.width/4, top.addAndGet(spacing), keyColor);
+            drawCenteredString(matrix,font,getDisplay(false)+valExtra,parent.width-(parent.width/4), top.getValue(), valColor);
+            top.add(spacing+font.lineHeight);
+            this.hover = hover;
+            return hover;
+        }
+
+        @Override
+        public String getDisplay(boolean isLeft) {
+            return isLeft ? this.key : this.val;
+        }
+
+        @Override
+        public List<ITextComponent> getHoverLines(boolean isLeft) {
+            return isLeft ? this.hoverTextKey : this.hoverTextVal;
+        }
+
+        @Override
+        public boolean onType(boolean backspace, char c) {
+            if(this.isSelected) {
+                if (this.keySelected) {
+                    if (backspace) {
+                        if (!this.key.isEmpty()) {
+                            this.key = this.key.substring(0, this.key.length() - 1);
+                            return true;
+                        }
+                    } else {
+                        this.key += c;
+                        return true;
+                    }
+                } else {
+                    if (backspace) {
+                        if (!this.val.isEmpty()) {
+                            this.val = this.val.substring(0, this.val.length() - 1);
+                            return true;
+                        }
+                    } else {
+                        this.val += c;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public void onClick(GuiSelection parent, boolean isLeft) {
+            this.isSelected = this.hover;
+            this.keySelected = isLeft;
+        }
+
+        @Override
+        public boolean onDelete(boolean isLeft) {
+            if(Objects.isNull(this.onDelete)) return false;
+            if(isLeft) {
+                this.onDelete.accept(this.key);
+                return true;
+            }
+            this.val = "";
+            return false;
+        }
+
+        @Override
+        public void onSave() {
+            this.onSave.accept(this.key,this.val);
         }
     }
 }

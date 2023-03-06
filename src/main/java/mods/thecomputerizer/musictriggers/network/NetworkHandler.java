@@ -1,7 +1,7 @@
-package mods.thecomputerizer.musictriggers.util;
+package mods.thecomputerizer.musictriggers.network;
 
 import mods.thecomputerizer.musictriggers.Constants;
-import mods.thecomputerizer.musictriggers.util.packets.*;
+import mods.thecomputerizer.musictriggers.network.packets.*;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -10,7 +10,7 @@ import net.minecraftforge.fml.network.NetworkDirection;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
 
-public class PacketHandler {
+public class NetworkHandler {
     public static int disc = 0;
 
     private  static  final  String  PROTOCOL_VERSION  =  "1.0" ;
@@ -22,11 +22,16 @@ public class PacketHandler {
             .simpleChannel ();
 
     public static void register() {
-        HANDLER.registerMessage(disc++, PacketBossInfo.class, PacketBossInfo::encode, PacketBossInfo::new, PacketBossInfo::handle);
-        HANDLER.registerMessage(disc++, PacketQueryServerInfo.class, PacketQueryServerInfo::encode, PacketQueryServerInfo::new, PacketQueryServerInfo::handle);
-        HANDLER.registerMessage(disc++, PacketSyncServerInfo.class, PacketSyncServerInfo::encode, PacketSyncServerInfo::new, PacketSyncServerInfo::handle);
-        HANDLER.registerMessage(disc++, PacketReceiveCommand.class, PacketReceiveCommand::encode, PacketReceiveCommand::new, PacketReceiveCommand::handle);
-        HANDLER.registerMessage(disc++, PacketJukeBoxCustom.class, PacketJukeBoxCustom::encode, PacketJukeBoxCustom::new, PacketJukeBoxCustom::handle);
+        HANDLER.registerMessage(disc++, PacketDynamicChannelInfo.class, PacketDynamicChannelInfo::encode,
+                PacketDynamicChannelInfo::new, PacketDynamicChannelInfo::handle);
+        HANDLER.registerMessage(disc++, PacketInitChannels.class, PacketInitChannels::encode,
+                PacketInitChannels::new, PacketInitChannels::handle);
+        HANDLER.registerMessage(disc++, PacketJukeBoxCustom.class, PacketJukeBoxCustom::encode,
+                PacketJukeBoxCustom::new, PacketJukeBoxCustom::handle);
+        HANDLER.registerMessage(disc++, PacketReceiveCommand.class, PacketReceiveCommand::encode,
+                PacketReceiveCommand::new, PacketReceiveCommand::handle);
+        HANDLER.registerMessage(disc++, PacketSyncServerInfo.class, PacketSyncServerInfo::encode,
+                PacketSyncServerInfo::new, PacketSyncServerInfo::handle);
     }
 
     public static void sendTo(Object message, ServerPlayerEntity player) {

@@ -1,41 +1,29 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
-import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.client.gui.widget.ExtendedButton;
+import org.apache.logging.log4j.util.TriConsumer;
 
-import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 public class ButtonSuperType extends ExtendedButton {
     private final List<ITextComponent> hoverLines;
-    private final BiConsumer<GuiSuperType, ButtonSuperType> handlerFunction;
-    private final GuiSuperType parentScreen;
-    private final boolean isApply;
-    private String baseDisplayString;
-    public ButtonSuperType(int xPos, int yPos, int width, int height, String displayString,
-                           List<String> hoverText, BiConsumer<GuiSuperType, ButtonSuperType> handler,
-                           GuiSuperType parent, boolean isApply) {
+    private final TriConsumer<GuiSuperType, ButtonSuperType, Integer> onClick;
+    private final int numModes;
+    private int mode;
+    public ButtonSuperType(int xPos, int yPos, int width, int height, int numModes, String displayString,
+                           List<String> hoverText, TriConsumer<GuiSuperType, ButtonSuperType, Integer> onClick,
+                           boolean isEnabled) {
         super(xPos, yPos, width, height, new StringTextComponent(displayString), null);
         this.hoverLines = hoverText.stream().map(StringTextComponent::new).collect(Collectors.toList());
-        this.handlerFunction = handler;
-        this.parentScreen = parent;
-        this.isApply = isApply;
-        if(isApply) {
-            this.active = parent.getInstance().hasEdits();
-            this.visible = parent.getInstance().hasEdits();
-        }
-        this.baseDisplayString = displayString;
-    }
-
-    public boolean isApplyButton() {
-        return this.isApply;
+        this.numModes = numModes;
+        this.mode = 1;
+        this.onClick = onClick;
+        this.active = isEnabled;
+        this.visible = isEnabled;
     }
 
     public void setEnable(boolean is) {
@@ -43,24 +31,8 @@ public class ButtonSuperType extends ExtendedButton {
         this.visible = is;
     }
 
-    public void updateBaseTextAndFormatting(FontRenderer font, String newDisplay, TextFormatting ... formatSettings) {
-        //int prevWidth = this.width;
-        //int newWidth = font.getStringWidth(newDisplay);
-        this.width = font.width(newDisplay)+4;
-        this.baseDisplayString = newDisplay;
-        updateDisplayFormat(formatSettings);
-    }
-
-    public void updateDisplayFormat(TextFormatting ... formatSettings) {
-        if(Objects.isNull(formatSettings)) {
-            this.message = new StringTextComponent(this.baseDisplayString);
-            return;
-        }
-        StringBuilder builder = new StringBuilder();
-        for(TextFormatting format : formatSettings)
-            builder.append(format.toString());
-        builder.append(this.baseDisplayString);
-        this.message = new StringTextComponent(builder.toString());
+    public void updateDisplay(String newDisplay) {
+        this.message = new StringTextComponent(newDisplay);
     }
 
 
@@ -69,24 +41,28 @@ public class ButtonSuperType extends ExtendedButton {
                 && mouseY>=this.y && mouseY<this.y+this.height;
     }
 
-    @Override
-    public void renderButton(@Nonnull MatrixStack matrix, int mouseX, int mouseY, float partial) {
-        super.renderButton(matrix, mouseX, mouseY, partial);
-        if(isHovering(mouseX, mouseY)) this.parentScreen.renderComponentTooltip(matrix,this.hoverLines,mouseX,mouseY);
+    public List<ITextComponent> getHoverText(int mouseX, int mouseY) {
+        return isHovering(mouseX, mouseY) ? this.hoverLines : new ArrayList<>();
     }
-
     @Override
     public void onPress() {
 
     }
 
-    @Override
-    public void onClick(double mouseX, double mouseY) {
-        if(isHovering((int)mouseX, (int)mouseY)) this.handlerFunction.accept(this.parentScreen,this);
+    public void handle(GuiSuperType parent, double mouseX, double mouseY) {
+        if(isHovering((int)mouseX, (int)mouseY)) {
+            incrementMode();
+            this.onClick.accept(parent,this,this.mode);
+        }
+    }
+
+    public void incrementMode() {
+        this.mode++;
+        if(this.mode>this.numModes) this.mode = 1;
     }
 
     @FunctionalInterface
-    public interface CreatorFunction<X, Y, W, H, D, L, F, P, A, B> {
-        B apply(X x, Y y, W width, H height, D display, L lines, F function, P parent, A apply);
+    public interface CreatorFunction<X, Y, W, H, M, D, L, F, A, B> {
+        B apply(X x, Y y, W width, H height, M Modes, D display, L lines, F function, A enabled);
     }
 }

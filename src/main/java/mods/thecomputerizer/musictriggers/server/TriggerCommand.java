@@ -1,10 +1,10 @@
-package mods.thecomputerizer.musictriggers.common;
+package mods.thecomputerizer.musictriggers.server;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import mods.thecomputerizer.musictriggers.Constants;
-import mods.thecomputerizer.musictriggers.util.PacketHandler;
-import mods.thecomputerizer.musictriggers.util.packets.PacketReceiveCommand;
+import mods.thecomputerizer.musictriggers.network.NetworkHandler;
+import mods.thecomputerizer.musictriggers.network.packets.PacketReceiveCommand;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
 import net.minecraft.command.arguments.EntityArgument;
@@ -16,7 +16,7 @@ public class TriggerCommand {
                 .then(Commands.argument("identifier", StringArgumentType.word())
                 .executes((ctx) -> {
                     try {
-                        PacketHandler.sendTo(new PacketReceiveCommand(StringArgumentType.getString(ctx, "identifier")), ctx.getSource().getPlayerOrException());
+                        NetworkHandler.sendTo(new PacketReceiveCommand(StringArgumentType.getString(ctx, "identifier")), ctx.getSource().getPlayerOrException());
                         return 1;
                     } catch (Exception e) {
                         Constants.MAIN_LOG.error("Player not specified");
@@ -28,7 +28,7 @@ public class TriggerCommand {
                         .then(Commands.argument("player", EntityArgument.player())
                                 .executes((ctx) -> {
                                     try {
-                                        PacketHandler.sendTo(new PacketReceiveCommand(StringArgumentType.getString(ctx, "identifier")), EntityArgument.getPlayer(ctx,"player"));
+                                        NetworkHandler.sendTo(new PacketReceiveCommand(StringArgumentType.getString(ctx, "identifier")), EntityArgument.getPlayer(ctx,"player"));
                                         return 1;
                                     } catch (Exception e) {
                                         Constants.MAIN_LOG.error("Player not specified correctly");

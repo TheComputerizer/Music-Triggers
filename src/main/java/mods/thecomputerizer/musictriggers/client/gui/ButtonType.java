@@ -8,6 +8,7 @@ import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.LogUtil;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.ResourceLocation;
+import org.apache.logging.log4j.util.TriConsumer;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -15,9 +16,9 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 
 public enum ButtonType {
-    BACK(16,8,64,16,"back",0,false,(parent, button) ->
+    BACK(16,8,64,16,"back",0,true,(parent, button, mode) ->
             parent.saveAndClose(false),ButtonSuperType::new),
-    APPLY(-16,8,96,16,"apply_changes",2,true,(parent, button) ->
+    APPLY(-16,8,96,16,"apply_changes",2,false,(parent, button, mode) ->
             parent.applyButton(),ButtonSuperType::new),
     LOG("log",2, 0.25f, null, (screen, button) ->
             ((GuiSuperType)screen).saveAndDisplay(
@@ -43,19 +44,20 @@ public enum ButtonType {
     TRANSITIONS("transitions",(screen, id) -> screen.getInstance().pageClick(GuiType.CHANNEL, screen, id),GuiPage.Icon::new),
     COMMANDS("commands",(screen, id) -> screen.getInstance().pageClick(GuiType.CHANNEL, screen, id),GuiPage.Icon::new),
     TOGGLES("toggles",(screen, id) -> screen.getInstance().pageClick(GuiType.CHANNEL, screen, id),GuiPage.Icon::new),
-    REDIRECT("redirect",(screen, id) -> screen.getInstance().pageClick(GuiType.CHANNEL, screen, id),GuiPage.Icon::new);
+    REDIRECT("redirect",(screen, id) -> screen.getInstance().pageClick(GuiType.CHANNEL, screen, id),GuiPage.Icon::new),
+    JUKEBOX("jukebox",(screen, id) -> screen.getInstance().pageClick(GuiType.CHANNEL, screen, id),GuiPage.Icon::new);
 
     //normal buttons variables
-    private final ButtonSuperType.CreatorFunction<Integer, Integer, Integer, Integer, String, List<String>,
-            BiConsumer<GuiSuperType, ButtonSuperType>, GuiSuperType, Boolean, ButtonSuperType> normalCreatorFunction;
+    private final ButtonSuperType.CreatorFunction<Integer, Integer, Integer, Integer, Integer, String, List<String>,
+            TriConsumer<GuiSuperType, ButtonSuperType, Integer>, Boolean, ButtonSuperType> normalCreatorFunction;
     private final int x;
     private final int y;
     private final int width;
     private final int height;
     private final String name;
     private final int hoverLines;
-    private final boolean isApply;
-    private final BiConsumer<GuiSuperType, ButtonSuperType> normalClick;
+    private final boolean startEnabled;
+    private final TriConsumer<GuiSuperType, ButtonSuperType, Integer> normalClick;
     //radial button variables
     private final RadialButton.CreatorFunction<List<String>, ResourceLocation, ResourceLocation, Float, String,
             BiConsumer<Screen, RadialButton>, RadialButton> radialCreatorFunction;
@@ -69,10 +71,11 @@ public enum ButtonType {
     private final BiConsumer<GuiSuperType,String> iconClick;
     private final IconCreatorFunction<String,ResourceLocation,ResourceLocation,Boolean,BiConsumer<GuiSuperType,String>, GuiPage.Icon> iconCreator;
 
-    ButtonType(int x, int y, int width, int height, String name, int hoverLines, Boolean isApply, BiConsumer<GuiSuperType, ButtonSuperType> normalClick,
-               ButtonSuperType.CreatorFunction<Integer, Integer, Integer, Integer, String, List<String>,
-                       BiConsumer<GuiSuperType, ButtonSuperType>, GuiSuperType, Boolean, ButtonSuperType> creatorFunction) {
-        this(x,y,width,height,name,hoverLines,isApply,normalClick,creatorFunction,
+    ButtonType(int x, int y, int width, int height, String name, int hoverLines, Boolean startEnabled,
+               TriConsumer<GuiSuperType, ButtonSuperType, Integer> normalClick,
+               ButtonSuperType.CreatorFunction<Integer, Integer, Integer, Integer, Integer, String, List<String>,
+                       TriConsumer<GuiSuperType, ButtonSuperType, Integer>, Boolean, ButtonSuperType> creatorFunction) {
+        this(x,y,width,height,name,hoverLines,startEnabled,normalClick,creatorFunction,
                 null,null,0,0f,null,null,
                 null,null,null);
     }
@@ -89,9 +92,10 @@ public enum ButtonType {
                 null,null,0,0f,null,null,
                 id,iconClick,iconCreator);
     }
-    ButtonType(int x, int y, int width, int height, String name, int hoverLines, Boolean isApply, BiConsumer<GuiSuperType, ButtonSuperType> normalClick,
-               ButtonSuperType.CreatorFunction<Integer, Integer, Integer, Integer, String, List<String>,
-                       BiConsumer<GuiSuperType, ButtonSuperType>, GuiSuperType, Boolean, ButtonSuperType> creatorFunction,
+    ButtonType(int x, int y, int width, int height, String name, int hoverLines, Boolean startEnabled,
+               TriConsumer<GuiSuperType, ButtonSuperType, Integer> normalClick,
+               ButtonSuperType.CreatorFunction<Integer, Integer, Integer, Integer, Integer, String, List<String>,
+                       TriConsumer<GuiSuperType, ButtonSuperType, Integer>, Boolean, ButtonSuperType> creatorFunction,
                RadialButton.CreatorFunction<List<String>, ResourceLocation, ResourceLocation, Float, String,
                        BiConsumer<Screen, RadialButton>, RadialButton> radialCreatorFunction, String iconName,
                int descLines, Float hoverIncrease, String centerText, BiConsumer<Screen, RadialButton> radialClick,
@@ -103,7 +107,7 @@ public enum ButtonType {
         this.height = height;
         this.name = name;
         this.hoverLines = hoverLines;
-        this.isApply = isApply;
+        this.startEnabled = startEnabled;
         this.normalClick = normalClick;
         this.normalCreatorFunction = creatorFunction;
         this.radialCreatorFunction = radialCreatorFunction;
@@ -132,10 +136,17 @@ public enum ButtonType {
         else if(adjustedX==69) adjustedX = (int)((((float)parent.width)/2f)-(((float)this.width)/2f));
         if(adjustedY<0) adjustedY = parent.width+adjustedY-this.width;
         else if(adjustedY==69) adjustedY = (int)((((float)parent.width)/2f)-(((float)this.width)/2f));
-        return this.normalCreatorFunction.apply(adjustedX,adjustedY,this.width,this.height,
-                Translate.guiGeneric(false,"button",this.name),
-                Translate.guiNumberedList(this.hoverLines,"button",this.name,"desc"),
-                this.normalClick,parent,this.isApply);
+        return this.normalCreatorFunction.apply(adjustedX,adjustedY,this.width,this.height, 0,getNormalDisplay(),
+                Translate.guiNumberedList(this.hoverLines,"button",this.name,"desc"), this.normalClick,
+                this.startEnabled);
+    }
+
+    public String getNormalDisplay() {
+        return Translate.guiGeneric(false,"button",this.name);
+    }
+
+    public String getID() {
+        return this.name;
     }
 
     public RadialButton getRadialButton() {
@@ -173,15 +184,7 @@ public enum ButtonType {
                 new GuiPage(screen, type, configInstance, type.getId(), configInstance.getPageIcons(type), canEdit));
     }
 
-    private static void guiParameterShortcut(GuiSuperType screen, GuiType type, String channel) {
-        Instance configInstance = screen.getInstance();
-        screen.saveAndDisplay(
-                new GuiParameters(screen, type, configInstance, channel+":"+type.getId(),
-                        Translate.guiGeneric(false,"titles",type.getId(),"name"),
-                        configInstance.getParameters(type, channel)));
-    }
-
-    private static ResourceLocation getIcons(String name, boolean hover) {
+    public static ResourceLocation getIcons(String name, boolean hover) {
         String base = "textures/gui/{}/{}.png";
         return AssetUtil.getAltResource(Constants.MODID,LogUtil.injectParameters(base,"black_icons",name),
                 LogUtil.injectParameters(base,"white_icons",name),hover);

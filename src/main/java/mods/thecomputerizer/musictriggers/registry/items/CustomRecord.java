@@ -1,4 +1,4 @@
-package mods.thecomputerizer.musictriggers.common.objects;
+package mods.thecomputerizer.musictriggers.registry.items;
 
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
@@ -11,6 +11,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
@@ -23,12 +24,12 @@ public class CustomRecord extends MusicTriggersRecord {
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void appendHoverText(ItemStack stack, @Nullable World world, List<ITextComponent> components, ITooltipFlag flag) {
+    public void appendHoverText(ItemStack stack, @Nullable World world, @Nonnull List<ITextComponent> components, @Nonnull ITooltipFlag flag) {
         if(stack.getOrCreateTag().contains("trackID"))
             components.add(AssetUtil.customLang("record.musictriggers.custom_record."+
                     ChannelManager.getChannel(stack.getOrCreateTag().getString("channelFrom")).getRecordMap()
                             .get(stack.getOrCreateTag().getString("trackID")),false));
-        else components.add(AssetUtil.extraLang(Constants.MODID,"item","music_triggers_record","blank_description"));
+        else components.add(AssetUtil.extraLang(Constants.MODID,"item","music_triggers_record","blank_description",false));
     }
 
     public static float mapTriggerToFloat(String channel, String song) {

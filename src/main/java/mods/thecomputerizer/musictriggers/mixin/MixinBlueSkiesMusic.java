@@ -12,13 +12,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Arrays;
 
-@SuppressWarnings("ALL")
 @Pseudo
 @Mixin(value = SkiesMusicTicker.class)
 public class MixinBlueSkiesMusic {
 
-    @Inject(at = @At(value = "HEAD"), method = "func_110550_d", cancellable = true)
-    private void tick(CallbackInfo info) {
+    @Inject(at = @At(value = "HEAD"), method = "tick", cancellable = true)
+    private void musictriggers_tick(CallbackInfo info) {
         if(Arrays.asList(ConfigDebug.BLOCKED_MOD_MUSIC).contains(BlueSkies.MODID) &&
                 (!ConfigDebug.PLAY_NORMAL_MUSIC || ChannelManager.canAnyChannelOverrideMusic())) info.cancel();
     }

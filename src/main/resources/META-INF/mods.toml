@@ -5,12 +5,11 @@
 
     [[mods]]
       modId="musictriggers"
-      version="1.16.5-6.0_PUBLIC_BETA"
+      version="${version}"
       displayName="Music Triggers"
       updateJSONURL=""
       displayURL="https://www.curseforge.com/minecraft/mc-mods/music-triggers"
       logoFile="musictriggers_logo"
-      credits="The_Computerizer"
       authors="The_Computerizer"
       description='''
       Lets you play music based on in game triggers
@@ -33,6 +32,6 @@
       [[dependencies.musictriggers]]
         modId="theimpossiblelibrary"
         mandatory=true
-        versionRange="[1.16.5-0.1.9-hf,)"
+        versionRange="[1.16.5-0.2.2,)"
         ordering="NONE"
         side="BOTH"

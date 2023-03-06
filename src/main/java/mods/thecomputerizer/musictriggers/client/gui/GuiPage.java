@@ -21,7 +21,6 @@ public class GuiPage extends GuiSuperType {
     private final String id;
     private final List<Icon> icons;
     private final boolean canEdit;
-    private ButtonSuperType toggleMode;
     private boolean deleteMode;
     private int scrollPos;
     private boolean canScrollDown;
@@ -52,28 +51,27 @@ public class GuiPage extends GuiSuperType {
         if(this.canEdit) {
             String displayName = Translate.guiGeneric(false,"button",this.id + "_add");
             int width = this.font.width(displayName)+8;
-            int left = 96;
-            addTopButton(left, displayName, width, new ArrayList<>(),
-                    (screen, button) -> {
+            int left = 16;
+            addSuperButton(createBottomButton(displayName, width, 1, new ArrayList<>(),
+                    (screen, button, mode) -> {
                         Minecraft.getInstance().setScreen(
                                 new GuiPopUp(this,GuiType.POPUP,this.getInstance(),this.id,true,4,
                                         new ArrayList<>(this.icons)));
                         this.hasEdits = true;
                         save();
-                    },
-                    this);
+                    }),left);
             left+=(width+16);
-            displayName = Translate.guiGeneric(false,"button","delete_mode");
-            width = this.font.width(displayName)+8;
-            this.toggleMode = addTopButton(left, displayName, width,
-                    Translate.guiNumberedList(3,"button","delete_mode","desc"),
-                    (screen, button) -> toggleDeleteMode(!this.deleteMode),this);
+            displayName = Translate.guiGeneric(false, "button", "delete_mode");
+            width = this.font.width(displayName) + 8;
+            String finalDisplayName = displayName;
+            addSuperButton(createBottomButton(displayName, width, 2,
+                    Translate.guiNumberedList(3, "button", "delete_mode", "desc"),
+                    (screen, button, mode) -> {
+                        this.deleteMode = mode > 1;
+                        TextFormatting color = mode == 1 ? TextFormatting.WHITE : TextFormatting.RED;
+                        button.updateDisplay(color + finalDisplayName);
+                    }), left);
         }
-    }
-
-    private void toggleDeleteMode(boolean isActive) {
-        this.deleteMode = isActive;
-        this.toggleMode.updateDisplayFormat(isActive ? TextFormatting.RED : TextFormatting.WHITE);
     }
 
     @Override
@@ -82,14 +80,18 @@ public class GuiPage extends GuiSuperType {
             if(scroll<1 && this.canScrollDown) {
                 this.scrollPos++;
                 this.canScrollDown = false;
-            } else if(this.scrollPos>0) this.scrollPos--;
-            return true;
+                return true;
+            } else if(this.scrollPos>0) {
+                this.scrollPos--;
+                return true;
+            }
         }
-        return false;
+        return super.mouseScrolled(mouseX, mouseY, scroll);
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+        super.mouseClicked(mouseX, mouseY, mouseButton);
         if (mouseButton == 0) {
             Iterator<Icon> itr = this.icons.iterator();
             while (itr.hasNext()) {
@@ -99,6 +101,7 @@ public class GuiPage extends GuiSuperType {
                     itr.remove();
                     this.hasEdits = true;
                     save();
+                    return true;
                 }
                 else icon.onClick(this);
             }
@@ -110,39 +113,42 @@ public class GuiPage extends GuiSuperType {
     protected void drawStuff(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
         int top = this.spacing+24;
         drawIcons(matrix,mouseX,mouseY,top);
-        drawLeftSide(top,matrix);
+        drawLeftSide(matrix,top);
     }
 
     private void drawIcons(MatrixStack matrix, int mouseX, int mouseY, int top) {
         int left = this.width-(this.spacing*15);
-        Vector2f topLeft;
+        Vector2f topLeft = new Vector2f(left,top);
         boolean isLeft = true;
         for(Icon icon : this.icons) {
             if(isLeft) topLeft = new Vector2f(left,top);
-            else topLeft = new Vector2f(left+(this.spacing*7),top);
-            icon.drawIcon(matrix,topLeft,this.spacing,mouseX,mouseY,black(192),this.getBlitOffset());
+            else topLeft = new Vector2f(left+(this.spacing*7),topLeft.y);
+            icon.drawIcon(matrix,topLeft,this.spacing,mouseX,mouseY,black(192),this.getBlitOffset(),
+                    Minecraft.getInstance().screen == this);
             if(!isLeft) top+=this.spacing*7;
             isLeft = !isLeft;
         }
     }
 
-    private void drawLeftSide(int top, MatrixStack matrix) {
-        int textHeight = this.font.lineHeight;
-        int centerX = this.width/2;
-        int left = this.spacing;
-        int textX = left+(this.spacing/2);
-        for(Icon icon : this.icons) {
-            if(icon.getHover()) {
-                GuiUtil.drawLine(new Vector2f(left, top), new Vector2f(centerX, top), white(128), 1f, this.getBlitOffset());
-                top += this.spacing;
-                drawString(matrix,font, icon.getDisplay(), textX, top, GuiUtil.WHITE);
-                top += (textHeight + this.spacing);
-                GuiUtil.drawLine(new Vector2f(left, top), new Vector2f(centerX, top), white(128), 1f, this.getBlitOffset());
-                top += this.spacing;
-                top = GuiUtil.drawMultiLineString(this,matrix,icon.getDescription(),textX,centerX,top,textHeight+(this.spacing/2)
-                )+(this.spacing/2);
-                GuiUtil.drawLine(new Vector2f(left, top), new Vector2f(centerX, top), white(128), 1f, this.getBlitOffset());
-                break;
+    private void drawLeftSide(MatrixStack matrix, int top) {
+        if(Minecraft.getInstance().screen==this) {
+            int textHeight = this.font.lineHeight;
+            int centerX = this.width / 2;
+            int left = this.spacing;
+            int textX = left + (this.spacing / 2);
+            for (Icon icon : this.icons) {
+                if (icon.getHover()) {
+                    GuiUtil.drawLine(new Vector2f(left, top), new Vector2f(centerX, top), white(128), 1f, this.getBlitOffset());
+                    top += this.spacing;
+                    drawString(matrix,font,icon.getDisplay(), textX, top, GuiUtil.WHITE);
+                    top += (textHeight + this.spacing);
+                    GuiUtil.drawLine(new Vector2f(left, top), new Vector2f(centerX, top), white(128), 1f, this.getBlitOffset());
+                    top += this.spacing;
+                    top = GuiUtil.drawMultiLineString(matrix, this.font, icon.getDescription(), textX, centerX, top, textHeight + (this.spacing / 2),
+                            100, 0, GuiUtil.WHITE) + (this.spacing / 2);
+                    GuiUtil.drawLine(new Vector2f(left, top), new Vector2f(centerX, top), white(128), 1f, this.getBlitOffset());
+                    break;
+                }
             }
         }
     }
@@ -204,18 +210,18 @@ public class GuiPage extends GuiSuperType {
             return mouseX>topLeft.x && mouseX<(topLeft.x+sideLength) && mouseY>topLeft.y && mouseY<(topLeft.y+sideLength);
         }
 
-        public void drawIcon(MatrixStack matrix, Vector2f topLeft, int spacing, int mouseX, int mouseY, Vector4f color, float zLevel) {
+        public void drawIcon(MatrixStack matrix, Vector2f topLeft, int spacing, int mouseX, int mouseY, Vector4f color, float zLevel, boolean curScreen) {
             GuiUtil.drawBoxOutline(topLeft,spacing*6,spacing*6,new Vector4f(255,255,255,192),
                     1f,zLevel);
             Vector2f backgroundTopLeft = new Vector2f(topLeft.x+(((float)spacing)/2),topLeft.y+(((float)spacing)/2));
             Vector2f iconCenter = new Vector2f((int)(backgroundTopLeft.x+(spacing*2.5f)),(int)(backgroundTopLeft.y+(spacing*2.5f)));
-            this.hover = isHovering(mouseX,mouseY,backgroundTopLeft,spacing*5);
+            this.hover = curScreen && isHovering(mouseX,mouseY,backgroundTopLeft,spacing*5);
             if(hover) {
                 GuiUtil.drawBox(backgroundTopLeft,spacing*5,spacing*5,GuiUtil.reverseColors(color),zLevel);
                 GuiUtil.bufferSquareTexture(matrix, iconCenter,spacing*1.5f,this.hoverTexture);
             } else {
                 GuiUtil.drawBox(backgroundTopLeft, spacing * 5, spacing * 5, color, zLevel);
-                GuiUtil.bufferSquareTexture(matrix,iconCenter, spacing * 1.5f, this.texture);
+                GuiUtil.bufferSquareTexture(matrix, iconCenter, spacing * 1.5f, this.texture);
             }
         }
 

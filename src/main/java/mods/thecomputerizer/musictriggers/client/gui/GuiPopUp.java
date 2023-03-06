@@ -6,6 +6,7 @@ import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.util.SharedConstants;
 import net.minecraft.util.math.vector.Vector2f;
 import net.minecraft.util.math.vector.Vector4f;
 import net.minecraft.util.text.ITextComponent;
@@ -15,8 +16,6 @@ import org.lwjgl.glfw.GLFW;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class GuiPopUp extends GuiSuperType {
@@ -56,32 +55,44 @@ public class GuiPopUp extends GuiSuperType {
     @Override
     public boolean keyPressed(int keyCode, int x, int y) {
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
-            this.getMinecraft().setScreen(this.parent);
+            Minecraft.getInstance().setScreen(this.parent);
             return true;
         }
-        if (this.canType) {
-            if (!blacklistedKeys.contains(keyCode)) {
-                if (keyCode == GLFW.GLFW_KEY_BACKSPACE) this.value = backspace(this.value);
-                else {
-                    String typed = GLFW.glfwGetKeyName(keyCode, -1);
-                    if(hasShiftDown() && Objects.nonNull(typed)) typed = typed.toUpperCase(Locale.ROOT);
-                    this.value += typed;
-                }
-                return true;
-            }
+        if (this.canType && keyCode == GLFW.GLFW_KEY_BACKSPACE) {
+            this.value = backspace(this.value);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean charTyped(char c, int mod) {
+        if(this.canType && SharedConstants.isAllowedChatCharacter(c)) {
+            this.value += c;
+            return true;
         }
         return false;
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+        super.mouseClicked(mouseX, mouseY, mouseButton);
         if (mouseButton == 0) {
-            if(this.hoverYes) this.getMinecraft().setScreen(null);
-            else if(this.hoverNo) this.getMinecraft().setScreen(this.parent);
-            else if (this.canType && this.isHover) click();
+            if(this.hoverYes) {
+                this.onClose();
+                return true;
+            }
+            else if(this.hoverNo) {
+                Minecraft.getInstance().setScreen(this.parent);
+                return true;
+            }
+            else if (this.canType && this.isHover) {
+                click();
+                return true;
+            }
             else clearError();
         }
-        return super.mouseClicked(mouseX, mouseY, mouseButton);
+        return false;
     }
 
     private void click() {
@@ -105,13 +116,12 @@ public class GuiPopUp extends GuiSuperType {
     }
     @Override
     protected void drawStuff(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
-        GuiUtil.drawBox(new Vector2f(0,0),this.width,this.height,
-                new Vector4f(0,0,0,128),this.getBlitOffset());
+        GuiUtil.drawBox(new Vector2f(0,0),this.width,this.height,new Vector4f(0,0,0,128),this.getBlitOffset());
         Vector2f center = new Vector2f(((float)this.width)/2,((float)this.height)/2);
-        if(this.id.matches("confirm")) drawConfirmationBox(matrix, center,mouseX,mouseY,this.font);
+        if(this.id.matches("confirm")) drawConfirmationBox(matrix,center,mouseX,mouseY,this.font);
         else {
             if (this.canType) drawCanType(matrix, center, mouseX, mouseY, this.font);
-            drawError(matrix, center, this.font);
+            drawError(matrix,center, this.font);
         }
     }
 
@@ -126,12 +136,12 @@ public class GuiPopUp extends GuiSuperType {
             Vector2f start = new Vector2f(0,bottom-this.spacing);
             Vector2f end = new Vector2f(this.width,bottom-this.spacing);
             GuiUtil.drawLine(start,end,white(255),1f,this.getBlitOffset());
-            start = new Vector2f(start.x, start.y-this.spacing-font.lineHeight);
-            end = new Vector2f(end.x, end.y-this.spacing-font.lineHeight);
+            start = new Vector2f(start.x,start.y-this.spacing-font.lineHeight);
+            end = new Vector2f(end.x,end.y-this.spacing-font.lineHeight);
             drawCenteredString(matrix,font,Translate.guiGeneric(false,"popup","error","title"),(int)center.x,
                     (int)start.y,red);
-            start = new Vector2f(start.x, start.y-this.spacing);
-            end = new Vector2f(end.x, end.y-this.spacing);
+            start = new Vector2f(start.x,start.y-this.spacing);
+            end = new Vector2f(end.x,end.y-this.spacing);
             GuiUtil.drawLine(start,end,white(255),1f,this.getBlitOffset());
         }
     }
@@ -142,14 +152,13 @@ public class GuiPopUp extends GuiSuperType {
         int boxHeight = font.lineHeight+(this.spacing*2);
         Vector2f topLeft = new Vector2f(center.x-(((float)width)/2),center.y-(((float)totalHeight)/2));
         drawSelectionBox(topLeft,width,boxHeight,false);
-        drawCenteredString(matrix,font,this.title, (int)center.x, (int)topLeft.y+this.spacing, GuiUtil.WHITE);
-        topLeft = new Vector2f(topLeft.x, topLeft.y+boxHeight);
+        drawCenteredString(matrix,font,this.title,(int)center.x,(int)topLeft.y+this.spacing,GuiUtil.WHITE);
+        topLeft = new Vector2f(topLeft.x,topLeft.y+boxHeight);
         this.isHover = mouseHover(topLeft,mouseX,mouseY,width,boxHeight);
         drawSelectionBox(topLeft,width,boxHeight,this.isHover);
         int color = GuiUtil.WHITE;
-        if(this.isHover) color = GuiUtil.makeRGBAInt(0,0,0,255);
-        drawCenteredString(matrix, font,this.value, (int)center.x, (int)topLeft.y+this.spacing, color);
-        topLeft = new Vector2f(topLeft.x, topLeft.y+boxHeight);
+        if(this.isHover) color = GuiUtil.makeRGBAInt(200,200,200,255);
+        drawCenteredString(matrix,font,this.value,(int)center.x,(int)topLeft.y+this.spacing,color);
         if(this.isHover) renderComponentTooltip(matrix,this.hoverText,mouseX,mouseY);
     }
 
@@ -163,26 +172,26 @@ public class GuiPopUp extends GuiSuperType {
     }
 
     private void drawConfirmationBox(MatrixStack matrix, Vector2f center, int mouseX, int mouseY, FontRenderer font) {
-        int width = font.width(this.title);
+        int width = font.width(this.title)+4;
         int totalHeight = (font.lineHeight*2)+(this.spacing*4);
         int boxHeight = font.lineHeight+(this.spacing*2);
         Vector2f topLeft = new Vector2f(center.x-(((float)width)/2),center.y-(((float)totalHeight)/2));
         drawSelectionBox(topLeft,width,boxHeight,false);
-        drawCenteredString(matrix, font,this.title, (int)center.x, (int)topLeft.y+this.spacing,GuiUtil.WHITE);
-        topLeft = new Vector2f(topLeft.x, topLeft.y+boxHeight);
+        drawCenteredString(matrix,font,this.title,(int) center.x,(int) topLeft.y+this.spacing,GuiUtil.WHITE);
+        topLeft = new Vector2f(topLeft.x,topLeft.y+boxHeight);
         String yes = Translate.guiGeneric(false,"popup","yes");
         String no = Translate.guiGeneric(false,"popup","no");
         this.hoverYes = mouseHover(topLeft,mouseX,mouseY,width/2,boxHeight);
-        drawSelectionBox(topLeft,width/2,boxHeight,this.isHover);
+        drawSelectionBox(topLeft,width/2,boxHeight,this.hoverYes);
         int color = GuiUtil.WHITE;
-        if(this.hoverYes) color = GuiUtil.makeRGBAInt(0,0,0,255);
-        drawCenteredString(matrix,font,yes,(int)(center.x-(width/4)),(int)topLeft.y+this.spacing,color);
-        topLeft = new Vector2f(center.x, topLeft.y);
+        if(this.hoverYes) color = GuiUtil.makeRGBAInt(200,200,200,255);
+        drawCenteredString(matrix,font,yes,(int)(center.x-(width/4)),(int)(topLeft.y+this.spacing),color);
+        topLeft = new Vector2f(center.x,topLeft.y);
         this.hoverNo = mouseHover(topLeft,mouseX,mouseY,width/2,boxHeight);
-        drawSelectionBox(topLeft,width/2,boxHeight,this.isHover);
+        drawSelectionBox(topLeft,width/2,boxHeight,this.hoverNo);
         color = GuiUtil.WHITE;
-        if(this.hoverNo) color = GuiUtil.makeRGBAInt(0,0,0,255);
-        drawCenteredString(matrix,font,no,(int)(center.x+(width/4)),(int)topLeft.y+this.spacing,color);
+        if(this.hoverNo) color = GuiUtil.makeRGBAInt(200,200,200,255);
+        drawCenteredString(matrix,font,no,(int)(center.x+(width/4)),(int)(topLeft.y+this.spacing),color);
     }
 
     private void drawSelectionBox(Vector2f topLeft, int width, int height, boolean hover) {

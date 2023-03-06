@@ -1,20 +1,25 @@
-package mods.thecomputerizer.musictriggers.common.objects;
+package mods.thecomputerizer.musictriggers.registry.items;
 
-import mods.thecomputerizer.musictriggers.util.PacketHandler;
-import mods.thecomputerizer.musictriggers.util.packets.PacketJukeBoxCustom;
+import mods.thecomputerizer.musictriggers.network.NetworkHandler;
+import mods.thecomputerizer.musictriggers.network.packets.PacketJukeBoxCustom;
+import mods.thecomputerizer.musictriggers.registry.BlockRegistry;
+import mods.thecomputerizer.musictriggers.registry.blocks.MusicRecorder;
+import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.JukeboxBlock;
 import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -33,34 +38,43 @@ public class MusicTriggersRecord extends Item {
     @Nonnull
     public ActionResultType useOn(ItemUseContext ctx) {
         BlockState state = ctx.getLevel().getBlockState(ctx.getClickedPos());
-        if (state.getBlock() instanceof MusicRecorder) {
-            MusicRecorder mr = (MusicRecorder) state.getBlock();
-            if(!ctx.getLevel().isClientSide && ctx.getPlayer()!=null && !state.getValue(MusicRecorder.HAS_RECORD) && !state.getValue(MusicRecorder.HAS_DISC)) {
+        if(state.getBlock()==BlockRegistry.MUSIC_RECORDER.get() && !state.getValue(MusicRecorder.HAS_RECORD)
+                && !state.getValue(MusicRecorder.HAS_DISC)) {
+            if (!ctx.getLevel().isClientSide) {
+                MusicRecorder mr = (MusicRecorder) state.getBlock();
                 ItemStack stack = ctx.getPlayer().getItemInHand(ctx.getHand());
-                mr.insertRecord(ctx.getLevel(),ctx.getClickedPos(),state,stack,ctx.getPlayer().getUUID());
+                mr.insertRecord(ctx.getLevel(), ctx.getClickedPos(), stack, state, ctx.getPlayer());
                 stack.shrink(1);
             }
             return ActionResultType.SUCCESS;
-        } else if (state.getBlock() instanceof JukeboxBlock && !(Boolean)state.getValue(JukeboxBlock.HAS_RECORD)) {
-            if (!ctx.getLevel().isClientSide && ctx.getPlayer()!=null) {
-                ItemStack stack = ctx.getPlayer().getItemInHand(ctx.getHand());
-                if(stack.getOrCreateTag().contains("trackID") && stack.getOrCreateTag().contains("channelFrom")) {
-                    ((JukeboxBlock) Blocks.JUKEBOX).setRecord(ctx.getLevel(),ctx.getClickedPos(),state,stack);
-                    PacketHandler.sendTo(new PacketJukeBoxCustom(ctx.getClickedPos(),stack.getOrCreateTag().getString("channelFrom"),stack.getOrCreateTag().getString("trackID")),(ServerPlayerEntity) ctx.getPlayer());
+        } else if (state.getBlock() == Blocks.JUKEBOX && !state.getValue(JukeboxBlock.HAS_RECORD)) {
+            PlayerEntity player = ctx.getPlayer();
+            if (!ctx.getLevel().isClientSide && player instanceof ServerPlayerEntity) {
+                ItemStack stack = player.getItemInHand(ctx.getHand());
+                CompoundNBT tag = stack.getOrCreateTag();
+                if (tag.contains("trackID") && tag.contains("channelFrom")) {
+                    ((JukeboxBlock) state.getBlock()).setRecord(ctx.getLevel(), ctx.getClickedPos(), state, stack);
+                    NetworkHandler.sendTo(new PacketJukeBoxCustom(ctx.getClickedPos(),tag.getString("channelFrom"),
+                            tag.getString("trackID")),(ServerPlayerEntity)player);
                     stack.shrink(1);
-                    ctx.getPlayer().awardStat(Stats.PLAY_RECORD);
+                    player.awardStat(Stats.PLAY_RECORD);
                 }
             }
             return ActionResultType.SUCCESS;
-        } else return super.useOn(ctx);
+        }
+        return ActionResultType.PASS;
     }
 
     @Override
     @OnlyIn(Dist.CLIENT)
-    public void appendHoverText(ItemStack stack, @Nullable World world, List<ITextComponent> components, ITooltipFlag flag) {
-        if(stack.getOrCreateTag().contains("trackID"))
-            components.add(new StringTextComponent(getDescription().getString()+": "+stack.getOrCreateTag().getString("trackID")));
-        else components.add(new TranslationTextComponent("item.musictriggers.music_triggers_record.blank_description"));
+    public void appendHoverText(ItemStack stack, @Nullable World world, @Nonnull List<ITextComponent> components, @Nonnull ITooltipFlag flag) {
+        CompoundNBT tag = stack.getOrCreateTag();
+        if(tag.contains("trackID"))
+            components.add(new StringTextComponent(
+                    AssetUtil.extraLang(Constants.MODID,"item","music_triggers_record",
+                            "description",false).getString() +": "+tag.getString("trackID")));
+        else components.add(AssetUtil.extraLang(Constants.MODID,"item","music_triggers_record",
+                        "blank_description",false));
     }
 
     public static float mapTriggerToFloat(String trigger) {
@@ -81,7 +95,7 @@ public class MusicTriggersRecord extends Item {
                 return 0.07f;
             case "creative":
                 return 0.08f;
-            case "day":
+            case "time":
                 return 0.09f;
             case "dead":
                 return 0.1f;
@@ -119,42 +133,36 @@ public class MusicTriggersRecord extends Item {
                 return 0.26f;
             case "mob":
                 return 0.27f;
-            case "night":
-                return 0.28f;
             case "pet":
-                return 0.29f;
+                return 0.28f;
             case "pvp":
-                return 0.3f;
+                return 0.29f;
             case "raining":
-                return 0.31f;
+                return 0.3f;
             case "rainintensity":
-                return 0.32f;
+                return 0.31f;
             case "riding":
-                return 0.33f;
+                return 0.32f;
             case "sandstorm":
-                return 0.34f;
+                return 0.33f;
             case "season":
-                return 0.35f;
+                return 0.34f;
             case "snowing":
-                return 0.36f;
+                return 0.35f;
             case "spectator":
-                return 0.37f;
+                return 0.36f;
             case "storming":
-                return 0.38f;
+                return 0.37f;
             case "structure":
-                return 0.39f;
-            case "sunrise":
-                return 0.4f;
-            case "sunset":
-                return 0.41f;
+                return 0.38f;
             case "tornado":
-                return 0.42f;
+                return 0.39f;
             case "underwater":
-                return 0.43f;
+                return 0.4f;
             case "victory":
-                return 0.44f;
+                return 0.41f;
             case "zones":
-                return 0.45f;
+                return 0.42f;
             default:
                 return 0f;
         }

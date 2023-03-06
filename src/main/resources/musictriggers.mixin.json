@@ -3,7 +3,9 @@
   "package": "mods.thecomputerizer.musictriggers.mixin",
   "compatibilityLevel": "JAVA_8",
   "refmap": "musictriggers.refmap.json",
-  "mixins": [],
+  "mixins": [
+    "MixinServerBossInfo"
+  ],
   "client": [
     "MixinBlueSkiesMusic",
     "MixinMusicTicker"
