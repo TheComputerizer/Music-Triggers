@@ -1,29 +1,32 @@
 package mods.thecomputerizer.musictriggers.client.gui.instance;
 
+import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.Translate;
-import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.musictriggers.client.gui.*;
-import mods.thecomputerizer.musictriggers.config.ConfigTransitions;
+import mods.thecomputerizer.theimpossiblelibrary.common.toml.Holder;
+import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
+import mods.thecomputerizer.theimpossiblelibrary.util.file.LogUtil;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import org.apache.logging.log4j.util.TriConsumer;
 
 import java.io.File;
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class Transitions extends AbstractChannelConfig {
-    private final Map<Integer, ConfigTransitions.Title> titleCards;
-    private final Map<Integer, ConfigTransitions.Image> imageCards;
-    private final List<ConfigTransitions.Title> newTitles;
-    private final List<ConfigTransitions.Image> newImages;
+    private final Holder fileData;
+    private int titleView;
 
-    public Transitions(File configFile, String channelName, Map<Integer, ConfigTransitions.Title> titleCards,
-                       Map<Integer, ConfigTransitions.Image> imageCards) {
-        super(configFile,channelName);
-        this.titleCards = titleCards;
-        this.imageCards = imageCards;
-        this.newTitles = new ArrayList<>();
-        this.newImages = new ArrayList<>();
+    public Transitions(String channelName, Holder fileData) {
+        super(channelName);
+        this.fileData = MusicTriggers.clone(fileData);
+        this.titleView = 1;
     }
 
     @Override
@@ -46,128 +49,174 @@ public class Transitions extends AbstractChannelConfig {
     @Override
     protected void write(String newFilePath) {
         File file = FileUtil.generateNestedFile("config/MusicTriggers/"+newFilePath+".toml",true);
-        List<String> lines = new ArrayList<>(headerLines());
-        for(ConfigTransitions.Title title : this.titleCards.values())
-            lines.addAll(title.getAsTomlLines(this.titleCards.size()>1));
-        for(ConfigTransitions.Image image : this.imageCards.values())
-            lines.addAll(image.getAsTomlLines(this.imageCards.size()>1));
+        List<String> lines = new ArrayList<>();
+        List<String> fromData = this.fileData.toLines();
+        if(fromData.stream().noneMatch(headerLines()::contains)) lines.addAll(headerLines());
+        lines.addAll(this.fileData.toLines());
         FileUtil.writeLinesToFile(file,lines,false);
     }
 
-    public List<GuiSelection.Element> getTitleCardInstances(GuiSelection selectionScreen, String channelName) {
-        return this.titleCards.keySet().stream()
-                .map(index -> new GuiSelection.Element(selectionScreen, channelName, "title",
-                        Translate.guiGeneric(false,"selection","title"), null, false,
-                        index, (channel, title) -> Minecraft.getInstance().setScreen(
-                        new GuiParameters(selectionScreen, GuiType.TITLE_INFO, selectionScreen.getInstance(),
-                                "title_info", "" + index, titleCardParameters(index))),
-                        (channel, title) -> removeTitleCard(index)))
-                .sorted(Comparator.comparingInt(GuiSelection.Element::getIndex))
-                .collect(Collectors.toList());
+    public List<GuiSelection.Element> getVariableElements() {
+        return this.titleView==1 ? getTitleCardInstances() : getImageCardInstances();
     }
 
-    public List<GuiSelection.Element> getImageCardInstances(GuiSelection selectionScreen, String channelName) {
-        return this.imageCards.keySet().stream()
-                .map(index -> new GuiSelection.Element(selectionScreen, channelName, "image",
-                        Translate.guiGeneric(false,"selection","image"), null, false,
-                        index, (channel, image) -> Minecraft.getInstance().setScreen(
-                        new GuiParameters(selectionScreen, GuiType.IMAGE_INFO, selectionScreen.getInstance(),
-                                "image_info", "" + index, imageCardParameters(index))),
-                        (channel, title) -> removeImageCard(index)))
-                .sorted(Comparator.comparingInt(GuiSelection.Element::getIndex))
-                .collect(Collectors.toList());
+    public List<GuiSelection.Element> getTitleCardInstances() {
+        List<GuiSelection.Element> elements = new ArrayList<>();
+        for(Table title : this.fileData.getTablesByName("title"))
+            elements.add(new GuiSelection.MonoElement("title",title.getAbsoluteIndex(),
+                    Translate.guiGeneric(false,"selection","title_card"),
+                    Translate.hoverLinesTitle(title),(parent) -> Minecraft.getInstance().setScreen(
+                            new GuiParameters(parent,GuiType.PARAMETER_GENERIC, parent.getInstance(),"title",
+                                    "title "+title.getAbsoluteIndex(),titleCardParameters(title),getChannelName())),
+                    (id) -> this.fileData.removeTable(title)));
+        return elements;
     }
 
-    public List<GuiParameters.Parameter> titleCardParameters(int index) {
-        ConfigTransitions.Title title = this.titleCards.get(index);
-        return Arrays.asList(new GuiParameters.Parameter("title","triggers",null,title.getTriggers().stream()
-                        .map(Trigger::getNameWithID).distinct().collect(Collectors.toList()),
-                        element -> title.setTriggers(element.stream()
-                                .map(name -> Trigger.createEmptyWithIDForGui(this.getChannelName(),name))
-                                .distinct().collect(Collectors.toList()))),
-                new GuiParameters.Parameter("title","subtitles",null,title.getTitles(),
-                        title::setTitles),
-                new GuiParameters.Parameter("title","subtitles",null,title.getSubTitles(),
-                        title::setSubTitles),
-                new GuiParameters.Parameter("title","title_color",null,title.getTitlecolor(),
-                        title::setTitlecolor),
-                new GuiParameters.Parameter("title","subtitle_color",null,title.getSubtitlecolor(),
-                        title::setSubtitlecolor),
-                new GuiParameters.Parameter("title","play_once",null,title.getPlayonce(),
-                        title::setPlayonce),
-                new GuiParameters.Parameter("title","vague",null,title.getVague(),
-                        title::setVague));
+    public List<GuiSelection.Element> getImageCardInstances() {
+        List<GuiSelection.Element> elements = new ArrayList<>();
+        for(Table image : this.fileData.getTablesByName("image"))
+            elements.add(new GuiSelection.MonoElement("image",image.getAbsoluteIndex(),
+                    Translate.guiGeneric(false,"selection","image_card"),
+                    Translate.hoverLinesImage(image),(parent) -> Minecraft.getInstance().setScreen(
+                    new GuiParameters(parent,GuiType.PARAMETER_GENERIC, parent.getInstance(),"title",
+                            "image "+image.getAbsoluteIndex(),imageCardParameters(image),getChannelName())),
+                    (id) -> this.fileData.removeTable(image)));
+        return elements;
     }
 
-    public List<GuiParameters.Parameter> imageCardParameters(int index) {
-        ConfigTransitions.Image image = this.imageCards.get(index);
-        return Arrays.asList(new GuiParameters.Parameter("image","triggers",null,image.getTriggers().stream()
-                        .map(Trigger::getNameWithID).distinct().collect(Collectors.toList()),
-                        element -> image.setTriggers(element.stream()
-                                .map(name -> Trigger.createEmptyWithIDForGui(this.getChannelName(),name))
-                                .distinct().collect(Collectors.toList()))),
-                new GuiParameters.Parameter("image","name",null,image.getName(),
-                        image::setName),
-                new GuiParameters.Parameter("image","vertical",null,image.getVertical(),
-                        image::setVertical),
-                new GuiParameters.Parameter("image","horizontal",null,image.getHorizontal(),
-                        image::setHorizontal),
-                new GuiParameters.Parameter("image","scalex",null,image.getScaleX(),
-                        image::setScaleX),
-                new GuiParameters.Parameter("image","scaley",null,image.getScaleY(),
-                        image::setScaleY),
-                new GuiParameters.Parameter("image","time",null,image.getTime(),
-                        image::setTime),
-                new GuiParameters.Parameter("image","locationx",null,image.getLocationX(),
-                        image::setLocationX),
-                new GuiParameters.Parameter("image","locationy",null,image.getLocationY(),
-                        image::setLocationY),
-                new GuiParameters.Parameter("image","fade_in",null,image.getFadeIn(),
-                        image::setFadeIn),
-                new GuiParameters.Parameter("image","fade_out",null,image.getFadeOut(),
-                        image::setFadeOut),
-                new GuiParameters.Parameter("image","play_once",null,image.getPlayonce(),
-                        image::setPlayonce),
-                new GuiParameters.Parameter("image","vague",null,image.getVague(),
-                        image::setVague),
-                new GuiParameters.Parameter("image","split",null,image.getSplit(),
-                        image::setSplit));
+    public List<GuiParameters.Parameter> titleCardParameters(Table table) {
+        return Arrays.asList(new GuiParameters.Parameter("title","triggers",
+                        this.fileData.getOrCreateVar(table,"triggers", new ArrayList<String>())),
+                new GuiParameters.Parameter("title","titles",
+                        this.fileData.getOrCreateVar(table,"titles", new ArrayList<String>())),
+                new GuiParameters.Parameter("title","subtitles",
+                        this.fileData.getOrCreateVar(table,"subtitles", new ArrayList<String>())),
+                new GuiParameters.Parameter("title","title_color",
+                        this.fileData.getOrCreateVar(table,"title_color", "red")),
+                new GuiParameters.Parameter("title","subtitle_color",
+                        this.fileData.getOrCreateVar(table,"subtitle_color", "white")),
+                new GuiParameters.Parameter("title","centered",
+                        this.fileData.getOrCreateVar(table,"centered", true)),
+                new GuiParameters.Parameter("title","horizontal_alignment",
+                        this.fileData.getOrCreateVar(table,"horizontal_alignment", "center")),
+                new GuiParameters.Parameter("title","vertical_alignment",
+                        this.fileData.getOrCreateVar(table,"vertical_alignment", "center")),
+                new GuiParameters.Parameter("title","x",
+                        this.fileData.getOrCreateVar(table,"x", -1)),
+                new GuiParameters.Parameter("title","y",
+                        this.fileData.getOrCreateVar(table,"y", -1)),
+                new GuiParameters.Parameter("title","scale_x",
+                        this.fileData.getOrCreateVar(table,"scale_x", 1f)),
+                new GuiParameters.Parameter("title","scale_y",
+                        this.fileData.getOrCreateVar(table,"scale_y", 1f)),
+                new GuiParameters.Parameter("title","subtitle_scale",
+                        this.fileData.getOrCreateVar(table,"subtitle_scale", 0.75f)),
+                new GuiParameters.Parameter("title","play_once",
+                        this.fileData.getOrCreateVar(table,"play_once", false)),
+                new GuiParameters.Parameter("title","vague",
+                        this.fileData.getOrCreateVar(table,"vague", false)));
     }
 
-    public void clickAddButton(GuiSuperType parent, String group, String extra) {
-        GuiSelection selectionScreen = (GuiSelection) parent;
-        if (selectionScreen.isTitleView()) {
-            addTitleCard();
-            selectionScreen.parentUpdate();
-        } else Minecraft.getInstance().setScreen(new GuiSelection(parent, GuiType.SELECTION_GENERIC,
-                parent.getInstance(), getChannelName(), "images", null,
-                Translate.selectionTitle("images", getChannelName()), null));
+    public List<GuiParameters.Parameter> imageCardParameters(Table table) {
+        return Arrays.asList(new GuiParameters.Parameter("image","triggers",
+                        this.fileData.getOrCreateVar(table,"triggers", new ArrayList<String>())),
+                new GuiParameters.Parameter("image","time",
+                        this.fileData.getOrCreateVar(table,"time", 100)),
+                new GuiParameters.Parameter("image","fade_in",
+                        this.fileData.getOrCreateVar(table,"fade_in", 20)),
+                new GuiParameters.Parameter("image","fade_out",
+                        this.fileData.getOrCreateVar(table,"fade_out", 20)),
+                new GuiParameters.Parameter("image","opacity",
+                        this.fileData.getOrCreateVar(table,"opacity", 1f)),
+                new GuiParameters.Parameter("image","scale_x",
+                        this.fileData.getOrCreateVar(table,"scale_x", 1f)),
+                new GuiParameters.Parameter("image","scale_y",
+                        this.fileData.getOrCreateVar(table,"scale_y", 1f)),
+                new GuiParameters.Parameter("image","horizontal_alignment",
+                        this.fileData.getOrCreateVar(table,"horizontal_alignment", "center")),
+                new GuiParameters.Parameter("image","vertical_alignment",
+                        this.fileData.getOrCreateVar(table,"vertical_alignment", "center")),
+                new GuiParameters.Parameter("image","x",
+                        this.fileData.getOrCreateVar(table,"x", 0)),
+                new GuiParameters.Parameter("image","y",
+                        this.fileData.getOrCreateVar(table,"y", 0)),
+                new GuiParameters.Parameter("image","play_once",
+                        this.fileData.getOrCreateVar(table,"play_once", false)),
+                new GuiParameters.Parameter("image","vague",
+                        this.fileData.getOrCreateVar(table,"vague", false)));
     }
 
-    public void addTitleCard() {
-        int next = this.titleCards.keySet().size();
-        ConfigTransitions.Title title = new ConfigTransitions.Title();
-        this.titleCards.put(next,title);
-        this.newTitles.add(title);
+    public ButtonSuperType[] transitionInstanceButtons(GuiSuperType grandfather) {
+        List<ButtonSuperType> buttons = new ArrayList<>();
+        String displayName = Translate.guiGeneric(false, "button", "add_card");
+        int width = Minecraft.getInstance().font.width(displayName)+8;
+        List<String> hoverText = Translate.singletonHover("button","add_card","hover");
+        TriConsumer<GuiSuperType, ButtonSuperType, Integer> onClick = (parent, button, type) -> {
+            if(this.titleView==1) this.fileData.addTable(null,"title");
+            else Minecraft.getInstance().setScreen(new GuiSelection(parent,GuiType.SELECTION_GENERIC,
+                    parent.getInstance(), Translate.guiGeneric(false,"selection","potential_images"),
+                    false,true,() -> getPotentialImages(parent)));
+            parent.parentUpdate();
+        };
+        buttons.add(grandfather.createBottomButton(displayName,width,1,hoverText,onClick));
+        displayName = Translate.guiGeneric(false, "button", "title_view");
+        width = Minecraft.getInstance().font.width(displayName)+8;
+        hoverText = Translate.singletonHover("button","title_view","hover");
+        onClick = (parent, button, type) -> {
+            this.titleView = type;
+            ChatFormatting color = type == 1 ? ChatFormatting.WHITE : ChatFormatting.RED;
+            String extraThing = type == 1 ? "title_view" : "image_view";
+            String display = Translate.guiGeneric(false, "button", extraThing);
+            button.updateDisplay(color + display);
+            parent.parentUpdate();
+        };
+        buttons.add(grandfather.createBottomButton(displayName,width,2,hoverText,onClick));
+        return buttons.toArray(new ButtonSuperType[]{});
     }
 
-    public void removeTitleCard(int id) {
-        ConfigTransitions.Title title = this.titleCards.get(id);
-        this.titleCards.remove(id);
-        this.newTitles.remove(title);
+    public List<GuiSelection.Element> getPotentialImages(GuiSuperType grandfather) {
+        List<GuiSelection.Element> elements = new ArrayList<>();
+        int index = 0;
+        for(String image : findImageResources()) {
+            elements.add(new GuiSelection.MonoElement(image,index,image,
+                    Collections.singletonList(LogUtil.injectParameters("assets/{}/textures", Constants.MODID)),
+                    (parent) -> {
+                        this.fileData.addVariable(this.fileData.addTable(null,"image"),"name",image);
+                        grandfather.parentUpdate();
+                        Minecraft.getInstance().setScreen(grandfather);
+                    }));
+            index++;
+        }
+        return elements;
     }
 
-    public void addImageCard(String name) {
-        int next = this.imageCards.keySet().size();
-        ConfigTransitions.Image image = new ConfigTransitions.Image();
-        image.setName(name);
-        this.imageCards.put(next,image);
-        this.newImages.add(image);
-    }
-
-    public void removeImageCard(int id) {
-        ConfigTransitions.Image image = this.imageCards.get(id);
-        this.imageCards.remove(id);
-        this.newImages.remove(image);
+    public List<String> findImageResources() {
+        try {
+            URL url = MusicTriggers.class.getResource("/assets/musictriggers/textures/");
+            if (Objects.nonNull(url)) {
+                URI uri = url.toURI();
+                Path path = null;
+                if ("file".equals(uri.getScheme())) {
+                    URL resource = MusicTriggers.class.getResource("/assets/musictriggers/textures");
+                    if(Objects.nonNull(resource)) path = Paths.get(resource.toURI());
+                }
+                else {
+                    FileSystem filesystem;
+                    try {
+                        filesystem = FileSystems.getFileSystem(uri);
+                    } catch (FileSystemNotFoundException | ProviderNotFoundException ignored) {
+                        filesystem = FileSystems.newFileSystem(uri, Collections.emptyMap());
+                    }
+                    path = filesystem.getPath("/assets/musictriggers/textures");
+                }
+                if(Objects.isNull(path)) return new ArrayList<>();
+                return Files.walk(path,1).map(Path::getFileName).map(Objects::toString)
+                        .filter(file -> file.endsWith(".png")).distinct().collect(Collectors.toList());
+            }
+        } catch (Exception e) {
+            Constants.MAIN_LOG.error("Unable to get calculate base path for image cards with error",e);
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
     }
 }

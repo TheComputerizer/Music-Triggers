@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "package": "mods.thecomputerizer.musictriggers.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "MixinServerBossEvent"
+  ],
+  "client": [
+    "MixinMusicManager"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "minVersion": "0.8"
+}

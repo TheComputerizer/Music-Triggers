@@ -3,88 +3,79 @@ package mods.thecomputerizer.musictriggers.client.audio;
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.ClientSync;
-import mods.thecomputerizer.musictriggers.client.data.Trigger;
-import mods.thecomputerizer.musictriggers.config.ConfigChannels;
+import mods.thecomputerizer.musictriggers.client.gui.instance.ChannelHolder;
+import mods.thecomputerizer.musictriggers.client.gui.instance.ChannelInstance;
+import mods.thecomputerizer.musictriggers.server.ServerData;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
-import mods.thecomputerizer.musictriggers.util.PacketHandler;
-import mods.thecomputerizer.musictriggers.util.packets.PacketQueryServerInfo;
-import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
+import mods.thecomputerizer.musictriggers.network.NetworkHandler;
+import mods.thecomputerizer.musictriggers.network.packets.PacketDynamicChannelInfo;
+import mods.thecomputerizer.musictriggers.network.packets.PacketInitChannels;
+import mods.thecomputerizer.theimpossiblelibrary.client.render.PNG;
+import mods.thecomputerizer.theimpossiblelibrary.client.render.Renderable;
+import mods.thecomputerizer.theimpossiblelibrary.client.render.Renderer;
+import mods.thecomputerizer.theimpossiblelibrary.client.render.Text;
+import mods.thecomputerizer.theimpossiblelibrary.common.toml.Holder;
+import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.util.file.TomlUtil;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
-import net.minecraft.sounds.Music;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.JukeboxBlock;
 import net.minecraft.world.level.block.entity.JukeboxBlockEntity;
 import org.apache.logging.log4j.Level;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
+@Environment(EnvType.CLIENT)
 public class ChannelManager {
+    public static char blinker = ' ';
     private static JukeboxChannel jukeboxChannel;
-    private static final HashMap<String, ConfigChannels.ChannelInfo> channelBlueprints = new HashMap<>();
+    private static File channelsConfig;
     private static final HashMap<String,Channel> channelMap = new HashMap<>();
     public static final HashMap<String, File[]> openAudioFiles = new HashMap<>();
+    public static final Map<Table, Renderable> tickingRenderables = new ConcurrentHashMap<>();
 
     private static int tickCounter = 0;
     public static boolean reloading = true;
+    public static String CUR_STRUCT = "Structure has not been synced";
 
-    public static void createChannel(ConfigChannels.ChannelInfo blueprint) {
-        if(verifyChannelParameters(blueprint.getChannelName(), blueprint.getMain(), blueprint.getTransitions(),
-                blueprint.getCommands(), blueprint.getToggles(), blueprint.getRedirect(), blueprint.getJukebox())) {
-            channelMap.put(blueprint.getChannelName(), new Channel(blueprint.getChannelName(), blueprint.getSoundCategory(),
-                    blueprint.getPausedByJukeBox(), blueprint.getOverridesNormalMusic(), blueprint.getMain(),
-                    blueprint.getTransitions(), blueprint.getCommands(), blueprint.getToggles(), blueprint.getRedirect(),
-                    blueprint.getJukebox(), blueprint.getSongsFolder()));
-            channelBlueprints.put(blueprint.getChannelName(),blueprint);
-        } else MusicTriggers.logExternally(Level.ERROR, "Channel {} failed to register! See the above errors for" +
-                "more information.",blueprint.getChannelName());
+    public static void initialize(File channelsFile, boolean startup) throws IOException {
+        jukeboxChannel = new JukeboxChannel("jukebox");
+        channelsConfig = channelsFile;
+        Holder channels = TomlUtil.readFully(channelsFile);
+        for(Table channel : channels.getTables().values()) {
+            if(verifyChannelName(channel.getName())) channelMap.put(channel.getName(),new Channel(channel));
+            else MusicTriggers.logExternally(Level.ERROR, "Channel {} failed to register! See the above errors for" +
+                    "more information.",channel.getName());
+        }
+        parseConfigFiles(startup);
     }
 
-    private static boolean verifyChannelParameters(String channelName, String mainFileName, String transitionsFileName,
-                                                   String commandsFileName, String togglesFileName, String redirectFileName,
-                                                   String jukeboxFileName) {
-        if(channelName.matches("preview"))
+    private static boolean verifyChannelName(String channelName) {
+        if(channelName.matches("preview") || channelName.matches("jukebox")) {
             MusicTriggers.logExternally(Level.ERROR, "Channel name cannot be set to \"jukebox\" or \"preview\"" +
                     "as those are used for internal functions!");
-        else if(Objects.nonNull(channelMap.get(channelName)))
-            MusicTriggers.logExternally(Level.ERROR, "Channel with name "+channelName+ " already exists" +
+            return false;
+        }
+        else if(Objects.nonNull(channelMap.get(channelName))) {
+            MusicTriggers.logExternally(Level.ERROR, "Channel with name " + channelName + " already exists" +
                     "! Different channels must have unique names!");
-        boolean verifiedFile = verifyFilePath(mainFileName,"main");
-        if(!verifiedFile) return false;
-        verifiedFile = verifyFilePath(transitionsFileName,"transitions");
-        if(!verifiedFile) return false;
-        verifiedFile = verifyFilePath(commandsFileName,"commands");
-        if(!verifiedFile) return false;
-        verifiedFile = verifyFilePath(togglesFileName,"toggles");
-        if(!verifiedFile) return false;
-        verifiedFile = verifyFilePath(redirectFileName,"redirect");
-        if(!verifiedFile) return false;
-        return verifyFilePath(jukeboxFileName,"jukebox");
-    }
-
-    private static boolean verifyFilePath(String filePath, String configType) {
-        if(filePath.endsWith("\\.toml") || filePath.endsWith("\\.txt")) {
-            MusicTriggers.logExternally(Level.ERROR, "Please do not include the " +
-                    "file extension in your file path. That is handled internally.");
             return false;
-        }
-        if(filePath.matches("debug") || filePath.matches("registration") || filePath.matches("channels")
-                || filePath.matches("preview")) {
-            MusicTriggers.logExternally(Level.ERROR, "Config type {} cannot be {} as that is the name of a " +
-                    "preset config file!",configType,filePath);
-            return false;
-        }
-        for(ConfigChannels.ChannelInfo registeredBlueprint : channelBlueprints.values()) {
-            if(!registeredBlueprint.verifyOtherFilePathIsValid(filePath, configType))
-                return false;
         }
         return true;
     }
 
-    public static void createJukeboxChannel() {
-        jukeboxChannel = new JukeboxChannel("jukebox");
+    public static boolean verifyOtherFilePath(String filePath) {
+        for(Channel channel : channelMap.values())
+            if(!channel.verifyOtherFilePath(filePath)) return false;
+        return true;
     }
 
     public static void playCustomJukeboxSong(boolean start, String channel, String id, BlockPos pos) {
@@ -92,22 +83,23 @@ public class ChannelManager {
         else jukeboxChannel.playTrack(channelMap.get(channel).getCopyOfTrackFromID(id),pos);
     }
 
-    public static void parseConfigFiles() {
+    public static void parseConfigFiles(boolean startup) {
         collectSongs();
-        for(Channel channel : channelMap.values()) channel.parseConfigs(true);
+        for(Channel channel : channelMap.values()) channel.parseConfigs(startup);
         ConfigDebug.initialize(new File(Constants.CONFIG_DIR,"debug.toml"));
-        ConfigRegistry.initialize(new File(Constants.CONFIG_DIR,"registration.toml"));
+        if(!startup) initializeServerInfo();
     }
 
     public static void readResourceLocations() {
         for(Channel channel : channelMap.values()) channel.readResourceLocations();
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static void collectSongs() {
         openAudioFiles.clear();
         for(Channel channel : channelMap.values()) {
             File folder = new File(channel.getLocalFolder());
-            FileUtil.generateNestedFile(folder, false);
+            folder.mkdirs();
             File[] listOfFiles = folder.listFiles((dir, name) -> dir.canRead());
             if (listOfFiles != null)
                 openAudioFiles.putIfAbsent(channel.getLocalFolder(),listOfFiles);
@@ -130,17 +122,26 @@ public class ChannelManager {
         return new ArrayList<>(channelMap.keySet());
     }
 
-    public static boolean overridingMusicIsPlaying() {
+    public static boolean canAnyChannelOverrideMusic() {
         for(Channel channel : getAllChannels()) if(channel.overridesNormalMusic() && channel.isPlaying()) return true;
         return false;
+    }
+
+    public static void initializeServerInfo() {
+        if(!ConfigRegistry.CLIENT_SIDE_ONLY) {
+            ServerData data = new ServerData();
+            for (Channel channel : channelMap.values())
+                channel.initializeServerData(data);
+            NetworkHandler.sendToServer(new PacketInitChannels(data));
+        }
     }
 
     public static void syncInfoFromServer(ClientSync sync) {
         try {
             getChannel(sync.getChannel()).sync(sync);
         } catch (NullPointerException exception) {
-            MusicTriggers.logExternally(Level.ERROR, "Channel "+sync.getChannel()+" did not exist and could " +
-                    "not be synced!");
+            MusicTriggers.logExternally(Level.ERROR, "Channel {} did not exist and could " +
+                    "not be synced!",sync.getChannel());
         }
     }
 
@@ -163,42 +164,69 @@ public class ChannelManager {
     }
 
     public static void reloadAllChannels() {
-        Trigger.clearInitialized();
-        collectSongs();
-        for(Channel channel : channelMap.values()) channel.reload();
-        refreshDebug();
+        for(Channel channel : channelMap.values())
+            channel.clear();
+        channelMap.clear();
+        try {
+            initialize(channelsConfig,false);
+        } catch (IOException ex) {
+            MusicTriggers.logExternally(Level.FATAL, "Failed to reload channels");
+            Constants.MAIN_LOG.fatal("Failed to reload channels for Music Triggers!",ex);
+        }
     }
 
+    public static void addRenderable(boolean title, Table table) {
+        if(!tickingRenderables.containsKey(table)) {
+            if(title) {
+                MusicTriggers.logExternally(Level.DEBUG, "Initializing title card");
+                Text titleCard = new Text(table.getVarMap());
+                titleCard.initializeTimers();
+                tickingRenderables.put(table,titleCard);
+            }
+            else {
+                PNG imageCard = Renderer.initializePng(MusicTriggers.getIcon(null,
+                        table.getValOrDefault("name","missing")),table.getVarMap());
+                if(Objects.nonNull(imageCard)) {
+                    MusicTriggers.logExternally(Level.DEBUG, "Initializing image card");
+                    imageCard.initializeTimers();
+                    tickingRenderables.put(table,imageCard);
+                }
+            }
+        }
+    }
     public static void tickChannels() {
         jukeboxChannel.checkStopPlaying(reloading);
         if(!reloading) {
-                tickCounter++;
-                if (checkForJukeBox()) jukeboxPause();
-                else jukeboxUnpause();
-                if (!Minecraft.getInstance().isWindowActive() || Minecraft.getInstance().isPaused()) pauseAllChannels();
-                else unpauseAllChannels();
-                for (Channel channel : channelMap.values())
-                    if (!channel.isPaused()) channel.tickFast();
-                if (tickCounter % 4 == 0) {
-                    for (Channel channel : channelMap.values()) channel.tickSlow();
-                    sendUpdatePacket();
-                }
-                if(tickCounter>=100) tickCounter=5;
+            synchronized (tickingRenderables) {
+                tickingRenderables.entrySet().removeIf(toTick -> !toTick.getValue().tick());
+            }
+            tickCounter++;
+            if (checkForJukeBox()) jukeboxPause();
+            else jukeboxUnpause();
+            if (!Minecraft.getInstance().isWindowActive() || Minecraft.getInstance().isPaused()) pauseAllChannels();
+            else unpauseAllChannels();
+            for (Channel channel : channelMap.values())
+                if (!channel.isPaused()) channel.tickFast();
+            if (tickCounter % 4 == 0 && Objects.nonNull(Minecraft.getInstance().options)) {
+                for (Channel channel : channelMap.values()) channel.tickSlow();
+                sendUpdatePacket();
+            }
+            if (tickCounter % 10 == 0) {
+                if (blinker == ' ') blinker = '|';
+                else if (blinker == '|') blinker = ' ';
+            }
+            if (tickCounter >= 100) tickCounter = 0;
         }
     }
 
     private static boolean checkForJukeBox() {
         Player player = Minecraft.getInstance().player;
-        if(player!=null) {
-            for (int x = player.chunkPosition().x - 3; x <= player.chunkPosition().x + 3; x++) {
-                for (int z = player.chunkPosition().z - 3; z <= player.chunkPosition().z + 3; z++) {
-                    Set<BlockPos> currentChunkTEPos = player.level.getChunk(x, z).getBlockEntitiesPos();
-                    for (BlockPos b : currentChunkTEPos)
-                        return player.level.getChunk(x, z).getBlockEntity(b) instanceof JukeboxBlockEntity te &&
-                                te.getBlockState().getValue(JukeboxBlock.HAS_RECORD);
-                }
-            }
-        }
+        if(Objects.nonNull(player))
+            for (int x = player.chunkPosition().x - 3; x <= player.chunkPosition().x + 3; x++)
+                for (int z = player.chunkPosition().z - 3; z <= player.chunkPosition().z + 3; z++)
+                    for (BlockPos b : player.level.getChunk(x, z).getBlockEntitiesPos())
+                        if (player.level.getChunk(x, z).getBlockEntity(b) instanceof JukeboxBlockEntity tile)
+                            return tile.getBlockState().getValue(JukeboxBlock.HAS_RECORD);
         return false;
     }
 
@@ -207,7 +235,18 @@ public class ChannelManager {
     }
 
     private static void sendUpdatePacket() {
-        if(Minecraft.getInstance().player!=null)
-            PacketHandler.sendToServer(new PacketQueryServerInfo(new ArrayList<>(channelMap.values())));
+        if(Minecraft.getInstance().player!=null && !ConfigRegistry.CLIENT_SIDE_ONLY) {
+            List<Channel> updatedChannels = new ArrayList<>();
+            for(Channel channel : channelMap.values())
+                if(channel.needsUpdatePacket()) updatedChannels.add(channel);
+            if(!updatedChannels.isEmpty())
+                NetworkHandler.sendToServer(new PacketDynamicChannelInfo(updatedChannels));
+        }
+    }
+
+    public static ChannelHolder createGuiData() {
+        Map<String, ChannelInstance> channels = channelMap.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().createGuiData()));
+        return new ChannelHolder(MusicTriggers.configFile("channels","toml"),channels);
     }
 }

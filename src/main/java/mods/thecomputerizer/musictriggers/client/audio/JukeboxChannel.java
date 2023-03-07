@@ -8,52 +8,37 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.JukeboxBlock;
 import net.minecraft.world.level.block.entity.JukeboxBlockEntity;
 import org.apache.logging.log4j.Level;
 
-import java.util.HashMap;
 import java.util.Objects;
 
+@Environment(EnvType.CLIENT)
 public class JukeboxChannel {
     private static final AudioDataFormat FORMAT = new Pcm16AudioDataFormat(2, 48000, 960, true);
-    private final String channel;
-    private final SoundSource category;
-    private final AudioPlayerManager playerManager;
-    private AudioPlayer player;
-    private ChannelListener listener;
-    private final HashMap<String, AudioTrack> loadedTracks;
+    private final AudioPlayer player;
     private BlockPos pos;
 
     public JukeboxChannel(String channel) {
-        this.channel = channel;
-        this.category = SoundSource.RECORDS;
-        this.playerManager = new DefaultAudioPlayerManager();
-        AudioSourceManagers.registerRemoteSources(this.playerManager);
-        AudioSourceManagers.registerLocalSource(this.playerManager);
-        this.player = refreshPlayer();
-        this.loadedTracks = new HashMap<>();
-        this.playerManager.setFrameBufferDuration(1000);
-        this.playerManager.setPlayerCleanupThreshold(Long.MAX_VALUE);
-        this.playerManager.getConfiguration().setResamplingQuality(AudioConfiguration.ResamplingQuality.HIGH);
-        this.playerManager.getConfiguration().setOpusEncodingQuality(AudioConfiguration.OPUS_QUALITY_MAX);
-        this.playerManager.getConfiguration().setOutputFormat(FORMAT);
+        AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
+        AudioSourceManagers.registerRemoteSources(playerManager);
+        AudioSourceManagers.registerLocalSource(playerManager);
+        this.player = playerManager.createPlayer();
+        this.player.setVolume(100);
+        new ChannelListener(this.player, FORMAT, null);
+        playerManager.setFrameBufferDuration(1000);
+        playerManager.setPlayerCleanupThreshold(Long.MAX_VALUE);
+        playerManager.getConfiguration().setResamplingQuality(AudioConfiguration.ResamplingQuality.HIGH);
+        playerManager.getConfiguration().setOpusEncodingQuality(AudioConfiguration.OPUS_QUALITY_MAX);
+        playerManager.getConfiguration().setOutputFormat(FORMAT);
         MusicTriggers.logExternally(Level.INFO,"Registered jukebox channel "+channel);
-    }
-
-    private AudioPlayer refreshPlayer() {
-        if(this.player!=null) {
-            this.player.destroy();
-            this.listener.stopThread();
-        }
-        AudioPlayer newPlayer = playerManager.createPlayer();
-        newPlayer.setVolume(100);
-        this.listener = new ChannelListener(newPlayer, FORMAT, this.channel);
-        return newPlayer;
     }
 
     public AudioPlayer getPlayer() {
@@ -75,25 +60,12 @@ public class JukeboxChannel {
             }
         }
     }
-
     public boolean isPlaying() {
         return getCurPlaying()!=null;
     }
 
-    public void setVolume(float volume) {
-        this.getPlayer().setVolume((int)(volume*getChannelVolume()*100));
-    }
-
-    private float getChannelVolume() {
-        float master = Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER);
-        return master*Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.valueOf(this.channel));
-    }
-
-    public void setAttenuation() {
-
-    }
-
     public void playTrack(AudioTrack track, BlockPos jukeboxPos) {
+        Constants.MAIN_LOG.error("PLAYING JUKEBOX TRACK");
         MusicTriggers.logExternally(Level.INFO,"Playing track for jukebox");
         if(track!=null) {
             track.setPosition(0);
@@ -103,14 +75,12 @@ public class JukeboxChannel {
             } catch (IllegalStateException e) {
                 if (!this.getPlayer().startTrack(track.makeClone(), false)) MusicTriggers.logExternally(Level.ERROR,"Could not start track!");
             }
-        } else MusicTriggers.logExternally(Level.ERROR,"Could not play disc!");
+        } else {
+            MusicTriggers.logExternally(Level.ERROR,"Could not play disc!");
+        }
     }
 
     public void stopTrack() {
         this.getPlayer().stopTrack();
-    }
-
-    public void reload() {
-
     }
 }

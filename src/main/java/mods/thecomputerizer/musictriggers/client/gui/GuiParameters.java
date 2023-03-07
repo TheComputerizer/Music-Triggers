@@ -1,69 +1,116 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.client.Translate;
+import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
+import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.common.toml.Variable;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.LogUtil;
+import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.contents.LiteralContents;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class GuiParameters extends GuiSuperType {
 
     private final List<Parameter> parameters;
+    private final List<Parameter> searchedParameters;
     private final String id;
     private final String title;
     private int longestParameterName;
     private int rightSide;
     private int scrollPos;
     private boolean canScrollDown;
-
+    private int numElements;
+    private boolean mouseHoverRight;
+    private boolean mouseHoverLeft;
 
     public GuiParameters(GuiSuperType parent, GuiType type, Instance configInstance, String guiID, String guiTitle,
                          List<Parameter> parameters) {
-        super(parent, type, configInstance);
+        this(parent,type,configInstance,guiID,guiTitle,parameters,null);
+    }
+
+    public GuiParameters(GuiSuperType parent, GuiType type, Instance configInstance, String guiID, String guiTitle,
+                         List<Parameter> parameters, @Nullable String channel) {
+        super(parent, type, configInstance, channel);
         this.id = guiID;
         this.title = guiTitle;
         this.parameters = parameters;
+        this.searchedParameters = new ArrayList<>();
         this.scrollPos = 0;
+        this.numElements = 0;
     }
 
-    private int calculateLongestParameter(Font font) {
-        int ret = font.width(this.title)*2;
-        for(Parameter parameter : this.parameters) {
-            int temp = parameter.displayNameLength(font);
+    private int calculateLongestParameter(Font fontRenderer) {
+        int ret = fontRenderer.width(this.title)*2;
+        for(Parameter parameter : this.searchedParameters) {
+            int temp = parameter.displayNameLength(fontRenderer);
             if(temp>ret) ret = temp;
         }
         this.rightSide = this.width-(ret+(this.spacing*3));
         return ret;
     }
 
-    @Override
-    public void init() {
-        super.init();
+    private void calculateScrollSize() {
+        this.scrollPos = 0;
         this.longestParameterName = calculateLongestParameter(Minecraft.getInstance().font);
+        int textSlot = Minecraft.getInstance().font.lineHeight+this.spacing;
+        int totalHeight = this.height-((this.spacing*3)+Minecraft.getInstance().font.lineHeight+48);
+        int runningHeight = textSlot;
+        int runningTotal = 1;
+        while(runningHeight+textSlot<totalHeight) {
+            runningTotal++;
+            runningHeight+=textSlot;
+        }
+        this.numElements = runningTotal;
+        this.canScrollDown = this.numElements < this.searchedParameters.size();
+    }
+
+    @Override
+    protected void updateSearch() {
+        this.searchedParameters.clear();
+        for(Parameter parameter : this.parameters)
+            if (checkSearch(parameter.getDisplayName()))
+                this.searchedParameters.add(parameter);
+        calculateScrollSize();
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scroll) {
         if(scroll!=0) {
-            if(scroll<1) {
-                if(this.canScrollDown) {
-                    this.scrollPos++;
-                    this.canScrollDown = false;
+            if(this.mouseHoverRight) {
+                if (scroll < 1) {
+                    if (this.canScrollDown) {
+                        this.scrollPos++;
+                        this.canScrollDown = this.numElements + this.scrollPos + 1 < this.searchedParameters.size();
+                        return true;
+                    }
+                } else if (this.scrollPos > 0) {
+                    this.scrollPos--;
+                    this.canScrollDown = true;
+                    return true;
                 }
-            } else if(this.scrollPos>0) this.scrollPos--;
-            return true;
+            } else if(this.mouseHoverLeft) {
+                for (Parameter parameter : this.searchedParameters) {
+                    if (parameter.isSelected()) {
+                        parameter.scroll((int) scroll);
+                        return true;
+                    }
+                }
+            }
         }
         return false;
     }
@@ -71,23 +118,42 @@ public class GuiParameters extends GuiSuperType {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
         if (mouseButton == 0) {
-            for (Parameter parameter : this.parameters)
-                parameter.onClick(mouseX > this.rightSide && mouseX <= (this.width - this.spacing));
+            for (Parameter parameter : this.searchedParameters)
+                if(parameter.onClick(mouseX>this.rightSide && mouseX<=(this.width-this.spacing),this,
+                        this.spacing+(this.spacing/2),this.width/2,(spacing*4)+24+this.font.lineHeight,
+                        this.font.lineHeight+(this.spacing/2)))
+                    return true;
         }
         return super.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     @Override
     public boolean keyPressed(int keyCode, int x, int y) {
-        if(!blacklistedKeys.contains(keyCode)) {
-            for (Parameter parameter : this.parameters) {
-                String typed = GLFW.glfwGetKeyName(keyCode, -1);
-                if(hasShiftDown() && Objects.nonNull(typed)) typed = typed.toUpperCase(Locale.ROOT);
-                parameter.onType(keyCode == GLFW.GLFW_KEY_BACKSPACE, numberKeys.contains(keyCode), typed);
-            }
+        if(super.keyPressed(keyCode, x, y)) return true;
+        if(Minecraft.getInstance().screen==this && keyCode == GLFW.GLFW_KEY_BACKSPACE) {
+            for (Parameter parameter : this.searchedParameters)
+                parameter.onType(true, ' ');
             return true;
         }
-        return super.keyPressed(keyCode, x, y);
+        return false;
+    }
+
+    @Override
+    public boolean charTyped(char c, int mod) {
+        if(super.charTyped(c, mod)) return true;
+        if(Minecraft.getInstance().screen==this && SharedConstants.isAllowedChatCharacter(c)) {
+            for (Parameter parameter : this.searchedParameters)
+                parameter.onType(false, c);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void init() {
+        super.init();
+        enableSearch();
+        updateSearch();
     }
 
     @Override
@@ -96,25 +162,35 @@ public class GuiParameters extends GuiSuperType {
         drawLeftSide(matrix, mouseX, mouseY, this.font);
     }
 
-    private void drawLeftSide(PoseStack matrix, int mouseX, int mouseY, Font font) {
-        int textHeight = font.lineHeight;
+    private void drawLeftSide(PoseStack matrix, int mouseX, int mouseY, Font fontRenderer) {
+        int textHeight = fontRenderer.lineHeight;
         int centerX = this.width/2;
         int left = this.spacing;
         int top = this.spacing+24;
         int textX = left+(this.spacing/2);
-        for(Parameter parameter : this.parameters) {
+        for(Parameter parameter : this.searchedParameters) {
             if(parameter.isSelected()) {
                 GuiUtil.drawLine(new Vector3f(left, top, 0), new Vector3f(centerX, top, 0), white(128), 1f, this.getBlitOffset());
                 top += this.spacing;
-                drawString(matrix, font, parameter.getDisplayName(), textX, top, GuiUtil.WHITE);
+                drawString(matrix,fontRenderer, parameter.getDisplayName(), textX, top, GuiUtil.WHITE);
                 top += (textHeight + this.spacing);
                 GuiUtil.drawLine(new Vector3f(left, top, 0), new Vector3f(centerX, top, 0), white(128), 1f, this.getBlitOffset());
                 top += this.spacing;
-                top = GuiUtil.drawMultiLineString(this,matrix,parameter.getDescription(),textX,centerX,top,textHeight+(this.spacing/2)
-                )+(this.spacing/2);
+                top = GuiUtil.drawMultiLineString(matrix,fontRenderer,parameter.getDescription(),textX,centerX,top,
+                        textHeight+(this.spacing/2),10,parameter.getScrollPos(),GuiUtil.WHITE)+(this.spacing/2);
                 GuiUtil.drawLine(new Vector3f(left, top, 0), new Vector3f(centerX, top, 0), white(128), 1f, this.getBlitOffset());
+                int topScroll = (this.spacing*3)+24+this.font.lineHeight;
+                int bottomScroll = top;
                 top += this.spacing;
-                parameter.drawVariableElement(matrix,new Vector3f(left, top, 0),this.spacing,mouseX,mouseY,font,this.getBlitOffset());
+                if(Minecraft.getInstance().screen==this && parameter.canScroll()) {
+                    parameter.drawScrollBar(topScroll,bottomScroll,left,this.getBlitOffset());
+                    this.mouseHoverLeft = this.mouseHover(new Vector3f(left,topScroll,0),mouseX,mouseY,
+                            (width/2)-left,bottomScroll-topScroll);
+                }
+                List<Component> hoverLines = parameter.drawVariableElement(matrix,new Vector3f(left,top,0),this.spacing,mouseX,mouseY,
+                        fontRenderer,this.getBlitOffset(), Minecraft.getInstance().screen==this);
+                if(Minecraft.getInstance().screen==this && !hoverLines.isEmpty())
+                    renderComponentTooltip(matrix,hoverLines,mouseX,mouseY);
                 break;
             }
         }
@@ -126,113 +202,80 @@ public class GuiParameters extends GuiSuperType {
         GuiUtil.drawBox(new Vector3f(this.rightSide,0,0),sideWidth,this.height,
                 new Vector4f(0,0,0,128),this.getBlitOffset());
         int lineX = this.width-this.spacing;
-        GuiUtil.drawLine(new Vector3f(lineX, 0, 0),new Vector3f(lineX, this.height, 0),
+        GuiUtil.drawLine(new Vector3f(lineX,0,0),new Vector3f(lineX, this.height, 0),
                 new Vector4f(255,255,255,194),1f,this.getBlitOffset());
         int textX = this.rightSide+this.spacing;
         drawString(matrix,this.font,this.title,textX,top,GuiUtil.WHITE);
-        boolean mouseHoverX = mouseX>this.rightSide && mouseX<=lineX;
-        int numParameters = this.parameters.size();
+        this.mouseHoverRight = mouseX>this.rightSide && mouseX<=lineX;
         int startY = top+textHeight+(this.spacing*2);
-        int index = this.scrollPos;
-        this.canScrollDown = (startY+((numParameters-this.scrollPos)*(textHeight+this.spacing)))>this.height;
-        while((startY+textHeight+this.spacing)<this.height) {
-            Parameter parameter = this.parameters.get(index);
-            boolean mouseHover = mouseHoverX && mouseY>=startY && mouseY<(startY+textHeight+this.spacing);
-            parameter.setDisplayHover(mouseHover);
-            if(mouseHover) {
-                GuiUtil.drawBox(new Vector3f(this.rightSide,startY,0),this.width-this.rightSide-this.spacing,textHeight+this.spacing,
-                        new Vector4f(255,255,255,194),this.getBlitOffset());
-                drawString(matrix,this.font,parameter.getDisplayName(),textX,startY+(this.spacing/2),
-                        GuiUtil.makeRGBAInt(0,0,0,255));
-            } else drawString(matrix,this.font,parameter.getDisplayName(),textX,startY+(this.spacing/2),GuiUtil.WHITE);
+        int index = 0;
+        for(Parameter parameter: this.searchedParameters) {
+            if (index >= this.scrollPos) {
+                boolean mouseHover = Minecraft.getInstance().screen==this && this.mouseHoverRight &&
+                        mouseY>=startY && mouseY<(startY+textHeight+this.spacing);
+                parameter.setDisplayHover(mouseHover);
+                if(mouseHover) {
+                    GuiUtil.drawBox(new Vector3f(this.rightSide,startY,0),this.width-this.rightSide-this.spacing,textHeight+this.spacing,
+                            new Vector4f(255,255,255,194),this.getBlitOffset());
+                    drawString(matrix,this.font,parameter.getDisplayName(),textX,startY+(this.spacing/2),
+                            GuiUtil.makeRGBAInt(50,50,50,255));
+                } else drawString(matrix,this.font,parameter.getDisplayName(),textX,startY+(this.spacing/2),GuiUtil.WHITE);
+                startY+=(textHeight+this.spacing);
+                if ((this.height-(this.spacing+24) - startY) < (this.spacing + this.font.lineHeight)) break;
+            }
             index++;
-            if(index>=(numParameters-this.scrollPos)) break;
-            startY+=(textHeight+this.spacing);
         }
+        if(this.searchedParameters.size()>this.numElements) drawScrollBar();
+    }
+
+    private void drawScrollBar() {
+        float height = (float)this.height;
+        float indices = this.searchedParameters.size()-this.numElements;
+        float perIndex = height/indices;
+        int top = (int)(perIndex*this.scrollPos);
+        int x = this.width-1;
+        Vector3f start = new Vector3f(x, top, 0);
+        if(perIndex<1) perIndex = 1;
+        Vector3f end = new Vector3f(x, top+perIndex, 0);
+        GuiUtil.drawLine(start,end,white(192), 2f, this.getBlitOffset());
     }
 
     @Override
     protected void save() {
         for(Parameter parameter : this.parameters) {
-            parameter.save();
-            if(parameter.hasEdits())
+            if(parameter.hasEdits()) {
                 madeChange(!(this.id.matches("debug") || this.id.matches("registration")));
+                break;
+            }
         }
     }
 
     public static class Parameter {
         private final String display;
         private final String description;
-        private final boolean isCheckBox;
-        private final List<String> listValues;
-        private final Consumer<Boolean> boolSave;
-        private final Consumer<String> stringSave;
-        private final Consumer<Integer> intSave;
-        private final Consumer<List<String>> listSave;
-        private boolean isChecked;
-        private String value;
-        private int intVal;
+        private final Variable var;
         private boolean displayHover;
         private boolean selected;
-        private boolean checkBoxHover;
-        private boolean valueHover;
-        private boolean valueSelected;
-        private int listHover;
-        private int listSelected;
-        private boolean intHover;
-        private boolean intSelected;
+        private boolean varHover;
         private boolean hasEdits;
+        private int descLines;
+        private int scrollPos;
 
-        public Parameter(String id, String trigger, String extra, int initialInt, Consumer<Integer> onSave) {
-            this(id,trigger,extra,false,false,null,new ArrayList<>(),initialInt,
-                    null,null,onSave,null);
+        public Parameter(String id, String trigger, Variable var) {
+            this(id,trigger,null,var);
         }
 
-        public Parameter(String id, String trigger, String extra, Consumer<List<String>> onSave, String ... initialElements) {
-            this(id,trigger,extra,Arrays.stream(initialElements).collect(Collectors.toList()),onSave);
-        }
-
-        public Parameter(String id, String trigger, String extra, List<String> initialList, Consumer<List<String>> onSave) {
-            this(id,trigger,extra,false,false,null,initialList,-1,null,
-                    null,null,onSave);
-        }
-
-        public Parameter(String id, String trigger, String extra, String initialValue, Consumer<String> onSave) {
-            this(id,trigger,extra,false,false,initialValue,new ArrayList<>(),-1,
-                    null,onSave,null,null);
-        }
-
-        public Parameter(String id, String trigger, String extra, boolean initialCheckBox, Consumer<Boolean> onSave) {
-            this(id,trigger,extra,true,initialCheckBox,null,new ArrayList<>(),-1,onSave,
-                    null,null,null);
-        }
-
-        private Parameter(String id, String trigger, String extra, boolean isCheckBox, boolean initialCheckBox,
-                         String initialValue, List<String> initialList, int initialInt, Consumer<Boolean> boolSave,
-                          Consumer<String> stringSave, Consumer<Integer> intSave, Consumer<List<String>> listSave) {
+        public Parameter(String id, String trigger, String extra, Variable var) {
             this.display = Translate.parameter("parameter",id,trigger,extra,"name");
             this.description = Translate.parameter("parameter",id,trigger,extra,"desc");
-            this.isCheckBox = isCheckBox;
-            this.boolSave = boolSave;
-            this.stringSave = stringSave;
-            this.intSave = intSave;
-            this.listSave = listSave;
-            this.isChecked = initialCheckBox;
-            this.value = initialValue;
-            this.listValues = initialList;
-            this.intVal = initialInt;
-            this.displayHover = false;
-            this.selected = false;
-            this.checkBoxHover = false;
-            this.valueHover = false;
-            this.valueSelected = false;
-            this.listHover = -1;
-            this.listSelected = -1;
+            this.var = var;
             this.hasEdits = false;
+            this.descLines = 0;
+            this.scrollPos = 0;
         }
 
-        public int displayNameLength(Font font) {
-            return font.width(this.display);
+        public int displayNameLength(Font fontRenderer) {
+            return fontRenderer.width(this.display);
         }
 
         public String getDisplayName() {
@@ -251,142 +294,144 @@ public class GuiParameters extends GuiSuperType {
             this.displayHover = hover;
         }
 
+        public void scroll(int scroll) {
+            if(scroll<1) {
+                if(this.descLines-10>this.scrollPos) this.scrollPos++;
+            } else if(this.scrollPos>0) this.scrollPos--;
+        }
+
+        public int getScrollPos() {
+            return this.scrollPos;
+        }
+
         private void toggleCheckBox() {
             this.hasEdits = true;
-            this.isChecked = !this.isChecked;
+            this.var.invert();
             this.saveScreen();
         }
 
-        public void onClick(boolean wasRightSide) {
-            if(wasRightSide) {
-                this.selected = this.displayHover;
-                this.valueSelected = false;
-                this.listSelected = -1;
-                this.intSelected = false;
+        public boolean onClick(boolean wasRightSide, GuiSuperType parent, int left, int right, int top, int spacing) {
+            if(Minecraft.getInstance().screen==parent) {
+                if (wasRightSide) {
+                    this.selected = this.displayHover;
+                    if (this.selected)
+                        this.descLines = GuiUtil.howManyLinesWillThisBe(Minecraft.getInstance().font, this.description, left,
+                                right, top, spacing);
+                    return this.selected;
+                } else if(this.selected) {
+                    if(this.varHover) {
+                        if (this.var.getAsBool(true).isPresent()) {
+                            toggleCheckBox();
+                            return true;
+                        }
+                        else if (this.var.get() instanceof List<?>) {
+                            GuiSuperType next = this.var.getName().matches("triggers") ?
+                                    parent.getInstance().createMultiSelectTriggerScreen(parent, parent.getChannel(),
+                                            (elements) -> {
+                                                this.setList(elements.stream().map(this::makeTriggerString)
+                                                        .filter(Objects::nonNull).collect(Collectors.toList()));
+                                                this.hasEdits = true;
+                                                parent.save();
+                                            }) : new GuiParameterList(parent, GuiType.PARAMETER_GENERIC,
+                                    parent.getInstance(), this);
+                            parent.playGenericClickSound();
+                            Minecraft.getInstance().setScreen(next);
+                            return true;
+                        }
+                    }
+                }
             }
-            else if(this.selected) {
-                if(this.checkBoxHover) toggleCheckBox();
-                this.valueSelected = this.valueHover;
-                this.listSelected = listHover;
-                this.intSelected = intHover;
+            return false;
+        }
+
+        private String makeTriggerString(GuiSelection.Element element) {
+            Table parent = this.var.getParent();
+            if(Objects.isNull(parent)) return null;
+            if(element instanceof GuiSelection.MonoElement)
+                return ((GuiSelection.MonoElement) element).getID();
+            return null;
+        }
+
+        public void onType(boolean backspace, char c) {
+            if(this.selected) {
+                Optional<String> optional = this.var.getAsString(true);
+                if(optional.isPresent()) {
+                    String val = optional.get();
+                    if (backspace) {
+                        if (!val.isEmpty()) val = val.substring(0, val.length() - 1);
+                    } else val += c;
+                    this.var.set(val);
+                    this.hasEdits = true;
+                    this.saveScreen();
+                }
             }
         }
 
-        public void onType(boolean backspace, boolean isNumber, String c) {
-            if(this.valueSelected) {
-                if(backspace) {
-                    if(!this.value.isEmpty()) this.value = this.value.substring(0,this.value.length()-1);
-                } else this.value+=c;
-                this.hasEdits = true;
-                this.saveScreen();
-            } else if(this.listSelected>=0) {
-                String val = this.listValues.get(this.listSelected);
-                if(backspace) {
-                    if(!val.isEmpty()) val = val.substring(0,val.length()-1);
-                } else val+=c;
-                this.listValues.set(this.listSelected,val);
-                this.hasEdits = true;
-                this.saveScreen();
-            } else if(this.intSelected && isNumber) {
-                String asString = ""+this.intVal;
-                if(backspace) {
-                    if(!asString.isEmpty()) asString = asString.substring(0,asString.length()-1);
-                } else asString+=c;
-                if(asString.isEmpty() || asString.matches("-")) this.intVal = 0;
-                else this.intVal = Integer.parseInt(asString);
-                this.hasEdits = true;
-                this.saveScreen();
-            }
-        }
-
-        public void drawVariableElement(PoseStack matrix, Vector3f topLeft, int spacing, int mouseX, int mouseY,
-                                        Font font, float zLevel) {
-            if(this.isCheckBox) {
+        public List<Component> drawVariableElement(PoseStack matrix, Vector3f topLeft, int spacing, int mouseX, int mouseY,
+                                                Font fontRenderer, float zLevel, boolean isCurrent) {
+            boolean varHover1 = isCurrent && mouseX >= topLeft.x() && mouseX < topLeft.x() + (spacing * 5) && mouseY >= topLeft.y()
+                    && mouseY < topLeft.y() + (spacing * 5);
+            if(this.var.getAsBool(true).isPresent()) {
                 float center = ((float)spacing)*2.5f;
-                this.checkBoxHover = mouseX>=topLeft.x() && mouseX<topLeft.x()+(spacing*5) && mouseY>=topLeft.y()
-                        && mouseY< topLeft.y()+(spacing*5);
+                this.varHover = varHover1;
                 GuiUtil.bufferSquareTexture(matrix,new Vector3f((int)(topLeft.x()+center),(int)(topLeft.y()+center),0),center,
                         getCheckboxTexture());
-            } else if(Objects.nonNull(this.value)) {
-                int width = font.width(this.value)+4;
-                int height = font.lineHeight+4;
-                this.valueHover = mouseX>topLeft.x() && mouseX<topLeft.x()+(width*2) && mouseY>topLeft.y() && mouseY<topLeft.y()+(height*2);
-                topLeft = new Vector3f(topLeft.x()/2, topLeft.y()/2, 0);
-                Vector3f textCorner = new Vector3f(topLeft.x()+2,topLeft.y()+2, 0);
-                matrix.pushPose();
-                RenderSystem.enableBlend();
-                RenderSystem.defaultBlendFunc();
-                matrix.scale(2f, 2f, 2f);
-                if(this.valueHover) {
-                    GuiUtil.drawBoxWithOutline(topLeft, width, height, new Vector4f(255, 255, 255, 192),
-                            new Vector4f(0, 0, 0, 192), 1f, zLevel);
-                    font.drawShadow(matrix, this.value, textCorner.x(), textCorner.y(),
-                            GuiUtil.makeRGBAInt(new Vector4f(0, 0, 0, 192)));
-                } else {
-                    GuiUtil.drawBoxWithOutline(topLeft, width, height, new Vector4f(0, 0, 0, 192),
-                            new Vector4f(255, 255, 255, 192), 1f, zLevel);
-                    font.drawShadow(matrix, this.value, textCorner.x(), textCorner.y(), GuiUtil.WHITE);
-                }
-                matrix.popPose();
-            } else if(Objects.nonNull(this.listSave)) {
-                int width;
-                int height = font.lineHeight+4;
-                boolean listHover;
-                matrix.pushPose();
-                RenderSystem.enableBlend();
-                RenderSystem.defaultBlendFunc();
-                matrix.scale(2f, 2f, 2f);
-                int index = 0;
-                topLeft = new Vector3f(topLeft.x()/2, topLeft.y()/2,0);
-                Vector3f textCorner = new Vector3f(topLeft.x()+2,topLeft.y()+2,0);
-                for(String value : this.listValues) {
-                    width = font.width(value)+4;
-                    listHover = mouseX>topLeft.x() && mouseX<topLeft.x()+width && mouseY>topLeft.y() && mouseY<topLeft.y()+height;
-                    if(listHover) {
-                        this.listHover = index;
-                        GuiUtil.drawBoxWithOutline(topLeft, width, height, new Vector4f(255, 255, 255, 192),
-                                new Vector4f(0, 0, 0, 192), 1f, zLevel);
-                        font.drawShadow(matrix, value, textCorner.x(), textCorner.y(),
-                                GuiUtil.makeRGBAInt(new Vector4f(0, 0, 0, 192)));
-                    } else {
-                        GuiUtil.drawBoxWithOutline(topLeft, width, height, new Vector4f(0, 0, 0, 192),
-                                new Vector4f(255, 255, 255, 192), 1f, zLevel);
-                        font.drawShadow(matrix, value, textCorner.x(), textCorner.y(), GuiUtil.WHITE);
-                    }
-                    topLeft = new Vector3f(topLeft.x(),topLeft.y()+height+16,0);
-                    textCorner = new Vector3f(textCorner.x(),textCorner.y()+height+16,0);
-                    index++;
-                }
-                matrix.popPose();
+                return new ArrayList<>();
+            } else if(this.var.get() instanceof List<?>) {
+                float center = ((float)spacing)*2.5f;
+                this.varHover = varHover1;
+                GuiUtil.bufferSquareTexture(matrix,new Vector3f((int)(topLeft.x()+center),(int)(topLeft.y()+center),0),center,
+                        ButtonType.getIcons("edit",this.varHover));
+                if(!this.varHover) return new ArrayList<>();
+                List<String> ret = ((List<?>)this.var.get()).isEmpty() ? Translate.singletonHoverExtra(this.display,"parameter_list","empty") :
+                        Collections.singletonList(Translate.condenseList((List<?>)this.var.get()));
+                return ret.stream().map(line -> (Component) MutableComponent.create(new LiteralContents(line))).toList();
             } else {
-                int width = font.width(""+this.intVal)+4;
-                int height = font.lineHeight+4;
-                this.intHover = mouseX>topLeft.x() && mouseX<topLeft.x()+(width*2) && mouseY>topLeft.y() && mouseY<topLeft.y()+(height*2);
-                topLeft = new Vector3f(topLeft.x()/2, topLeft.y()/2,0);
+                int width = fontRenderer.width(this.var.get().toString())+6;
+                int height = fontRenderer.lineHeight+4;
+                this.varHover = isCurrent && mouseX>topLeft.x() && mouseX<topLeft.x()+(width*2) && mouseY>topLeft.y() &&
+                        mouseY<topLeft.y()+(height*2);
+                //topLeft = new Vector3f(topLeft.x/2,topLeft.y/2);
                 Vector3f textCorner = new Vector3f(topLeft.x()+2,topLeft.y()+2,0);
                 matrix.pushPose();
-                RenderSystem.enableBlend();
-                RenderSystem.defaultBlendFunc();
                 matrix.scale(2f, 2f, 2f);
-                if(this.intHover) {
-                    GuiUtil.drawBoxWithOutline(topLeft, width, height, new Vector4f(255, 255, 255, 192),
+                char extra = this.selected ? ChannelManager.blinker : ' ';
+                if(this.varHover) {
+                    GuiUtil.drawBoxWithOutline(topLeft, width*2, height*2, new Vector4f(255, 255, 255, 192),
                             new Vector4f(0, 0, 0, 192), 1f, zLevel);
-                    font.drawShadow(matrix, ""+this.intVal, textCorner.x(), textCorner.y(),
+                    fontRenderer.drawShadow(matrix,this.var.get().toString()+extra, textCorner.x()/2, textCorner.y()/2,
                             GuiUtil.makeRGBAInt(new Vector4f(0, 0, 0, 192)));
                 } else {
-                    GuiUtil.drawBoxWithOutline(topLeft, width, height, new Vector4f(0, 0, 0, 192),
+                    GuiUtil.drawBoxWithOutline(topLeft, width*2, height*2, new Vector4f(0, 0, 0, 192),
                             new Vector4f(255, 255, 255, 192), 1f, zLevel);
-                    font.drawShadow(matrix, ""+this.intVal, textCorner.x(), textCorner.y(), GuiUtil.WHITE);
+                    fontRenderer.drawShadow(matrix,this.var.get().toString()+extra, textCorner.x()/2, textCorner.y()/2, GuiUtil.WHITE);
                 }
                 matrix.popPose();
+                return new ArrayList<>();
             }
+        }
+
+        public boolean canScroll() {
+            return this.descLines>10;
+        }
+
+        public void drawScrollBar(int scrollTop, int bottom, int left, float zLevel) {
+            float height = bottom-scrollTop;
+            float indices = this.descLines-9;
+            float perIndex = height/indices;
+            int top = (int)(scrollTop+(perIndex*this.scrollPos));
+            Vector3f start = new Vector3f(left, top, 0);
+            if(perIndex<1) perIndex = 1;
+            Vector3f end = new Vector3f(left,(int)(top+perIndex),0);
+            GuiUtil.drawLine(start,end,new Vector4f(255,255,255,128), 2f, zLevel);
         }
 
         private ResourceLocation getCheckboxTexture() {
             String checked = "unchecked";
-            if(this.isChecked) checked = "checked";
-            String path = "black_icons";
-            if(this.checkBoxHover) path = "white_icons";
+            Optional<Boolean> optional= this.var.getAsBool(true);
+            if(optional.isPresent() && optional.get()) checked = "checked";
+            String path = "white_icons";
+            if(this.varHover) path = "black_icons";
             return new ResourceLocation(Constants.MODID,LogUtil.injectParameters("textures/gui/{}/{}.png",
                     path,checked));
         }
@@ -400,11 +445,12 @@ public class GuiParameters extends GuiSuperType {
                 ((GuiSuperType)Minecraft.getInstance().screen).save();
         }
 
-        public void save() {
-            if(Objects.nonNull(this.boolSave)) this.boolSave.accept(this.isChecked);
-            else if(Objects.nonNull(this.stringSave)) this.stringSave.accept(this.value);
-            else if(Objects.nonNull(this.intSave)) this.intSave.accept(this.intVal);
-            else this.listSave.accept(this.listValues);
+        public void setList(List<String> list) {
+            this.var.set(list);
+        }
+
+        public List<String> getList() {
+            return ((List<?>)this.var.get()).stream().map(Objects::toString).collect(Collectors.toList());
         }
     }
 }

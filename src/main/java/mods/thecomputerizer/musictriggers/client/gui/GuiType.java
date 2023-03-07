@@ -10,6 +10,7 @@ import mods.thecomputerizer.theimpossiblelibrary.client.gui.RadialProgressBar;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.util.TriConsumer;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -20,8 +21,8 @@ public enum GuiType {
     PLAYBACK("playback", MusicTriggers.getIcon("gui/white_icons","playback"), null, Collections.EMPTY_LIST, 100f, 0f,
             new ButtonType[]{ButtonType.BACK,ButtonType.APPLY,ButtonType.SKIP_SONG,ButtonType.RESET_SONG},
             RadialProgressBar::new, functionImpl(), 100,
-            (Screen, bar, mousePos) -> {
-                GuiPlayback playback = (GuiPlayback)Screen;
+            (guiScreen, bar, mousePos) -> {
+                GuiPlayback playback = (GuiPlayback)guiScreen;
                 playback.click(bar.mousePosToProgress(mousePos));
             }),
     EDIT("edit", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
@@ -29,21 +30,14 @@ public enum GuiType {
     REGISTRATION("registration", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
     CHANNEL("channel", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
     MAIN_CONFIG("main_config", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
-    SONG_TRIGGERS("song_triggers", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
     TRANSITIONS("transitions", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
     COMMANDS("commands", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
     TOGGLES("toggles", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
     REDIRECT("redirect", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
-    SONGS("songs", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
-    IMAGES("images", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
+    JUKEBOX("jukebox", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
     CHANNEL_INFO("channel_info", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
     SELECTION_GENERIC("selection_generic", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
-    SONG_INFO("song_info", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
-    TRIGGER_INFO("trigger_info", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
-    TITLE_INFO("title_info", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
-    IMAGE_INFO("image_info", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
-    COMMAND_INFO("command_info", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
-    TOGGLE_INFO("toggle_info", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
+    PARAMETER_GENERIC("parameter_generic", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
     POPUP("popup", new ButtonType[]{});
 
     private static final Map<String, GuiType> GUI_TYPES = Maps.newHashMap();
@@ -67,27 +61,27 @@ public enum GuiType {
         this(id, null, null, null, null, null, null, buttonHolders,
                 null, null, 0, null);
     }
-    GuiType(String id, ResourceLocation iconLocation, ResourceLocation altIconLocation,
+    GuiType(String id, @Nullable ResourceLocation iconLocation, @Nullable ResourceLocation altIconLocation,
             List<String> tooltips, Float resolution, Float iconIncrease, ButtonType[] buttonHolders,
             ProgressCreator<Integer, Integer, Float, Integer, TriConsumer<Screen, RadialProgressBar, Vector3f>, RadialProgressBar> progressBar,
-            RadialElement.CreatorFunction<Screen, ResourceLocation, ResourceLocation, RadialProgressBar,
+            @Nullable RadialElement.CreatorFunction<Screen, ResourceLocation, ResourceLocation, RadialProgressBar,
                     Integer, Integer, Integer, Integer, Integer, String, List<String>, Float, Float, ButtonType[],
                     RadialElement> circleConstructor, Integer progressRes, TriConsumer<Screen, RadialProgressBar, Vector3f> progressClick) {
         this(id, iconLocation, altIconLocation, null, tooltips, resolution, iconIncrease, buttonHolders,
-                null, circleConstructor, progressRes, progressClick);
+                progressBar, circleConstructor, progressRes, progressClick);
     }
-    GuiType(String id, ResourceLocation iconLocation, ResourceLocation altIconLocation,
+    GuiType(String id, ResourceLocation iconLocation, @Nullable ResourceLocation altIconLocation,
             List<String> tooltips, Float resolution, Float iconIncrease, ButtonType[] buttonHolders,
-            RadialElement.CreatorFunction<Screen, ResourceLocation, ResourceLocation, RadialProgressBar,
+            @Nullable RadialElement.CreatorFunction<Screen, ResourceLocation, ResourceLocation, RadialProgressBar,
                     Integer, Integer, Integer, Integer, Integer, String, List<String>, Float, Float, ButtonType[],
                     RadialElement> circleConstructor) {
         this(id, iconLocation, altIconLocation, null, tooltips, resolution, iconIncrease,
                 buttonHolders, null, circleConstructor, 0, null);
     }
-    GuiType(String id, ResourceLocation iconLocation, ResourceLocation altIconLocation,
-            String text, List<String> tooltips, Float resolution, Float iconIncrease, ButtonType[] buttonHolders,
-            ProgressCreator<Integer, Integer, Float, Integer, TriConsumer<Screen, RadialProgressBar, Vector3f>, RadialProgressBar> progressBar,
-            RadialElement.CreatorFunction<Screen, ResourceLocation, ResourceLocation, RadialProgressBar,
+    GuiType(String id, @Nullable ResourceLocation iconLocation, @Nullable ResourceLocation altIconLocation,
+            @Nullable String text, List<String> tooltips, Float resolution, Float iconIncrease, ButtonType[] buttonHolders,
+            @Nullable ProgressCreator<Integer, Integer, Float, Integer, TriConsumer<Screen, RadialProgressBar, Vector3f>, RadialProgressBar> progressBar,
+            @Nullable RadialElement.CreatorFunction<Screen, ResourceLocation, ResourceLocation, RadialProgressBar,
                     Integer, Integer, Integer, Integer, Integer, String, List<String>, Float, Float, ButtonType[],
                     RadialElement> circleConstructor, Integer progressRes, TriConsumer<Screen, RadialProgressBar, Vector3f> progressClick) {
         this.id = id;
@@ -108,7 +102,7 @@ public enum GuiType {
         return this.id;
     }
 
-    public RadialElement getCircleForType(Screen parentScreen, Integer[] loc, RadialProgressBar bar) {
+    public RadialElement getCircleForType(Screen parentScreen, Integer[] loc, @Nullable RadialProgressBar bar) {
         if(this.circleConstructor==null) return null;
         return this.circleConstructor.apply(parentScreen, this.iconLocation, this.altIconLocation, bar, loc[0], loc[1],
                 loc[2], loc[3], loc[4], this.text, this.tooltips, this.resolution, this.iconIncrease, this.buttonHolders);

@@ -37,18 +37,18 @@ public class GuiRadial extends GuiSuperType {
     }
 
     @Override
-    protected void drawStuff(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
-        circleButton.render(matrix,this.getBlitOffset(),mouseX,mouseY);
+    public void drawStuff(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
         GuiUtil.drawColoredRing(new Vector3f((int)(((float)this.width)/2f),(int)(((float)this.height)/2f),0),
-                new Vector3f(35,37,0),new
-                        Vector4f(255,255,255,192),100,this.getBlitOffset());
+                new Vector3f(35,37,0),new Vector4f(255,255,255,192),100,this.getBlitOffset());
         GuiUtil.drawColoredRing(new Vector3f((int)(((float)this.width)/2f),(int)(((float)this.height)/2f),0),
-                new Vector3f(110,112,0),
-                new Vector4f(255,255,255,192),100,this.getBlitOffset());
+                new Vector3f(110,112,0),new Vector4f(255,255,255,192),100,this.getBlitOffset());
+        circleButton.render(matrix, this.getBlitOffset(),mouseX,mouseY);
     }
 
     @Override
     protected void save() {
 
     }
+
+
 }

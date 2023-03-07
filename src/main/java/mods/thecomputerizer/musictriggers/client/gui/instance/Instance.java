@@ -1,19 +1,18 @@
 package mods.thecomputerizer.musictriggers.client.gui.instance;
 
-import mods.thecomputerizer.musictriggers.client.EventsClient;
-import mods.thecomputerizer.musictriggers.client.Translate;
-import mods.thecomputerizer.musictriggers.client.data.Trigger;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.client.ClientEvents;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.*;
-import mods.thecomputerizer.musictriggers.config.ConfigChannels;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.util.RandomSource;
-
+import org.apache.logging.log4j.Level;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class Instance {
@@ -25,9 +24,9 @@ public class Instance {
     private boolean hasChanges;
     private boolean needsReload;
 
-    public static GuiSuperType createTestGui() {
+    public static GuiSuperType createGui() {
         return new GuiRadial(null, GuiType.MAIN, new Instance(ConfigDebug.copyToGui(), ConfigRegistry.copyToGui(),
-                ConfigChannels.copyToGui()));
+                ChannelManager.createGuiData()));
     }
 
     private Instance(Debug debug, Registration registration, ChannelHolder channels) {
@@ -52,11 +51,14 @@ public class Instance {
         this.debugInstance.write(null);
         this.registrationInstance.write(null);
         if(this.needsReload) {
+            MusicTriggers.logExternally(Level.INFO,"In-game changes detected for channel files - Reloading audio system");
             this.channelHolder.write(null);
-            EventsClient.initReload();
+            ClientEvents.initReload();
         }
-        else ChannelManager.refreshDebug();
-        Minecraft.getInstance().setScreen(null);
+        else {
+            MusicTriggers.logExternally(Level.INFO,"In-game changes detected for non-channel files - Refreshing debug information");
+            ChannelManager.refreshDebug();
+        }
     }
 
     public void madeChanges(boolean needsReload) {
@@ -68,12 +70,12 @@ public class Instance {
         return this.hasChanges;
     }
 
-    public AbstractConfig getModule(GuiType type, String channel) {
+    public AbstractConfig getModule(GuiType type, @Nullable String channel) {
         if(Objects.isNull(channel)) return this.moduleMap.get(type);
         return this.channelHolder.getChannel(channel).getModule(type);
     }
 
-    public List<GuiParameters.Parameter> getParameters(GuiType type, String channel) {
+    public List<GuiParameters.Parameter> getParameters(GuiType type, @Nullable String channel) {
         return getModule(type, channel).getParameters(type);
     }
 
@@ -95,18 +97,7 @@ public class Instance {
         if(type==GuiType.CHANNEL) {
             GuiPage pageScreen = (GuiPage)screen;
             String channel = pageScreen.getID();
-            if(id.matches("edit"))
-                Minecraft.getInstance().setScreen(new GuiParameters(screen,GuiType.CHANNEL_INFO,
-                        screen.getInstance(),channel,
-                        Translate.guiGeneric(false,"titles","channel_info") +": "+channel,
-                        this.channelHolder.getChannel(channel).channelInfoParameters()));
-            else if(id.matches("redirect")) getChannel(channel).openRedirectGui(screen);
-            else {
-                String extra = id.matches("transitions") ? "titles" : null;
-                Minecraft.getInstance().setScreen(new GuiSelection(screen,GuiType.SELECTION_GENERIC,
-                        screen.getInstance(),channel,id,extra,null,
-                        this.channelHolder.getChannel(channel).clickAddButton(channel,null)));
-            }
+            getChannel(channel).openChannelScreen(pageScreen,channel,id,this.registeredSounds);
         }
     }
 
@@ -126,36 +117,18 @@ public class Instance {
         this.channelHolder.deleteChannel(channel);
     }
 
-    public List<String> channelNames() {
-        return this.channelHolder.allChannelNames();
-    }
-
-    public List<GuiSelection.Element> getElementGroup(GuiSelection selectionScreen, String channel, String group, String extra) {
-        return this.channelHolder.getChannel(channel).getElementGroup(selectionScreen, channel, group, extra);
-    }
-
-    public List<Trigger> getTriggers(String channel, String index) {
-        return this.channelHolder.getChannel(channel).getTriggers(index);
-    }
-
-    public List<GuiSelection.Element> transitionsSpecialCase(GuiSelection selectionScreen, String channel, String viewMode) {
-        return getChannel(channel).transitionsSpecialCase(selectionScreen, viewMode);
-    }
-
-    public boolean isSongEntryUsed(String channel, String song) {
-        return getChannel(channel).isSongUsed(song);
-    }
-
-    public List<String> getRegisteredSounds() {
-        return this.registeredSounds;
+    public GuiSelection createMultiSelectTriggerScreen(GuiSuperType parent, @Nullable String channel,
+                                                       Consumer<List<GuiSelection.Element>> multiSelectHandler) {
+        return Objects.isNull(channel) ? null :
+                this.channelHolder.getChannel(channel).createMultiSelectTriggerScreen(parent, multiSelectHandler);
     }
 
     public List<String> findAllRegisteredSounds() {
-        RandomSource random = SoundInstance.createUnseededRandom();
+        RandomSource rand = RandomSource.create();
         return Minecraft.getInstance().getSoundManager().registry.values().stream()
                 .map(accessor -> accessor.list)
                 .flatMap(Collection::stream)
-                .map(accessor -> accessor.getSound(random).getPath().toString())
+                .map(accessor -> accessor.getSound(rand).getPath().toString())
                 .distinct().sorted().collect(Collectors.toList());
     }
 }
