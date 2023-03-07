@@ -2,7 +2,6 @@ package mods.thecomputerizer.musictriggers.config;
 
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.gui.instance.Jukebox;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 
 import java.io.BufferedReader;
@@ -17,10 +16,6 @@ public class ConfigJukebox {
 
     private final File file;
     public final Map<String, String> recordMap;
-
-    public Jukebox copyToGui(String channel) {
-        return new Jukebox(this.file, channel, this.recordMap);
-    }
 
     public ConfigJukebox(File file) {
         boolean exists = file.exists();

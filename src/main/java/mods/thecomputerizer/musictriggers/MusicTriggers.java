@@ -1,49 +1,59 @@
 package mods.thecomputerizer.musictriggers;
 
 import com.rits.cloning.Cloner;
-import mods.thecomputerizer.musictriggers.common.EventsCommon;
-import mods.thecomputerizer.musictriggers.common.TriggerCommand;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
-import mods.thecomputerizer.musictriggers.util.PacketHandler;
-import mods.thecomputerizer.musictriggers.util.RegistryHandler;
+import mods.thecomputerizer.musictriggers.network.NetworkHandler;
+import mods.thecomputerizer.musictriggers.registry.BlockRegistry;
+import mods.thecomputerizer.musictriggers.registry.ItemRegistry;
+import mods.thecomputerizer.musictriggers.registry.TileRegistry;
+import mods.thecomputerizer.musictriggers.server.ServerEvents;
+import mods.thecomputerizer.musictriggers.server.TriggerCommand;
+import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
+import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.LogUtil;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.ChatFormatting;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.Level;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.File;
+import java.util.LinkedHashMap;
+import java.util.Objects;
 import java.util.Random;
 
 public class MusicTriggers implements ModInitializer {
-
     private static LogUtil.ModLogger MOD_LOG;
-    public static List<String> savedMessages = new ArrayList<>();
+    public static final LinkedHashMap<String, Integer> savedMessages = new LinkedHashMap<>();
     private static Random random;
 
     @Override
     public void onInitialize() {
         MOD_LOG = LogUtil.create(Constants.MODID);
         random = new Random();
-        if (!Constants.CONFIG_DIR.exists())
+        if(!Constants.CONFIG_DIR.exists())
             if(!Constants.CONFIG_DIR.mkdir())
                 throw new RuntimeException("Unable to create file directory at "+Constants.CONFIG_DIR.getPath()+
                         "! Music Triggers is unable to load any further.");
-        if (ConfigRegistry.REGISTER_DISCS) RegistryHandler.init();
+        ConfigRegistry.initialize(new File(Constants.CONFIG_DIR,"registration.toml"),false);
+        if(ConfigRegistry.REGISTER_DISCS) {
+            Constants.MAIN_LOG.info("Loading Music Triggers discs and blocks");
+            BlockRegistry.register();
+            ItemRegistry.register();
+            TileRegistry.register();
+        }
         CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> TriggerCommand.register(dispatcher));
-        if(!ConfigRegistry.CLIENT_SIDE_ONLY) PacketHandler.registerReceivers();
+        if(!ConfigRegistry.CLIENT_SIDE_ONLY) NetworkHandler.registerReceivers();
         setUpCommonEvents();
     }
 
-    private static void setUpCommonEvents() {
-        ServerTickEvents.END_SERVER_TICK.register( server -> EventsCommon.onServerTick());
+    private void setUpCommonEvents() {
+        ServerTickEvents.END_SERVER_TICK.register(server -> ServerEvents.onServerTick());
     }
 
     public static ResourceLocation getIcon(String type, String name) {
-        return new ResourceLocation(Constants.MODID,"textures/"+type+"/"+name+".png");
+        return Objects.nonNull(type) ? new ResourceLocation(Constants.MODID,"textures/"+type+"/"+name+".png") :
+                new ResourceLocation(Constants.MODID,"textures/"+name);
     }
 
     public static String[] stringBreaker(String s, String regex) {
@@ -110,19 +120,22 @@ public class MusicTriggers implements ModInitializer {
 
     public static void logExternally(Level level, String message, Object ... parameters) {
         MOD_LOG.log(level, message, parameters);
-        if(level!=Level.DEBUG) savedMessages.add(colorizeLogLevel(level)+ LogUtil.injectParameters(message, parameters));
+        savedMessages.put("["+String.format("%-5s",level.toString())+"] "+LogUtil.injectParameters(message, parameters),colorizeLogLevel(level));
     }
 
-    private static String colorizeLogLevel(Level level) {
-        String logLevel = "["+level.toString()+"] ";
-        if(level==Level.DEBUG) return ChatFormatting.GRAY+logLevel;
-        else if(level==Level.INFO) return logLevel;
-        else if(level==Level.WARN) return ChatFormatting.GOLD+logLevel;
-        else if(level==Level.ERROR) return ChatFormatting.RED+logLevel;
-        else return ChatFormatting.DARK_RED+logLevel;
+    private static int colorizeLogLevel(Level level) {
+        if(level==Level.DEBUG) return GuiUtil.makeRGBAInt(200,200,200,255);
+        else if(level==Level.INFO) return GuiUtil.WHITE;
+        else if(level==Level.WARN) return GuiUtil.makeRGBAInt(255,215,0,255);
+        else if(level==Level.ERROR) return GuiUtil.makeRGBAInt(255,0,0,255);
+        return GuiUtil.makeRGBAInt(100,0,0,255);
     }
 
     public static <T> T clone(final T o) {
         return Cloner.standard().deepClone(o);
+    }
+
+    public static File configFile(String path, String extension) {
+        return FileUtil.generateNestedFile(new File(Constants.CONFIG_DIR,path+"."+extension),false);
     }
 }

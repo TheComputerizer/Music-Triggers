@@ -3,50 +3,47 @@ package mods.thecomputerizer.musictriggers.client.gui;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
-import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.client.ClientEvents;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.sounds.SoundEvents;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.util.TriConsumer;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Objects;
 
 public abstract class GuiSuperType extends Screen {
 
-    protected static final List<Integer> blacklistedKeys = Stream.of(GLFW.GLFW_KEY_LEFT_SHIFT, GLFW.GLFW_KEY_RIGHT_SHIFT,
-            GLFW.GLFW_KEY_TAB, GLFW.GLFW_KEY_CAPS_LOCK, GLFW.GLFW_KEY_LEFT_ALT, GLFW.GLFW_KEY_RIGHT_ALT, GLFW.GLFW_KEY_END, GLFW.GLFW_KEY_UP,
-            GLFW.GLFW_KEY_DOWN, GLFW.GLFW_KEY_LEFT, GLFW.GLFW_KEY_RIGHT, GLFW.GLFW_KEY_F2, GLFW.GLFW_KEY_F3, GLFW.GLFW_KEY_F4,
-            GLFW.GLFW_KEY_F5, GLFW.GLFW_KEY_F6, GLFW.GLFW_KEY_F7, GLFW.GLFW_KEY_F8, GLFW.GLFW_KEY_F9, GLFW.GLFW_KEY_F10,
-            GLFW.GLFW_KEY_F11, GLFW.GLFW_KEY_F12, GLFW.GLFW_KEY_F13, GLFW.GLFW_KEY_F14, GLFW.GLFW_KEY_F15, GLFW.GLFW_KEY_F16,
-            GLFW.GLFW_KEY_F17, GLFW.GLFW_KEY_F18, GLFW.GLFW_KEY_F19, GLFW.GLFW_KEY_LEFT_CONTROL, GLFW.GLFW_KEY_RIGHT_CONTROL,
-            GLFW.GLFW_KEY_NUM_LOCK, GLFW.GLFW_KEY_SCROLL_LOCK, GLFW.GLFW_KEY_PRINT_SCREEN, GLFW.GLFW_KEY_HOME, GLFW.GLFW_KEY_PAUSE,
-            GLFW.GLFW_KEY_LEFT_SUPER, GLFW.GLFW_KEY_INSERT, GLFW.GLFW_KEY_DELETE, GLFW.GLFW_KEY_RIGHT_SUPER, GLFW.GLFW_KEY_F20,
-            GLFW.GLFW_KEY_F21, GLFW.GLFW_KEY_F22, GLFW.GLFW_KEY_F23, GLFW.GLFW_KEY_F24, GLFW.GLFW_KEY_F25, GLFW.GLFW_KEY_UNKNOWN,
-            GLFW.GLFW_KEY_ENTER, GLFW.GLFW_KEY_END, GLFW.GLFW_KEY_ESCAPE, GLFW.GLFW_KEY_KP_ENTER).collect(Collectors.toList());
-    protected static final List<Integer> numberKeys = Stream.of(GLFW.GLFW_KEY_BACKSPACE, GLFW.GLFW_KEY_1, GLFW.GLFW_KEY_2,
-            GLFW.GLFW_KEY_3, GLFW.GLFW_KEY_4, GLFW.GLFW_KEY_5, GLFW.GLFW_KEY_6, GLFW.GLFW_KEY_7, GLFW.GLFW_KEY_8,
-            GLFW.GLFW_KEY_9, GLFW.GLFW_KEY_0, GLFW.GLFW_KEY_KP_1, GLFW.GLFW_KEY_KP_2, GLFW.GLFW_KEY_KP_3,
-            GLFW.GLFW_KEY_KP_4, GLFW.GLFW_KEY_KP_5, GLFW.GLFW_KEY_KP_6, GLFW.GLFW_KEY_KP_7, GLFW.GLFW_KEY_KP_8,
-            GLFW.GLFW_KEY_KP_9, GLFW.GLFW_KEY_KP_0, GLFW.GLFW_KEY_KP_SUBTRACT).collect(Collectors.toList());
     protected final GuiSuperType parent;
     protected final GuiType type;
     private final Instance configInstance;
     private final List<ButtonSuperType> superButtons;
-    protected final int spacing;
+    private final String channel;
+    private ButtonSuperType applyButton;
+    protected int spacing;
+    protected EditBox searchBar;
 
     public GuiSuperType(GuiSuperType parent, GuiType type, Instance configInstance) {
+        this(parent,type,configInstance,null);
+    }
+
+    public GuiSuperType(GuiSuperType parent, GuiType type, Instance configInstance, @Nullable String channel) {
         super(new TextComponent(type.getId()));
         this.parent = parent;
         this.type = type;
         this.configInstance = configInstance;
+        this.channel = channel;
         this.superButtons = new ArrayList<>();
         this.spacing = 16;
     }
@@ -57,6 +54,10 @@ public abstract class GuiSuperType extends Screen {
 
     public GuiSuperType getParent() {
         return this.parent;
+    }
+
+    public String getChannel() {
+        return this.channel;
     }
 
     public Vector4f white(int alpha) {
@@ -71,10 +72,18 @@ public abstract class GuiSuperType extends Screen {
     public boolean keyPressed(int keyCode, int x, int y) {
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             if(!getInstance().hasEdits()) {
-                Minecraft.getInstance().setScreen(null);
+                this.onClose();
             } else Minecraft.getInstance().setScreen(new GuiPopUp(this,GuiType.POPUP,getInstance(),"confirm"));
+            return true;
         }
-        return true;
+        boolean ret = this.searchBar.keyPressed(keyCode, x, y);
+        if(ret) updateSearch();
+        return ret;
+    }
+
+    @Override
+    public boolean charTyped(char c, int mod) {
+        return this.searchBar.charTyped(c, mod);
     }
 
     protected String backspace(String value) {
@@ -84,35 +93,69 @@ public abstract class GuiSuperType extends Screen {
 
     @Override
     public void init() {
-        EventsClient.renderDebug = false;
-        for(ButtonType buttonHolder : this.type.getButtonHolders())
-            if(buttonHolder.isNormal())
-                addSuperButton(buttonHolder.getNormalButton(this));
+        this.superButtons.clear();
+        switch (Minecraft.getInstance().options.guiScale) {
+            case 0 -> this.spacing = 10;
+            case 1 -> this.spacing = 24;
+            case 2 -> this.spacing = 16;
+            case 3 -> this.spacing = 12;
+        }
+        ClientEvents.renderDebug = false;
+        for (ButtonType buttonHolder : this.type.getButtonHolders()) {
+            if (buttonHolder.isNormal()) {
+                ButtonSuperType button = buttonHolder.getNormalButton(this);
+                if(buttonHolder.getID().contains("apply"))
+                    this.applyButton = button;
+                addSuperButton(button);
+            }
+        }
+        if(this.configInstance.hasEdits() && Objects.nonNull(this.applyButton)) this.applyButton.setEnable(true);
+        this.searchBar = new EditBox(this.font, this.width / 4, 8,this.width / 2, 16,
+                new TextComponent("search_bar"));
+        this.searchBar.setMaxLength(32500);
+        this.searchBar.setVisible(false);
+        this.searchBar.setEditable(false);
+        this.searchBar.setValue("");
     }
 
-    protected ButtonSuperType addTopButton(int x, String name, int width, List<String> hoverText,
-                                BiConsumer<GuiSuperType, ButtonSuperType> handler, GuiSuperType parent) {
-        ButtonSuperType newButton = new ButtonSuperType(x,8,width,16, name,hoverText,
-                handler,parent,false);
-        this.addSuperButton(newButton);
-        return newButton;
+    protected void enableSearch() {
+        this.searchBar.setEditable(true);
+        this.searchBar.setVisible(true);
     }
 
-    protected void addSuperButton(ButtonSuperType button) {
-        this.renderables.add(button);
+    protected boolean checkSearch(String toCheck) {
+        return toCheck.toLowerCase().contains(this.searchBar.getValue().toLowerCase());
+    }
+
+    protected void updateSearch() {
+
+    }
+
+    public ButtonSuperType createBottomButton(String name, int width, int modes, List<String> hoverText,
+                                                 TriConsumer<GuiSuperType, ButtonSuperType, Integer> handler) {
+        return new ButtonSuperType(0, this.height-24,width,16, modes,name,
+                hoverText, handler,true);
+    }
+
+    private void addSuperButton(ButtonSuperType button) {
+        this.superButtons.add(button);
+    }
+
+    protected void addSuperButton(ButtonSuperType button, int x) {
+        if(x>=0) button.x=x;
         this.superButtons.add(button);
     }
 
     public void madeChange(boolean needReload) {
-        recursivelySetApply(this);
-        getInstance().madeChanges(needReload);
+        if(!this.applyButton.active) {
+            recursivelySetApply(this);
+            getInstance().madeChanges(needReload);
+        }
     }
 
     private void recursivelySetApply(GuiSuperType superScreen) {
-        for(ButtonSuperType button : superScreen.superButtons)
-            if(button.isApplyButton())
-                button.setEnable(true);
-        if(superScreen.parent!=null) recursivelySetApply(superScreen.parent);
+        this.applyButton.setEnable(true);
+        if(Objects.nonNull(superScreen.parent)) recursivelySetApply(superScreen.parent);
     }
 
     protected abstract void drawStuff(PoseStack matrix, int mouseX, int mouseY, float partialTicks);
@@ -120,11 +163,19 @@ public abstract class GuiSuperType extends Screen {
     @Override
     public void render(@Nonnull PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
         this.renderBackground(matrix);
-        drawStuff(matrix,mouseX, mouseY, partialTicks);
-        super.render(matrix, mouseX, mouseY, partialTicks);
+        drawStuff(matrix, mouseX, mouseY, partialTicks);
+        for(ButtonSuperType superButton : this.superButtons)
+            superButton.render(matrix,mouseX,mouseY,partialTicks);
+        this.searchBar.render(matrix,mouseX,mouseY,partialTicks);
+        for(ButtonSuperType superButton : this.superButtons) {
+            if(Minecraft.getInstance().screen == this) {
+                List<Component> hoverText = superButton.getHoverText(mouseX,mouseY);
+                if(!hoverText.isEmpty()) renderComponentTooltip(matrix, hoverText, mouseX, mouseY);
+            }
+        }
     }
 
-    protected boolean mouseHover(Vector3f topLeft, int mouseX, int mouseY, int width, int height) {
+    public boolean mouseHover(Vector3f topLeft, int mouseX, int mouseY, int width, int height) {
         return mouseX>=topLeft.x() && mouseX<topLeft.x()+width && mouseY>=topLeft.y() && mouseY<topLeft.y()+height;
     }
 
@@ -132,10 +183,10 @@ public abstract class GuiSuperType extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
         if (mouseButton == 0) {
             for (ButtonSuperType superButton : this.superButtons)
-                superButton.onClick(mouseX, mouseY);
+                superButton.handle(this, mouseX, mouseY);
             return true;
         }
-        return false;
+        return this.searchBar.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     public void saveAndDisplay(GuiSuperType next) {
@@ -144,7 +195,7 @@ public abstract class GuiSuperType extends Screen {
     }
 
     public void parentUpdate() {
-
+        madeChange(true);
     }
 
     protected abstract void save();
@@ -154,24 +205,31 @@ public abstract class GuiSuperType extends Screen {
         if(reload) {
             if(this.configInstance.hasEdits())
                 applyButton();
-            EventsClient.initReload();
-            Minecraft.getInstance().setScreen(null);
+            MusicTriggers.logExternally(Level.INFO,"No in-game changes were detected - Loading file changes");
+            ClientEvents.initReload();
+            this.onClose();
         } else Minecraft.getInstance().setScreen(this.parent);
     }
 
     public void applyButton() {
-        if(this.parent==null)
-            getInstance().writeAndReload();
-        else this.parent.applyButton();
+        save();
+        if(Objects.nonNull(this.parent)) {
+            Minecraft.getInstance().setScreen(this.parent);
+            this.parent.applyButton();
+        }
+        else {
+            this.getInstance().writeAndReload();
+            this.onClose();
+        }
     }
 
     @Override
     public void onClose() {
-        EventsClient.renderDebug = true;
+        super.onClose();
+        ClientEvents.renderDebug = true;
     }
 
     public void playGenericClickSound() {
         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-
     }
 }

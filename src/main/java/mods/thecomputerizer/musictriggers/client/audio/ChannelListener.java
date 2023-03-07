@@ -16,6 +16,7 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.SourceDataLine;
+import java.util.Objects;
 
 @Environment(EnvType.CLIENT)
 public class ChannelListener extends AudioEventAdapter {
@@ -23,9 +24,9 @@ public class ChannelListener extends AudioEventAdapter {
     private final AudioDataFormat format;
 
     private final AudioOutput AUDIO_THREAD;
-    private final String channel;
+    private final Channel channel;
 
-    public ChannelListener(AudioPlayer audioPlayer, AudioDataFormat format, String channel) {
+    public ChannelListener(AudioPlayer audioPlayer, AudioDataFormat format, Channel channel) {
         this.audioPlayer = audioPlayer;
         this.format = format;
         this.channel = channel;
@@ -35,25 +36,26 @@ public class ChannelListener extends AudioEventAdapter {
     }
 
     @SuppressWarnings("deprecation")
-    public void stopThread() {
+    public void stop() {
         this.AUDIO_THREAD.stop();
     }
 
     @Override
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
-
+        if(Objects.nonNull(this.channel)) this.channel.markUpdated();
     }
 
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
+        if(Objects.nonNull(this.channel)) this.channel.markUpdated();
     }
 
     @Override
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
-        MusicTriggers.logExternally(Level.ERROR,"Track exception caught! Restarting audio output for channel: {}",
-                this.channel);
+        MusicTriggers.logExternally(Level.ERROR,"Track exception caught! Restarting audio output for channel {}",this.channel);
         exception.printStackTrace();
         this.AUDIO_THREAD.setRunAudioLoop(false);
+        if(Objects.nonNull(this.channel)) this.channel.markUpdated();
     }
 
     @SuppressWarnings("BusyWait")

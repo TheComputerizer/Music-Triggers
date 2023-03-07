@@ -1,23 +1,21 @@
 package mods.thecomputerizer.musictriggers.client.gui.instance;
 
-import mods.thecomputerizer.musictriggers.Constants;
-import mods.thecomputerizer.musictriggers.client.data.Universal;
-import mods.thecomputerizer.musictriggers.client.gui.ButtonType;
-import mods.thecomputerizer.musictriggers.client.gui.GuiPage;
-import mods.thecomputerizer.musictriggers.client.gui.GuiParameters;
-import mods.thecomputerizer.musictriggers.client.gui.GuiType;
+import mods.thecomputerizer.musictriggers.client.gui.*;
+import mods.thecomputerizer.theimpossiblelibrary.common.toml.Holder;
+import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ChannelHolder extends AbstractConfig {
-    private final Jukebox jukeboxInstance;
+
+    private final File channelsFile;
     private final Map<String, ChannelInstance> channelInstances;
 
-    public ChannelHolder(File configFile, Jukebox customRecordsChannel, Map<String, ChannelInstance> channelInstances) {
-        super(configFile);
-        this.jukeboxInstance = customRecordsChannel;
+    public ChannelHolder(File channelsFile, Map<String, ChannelInstance> channelInstances) {
+        this.channelsFile = channelsFile;
         this.channelInstances = channelInstances;
     }
 
@@ -29,10 +27,6 @@ public class ChannelHolder extends AbstractConfig {
         return this.channelInstances.get(name);
     }
 
-    public List<String> allChannelNames() {
-        return new ArrayList<>(this.channelInstances.keySet());
-    }
-
     @Override
     public List<GuiParameters.Parameter> getParameters(GuiType type) {
         return new ArrayList<>();
@@ -40,10 +34,7 @@ public class ChannelHolder extends AbstractConfig {
 
     @Override
     public List<GuiPage.Icon> getPageIcons(String channel) {
-        List<GuiPage.Icon> ret = new ArrayList<>();
-        if(this.jukeboxInstance !=null) ret.addAll(this.jukeboxInstance.getPageIcons(null));
-        ret.addAll(this.channelInstances.keySet().stream().map(this::getPageIcon).toList());
-        return ret;
+        return this.channelInstances.keySet().stream().map(this::getPageIcon).collect(Collectors.toList());
     }
 
     @Override
@@ -59,7 +50,7 @@ public class ChannelHolder extends AbstractConfig {
         List<String> lines = new ArrayList<>(headerLines());
         for (ChannelInstance channel : this.channelInstances.values())
             lines.addAll(channel.write());
-        FileUtil.writeLinesToFile(getOriginalFile(),lines,false);
+        FileUtil.writeLinesToFile(this.channelsFile,lines,false);
     }
 
     public GuiPage.Icon getPageIcon(String channelName) {
@@ -67,18 +58,11 @@ public class ChannelHolder extends AbstractConfig {
     }
 
     public GuiPage.Icon makeNewChannel(String channelName) {
-        String configPath = Constants.CONFIG_DIR.getPath()+"/";
-        File base = new File(Constants.CONFIG_DIR,channelName);
-        String basePath = base.getPath()+"/";
-        this.channelInstances.put(channelName,new ChannelInstance(channelName,"music",
-                new Main(new File(base,"main"),channelName,new Universal(null),new HashMap<>()),
-                basePath+"main",
-                new Transitions(new File(base,"transitions"), channelName,new HashMap<>(), new HashMap<>()),
-                basePath+"transitions",
-                new Commands(new File(base,"commands"), channelName,new HashMap<>()),basePath+"commands",
-                new Toggles(new File(base,"toggles"), channelName,new HashMap<>()),basePath+"toggles",
-                new Redirect(new File(base,"redirect"), channelName,new HashMap<>(), new HashMap<>()),
-                basePath+"redirect",configPath+"songs",true,true));
+        Table table = new Table(0,null,1,channelName);
+        this.channelInstances.put(channelName,new ChannelInstance(table,
+                new Main(channelName, Holder.makeEmpty()), new Transitions(channelName, Holder.makeEmpty()),
+                new Commands(channelName,Holder.makeEmpty()), new Toggles(channelName,Holder.makeEmpty()),
+                new Redirect(channelName,new HashMap<>(), new HashMap<>()), new Jukebox(channelName, new HashMap<>())));
         return getPageIcon(channelName);
     }
 
