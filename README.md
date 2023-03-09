@@ -3,4 +3,6 @@ This is a Minecraft mod that will allow you to set the music based on in game tr
 
 Here is a link to the curseforge project https://www.curseforge.com/minecraft/mc-mods/music-triggers
 
-(1.18.2-fabric branch)
+Alternatively, here is a lonk to the Modrinth project https://modrinth.com/mod/music-triggers
+
+(1.19.2 Fabric branch)
