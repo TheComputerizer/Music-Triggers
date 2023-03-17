@@ -4,7 +4,7 @@
   "name": "Music Triggers",
   "description": "Sets the music based on in game triggers",
   "version": "${version}",
-  "mcversion": "1.12.2",
+  "mcversion": "${mcversion}",
   "url": "",
   "updateUrl": "",
   "authorList": ["The_Computerizer"],

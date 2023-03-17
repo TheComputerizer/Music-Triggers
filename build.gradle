@@ -1,4 +1,3 @@
-//file:noinspection GroovyUnusedAssignment
 //file:noinspection GroovyAssignabilityCheck
 
 plugins {
@@ -17,18 +16,18 @@ fancyGradle {
     }
 }
 
-version = '1.12.2-6.0'
-group = 'mods.thecomputerizer.musictriggers'
-archivesBaseName = 'musictriggers'
+version = "${project.minecraft_version}-${project.mod_version}"
+group = project.maven_group
+archivesBaseName = project.base_name
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 
 minecraft {
-    mappings channel: 'stable', version: '39-1.12'
+    mappings channel: 'stable', version: project.mappings_version
     accessTransformer = file('src/main/resources/META-INF/musictriggers_at.cfg')
     runs {
         def args = [
-                "-Dmixin.debug.export=true",
+                '-Dmixin.debug.export=true',
                 '-Dmixin.hotSwap=true',
                 '-Dmixin.checks.interfaces=true'
         ]
@@ -76,30 +75,22 @@ repositories {
 
 configurations {
     shade
-    shade
     implementation.extendsFrom(shade)
     shadow.extendsFrom shade
 }
 
 dependencies {
     //minecraft
-    minecraft('net.minecraftforge:forge:1.12.2-14.23.5.2860')
+    minecraft "net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}"
 
     //external dependencies
-    shade('io.github.kostaskougios:cloning:1.10.3')
-    shade('com.github.walkyst:lavaplayer-fork:1.3.97.1') {
-        exclude module: 'commons-lang3'
-        exclude module: 'httpcore'
-        exclude module: 'httpclient'
+    shade("io.github.kostaskougios:cloning:${project.cloning_version}")
+    shade("com.github.walkyst:lavaplayer-fork:${project.lava_version}") {
+        exclude module: 'commons-io'
     }
 
-    //libraries that need to be included separately for relocation
-    shade('org.apache.httpcomponents:httpcore:4.4.15')
-    shade('org.apache.httpcomponents:httpclient:4.5.14')
-    shade('org.apache.commons:commons-lang3:3.12.0')
-
     //mixin
-    shade('org.spongepowered:mixin:0.8.5') {
+    shade("org.spongepowered:mixin:${project.mixin_version}") {
         exclude module: 'asm-commons'
         exclude module: 'asm-tree'
         exclude module: 'commons-io'
@@ -108,38 +99,46 @@ dependencies {
         exclude module: 'launchwrapper'
         exclude module: 'log4j-core'
     }
-    annotationProcessor('org.spongepowered:mixin:0.8.5:processor')
+    annotationProcessor("org.spongepowered:mixin:${project.mixin_version}:processor")
 
     //required mod dependencies
-    implementation(fg.deobf('curse.maven:the-impossible-library-661115:4418997'))
+    //implementation(fg.deobf('curse.maven:the-impossible-library-661115:4418997'))
     //local versions of required dependencies for testing
-    //implementation name: 'theimpossiblelibrary-1.12.2-0.2.2'
+    //noinspection DependencyNotationArgument
+    implementation name: "theimpossiblelibrary-${project.minecraft_version}-${project.lib_version}"
 
     //mod support dependencies
-    implementation(fg.deobf('curse.maven:bloodmoon-226321:2537917'))
-    implementation(fg.deobf('curse.maven:nyx-349214:3161738'))
-    implementation(fg.deobf('curse.maven:atomicstrykers-infernal-mobs-227875:3431758'))
-    implementation(fg.deobf('curse.maven:coroutil-237749:2902920'))
-    implementation(fg.deobf('curse.maven:weather-storms-tornadoes-237746:2596867'))
-    implementation(fg.deobf('curse.maven:serene-seasons-291874:2799213'))
-    implementation(fg.deobf('curse.maven:champions-307152:3177947'))
-    implementation(fg.deobf('net.darkhax.gamestages:GameStages-1.12.2:2.0.98'))
+    implementation(fg.deobf("curse.maven:bloodmoon-226321:${project.bloodmoon_version}"))
+    implementation(fg.deobf("curse.maven:nyx-349214:${project.nyx_version}"))
+    implementation(fg.deobf("curse.maven:atomicstrykers-infernal-mobs-227875:${project.infernal_version}"))
+    implementation(fg.deobf("curse.maven:coroutil-237749:${project.coroutil_version}"))
+    implementation(fg.deobf("curse.maven:weather-storms-tornadoes-237746:${project.weather_version}"))
+    implementation(fg.deobf("curse.maven:serene-seasons-291874:${project.seasons_version}"))
+    implementation(fg.deobf("curse.maven:champions-307152:${project.champions_version}"))
+    implementation(fg.deobf("net.darkhax.gamestages:GameStages-${project.minecraft_version}:${project.gamestages_version}"))
 
     //idk whats wrong with the mod but i cant get it to work in a dev environment
-    compileOnly(fg.deobf('curse.maven:dynamic-surroundings-238891:3497269'))
+    compileOnly(fg.deobf("curse.maven:dynamic-surroundings-238891:${project.dynamic_surroundings_version}"))
 
     //only needed for runtime
-    runtimeOnly(fg.deobf('curse.maven:bookshelf-228525:2836960'))
-    runtimeOnly(fg.deobf('curse.maven:orelib-307806:2820815'))
-    runtimeOnly(fg.deobf('curse.maven:had-enough-items-557549:4109510'))
+    runtimeOnly(fg.deobf("curse.maven:bookshelf-228525:${project.bookshelf_version}"))
+    runtimeOnly(fg.deobf("curse.maven:orelib-307806:${project.orelib_version}"))
+    runtimeOnly(fg.deobf("curse.maven:had-enough-items-557549:${project.hei_version}"))
 }
 
 shadowJar {
     //necessary relocation
-    relocate 'org.slf4j', 'libraries.sljf4'
-    relocate 'org.apache.commons', 'libraries.apache.commons'
-    relocate 'org.apache.http', 'libraries.apache.http'
-    exclude 'org/spongepowered/asm/launch/MixinLaunchPlugin.class'
+    relocate 'org.apache.commons.codec', "${project.shadow_group}.apache.commons.codec"
+    relocate 'org.apache.commons.logging', "${project.shadow_group}.apache.commons.logging"
+    relocate 'org.apache.http', "${project.shadow_group}.apache.http"
+    relocate 'org.jsoup', "${project.shadow_group}.jsoup"
+    relocate 'org.objenesis', "${project.shadow_group}.objenesis"
+    relocate 'org.slf4j', "${project.shadow_group}.slf4j"
+    relocate 'net.iharder', "${project.shadow_group}.iharder"
+    relocate 'mozilla', "${project.shadow_group}"
+    relocate 'com.fasterxml', "${project.shadow_group}.fasterxml"
+    relocate 'com.rits', "${project.shadow_group}.rits"
+    relocate 'certificates', "${project.shadow_group}"
     configurations = [project.configurations.shadow]
     classifier ''
     mergeServiceFiles()
@@ -155,10 +154,10 @@ reobf {
 processResources {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
     inputs.property 'version', project.version
-    inputs.property 'mcversion', '1.12.2'
+    inputs.property 'mcversion', project.minecraft_version
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
-        expand 'version': project.version, 'mcversion': '1.12.2'
+        expand 'version': project.version, 'mcversion': project.minecraft_version
     }
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
@@ -167,6 +166,10 @@ processResources {
 
 mixin {
     add sourceSets.main, 'musictriggers.refmap.json'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
 }
 
 jar {
