@@ -1,14 +1,14 @@
-package mods.thecomputerizer.musictriggers.common;
+package mods.thecomputerizer.musictriggers.registry;
 
 import mods.thecomputerizer.musictriggers.Constants;
-import mods.thecomputerizer.musictriggers.common.objects.MusicRecorder;
+import mods.thecomputerizer.musictriggers.registry.blocks.MusicRecorder;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class MusicTriggersBlocks {
+public class BlockRegistry {
 
     public static final Block MUSIC_RECORDER = makeBlock("music_recorder", MusicRecorder::new,
             block -> block.setCreativeTab(CreativeTabs.MISC));

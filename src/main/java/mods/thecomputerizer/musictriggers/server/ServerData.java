@@ -1,20 +1,20 @@
-package mods.thecomputerizer.musictriggers.common;
+package mods.thecomputerizer.musictriggers.server;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
 import c4.champions.common.capability.CapabilityChampionship;
 import c4.champions.common.capability.IChampionship;
 import io.netty.buffer.ByteBuf;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.util.RegistryHandler;
-import mods.thecomputerizer.musictriggers.util.packets.PacketSyncServerInfo;
+import mods.thecomputerizer.musictriggers.registry.ItemRegistry;
+import mods.thecomputerizer.musictriggers.registry.RegistryHandler;
+import mods.thecomputerizer.musictriggers.network.packets.PacketSyncServerInfo;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.TomlPart;
 import mods.thecomputerizer.theimpossiblelibrary.util.NetworkUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
-import net.minecraft.entity.boss.EntityDragon;
-import net.minecraft.entity.monster.EntityMob;
+import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
@@ -173,8 +173,8 @@ public class ServerData {
             index--;
         }
         if (Objects.isNull(channel)) return ItemStack.EMPTY;
-        ItemStack ret = new ItemStack(MusicTriggersItems.MUSIC_TRIGGERS_RECORD);
-        if (recordStack.getItem()==MusicTriggersItems.BLANK_RECORD) {
+        ItemStack ret = new ItemStack(ItemRegistry.MUSIC_TRIGGERS_RECORD);
+        if (recordStack.getItem()== ItemRegistry.BLANK_RECORD) {
             NBTTagCompound tag = new NBTTagCompound();
             tag.setString("channelFrom", channel);
             tag.setString("trackID", this.currentSongs.get(channel));
@@ -202,11 +202,12 @@ public class ServerData {
             if (trigger.getName().matches("home"))
                 potentiallyUpdate(trigger, calculateHome(player, pos, trigger.getValOrDefault("detection_range", 16)));
             else if (trigger.getName().matches("structure"))
-                potentiallyUpdate(trigger, calculateStruct(player.getServerWorld(), pos, trigger.getValOrDefault("resource_name", new ArrayList<>())));
+                potentiallyUpdate(trigger, calculateStruct(player.getServerWorld(), pos, trigger.getValOrDefault("resource_name", Collections.singletonList("any"))));
             else if (trigger.getName().matches("mob"))
                 potentiallyUpdate(trigger, calculateMob(trigger, player, pos));
             else toRemove.add(trigger);
         }
+        this.bossInfo.removeIf(info -> info.getPercent()<=0 || !info.visible);
         if(!toRemove.isEmpty()) this.allTriggers.removeAll(toRemove);
         if(!this.updatedTriggers.isEmpty())
             RegistryHandler.network.sendTo(new PacketSyncServerInfo.Message(this.updatedTriggers), player);
@@ -261,22 +262,22 @@ public class ServerData {
     }
 
     private boolean calculateMob(Table mobTrigger, EntityPlayerMP player, BlockPos pos) {
-        List<String> resources = mobTrigger.getValOrDefault("resource_name",new ArrayList<>());
+        List<String> resources = mobTrigger.getValOrDefault("resource_name",Collections.singletonList("any"));
         if(resources.isEmpty()) return false;
-        List<String> whitelist = !resources.contains("MOB") && !resources.contains("BOSS") ? resources : new ArrayList<>();
-        List<String> blacklist = !resources.contains("MOB") && !resources.contains("BOSS") ? new ArrayList<>() : resources;
-        List<String> infernal = mobTrigger.getValOrDefault("infernal",new ArrayList<>());
-        List<String> champion = mobTrigger.getValOrDefault("champion",new ArrayList<>());
-        boolean checkTarget = mobTrigger.getValOrDefault("mob_targeting",false);
-        int hordeTarget = mobTrigger.getValOrDefault("horde_targeting_percentage",0);
+        List<String> infernal = mobTrigger.getValOrDefault("infernal", Collections.singletonList("any"));
+        List<String> champion = mobTrigger.getValOrDefault("champion",Collections.singletonList("any"));
+        boolean checkTarget = mobTrigger.getValOrDefault("mob_targeting",true);
+        int hordeTarget = mobTrigger.getValOrDefault("horde_targeting_percentage",50);
         int num = mobTrigger.getValOrDefault("level",1);
         int range = mobTrigger.getValOrDefault("detection_range",16);
         int health = mobTrigger.getValOrDefault("health",100);
-        int hordeHealth = mobTrigger.getValOrDefault("horde_health_percentage",0);
+        int hordeHealth = mobTrigger.getValOrDefault("horde_health_percentage",50);
         String nbt = mobTrigger.getValOrDefault("mob_nbt","any");
         if (resources.contains("BOSS")) {
             List<BossInfoServer> correctBosses = this.bossInfo.stream().filter(
-                    info -> resources.size()==1 || partiallyMatches(info.getName().getUnformattedText(),resources)).collect(Collectors.toList());
+                    info -> resources.size()==1 || partiallyMatches(info.getName().getUnformattedText(),resources
+                            .stream().filter(element -> !element.matches("BOSS")).collect(Collectors.toList())))
+                    .collect(Collectors.toList());
             BossInfoServer[] passedBosses = new BossInfoServer[num];
             for (int i = 0; i < num; i++) {
                 if (i >= correctBosses.size())
@@ -285,18 +286,18 @@ public class ServerData {
             }
             return checkBossHealth(passedBosses, health, hordeHealth);
         }
-        return checkMobs(player,pos,num,range,whitelist,blacklist,infernal,champion,checkTarget,hordeTarget,health,hordeHealth,nbt);
+        return checkMobs(player,pos,num,range,resources,infernal,champion,checkTarget,hordeTarget,health,hordeHealth,nbt);
     }
 
-    private boolean checkMobs(EntityPlayerMP player, BlockPos pos, int num, int range, List<String> whiteList,
-                              List<String> blackList, List<String> infernal, List<String> champion, boolean target,
-                              int hordeTarget, int health, int hordeHealth, String nbt) {
+    private boolean checkMobs(EntityPlayerMP player, BlockPos pos, int num, int range, List<String> resources,
+                              List<String> infernal, List<String> champion, boolean target, int hordeTarget, int health,
+                              int hordeHealth, String nbt) {
         if(num<=0) return false;
         EntityLiving[] passedEntities = new EntityLiving[num];
         AxisAlignedBB box = new AxisAlignedBB(pos.getX()-range,pos.getY()-range,pos.getZ()-range,
                 pos.getX()+range,pos.getY()+range,pos.getZ()+range);
         List<EntityLiving> livingWithBlacklist = player.getServerWorld().getEntitiesWithinAABB(
-                EntityLiving.class,box,e -> checkEntityName(e,whiteList,blackList));
+                EntityLiving.class,box,e -> checkEntityName(e,resources));
         livingWithBlacklist.removeIf(living -> !checkNBT(living,nbt) || !checkModExtensions(living,infernal,champion));
         for(int i=0;i<num;i++) {
             if(i>=livingWithBlacklist.size())
@@ -306,19 +307,20 @@ public class ServerData {
         return checkTarget(passedEntities,target,hordeTarget,player) && checkHealth(passedEntities,health,hordeHealth);
     }
 
-    private boolean checkEntityName(EntityLiving entity, List<String> whiteList, List<String> blackList) {
-        if(whiteList.isEmpty() && blackList.isEmpty()) return true;
-        if(blackList.contains("MOB") &&!(entity instanceof EntityMob) && !(entity instanceof EntityDragon)) return false;
+    private boolean checkEntityName(EntityLiving entity, List<String> resources) {
         String displayName = entity.getName();
         ResourceLocation id = EntityList.getKey(entity);
-        if(!whiteList.isEmpty())
-            return whiteList.contains(displayName) || (Objects.nonNull(id) && partiallyMatches(id.toString(),whiteList));
-        return !blackList.contains(displayName) || (Objects.nonNull(id) && !partiallyMatches(id.toString(),blackList));
+        if(resources.contains("MOB")) {
+            if(!(entity instanceof IMob)) return false;
+            List<String> blackList = resources.stream().filter(element -> !element.matches("MOB")).collect(Collectors.toList());
+            return !blackList.contains(displayName) && (Objects.isNull(id) || !partiallyMatches(id.toString(),blackList));
+        }
+        return resources.contains(displayName) || (Objects.nonNull(id) && !partiallyMatches(id.toString(),resources));
     }
 
     private boolean partiallyMatches(String thing, List<String> partials) {
         for(String partial : partials)
-            if(!partial.matches("MOB") && !partial.matches("BOSS") && thing.contains(partial)) return true;
+            if(thing.contains(partial)) return true;
         return false;
     }
 

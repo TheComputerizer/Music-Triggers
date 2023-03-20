@@ -101,7 +101,7 @@ public class GuiSelection extends GuiSuperType {
                     (screen, button, mode) -> {
                         TextFormatting color = mode == 1 ? TextFormatting.WHITE : TextFormatting.RED;
                         this.deleteMode = color==TextFormatting.RED;
-                        button.updateDisplay(color + finalDisplayName);
+                        button.updateDisplay(color + finalDisplayName,this.fontRenderer);
                     }), left);
             left += (width + 16);
         }
@@ -113,7 +113,7 @@ public class GuiSelection extends GuiSuperType {
                     (screen, button, mode) -> {
                         this.sortType = mode - 1;
                         TextFormatting color = mode == 1 ? TextFormatting.WHITE : mode == 2 ? TextFormatting.GRAY : TextFormatting.DARK_GRAY;
-                        button.updateDisplay(color + sortElements());
+                        button.updateDisplay(color + sortElements(),this.fontRenderer);
                     }), left);
             left += (width + 16);
         }

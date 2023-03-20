@@ -1,4 +1,4 @@
-package mods.thecomputerizer.musictriggers.common;
+package mods.thecomputerizer.musictriggers.server;
 
 import mods.thecomputerizer.musictriggers.Constants;
 import net.minecraftforge.fml.common.Mod;
@@ -6,7 +6,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 @Mod.EventBusSubscriber(modid= Constants.MODID)
-public class EventsCommon {
+public class ServerEvents {
     private static int TIMER = 0;
 
     @SubscribeEvent

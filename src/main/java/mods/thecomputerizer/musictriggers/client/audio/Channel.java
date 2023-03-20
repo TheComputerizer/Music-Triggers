@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.client.audio;
 
-import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat;
-import com.sedmelluq.discord.lavaplayer.format.Pcm16AudioDataFormat;
+import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.player.*;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
@@ -17,9 +16,9 @@ import mods.thecomputerizer.musictriggers.client.data.Audio;
 import mods.thecomputerizer.musictriggers.client.data.Toggle;
 import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.musictriggers.client.gui.instance.*;
-import mods.thecomputerizer.musictriggers.common.ServerData;
 import mods.thecomputerizer.musictriggers.config.ConfigJukebox;
 import mods.thecomputerizer.musictriggers.config.ConfigRedirect;
+import mods.thecomputerizer.musictriggers.server.ServerData;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Variable;
@@ -48,7 +47,6 @@ import java.util.stream.Collectors;
 @SideOnly(value = Side.CLIENT)
 public class Channel {
     public static final KeyBinding GUI = new KeyBinding("key.musictriggers.gui", Keyboard.KEY_R, "key.categories.musictriggers");
-    private static final AudioDataFormat FORMAT = new Pcm16AudioDataFormat(2, 48000, 960, true);
     private final Table info;
     private final SoundCategory category;
     private final Data data;
@@ -99,13 +97,13 @@ public class Channel {
         AudioSourceManagers.registerLocalSource(this.playerManager);
         this.player = this.playerManager.createPlayer();
         this.player.setVolume(100);
-        this.listener = new ChannelListener(this.player, FORMAT, this);
+        this.listener = new ChannelListener(this.player, StandardAudioDataFormats.DISCORD_PCM_S16_BE, this);
         this.loadedTracks = new HashMap<>();
         this.playerManager.setFrameBufferDuration(1000);
         this.playerManager.setPlayerCleanupThreshold(Long.MAX_VALUE);
         this.playerManager.getConfiguration().setResamplingQuality(AudioConfiguration.ResamplingQuality.HIGH);
         this.playerManager.getConfiguration().setOpusEncodingQuality(AudioConfiguration.OPUS_QUALITY_MAX);
-        this.playerManager.getConfiguration().setOutputFormat(FORMAT);
+        this.playerManager.getConfiguration().setOutputFormat(StandardAudioDataFormats.DISCORD_PCM_S16_BE);
         this.oncePerTrigger = new ArrayList<>();
         this.onceUntilEmpty = new ArrayList<>();
         this.commandsForPacket = new ArrayList<>();
@@ -126,6 +124,8 @@ public class Channel {
                 info.getValOrDefault("jukebox", info.getName() + "/jukebox"),"txt"));
         this.picker = new MusicPicker(this);
         this.localFolderPath = info.getValOrDefault("songs_folder", "config/MusicTriggers/songs");
+        File file = new File(this.localFolderPath);
+        if(!file.exists()) file.mkdirs();
     }
 
     private List<String> collectFilePaths(Table info) {
@@ -350,7 +350,6 @@ public class Channel {
         return null;
     }
 
-    @SuppressWarnings("ConstantConditions")
     public void renderCards() {
         MusicTriggers.logExternally(Level.DEBUG, "Channel[{}] - Finding cards to render",getChannelName());
         for (Table table : this.data.titleCards.keySet())
@@ -369,8 +368,9 @@ public class Channel {
 
     public String formatPlayback() {
         String ret = "No song playing";
-        if(isPlaying())
-            ret = formatMinutes((int)(getMillis()/1000f))+"/"+formatMinutes((int)(getTotalMillis()/1000f));
+        if(isPlaying()) {
+            ret = formatMinutes((int) (getMillis() / 1000f));// + "/" + formatMinutes((int) (getTotalMillis() / 1000f));
+        }
         return ret;
     }
 
@@ -440,7 +440,7 @@ public class Channel {
     }
 
     public long getTotalMillis() {
-        return getCurPlaying().getDuration();
+        return getCurPlaying().getInfo().length;
     }
 
     public long getMillis() {
@@ -462,20 +462,30 @@ public class Channel {
         else return master*Minecraft.getMinecraft().gameSettings.getSoundLevel(getCategory());
     }
 
+    public void resetTrack() {
+        if(isPlaying()) {
+            MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Attempting to reset currently playing track",getChannelName());
+            AudioTrack cloned = this.getPlayer().getPlayingTrack().makeClone();
+            if (!this.getPlayer().startTrack(cloned, false))
+                MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Could not reset track!",getChannelName());
+        }
+    }
+
     public void playTrack(Audio audio, long milliseconds) {
         String id = audio.getName();
         AudioTrack track = this.loadedTracks.get(audio.getName());
-        MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Playing track from id {}",getChannelName(),id);
         if(track!=null) {
             try {
                 if (!this.getPlayer().startTrack(track, false))
                     MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Could not start track!",getChannelName());
                 else this.curTrack = audio;
+                MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Track with id {} is seekable: {}",getChannelName(),id,track.isSeekable());
             } catch (IllegalStateException e) {
                 AudioTrack cloned = track.makeClone();
                 if (!this.getPlayer().startTrack(cloned, false))
                     MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Could not start track!",getChannelName());
                 else this.curTrack = audio;
+                MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Track with id {} is seekable: {}",getChannelName(),id,track.isSeekable());
             }
         } else {
             MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Track with id {} was null! Attempting to " +

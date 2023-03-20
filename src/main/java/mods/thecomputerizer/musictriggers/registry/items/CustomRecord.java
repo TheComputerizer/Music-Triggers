@@ -1,4 +1,4 @@
-package mods.thecomputerizer.musictriggers.common.objects;
+package mods.thecomputerizer.musictriggers.registry.items;
 
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;

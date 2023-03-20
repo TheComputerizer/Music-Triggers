@@ -8,7 +8,7 @@ import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.musictriggers.client.gui.GuiSuperType;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
-import mods.thecomputerizer.musictriggers.common.TriggerCommand;
+import mods.thecomputerizer.musictriggers.server.TriggerCommand;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
@@ -17,7 +17,6 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.Style;
@@ -38,24 +37,21 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.Level;
+import org.lwjgl.opengl.Display;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
 
 @SuppressWarnings("deprecation")
 @Mod.EventBusSubscriber(modid = Constants.MODID, value = Side.CLIENT)
-public class EventsClient {
-    public static ResourceLocation IMAGE_CARD = null;
-    public static boolean isWorldRendered;
-    public static float fadeCount = 1000;
-    public static Boolean activated = false;
-    public static long timer=0;
-    public static int reloadCounter = 0;
-    public static boolean ismoving;
-    public static String lastAdvancement;
-    public static boolean advancement;
-    public static boolean renderDebug = true;
-    public static final HashMap<String, Boolean> commandMap = new HashMap<>();
+public class ClientEvents {
+    public static boolean IS_WORLD_RENDERED = false;
+    public static int RELOAD_COUNTER = 0;
+    public static String LAST_ADVANCEMENT;
+    public static boolean GAINED_NEW_ADVANCEMENT;
+    public static boolean SHOULD_RENDER_DEBUG = true;
+    public static final HashMap<String, Boolean> COMMAND_MAP = new HashMap<>();
+    public static boolean IS_DISPLAY_FOCUSED = true;
 
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
@@ -77,47 +73,47 @@ public class EventsClient {
 
     @SubscribeEvent
     public static void onAdvancement(AdvancementEvent e) {
-        lastAdvancement = e.getAdvancement().getId().toString();
-        advancement = true;
+        LAST_ADVANCEMENT = e.getAdvancement().getId().toString();
+        GAINED_NEW_ADVANCEMENT = true;
     }
 
     @SubscribeEvent
     public static void onCommand(CommandEvent e) {
         if(e.getCommand() instanceof TriggerCommand) {
             TriggerCommand command = (TriggerCommand) e.getCommand();
-            if(!command.getIdentifier().matches("any")) commandMap.put(command.getIdentifier(),true);
+            if(!command.getIdentifier().matches("any")) COMMAND_MAP.put(command.getIdentifier(),true);
         }
     }
 
     public static boolean commandHelper(Trigger trigger) {
         String id = trigger.getParameter("identifier");
-        return commandMap.containsKey(id) && commandMap.get(id);
+        return COMMAND_MAP.containsKey(id) && COMMAND_MAP.get(id);
     }
 
     public static void commandFinish(Trigger trigger) {
         String id = trigger.getParameter("identifier");
-        commandMap.put(id,false);
+        COMMAND_MAP.put(id,false);
     }
 
     @SubscribeEvent
     public static void clientDisconnected(FMLNetworkEvent.ClientDisconnectionFromServerEvent e) {
-        isWorldRendered=false;
+        IS_WORLD_RENDERED =false;
     }
 
     @SubscribeEvent
     public static void cancelRenders(RenderGameOverlayEvent.Pre e) {
-        if(!isWorldRendered) {
+        if(!IS_WORLD_RENDERED) {
             ChannelManager.initializeServerInfo();
-            isWorldRendered = true;
+            IS_WORLD_RENDERED = true;
         }
-        if(e.getType()==RenderGameOverlayEvent.ElementType.ALL && !renderDebug) e.setCanceled(true);
+        if(e.getType()==RenderGameOverlayEvent.ElementType.ALL && !SHOULD_RENDER_DEBUG) e.setCanceled(true);
     }
 
     public static void initReload() {
         Minecraft.getMinecraft().player.sendMessage(new TextComponentString(
                 I18n.translateToLocal("misc.musictriggers.reload_start"))
                 .setStyle(new Style().setItalic(true).setColor(TextFormatting.RED)));
-        reloadCounter = 5;
+        RELOAD_COUNTER = 5;
         ChannelManager.reloading = true;
         MusicTriggers.savedMessages.clear();
         MusicTriggers.logExternally(Level.INFO,"Reloading Music...");
@@ -131,20 +127,16 @@ public class EventsClient {
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent event) {
         if(event.phase== TickEvent.Phase.END) {
-            if (!Minecraft.getMinecraft().isGamePaused() && !(Minecraft.getMinecraft().currentScreen instanceof GuiSuperType) && !renderDebug)
-                renderDebug = true;
-            if (reloadCounter > 0) {
-                reloadCounter -= 1;
-                if (reloadCounter == 1) {
+            IS_DISPLAY_FOCUSED = Display.isCreated() && Display.isActive();
+            if (!Minecraft.getMinecraft().isGamePaused() && !(Minecraft.getMinecraft().currentScreen instanceof GuiSuperType) && !SHOULD_RENDER_DEBUG)
+                SHOULD_RENDER_DEBUG = true;
+            if (RELOAD_COUNTER > 0) {
+                RELOAD_COUNTER -= 1;
+                if (RELOAD_COUNTER == 1) {
                     ChannelManager.reloadAllChannels();
                     Minecraft.getMinecraft().player.sendMessage(new TextComponentString(
                             I18n.translateToLocal("misc.musictriggers.reload_finished"))
                             .setStyle(new Style().setItalic(true).setColor(TextFormatting.GREEN)));
-                    IMAGE_CARD = null;
-                    fadeCount = 1000;
-                    timer = 0;
-                    activated = false;
-                    ismoving = false;
                     ChannelManager.reloading = false;
                 }
             }
@@ -154,7 +146,7 @@ public class EventsClient {
     @SuppressWarnings("ConstantConditions")
     @SubscribeEvent
     public static void debugInfo(RenderGameOverlayEvent.Text e) {
-        if(ConfigDebug.SHOW_DEBUG && isWorldRendered && renderDebug) {
+        if(ConfigDebug.SHOW_DEBUG && IS_WORLD_RENDERED && SHOULD_RENDER_DEBUG) {
             e.getLeft().add("Music Triggers Debug Information");
             for(Channel channel : ChannelManager.getAllChannels()) {
                 if (channel.curPlayingName() != null)

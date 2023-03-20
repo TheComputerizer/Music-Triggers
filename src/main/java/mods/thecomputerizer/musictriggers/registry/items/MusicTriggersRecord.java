@@ -1,9 +1,10 @@
-package mods.thecomputerizer.musictriggers.common.objects;
+package mods.thecomputerizer.musictriggers.registry.items;
 
 import mods.thecomputerizer.musictriggers.Constants;
-import mods.thecomputerizer.musictriggers.common.MusicTriggersBlocks;
-import mods.thecomputerizer.musictriggers.util.RegistryHandler;
-import mods.thecomputerizer.musictriggers.util.packets.PacketJukeBoxCustom;
+import mods.thecomputerizer.musictriggers.registry.BlockRegistry;
+import mods.thecomputerizer.musictriggers.registry.blocks.MusicRecorder;
+import mods.thecomputerizer.musictriggers.registry.RegistryHandler;
+import mods.thecomputerizer.musictriggers.network.packets.PacketJukeBoxCustom;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
 import net.minecraft.block.BlockJukebox;
 import net.minecraft.block.state.IBlockState;
@@ -44,7 +45,7 @@ public class MusicTriggersRecord extends EpicItem {
                                       @Nonnull EnumHand hand, @Nonnull EnumFacing facing, float hitX, float hitY,
                                       float hitZ) {
         IBlockState state = world.getBlockState(pos);
-        if(state.getBlock()==MusicTriggersBlocks.MUSIC_RECORDER && !state.getValue(MusicRecorder.HAS_RECORD)
+        if(state.getBlock()== BlockRegistry.MUSIC_RECORDER && !state.getValue(MusicRecorder.HAS_RECORD)
                 && !state.getValue(MusicRecorder.HAS_DISC)) {
             if (!world.isRemote) {
                 MusicRecorder mr = (MusicRecorder) state.getBlock();

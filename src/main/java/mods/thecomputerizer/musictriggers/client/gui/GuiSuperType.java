@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.client.ClientEvents;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -112,7 +112,7 @@ public abstract class GuiSuperType extends GuiScreen {
                 break;
             }
         }
-        EventsClient.renderDebug = false;
+        ClientEvents.SHOULD_RENDER_DEBUG = false;
         for (ButtonType buttonHolder : this.type.getButtonHolders()) {
             if (buttonHolder.isNormal()) {
                 ButtonSuperType button = buttonHolder.getNormalButton(this.buttonIDCounter++, this);
@@ -228,7 +228,7 @@ public abstract class GuiSuperType extends GuiScreen {
             if(this.configInstance.hasEdits())
                 applyButton();
             MusicTriggers.logExternally(Level.INFO,"No in-game changes were detected - Loading file changes");
-            EventsClient.initReload();
+            ClientEvents.initReload();
             Minecraft.getMinecraft().setIngameFocus();
         } else this.mc.displayGuiScreen(this.parent);
     }
@@ -244,7 +244,7 @@ public abstract class GuiSuperType extends GuiScreen {
 
     @Override
     public void onGuiClosed() {
-        EventsClient.renderDebug = true;
+        ClientEvents.SHOULD_RENDER_DEBUG = true;
     }
 
     public void playGenericClickSound() {

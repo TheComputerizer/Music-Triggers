@@ -1,4 +1,4 @@
-package mods.thecomputerizer.musictriggers.util.packets;
+package mods.thecomputerizer.musictriggers.network.packets;
 
 import io.netty.buffer.ByteBuf;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;

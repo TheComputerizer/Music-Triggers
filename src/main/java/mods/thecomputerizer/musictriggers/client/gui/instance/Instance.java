@@ -1,12 +1,15 @@
 package mods.thecomputerizer.musictriggers.client.gui.instance;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.client.ClientEvents;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.*;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.ISoundEventAccessor;
+import net.minecraft.client.audio.Sound;
+import net.minecraft.client.audio.SoundEventAccessor;
 import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nullable;
@@ -52,7 +55,7 @@ public class Instance {
         if(this.needsReload) {
             MusicTriggers.logExternally(Level.INFO,"In-game changes detected for channel files - Reloading audio system");
             this.channelHolder.write(null);
-            EventsClient.initReload();
+            ClientEvents.initReload();
         }
         else {
             MusicTriggers.logExternally(Level.INFO,"In-game changes detected for non-channel files - Refreshing debug information");
@@ -124,10 +127,15 @@ public class Instance {
     }
 
     public List<String> findAllRegisteredSounds() {
-        return Minecraft.getMinecraft().getSoundHandler().soundRegistry.soundRegistry.values().stream()
-                .map(accessor -> accessor.accessorList)
-                .flatMap(Collection::stream)
-                .map(accessor -> accessor.cloneEntry().getSoundAsOggLocation().toString())
-                .distinct().sorted().collect(Collectors.toList());
+        List<String> ret = new ArrayList<>();
+        Iterator<SoundEventAccessor> accessorIterator = Minecraft.getMinecraft().getSoundHandler().soundRegistry.iterator();
+        while(accessorIterator.hasNext()) {
+            for (ISoundEventAccessor<Sound> soundAccessor : accessorIterator.next().accessorList) {
+                String location = soundAccessor.cloneEntry().getSoundAsOggLocation().toString();
+                if(!ret.contains(location)) ret.add(location);
+            }
+        }
+        Collections.sort(ret);
+        return ret;
     }
 }

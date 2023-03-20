@@ -1,4 +1,4 @@
-package mods.thecomputerizer.musictriggers.common;
+package mods.thecomputerizer.musictriggers.server;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;

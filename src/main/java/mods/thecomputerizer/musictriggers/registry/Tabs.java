@@ -1,6 +1,5 @@
-package mods.thecomputerizer.musictriggers.common.objects;
+package mods.thecomputerizer.musictriggers.registry;
 
-import mods.thecomputerizer.musictriggers.common.MusicTriggersItems;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.relauncher.Side;
@@ -14,7 +13,7 @@ public class Tabs {
         @SideOnly(Side.CLIENT)
         @Nonnull
         public ItemStack createIcon() {
-            return new ItemStack(MusicTriggersItems.MUSIC_RECORDER);
+            return new ItemStack(ItemRegistry.MUSIC_RECORDER);
         }
     };
 }

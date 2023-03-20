@@ -1,7 +1,7 @@
-package mods.thecomputerizer.musictriggers.common;
+package mods.thecomputerizer.musictriggers.registry;
 
 import mods.thecomputerizer.musictriggers.Constants;
-import mods.thecomputerizer.musictriggers.common.objects.*;
+import mods.thecomputerizer.musictriggers.registry.items.*;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 
@@ -10,14 +10,14 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class MusicTriggersItems {
+public class ItemRegistry {
     public static final Item MUSIC_TRIGGERS_RECORD = makeEpicItem("music_triggers_record", MusicTriggersRecord::new,
             item -> item.setCreativeTab(Tabs.MUSIC_TRIGGERS_TAB));
     public static final Item CUSTOM_RECORD = makeEpicItem("custom_record", CustomRecord::new,
             item -> item.setCreativeTab(Tabs.MUSIC_TRIGGERS_TAB));
     public static final Item BLANK_RECORD = makeEpicItem("blank_record", BlankRecord::new,
             item -> item.setCreativeTab(Tabs.MUSIC_TRIGGERS_TAB));
-    public static final Item MUSIC_RECORDER = makeEpicItemBlock(MusicTriggersBlocks.MUSIC_RECORDER,
+    public static final Item MUSIC_RECORDER = makeEpicItemBlock(BlockRegistry.MUSIC_RECORDER,
             item -> item.setCreativeTab(Tabs.MUSIC_TRIGGERS_TAB));
 
     private static EpicItem makeEpicItem(final String name, final Supplier<EpicItem> constructor, final Consumer<EpicItem> config) {

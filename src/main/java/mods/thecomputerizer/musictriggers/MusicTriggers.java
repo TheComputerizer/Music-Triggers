@@ -1,13 +1,13 @@
 package mods.thecomputerizer.musictriggers;
 
 import com.rits.cloning.Cloner;
-import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.client.ClientEvents;
 import mods.thecomputerizer.musictriggers.client.audio.Channel;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
-import mods.thecomputerizer.musictriggers.common.EventsCommon;
+import mods.thecomputerizer.musictriggers.server.ServerEvents;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
-import mods.thecomputerizer.musictriggers.util.CustomTick;
-import mods.thecomputerizer.musictriggers.util.RegistryHandler;
+import mods.thecomputerizer.musictriggers.registry.RegistryHandler;
+import mods.thecomputerizer.theimpossiblelibrary.util.CustomTick;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.LogUtil;
@@ -53,11 +53,11 @@ public class MusicTriggers {
         if(!ConfigRegistry.CLIENT_SIDE_ONLY) RegistryHandler.init();
         if(event.getSide()==Side.CLIENT) {
             MinecraftForge.EVENT_BUS.register(ChannelManager.class);
-            MinecraftForge.EVENT_BUS.register(EventsClient.class);
+            MinecraftForge.EVENT_BUS.register(ClientEvents.class);
             CustomTick.addCustomTickEvent(20);
             ChannelManager.reloading = false;
         }
-        MinecraftForge.EVENT_BUS.register(EventsCommon.class);
+        MinecraftForge.EVENT_BUS.register(ServerEvents.class);
     }
 
     @EventHandler

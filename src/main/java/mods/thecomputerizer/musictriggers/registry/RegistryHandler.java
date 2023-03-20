@@ -1,13 +1,13 @@
-package mods.thecomputerizer.musictriggers.util;
+package mods.thecomputerizer.musictriggers.registry;
 
 import mods.thecomputerizer.musictriggers.Constants;
-import mods.thecomputerizer.musictriggers.common.MusicTriggersBlocks;
-import mods.thecomputerizer.musictriggers.common.objects.MusicRecorderEntity;
+import mods.thecomputerizer.musictriggers.registry.BlockRegistry;
+import mods.thecomputerizer.musictriggers.registry.tiles.MusicRecorderEntity;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
-import mods.thecomputerizer.musictriggers.util.packets.PacketDynamicChannelInfo;
-import mods.thecomputerizer.musictriggers.util.packets.PacketInitChannels;
-import mods.thecomputerizer.musictriggers.util.packets.PacketJukeBoxCustom;
-import mods.thecomputerizer.musictriggers.util.packets.PacketSyncServerInfo;
+import mods.thecomputerizer.musictriggers.network.packets.PacketDynamicChannelInfo;
+import mods.thecomputerizer.musictriggers.network.packets.PacketInitChannels;
+import mods.thecomputerizer.musictriggers.network.packets.PacketJukeBoxCustom;
+import mods.thecomputerizer.musictriggers.network.packets.PacketSyncServerInfo;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
@@ -25,7 +25,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import java.util.Objects;
 
-import static mods.thecomputerizer.musictriggers.common.MusicTriggersItems.*;
+import static mods.thecomputerizer.musictriggers.registry.ItemRegistry.*;
 
 
 @GameRegistry.ObjectHolder(Constants.MODID)
@@ -46,7 +46,7 @@ public final class RegistryHandler {
     @SubscribeEvent
     public static void registerBlocks(RegistryEvent.Register<Block> e) {
         if(ConfigRegistry.REGISTER_DISCS) {
-            e.getRegistry().register(MusicTriggersBlocks.MUSIC_RECORDER);
+            e.getRegistry().register(BlockRegistry.MUSIC_RECORDER);
             GameRegistry.registerTileEntity(MusicRecorderEntity.class,new ResourceLocation(Constants.MODID,"tile.music_recorder"));
         }
     }

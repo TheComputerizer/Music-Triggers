@@ -56,6 +56,13 @@ repositories {
         }
     }
     maven {
+        name = 'Modrinth'
+        url = uri('https://api.modrinth.com/maven')
+        content {
+            includeGroup 'maven.modrinth'
+        }
+    }
+    maven {
         name = 'Sponge'
         url = uri('https://repo.spongepowered.org/maven')
     }
@@ -102,10 +109,10 @@ dependencies {
     annotationProcessor("org.spongepowered:mixin:${project.mixin_version}:processor")
 
     //required mod dependencies
-    //implementation(fg.deobf('curse.maven:the-impossible-library-661115:4418997'))
+    implementation(fg.deobf("maven.modrinth:the-impossible-library:${project.minecraft_version}-${project.lib_version}"))
     //local versions of required dependencies for testing
     //noinspection DependencyNotationArgument
-    implementation name: "theimpossiblelibrary-${project.minecraft_version}-${project.lib_version}"
+    //implementation name: "theimpossiblelibrary-${project.minecraft_version}-${project.lib_version}"
 
     //mod support dependencies
     implementation(fg.deobf("curse.maven:bloodmoon-226321:${project.bloodmoon_version}"))
@@ -168,18 +175,23 @@ mixin {
     add sourceSets.main, 'musictriggers.refmap.json'
 }
 
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = "UTF-8"
-}
-
 jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from(configurations.shade.collect {
+        it.isDirectory() ? it : zipTree(it)
+    }) {
+        exclude "LICENSE.txt", "META-INF/MANIFSET.MF", "META-INF/maven/**", "META-INF/*.RSA", "META-INF/*.SF"
+    }
     manifest {
         attributes([
-            'FMLAT': 'musictriggers_at.cfg',
-            'FMLCorePlugin': 'mods.thecomputerizer.musictriggers.core.MixinLoaderPlugin',
-            'FMLCorePluginContainsFMLMod': 'true',
-            'ForceLoadAsMod': 'true',
-            'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker'
+                'Specification-Version': project.version,
+                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                'FMLCorePlugin': 'mods.thecomputerizer.musictriggers.core.MixinLoadingPlugin',
+                'FMLCorePluginContainsFMLMod': true,
+                'ForceLoadAsMod': true,
+                'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
+                'MixinConfigs': 'musictriggers.mixin.json',
+                'FMLAT': 'musictriggers_at.cfg'
         ])
     }
 }

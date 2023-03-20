@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.mixin;
 
-import mods.thecomputerizer.musictriggers.common.ServerData;
+import mods.thecomputerizer.musictriggers.server.ServerData;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.world.BossInfoServer;
 import org.spongepowered.asm.mixin.Mixin;

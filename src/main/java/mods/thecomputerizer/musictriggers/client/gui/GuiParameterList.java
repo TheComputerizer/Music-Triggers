@@ -87,7 +87,7 @@ public class GuiParameterList extends GuiSuperType {
                 (screen, button, mode) -> {
                     this.deleteMode = mode > 1;
                     TextFormatting color = mode == 1 ? TextFormatting.WHITE : TextFormatting.RED;
-                    button.updateDisplay(color + finalDisplayName);
+                    button.updateDisplay(color + finalDisplayName,this.fontRenderer);
                 }), left);
     }
 

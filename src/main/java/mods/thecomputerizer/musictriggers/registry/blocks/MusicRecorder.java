@@ -1,6 +1,7 @@
-package mods.thecomputerizer.musictriggers.common.objects;
+package mods.thecomputerizer.musictriggers.registry.blocks;
 
-import mods.thecomputerizer.musictriggers.common.MusicTriggersItems;
+import mods.thecomputerizer.musictriggers.registry.ItemRegistry;
+import mods.thecomputerizer.musictriggers.registry.tiles.MusicRecorderEntity;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.MapColor;
@@ -34,8 +35,8 @@ public class MusicRecorder extends Block implements ITileEntityProvider {
 
     public void insertRecord(World worldIn, BlockPos pos, ItemStack recordStack, EntityPlayer player) {
         if (!worldIn.isRemote) {
-            if (recordStack.getItem()==MusicTriggersItems.BLANK_RECORD || recordStack.getItem()==MusicTriggersItems.MUSIC_TRIGGERS_RECORD) {
-                int meta = recordStack.getItem()==MusicTriggersItems.BLANK_RECORD ? 1 : 2;
+            if (recordStack.getItem()== ItemRegistry.BLANK_RECORD || recordStack.getItem()== ItemRegistry.MUSIC_TRIGGERS_RECORD) {
+                int meta = recordStack.getItem()== ItemRegistry.BLANK_RECORD ? 1 : 2;
                 TileEntity entity = worldIn.getTileEntity(pos);
                 if (entity instanceof MusicRecorderEntity) {
                     MusicRecorderEntity recorderEntity = (MusicRecorderEntity) entity;

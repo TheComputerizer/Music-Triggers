@@ -1,7 +1,7 @@
-package mods.thecomputerizer.musictriggers.util.packets;
+package mods.thecomputerizer.musictriggers.network.packets;
 
 import io.netty.buffer.ByteBuf;
-import mods.thecomputerizer.musictriggers.common.ServerData;
+import mods.thecomputerizer.musictriggers.server.ServerData;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;

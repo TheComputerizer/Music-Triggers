@@ -7,7 +7,7 @@ import de.ellpeck.nyx.lunarevents.HarvestMoon;
 import de.ellpeck.nyx.lunarevents.StarShower;
 import lumien.bloodmoon.Bloodmoon;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.EventsClient;
+import mods.thecomputerizer.musictriggers.client.ClientEvents;
 import mods.thecomputerizer.musictriggers.client.MusicPicker;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
@@ -394,16 +394,16 @@ public class Trigger {
         });
         ret.put("advancement",(trigger,player) -> {
             String resource = trigger.getResource();
-            boolean pass = (EventsClient.advancement && trigger.checkResourceList(EventsClient.lastAdvancement,resource,false)) ||
+            boolean pass = (ClientEvents.GAINED_NEW_ADVANCEMENT && trigger.checkResourceList(ClientEvents.LAST_ADVANCEMENT,resource,false)) ||
                     resource.matches("any");
-            if(pass) EventsClient.advancement = false;
+            if(pass) ClientEvents.GAINED_NEW_ADVANCEMENT = false;
             return pass;
         });
         ret.put("statistic",(trigger,player) ->
                 trigger.checkStat(trigger.getResource(),trigger.getParameterInt("level"),player));
         ret.put("command",(trigger,player) -> {
-            boolean pass = EventsClient.commandHelper(trigger);
-            if(pass) EventsClient.commandFinish(trigger);
+            boolean pass = ClientEvents.commandHelper(trigger);
+            if(pass) ClientEvents.commandFinish(trigger);
             return pass;
         });
         ret.put("gamestage",(trigger,player) -> Loader.isModLoaded("gamestages") &&
@@ -653,9 +653,12 @@ public class Trigger {
     @SuppressWarnings("ConstantConditions")
     public boolean checkDimensionList(int playerDim, String resourceList) {
         for(String resource : stringBreaker(resourceList,";")) if((playerDim+"").matches(resource)) return true;
-        if(DimensionType.getById(playerDim)==null) return false;
-        String dimName = DimensionType.getById(playerDim).getName();
-        return dimName != null && checkResourceList(dimName, resourceList, false);
+        try {
+            DimensionType dimension = DimensionType.getById(playerDim);
+            return Objects.nonNull(dimension.name()) && checkResourceList(dimension.name(), resourceList, false);
+        } catch (IllegalArgumentException ex) {
+            return false;
+        }
     }
 
     public List<String> parseGamestageList(String resourceList) {

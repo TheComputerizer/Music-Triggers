@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraftforge.fml.client.config.GuiButtonExt;
 import org.apache.logging.log4j.util.TriConsumer;
 
@@ -28,8 +29,9 @@ public class ButtonSuperType extends GuiButtonExt {
         this.visible = is;
     }
 
-    public void updateDisplay(String newDisplay) {
+    public void updateDisplay(String newDisplay, FontRenderer font) {
         this.displayString = newDisplay;
+        this.width = font.getStringWidth(this.displayString) + 8;
     }
 
 
