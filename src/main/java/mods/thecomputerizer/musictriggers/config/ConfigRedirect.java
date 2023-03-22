@@ -40,15 +40,14 @@ public class ConfigRedirect {
             BufferedReader br = new BufferedReader(new FileReader(this.FILE));
             String line = br.readLine();
             while (line != null) {
-                if(!line.contains("Format") && line.contains("=") && !line.contains("==")) {
-                    String[] broken = MusicTriggers.stringBreaker(line,"=");
-                    urlMap.put(broken[0].trim(),broken[1].trim());
+                if(!line.contains("Format") && line.contains(" = ") && !line.contains(" == ")) {
+                    urlMap.put(line.substring(0,line.indexOf('=')-1).trim(),line.substring(line.indexOf('=')+1).trim());
                 } else if (!line.contains("Format") && line.contains("==")) {
-                    String[] broken = MusicTriggers.stringBreaker(line,"==");
+                    String resource = line.substring(line.indexOf('=') + 2).trim();
                     try {
-                        resourceLocationMap.put(broken[0].trim(), new ResourceLocation(broken[1].trim()));
+                        resourceLocationMap.put(line.substring(0,line.indexOf('=')-1), new ResourceLocation(resource));
                     } catch (Exception ignored) {
-                        MusicTriggers.logExternally(Level.ERROR,"Resource location {} was invalid!",broken[1].trim());
+                        MusicTriggers.logExternally(Level.ERROR,"Resource location {} was invalid!", resource);
                     }
                 }
                 line = br.readLine();

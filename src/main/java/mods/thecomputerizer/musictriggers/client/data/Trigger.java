@@ -97,6 +97,7 @@ public class Trigger {
         ret.put("advancement",Arrays.asList("identifier","persistence","resource_name"));
         ret.put("statistic",Arrays.asList("identifier","resource_name"));
         ret.put("command",Arrays.asList("identifier","persistence"));
+        ret.put("raid", Collections.singletonList("identifier"));
         ret.put("gamestage",Arrays.asList("identifier","resource_name"));
         ret.put("rainintensity", Collections.singletonList("identifier"));
         ret.put("tornado",Arrays.asList("identifier","level"));
@@ -400,9 +401,9 @@ public class Trigger {
         });
         ret.put("advancement",(trigger,player) -> {
             String resource = trigger.getResource();
-            boolean pass = (ClientEvents.advancement && trigger.checkResourceList(ClientEvents.lastAdvancement,resource,false)) ||
+            boolean pass = (ClientEvents.GAINED_NEW_ADVANCEMENT && trigger.checkResourceList(ClientEvents.LAST_ADVANCEMENT,resource,false)) ||
                     resource.matches("any");
-            if(pass) ClientEvents.advancement = false;
+            if(pass) ClientEvents.GAINED_NEW_ADVANCEMENT = false;
             return pass;
         });
         ret.put("statistic",(trigger,player) ->

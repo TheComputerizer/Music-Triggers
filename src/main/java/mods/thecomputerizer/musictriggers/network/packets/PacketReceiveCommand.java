@@ -27,7 +27,7 @@ public class PacketReceiveCommand {
         NetworkEvent.Context ctx = context.get();
         ctx.enqueueWork(() -> {
         });
-        if(packet.getIdentifier()!=null) ClientEvents.commandMap.put(packet.getIdentifier(), true);
+        if(packet.getIdentifier()!=null) ClientEvents.COMMAND_MAP.put(packet.getIdentifier(), true);
         ctx.setPacketHandled(true);
     }
 

@@ -31,11 +31,9 @@ public enum ButtonType {
     RELOAD("reload",4, 0.25f, null,(screen, button) ->
             ((GuiSuperType)screen).saveAndClose(true),RadialButton::new),
     SKIP_SONG("skip_song",2, 0.25f, null,(screen, button) ->
-            ((GuiSuperType)screen).saveAndDisplay(
-                    new GuiLogVisualizer((GuiSuperType)screen,GuiType.LOG,((GuiSuperType)screen).getInstance())),RadialButton::new),
+            ((GuiPlayback)screen).skip(),RadialButton::new),
     RESET_SONG("reset_song",2, 0.25f, null,(screen, button) ->
-            ((GuiSuperType)screen).saveAndDisplay(
-                    new GuiLogVisualizer((GuiSuperType)screen,GuiType.LOG,((GuiSuperType)screen).getInstance())),RadialButton::new),
+            ((GuiPlayback)screen).reset(),RadialButton::new),
     DEBUG("debug",(screen, id) -> guiParameterShortcut(screen,GuiType.DEBUG),GuiPage.Icon::new),
     REGISTRATION("registration",(screen, id) -> guiParameterShortcut(screen,GuiType.REGISTRATION),GuiPage.Icon::new),
     CHANNEL("channel",(screen, id) -> screen.getInstance().pageClick(GuiType.EDIT, screen, id),GuiPage.Icon::new),

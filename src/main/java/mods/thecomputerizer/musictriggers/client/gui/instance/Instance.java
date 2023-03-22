@@ -7,6 +7,9 @@ import mods.thecomputerizer.musictriggers.client.gui.*;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.ISoundEventAccessor;
+import net.minecraft.client.audio.Sound;
+import net.minecraft.client.audio.SoundEventAccessor;
 import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nullable;
@@ -123,10 +126,14 @@ public class Instance {
     }
 
     public List<String> findAllRegisteredSounds() {
-        return Minecraft.getInstance().getSoundManager().registry.values().stream()
-                .map(accessor -> accessor.list)
-                .flatMap(Collection::stream)
-                .map(accessor -> accessor.getSound().getPath().toString())
-                .distinct().sorted().collect(Collectors.toList());
+        List<String> ret = new ArrayList<>();
+        for(SoundEventAccessor regAccess : Minecraft.getInstance().getSoundManager().registry.values()) {
+            for (ISoundEventAccessor<Sound> soundAccessor : regAccess.list) {
+                String location = soundAccessor.getSound().getPath().toString();
+                if(!ret.contains(location)) ret.add(location);
+            }
+        }
+        Collections.sort(ret);
+        return ret;
     }
 }
