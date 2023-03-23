@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Vector3f;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
+import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
 import net.minecraft.client.Minecraft;
 
@@ -73,9 +74,11 @@ public class GuiLogVisualizer extends GuiSuperType {
             if(skip>0) skip--;
             else {
                 if(finish>0) {
-                    drawString(matrix, this.font, logEntry.getKey(), 16, y, logEntry.getValue());
-                    y += textSpacing;
-                    finish--;
+                    if(renderLevel(logEntry.getKey())) {
+                        drawString(matrix, this.font, logEntry.getKey(), 16, y, logEntry.getValue());
+                        y += textSpacing;
+                        finish--;
+                    }
                 }
             }
         }
@@ -91,6 +94,15 @@ public class GuiLogVisualizer extends GuiSuperType {
         if(perIndex<1) perIndex = 1;
         Vector3f end = new Vector3f(x, (int)(top+perIndex), 0);
         GuiUtil.drawLine(start,end,white(192), 2f, this.getBlitOffset());
+    }
+
+    private boolean renderLevel(String level) {
+        if(ConfigDebug.LOG_LEVEL.matches("DEBUG")) return true;
+        if(ConfigDebug.LOG_LEVEL.matches("INFO")) return !level.contains("DEBUG");
+        if(ConfigDebug.LOG_LEVEL.matches("WARN")) return !level.contains("DEBUG") && !level.contains("INFO");
+        if(ConfigDebug.LOG_LEVEL.matches("ERROR")) return level.contains("ERROR") && level.contains("FATAL");
+        if(ConfigDebug.LOG_LEVEL.matches("FATAL")) return level.contains("FATAL");
+        return true;
     }
 
     @Override

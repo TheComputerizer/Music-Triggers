@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.client.audio;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat;
 import com.sedmelluq.discord.lavaplayer.format.Pcm16AudioDataFormat;
+import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.player.*;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
@@ -57,7 +58,6 @@ import java.util.stream.Collectors;
 public class Channel {
     public static final KeyMapping GUI = new KeyMapping("key.musictriggers.gui", KeyConflictContext.UNIVERSAL,
             InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.categories.musictriggers");
-    private static final AudioDataFormat FORMAT = new Pcm16AudioDataFormat(2, 48000, 960, true);
     private final Table info;
     private final SoundSource category;
     private final Data data;
@@ -108,13 +108,13 @@ public class Channel {
         AudioSourceManagers.registerLocalSource(this.playerManager);
         this.player = this.playerManager.createPlayer();
         this.player.setVolume(100);
-        this.listener = new ChannelListener(this.player, FORMAT, this);
+        this.listener = new ChannelListener(this.player, StandardAudioDataFormats.DISCORD_PCM_S16_BE, this);
         this.loadedTracks = new HashMap<>();
         this.playerManager.setFrameBufferDuration(1000);
         this.playerManager.setPlayerCleanupThreshold(Long.MAX_VALUE);
         this.playerManager.getConfiguration().setResamplingQuality(AudioConfiguration.ResamplingQuality.HIGH);
         this.playerManager.getConfiguration().setOpusEncodingQuality(AudioConfiguration.OPUS_QUALITY_MAX);
-        this.playerManager.getConfiguration().setOutputFormat(FORMAT);
+        this.playerManager.getConfiguration().setOutputFormat(StandardAudioDataFormats.DISCORD_PCM_S16_BE);
         this.oncePerTrigger = new ArrayList<>();
         this.onceUntilEmpty = new ArrayList<>();
         this.commandsForPacket = new ArrayList<>();
@@ -135,6 +135,8 @@ public class Channel {
                 info.getValOrDefault("jukebox", info.getName() + "/jukebox"),"txt"));
         this.picker = new MusicPicker(this);
         this.localFolderPath = info.getValOrDefault("songs_folder", "config/MusicTriggers/songs");
+        File file = new File(this.localFolderPath);
+        if(!file.exists()) file.mkdirs();
     }
 
     private List<String> collectFilePaths(Table info) {
@@ -378,7 +380,7 @@ public class Channel {
     public String formatPlayback() {
         String ret = "No song playing";
         if(isPlaying())
-            ret = formatMinutes((int)(getMillis()/1000f))+"/"+formatMinutes((int)(getTotalMillis()/1000f));
+            ret = formatMinutes((int) (getMillis() / 1000f));// + "/" + formatMinutes((int) (getTotalMillis() / 1000f));
         return ret;
     }
 
@@ -448,7 +450,7 @@ public class Channel {
     }
 
     public long getTotalMillis() {
-        return getCurPlaying().getDuration();
+        return getCurPlaying().getInfo().length;
     }
 
     public long getMillis() {
@@ -470,20 +472,30 @@ public class Channel {
         else return master*Minecraft.getInstance().options.getSoundSourceVolume(getCategory());
     }
 
+    public void resetTrack() {
+        if(isPlaying()) {
+            MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Attempting to reset currently playing track",getChannelName());
+            AudioTrack cloned = this.getPlayer().getPlayingTrack().makeClone();
+            if (!this.getPlayer().startTrack(cloned, false))
+                MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Could not reset track!",getChannelName());
+        }
+    }
+
     public void playTrack(Audio audio, long milliseconds) {
         String id = audio.getName();
         AudioTrack track = this.loadedTracks.get(audio.getName());
-        MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Playing track from id {}",getChannelName(),id);
         if(track!=null) {
             try {
                 if (!this.getPlayer().startTrack(track, false))
                     MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Could not start track!",getChannelName());
                 else this.curTrack = audio;
+                MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Track with id {} is seekable: {}",getChannelName(),id,track.isSeekable());
             } catch (IllegalStateException e) {
                 AudioTrack cloned = track.makeClone();
                 if (!this.getPlayer().startTrack(cloned, false))
                     MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Could not start track!",getChannelName());
                 else this.curTrack = audio;
+                MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Track with id {} is seekable: {}",getChannelName(),id,track.isSeekable());
             }
         } else {
             MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Track with id {} was null! Attempting to " +
@@ -850,7 +862,6 @@ public class Channel {
     }
 
     private void removeErroredAudio(Audio audio) {
-        Constants.MAIN_LOG.error("REMOVING BAD AUDIO");
         String name = audio.getName();
         this.redirect.urlMap.remove(name);
         this.redirect.resourceLocationMap.remove(name);
@@ -868,7 +879,7 @@ public class Channel {
     }
 
     public ChannelInstance createGuiData() {
-        return new ChannelInstance(this.info,new Main(getChannelName(),this.data.main),
+        return new ChannelInstance(MusicTriggers.clone(this.info),new Main(getChannelName(),this.data.main),
                 new Transitions(getChannelName(),this.data.transitions),new Commands(getChannelName(),this.data.commands),
                 new Toggles(getChannelName(),this.data.toggles),
                 new Redirect(getChannelName(),this.redirect.urlMap,this.redirect.resourceLocationMap),

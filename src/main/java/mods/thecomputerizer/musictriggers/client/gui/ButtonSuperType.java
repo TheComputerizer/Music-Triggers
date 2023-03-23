@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraftforge.client.gui.widget.ExtendedButton;
@@ -33,6 +34,7 @@ public class ButtonSuperType extends ExtendedButton {
 
     public void updateDisplay(String newDisplay) {
         this.message = new TextComponent(newDisplay);
+        this.width = Minecraft.getInstance().font.width(this.message) + 8;
     }
 
 
@@ -49,11 +51,13 @@ public class ButtonSuperType extends ExtendedButton {
 
     }
 
-    public void handle(GuiSuperType parent, double mouseX, double mouseY) {
+    public boolean handle(GuiSuperType parent, double mouseX, double mouseY) {
         if(isHovering((int)mouseX, (int)mouseY)) {
             incrementMode();
             this.onClick.accept(parent,this,this.mode);
+            return true;
         }
+        return false;
     }
 
     public void incrementMode() {

@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.config;
 
-import libraries.com.moandjiezana.toml.Toml;
+import mods.thecomputerizer.shadowed.moandjiezana.toml.Toml;
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Debug;
@@ -26,6 +26,7 @@ public class ConfigDebug {
     public static boolean PLAY_NORMAL_MUSIC = false;
     public static boolean REVERSE_PRIORITY = false;
     public static boolean COMBINE_EQUAL_PRIORITY = false;
+    public static boolean PAUSE_WHEN_TABBED = true;
     public static String[] BLOCKED_MOD_MUSIC = {};
     public static String[] BLOCKED_MOD_RECORDS = {};
 
@@ -66,6 +67,9 @@ public class ConfigDebug {
         lines.add("# Allows for the combination of song pools in the case of multiple triggers with the same priority value being able to play at once");
         lines.add(LogUtil.injectParameters("COMBINE_EQUAL_PRIORITY = {}",COMBINE_EQUAL_PRIORITY));
         lines.add("");
+        lines.add("# If PAUSE_WHEN_TABBED is set to false, the music will no longer get paused when the game is not in focus");
+        lines.add(LogUtil.injectParameters("PAUSE_WHEN_TABBED = {}",PAUSE_WHEN_TABBED));
+        lines.add("");
         lines.add("# A list of mod ids to block audio in the Music category from so there is no overlap in music playing during events from other mods");
         lines.add(LogUtil.injectParameters("BLOCKED_MOD_MUSIC = {}", TextUtil.compileCollection((Object[])BLOCKED_MOD_MUSIC)));
         lines.add("");
@@ -82,6 +86,7 @@ public class ConfigDebug {
         PLAY_NORMAL_MUSIC = TomlUtil.readIfExists(toml,"PLAY_NORMAL_MUSIC",PLAY_NORMAL_MUSIC);
         REVERSE_PRIORITY = TomlUtil.readIfExists(toml,"REVERSE_PRIORITY",REVERSE_PRIORITY);
         COMBINE_EQUAL_PRIORITY = TomlUtil.readIfExists(toml,"COMBINE_EQUAL_PRIORITY",COMBINE_EQUAL_PRIORITY);
+        PAUSE_WHEN_TABBED = TomlUtil.readIfExists(toml,"PAUSE_WHEN_TABBED",PAUSE_WHEN_TABBED);
         BLOCKED_MOD_MUSIC = TomlUtil.readGenericArray(toml,"BLOCKED_MOD_MUSIC",BLOCKED_MOD_MUSIC);
         BLOCKED_MOD_RECORDS = TomlUtil.readGenericArray(toml,"BLOCKED_MOD_RECORDS",BLOCKED_MOD_RECORDS);
     }
@@ -93,6 +98,7 @@ public class ConfigDebug {
         PLAY_NORMAL_MUSIC = data.getValOrDefault("PLAY_NORMAL_MUSIC",false);
         REVERSE_PRIORITY = data.getValOrDefault("REVERSE_PRIORITY",false);
         COMBINE_EQUAL_PRIORITY = data.getValOrDefault("COMBINE_EQUAL_PRIORITY",false);
+        PAUSE_WHEN_TABBED = data.getValOrDefault("PAUSE_WHEN_TABBED",true);
         BLOCKED_MOD_MUSIC = data.getValOrDefault("BLOCKED_MOD_MUSIC",new ArrayList<String>()).toArray(new String[]{});
         BLOCKED_MOD_RECORDS = data.getValOrDefault("BLOCKED_MOD_RECORDS",new ArrayList<String>()).toArray(new String[]{});
         write();

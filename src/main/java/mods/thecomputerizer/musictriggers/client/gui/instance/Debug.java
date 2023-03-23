@@ -34,6 +34,8 @@ public class Debug extends AbstractConfig {
                         fileData.getOrCreateVar(null,"REVERSE_PRIORITY",false)),
                 new GuiParameters.Parameter(type.getId(),"combine_pools",
                         fileData.getOrCreateVar(null,"COMBINE_EQUAL_PRIORITY",false)),
+                new GuiParameters.Parameter(type.getId(),"pause_when_tabbed",
+                        fileData.getOrCreateVar(null,"PAUSE_WHEN_TABBED",true)),
                 new GuiParameters.Parameter(type.getId(),"blocked_mod_music",
                         fileData.getOrCreateVar(null,"BLOCKED_MOD_MUSIC",new ArrayList<String>())),
                 new GuiParameters.Parameter(type.getId(),"blocked_mod_records",

@@ -1,37 +1,37 @@
-    modLoader="javafml"
-    loaderVersion="[39,)"
-    license="All Rights Reserved"
-    showAsResourcePack=false
+modLoader="javafml"
+loaderVersion="[39,)"
+license="MIT"
+showAsResourcePack=false
 
-    [[mods]]
-      modId="musictriggers"
-      version="${version}"
-      displayName="Music Triggers"
-      updateJSONURL=""
-      displayURL="https://www.curseforge.com/minecraft/mc-mods/music-triggers"
-      logoFile="musictriggers_logo"
-      authors="The_Computerizer"
-      description='''
-      Lets you play music based on in game triggers
-      '''
+[[mods]]
+  modId="musictriggers"
+  version="${version}"
+  displayName="Music Triggers"
+  updateJSONURL=""
+  displayURL="https://www.curseforge.com/minecraft/mc-mods/music-triggers"
+  logoFile="musictriggers_logo.png"
+  authors="The_Computerizer"
+  description='''
+  Lets you play music based on in game triggers
+  '''
 
-      [[dependencies.musictriggers]]
-        modId="forge"
-        mandatory=true
-        versionRange="[39,)"
-        ordering="NONE"
-        side="BOTH"
+  [[dependencies.musictriggers]]
+    modId="forge"
+    mandatory=true
+    versionRange="[39,)"
+    ordering="NONE"
+    side="BOTH"
 
-      [[dependencies.musictriggers]]
-        modId="minecraft"
-        mandatory=true
-        versionRange="[1.18.1,1.19)"
-        ordering="NONE"
-        side="BOTH"
+  [[dependencies.musictriggers]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.18.1,1.19)"
+    ordering="NONE"
+    side="BOTH"
 
-      [[dependencies.musictriggers]]
-        modId="theimpossiblelibrary"
-        mandatory=true
-        versionRange="[1.18.2-0.2.2,)"
-        ordering="NONE"
-        side="BOTH"
+  [[dependencies.musictriggers]]
+    modId="theimpossiblelibrary"
+    mandatory=true
+    versionRange="[1.18.2-0.2.3,)"
+    ordering="NONE"
+    side="BOTH"
