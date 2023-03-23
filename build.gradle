@@ -1,7 +1,7 @@
 //file:noinspection GroovyAssignabilityCheck
 
 plugins {
-    id 'net.minecraftforge.gradle' version '5.1+'
+    id 'net.minecraftforge.gradle' version '5.1.69'
     id 'com.github.johnrengelman.shadow' version '7.1.+'
     id 'wtf.gofancy.fancygradle' version '1.1.+'
     id 'org.spongepowered.mixin' version '0.7.+'
@@ -47,8 +47,6 @@ minecraft {
 
 
 repositories {
-    google()
-    mavenCentral()
     maven {
         url = uri('https://www.cursemaven.com')
         content {
@@ -75,20 +73,18 @@ repositories {
     maven {
         url = uri('https://jitpack.io')
     }
-    flatDir {
-        dirs 'build/libs'
-    }
 }
 
 configurations {
     shade
-    implementation.extendsFrom(shade)
+    implementation.extendsFrom shade
     shadow.extendsFrom shade
 }
 
 dependencies {
     //minecraft
     minecraft "net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}"
+
 
     //external dependencies
     shade("io.github.kostaskougios:cloning:${project.cloning_version}")

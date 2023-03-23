@@ -202,7 +202,7 @@ public class GuiParameters extends GuiSuperType {
                             GuiUtil.makeRGBAInt(50,50,50,255));
                 } else drawString(this.fontRenderer,parameter.getDisplayName(),textX,startY+(this.spacing/2),GuiUtil.WHITE);
                 startY+=(textHeight+this.spacing);
-                if ((this.height-(this.spacing+24) - startY) < (this.spacing + this.fontRenderer.FONT_HEIGHT)) break;
+                if (this.height-startY<(textHeight+(this.spacing/2))) break;
             }
             index++;
         }

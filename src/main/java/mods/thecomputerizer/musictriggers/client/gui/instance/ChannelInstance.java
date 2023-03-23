@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.client.gui.instance;
 import mods.thecomputerizer.musictriggers.client.Translate;
 import mods.thecomputerizer.musictriggers.client.gui.*;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.common.toml.Variable;
 import net.minecraft.client.Minecraft;
 
 import java.io.File;
@@ -146,7 +147,18 @@ public class ChannelInstance {
     }
 
     public List<String> write() {
-        List<String> lines = new ArrayList<>(this.info.toLines());
+        List<String> lines = new ArrayList<>();
+        lines.add("["+this.info.getPath()+"]");
+        writeOptionalParameter(lines,"sound_category","music",true);
+        writeOptionalParameter(lines,"main",info.getName()+"/main",true);
+        writeOptionalParameter(lines,"transitions",info.getName()+"/transitions",true);
+        writeOptionalParameter(lines,"commands",info.getName()+"/commands",true);
+        writeOptionalParameter(lines,"toggles",info.getName()+"/toggles",true);
+        writeOptionalParameter(lines,"redirect",info.getName()+"/redirect",true);
+        writeOptionalParameter(lines,"jukebox",info.getName()+"/jukebox",true);
+        writeOptionalParameter(lines,"songs_folder","config/MusicTriggers/songs",true);
+        writeOptionalParameter(lines,"paused_by_jukebox","true",false);
+        writeOptionalParameter(lines,"overrides_normal_music","true",false);
         lines.add("");
         this.mainInstance.write(this.info.getValOrDefault("main",this.info.getName()+"/main"));
         this.transitionsInstance.write(this.info.getValOrDefault("transitions",this.info.getName()+"/transitions"));
@@ -155,5 +167,13 @@ public class ChannelInstance {
         this.redirectInstance.write(this.info.getValOrDefault("redirect",this.info.getName()+"/redirect"));
         this.jukeboxInstance.write(this.info.getValOrDefault("jukebox",this.info.getName()+"/jukebox"));
         return lines;
+    }
+
+    private void writeOptionalParameter(List<String> lines, String name, String defVal, boolean isString) {
+        Variable var = this.info.getOrCreateVar(name,defVal);
+        if(!var.get().toString().matches(defVal)) {
+            if(isString) lines.add("\t"+name+" = \""+var.get().toString()+"\"");
+            else lines.add("\t"+name+" = "+var.get().toString());
+        }
     }
 }

@@ -201,7 +201,8 @@ public class ClientEvents {
                 EntityPlayer player = mc.player;
                 World world = player.getEntityWorld();
                 if(player!=null && world!=null) {
-                    e.getLeft().add("Current Biome: " + world.getBiome(player.getPosition()).getRegistryName());
+                    e.getLeft().add("Current Biome Name: " + world.getBiome(player.getPosition()).getRegistryName());
+                    e.getLeft().add("Current Biome Category: " + world.getBiome(player.getPosition()).getTempCategory());
                     e.getLeft().add("Current Dimension: " + player.dimension);
                     e.getLeft().add("Current Total Light: " + world.getLight(roundedPos(player), true));
                     e.getLeft().add("Current Block Light: " + world.getLightFor(EnumSkyBlock.BLOCK, roundedPos(player)));
