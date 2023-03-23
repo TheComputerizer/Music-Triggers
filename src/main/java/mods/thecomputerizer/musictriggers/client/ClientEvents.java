@@ -203,7 +203,8 @@ public class ClientEvents {
                 ClientPlayerEntity player = mc.player;
                 World world = player.level;
                 if(player!=null && world!=null) {
-                    e.getLeft().add("Current Biome: " + world.getBiome(player.blockPosition()).getRegistryName());
+                    e.getLeft().add("Current Biome Name: " + world.getBiome(player.blockPosition()).getRegistryName());
+                    e.getLeft().add("Current Biome Category: " + world.getBiome(player.blockPosition()).getBiomeCategory().getName());
                     e.getLeft().add("Current Dimension: " + world.dimension().location());
                     e.getLeft().add("Current Structure: " + ChannelManager.CUR_STRUCT);
                     e.getLeft().add("Current Total Light: " +  world.getRawBrightness(roundedPos(player), 0));
