@@ -16,6 +16,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.*;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
@@ -116,6 +117,7 @@ public class ServerData {
     private final Map<String, String> currentSongs = new HashMap<>();
     private final Map<String, String> currentTriggers = new HashMap<>();
     private String curStruct;
+    private String prevStruct;
     public ServerData(FriendlyByteBuf buf) {
         this.mappedTriggers = NetworkUtil.readGenericMap(buf, NetworkUtil::readString, buf1 ->
                 NetworkUtil.readGenericList(buf1,buf2 -> TomlPart.getByID(NetworkUtil.readString(buf2)).decode(buf2,null))
@@ -225,10 +227,12 @@ public class ServerData {
         }
         this.bossInfo.removeIf(info -> info.getProgress()<=0 || !info.isVisible() || info.getName().getString().matches("Raid"));
         if(!toRemove.isEmpty()) this.allTriggers.removeAll(toRemove);
-        if(!this.updatedTriggers.isEmpty()) {
+        if(!this.updatedTriggers.isEmpty() || (Objects.nonNull(this.prevStruct) &&
+                (Objects.isNull(this.curStruct) || !this.prevStruct.matches(this.curStruct)))) {
             String structToSend = Objects.nonNull(this.curStruct) && !(this.curStruct.length()==0) ? this.curStruct :
                     "Structure has not been synced";
             NetworkHandler.sendTo(new PacketSyncServerInfo(this.updatedTriggers, structToSend), player);
+            this.prevStruct = structToSend;
         }
     }
 
@@ -313,10 +317,13 @@ public class ServerData {
     }
 
     private boolean calculateStruct(ServerLevel world, BlockPos pos, List<String> resourceMatcher) {
-        for (Structure feature : world.getChunkAt(pos).getAllReferences().keySet()) {
-            if (world.structureManager().getStructureAt(pos, feature).isValid()) {
-                if(Objects.nonNull(Registry.STRUCTURE_TYPES.getKey(feature.type()))) {
-                    this.curStruct = Registry.STRUCTURE_TYPES.getKey(feature.type()).toString();
+        this.curStruct = null;
+        Optional<? extends Registry<Structure>> optionalReg = world.registryAccess().registry(Registry.STRUCTURE_REGISTRY);
+        if(optionalReg.isPresent()) {
+            Registry<Structure> reg = optionalReg.get();
+            for (ResourceLocation featureID : reg.keySet()) {
+                if (world.structureManager().getStructureAt(pos, reg.get(featureID)).isValid()) {
+                    this.curStruct = featureID.toString();
                     break;
                 }
             }
