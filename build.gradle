@@ -1,8 +1,6 @@
-//file:noinspection GroovyUnusedAssignment
 //file:noinspection GroovyAssignabilityCheck
-
 plugins {
-    id 'net.minecraftforge.gradle' version '5.1.68'
+    id 'net.minecraftforge.gradle' version '5.1.69'
     id 'com.github.johnrengelman.shadow' version '7.1.+'
     id 'org.spongepowered.mixin' version '0.7.+'
     id 'org.parchmentmc.librarian.forgegradle' version '1.+'
@@ -82,9 +80,11 @@ repositories {
     }
 }
 
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
 configurations {
     shade
-    implementation.extendsFrom(shade)
+    minecraftLibrary.extendsFrom(shade)
     shadow.extendsFrom shade
 }
 
