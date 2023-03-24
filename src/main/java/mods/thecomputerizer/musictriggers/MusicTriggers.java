@@ -6,13 +6,11 @@ import mods.thecomputerizer.musictriggers.client.audio.Channel;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import mods.thecomputerizer.musictriggers.network.NetworkHandler;
-import mods.thecomputerizer.musictriggers.registry.BlockRegistry;
 import mods.thecomputerizer.musictriggers.registry.ItemRegistry;
-import mods.thecomputerizer.musictriggers.registry.TileRegistry;
+import mods.thecomputerizer.musictriggers.registry.RegistryHandler;
 import mods.thecomputerizer.musictriggers.registry.items.CustomRecord;
 import mods.thecomputerizer.musictriggers.registry.items.MusicTriggersRecord;
 import mods.thecomputerizer.musictriggers.server.ServerEvents;
-import mods.thecomputerizer.musictriggers.server.TriggerCommand;
 import mods.thecomputerizer.theimpossiblelibrary.util.CustomTick;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
@@ -22,9 +20,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -51,8 +46,6 @@ public class MusicTriggers {
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::commonSetup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::loadComplete);
-        IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
-        MinecraftForge.EVENT_BUS.register(this);
         MOD_LOG = LogUtil.create(Constants.MODID);
         random = new Random();
         if(!Constants.CONFIG_DIR.exists())
@@ -66,12 +59,10 @@ public class MusicTriggers {
             MinecraftForge.EVENT_BUS.register(ClientEvents.class);
             ChannelManager.reloading = false;
         }
-        MinecraftForge.EVENT_BUS.register(ServerEvents.class);
-        if(ConfigRegistry.REGISTER_DISCS) {
-            Constants.MAIN_LOG.info("Loading Music Triggers discs and blocks");
-            BlockRegistry.registerBlocks(eventBus);
-            ItemRegistry.registerItems(eventBus);
-            TileRegistry.registerTiles(eventBus);
+        if(!ConfigRegistry.CLIENT_SIDE_ONLY) {
+            MinecraftForge.EVENT_BUS.register(ServerEvents.class);
+            MinecraftForge.EVENT_BUS.register(RegistryHandler.class);
+            if(ConfigRegistry.REGISTER_DISCS) RegistryHandler.init(FMLJavaModLoadingContext.get().getModEventBus());
         }
     }
 
@@ -105,11 +96,6 @@ public class MusicTriggers {
     public void loadComplete(FMLLoadCompleteEvent ev) {
         if(FMLEnvironment.dist == Dist.CLIENT)
             ChannelManager.readResourceLocations();
-    }
-
-    @SubscribeEvent
-    public void registerCommands(RegisterCommandsEvent ev) {
-        TriggerCommand.register(ev.getDispatcher());
     }
 
     public static ResourceLocation getIcon(String type, String name) {

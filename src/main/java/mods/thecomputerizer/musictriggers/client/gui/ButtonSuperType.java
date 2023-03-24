@@ -49,11 +49,13 @@ public class ButtonSuperType extends ExtendedButton {
 
     }
 
-    public void handle(GuiSuperType parent, double mouseX, double mouseY) {
+    public boolean handle(GuiSuperType parent, double mouseX, double mouseY) {
         if(isHovering((int)mouseX, (int)mouseY)) {
             incrementMode();
             this.onClick.accept(parent,this,this.mode);
+            return true;
         }
+        return false;
     }
 
     public void incrementMode() {

@@ -7,6 +7,9 @@ import mods.thecomputerizer.musictriggers.client.gui.*;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.sounds.Sound;
+import net.minecraft.client.sounds.WeighedSoundEvents;
+import net.minecraft.client.sounds.Weighted;
 import net.minecraft.util.RandomSource;
 import org.apache.logging.log4j.Level;
 
@@ -125,10 +128,14 @@ public class Instance {
 
     public List<String> findAllRegisteredSounds() {
         RandomSource rand = RandomSource.create();
-        return Minecraft.getInstance().getSoundManager().registry.values().stream()
-                .map(accessor -> accessor.list)
-                .flatMap(Collection::stream)
-                .map(accessor -> accessor.getSound(rand).getPath().toString())
-                .distinct().sorted().collect(Collectors.toList());
+        List<String> ret = new ArrayList<>();
+        for(WeighedSoundEvents regAccess : Minecraft.getInstance().getSoundManager().registry.values()) {
+            for (Weighted<Sound> soundAccessor : regAccess.list) {
+                String location = soundAccessor.getSound(rand).getPath().toString();
+                if(!ret.contains(location)) ret.add(location);
+            }
+        }
+        Collections.sort(ret);
+        return ret;
     }
 }

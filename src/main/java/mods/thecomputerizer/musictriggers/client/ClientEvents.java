@@ -20,7 +20,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
@@ -49,17 +48,12 @@ import java.util.Objects;
 
 @OnlyIn(Dist.CLIENT)
 public class ClientEvents {
-    public static ResourceLocation IMAGE_CARD = null;
-    public static boolean isWorldRendered;
-    public static float fadeCount = 1000;
-    public static Boolean activated = false;
-    public static long timer=0;
-    public static int reloadCounter = 0;
-    public static boolean ismoving;
-    public static String lastAdvancement;
-    public static boolean advancement;
-    public static boolean renderDebug = true;
-    public static final HashMap<String, Boolean> commandMap = new HashMap<>();
+    public static boolean IS_WORLD_RENDERED;
+    public static int RELOAD_COUNTER = 0;
+    public static String LAST_ADVANCEMENT;
+    public static boolean GAINED_NEW_ADVANCEMENT;
+    public static boolean SHOULD_RENDER_DEBUG = true;
+    public static final HashMap<String, Boolean> COMMAND_MAP = new HashMap<>();
 
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
@@ -78,10 +72,11 @@ public class ClientEvents {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @SubscribeEvent
     public static void onAdvancement(AdvancementEvent.AdvancementEarnEvent e) {
-        lastAdvancement = e.getAdvancement().getId().toString();
-        advancement = true;
+        LAST_ADVANCEMENT = e.getAdvancement().getId().toString();
+        GAINED_NEW_ADVANCEMENT = true;
     }
 
     @SubscribeEvent
@@ -93,7 +88,7 @@ public class ClientEvents {
                 if(arg.matches("triggercommand")) wasCorrect = true;
                 first = false;
             } else {
-                if (wasCorrect && !arg.matches("any")) commandMap.put(arg, true);
+                if (wasCorrect && !arg.matches("any")) COMMAND_MAP.put(arg, true);
                 break;
              }
         }
@@ -101,26 +96,26 @@ public class ClientEvents {
 
     public static boolean commandHelper(Trigger trigger) {
         String id = trigger.getParameter("identifier");
-        return commandMap.containsKey(id) && commandMap.get(id);
+        return COMMAND_MAP.containsKey(id) && COMMAND_MAP.get(id);
     }
 
     public static void commandFinish(Trigger trigger) {
         String id = trigger.getParameter("identifier");
-        commandMap.put(id,false);
+        COMMAND_MAP.put(id,false);
     }
 
     @SubscribeEvent
     public static void clientDisconnected(PlayerEvent.PlayerLoggedOutEvent e) {
-        isWorldRendered=false;
+        IS_WORLD_RENDERED =false;
     }
 
     @SubscribeEvent
     public static void cancelRenders(RenderGuiOverlayEvent.Pre e) {
-        if(!isWorldRendered) {
+        if(!IS_WORLD_RENDERED) {
             ChannelManager.initializeServerInfo();
-            isWorldRendered = true;
+            IS_WORLD_RENDERED = true;
         }
-        if(!renderDebug) e.setCanceled(true);
+        if(!SHOULD_RENDER_DEBUG) e.setCanceled(true);
     }
 
     public static void initReload() {
@@ -128,7 +123,7 @@ public class ClientEvents {
                 .withStyle(ChatFormatting.RED).withStyle(ChatFormatting.ITALIC);
         if(Objects.nonNull(Minecraft.getInstance().player))
             Minecraft.getInstance().player.sendSystemMessage(reload);
-        reloadCounter = 5;
+        RELOAD_COUNTER = 5;
         ChannelManager.reloading = true;
         MusicTriggers.savedMessages.clear();
         MusicTriggers.logExternally(Level.INFO,"Reloading Music...");
@@ -143,21 +138,16 @@ public class ClientEvents {
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent event) {
         if(event.phase==TickEvent.Phase.END) {
-            if (!Minecraft.getInstance().isPaused() && !(Minecraft.getInstance().screen instanceof GuiSuperType) && !renderDebug)
-                renderDebug = true;
-            if (reloadCounter > 0) {
-                reloadCounter -= 1;
-                if (reloadCounter == 1) {
+            if (!Minecraft.getInstance().isPaused() && !(Minecraft.getInstance().screen instanceof GuiSuperType) && !SHOULD_RENDER_DEBUG)
+                SHOULD_RENDER_DEBUG = true;
+            if (RELOAD_COUNTER > 0) {
+                RELOAD_COUNTER -= 1;
+                if (RELOAD_COUNTER == 1) {
                     ChannelManager.reloadAllChannels();
                     Component reload = MutableComponent.create(AssetUtil.genericLang(Constants.MODID, "misc", "reload_finished",false))
                             .withStyle(ChatFormatting.GREEN).withStyle(ChatFormatting.ITALIC);
                     if (Objects.nonNull(Minecraft.getInstance().player))
                         Minecraft.getInstance().player.sendSystemMessage(reload);
-                    IMAGE_CARD = null;
-                    fadeCount = 1000;
-                    timer = 0;
-                    activated = false;
-                    ismoving = false;
                     ChannelManager.reloading = false;
                 }
             }
@@ -167,7 +157,7 @@ public class ClientEvents {
     @SuppressWarnings("ConstantConditions")
     @SubscribeEvent
     public static void debugInfo(RenderGuiOverlayEvent e) {
-        if(ConfigDebug.SHOW_DEBUG && isWorldRendered && renderDebug) {
+        if(ConfigDebug.SHOW_DEBUG && IS_WORLD_RENDERED && SHOULD_RENDER_DEBUG) {
             List<String> lines = new ArrayList<>();
             lines.add("Music Triggers Debug Information");
             for(Channel channel : ChannelManager.getAllChannels()) {
@@ -224,7 +214,7 @@ public class ClientEvents {
                 net.minecraft.world.level.Level world = player.level;
                 if(player!=null && world!=null) {
                     ResourceKey<Biome> biomeKey = world.getBiome(player.blockPosition()).unwrapKey().orElse(null);
-                    lines.add("Current Biome: " + (Objects.nonNull(biomeKey) ? biomeKey.location().toString() : "Unknown Biome"));
+                    lines.add("Current Biome Name: " + (Objects.nonNull(biomeKey) ? biomeKey.location().toString() : "Unknown Biome"));
                     lines.add("Current Dimension: " + world.dimension().location());
                     lines.add("Current Structure: " + ChannelManager.CUR_STRUCT);
                     lines.add("Current Total Light: " +  world.getRawBrightness(roundedPos(player), 0));

@@ -73,7 +73,6 @@ public class MusicPicker {
         } else {
             List<Audio> activeSongs = comboChecker(priorityHandler(playableTriggers(player,universal),universal));
             if (!activeSongs.isEmpty()) {
-                this.getInfo().updatePlayableTriggers(this.dynamicTemp);
                 this.getInfo().updateActiveTriggers(activeSongs.stream().map(Audio::getTriggers).flatMap(Collection::stream)
                         .distinct().collect(Collectors.toList()));
                 for (Trigger trigger : this.removePersistentPlayable)
@@ -117,6 +116,12 @@ public class MusicPicker {
         this.fadeOut = 0;
     }
 
+    private List<Audio> removeEmptyCombinations(Trigger priorityTrigger, List<Audio> found) {
+        if(!found.isEmpty() || this.dynamicTemp.isEmpty()) return found;
+        this.dynamicTemp.remove(priorityTrigger);
+        return comboChecker(priorityHandler(this.dynamicTemp));
+    }
+
     private List<Audio> comboChecker(Trigger priorityTrigger) {
         if (priorityTrigger == null) return new ArrayList<>();
         List<Audio> found = new ArrayList<>();
@@ -136,8 +141,8 @@ public class MusicPicker {
         List<Audio> combinations = new ArrayList<>();
         for(Audio audio : found)
             if(audio.getTriggers().size()>1) combinations.add(audio);
-        if(combinations.size()==0) return found;
-        return recursiveCombination(priorityTrigger,combinations);
+        if(combinations.size()==0) return removeEmptyCombinations(priorityTrigger,found);
+        return removeEmptyCombinations(priorityTrigger,recursiveCombination(priorityTrigger,combinations));
     }
 
     private List<Audio> recursiveCombination(Trigger priorityTrigger, List<Audio> combinations) {
