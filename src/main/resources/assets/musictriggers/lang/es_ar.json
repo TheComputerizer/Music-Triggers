@@ -503,5 +503,10 @@
   "gui.musictriggers.trigger.blizzard": "Tormenta de Nieve",
   "gui.musictriggers.trigger.cloudy": "Nublado",
   "gui.musictriggers.trigger.lightrain": "Lluvia Ligera",
-  "gui.musictriggers.trigger.season": "Temporada"
+  "gui.musictriggers.trigger.season": "Temporada",
+  "gui.musictriggers.button.selected_channel": "Canal Seleccionado:",
+  "gui.musictriggers.button.selected_channel.desc1": "Haz click para recorrer los canales registrados.",
+  "gui.musictriggers.parameter.debug.pause_when_tabbed.name": "Pausar cuando se tabule.",
+  "gui.musictriggers.parameter.debug.pause_when_tabbed.desc": "Determina si la música pausará cuando la ventana del juego no esté en primer plano."
+
 }
