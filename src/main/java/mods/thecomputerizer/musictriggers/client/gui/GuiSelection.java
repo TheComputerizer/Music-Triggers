@@ -147,7 +147,7 @@ public class GuiSelection extends GuiSuperType {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
-        super.mouseClicked(mouseX, mouseY, mouseButton);
+        if(super.mouseClicked(mouseX, mouseY, mouseButton)) return true;
         if (mouseButton == 0 && this.elementHover>=0) {
             Element element = this.searchedElements.get(this.elementHover);
             if(this.deleteMode) {
@@ -175,9 +175,8 @@ public class GuiSelection extends GuiSuperType {
                 }
                 return true;
             }
-            return false;
         }
-        return super.mouseClicked(mouseX, mouseY, mouseButton);
+        return false;
     }
 
     @Override

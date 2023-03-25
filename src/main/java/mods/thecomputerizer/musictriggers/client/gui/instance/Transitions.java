@@ -41,7 +41,7 @@ public class Transitions extends AbstractChannelConfig {
 
     @Override
     protected List<String> headerLines() {
-        return Arrays.asList("# Please refer to the wiki page located at https://github.com/TheComputerizer/Music-Triggers/wiki/The-Basics",
+        return Arrays.asList("# Please refer to the wiki page located at https://github.com/TheComputerizer/Music-Triggers/wiki",
                 "# or the discord server located at https://discord.gg/FZHXFYp8fc",
                 "# for any specific questions you might have regarding transitions","");
     }

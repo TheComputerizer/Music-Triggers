@@ -8,6 +8,7 @@ import mods.thecomputerizer.theimpossiblelibrary.common.toml.Comment;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.VarMatcher;
+import mods.thecomputerizer.theimpossiblelibrary.util.TextUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.util.TriConsumer;
@@ -38,7 +39,7 @@ public class Main extends AbstractChannelConfig {
 
     @Override
     protected List<String> headerLines() {
-        return Arrays.asList("# Please refer to the wiki page located at https://github.com/TheComputerizer/Music-Triggers/wiki/The-Basics",
+        return Arrays.asList("# Please refer to the wiki page located at https://github.com/TheComputerizer/Music-Triggers/wiki",
                 "# or the discord server located at https://discord.gg/FZHXFYp8fc",
                 "# for any specific questions you might have regarding the main config file","");
     }
@@ -52,7 +53,12 @@ public class Main extends AbstractChannelConfig {
                 for(Table trigger : getOrCreateTable(null,"triggers").getTablesByName(triggerName)) {
                     VarMatcher matcher = new VarMatcher();
                     for(String parameter : Trigger.getAcceptedParameters(triggerName))
-                        matcher.addCondition(parameter,val -> !val.toString().matches(Trigger.getDefaultParameter(parameter)));
+                        matcher.addCondition(parameter,val -> {
+                            if(val instanceof List<?>)
+                                return !TextUtil.listToString(((List<?>)val).stream().map(Objects::toString)
+                                        .collect(Collectors.toList()),";").matches(Trigger.getDefaultParameter(parameter));
+                            return !val.toString().matches(Trigger.getDefaultParameter(parameter));
+                        });
                     trigger.addMatcher(matcher);
                 }
             }
@@ -68,6 +74,7 @@ public class Main extends AbstractChannelConfig {
                         val.toString().matches("100"))));
                 matcher.addCondition("play_once",(val -> !((val instanceof Number && ((Number) val).intValue()==0) ||
                         val.toString().matches("0"))));
+                matcher.addCondition("must_finish", val -> !val.toString().toLowerCase().matches("false"));
                 song.addMatcher(matcher);
             }
         }

@@ -15,6 +15,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.*;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
@@ -38,7 +39,7 @@ public class ServerData {
     private static final Map<String, List<ServerBossEvent>> QUEUED_BOSS_BARS = new HashMap<>();
     private static final List<String> NBT_MODES = Arrays.asList("KEY_PRESENT","VAL_PRESENT","GREATER","LESSER","EQUAL","INVERT");
     private static final List<String> TRIGGER_HOLDERS = Arrays.asList("difficulty","time","light","height","riding",
-            "dimension","biome","structure","mob","victory","gui","zones","pvp","advancement","statistic","command",
+            "dimension","biome","structure","mob","victory","gui","zones","pvp","advancement","statistic","command","raid",
             "gamestage","rainintensity","tornado","moon","season");
 
     public static void initializePlayerChannels(MinecraftServer server, FriendlyByteBuf buf) {
@@ -112,6 +113,7 @@ public class ServerData {
     private final Map<String, String> currentSongs = new HashMap<>();
     private final Map<String, String> currentTriggers = new HashMap<>();
     private String curStruct;
+    private String prevStruct;
     public ServerData(MinecraftServer server, FriendlyByteBuf buf) {
         this.mappedTriggers = NetworkUtil.readGenericMap(buf, NetworkUtil::readString, buf1 ->
                 NetworkUtil.readGenericList(buf1,buf2 -> TomlPart.getByID(NetworkUtil.readString(buf2)).decode(buf2,null))
@@ -212,18 +214,21 @@ public class ServerData {
             else if (trigger.getName().matches("biome"))
                 potentiallyUpdate(trigger, calculateBiome(trigger,player.getLevel(),pos));
             else if (trigger.getName().matches("structure"))
-                potentiallyUpdate(trigger, calculateStruct(player.getLevel(), pos, trigger.getValOrDefault("resource_name", new ArrayList<>())));
+                potentiallyUpdate(trigger, calculateStruct(player.getLevel(), pos, trigger.getValOrDefault("resource_name", Collections.singletonList("any"))));
             else if (trigger.getName().matches("mob"))
                 potentiallyUpdate(trigger, calculateMob(trigger, player, pos));
             else if (trigger.getName().matches("raid"))
                 potentiallyUpdate(trigger, calculateRaid(player.getLevel(),pos,trigger.getValOrDefault("level",-1)));
             else toRemove.add(trigger);
         }
+        this.bossInfo.removeIf(info -> info.getProgress()<=0 || !info.isVisible() || info.getName().getString().matches("Raid"));
         if(!toRemove.isEmpty()) this.allTriggers.removeAll(toRemove);
-        if(!this.updatedTriggers.isEmpty()) {
+        if(!this.updatedTriggers.isEmpty() || (Objects.nonNull(this.prevStruct) &&
+                (Objects.isNull(this.curStruct) || !this.prevStruct.matches(this.curStruct)))) {
             String structToSend = Objects.nonNull(this.curStruct) && !(this.curStruct.length()==0) ? this.curStruct :
                     "Structure has not been synced";
             NetworkHandler.sendTo(new PacketSyncServerInfo(this.updatedTriggers, structToSend), player);
+            this.prevStruct = structToSend;
         }
     }
 
@@ -281,9 +286,9 @@ public class ServerData {
         Biome biome = curBiomeHolder.value();
         Optional<String> optionalBiomeName = RegUtil.get(server,Registry.BIOME_REGISTRY,biome);
         if(optionalBiomeName.isEmpty()) return false;
-        List<String> resources = biomeTrigger.getValOrDefault("resource_name",new ArrayList<>());
+        List<String> resources = biomeTrigger.getValOrDefault("resource_name",Collections.singletonList("any"));
         if(resources.isEmpty()) resources.add("any");
-        List<String> categories = biomeTrigger.getValOrDefault("biome_category",new ArrayList<>());
+        List<String> categories = biomeTrigger.getValOrDefault("biome_category",Collections.singletonList("any"));
         if(categories.isEmpty()) resources.add("any");
         String rainType = biomeTrigger.getValOrDefault("rain_type","any");
         float rainFall = biomeTrigger.getValOrDefault("biome_rainfall",Float.MIN_VALUE);
@@ -308,10 +313,13 @@ public class ServerData {
     }
 
     private boolean calculateStruct(ServerLevel world, BlockPos pos, List<String> resourceMatcher) {
-        for (Structure feature : world.getChunkAt(pos).getAllReferences().keySet()) {
-            if (world.structureManager().getStructureAt(pos, feature).isValid()) {
-                if(Objects.nonNull(Registry.STRUCTURE_TYPES.getKey(feature.type()))) {
-                    this.curStruct = Registry.STRUCTURE_TYPES.getKey(feature.type()).toString();
+        this.curStruct = null;
+        Optional<? extends Registry<Structure>> optionalReg = world.registryAccess().registry(Registry.STRUCTURE_REGISTRY);
+        if(optionalReg.isPresent()) {
+            Registry<Structure> reg = optionalReg.get();
+            for (ResourceLocation featureID : reg.keySet()) {
+                if (world.structureManager().getStructureAt(pos, reg.get(featureID)).isValid()) {
+                    this.curStruct = featureID.toString();
                     break;
                 }
             }
@@ -320,20 +328,19 @@ public class ServerData {
     }
 
     private boolean calculateMob(Table mobTrigger, ServerPlayer player, BlockPos pos) {
-        List<String> resources = mobTrigger.getValOrDefault("resource_name",new ArrayList<>());
+        List<String> resources = mobTrigger.getValOrDefault("resource_name",Collections.singletonList("any"));
         if(resources.isEmpty()) return false;
-        List<String> whitelist = !resources.contains("MOB") && !resources.contains("BOSS") ? resources : new ArrayList<>();
-        List<String> blacklist = !resources.contains("MOB") && !resources.contains("BOSS") ? new ArrayList<>() : resources;
-        boolean checkTarget = mobTrigger.getValOrDefault("mob_targeting",false);
-        int hordeTarget = mobTrigger.getValOrDefault("horde_targeting_percentage",0);
+        boolean checkTarget = mobTrigger.getValOrDefault("mob_targeting",true);
+        int hordeTarget = mobTrigger.getValOrDefault("horde_targeting_percentage",50);
         int num = mobTrigger.getValOrDefault("level",1);
         int range = mobTrigger.getValOrDefault("detection_range",16);
         int health = mobTrigger.getValOrDefault("health",100);
-        int hordeHealth = mobTrigger.getValOrDefault("horde_health_percentage",0);
+        int hordeHealth = mobTrigger.getValOrDefault("horde_health_percentage",50);
         String nbt = mobTrigger.getValOrDefault("mob_nbt","any");
         if (resources.contains("BOSS")) {
             List<ServerBossEvent> correctBosses = this.bossInfo.stream().filter(
-                    info -> resources.size()==1 || partiallyMatches(info.getName().getString(),resources)).toList();
+                    info -> !info.getName().getString().matches("Raid") && (resources.size()==1 || partiallyMatches(info.getName().getString(),resources
+                            .stream().filter(element -> !element.matches("BOSS")).toList()))).toList();
             ServerBossEvent[] passedBosses = new ServerBossEvent[num];
             for (int i = 0; i < num; i++) {
                 if (i >= correctBosses.size())
@@ -342,18 +349,17 @@ public class ServerData {
             }
             return checkBossHealth(passedBosses, health, hordeHealth);
         }
-        return checkMobs(player,pos,num,range,whitelist,blacklist,checkTarget,hordeTarget,health,hordeHealth,nbt);
+        return checkMobs(player,pos,num,range,resources,checkTarget,hordeTarget,health,hordeHealth,nbt);
     }
 
-    private boolean checkMobs(ServerPlayer player, BlockPos pos, int num, int range, List<String> whiteList,
-                              List<String> blackList, boolean target,
-                              int hordeTarget, int health, int hordeHealth, String nbt) {
+    private boolean checkMobs(ServerPlayer player, BlockPos pos, int num, int range, List<String> resources,
+                              boolean target, int hordeTarget, int health, int hordeHealth, String nbt) {
         if(num<=0) return false;
         LivingEntity[] passedEntities = new LivingEntity[num];
         AABB box = new AABB(pos.getX()-range,pos.getY()-range,pos.getZ()-range,
                 pos.getX()+range,pos.getY()+range,pos.getZ()+range);
         List<LivingEntity> livingWithBlacklist = player.getLevel().getEntitiesOfClass(
-                LivingEntity.class,box,e -> e!=player && checkEntityName(e,whiteList,blackList));
+                LivingEntity.class,box,e -> e!=player && checkEntityName(e,resources));
         livingWithBlacklist.removeIf(living -> !checkNBT(living,nbt));
         for(int i=0;i<num;i++) {
             if(i>=livingWithBlacklist.size())
@@ -363,19 +369,20 @@ public class ServerData {
         return checkTarget(passedEntities,target,hordeTarget,player) && checkHealth(passedEntities,health,hordeHealth);
     }
 
-    private boolean checkEntityName(LivingEntity entity, List<String> whiteList, List<String> blackList) {
-        if(whiteList.isEmpty() && blackList.isEmpty()) return true;
-        if(blackList.contains("MOB") &&!(entity instanceof Mob)) return false;
+    private boolean checkEntityName(LivingEntity entity, List<String> resources) {
         String displayName = entity.getName().getString();
         Optional<String> potentialID = RegUtil.get(this.server,Registry.ENTITY_TYPE_REGISTRY,entity.getType());
-        if(!whiteList.isEmpty())
-            return whiteList.contains(displayName) || potentialID.isPresent() && partiallyMatches(potentialID.get(),whiteList);
-        return !blackList.contains(displayName) || potentialID.isPresent() && !partiallyMatches(potentialID.get(),blackList);
+        if(resources.contains("MOB")) {
+            if(!(entity instanceof Mob)) return false;
+            List<String> blackList = resources.stream().filter(element -> !element.matches("MOB")).collect(Collectors.toList());
+            return !blackList.contains(displayName) && potentialID.isPresent() && !partiallyMatches(potentialID.get(),blackList);
+        }
+        return resources.contains(displayName) || (potentialID.isPresent() && partiallyMatches(potentialID.get(),resources));
     }
 
     private boolean partiallyMatches(String thing, List<String> partials) {
         for(String partial : partials)
-            if(!partial.matches("MOB") && !partial.matches("BOSS") && thing.contains(partial)) return true;
+            if(thing.contains(partial)) return true;
         return false;
     }
 

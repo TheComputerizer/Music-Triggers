@@ -134,6 +134,7 @@ public class GuiParameterList extends GuiSuperType {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+        if(super.mouseClicked(mouseX, mouseY, mouseButton)) return true;
         if (mouseButton == 0) {
             if(this.deleteMode) {
                 if (this.indexHover >= 0) delete(this.indexHover);
@@ -142,7 +143,7 @@ public class GuiParameterList extends GuiSuperType {
                 return true;
             }
         }
-        return super.mouseClicked(mouseX, mouseY, mouseButton);
+        return false;
     }
 
     @Override

@@ -83,7 +83,9 @@ public abstract class GuiSuperType extends Screen {
 
     @Override
     public boolean charTyped(char c, int mod) {
-        return this.searchBar.charTyped(c, mod);
+        boolean ret = this.searchBar.charTyped(c, mod);
+        if(ret) updateSearch();
+        return ret;
     }
 
     protected String backspace(String value) {
@@ -100,7 +102,7 @@ public abstract class GuiSuperType extends Screen {
             case 2 -> this.spacing = 16;
             case 3 -> this.spacing = 12;
         }
-        ClientEvents.renderDebug = false;
+        ClientEvents.SHOULD_RENDER_DEBUG = false;
         for (ButtonType buttonHolder : this.type.getButtonHolders()) {
             if (buttonHolder.isNormal()) {
                 ButtonSuperType button = buttonHolder.getNormalButton(this);
@@ -181,12 +183,13 @@ public abstract class GuiSuperType extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
-        if (mouseButton == 0) {
+        if(this.searchBar.mouseClicked(mouseX, mouseY, mouseButton)) return true;
+        boolean ret = false;
+        if (mouseButton == 0)
             for (ButtonSuperType superButton : this.superButtons)
-                superButton.handle(this, mouseX, mouseY);
-            return true;
-        }
-        return this.searchBar.mouseClicked(mouseX, mouseY, mouseButton);
+                if(superButton.handle(this, mouseX, mouseY))
+                    ret = true;
+        return ret;
     }
 
     public void saveAndDisplay(GuiSuperType next) {
@@ -226,7 +229,7 @@ public abstract class GuiSuperType extends Screen {
     @Override
     public void onClose() {
         super.onClose();
-        ClientEvents.renderDebug = true;
+        ClientEvents.SHOULD_RENDER_DEBUG = true;
     }
 
     public void playGenericClickSound() {

@@ -82,9 +82,11 @@ public class GuiParameters extends GuiSuperType {
     @Override
     protected void updateSearch() {
         this.searchedParameters.clear();
-        for(Parameter parameter : this.parameters)
+        for(Parameter parameter : this.parameters) {
+            parameter.setDisplayHover(false);
             if (checkSearch(parameter.getDisplayName()))
                 this.searchedParameters.add(parameter);
+        }
         calculateScrollSize();
     }
 
@@ -117,14 +119,16 @@ public class GuiParameters extends GuiSuperType {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+        if(super.mouseClicked(mouseX, mouseY, mouseButton)) return true;
+        boolean clickSuccess = false;
         if (mouseButton == 0) {
             for (Parameter parameter : this.searchedParameters)
-                if(parameter.onClick(mouseX>this.rightSide && mouseX<=(this.width-this.spacing),this,
-                        this.spacing+(this.spacing/2),this.width/2,(spacing*4)+24+this.font.lineHeight,
-                        this.font.lineHeight+(this.spacing/2)))
-                    return true;
+                if (parameter.onClick(mouseX > this.rightSide && mouseX <= (this.width - this.spacing), this,
+                        this.spacing + (this.spacing / 2), this.width / 2, (spacing * 4) + 24 + this.font.lineHeight,
+                        this.font.lineHeight + (this.spacing / 2)))
+                    clickSuccess = true;
         }
-        return super.mouseClicked(mouseX, mouseY, mouseButton);
+        return clickSuccess;
     }
 
     @Override
@@ -132,7 +136,8 @@ public class GuiParameters extends GuiSuperType {
         if(super.keyPressed(keyCode, x, y)) return true;
         if(Minecraft.getInstance().screen==this && keyCode == GLFW.GLFW_KEY_BACKSPACE) {
             for (Parameter parameter : this.searchedParameters)
-                parameter.onType(true, ' ');
+                if(parameter.isSelected())
+                    parameter.onType(true, ' ');
             return true;
         }
         return false;
@@ -143,7 +148,8 @@ public class GuiParameters extends GuiSuperType {
         if(super.charTyped(c, mod)) return true;
         if(Minecraft.getInstance().screen==this && SharedConstants.isAllowedChatCharacter(c)) {
             for (Parameter parameter : this.searchedParameters)
-                parameter.onType(false, c);
+                if(parameter.isSelected())
+                    parameter.onType(false, c);
             return true;
         }
         return false;
@@ -221,7 +227,7 @@ public class GuiParameters extends GuiSuperType {
                             GuiUtil.makeRGBAInt(50,50,50,255));
                 } else drawString(matrix,this.font,parameter.getDisplayName(),textX,startY+(this.spacing/2),GuiUtil.WHITE);
                 startY+=(textHeight+this.spacing);
-                if ((this.height-(this.spacing+24) - startY) < (this.spacing + this.font.lineHeight)) break;
+                if (this.height-startY<(textHeight+(this.spacing/2))) break;
             }
             index++;
         }

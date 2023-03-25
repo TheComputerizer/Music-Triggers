@@ -27,7 +27,7 @@ public class PacketReceiveCommand implements IPacket {
     public static ClientPlayNetworking.PlayChannelHandler handle() {
         return (client, handler, buf, sender) -> {
             PacketReceiveCommand packet = new PacketReceiveCommand(buf);
-            ClientEvents.commandMap.put(packet.identifier, true);
+            ClientEvents.COMMAND_MAP.put(packet.identifier, true);
         };
     }
 }

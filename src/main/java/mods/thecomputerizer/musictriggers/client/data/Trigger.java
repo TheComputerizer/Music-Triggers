@@ -384,9 +384,9 @@ public class Trigger {
         });
         ret.put("advancement",(trigger,player) -> {
             String resource = trigger.getResource();
-            boolean pass = (ClientEvents.advancement && trigger.checkResourceList(ClientEvents.lastAdvancement,resource,false)) ||
+            boolean pass = (ClientEvents.GAINED_NEW_ADVANCEMENT && trigger.checkResourceList(ClientEvents.LAST_ADVANCEMENT,resource,false)) ||
                     resource.matches("any");
-            if(pass) ClientEvents.advancement = false;
+            if(pass) ClientEvents.GAINED_NEW_ADVANCEMENT = false;
             return pass;
         });
         ret.put("statistic",(trigger,player) ->
@@ -504,7 +504,7 @@ public class Trigger {
     }
 
     public boolean runActivationFunction(LocalPlayer player) {
-        return isActive(triggerConditions.get(getName()).apply(this,player));
+        return triggerConditions.containsKey(getName()) && isActive(triggerConditions.get(getName()).apply(this,player));
     }
 
     private boolean isActive(boolean active) {
