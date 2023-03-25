@@ -116,6 +116,7 @@ public class ServerData {
     private final Map<String, String> currentSongs = new HashMap<>();
     private final Map<String, String> currentTriggers = new HashMap<>();
     private String curStruct;
+    private String prevStruct;
     public ServerData(PacketBuffer buf) {
         this.mappedTriggers = NetworkUtil.readGenericMap(buf, NetworkUtil::readString, buf1 ->
                 NetworkUtil.readGenericList(buf1,buf2 -> TomlPart.getByID(NetworkUtil.readString(buf2)).decode(buf2,null))
@@ -220,10 +221,12 @@ public class ServerData {
         }
         this.bossInfo.removeIf(info -> info.getPercent()<=0 || !info.visible || info.getName().getString().matches("Raid"));
         if(!toRemove.isEmpty()) this.allTriggers.removeAll(toRemove);
-        if(!this.updatedTriggers.isEmpty()) {
+        if(!this.updatedTriggers.isEmpty() || (Objects.nonNull(this.prevStruct) &&
+                (Objects.isNull(this.curStruct) || !this.prevStruct.matches(this.curStruct)))) {
             String structToSend = Objects.nonNull(this.curStruct) && !(this.curStruct.length()==0) ? this.curStruct :
                     "Structure has not been synced";
             NetworkHandler.sendTo(new PacketSyncServerInfo(this.updatedTriggers, structToSend), player);
+            this.prevStruct = structToSend;
         }
     }
 
@@ -373,7 +376,7 @@ public class ServerData {
             List<String> blackList = resources.stream().filter(element -> !element.matches("MOB")).collect(Collectors.toList());
             return !blackList.contains(displayName) && (Objects.isNull(id) || !partiallyMatches(id.toString(),blackList));
         }
-        return resources.contains(displayName) || (Objects.nonNull(id) && !partiallyMatches(id.toString(),resources));
+        return resources.contains(displayName) || (Objects.nonNull(id) && partiallyMatches(id.toString(),resources));
     }
 
     private boolean partiallyMatches(String thing, List<String> partials) {
