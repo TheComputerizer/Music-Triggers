@@ -176,7 +176,6 @@ public class ClientEvents {
                     ResourceKey<Biome> biomeKey = world.getBiome(player.blockPosition()).unwrapKey().orElse(null);
                     lines.add("Current Biome Name: " + (Objects.nonNull(biomeKey) ? biomeKey.location().toString() : "Unknown Biome"));
                     lines.add("Current Biome Category: " + Biome.getBiomeCategory(world.getBiome(player.blockPosition())).getName());
-                    lines.add("Current Biome: " + (Objects.nonNull(biomeKey) ? biomeKey.location().toString() : "Unknown Biome"));
                     lines.add("Current Dimension: " + world.dimension().location());
                     lines.add("Current Structure: " + ChannelManager.CUR_STRUCT);
                     lines.add("Current Total Light: " +  world.getRawBrightness(roundedPos(player), 0));
