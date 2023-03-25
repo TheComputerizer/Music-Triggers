@@ -315,7 +315,7 @@ public class ServerData {
             List<String> blackList = resources.stream().filter(element -> !element.matches("MOB")).collect(Collectors.toList());
             return !blackList.contains(displayName) && (Objects.isNull(id) || !partiallyMatches(id.toString(),blackList));
         }
-        return resources.contains(displayName) || (Objects.nonNull(id) && !partiallyMatches(id.toString(),resources));
+        return resources.contains(displayName) || (Objects.nonNull(id) && partiallyMatches(id.toString(),resources));
     }
 
     private boolean partiallyMatches(String thing, List<String> partials) {

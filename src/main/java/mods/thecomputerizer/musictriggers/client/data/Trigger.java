@@ -544,7 +544,7 @@ public class Trigger {
     }
 
     public boolean runActivationFunction(EntityPlayerSP player) {
-        return isActive(triggerConditions.get(getName()).apply(this,player));
+        return triggerConditions.containsKey(getName()) && isActive(triggerConditions.get(getName()).apply(this,player));
     }
 
     private boolean isActive(boolean active) {

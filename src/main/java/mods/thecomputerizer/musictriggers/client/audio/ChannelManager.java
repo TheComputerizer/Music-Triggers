@@ -230,10 +230,10 @@ public class ChannelManager {
                     if (tickCounter >= 100) tickCounter = 0;
                 }
             } catch (Exception e) {
-                Constants.MAIN_LOG.fatal("Caught unknown exception while checking audio conditions!");
-                e.printStackTrace();
+                Constants.MAIN_LOG.fatal("Caught unknown exception while checking audio conditions!",e);
                 MusicTriggers.logExternally(Level.FATAL,"Caught unknown exception while checking audio conditions! " +
                         "Freezing all channels until reloaded. See the main log for the full stacktrace of the error.");
+                reloading = true;
             }
         }
     }

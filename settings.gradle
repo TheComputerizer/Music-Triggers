@@ -4,10 +4,13 @@ pluginManagement {
             name 'MinecraftForge'
             url 'https://maven.minecraftforge.net/'
         }
+        /*
         maven {
             name 'Garden of Fancy'
             url 'https://maven.gofancy.wtf/releases'
-        }
+        }*/
+        //fallback for fancygradle maven
+        mavenLocal()
         maven {
             name 'Sponge'
             url 'https://repo.spongepowered.org/repository/maven-public/'
