@@ -31,11 +31,11 @@
   ],
 
   "depends": {
-    "fabricloader": ">=0.14.17",
+    "fabricloader": ">=0.14.14",
     "fabric": "*",
     "minecraft": "~1.18.2",
     "java": ">=17",
-    "theimpossiblelibrary": "*"
+    "theimpossiblelibrary": ">=1.18.2-fabric-0.2.3"
   },
   "suggests": {
     "another-mod": "*"

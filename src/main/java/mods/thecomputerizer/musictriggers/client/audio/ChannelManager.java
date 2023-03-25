@@ -17,6 +17,7 @@ import mods.thecomputerizer.theimpossiblelibrary.client.render.Renderer;
 import mods.thecomputerizer.theimpossiblelibrary.client.render.Text;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.TomlUtil;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -47,9 +48,16 @@ public class ChannelManager {
     public static String CUR_STRUCT = "Structure has not been synced";
 
     public static void initialize(File channelsFile, boolean startup) throws IOException {
+        for(Renderable card : tickingRenderables.values()) {
+            Renderer.removeRenderable(card);
+            card.stop();
+        }
+        tickingRenderables.clear();
         jukeboxChannel = new JukeboxChannel("jukebox");
         channelsConfig = channelsFile;
+        FileUtil.generateNestedFile(channelsFile,false);
         Holder channels = TomlUtil.readFully(channelsFile);
+        if(channels.getTables().isEmpty()) channels.addTable(null,"example");
         for(Table channel : channels.getTables().values()) {
             if(verifyChannelName(channel.getName())) channelMap.put(channel.getName(),new Channel(channel));
             else MusicTriggers.logExternally(Level.ERROR, "Channel {} failed to register! See the above errors for" +
@@ -180,7 +188,7 @@ public class ChannelManager {
             if(title) {
                 MusicTriggers.logExternally(Level.DEBUG, "Initializing title card");
                 Text titleCard = new Text(table.getVarMap());
-                titleCard.initializeTimers();
+                Renderer.addRenderable(titleCard);
                 tickingRenderables.put(table,titleCard);
             }
             else {
@@ -188,7 +196,7 @@ public class ChannelManager {
                         table.getValOrDefault("name","missing")),table.getVarMap());
                 if(Objects.nonNull(imageCard)) {
                     MusicTriggers.logExternally(Level.DEBUG, "Initializing image card");
-                    imageCard.initializeTimers();
+                    Renderer.addRenderable(imageCard);
                     tickingRenderables.put(table,imageCard);
                 }
             }
@@ -197,25 +205,32 @@ public class ChannelManager {
     public static void tickChannels() {
         jukeboxChannel.checkStopPlaying(reloading);
         if(!reloading) {
-            synchronized (tickingRenderables) {
-                tickingRenderables.entrySet().removeIf(toTick -> !toTick.getValue().tick());
+            try {
+                synchronized (tickingRenderables) {
+                    tickingRenderables.entrySet().removeIf(toTick -> !toTick.getValue().tick());
+                }
+                tickCounter++;
+                if (checkForJukeBox()) jukeboxPause();
+                else jukeboxUnpause();
+                if (!Minecraft.getInstance().isWindowActive() || Minecraft.getInstance().isPaused()) pauseAllChannels();
+                else unpauseAllChannels();
+                for (Channel channel : channelMap.values())
+                    if (!channel.isPaused()) channel.tickFast();
+                if (tickCounter % 4 == 0 && Objects.nonNull(Minecraft.getInstance().options)) {
+                    for (Channel channel : channelMap.values()) channel.tickSlow();
+                    sendUpdatePacket();
+                }
+                if (tickCounter % 10 == 0) {
+                    if (blinker == ' ') blinker = '|';
+                    else if (blinker == '|') blinker = ' ';
+                }
+                if (tickCounter >= 100) tickCounter = 0;
+            } catch (Exception e) {
+                Constants.MAIN_LOG.fatal("Caught unknown exception while checking audio conditions!",e);
+                MusicTriggers.logExternally(Level.FATAL,"Caught unknown exception while checking audio conditions! " +
+                        "Freezing all channels until reloaded. See the main log for the full stacktrace of the error.");
+                reloading = true;
             }
-            tickCounter++;
-            if (checkForJukeBox()) jukeboxPause();
-            else jukeboxUnpause();
-            if (!Minecraft.getInstance().isWindowActive() || Minecraft.getInstance().isPaused()) pauseAllChannels();
-            else unpauseAllChannels();
-            for (Channel channel : channelMap.values())
-                if (!channel.isPaused()) channel.tickFast();
-            if (tickCounter % 4 == 0 && Objects.nonNull(Minecraft.getInstance().options)) {
-                for (Channel channel : channelMap.values()) channel.tickSlow();
-                sendUpdatePacket();
-            }
-            if (tickCounter % 10 == 0) {
-                if (blinker == ' ') blinker = '|';
-                else if (blinker == '|') blinker = ' ';
-            }
-            if (tickCounter >= 100) tickCounter = 0;
         }
     }
 
