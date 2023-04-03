@@ -51,7 +51,8 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
-        SimpleSoundInstance silenced = new SimpleSoundInstance(e.getSound().getLocation(), SoundSource.MUSIC, 
+        if(e.getSound() == null) return;
+        SimpleSoundInstance silenced = new SimpleSoundInstance(e.getSound().getLocation(), SoundSource.MUSIC,
                 Float.MIN_VALUE*1000, 1F, false, 0, SoundInstance.Attenuation.NONE, 0.0D, 0.0D, 0.0D, true);
         for(String s : ConfigDebug.BLOCKED_MOD_MUSIC) {
             if(e.getSound().getLocation().toString().contains(s) && e.getSound().getSource()==SoundSource.MUSIC) {
