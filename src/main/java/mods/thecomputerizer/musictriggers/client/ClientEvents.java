@@ -8,8 +8,8 @@ import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.musictriggers.client.gui.GuiSuperType;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
-import mods.thecomputerizer.musictriggers.server.TriggerCommand;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
+import mods.thecomputerizer.musictriggers.server.TriggerCommand;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -17,8 +17,8 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
@@ -41,6 +41,7 @@ import org.lwjgl.opengl.Display;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
+import java.util.Objects;
 
 @SuppressWarnings("deprecation")
 @Mod.EventBusSubscriber(modid = Constants.MODID, value = Side.CLIENT)
@@ -55,19 +56,16 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void playSound(PlaySoundEvent e) {
-        PositionedSoundRecord silenced = new PositionedSoundRecord(e.getSound().getSoundLocation(), SoundCategory.MUSIC,
-                Float.MIN_VALUE*1000, 1F, false, 1, ISound.AttenuationType.LINEAR, 0F, 0F, 0F);
-        for(String s : ConfigDebug.BLOCKED_MOD_MUSIC) {
-            if(e.getSound().getSoundLocation().toString().contains(s) && e.getSound().getCategory()==SoundCategory.MUSIC) {
-                if(!(!ChannelManager.canAnyChannelOverrideMusic() && ConfigDebug.PLAY_NORMAL_MUSIC)) e.setResultSound(silenced);
-            }
-        }
-        silenced = new PositionedSoundRecord(e.getSound().getSoundLocation(), SoundCategory.RECORDS,
-                Float.MIN_VALUE*1000, 1F, false, 1, ISound.AttenuationType.LINEAR, 0F, 0F, 0F);
-        for(String s : ConfigDebug.BLOCKED_MOD_RECORDS) {
-            if(e.getSound().getSoundLocation().toString().contains(s) && e.getSound().getCategory()==SoundCategory.RECORDS) {
-                if(!(!ChannelManager.canAnyChannelOverrideMusic() && ConfigDebug.PLAY_NORMAL_MUSIC)) e.setResultSound(silenced);
-            }
+        if(Objects.isNull(e.getSound())) return;
+        PositionedSoundRecord silenced = new PositionedSoundRecord(e.getSound().getSoundLocation(), e.getSound().getCategory(),
+                Float.MIN_VALUE*10000, 1F, false, 1, ISound.AttenuationType.LINEAR, 0F, 0F, 0F);
+        for(String s : ConfigDebug.BLOCKED_MOD_CATEGORIES) {
+            String modid = s.contains("\\;") ? s.substring(0,s.indexOf(';')-1) : s;
+            if(!e.getSound().getSoundLocation().getNamespace().matches(modid)) continue;
+            String categoryName = s.contains("\\;") && s.indexOf(';')+1<s.length() ? s.substring(s.indexOf(';')+1) : "music";
+            if(e.getSound().getCategory().getName().matches(categoryName))
+                if(ChannelManager.handleSoundEventOverride(e.getSound()))
+                    e.setResultSound(silenced);
         }
     }
 
@@ -115,7 +113,7 @@ public class ClientEvents {
                 .setStyle(new Style().setItalic(true).setColor(TextFormatting.RED)));
         RELOAD_COUNTER = 5;
         ChannelManager.reloading = true;
-        MusicTriggers.savedMessages.clear();
+        MusicTriggers.clearLog();
         MusicTriggers.logExternally(Level.INFO,"Reloading Music...");
     }
 
@@ -149,102 +147,104 @@ public class ClientEvents {
         if(ConfigDebug.SHOW_DEBUG && IS_WORLD_RENDERED && SHOULD_RENDER_DEBUG) {
             e.getLeft().add("Music Triggers Debug Information");
             for(Channel channel : ChannelManager.getAllChannels()) {
-                if (channel.curPlayingName() != null)
+                if (Objects.nonNull(channel.curPlayingName()))
                     e.getLeft().add("Channel[" + channel.getChannelName() + "] Current Song: " + channel.curPlayingName());
-                if (!ConfigDebug.CURRENT_SONG_ONLY) {
-                    int displayCount = 0;
+                if (!ConfigDebug.CURRENT_SONG_ONLY || ConfigDebug.ALLOW_TIMESTAMPS) {
                     if (!channel.formatSongTime().matches("No song playing"))
                         e.getLeft().add("Channel[" + channel.getChannelName() + "] Current Song Time: " + channel.formatSongTime());
-                    if (channel.formattedFadeOutTime() != null)
+                    if (Objects.nonNull(channel.formattedFadeOutTime()))
                         e.getLeft().add("Channel[" + channel.getChannelName() + "] Fading Out: " + channel.formattedFadeOutTime());
-                    if (channel.formattedFadeInTime() != null)
+                    if (Objects.nonNull(channel.formattedFadeInTime()))
                         e.getLeft().add("Channel[" + channel.getChannelName() + "] Fading In: " + channel.formattedFadeInTime());
+                }
+                if (!ConfigDebug.CURRENT_SONG_ONLY) {
                     synchronized(channel.getPlayableTriggers()) {
                         if (!channel.getPlayableTriggers().isEmpty()) {
-                            StringBuilder s = new StringBuilder();
+                            StringBuilder builder = new StringBuilder("Channel[" + channel.getChannelName() + "] Playable Events:");
+                            boolean first = true;
                             for (Trigger trigger : channel.getPlayableTriggers()) {
                                 String name = trigger.getNameWithID();
-                                if (Minecraft.getMinecraft().fontRenderer.getStringWidth(s + " " + name) > 0.75f * (new ScaledResolution(Minecraft.getMinecraft())).getScaledWidth()) {
-                                    if (displayCount == 0) {
-                                        e.getLeft().add("Channel[" + channel.getChannelName() + "] Playable Events: " + s);
-                                        displayCount++;
-                                    } else e.getLeft().add(s.toString());
-                                    s = new StringBuilder();
-                                }
-                                s.append(" ").append(name);
+                                if(!first) {
+                                    if (checkStringWidth(e.getResolution(), builder + " " + name)) {
+                                        e.getLeft().add(builder.toString());
+                                        builder = new StringBuilder("Channel[" + channel.getChannelName() + "] Playable Events:");
+                                    }
+                                } else first = false;
+                                builder.append(" ").append(name);
                             }
-                            if (displayCount == 0)
-                                e.getLeft().add("Channel[" + channel.getChannelName() + "] Playable Events: " + s);
-                            else e.getLeft().add(s.toString());
+                            e.getLeft().add(builder.toString());
                         }
                     }
                 }
             }
             if (!ConfigDebug.CURRENT_SONG_ONLY) {
-                int displayCount = 0;
-                StringBuilder sm = new StringBuilder();
-                sm.append("minecraft");
-                for (String ev : ConfigDebug.BLOCKED_MOD_MUSIC) {
-                    if(Minecraft.getMinecraft().fontRenderer.getStringWidth(sm+" "+ev)>0.75f*(new ScaledResolution(Minecraft.getMinecraft())).getScaledWidth()) {
-                        if(displayCount==0) {
-                            e.getLeft().add("Blocked Mods: " + sm);
-                            displayCount++;
-                        } else e.getLeft().add(sm.toString());
-                        sm = new StringBuilder();
-                    }
-                    sm.append(" ").append(ev);
+                StringBuilder builder = new StringBuilder("Blocked Mods:");
+                boolean first = true;
+                for (String blocked : ConfigDebug.FORMATTED_BLOCKED_MODS) {
+                    if(!first) {
+                        if (checkStringWidth(e.getResolution(), builder + " " + blocked)) {
+                            e.getLeft().add(builder.toString());
+                            builder = new StringBuilder("Blocked Mods:");
+                        }
+                    } else first = false;
+                    builder.append(" ").append(blocked);
                 }
-                if(displayCount==0) e.getLeft().add("Blocked Mods: " + sm);
-                else e.getLeft().add(sm.toString());
-                displayCount=0;
+                e.getLeft().add(builder.toString());
                 Minecraft mc = Minecraft.getMinecraft();
                 EntityPlayer player = mc.player;
-                World world = player.getEntityWorld();
-                if(player!=null && world!=null) {
+                if(Objects.nonNull(player)) {
+                    World world = player.getEntityWorld();
+                    if(Objects.nonNull(mc.currentScreen))
+                        e.getLeft().add("Current GUI Class Name: " + mc.currentScreen.getClass().getName());
                     e.getLeft().add("Current Biome Name: " + world.getBiome(player.getPosition()).getRegistryName());
                     e.getLeft().add("Current Biome Category: " + world.getBiome(player.getPosition()).getTempCategory());
                     e.getLeft().add("Current Dimension: " + player.dimension);
                     e.getLeft().add("Current Total Light: " + world.getLight(roundedPos(player), true));
                     e.getLeft().add("Current Block Light: " + world.getLightFor(EnumSkyBlock.BLOCK, roundedPos(player)));
-                    if (MusicPicker.effectList != null && !MusicPicker.effectList.isEmpty()) {
-                        StringBuilder se = new StringBuilder();
-                        for (String ev : MusicPicker.effectList) {
-                            if(Minecraft.getMinecraft().fontRenderer.getStringWidth(se+" "+ev)>0.75f*(new ScaledResolution(Minecraft.getMinecraft())).getScaledWidth()) {
-                                if(displayCount==0) {
-                                    e.getLeft().add("Effect List: " + se);
-                                    displayCount++;
-                                } else e.getLeft().add(se.toString());
-                                se = new StringBuilder();
+                    if (Objects.nonNull(MusicPicker.EFFECT_LIST) && !MusicPicker.EFFECT_LIST.isEmpty()) {
+                        builder = new StringBuilder("Effect List:");
+                        first = true;
+                        for (String effect : MusicPicker.EFFECT_LIST) {
+                            if(!first) {
+                                if (checkStringWidth(e.getResolution(), builder + " " + effect)) {
+                                    e.getLeft().add(builder.toString());
+                                    builder = new StringBuilder("Effect List:");
+                                }
                             }
-                            se.append(" ").append(ev);
+                            else first = false;
+                            builder.append(" ").append(effect);
                         }
-                        if(displayCount==0) e.getLeft().add("Effect List: " + se);
-                        else e.getLeft().add(se.toString());
+                        e.getLeft().add(builder.toString());
                     }
-                    if(Minecraft.getMinecraft().objectMouseOver != null) {
-                        if (getLivingFromEntity(Minecraft.getMinecraft().objectMouseOver.entityHit) != null)
-                            e.getLeft().add("Current Entity Name: " + getLivingFromEntity(Minecraft.getMinecraft().objectMouseOver.entityHit).getName());
-                        try {
-                            if (infernalChecker(getLivingFromEntity(Minecraft.getMinecraft().objectMouseOver.entityHit)) != null)
-                                e.getLeft().add("Infernal Mob Mod Name: " + infernalChecker(getLivingFromEntity(Minecraft.getMinecraft().objectMouseOver.entityHit)));
-                        } catch (NoSuchMethodError ignored) { }
+                    RayTraceResult res = mc.objectMouseOver;
+                    if(Objects.nonNull(res)) {
+                        EntityLiving entity = getLivingFromEntity(res.entityHit);
+                        if (Objects.nonNull(entity)) {
+                            e.getLeft().add("Current Entity Name: " + entity.getName());
+                            String infernal = infernalChecker(entity);
+                            if(Objects.nonNull(infernal))
+                                e.getLeft().add("Infernal Mob Mod Name: " + infernal);
+                        }
                     }
                 }
             }
         }
     }
 
+    private static boolean checkStringWidth(ScaledResolution res, String s) {
+        return (res.getScaledWidth()*0.9f)<=Minecraft.getMinecraft().fontRenderer.getStringWidth(s);
+    }
+
     private static BlockPos roundedPos(EntityPlayer p) {
         return new BlockPos((Math.round(p.posX * 2) / 2.0), (Math.round(p.posY * 2) / 2.0), (Math.round(p.posZ * 2) / 2.0));
     }
 
-    private static String infernalChecker(@Nullable EntityLiving m) {
-        if(Loader.isModLoaded("infernalmobs") && m!=null) return InfernalMobsCore.getMobModifiers(m) == null ? null : InfernalMobsCore.getMobModifiers(m).getModName();
-        return null;
+    private static @Nullable String infernalChecker(EntityLiving entity) {
+        if(!Loader.isModLoaded("infernalmobs")) return null;
+        return InfernalMobsCore.getIsRareEntity(entity) ? InfernalMobsCore.getMobModifiers(entity).getModName() : null;
     }
 
-    private static EntityLiving getLivingFromEntity(Entity e) {
-        if(e instanceof EntityLiving) return (EntityLiving) e;
-        return null;
+    private static @Nullable EntityLiving getLivingFromEntity(Entity entity) {
+        return entity instanceof EntityLiving ? (EntityLiving)entity : null;
     }
 }

@@ -153,7 +153,7 @@ public class Toggles extends AbstractChannelConfig {
             if(!registeredFromCon.contains(con))
                 elements.add(new GuiSelection.MonoElement("trigger_condition",index,
                         Translate.guiGeneric(false,"selection","toggle_condition","trigger")+" "+con,
-                        hoverLinesCondition(toggle),(parent) -> {
+                        hoverLinesPotential(String.valueOf(con),true),(parent) -> {
                     this.fileData.addVariable(this.fileData.addTable(toggle,"from"),"condition",con);
                     grandfather.parentUpdate();
                     Minecraft.getMinecraft().displayGuiScreen(grandfather);
@@ -164,7 +164,7 @@ public class Toggles extends AbstractChannelConfig {
             if(!registeredToCon.contains(con))
                 elements.add(new GuiSelection.MonoElement("target_condition",index,
                         Translate.guiGeneric(false,"selection","toggle_condition","target")+" "+con,
-                        hoverLinesCondition(toggle),(parent) -> {
+                        hoverLinesPotential(con,false),(parent) -> {
                     this.fileData.addVariable(this.fileData.addTable(toggle,"to"),"condition",con);
                     grandfather.parentUpdate();
                     Minecraft.getMinecraft().displayGuiScreen(grandfather);
@@ -174,14 +174,9 @@ public class Toggles extends AbstractChannelConfig {
         return elements;
     }
 
-    private List<String> hoverLinesCondition(Table table) {
-        if(table.hasVar("condition")) {
-            if (table.getName().matches("from"))
-                return Collections.singletonList(Translate.guiGeneric(false, "selection", "trigger_condition",
-                        "trigger" + table.getValOrDefault("condition","missing")));
-            return Collections.singletonList(Translate.guiGeneric(false, "selection", "toggle_condition",
-                    "target", table.getValOrDefault("condition","missing")));
-        } return new ArrayList<>();
+    private List<String> hoverLinesPotential(String con, boolean from) {
+        return Collections.singletonList(from ? Translate.guiGeneric(false,"toggle","trigger"+con) :
+                Translate.guiGeneric(false,"toggle","target",con));
     }
 
     private boolean canAddCondition(Table toggle) {

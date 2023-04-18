@@ -2,16 +2,17 @@ package mods.thecomputerizer.musictriggers.client.audio;
 
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.ClientSync;
 import mods.thecomputerizer.musictriggers.client.ClientEvents;
+import mods.thecomputerizer.musictriggers.client.ClientSync;
+import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.musictriggers.client.gui.instance.ChannelHolder;
 import mods.thecomputerizer.musictriggers.client.gui.instance.ChannelInstance;
-import mods.thecomputerizer.musictriggers.server.ServerData;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
-import mods.thecomputerizer.musictriggers.registry.RegistryHandler;
-import mods.thecomputerizer.musictriggers.network.packets.PacketInitChannels;
+import mods.thecomputerizer.musictriggers.network.NetworkHandler;
 import mods.thecomputerizer.musictriggers.network.packets.PacketDynamicChannelInfo;
+import mods.thecomputerizer.musictriggers.network.packets.PacketInitChannels;
+import mods.thecomputerizer.musictriggers.server.data.ServerChannels;
 import mods.thecomputerizer.theimpossiblelibrary.client.render.PNG;
 import mods.thecomputerizer.theimpossiblelibrary.client.render.Renderable;
 import mods.thecomputerizer.theimpossiblelibrary.client.render.Renderer;
@@ -23,19 +24,27 @@ import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.TomlUtil;
 import net.minecraft.block.BlockJukebox;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.ISound;
+import net.minecraft.client.audio.SoundManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.Level;
+import paulscode.sound.SoundSystem;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+@Mod.EventBusSubscriber(modid = Constants.MODID, value = Side.CLIENT)
 public class ChannelManager {
     public static char blinker = ' ';
     private static JukeboxChannel jukeboxChannel;
@@ -43,6 +52,7 @@ public class ChannelManager {
     private static final HashMap<String,Channel> channelMap = new HashMap<>();
     public static final HashMap<String, File[]> openAudioFiles = new HashMap<>();
     public static final Map<Table, Renderable> tickingRenderables = new ConcurrentHashMap<>();
+    private static final HashSet<String> PAUSED_VANILLA_SOUNDS = new HashSet<>();
 
     private static int tickCounter = 0;
     public static boolean reloading = true;
@@ -53,6 +63,8 @@ public class ChannelManager {
             card.stop();
         }
         tickingRenderables.clear();
+        PAUSED_VANILLA_SOUNDS.clear();
+        Trigger.loadDefaultData();
         jukeboxChannel = new JukeboxChannel("jukebox");
         channelsConfig = channelsFile;
         FileUtil.generateNestedFile(channelsFile,false);
@@ -118,29 +130,70 @@ public class ChannelManager {
         return channelMap.get(channel);
     }
 
-    public static boolean channelExists(String channel) {
-        return channelMap.containsKey(channel);
-    }
-
     public static Collection<Channel> getAllChannels() {
         return channelMap.values();
     }
 
-    public static List<String> getChannelNames() {
-        return new ArrayList<>(channelMap.keySet());
+    public static boolean handleSoundEventOverride(ISound sound) {
+        if(!ConfigDebug.PLAY_NORMAL_MUSIC) return true;
+        if(!sound.getSound().isStreaming() && ConfigDebug.BLOCK_STREAMING_ONLY) return false;
+        for(Channel channel : getAllChannels())
+            if(channel.getOverrideStatus(sound)) return true;
+        return false;
     }
 
-    public static boolean canAnyChannelOverrideMusic() {
-        for(Channel channel : getAllChannels()) if(channel.overridesNormalMusic() && channel.isPlaying()) return true;
-        return false;
+    public static HashSet<SoundCategory> getInterrputedCategories() {
+        HashSet<SoundCategory> ret = new HashSet<>();
+        for(String interrputed : ConfigDebug.INTERRUPTED_AUDIO_CATEGORIES) {
+            if(SoundCategory.getSoundCategoryNames().contains(interrputed)) {
+                SoundCategory toAdd = SoundCategory.getByName(interrputed);
+                ret.add(toAdd);
+            }
+        }
+        return ret;
+    }
+
+    public static void handleAudioStart(boolean pause, HashSet<SoundCategory> categories) {
+        if(categories.isEmpty()) return;
+        SoundManager sounds = Minecraft.getMinecraft().getSoundHandler().sndManager;
+        SoundSystem sys = sounds.sndSystem;
+        Consumer<String> handler = soundString -> {
+            if(pause) {
+                sys.pause(soundString);
+                PAUSED_VANILLA_SOUNDS.add(soundString);
+            }
+            else sys.stop(soundString);
+        };
+        HashSet<String> soundStrings = new HashSet<>();
+        for(SoundCategory category : categories)
+            soundStrings.addAll(sounds.categorySounds.get(category));
+        for(String sound : soundStrings)
+            if(Objects.nonNull(sound))
+                handler.accept(sound);
+    }
+
+    public static void handleAudioStop(HashSet<SoundCategory> categories) {
+        SoundManager sounds = Minecraft.getMinecraft().getSoundHandler().sndManager;
+        SoundSystem sys = sounds.sndSystem;
+        Iterator<String> pausedItr = PAUSED_VANILLA_SOUNDS.iterator();
+        while(pausedItr.hasNext()) {
+            String paused = pausedItr.next();
+            for(SoundCategory category : categories) {
+                if(sounds.categorySounds.get(category).contains(paused)) {
+                    sys.play(paused);
+                    pausedItr.remove();
+                    break;
+                }
+            }
+        }
     }
 
     public static void initializeServerInfo() {
         if(!ConfigRegistry.CLIENT_SIDE_ONLY) {
-            ServerData data = new ServerData();
+            ServerChannels data = new ServerChannels();
             for (Channel channel : channelMap.values())
                 channel.initializeServerData(data);
-            RegistryHandler.network.sendToServer(new PacketInitChannels.Message(data));
+            NetworkHandler.sendToServer(new PacketInitChannels.Message(data));
         }
     }
 
@@ -261,7 +314,7 @@ public class ChannelManager {
             for(Channel channel : channelMap.values())
                 if(channel.needsUpdatePacket()) updatedChannels.add(channel);
             if(!updatedChannels.isEmpty())
-                RegistryHandler.network.sendToServer(new PacketDynamicChannelInfo.Message(updatedChannels));
+                NetworkHandler.sendToServer(new PacketDynamicChannelInfo.Message(updatedChannels));
         }
     }
 

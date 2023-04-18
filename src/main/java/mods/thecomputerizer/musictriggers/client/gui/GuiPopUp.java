@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import mods.thecomputerizer.musictriggers.client.Translate;
+import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
 import net.minecraft.client.Minecraft;
@@ -27,15 +28,14 @@ public class GuiPopUp extends GuiSuperType {
     private boolean hoverNo;
 
     public GuiPopUp(GuiSuperType parent, GuiType type, Instance configInstance, String id) {
-        this(parent, type, configInstance, id, false, 0, new ArrayList<>());
+        this(parent, type, configInstance, id, false, new ArrayList<>());
     }
 
-    public GuiPopUp(GuiSuperType parent, GuiType type, Instance configInstance, String id, boolean canType, int descLines,
-                    List<GuiPage.Icon> icons) {
+    public GuiPopUp(GuiSuperType parent, GuiType type, Instance configInstance, String id, boolean canType, List<GuiPage.Icon> icons) {
         super(parent, type, configInstance);
         this.id = id;
         this.title = Translate.guiGeneric(false,"popup",id,"name");
-        this.hoverText = Translate.guiNumberedList(descLines,"button",id+"_add");
+        this.hoverText = Translate.guiNumberedList(4,"button","add_channel","hover");
         this.icons = icons;
         this.spacing = 16;
         this.value = "channel_name";
@@ -72,6 +72,7 @@ public class GuiPopUp extends GuiSuperType {
     private void click() {
         if(this.value==null || this.value.isEmpty()) this.error = "blank";
         else if(this.getInstance().channelExists(this.value)) this.error = "duplicate";
+        else if(this.value.trim().contains(" ")) this.error = "space";
         else {
             this.icons.add(this.getInstance().addChannel(this.value));
             ((GuiPage)this.parent).updateIcons(this.icons);
@@ -132,7 +133,7 @@ public class GuiPopUp extends GuiSuperType {
         drawSelectionBox(topLeft,width,boxHeight,this.isHover);
         int color = GuiUtil.WHITE;
         if(this.isHover) color = GuiUtil.makeRGBAInt(200,200,200,255);
-        drawCenteredString(font,this.value, center.x,topLeft.y+this.spacing,color);
+        drawCenteredString(font,this.value+ChannelManager.blinker, center.x,topLeft.y+this.spacing,color);
         topLeft.setY(topLeft.y+boxHeight);
         if(this.isHover) drawHoveringText(this.hoverText,mouseX,mouseY);
     }

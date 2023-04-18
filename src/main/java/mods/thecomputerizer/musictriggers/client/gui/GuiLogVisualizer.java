@@ -5,11 +5,13 @@ import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.Tuple;
 import org.lwjgl.input.Mouse;
 
 import javax.vecmath.Point2i;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 
 public class GuiLogVisualizer extends GuiSuperType {
 
@@ -17,10 +19,21 @@ public class GuiLogVisualizer extends GuiSuperType {
     private int numElements;
     private boolean canScroll;
     private boolean canScrollUp;
+    private Set<Map.Entry<Integer,Tuple<String,Integer>>> orderedMessages;
+    private int filteredSize;
 
     public GuiLogVisualizer(GuiSuperType parent, GuiType type, Instance configInstance) {
         super(parent, type, configInstance);
         this.spacing = Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT/2;
+        this.orderedMessages = MusicTriggers.getLogEntries();
+        this.filteredSize = calculateFilteredSize();
+    }
+
+    private int calculateFilteredSize() {
+        int size = 0;
+        for(Map.Entry<Integer, Tuple<String, Integer>> logEntry : this.orderedMessages)
+            if(renderLevel(logEntry.getValue().getFirst())) size++;
+        return size;
     }
 
     private void calculateScrollSize() {
@@ -34,9 +47,9 @@ public class GuiLogVisualizer extends GuiSuperType {
             runningHeight+=textSlot;
         }
         this.numElements = runningTotal;
-        this.canScroll = this.numElements < MusicTriggers.savedMessages.size();
+        this.canScroll = this.numElements < this.filteredSize;
         this.canScrollUp = this.canScroll;
-        if(!this.canScroll) this.numElements = MusicTriggers.savedMessages.size();
+        if(!this.canScroll) this.numElements = this.filteredSize;
     }
 
     @Override
@@ -48,7 +61,7 @@ public class GuiLogVisualizer extends GuiSuperType {
                 if (scroll >= 1) {
                     if (this.canScrollUp) {
                         this.scrollPos++;
-                        this.canScrollUp = this.scrollPos + this.numElements + 1 < MusicTriggers.savedMessages.size();
+                        this.canScrollUp = this.scrollPos + this.numElements + 1 < this.filteredSize;
                     }
                 } else if (this.scrollPos > 0) {
                     this.scrollPos--;
@@ -61,6 +74,8 @@ public class GuiLogVisualizer extends GuiSuperType {
     @Override
     public void initGui() {
         super.initGui();
+        this.orderedMessages = MusicTriggers.getLogEntries();
+        this.filteredSize = calculateFilteredSize();
         calculateScrollSize();
     }
 
@@ -68,14 +83,15 @@ public class GuiLogVisualizer extends GuiSuperType {
     protected void drawStuff(int mouseX, int mouseY, float partialTicks) {
         int textSpacing = this.fontRenderer.FONT_HEIGHT+this.spacing;
         int y = this.canScroll ? 32 : this.height-(this.numElements*textSpacing);
-        int skip = this.canScroll ? MusicTriggers.savedMessages.size()-this.numElements-this.scrollPos : 0;
+        int skip = this.canScroll ? this.filteredSize-this.numElements-this.scrollPos : 0;
         int finish = this.numElements;
-        for(Map.Entry<String, Integer> logEntry : MusicTriggers.savedMessages.entrySet()) {
+        for(Map.Entry<Integer, Tuple<String, Integer>> logEntry : this.orderedMessages) {
             if(skip>0) skip--;
             else {
                 if(finish>0) {
-                    if(renderLevel(logEntry.getKey())) {
-                        drawString(this.fontRenderer, logEntry.getKey(), 16, y, logEntry.getValue());
+                    Tuple<String, Integer> message = logEntry.getValue();
+                    if(renderLevel(message.getFirst())) {
+                        drawString(this.fontRenderer, message.getFirst(), 16, y, message.getSecond());
                         y += textSpacing;
                         finish--;
                     }
@@ -86,7 +102,7 @@ public class GuiLogVisualizer extends GuiSuperType {
     }
 
     private void drawScrollBar() {
-        float indices = MusicTriggers.savedMessages.size()-this.numElements;
+        float indices = this.filteredSize-this.numElements;
         float perIndex = this.height/indices;
         int top = (int)(perIndex*(indices-this.scrollPos-1));
         int x = this.width-1;

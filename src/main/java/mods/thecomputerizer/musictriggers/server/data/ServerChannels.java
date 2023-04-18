@@ -1,13 +1,13 @@
-package mods.thecomputerizer.musictriggers.server;
+package mods.thecomputerizer.musictriggers.server.data;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
 import c4.champions.common.capability.CapabilityChampionship;
 import c4.champions.common.capability.IChampionship;
 import io.netty.buffer.ByteBuf;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.registry.ItemRegistry;
-import mods.thecomputerizer.musictriggers.registry.RegistryHandler;
+import mods.thecomputerizer.musictriggers.network.NetworkHandler;
 import mods.thecomputerizer.musictriggers.network.packets.PacketSyncServerInfo;
+import mods.thecomputerizer.musictriggers.registry.ItemRegistry;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.TomlPart;
 import mods.thecomputerizer.theimpossiblelibrary.util.NetworkUtil;
@@ -32,9 +32,10 @@ import org.apache.logging.log4j.Level;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public class ServerData {
-    private static final Map<String, ServerData> SERVER_DATA = new HashMap<>();
+public class ServerChannels {
+    private static final Map<String, ServerChannels> SERVER_DATA = new HashMap<>();
     private static final Map<String, List<BossInfoServer>> QUEUED_BOSS_BARS = new HashMap<>();
     private static final List<String> NBT_MODES = Arrays.asList("KEY_PRESENT","VAL_PRESENT","GREATER","LESSER","EQUAL","INVERT");
     private static final List<String> TRIGGER_HOLDERS = Arrays.asList("difficulty","time","light","height","riding",
@@ -42,7 +43,7 @@ public class ServerData {
             "gamestage","rainintensity","tornado","moon","season");
 
     public static void initializePlayerChannels(ByteBuf buf) {
-        ServerData data = new ServerData(buf);
+        ServerChannels data = new ServerChannels(buf);
         if(SERVER_DATA.containsKey(data.playerUUID.toString()))
             data.bossInfo.addAll(SERVER_DATA.get(data.playerUUID.toString()).bossInfo);
         SERVER_DATA.put(data.playerUUID.toString(),data);
@@ -61,22 +62,22 @@ public class ServerData {
             boolean isPlaying = buf.readBoolean();
             String track = isPlaying ? NetworkUtil.readString(buf) : null;
             String trigger = isPlaying ? NetworkUtil.readString(buf) : null;
-            ServerData data = SERVER_DATA.get(playerUUID);
+            ServerChannels data = SERVER_DATA.get(playerUUID);
             if(Objects.nonNull(data) && data.isValid()) data.updateDynamicInfo(channel,commands,track,trigger);
         }
     }
 
     public static void runServerChecks() {
-        Iterator<Map.Entry<String,ServerData>> itr = SERVER_DATA.entrySet().iterator();
+        Iterator<Map.Entry<String, ServerChannels>> itr = SERVER_DATA.entrySet().iterator();
         while(itr.hasNext()) {
-            ServerData data = itr.next().getValue();
+            ServerChannels data = itr.next().getValue();
             if(data.isValid()) data.runChecks();
             else itr.remove();
         }
     }
 
     public static void addBossBarTracking(UUID playerUUID, BossInfoServer info) {
-        ServerData data = SERVER_DATA.get(playerUUID.toString());
+        ServerChannels data = SERVER_DATA.get(playerUUID.toString());
         if(Objects.nonNull(data)) {
             if (data.isValid()) data.bossInfo.add(info);
         } else {
@@ -87,7 +88,7 @@ public class ServerData {
     }
 
     public static void removeBossBarTracking(UUID playerUUID, BossInfoServer info) {
-        ServerData data = SERVER_DATA.get(playerUUID.toString());
+        ServerChannels data = SERVER_DATA.get(playerUUID.toString());
         if(Objects.nonNull(data)) {
             if (data.isValid()) data.bossInfo.remove(info);
         } else if(QUEUED_BOSS_BARS.containsKey(playerUUID.toString()))
@@ -95,15 +96,22 @@ public class ServerData {
     }
 
     public static ItemStack recordAudioData(UUID playerUUID, ItemStack recordStack) {
-        ServerData data = SERVER_DATA.get(playerUUID.toString());
+        ServerChannels data = SERVER_DATA.get(playerUUID.toString());
         if(data.isValid()) return data.recordAudioData(recordStack);
         return ItemStack.EMPTY;
+    }
+
+    public static void setPVP(EntityPlayerMP attacker, String playerUUID) {
+        ServerChannels data = SERVER_DATA.get(playerUUID);
+        if(Objects.nonNull(data))
+            if(data.isValid()) data.setPVP(attacker);
     }
 
     private final Map<String, List<Table>> mappedTriggers;
     private final List<Table> allTriggers;
     private final Map<Table, Boolean> triggerStatus = new HashMap<>();
     private final Map<String, Map<String, Boolean>> updatedTriggers = new HashMap<>();
+    private final Map<String, Victory> victoryTriggers;
     private final Map<String, List<String>> menuSongs;
     private final List<BossInfoServer> bossInfo = new ArrayList<>();
     private final UUID playerUUID;
@@ -111,20 +119,42 @@ public class ServerData {
     private final List<String> commandQueue = new ArrayList<>();
     private final Map<String, String> currentSongs = new HashMap<>();
     private final Map<String, String> currentTriggers = new HashMap<>();
-    public ServerData(ByteBuf buf) {
+    private EntityPlayerMP attacker = null;
+    public ServerChannels(ByteBuf buf) {
         this.mappedTriggers = NetworkUtil.readGenericMap(buf, NetworkUtil::readString, buf1 ->
                 NetworkUtil.readGenericList(buf1,buf2 -> TomlPart.getByID(NetworkUtil.readString(buf2)).decode(buf2,null))
                 .stream().filter(Table.class::isInstance).map(Table.class::cast).collect(Collectors.toList()));
         this.allTriggers = mappedTriggers.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
+        this.victoryTriggers = initVictories();
         this.menuSongs = NetworkUtil.readGenericMap(buf,NetworkUtil::readString,
                 buf1 -> NetworkUtil.readGenericList(buf1,NetworkUtil::readString));
         this.server = FMLCommonHandler.instance().getMinecraftServerInstance();
         this.playerUUID = UUID.fromString(NetworkUtil.readString(buf));
     }
 
-    public ServerData() {
+    private HashMap<String, Victory> initVictories() {
+        HashMap<String, Victory> ret = new HashMap<>();
+        for(Table trigger : this.allTriggers) {
+            if (trigger.getName().matches("victory")) {
+                String id = trigger.getValOrDefault("identifier","not_set");
+                if(!id.matches("not_set")) {
+                    Stream<Table> references = this.allTriggers.stream().filter(table -> {
+                        if(!table.getName().matches("mob") && !table.getName().matches("pvp")) return false;
+                        return !table.getValOrDefault("identifier","not_set").matches("not_set");
+                    });
+                    if(references.findAny().isPresent()) ret.put(id,new Victory(references,
+                            trigger.getValOrDefault("victory_timeout",20)));
+                    else references.close();
+                }
+            }
+        }
+        return ret;
+    }
+
+    public ServerChannels() {
         this.mappedTriggers = new HashMap<>();
         this.allTriggers = new ArrayList<>();
+        this.victoryTriggers = new HashMap<>();
         this.menuSongs = new HashMap<>();
         this.server = null;
         this.playerUUID = null;
@@ -192,25 +222,37 @@ public class ServerData {
         return ret;
     }
 
+    private void setPVP(EntityPlayerMP attacker) {
+        this.attacker = attacker;
+    }
+
+    @SuppressWarnings("ConstantValue")
     private void runChecks() {
-        runCommands();
-        EntityPlayerMP player = this.server.getPlayerList().getPlayerByUUID(this.playerUUID);
         this.updatedTriggers.clear();
-        List<Table> toRemove = new ArrayList<>();
-        BlockPos pos = roundedPos(player);
-        for (Table trigger : this.allTriggers) {
-            if (trigger.getName().matches("home"))
-                potentiallyUpdate(trigger, calculateHome(player, pos, trigger.getValOrDefault("detection_range", 16)));
-            else if (trigger.getName().matches("structure"))
-                potentiallyUpdate(trigger, calculateStruct(player.getServerWorld(), pos, trigger.getValOrDefault("resource_name", Collections.singletonList("any"))));
-            else if (trigger.getName().matches("mob"))
-                potentiallyUpdate(trigger, calculateMob(trigger, player, pos));
-            else toRemove.add(trigger);
+        EntityPlayerMP player = this.server.getPlayerList().getPlayerByUUID(this.playerUUID);
+        if(Objects.nonNull(player)) {
+            runCommands();
+            List<Table> toRemove = new ArrayList<>();
+            BlockPos pos = roundedPos(player);
+            for (Table trigger : this.allTriggers) {
+                if (trigger.getName().matches("home"))
+                    potentiallyUpdate(trigger, calculateHome(player, pos, trigger.getValOrDefault("detection_range", 16)));
+                else if (trigger.getName().matches("structure"))
+                    potentiallyUpdate(trigger, calculateStruct(player.getServerWorld(), pos, trigger.getValOrDefault("resource_name", Collections.singletonList("any"))));
+                else if (trigger.getName().matches("victory"))
+                    potentiallyUpdate(trigger, calculateVictory(trigger.getValOrDefault("identifier", "not_set")));
+                else if (trigger.getName().matches("mob"))
+                    potentiallyUpdate(trigger, calculateMob(trigger, player, pos));
+                else if (trigger.getName().matches("pvp"))
+                    potentiallyUpdate(trigger, calculatePVP(trigger));
+                else toRemove.add(trigger);
+            }
+            this.attacker = null;
+            this.bossInfo.removeIf(info -> info.getPercent() <= 0 || !info.visible);
+            if (!toRemove.isEmpty()) this.allTriggers.removeAll(toRemove);
+            if (!this.updatedTriggers.isEmpty())
+                NetworkHandler.sendToPlayer(new PacketSyncServerInfo.Message(this.updatedTriggers), player);
         }
-        this.bossInfo.removeIf(info -> info.getPercent()<=0 || !info.visible);
-        if(!toRemove.isEmpty()) this.allTriggers.removeAll(toRemove);
-        if(!this.updatedTriggers.isEmpty())
-            RegistryHandler.network.sendTo(new PacketSyncServerInfo.Message(this.updatedTriggers), player);
     }
 
     private void runCommands() {
@@ -251,7 +293,9 @@ public class ServerData {
         return new BlockPos((Math.round(p.posX * 2) / 2.0), (Math.round(p.posY * 2) / 2.0), (Math.round(p.posZ * 2) / 2.0));
     }
 
+    @SuppressWarnings("ConstantValue")
     private boolean calculateHome(EntityPlayerMP player, BlockPos pos, int range) {
+        if(Objects.isNull(player.getBedLocation(player.dimension))) return false;
         return player.getBedLocation(player.dimension).getDistance(pos.getX(),pos.getY(),pos.getZ())<=range;
     }
 
@@ -273,10 +317,11 @@ public class ServerData {
         int health = mobTrigger.getValOrDefault("health",100);
         int hordeHealth = mobTrigger.getValOrDefault("horde_health_percentage",50);
         String nbt = mobTrigger.getValOrDefault("mob_nbt","any");
+        String victoryID = mobTrigger.getValOrDefault("victory_id","not_set");
         if (resources.contains("BOSS")) {
-            List<BossInfoServer> correctBosses = this.bossInfo.stream().filter(
-                    info -> resources.size()==1 || partiallyMatches(info.getName().getUnformattedText(),resources
-                            .stream().filter(element -> !element.matches("BOSS")).collect(Collectors.toList())))
+            List<BossInfoServer> correctBosses = resources.size() == 1 ? this.bossInfo : this.bossInfo.stream().filter(
+                    info -> partiallyMatches(info.getName().getUnformattedText(),resources.stream()
+                            .filter(element -> !element.matches("BOSS")).collect(Collectors.toList())))
                     .collect(Collectors.toList());
             BossInfoServer[] passedBosses = new BossInfoServer[num];
             for (int i = 0; i < num; i++) {
@@ -284,35 +329,56 @@ public class ServerData {
                     return false;
                 passedBosses[i] = correctBosses.get(i);
             }
-            return checkBossHealth(passedBosses, health, hordeHealth);
+            boolean pass = checkBossHealth(passedBosses, health, hordeHealth);
+            Victory victory = this.victoryTriggers.get(victoryID);
+            if(Objects.nonNull(victory)) {
+                if(pass)
+                    for(BossInfoServer info : passedBosses)
+                        victory.add(mobTrigger, info);
+                victory.setActive(mobTrigger,pass);
+            }
+            return pass;
         }
-        return checkMobs(player,pos,num,range,resources,infernal,champion,checkTarget,hordeTarget,health,hordeHealth,nbt);
+        return checkMobs(mobTrigger,player,pos,num,range,resources,infernal,champion,checkTarget,hordeTarget,health,
+                hordeHealth,nbt,victoryID);
     }
 
-    private boolean checkMobs(EntityPlayerMP player, BlockPos pos, int num, int range, List<String> resources,
+    private boolean checkMobs(Table trigger, EntityPlayerMP player, BlockPos pos, int num, int range, List<String> resources,
                               List<String> infernal, List<String> champion, boolean target, int hordeTarget, int health,
-                              int hordeHealth, String nbt) {
+                              int hordeHealth, String nbt, String victoryID) {
         if(num<=0) return false;
         EntityLiving[] passedEntities = new EntityLiving[num];
         AxisAlignedBB box = new AxisAlignedBB(pos.getX()-range,pos.getY()-range,pos.getZ()-range,
                 pos.getX()+range,pos.getY()+range,pos.getZ()+range);
-        List<EntityLiving> livingWithBlacklist = player.getServerWorld().getEntitiesWithinAABB(
-                EntityLiving.class,box,e -> checkEntityName(e,resources));
-        livingWithBlacklist.removeIf(living -> !checkNBT(living,nbt) || !checkModExtensions(living,infernal,champion));
-        for(int i=0;i<num;i++) {
-            if(i>=livingWithBlacklist.size())
+        HashSet<EntityLiving> livingWithBlacklist = new HashSet<>(player.getServerWorld().getEntitiesWithinAABB(
+                EntityLiving.class,box,e -> checkEntityName(e,resources)));
+        livingWithBlacklist.removeIf(living -> Objects.isNull(living) || !checkNBT(living, nbt) ||
+                !checkModExtensions(living, infernal, champion));
+        Iterator<EntityLiving> itr = livingWithBlacklist.iterator();
+        for(int i = 0; i < num; i++) {
+            if(!itr.hasNext())
                 return false;
-            passedEntities[i] = livingWithBlacklist.get(i);
+            passedEntities[i] = itr.next();
         }
-        return checkTarget(passedEntities,target,hordeTarget,player) && checkHealth(passedEntities,health,hordeHealth);
+        boolean pass = checkTarget(passedEntities,target,hordeTarget,player) &&
+                checkHealth(passedEntities,(float)health,(float)hordeHealth);
+        Victory victory = this.victoryTriggers.get(victoryID);
+        if(Objects.nonNull(victory)) {
+            for(EntityLiving entity : passedEntities)
+                victory.add(trigger,entity);
+            victory.setActive(trigger,pass);
+        }
+        return pass;
     }
 
     private boolean checkEntityName(EntityLiving entity, List<String> resources) {
+        if(resources.isEmpty()) return false;
         String displayName = entity.getName();
         ResourceLocation id = EntityList.getKey(entity);
         if(resources.contains("MOB")) {
             if(!(entity instanceof IMob)) return false;
             List<String> blackList = resources.stream().filter(element -> !element.matches("MOB")).collect(Collectors.toList());
+            if(blackList.isEmpty()) return true;
             return !blackList.contains(displayName) && (Objects.isNull(id) || !partiallyMatches(id.toString(),blackList));
         }
         return resources.contains(displayName) || (Objects.nonNull(id) && partiallyMatches(id.toString(),resources));
@@ -328,9 +394,11 @@ public class ServerData {
         if(!target || ratio<=0) return true;
         float size = entities.length;
         float counter = 0f;
-        for(EntityLiving entity : entities)
-            if(entity.getAttackTarget()==player)
+        for(EntityLiving entity : entities) {
+            if(Objects.isNull(entity) || Objects.isNull(entity.getAttackTarget())) continue;
+            if(entity.getAttackTarget() == player)
                 counter++;
+        }
         return counter/size>=ratio/100f;
     }
 
@@ -339,7 +407,7 @@ public class ServerData {
         float size = entities.length;
         float counter = 0f;
         for(EntityLiving entity : entities)
-            if(entity.getHealth()/entity.getMaxHealth()<=health)
+            if(entity.getHealth()/entity.getMaxHealth()<=health/100f)
                 counter++;
         return counter/size>=ratio/100f;
     }
@@ -479,5 +547,23 @@ public class ServerData {
             }
         }
         return true;
+    }
+
+    private boolean calculateVictory(String id) {
+        if(id.matches("not_set") || !this.victoryTriggers.containsKey(id)) return false;
+        return this.victoryTriggers.get(id).runCalculation();
+    }
+
+    private boolean calculatePVP(Table trigger) {
+        boolean pass = Objects.nonNull(this.attacker);
+        String victoryID = trigger.getValOrDefault("victory_id","not_set");
+        Victory victory = this.victoryTriggers.get(victoryID);
+        if(Objects.nonNull(this.attacker)) {
+            if(Objects.nonNull(victory)) {
+                victory.add(trigger,this.attacker);
+                victory.setActive(trigger,true);
+            }
+        } else victory.setActive(trigger,false);
+        return pass;
     }
 }

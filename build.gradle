@@ -184,7 +184,7 @@ jar {
                 'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
                 'FMLCorePlugin': 'mods.thecomputerizer.musictriggers.core.MixinLoadingPlugin',
                 'FMLCorePluginContainsFMLMod': true,
-                'ForceLoadAsMod': true,
+                //'ForceLoadAsMod': true,
                 'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
                 'MixinConfigs': 'musictriggers.mixin.json',
                 'FMLAT': 'musictriggers_at.cfg'

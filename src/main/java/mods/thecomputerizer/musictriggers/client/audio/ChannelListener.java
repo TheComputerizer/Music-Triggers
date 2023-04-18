@@ -35,19 +35,16 @@ public class ChannelListener extends AudioEventAdapter {
         this.AUDIO_THREAD.start();
     }
 
-    @SuppressWarnings("deprecation")
-    public void stop() {
-        this.AUDIO_THREAD.stop();
-    }
-
     @Override
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
-        if(Objects.nonNull(this.channel)) this.channel.markUpdated();
+        if(Objects.nonNull(this.channel))
+            this.channel.onTrackStart();
     }
 
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
-        if(Objects.nonNull(this.channel)) this.channel.markUpdated();
+        if(Objects.nonNull(this.channel))
+            this.channel.onTrackStop();
     }
 
     @Override
@@ -55,7 +52,8 @@ public class ChannelListener extends AudioEventAdapter {
         MusicTriggers.logExternally(Level.ERROR,"Track exception caught! Restarting audio output for channel {}",this.channel);
         exception.printStackTrace();
         this.AUDIO_THREAD.setRunAudioLoop(false);
-        if(Objects.nonNull(this.channel)) this.channel.markUpdated();
+        if(Objects.nonNull(this.channel))
+            this.channel.onTrackStop();
     }
 
     @SuppressWarnings("BusyWait")

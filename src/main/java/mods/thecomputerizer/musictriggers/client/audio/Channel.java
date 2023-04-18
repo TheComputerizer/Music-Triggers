@@ -18,7 +18,7 @@ import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.musictriggers.client.gui.instance.*;
 import mods.thecomputerizer.musictriggers.config.ConfigJukebox;
 import mods.thecomputerizer.musictriggers.config.ConfigRedirect;
-import mods.thecomputerizer.musictriggers.server.ServerData;
+import mods.thecomputerizer.musictriggers.server.data.ServerChannels;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Variable;
@@ -26,6 +26,7 @@ import mods.thecomputerizer.theimpossiblelibrary.util.NetworkUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.TextUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.TomlUtil;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.ISound;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
@@ -55,9 +56,10 @@ public class Channel {
     private final MusicPicker picker;
     private final boolean canBePausedByJukeBox;
     private final boolean overrides;
+    private final boolean pausesOverrides;
+    private final boolean explicitlyOverrides;
     private final AudioPlayerManager playerManager;
     private final AudioPlayer player;
-    private final ChannelListener listener;
     private final HashMap<String, AudioTrack> loadedTracks;
     private final ClientSync sync;
     private final List<String> commandsForPacket;
@@ -71,6 +73,7 @@ public class Channel {
     private int tempFadeIn = 0;
     private int tempFadeOut = 0;
     private int savedFadeOut = 0;
+    private Audio prevTrack;
     private Audio curTrack;
     private final List<Audio> oncePerTrigger;
     private final List<Audio> onceUntilEmpty;
@@ -91,13 +94,15 @@ public class Channel {
                 SoundCategory.getByName(category) : SoundCategory.MUSIC;
         this.canBePausedByJukeBox = info.getValOrDefault("paused_by_jukebox",true);
         this.overrides = info.getValOrDefault("overrides_normal_music",true);
+        this.pausesOverrides = info.getValOrDefault("pause_overrides",false);
+        this.explicitlyOverrides = info.getValOrDefault("explicit_overrides",false);
         this.sync = new ClientSync(info.getName());
         this.playerManager = new DefaultAudioPlayerManager();
         AudioSourceManagers.registerRemoteSources(this.playerManager);
         AudioSourceManagers.registerLocalSource(this.playerManager);
         this.player = this.playerManager.createPlayer();
         this.player.setVolume(100);
-        this.listener = new ChannelListener(this.player, StandardAudioDataFormats.DISCORD_PCM_S16_BE, this);
+        new ChannelListener(this.player, StandardAudioDataFormats.DISCORD_PCM_S16_BE, this);
         this.loadedTracks = new HashMap<>();
         this.playerManager.setFrameBufferDuration(1000);
         this.playerManager.setPlayerCleanupThreshold(Long.MAX_VALUE);
@@ -159,27 +164,24 @@ public class Channel {
 
     public void runToggle(int condition, List<Trigger> triggers) {
         for(Toggle toggle : this.data.toggleList)
-            toggle.runToggle(condition, triggers);
+            toggle.runToggle(1, this.data.toggleList.stream()
+                    .map(toggle1 -> toggle1.runToggle(condition, triggers))
+                    .flatMap(Collection::stream).distinct().collect(Collectors.toList()));
     }
 
     public ClientSync getSyncStatus() {
         return this.sync;
     }
 
-    public void markUpdated() {
-        this.changedStatus = true;
-    }
-
     public boolean needsUpdatePacket() {
         return this.changedStatus;
     }
 
-    public boolean overridesNormalMusic() {
-        return this.overrides;
-    }
-
-    public boolean getVictory(int id) {
-        return this.picker.getVictory(id);
+    public boolean getOverrideStatus(ISound sound) {
+        if(!isPlaying() || !this.overrides) return false;
+        for(SoundCategory category : getOverrideCategories())
+            if(sound.getCategory()==category) return true;
+        return false;
     }
 
     private void checkLoops() {
@@ -278,12 +280,11 @@ public class Channel {
                                 setPitch(pitch);
                                 if(this.triggerStarted) this.tempFadeIn = this.picker.fadeIn;
                                 this.triggerStarted = false;
-                                playTrack(audio, 0);
-                                delayCatch = false;
+                                playTrack(audio);
+                                this.delayCatch = false;
                                 if (audio.getPlayOnce() == 1) this.onceUntilEmpty.add(audio);
                                 if (audio.getPlayOnce() == 2) this.oncePerTrigger.add(audio);
-                            } else
-                                MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Audio was null!", getChannelName());
+                            }
                         }
                     } else {
                         this.delayCounter = MusicTriggers.randomInt("trigger_delay", this.picker.triggerDelay, 0);
@@ -293,6 +294,7 @@ public class Channel {
                         onTriggerStart();
                     }
                 } else {
+                    if(Objects.nonNull(this.curTrack)) this.prevTrack = this.curTrack;
                     this.curTrack = null;
                     this.playingTriggers.clear();
                 }
@@ -314,6 +316,8 @@ public class Channel {
     }
 
     private void onTriggerStart() {
+        this.oncePerTrigger.clear();
+        this.onceUntilEmpty.clear();
         this.commandsForPacket.clear();
         for(String command : this.data.commandMap.keySet()) {
             if(new HashSet<>(this.picker.getInfo().getActiveTriggers()).containsAll(this.data.commandMap.get(command)))
@@ -337,6 +341,7 @@ public class Channel {
             return null;
         }
         if(curSongs.size()==1) return curSongs.get(0);
+        curSongs.removeIf(audio -> Objects.nonNull(this.prevTrack) && audio==this.prevTrack);
         int sum = 0;
         for(Audio audio : curSongs) {
             if(audio!=this.curTrack)
@@ -448,7 +453,7 @@ public class Channel {
     }
 
     public void setMillis(long milliseconds) {
-        MusicTriggers.logExternally(Level.WARN, "Found loop! Setting track time to {}",milliseconds);
+        MusicTriggers.logExternally(Level.INFO, "Setting track time to {}",milliseconds);
         getCurPlaying().setPosition(milliseconds);
     }
 
@@ -466,26 +471,35 @@ public class Channel {
         if(isPlaying()) {
             MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Attempting to reset currently playing track",getChannelName());
             AudioTrack cloned = this.getPlayer().getPlayingTrack().makeClone();
+            if(Objects.nonNull(this.curTrack)) cloned.setPosition(this.curTrack.getMilliStart());
             if (!this.getPlayer().startTrack(cloned, false))
                 MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Could not reset track!",getChannelName());
         }
     }
 
-    public void playTrack(Audio audio, long milliseconds) {
+    public void playTrack(Audio audio) {
         String id = audio.getName();
         AudioTrack track = this.loadedTracks.get(audio.getName());
-        if(track!=null) {
+        if(Objects.nonNull(track)) {
             try {
                 if (!this.getPlayer().startTrack(track, false))
                     MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Could not start track!",getChannelName());
-                else this.curTrack = audio;
-                MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Track with id {} is seekable: {}",getChannelName(),id,track.isSeekable());
+                else {
+                    if(Objects.nonNull(this.curTrack)) this.prevTrack = this.curTrack;
+                    track.setPosition(audio.getMilliStart());
+                    this.curTrack = audio;
+                }
+                MusicTriggers.logExternally(Level.DEBUG, "Channel[{}] - Track with id {} is seekable: {}",getChannelName(),id,track.isSeekable());
             } catch (IllegalStateException e) {
                 AudioTrack cloned = track.makeClone();
                 if (!this.getPlayer().startTrack(cloned, false))
                     MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Could not start track!",getChannelName());
-                else this.curTrack = audio;
-                MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Track with id {} is seekable: {}",getChannelName(),id,track.isSeekable());
+                else {
+                    if(Objects.nonNull(this.curTrack)) this.prevTrack = this.curTrack;
+                    track.setPosition(audio.getMilliStart());
+                    this.curTrack = audio;
+                }
+                MusicTriggers.logExternally(Level.DEBUG, "Channel[{}] - Track with id {} is seekable: {}",getChannelName(),id,track.isSeekable());
             }
         } else {
             MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Track with id {} was null! Attempting to " +
@@ -510,6 +524,21 @@ public class Channel {
                 }
             }
         }
+    }
+
+    public HashSet<SoundCategory> getOverrideCategories() {
+        return this.explicitlyOverrides ? new HashSet<>(Collections.singletonList(getCategory())) :
+                ChannelManager.getInterrputedCategories();
+    }
+
+    public void onTrackStart() {
+        ChannelManager.handleAudioStart(this.pausesOverrides,getOverrideCategories());
+        this.changedStatus = true;
+    }
+
+    public void onTrackStop() {
+        ChannelManager.handleAudioStop(getOverrideCategories());
+        this.changedStatus = true;
     }
 
     public AudioTrack getCopyOfTrackFromID(String id) {
@@ -777,8 +806,8 @@ public class Channel {
         }
     }
 
-    public void initializeServerData(ServerData serverData) {
-        serverData.addChannelInfo(getChannelName(),new ArrayList<>(this.data.serverTriggers.values()),this.data.menuSongs);
+    public void initializeServerData(ServerChannels serverChannels) {
+        serverChannels.addChannelInfo(getChannelName(),new ArrayList<>(this.data.serverTriggers.values()),this.data.menuSongs);
     }
 
     public void encodeDynamic(ByteBuf buf) {
@@ -806,11 +835,10 @@ public class Channel {
 
     private void clearSongs() {
         if(isPlaying()) stopTrack(false);
-        oncePerTrigger.clear();
-        onceUntilEmpty.clear();
         this.fadingOut = false;
-        tempFadeIn = this.picker.fadeIn;
-        curTrack = null;
+        this.tempFadeIn = this.picker.fadeIn;
+        if(Objects.nonNull(this.curTrack)) this.prevTrack = this.curTrack;
+        this.curTrack = null;
     }
 
     public void parseConfigs(boolean startup) {
@@ -858,7 +886,6 @@ public class Channel {
     }
 
     public void clear() {
-        this.listener.stop();
         this.player.destroy();
         this.loadedTracks.clear();
         this.changedStatus = false;
@@ -877,7 +904,6 @@ public class Channel {
         private final List<String> menuSongs;
         private final HashMap<Trigger, List<Audio>> songPools;
         private Optional<Table> universalTriggerParameters;
-        private Optional<Table> universalAudioParameters;
         private final Map<Table, List<Trigger>> titleCards;
         private final Map<Table, List<Trigger>> imageCards;
         private final Map<String, List<Trigger>> commandMap;
@@ -930,26 +956,34 @@ public class Channel {
             if(Objects.nonNull(triggers)) {
                 for (Table trigger : triggers.getChildren().values()) {
                     if(!trigger.getName().matches("universal")) {
-                        ret.putIfAbsent(trigger.getName(), new HashMap<>());
-                        String id = getIDOrFiller(trigger.getName(), trigger);
-                        if (id.matches("missing_id")) MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Trigger " +
-                                "{} is missing a required identifier or id parameter and will be skipped!", info.getName(), trigger.getName());
+                        if(!Trigger.isLoaded(trigger.getName()))
+                            MusicTriggers.logExternally(Level.WARN,"Channel[{}] - Tried to assign unregistered " +
+                                    "trigger with name \"{}\"! Is this a modded trigger?",info.getName(),trigger.getName());
                         else {
-                            if (ret.get(trigger.getName()).containsKey(id)) {
-                                if (!id.matches("not_accepted"))
-                                    MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Identifier {} for trigger {} " +
-                                            "has already been defined and cannot be redefined", info.getName(), id, trigger.getName());
-                                else MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Trigger {} " +
-                                        "has already been defined and cannot be redefined", info.getName(), trigger.getName());
-                            } else {
-                                Optional<Trigger> createdTrigger = createTrigger(trigger);
-                                if (createdTrigger.isPresent()) {
-                                    String name = trigger.getName();
-                                    ret.get(name).put(id, createdTrigger.get());
-                                    registeredTriggers.add(createdTrigger.get());
-                                    if(name.matches("home") || name.matches("mob") || name.matches("structure"))
-                                        serverTriggers.put(createdTrigger.get(),trigger);
-                                    logRegister(trigger.getName(), id);
+                            ret.putIfAbsent(trigger.getName(), new HashMap<>());
+                            String id = getIDOrFiller(trigger.getName(), trigger);
+                            if (id.matches("missing_id"))
+                                MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Trigger " +
+                                        "{} is missing a required identifier or id parameter and will be skipped!", info.getName(), trigger.getName());
+                            else {
+                                if (ret.get(trigger.getName()).containsKey(id)) {
+                                    if (!id.matches("not_accepted"))
+                                        MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Identifier {} for trigger {} " +
+                                                "has already been defined and cannot be redefined", info.getName(), id, trigger.getName());
+                                    else MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Trigger {} " +
+                                            "has already been defined and cannot be redefined", info.getName(), trigger.getName());
+                                } else {
+                                    Optional<Trigger> createdTrigger = createTrigger(trigger);
+                                    if (createdTrigger.isPresent()) {
+                                        String name = trigger.getName();
+                                        ret.get(name).put(id, createdTrigger.get());
+                                        registeredTriggers.add(createdTrigger.get());
+                                        if (name.matches("home") || name.matches("mob") ||
+                                                name.matches("structure") || name.matches("victory") ||
+                                                name.matches("pvp"))
+                                            serverTriggers.put(createdTrigger.get(), trigger);
+                                        logRegister(trigger.getName(), id);
+                                    }
                                 }
                             }
                         }
@@ -998,10 +1032,12 @@ public class Channel {
 
         private List<Audio> parseAudio(Table songs) {
             List<Audio> ret = new ArrayList<>();
+            Table universal = Objects.isNull(songs) ? null :
+                    songs.hasTable("universal") ? songs.getTableByName("universal") : null;
             if(Objects.nonNull(songs)) {
                 for (Table audio : songs.getChildren().values()) {
                     if(!audio.getName().matches("universal")) {
-                        Audio potential = new Audio(audio, this.registeredTriggers);
+                        Audio potential = new Audio(audio, this.registeredTriggers,universal);
                         if (potential.getTriggers().isEmpty())
                             MusicTriggers.logExternally(Level.WARN, "Channel[{}] - No valid triggers were " +
                                     "registered for audio {} so it has been skipped!",info.getName(),audio.getName());
@@ -1017,8 +1053,6 @@ public class Channel {
                     }
                 }
             }
-            this.universalAudioParameters = Objects.isNull(songs) ? Optional.empty() : songs.hasTable("universal") ?
-                    Optional.of(songs.getTableByName("universal")) : Optional.empty();
             return ret;
         }
 

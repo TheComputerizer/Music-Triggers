@@ -1,9 +1,9 @@
 package mods.thecomputerizer.musictriggers.registry.items;
 
 import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.network.NetworkHandler;
 import mods.thecomputerizer.musictriggers.registry.BlockRegistry;
 import mods.thecomputerizer.musictriggers.registry.blocks.MusicRecorder;
-import mods.thecomputerizer.musictriggers.registry.RegistryHandler;
 import mods.thecomputerizer.musictriggers.network.packets.PacketJukeBoxCustom;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
 import net.minecraft.block.BlockJukebox;
@@ -60,7 +60,7 @@ public class MusicTriggersRecord extends EpicItem {
                 if (stack.getTagCompound() != null && stack.getTagCompound().hasKey("trackID") &&
                         stack.getTagCompound().hasKey("channelFrom")) {
                     ((BlockJukebox) state.getBlock()).insertRecord(world, pos, state, stack);
-                    RegistryHandler.network.sendTo(new PacketJukeBoxCustom.Message(pos,
+                    NetworkHandler.sendToPlayer(new PacketJukeBoxCustom.Message(pos,
                             stack.getTagCompound().getString("channelFrom"), stack.getTagCompound().getString("trackID")), (EntityPlayerMP) player);
                     stack.shrink(1);
                     player.addStat(StatList.RECORD_PLAYED);

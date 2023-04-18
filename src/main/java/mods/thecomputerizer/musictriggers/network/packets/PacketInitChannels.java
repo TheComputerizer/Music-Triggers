@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.network.packets;
 
 import io.netty.buffer.ByteBuf;
-import mods.thecomputerizer.musictriggers.server.ServerData;
+import mods.thecomputerizer.musictriggers.server.data.ServerChannels;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -15,17 +15,17 @@ public class PacketInitChannels implements IMessageHandler<PacketInitChannels.Me
 
     public static class Message implements IMessage {
 
-        private ServerData data;
+        private ServerChannels data;
 
         public Message() {}
 
-        public Message(ServerData channelData) {
+        public Message(ServerChannels channelData) {
             this.data = channelData;
         }
 
         @Override
         public void fromBytes(ByteBuf buf) {
-            ServerData.initializePlayerChannels(buf);
+            ServerChannels.initializePlayerChannels(buf);
         }
 
         @Override

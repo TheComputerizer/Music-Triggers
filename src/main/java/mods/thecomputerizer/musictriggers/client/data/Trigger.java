@@ -43,248 +43,109 @@ import java.util.function.BiFunction;
 
 import static mods.thecomputerizer.musictriggers.MusicTriggers.stringBreaker;
 
-@SuppressWarnings({"BooleanMethodIsAlwaysInverted", "unused"})
+@SuppressWarnings({"BooleanMethodIsAlwaysInverted"})
 public class Trigger {
 
-    private static final String[] allTriggers = new String[]{"loading","menu","generic","difficulty","time","light",
-            "height","raining","storming","snowing","lowhp","dead","creative","spectator","riding","pet","underwater",
-            "elytra","fishing","drowning","home","dimension","biome","structure","mob","victory","gui","effect","zones",
-            "pvp", "advancement","statistic","command","gamestage","bloodmoon","harvestmoon","fallingstars",
-            "rainintensity","tornado","hurricane","sandstorm","season","raid","bluemoon","moon","acidrain","blizzard",
-            "cloudy","lightrain"};
-    private static final String[] acceptedTriggers = new String[]{"loading","menu","generic","difficulty","time","light",
-            "height","raining","storming","snowing","lowhp","dead", "creative","spectator","riding","pet","underwater",
-            "elytra","fishing","drowning","home", "dimension","biome", "structure","mob","victory","gui","effect","zones",
-            "pvp","advancement","statistic","command","gamestage","bloodmoon","harvestmoon","fallingstars","rainintensity",
-            "tornado","hurricane","sandstorm","season"};
-    private static final String[] modTriggers = new String[]{"gamestage","bloodmoon","harvestmoon","fallingstars",
-            "rainintensity","tornado","hurricane","sandstorm","season"};
-    private static final String[] allParameters = new String[]{"priority","identifier","fade_in","fade_out",
-            "trigger_delay","song_delay","level","persistence","start_delay","time_bundle","start_hour","end_hour",
-            "lowest_day_number","highest_day_number","zone_min_x","zone_max_x","zone_min_y","zone_max_y","zone_min_z",
-            "zone_max_z","resource_name","start_toggled","not","passive_persistence","toggle_inactive_playable",
-            "detection_range","mob_targeting","health","horde_targeting_percentage","horde_health_percentage","mob_nbt",
-            "infernal","champion","victory_id","victory_timeout","moon_phase","light_type","is_whitelist",
-            "biome_category","rain_type","biome_temperature","check_lower_temp","biome_rainfall","check_higher_rainfall",
-            "check_for_sky","check_above_level"};
-    private static final HashMap<String, String> defaultParameterMap = setDefaultParameters();
-    private static final HashMap<String, List<String>> acceptedParameters = setAcceptedParameters();
-    private static final HashMap<String, List<String>> requiredParameters = setRequiredParameters();
-    private static final HashMap<String, List<String>> choiceRequiredParameters = setChoiceRequiredParameters();
-    private static final HashMap<String, BiFunction<Trigger, EntityPlayerSP, Boolean>> triggerConditions = setTriggerConditions();
+    private static final HashSet<String> ALL_TRIGGERS = new HashSet<>();
+    private static final HashSet<String> ACCEPTED_TRIGGERS = new HashSet<>();
+    private static final HashMap<String, String> DEFAULT_PARAMETER_MAP = new HashMap<>();
+    private static final HashMap<String, List<String>> ACCEPTED_PARAMETERS = new HashMap<>();
+    private static final HashMap<String, List<String>> REQUIRED_PARAMETERS = new HashMap<>();
+    private static final HashMap<String, List<String>> CHOICE_REQUIRED_PARAMETERS = new HashMap<>();
+    private static final HashMap<String, BiFunction<Trigger, EntityPlayerSP, Boolean>> TRIGGER_CONDITIONS = new HashMap<>();
 
-    private static HashMap<String, List<String>> setRequiredParameters() {
-        HashMap<String, List<String>> ret = new HashMap<>();
-        ret.put("difficulty",Arrays.asList("identifier","level"));
-        ret.put("time", Collections.singletonList("identifier"));
-        ret.put("light",Arrays.asList("identifier","level"));
-        ret.put("height",Arrays.asList("identifier","level"));
-        ret.put("riding", Collections.singletonList("identifier"));
-        ret.put("dimension",Arrays.asList("identifier","resource_name"));
-        ret.put("biome", Collections.singletonList("identifier"));
-        ret.put("structure",Arrays.asList("identifier","resource_name"));
-        ret.put("mob",Arrays.asList("identifier","level","resource_name"));
-        ret.put("victory",Arrays.asList("identifier","persistence","victory_id"));
-        ret.put("gui",Arrays.asList("identifier","resource_name"));
-        ret.put("effect",Arrays.asList("identifier","resource_name"));
-        ret.put("zones", Collections.singletonList("identifier"));
-        ret.put("pvp",Arrays.asList("identifier","persistence"));
-        ret.put("advancement",Arrays.asList("identifier","persistence","resource_name"));
-        ret.put("statistic",Arrays.asList("identifier","resource_name"));
-        ret.put("command",Arrays.asList("identifier","persistence"));
-        ret.put("gamestage",Arrays.asList("identifier","resource_name"));
-        ret.put("rainintensity", Collections.singletonList("identifier"));
-        ret.put("tornado",Arrays.asList("identifier","level"));
-        ret.put("moon",Arrays.asList("identifier","resource_name"));
-        ret.put("season",Arrays.asList("identifier","level"));
-        return ret;
+    public static void loadDefaultData() {
+        clearData();
+        loadDefaultParameters();
+        loadDefaultTriggers();
     }
 
-    private static HashMap<String, List<String>> setChoiceRequiredParameters() {
-        HashMap<String, List<String>> ret = new HashMap<>();
-        ret.put("time",Arrays.asList("time_bundle","start_hour"));
-        ret.put("biome",Arrays.asList("resource_name","biome_category","rain_type","biome_temperature","biome_rainfall"));
-        ret.put("zones",Arrays.asList("zone_min_x","zone_max_x","zone_min_y","zone_max_y","zone_min_z","zone_max_z"));
-        return ret;
+    private static void clearData() {
+        ALL_TRIGGERS.clear();
+        ACCEPTED_TRIGGERS.clear();
+        DEFAULT_PARAMETER_MAP.clear();
+        ACCEPTED_PARAMETERS.clear();
+        REQUIRED_PARAMETERS.clear();
+        CHOICE_REQUIRED_PARAMETERS.clear();
+        TRIGGER_CONDITIONS.clear();
     }
 
-    private static HashMap<String, List<String>> setAcceptedParameters() {
-        HashMap<String, List<String>> ret = new HashMap<>();
-        ret.put("loading",new ArrayList<>());
-        ret.put("menu",new ArrayList<>());
-        ret.put("generic",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled"));
-        ret.put("difficulty",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay","level",
-                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("time",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
-                "start_toggled","not","persistence","start_delay","time_bundle","start_hour","end_hour",
-                "passive_persistence","toggle_inactive_playable","moon_phase","lowest_day_number","highest_day_number"));
-        ret.put("light",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay","level",
-                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable",
-                "light_type"));
-        ret.put("height",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay","level",
-                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable",
-                "check_for_sky","check_above_level"));
-        ret.put("raining",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("storming",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("snowing",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("lowhp",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","level",
-                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("dead",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("creative",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("spectator",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("riding",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
-                "start_toggled","not","persistence","resource_name","start_delay","passive_persistence",
-                "toggle_inactive_playable"));
-        ret.put("pet",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable","detection_range"));
-        ret.put("underwater",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("elytra",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("fishing",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("drowning",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","level",
-                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("home",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay", "start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable","detection_range"));
-        ret.put("dimension",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
-                "resource_name","start_toggled","not","persistence","start_delay","passive_persistence",
-                "toggle_inactive_playable"));
-        ret.put("biome",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
-                "resource_name","start_toggled","not","persistence","start_delay","passive_persistence",
-                "toggle_inactive_playable","biome_category","rain_type","biome_temperature","check_lower_temp",
-                "biome_rainfall","check_higher_rainfall"));
-        ret.put("structure",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
-                "resource_name","start_toggled","not","persistence","start_delay","passive_persistence",
-                "toggle_inactive_playable"));
-        ret.put("mob",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay","level",
-                "persistence","start_delay","resource_name","start_toggled","not","passive_persistence",
-                "toggle_inactive_playable","detection_range","mob_targeting","health","horde_targeting_percentage",
-                "horde_health_percentage","mob_nbt","infernal","champion","victory_id","victory_timeout"));
-        ret.put("victory",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
-                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable",
-                "victory_id"));
-        ret.put("gui",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
-                "resource_name","start_toggled","not","persistence","start_delay","passive_persistence",
-                "toggle_inactive_playable"));
-        ret.put("effect",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
-                "resource_name","start_toggled","not","persistence","start_delay","passive_persistence",
-                "toggle_inactive_playable"));
-        ret.put("zones",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
-                "start_toggled","not","persistence","start_delay","zone_min_x","zone_max_x","zone_min_y",
-                "zone_max_y","zone_min_z","zone_max_z","passive_persistence","toggle_inactive_playable"));
-        ret.put("pvp",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
-                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable",
-                "victory_id","victory_timeout"));
-        ret.put("advancement",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
-                "resource_name","start_toggled","not","persistence","start_delay","passive_persistence",
-                "toggle_inactive_playable"));
-        ret.put("statistic",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
-                "level","resource_name","start_toggled","not","persistence","start_delay","passive_persistence",
-                "toggle_inactive_playable","check_above_level"));
-        ret.put("command",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
-                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("gamestage",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
-                "resource_name","start_toggled","not","persistence","start_delay","passive_persistence",
-                "toggle_inactive_playable","is_whitelist"));
-        ret.put("bloodmoon",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("harvestmoon",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("fallingstars",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("rainintensity",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
-                "level","start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("tornado",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay","level",
-                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable",
-                "detection_range"));
-        ret.put("hurricane",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable","detection_range"));
-        ret.put("sandstorm",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable","detection_range"));
-        ret.put("season",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay","level",
-                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("raid",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay","level",
-                "start_toggled","not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("bluemoon",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("moon",Arrays.asList("priority","identifier","fade_in","fade_out","trigger_delay","song_delay",
-                "start_toggled","resource_name","not","persistence","start_delay","passive_persistence",
-                "toggle_inactive_playable"));
-        ret.put("acidrain",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("blizzard",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("cloudy",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        ret.put("lightrain",Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay","start_toggled",
-                "not","persistence","start_delay","passive_persistence","toggle_inactive_playable"));
-        return ret;
+    private static void loadDefaultParameters() {
+        addParameter("priority","0");
+        addParameter("identifier","not_set");
+        addParameter("fade_in","0");
+        addParameter("fade_out","0");
+        addParameter("trigger_delay","0");
+        addParameter("song_delay","0");
+        addParameter("level",String.valueOf(Integer.MIN_VALUE));
+        addParameter("persistence","0");
+        addParameter("start_delay","0");
+        addParameter("time_bundle","any");
+        addParameter("start_hour","0");
+        addParameter("end_hour","0");
+        addParameter("lowest_day_number","0");
+        addParameter("highest_day_number",String.valueOf(Integer.MAX_VALUE));
+        addParameter("zone_min_x",String.valueOf(Integer.MIN_VALUE));
+        addParameter("zone_min_y",String.valueOf(Integer.MIN_VALUE));
+        addParameter("zone_min_z",String.valueOf(Integer.MIN_VALUE));
+        addParameter("zone_max_x",String.valueOf(Integer.MAX_VALUE));
+        addParameter("zone_max_y",String.valueOf(Integer.MAX_VALUE));
+        addParameter("zone_max_z",String.valueOf(Integer.MAX_VALUE));
+        addParameter("resource_name","any");
+        addParameter("start_toggled","true");
+        addParameter("not","false");
+        addParameter("passive_persistence","false");
+        addParameter("toggle_inactive_playable","false");
+        addParameter("detection_range","16");
+        addParameter("mob_targeting","true");
+        addParameter("health","100");
+        addParameter("horde_targeting_percentage","50");
+        addParameter("horde_health_percentage","50");
+        addParameter("mob_nbt","any");
+        addParameter("infernal","any");
+        addParameter("champion","any");
+        addParameter("victory_id","not_set");
+        addParameter("victory_timeout","20");
+        addParameter("victory_percentage","100");
+        addParameter("moon_phase","0");
+        addParameter("light_type","any");
+        addParameter("is_whitelist","true");
+        addParameter("biome_category","any");
+        addParameter("rain_type","any");
+        addParameter("biome_temperature",String.valueOf(Float.MIN_VALUE));
+        addParameter("check_lower_temp","false");
+        addParameter("biome_rainfall",String.valueOf(Float.MIN_VALUE));
+        addParameter("check_higher_rainfall","true");
+        addParameter("check_for_sky","true");
+        addParameter("check_above_level","false");
     }
 
-    private static HashMap<String, String> setDefaultParameters() {
-        HashMap<String, String> ret = new HashMap<>();
-        ret.put("priority","0");
-        ret.put("identifier","not_set");
-        ret.put("fade_in","0");
-        ret.put("fade_out","0");
-        ret.put("trigger_delay","0");
-        ret.put("song_delay","0");
-        ret.put("level",""+Integer.MIN_VALUE);
-        ret.put("persistence","0");
-        ret.put("start_delay","0");
-        ret.put("time_bundle","any");
-        ret.put("start_hour","0");
-        ret.put("end_hour","0");
-        ret.put("lowest_day_number","0");
-        ret.put("highest_day_number",""+Integer.MAX_VALUE);
-        ret.put("zone_min_x",""+Integer.MIN_VALUE);
-        ret.put("zone_min_y",""+Integer.MIN_VALUE);
-        ret.put("zone_min_z",""+Integer.MIN_VALUE);
-        ret.put("zone_max_x",""+Integer.MAX_VALUE);
-        ret.put("zone_max_y",""+Integer.MAX_VALUE);
-        ret.put("zone_max_z",""+Integer.MAX_VALUE);
-        ret.put("resource_name","any");
-        ret.put("start_toggled","true");
-        ret.put("not","false");
-        ret.put("passive_persistence","false");
-        ret.put("toggle_inactive_playable","false");
-        ret.put("detection_range","16");
-        ret.put("mob_targeting","true");
-        ret.put("health","100");
-        ret.put("horde_targeting_percentage","50");
-        ret.put("horde_health_percentage","50");
-        ret.put("mob_nbt","any");
-        ret.put("infernal","any");
-        ret.put("champion","any");
-        ret.put("victory_id","0");
-        ret.put("victory_timeout","20");
-        ret.put("moon_phase","0");
-        ret.put("light_type","any");
-        ret.put("is_whitelist","true");
-        ret.put("biome_category","any");
-        ret.put("rain_type","any");
-        ret.put("biome_temperature",""+Float.MIN_VALUE);
-        ret.put("check_lower_temp","false");
-        ret.put("biome_rainfall",""+Float.MIN_VALUE);
-        ret.put("check_higher_rainfall","true");
-        ret.put("check_for_sky","true");
-        ret.put("check_above_level","false");
-        return ret;
+    //accepted parameter set
+    public static List<String> makeParameterSet(boolean isHolder, String ... parameters) {
+        return makeParameterSet(true,isHolder,parameters);
     }
 
-    private static HashMap<String, BiFunction<Trigger, EntityPlayerSP, Boolean>> setTriggerConditions() {
-        HashMap<String, BiFunction<Trigger, EntityPlayerSP, Boolean>> ret = new HashMap<>();
-        ret.put("loading",(trigger,player) -> false);
-        ret.put("menu",(trigger,player) -> false);
-        ret.put("generic",(trigger,player) -> false);
-        ret.put("time",(trigger,player) -> {
+    public static List<String> makeParameterSet(boolean isAccepted, boolean isHolder, String ... parameters) {
+        List<String> acceptedParameters = isAccepted ?
+                new ArrayList<>(Arrays.asList("priority","fade_in","fade_out","trigger_delay", "song_delay","start_toggled", "not",
+                        "persistence","start_delay","passive_persistence","toggle_inactive_playable")) : new ArrayList<>();
+        if(isHolder) acceptedParameters.add("identifier");
+        Collections.addAll(acceptedParameters, parameters);
+        return acceptedParameters;
+    }
+
+    private static void loadDefaultTriggers() {
+        addTrigger("loading",false,makeParameterSet(false),(trigger,player) -> false);
+        addTrigger("menu",false,makeParameterSet(false),(trigger,player) -> false);
+        addTrigger("generic",false,makeParameterSet(false),(trigger,player) -> false);
+        addTrigger("difficulty",false,makeParameterSet(true,"level"),
+                Arrays.asList("identifier","level"),new ArrayList<>(),(trigger,player) -> {
+            Minecraft mc = Minecraft.getMinecraft();
+            return trigger.difficultyHelper(mc.world.getDifficulty(), mc.world.getWorldInfo().isHardcoreModeEnabled());
+        });
+        addTrigger("time",false,makeParameterSet(true,"time_bundle",
+                        "start_hour","end_hour","moon_phase", "lowest_day_number","highest_day_number"),
+                Collections.singletonList("identifier"),Arrays.asList("time_bundle","start_hour"),(trigger,player) -> {
             World world = player.getEntityWorld();
             double time = (double) world.getWorldTime() / 24000.0;
             if (time > 1) time = time - (long) time;
@@ -318,143 +179,230 @@ public class Trigger {
             else pass = time >= min || time < max;
             return pass && trigger.timeTriggerExtras(world.getTotalWorldTime(),world.getMoonPhase() + 1);
         });
-        ret.put("light",(trigger,player) ->
+        addTrigger("light",false,makeParameterSet(true,"level","light_type"),
+                Arrays.asList("identifier","level"),new ArrayList<>(),(trigger,player) ->
                 trigger.averageLight(trigger.roundedPos(player),trigger.getParameter("light_type"), player.getEntityWorld())
                         <= trigger.getParameterInt("level"));
-        ret.put("height",(trigger,player) ->
+        addTrigger("height",false,makeParameterSet(true,"level","check_for_sky","check_above_level"),
+                Arrays.asList("identifier","level"),new ArrayList<>(),(trigger,player) ->
                 trigger.handleHeight((int) player.posY,player.getEntityWorld().canSeeSky(trigger.roundedPos(player))));
-        ret.put("elytra",(trigger,player) -> player.getTicksElytraFlying() > 0);
-        ret.put("fishing",(trigger,player) -> player.fishEntity != null && player.fishEntity.isOverWater());
-        ret.put("raining",(trigger,player) -> player.getEntityWorld().isRaining());
-        ret.put("snowing",(trigger,player) -> {
+        addTrigger("elytra",false,makeParameterSet(false),
+                (trigger,player) -> player.getTicksElytraFlying() > 0);
+        addTrigger("fishing",false,makeParameterSet(false),
+                (trigger,player) -> player.fishEntity != null && player.fishEntity.isOverWater());
+        addTrigger("raining",false,makeParameterSet(false),
+                (trigger,player) -> player.getEntityWorld().isRaining());
+        addTrigger("snowing",false,makeParameterSet(false),(trigger,player) -> {
             BlockPos pos = trigger.roundedPos(player);
             return player.getEntityWorld().isRaining() &&
                     player.getEntityWorld().getBiomeProvider().getTemperatureAtHeight(
                             player.getEntityWorld().getBiome(pos).getTemperature(pos),
                             player.getEntityWorld().getPrecipitationHeight(pos).getY()) < 0.15f;
         });
-        ret.put("storming",(trigger,player) -> player.getEntityWorld().isThundering());
-        ret.put("lowhp",(trigger,player) -> trigger.handleHP(player.getHealth(), player.getMaxHealth()));
-        ret.put("dead",(trigger,player) -> player.getHealth() <= 0f || player.isDead);
-        ret.put("spectator",(trigger,player) -> player.isSpectator());
-        ret.put("creative",(trigger,player) -> player.isCreative());
-        ret.put("riding",(trigger,player) -> trigger.checkRiding(trigger.getResource(),player));
-        ret.put("underwater",(trigger,player) ->
+        addTrigger("storming",false,makeParameterSet(false),
+                (trigger,player) -> player.getEntityWorld().isThundering());
+        addTrigger("lowhp",false,makeParameterSet(false,"level"),
+                (trigger,player) -> trigger.handleHP(player.getHealth(), player.getMaxHealth()));
+        addTrigger("dead",false,makeParameterSet(false),
+                (trigger,player) -> player.getHealth() <= 0f || player.isDead);
+        addTrigger("spectator",false,makeParameterSet(false),(trigger,player) -> player.isSpectator());
+        addTrigger("creative",false,makeParameterSet(false),(trigger,player) -> player.isCreative());
+        addTrigger("riding",false,makeParameterSet(true,"resource_name"),
+                Collections.singletonList("identifier"),new ArrayList<>(),
+                (trigger,player) -> trigger.checkRiding(trigger.getResource(),player));
+        addTrigger("underwater",false,makeParameterSet(false),(trigger,player) ->
                 player.getEntityWorld().getBlockState(trigger.roundedPos(player)).getMaterial() == Material.WATER &&
-                player.getEntityWorld().getBlockState(trigger.roundedPos(player).up()).getMaterial() == Material.WATER);
-        ret.put("pet",(trigger,player) -> {
+                        player.getEntityWorld().getBlockState(trigger.roundedPos(player).up()).getMaterial() == Material.WATER);
+        addTrigger("pet",false,makeParameterSet(false,"detection_range"),(trigger,player) -> {
             boolean pass = false;
+            int range = trigger.getParameterInt("detection_range");
             for (EntityLiving ent : player.getEntityWorld().getEntitiesWithinAABB(EntityLiving.class,
-                    new AxisAlignedBB(player.posX - 16, player.posY - 8, player.posZ - 16,
-                            player.posX + 16, player.posY + 8, player.posZ + 16))) {
+                    new AxisAlignedBB(player.posX - range, player.posY - ((float) range /2), player.posZ - range,
+                            player.posX + range, player.posY + ((float) range /2), player.posZ + range))) {
                 if (ent instanceof EntityTameable && ent.serializeNBT().getString("Owner").matches(player.getName()))
                     pass = true;
             }
             return pass;
         });
-        ret.put("drowning",(trigger,player) -> player.getAir() < trigger.getParameterInt("level"));
-        ret.put("pvp",(trigger,player) -> false); //TODO
-        ret.put("home",(trigger,player) -> !ConfigRegistry.CLIENT_SIDE_ONLY &&
-                ChannelManager.getChannel(trigger.channel).getSyncStatus().isTriggerActive(trigger));
-        ret.put("dimension",(trigger,player) -> trigger.checkDimensionList(player.dimension,trigger.getResource()));
-        ret.put("biome",(trigger,player) ->
+        addTrigger("drowning",false,makeParameterSet(false,"level"),
+                (trigger,player) -> player.getAir() < trigger.getParameterInt("level"));
+        addTrigger("pvp",true,makeParameterSet(true), Collections.singletonList("identifier"),
+                new ArrayList<>(),(trigger,player) -> ChannelManager.getChannel(trigger.channel).getSyncStatus().isTriggerActive(trigger));
+        addTrigger("home",true,makeParameterSet(false,"detection_range"),
+                (trigger,player) -> ChannelManager.getChannel(trigger.channel).getSyncStatus().isTriggerActive(trigger));
+        addTrigger("dimension",false,makeParameterSet(true,"resource_name"),
+                Arrays.asList("identifier","resource_name"),new ArrayList<>(),
+                (trigger,player) -> trigger.checkDimensionList(player.dimension,trigger.getResource()));
+        addTrigger("biome",false,makeParameterSet(true,"resource_name","biome_category",
+                        "rain_type","biome_temperature","check_lower_temp","biome_rainfall","check_higher_rainfall"),
+                Collections.singletonList("identifier"),Arrays.asList("resource_name","biome_category","rain_type",
+                        "biome_temperature","biome_rainfall"),(trigger, player) ->
                 trigger.checkBiome(player.getEntityWorld().getBiome(trigger.roundedPos(player)), trigger.getResource(),
-                trigger.getParameter("biome_category"),trigger.getParameter("rain_type"),
-                trigger.getParameterFloat("biome_temperature"),trigger.getParameterBool("check_lower_temp"),
-                trigger.getParameterFloat("biome_rainfall"),trigger.getParameterBool("check_higher_rainfall")));
-        ret.put("structure",(trigger,player) -> !ConfigRegistry.CLIENT_SIDE_ONLY &&
-                ChannelManager.getChannel(trigger.channel).getSyncStatus().isTriggerActive(trigger));
-        ret.put("mob",(trigger,player) -> !ConfigRegistry.CLIENT_SIDE_ONLY &&
-                ChannelManager.getChannel(trigger.channel).getSyncStatus().isTriggerActive(trigger));
-        ret.put("zones",(trigger,player) -> {
+                        trigger.getParameter("biome_category"),trigger.getParameter("rain_type"),
+                        trigger.getParameterFloat("biome_temperature"),trigger.getParameterBool("check_lower_temp"),
+                        trigger.getParameterFloat("biome_rainfall"),trigger.getParameterBool("check_higher_rainfall")));
+        addTrigger("structure",true,makeParameterSet(true,"resource_name"),
+                Arrays.asList("identifier","resource_name"),new ArrayList<>(),
+                (trigger,player) -> ChannelManager.getChannel(trigger.channel).getSyncStatus().isTriggerActive(trigger));
+        addTrigger("mob",true,makeParameterSet(true,"resource_name","level",
+                        "detection_range","mob_targeting","health","horde_targeting_percentage", "horde_health_percentage",
+                        "mob_nbt","infernal","champion","victory_id","victory_percentage"),
+                Arrays.asList("identifier","level","resource_name"),new ArrayList<>(),
+                (trigger,player) -> ChannelManager.getChannel(trigger.channel).getSyncStatus().isTriggerActive(trigger));
+        addTrigger("zones",false,makeParameterSet(true,"start_delay","zone_min_x",
+                        "zone_max_x","zone_min_y","zone_max_y","zone_min_z","zone_max_z"),
+                Collections.singletonList("identifier"),Arrays.asList("start_delay","zone_min_x","zone_max_x","zone_min_y",
+                        "zone_max_y","zone_min_z","zone_max_z"),(trigger, player) -> {
             BlockPos pos = player.getPosition();
             return trigger.zoneHelper(pos.getX(),pos.getY(),pos.getZ());
         });
-        ret.put("effect",(trigger,player) -> {
+        addTrigger("effect",false,makeParameterSet(true,"resource_name"),
+                Arrays.asList("identifier","resource_name"),new ArrayList<>(),(trigger,player) -> {
             boolean pass = false;
-            MusicPicker.effectList.clear();
+            MusicPicker.EFFECT_LIST.clear();
             for (PotionEffect p : player.getActivePotionEffects()) {
-                MusicPicker.effectList.add(p.getEffectName());
+                MusicPicker.EFFECT_LIST.add(p.getEffectName());
                 if (trigger.checkResourceList(p.getEffectName(),trigger.getResource(),false))
                     pass = true;
             }
             return pass;
         });
-        ret.put("victory",(trigger,player) ->
-                ChannelManager.getChannel(trigger.channel).getVictory(trigger.getParameterInt("victory_id")));
-        ret.put("gui",(trigger,player) -> {
+        addTrigger("victory",false,makeParameterSet(true,"victory_timeout"),
+                Arrays.asList("identifier","persistence"),new ArrayList<>(),
+                (trigger,player) -> ChannelManager.getChannel(trigger.channel).getSyncStatus().isTriggerActive(trigger));
+        addTrigger("gui",false,makeParameterSet(true,"resource_name"),
+                Arrays.asList("identifier","resource_name"),new ArrayList<>(),(trigger,player) -> {
             Minecraft mc = Minecraft.getMinecraft();
             String resource = trigger.getResource();
-            return (mc.currentScreen!=null && trigger.checkResourceList(mc.currentScreen.getClass().getName(),resource,false)) ||
-                    (resource.matches("CREDITS") && mc.currentScreen instanceof GuiWinGame);
+            return (Objects.nonNull(mc.currentScreen) &&
+                    (trigger.checkResourceList(mc.currentScreen.getClass().getName(),resource,false)) ||
+                    (resource.matches("CREDITS") && mc.currentScreen instanceof GuiWinGame));
         });
-        ret.put("difficulty",(trigger,player) -> {
-            Minecraft mc = Minecraft.getMinecraft();
-            return trigger.difficultyHelper(mc.world.getDifficulty(), mc.world.getWorldInfo().isHardcoreModeEnabled());
-        });
-        ret.put("advancement",(trigger,player) -> {
+        addTrigger("advancement",false,makeParameterSet(true,"resource_name"),
+                Arrays.asList("identifier","resource_name","persistence"),new ArrayList<>(),(trigger,player) -> {
             String resource = trigger.getResource();
             boolean pass = (ClientEvents.GAINED_NEW_ADVANCEMENT && trigger.checkResourceList(ClientEvents.LAST_ADVANCEMENT,resource,false)) ||
                     resource.matches("any");
             if(pass) ClientEvents.GAINED_NEW_ADVANCEMENT = false;
             return pass;
         });
-        ret.put("statistic",(trigger,player) ->
+        addTrigger("statistic",false,makeParameterSet(true,"resource_name","level"),
+                Arrays.asList("identifier","resource_name"),new ArrayList<>(),(trigger,player) ->
                 trigger.checkStat(trigger.getResource(),trigger.getParameterInt("level"),player));
-        ret.put("command",(trigger,player) -> {
+        addTrigger("command",false,makeParameterSet(true),
+                Arrays.asList("identifier","persistence"),new ArrayList<>(),(trigger,player) -> {
             boolean pass = ClientEvents.commandHelper(trigger);
             if(pass) ClientEvents.commandFinish(trigger);
             return pass;
         });
-        ret.put("gamestage",(trigger,player) -> Loader.isModLoaded("gamestages") &&
-                trigger.whitelistHelper(GameStageHelper.clientHasAnyOf(
+        addTrigger("gamestage",false,Collections.singletonList("gamestages"),
+                makeParameterSet(true,"resource_name","is_whitelist"),
+                Arrays.asList("identifier","resource_name","is_whitelist"),new ArrayList<>(),
+                (trigger,player) -> trigger.whitelistHelper(GameStageHelper.clientHasAnyOf(
                         player,trigger.parseGamestageList(trigger.getResource()))));
-        ret.put("bloodmoon",(trigger,player) -> (Loader.isModLoaded("bloodmoon") &&
+        addTrigger("bloodmoon",false,Arrays.asList("bloodmoon","nyx"),makeParameterSet(false),
+                (trigger,player) -> (Loader.isModLoaded("bloodmoon") &&
                 Bloodmoon.proxy.isBloodmoon()) || (Loader.isModLoaded("nyx") &&
                 NyxWorld.get(player.getEntityWorld()).currentEvent instanceof BloodMoon));
-        ret.put("harvestmoon",(trigger,player) -> Loader.isModLoaded("nyx") &&
-                NyxWorld.get(player.getEntityWorld()).currentEvent instanceof HarvestMoon);
-        ret.put("fallingstars",(trigger,player) -> Loader.isModLoaded("nyx") &&
-                NyxWorld.get(player.getEntityWorld()).currentEvent instanceof StarShower);
-        ret.put("rainintensity",(trigger,player) -> Loader.isModLoaded("dsurround") &&
-                Weather.getIntensityLevel()>(((float)trigger.getParameterInt("level"))/100f));
-        ret.put("tornado",(trigger,player) -> Loader.isModLoaded("weather2") &&
-                WeatherDataHelper.getWeatherManagerForClient() != null &&
-                WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition())
-                        ,trigger.getParameterInt("detection_range")) !=null &&
-                WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition())
-                        ,trigger.getParameterInt("detection_range")).levelCurIntensityStage >= trigger.getParameterInt("level"));
-        ret.put("hurricane",(trigger,player) -> Loader.isModLoaded("weather2") &&
-                WeatherDataHelper.getWeatherManagerForClient() != null &&
-                WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition())
-                        , trigger.getParameterInt("detection_range")) != null &&
-                WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition())
-                        , trigger.getParameterInt("detection_range")).isHurricane());
-        ret.put("sandstorm",(trigger,player) -> Loader.isModLoaded("weather2") &&
-                WeatherDataHelper.getWeatherManagerForClient() != null &&
-                WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition())
-                        , trigger.getParameterInt("detection_range")) != null &&
-                WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition())
-                        , trigger.getParameterInt("detection_range")).isHurricane());
-        ret.put("season",(trigger,player) ->
-                trigger.seasonHelper(SeasonHelper.getSeasonState(player.getEntityWorld()).getSeason()));
-        return ret;
+        addTrigger("harvestmoon",false, Collections.singletonList("nyx"),makeParameterSet(false),
+                (trigger, player) -> NyxWorld.get(player.getEntityWorld()).currentEvent instanceof HarvestMoon);
+        addTrigger("fallingstars",false, Collections.singletonList("nyx"),makeParameterSet(false),
+                (trigger, player) -> NyxWorld.get(player.getEntityWorld()).currentEvent instanceof StarShower);
+        addTrigger("rainintensity",false,Collections.singletonList("dsurround"),
+                makeParameterSet(true,"level"), Collections.singletonList("identifier"),new ArrayList<>(),
+                (trigger,player) -> Weather.getIntensityLevel()>(((float)trigger.getParameterInt("level"))/100f));
+        addTrigger("tornado",false,Collections.singletonList("weather2"),
+                makeParameterSet(true,"level","detection_range"),Arrays.asList("identifier","level"),
+                new ArrayList<>(),(trigger,player) ->  Objects.nonNull(WeatherDataHelper.getWeatherManagerForClient()) &&
+                Objects.nonNull(WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition()),
+                        trigger.getParameterInt("detection_range"))) &&
+                WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition()),
+                        trigger.getParameterInt("detection_range")).levelCurIntensityStage >= trigger.getParameterInt("level"));
+        addTrigger("hurricane",false,Collections.singletonList("weather2"),
+                makeParameterSet(true,"detection_range"),
+                (trigger,player) -> Objects.nonNull(WeatherDataHelper.getWeatherManagerForClient()) &&
+                Objects.nonNull(WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition()),
+                        trigger.getParameterInt("detection_range"))) &&
+                WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition()),
+                        trigger.getParameterInt("detection_range")).isHurricane());
+        addTrigger("sandstorm",false,Collections.singletonList("weather2"),
+                makeParameterSet(true,"detection_range"),(trigger,player) -> Objects.nonNull(WeatherDataHelper.getWeatherManagerForClient()) &&
+                Objects.nonNull(WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition()),
+                        trigger.getParameterInt("detection_range"))) &&
+                WeatherDataHelper.getWeatherManagerForClient().getClosestStormAny(new Vec3(player.getPosition()),
+                        trigger.getParameterInt("detection_range")).isHurricane());
+        addTrigger("season",false,Collections.singletonList("sereneseasons"),
+                makeParameterSet(true,"level"),Arrays.asList("identifier","level"), new ArrayList<>(),
+                (trigger,player) -> trigger.seasonHelper(SeasonHelper.getSeasonState(player.getEntityWorld()).getSeason()));
     }
 
-    public static List<String> getAcceptedTriggers() {
-        return Arrays.asList(acceptedTriggers);
+    public static void addParameter(String name, String defaultValue) throws IllegalArgumentException {
+        if(DEFAULT_PARAMETER_MAP.containsKey(name)) throw new IllegalArgumentException("Parameter with name "+name+"already exists!");
+        DEFAULT_PARAMETER_MAP.put(name,defaultValue);
+    }
+
+    //vanilla + no required parameters
+    public static void addTrigger(String name, boolean isServerSide, List<String> acceptedParameters,
+                                  BiFunction<Trigger, EntityPlayerSP, Boolean> activationFunction) throws IllegalArgumentException {
+        addTrigger(name,isServerSide,new ArrayList<>(),acceptedParameters,new ArrayList<>(),new ArrayList<>(),activationFunction);
+    }
+
+    //no required parameters
+    public static void addTrigger(String name, boolean isServerSide,List<String> requiredMods,List<String> acceptedParameters,
+                                  BiFunction<Trigger, EntityPlayerSP, Boolean> activationFunction) throws IllegalArgumentException {
+        addTrigger(name,isServerSide,requiredMods,acceptedParameters,new ArrayList<>(),new ArrayList<>(),activationFunction);
+    }
+
+    //vanilla trigger
+    public static void addTrigger(String name, boolean isServerSide, List<String> acceptedParameters,
+                                  List<String> requiredParameters, List<String> choiceRequiredParameters,
+                                  BiFunction<Trigger, EntityPlayerSP, Boolean> activationFunction) throws IllegalArgumentException {
+        addTrigger(name,isServerSide,new ArrayList<>(),acceptedParameters,requiredParameters,choiceRequiredParameters,activationFunction);
+    }
+
+    public static void addTrigger(String name, boolean isServerSide, List<String> requiredMods,
+                                  List<String> acceptedParameters, List<String> requiredParameters, List<String> choiceRequiredParameters,
+                                  BiFunction<Trigger, EntityPlayerSP, Boolean> activationFunction) throws IllegalArgumentException {
+        if (ALL_TRIGGERS.contains(name))
+            throw new IllegalArgumentException("Trigger with name " + name + "already exists!");
+        ALL_TRIGGERS.add(name);
+        if(!isServerSide || !ConfigRegistry.CLIENT_SIDE_ONLY) {
+            if (requiredMods.isEmpty()) ACCEPTED_TRIGGERS.add(name);
+            else {
+                for (String modid : requiredMods) {
+                    if (Loader.isModLoaded(modid)) {
+                        ACCEPTED_TRIGGERS.add(name);
+                        break;
+                    }
+                }
+            }
+        }
+        if (ACCEPTED_TRIGGERS.contains(name)) {
+            ACCEPTED_PARAMETERS.put(name, acceptedParameters);
+            REQUIRED_PARAMETERS.put(name, requiredParameters);
+            CHOICE_REQUIRED_PARAMETERS.put(name, choiceRequiredParameters);
+            TRIGGER_CONDITIONS.put(name, activationFunction);
+        }
+    }
+
+    public static HashSet<String> getAcceptedTriggers() {
+        return ACCEPTED_TRIGGERS;
     }
 
     public static List<String> getAcceptedParameters(String trigger) {
-        return acceptedParameters.get(trigger);
+        return ACCEPTED_PARAMETERS.get(trigger);
     }
 
     public static boolean isParameterAccepted(String trigger, String parameter) {
-        return acceptedParameters.get(trigger).contains(parameter);
+        return ACCEPTED_PARAMETERS.containsKey(trigger) && ACCEPTED_PARAMETERS.get(trigger).contains(parameter);
     }
 
     public static String getDefaultParameter(String parameter) {
-        return defaultParameterMap.get(parameter);
+        return DEFAULT_PARAMETER_MAP.get(parameter);
+    }
+
+    public static boolean isLoaded(String trigger) {
+        return ACCEPTED_TRIGGERS.contains(trigger);
     }
 
     private final String channel;
@@ -471,13 +419,13 @@ public class Trigger {
 
     private HashMap<String, String> buildDefaultParameters(String trigger) {
         HashMap<String, String> ret = new HashMap<>();
-        for(String parameter : acceptedParameters.get(trigger)) ret.put(parameter,defaultParameterMap.get(parameter));
+        for(String parameter : ACCEPTED_PARAMETERS.get(trigger)) ret.put(parameter, DEFAULT_PARAMETER_MAP.get(parameter));
         return ret;
     }
 
     public boolean hasAllRequiredParameters() {
-        if(requiredParameters.containsKey(this.name)) {
-            for(String parameter : requiredParameters.get(this.name)) {
+        if(REQUIRED_PARAMETERS.containsKey(this.name) && !REQUIRED_PARAMETERS.get(this.name).isEmpty()) {
+            for(String parameter : REQUIRED_PARAMETERS.get(this.name)) {
                 if(isDefault(parameter)) {
                     MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Trigger {} is missing required parameter {} so it"+
                             " will be skipped!",this.channel,this.name,parameter);
@@ -485,16 +433,18 @@ public class Trigger {
                 }
             }
         }
-        if(choiceRequiredParameters.containsKey(this.name)) {
-            boolean fail = true;
+        if(CHOICE_REQUIRED_PARAMETERS.containsKey(this.name) && !CHOICE_REQUIRED_PARAMETERS.get(this.name).isEmpty()) {
+            boolean fail = false;
             StringBuilder builder = new StringBuilder();
-            for(String parameter : requiredParameters.get(this.name)) {
+            for(String parameter : REQUIRED_PARAMETERS.get(this.name)) {
                 builder.append(parameter).append(" ");
-                if (!isDefault(parameter))
-                    fail = false;
+                if(isDefault(parameter)) {
+                    fail = true;
+                    break;
+                }
             }
             if(fail) {
-                MusicTriggers.logExternally(Level.WARN, "Channel[{}] -  Trigger {} requires one the following triggers: {}",
+                MusicTriggers.logExternally(Level.WARN, "Channel[{}] -  Trigger {} requires one the following parameters: {}",
                         this.channel,this.name,builder.toString());
                 return false;
             }
@@ -518,7 +468,7 @@ public class Trigger {
     }
 
     private boolean isDefault(String parameter) {
-        return this.parameters.get(parameter).matches(defaultParameterMap.get(parameter));
+        return this.parameters.get(parameter).matches(DEFAULT_PARAMETER_MAP.get(parameter));
     }
 
     public boolean hasID() {
@@ -535,16 +485,16 @@ public class Trigger {
 
     public int getParameterInt(String parameter) {
         return MusicTriggers.randomInt(parameter,getParameter(parameter),
-                Integer.parseInt(defaultParameterMap.get(parameter)));
+                Integer.parseInt(DEFAULT_PARAMETER_MAP.get(parameter)));
     }
 
     public float getParameterFloat(String parameter) {
         return MusicTriggers.randomFloat(parameter,getParameter(parameter),
-                Float.parseFloat(defaultParameterMap.get(parameter)));
+                Float.parseFloat(DEFAULT_PARAMETER_MAP.get(parameter)));
     }
 
     public boolean runActivationFunction(EntityPlayerSP player) {
-        return triggerConditions.containsKey(getName()) && isActive(triggerConditions.get(getName()).apply(this,player));
+        return TRIGGER_CONDITIONS.containsKey(getName()) && isActive(TRIGGER_CONDITIONS.get(getName()).apply(this,player));
     }
 
     private boolean isActive(boolean active) {
@@ -557,11 +507,6 @@ public class Trigger {
         int phase = getParameterInt("moon_phase");
         return (day>=getParameterInt("lowest_day_number") && day<=getParameterInt("highest_day_number")) &&
                 (phase<=0 || phase>8 || phase==worldPhase);
-    }
-
-    public boolean canStart(int fromMap, int fromUniversal) {
-        int check = getParameterInt("start_delay");
-        return fromMap>=(check>0 ? check : fromUniversal);
     }
 
     public boolean handleHeight(int playerY, boolean visibleSky) {
@@ -652,7 +597,7 @@ public class Trigger {
 
     @SuppressWarnings("ConstantConditions")
     public boolean checkDimensionList(int playerDim, String resourceList) {
-        for(String resource : stringBreaker(resourceList,";")) if((playerDim+"").matches(resource)) return true;
+        for(String resource : stringBreaker(resourceList,";")) if((String.valueOf(playerDim)).matches(resource)) return true;
         try {
             DimensionType dimension = DimensionType.getById(playerDim);
             return Objects.nonNull(dimension.name()) && checkResourceList(dimension.name(), resourceList, false);
