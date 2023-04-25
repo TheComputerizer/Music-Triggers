@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.network.packets;
 
 import mods.thecomputerizer.musictriggers.client.audio.Channel;
-import mods.thecomputerizer.musictriggers.server.ServerData;
+import mods.thecomputerizer.musictriggers.server.data.ServerChannels;
 import mods.thecomputerizer.theimpossiblelibrary.util.NetworkUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.PacketBuffer;
@@ -16,7 +16,7 @@ public class PacketDynamicChannelInfo {
     private final List<Channel> clientChannels = new ArrayList<>();
 
     public PacketDynamicChannelInfo(PacketBuffer buf) {
-        ServerData.decodeDynamicInfo(buf);
+        ServerChannels.decodeDynamicInfo(buf);
     }
 
     public PacketDynamicChannelInfo(List<Channel> clientChannels) {

@@ -55,8 +55,7 @@ public class GuiPage extends GuiSuperType {
             addSuperButton(createBottomButton(displayName, width, 1, new ArrayList<>(),
                     (screen, button, mode) -> {
                         Minecraft.getInstance().setScreen(
-                                new GuiPopUp(this,GuiType.POPUP,this.getInstance(),this.id,true,4,
-                                        new ArrayList<>(this.icons)));
+                                new GuiPopUp(this,GuiType.POPUP,this.getInstance(),this.id,true, new ArrayList<>(this.icons)));
                         this.hasEdits = true;
                         save();
                     }),left);
