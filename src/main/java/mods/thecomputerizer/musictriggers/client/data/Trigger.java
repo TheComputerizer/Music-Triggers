@@ -48,6 +48,7 @@ public class Trigger {
 
     private static final HashSet<String> ALL_TRIGGERS = new HashSet<>();
     private static final HashSet<String> ACCEPTED_TRIGGERS = new HashSet<>();
+    private static final HashSet<String> SERVER_TRIGGERS = new HashSet<>();
     private static final HashMap<String, String> DEFAULT_PARAMETER_MAP = new HashMap<>();
     private static final HashMap<String, List<String>> ACCEPTED_PARAMETERS = new HashMap<>();
     private static final HashMap<String, List<String>> REQUIRED_PARAMETERS = new HashMap<>();
@@ -63,6 +64,7 @@ public class Trigger {
     private static void clearData() {
         ALL_TRIGGERS.clear();
         ACCEPTED_TRIGGERS.clear();
+        SERVER_TRIGGERS.clear();
         DEFAULT_PARAMETER_MAP.clear();
         ACCEPTED_PARAMETERS.clear();
         REQUIRED_PARAMETERS.clear();
@@ -267,7 +269,7 @@ public class Trigger {
             }
             return pass;
         });
-        addTrigger("victory",false,makeParameterSet(true,"victory_timeout"),
+        addTrigger("victory",true,makeParameterSet(true,"victory_timeout"),
                 Arrays.asList("identifier","persistence"),new ArrayList<>(),
                 (trigger,player) -> ChannelManager.getChannel(trigger.channel).getSyncStatus().isTriggerActive(trigger));
         addTrigger("gui",false,makeParameterSet(true,"resource_name"),
@@ -378,6 +380,8 @@ public class Trigger {
             }
         }
         if (ACCEPTED_TRIGGERS.contains(name)) {
+            if(isServerSide)
+                SERVER_TRIGGERS.add(name);
             ACCEPTED_PARAMETERS.put(name, acceptedParameters);
             REQUIRED_PARAMETERS.put(name, requiredParameters);
             CHOICE_REQUIRED_PARAMETERS.put(name, choiceRequiredParameters);
@@ -387,6 +391,10 @@ public class Trigger {
 
     public static HashSet<String> getAcceptedTriggers() {
         return ACCEPTED_TRIGGERS;
+    }
+
+    public static boolean isServerSide(String name) {
+        return SERVER_TRIGGERS.contains(name);
     }
 
     public static List<String> getAcceptedParameters(String trigger) {

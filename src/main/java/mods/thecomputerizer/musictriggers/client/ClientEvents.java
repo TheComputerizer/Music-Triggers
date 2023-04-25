@@ -15,6 +15,7 @@ import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.BlockPos;
@@ -221,6 +222,7 @@ public class ClientEvents {
                         EntityLiving entity = getLivingFromEntity(res.entityHit);
                         if (Objects.nonNull(entity)) {
                             e.getLeft().add("Current Entity Name: " + entity.getName());
+                            e.getLeft().add("Current Entity ID: " + EntityList.getKey(entity));
                             String infernal = infernalChecker(entity);
                             if(Objects.nonNull(infernal))
                                 e.getLeft().add("Infernal Mob Mod Name: " + infernal);

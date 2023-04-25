@@ -131,8 +131,8 @@ public class ConfigDebug {
     private static HashSet<String> formatBlockedMods() {
         Multimap<String, String> compiled = HashMultimap.create();
         for(String blocked : BLOCKED_MOD_CATEGORIES) {
-            String modid = blocked.contains("\\;") ? blocked.substring(0,blocked.indexOf(';')-1) : blocked;
-            String category = blocked.contains("\\;") && blocked.indexOf(';')+1<blocked.length() ?
+            String modid = blocked.contains(";") ? blocked.substring(0,blocked.indexOf(';')) : blocked;
+            String category = blocked.contains(";") && blocked.indexOf(';')+1<blocked.length() ?
                     blocked.substring(blocked.indexOf(';')+1) : "music";
             if(!compiled.containsEntry(modid,category)) compiled.put(modid,category);
         }

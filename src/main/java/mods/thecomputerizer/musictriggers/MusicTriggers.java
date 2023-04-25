@@ -134,7 +134,8 @@ public class MusicTriggers {
 
     public static void logExternally(Level level, String message, Object ... parameters) {
         MOD_LOG.log(level, message, parameters);
-        ORDERED_LOG_MESSAGES.put(MESSAGE_COUNTER,new Tuple<>("["+String.format("%-5s",level.toString())+"] "+LogUtil.injectParameters(message, parameters),colorizeLogLevel(level)));
+        ORDERED_LOG_MESSAGES.put(MESSAGE_COUNTER,new Tuple<>("["+String.format("%-5s",level.toString())+"] "+
+                LogUtil.injectParameters(message, parameters),colorizeLogLevel(level)));
         MESSAGE_COUNTER++;
     }
 

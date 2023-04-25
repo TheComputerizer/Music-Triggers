@@ -43,6 +43,7 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.file.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @SideOnly(value = Side.CLIENT)
@@ -65,6 +66,7 @@ public class Channel {
     private final List<String> commandsForPacket;
     private final List<String> erroredSongDownloads;
     private final String localFolderPath;
+    private final AtomicInteger AUDIO_QUEUE;
 
     private boolean triggerStarted;
     private boolean fadingIn = false;
@@ -131,6 +133,7 @@ public class Channel {
         this.localFolderPath = info.getValOrDefault("songs_folder", "config/MusicTriggers/songs");
         File file = new File(this.localFolderPath);
         if(!file.exists()) file.mkdirs();
+        this.AUDIO_QUEUE = new AtomicInteger();
     }
 
     private List<String> collectFilePaths(Table info) {
@@ -441,7 +444,7 @@ public class Channel {
 
     private boolean checkAudio() {
         return Minecraft.getMinecraft().gameSettings.getSoundLevel(SoundCategory.MASTER) > 0
-                && Minecraft.getMinecraft().gameSettings.getSoundLevel(this.category) > 0;
+                && Minecraft.getMinecraft().gameSettings.getSoundLevel(this.category) > 0 && this.AUDIO_QUEUE.get()<=0;
     }
 
     public long getTotalMillis() {
@@ -575,6 +578,7 @@ public class Channel {
         setFilters(pitch);
     }
 
+    @SuppressWarnings("unused")
     private void setFilters(float pitch) {
         //getPlayer().setFilterFactory((track, format, output) -> {});
     }
@@ -616,9 +620,11 @@ public class Channel {
     }
 
     private void loadFromURL(String id, String url, @Nullable Audio audioReference) {
+        this.AUDIO_QUEUE.incrementAndGet();
         this.playerManager.loadItem(url, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
+                Channel.this.AUDIO_QUEUE.decrementAndGet();
                 if(!Channel.this.loadedTracks.containsKey(id)) {
                     Channel.this.addTrackToMap(id,track);
                     MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Track loaded from url {}",getChannelName(),url);
@@ -628,6 +634,7 @@ public class Channel {
 
             @Override
             public void playlistLoaded(AudioPlaylist playlist) {
+                Channel.this.AUDIO_QUEUE.decrementAndGet();
                 MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Loaded a playlist from {}",getChannelName(),url);
                 for(int i=1;i<playlist.getTracks().size()+1;i++) {
                     if(!Channel.this.loadedTracks.containsKey(id+"_"+i)) {
@@ -641,6 +648,7 @@ public class Channel {
 
             @Override
             public void noMatches() {
+                Channel.this.AUDIO_QUEUE.decrementAndGet();
                 MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - No audio able to be extracted from url {}",
                         getChannelName(),url);
                 Channel.this.erroredSongDownloads.add(id+" -> "+url);
@@ -653,6 +661,7 @@ public class Channel {
 
             @Override
             public void loadFailed(FriendlyException exception) {
+                Channel.this.AUDIO_QUEUE.decrementAndGet();
                 MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Load failed! {}",getChannelName(),url);
                 exception.printStackTrace();
                 if(Objects.nonNull(audioReference)) {
@@ -666,6 +675,7 @@ public class Channel {
 
     private void loadFromResourceLocation(String id, ResourceLocation source, @Nullable Audio audioReference) {
         try {
+            this.AUDIO_QUEUE.incrementAndGet();
             if (!this.loadedTracks.containsKey(id)) {
                 String first = null;
                 String second = null;
@@ -702,6 +712,7 @@ public class Channel {
                     AudioLoadResultHandler handler = new AudioLoadResultHandler() {
                         @Override
                         public void trackLoaded(AudioTrack track) {
+                            Channel.this.AUDIO_QUEUE.decrementAndGet();
                             Channel.this.addTrackToMap(id, track);
                             MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Track loaded from resource " +
                                     "location {}",getChannelName(),source);
@@ -709,11 +720,13 @@ public class Channel {
 
                         @Override
                         public void playlistLoaded(AudioPlaylist playlist) {
+                            Channel.this.AUDIO_QUEUE.decrementAndGet();
                             MusicTriggers.logExternally(Level.INFO, "Channel[{}] - no playlists here",getChannelName());
                         }
 
                         @Override
                         public void noMatches() {
+                            Channel.this.AUDIO_QUEUE.decrementAndGet();
                             MusicTriggers.logExternally(Level.INFO, "Channel[{}] - no matches from resource " +
                                     "location {}",getChannelName(),source);
                             if(Objects.nonNull(audioReference)) {
@@ -725,6 +738,7 @@ public class Channel {
 
                         @Override
                         public void loadFailed(FriendlyException exception) {
+                            Channel.this.AUDIO_QUEUE.decrementAndGet();
                             MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Track loaded failed resource " +
                                     "location {}",getChannelName(),source);
                             if(Objects.nonNull(audioReference)) {
@@ -741,6 +755,7 @@ public class Channel {
             } else MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Audio file with id {} already exists!",
                     getChannelName(),id);
         } catch (Exception e) {
+            Channel.this.AUDIO_QUEUE.decrementAndGet();
             MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Could not decode track from resource " +
                     "location {}! See the main log for the full error",getChannelName(),source);
             Constants.MAIN_LOG.error("Channel[{}] - Could not decode track from resource location",getChannelName(),e);
@@ -750,9 +765,11 @@ public class Channel {
 
     private void loadAudioFile(String id, File file, @Nullable Audio audioReference) {
         try {
+            this.AUDIO_QUEUE.incrementAndGet();
             this.playerManager.loadItem(new AudioReference(file.getPath(), file.getName()), new AudioLoadResultHandler() {
                 @Override
                 public void trackLoaded(AudioTrack track) {
+                    Channel.this.AUDIO_QUEUE.decrementAndGet();
                     if (!Channel.this.loadedTracks.containsKey(id)) {
                         Channel.this.addTrackToMap(id, track);
                         MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Track loaded from file {}",
@@ -763,6 +780,7 @@ public class Channel {
 
                 @Override
                 public void playlistLoaded(AudioPlaylist playlist) {
+                    Channel.this.AUDIO_QUEUE.decrementAndGet();
                     MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Loaded track from file {}",
                             getChannelName(),file.getName());
                     for (int i = 1; i < playlist.getTracks().size() + 1; i++) {
@@ -777,6 +795,7 @@ public class Channel {
 
                 @Override
                 public void noMatches() {
+                    Channel.this.AUDIO_QUEUE.decrementAndGet();
                     MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - No audio able to be extracted from " +
                             "file {}",getChannelName(),file.getName());
                     Channel.this.erroredSongDownloads.add(id + " -> " + file.getName());
@@ -789,6 +808,7 @@ public class Channel {
 
                 @Override
                 public void loadFailed(FriendlyException exception) {
+                    Channel.this.AUDIO_QUEUE.decrementAndGet();
                     MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Load failed! {}",getChannelName(),file.getName());
                     exception.printStackTrace();
                     if(Objects.nonNull(audioReference)) {
@@ -799,6 +819,7 @@ public class Channel {
                 }
             });
         } catch (Exception e) {
+            Channel.this.AUDIO_QUEUE.decrementAndGet();
             MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Could not load track from file {}! See the " +
                     "main log for the full error",getChannelName(),id);
             Constants.MAIN_LOG.error("Channel[{}] - Could not load track from file",getChannelName(),e);
@@ -978,9 +999,7 @@ public class Channel {
                                         String name = trigger.getName();
                                         ret.get(name).put(id, createdTrigger.get());
                                         registeredTriggers.add(createdTrigger.get());
-                                        if (name.matches("home") || name.matches("mob") ||
-                                                name.matches("structure") || name.matches("victory") ||
-                                                name.matches("pvp"))
+                                        if (Trigger.isServerSide(name))
                                             serverTriggers.put(createdTrigger.get(), trigger);
                                         logRegister(trigger.getName(), id);
                                     }

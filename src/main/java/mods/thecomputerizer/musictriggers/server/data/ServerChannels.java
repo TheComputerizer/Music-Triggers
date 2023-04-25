@@ -38,9 +38,7 @@ public class ServerChannels {
     private static final Map<String, ServerChannels> SERVER_DATA = new HashMap<>();
     private static final Map<String, List<BossInfoServer>> QUEUED_BOSS_BARS = new HashMap<>();
     private static final List<String> NBT_MODES = Arrays.asList("KEY_PRESENT","VAL_PRESENT","GREATER","LESSER","EQUAL","INVERT");
-    private static final List<String> TRIGGER_HOLDERS = Arrays.asList("difficulty","time","light","height","riding",
-            "dimension","biome","structure","mob","victory","gui","zones","pvp","advancement","statistic","command",
-            "gamestage","rainintensity","tornado","moon","season");
+    private static final List<String> TRIGGER_HOLDERS = Arrays.asList("structure","mob","victory","pvp");
 
     public static void initializePlayerChannels(ByteBuf buf) {
         ServerChannels data = new ServerChannels(buf);
@@ -307,33 +305,28 @@ public class ServerChannels {
 
     private boolean calculateMob(Table mobTrigger, EntityPlayerMP player, BlockPos pos) {
         List<String> resources = mobTrigger.getValOrDefault("resource_name",Collections.singletonList("any"));
-        if(resources.isEmpty()) return false;
+        int num = mobTrigger.getValOrDefault("level",1);
+        if(resources.isEmpty() || num<=0) return false;
         List<String> infernal = mobTrigger.getValOrDefault("infernal", Collections.singletonList("any"));
         List<String> champion = mobTrigger.getValOrDefault("champion",Collections.singletonList("any"));
         boolean checkTarget = mobTrigger.getValOrDefault("mob_targeting",true);
         int hordeTarget = mobTrigger.getValOrDefault("horde_targeting_percentage",50);
-        int num = mobTrigger.getValOrDefault("level",1);
         int range = mobTrigger.getValOrDefault("detection_range",16);
         int health = mobTrigger.getValOrDefault("health",100);
         int hordeHealth = mobTrigger.getValOrDefault("horde_health_percentage",50);
         String nbt = mobTrigger.getValOrDefault("mob_nbt","any");
         String victoryID = mobTrigger.getValOrDefault("victory_id","not_set");
         if (resources.contains("BOSS")) {
-            List<BossInfoServer> correctBosses = resources.size() == 1 ? this.bossInfo : this.bossInfo.stream().filter(
+            HashSet<BossInfoServer> matchedBosses = new HashSet<>(resources.size() == 1 ? this.bossInfo : this.bossInfo.stream().filter(
                     info -> partiallyMatches(info.getName().getUnformattedText(),resources.stream()
                             .filter(element -> !element.matches("BOSS")).collect(Collectors.toList())))
-                    .collect(Collectors.toList());
-            BossInfoServer[] passedBosses = new BossInfoServer[num];
-            for (int i = 0; i < num; i++) {
-                if (i >= correctBosses.size())
-                    return false;
-                passedBosses[i] = correctBosses.get(i);
-            }
-            boolean pass = checkBossHealth(passedBosses, health, hordeHealth);
+                    .collect(Collectors.toList()));
+            if(matchedBosses.size()<num) return false;
+            boolean pass = checkBossHealth(matchedBosses, num, health, hordeHealth);
             Victory victory = this.victoryTriggers.get(victoryID);
             if(Objects.nonNull(victory)) {
                 if(pass)
-                    for(BossInfoServer info : passedBosses)
+                    for(BossInfoServer info : matchedBosses)
                         victory.add(mobTrigger, info);
                 victory.setActive(mobTrigger,pass);
             }
@@ -346,29 +339,26 @@ public class ServerChannels {
     private boolean checkMobs(Table trigger, EntityPlayerMP player, BlockPos pos, int num, int range, List<String> resources,
                               List<String> infernal, List<String> champion, boolean target, int hordeTarget, int health,
                               int hordeHealth, String nbt, String victoryID) {
-        if(num<=0) return false;
-        EntityLiving[] passedEntities = new EntityLiving[num];
         AxisAlignedBB box = new AxisAlignedBB(pos.getX()-range,pos.getY()-range,pos.getZ()-range,
                 pos.getX()+range,pos.getY()+range,pos.getZ()+range);
-        HashSet<EntityLiving> livingWithBlacklist = new HashSet<>(player.getServerWorld().getEntitiesWithinAABB(
-                EntityLiving.class,box,e -> checkEntityName(e,resources)));
-        livingWithBlacklist.removeIf(living -> Objects.isNull(living) || !checkNBT(living, nbt) ||
-                !checkModExtensions(living, infernal, champion));
-        Iterator<EntityLiving> itr = livingWithBlacklist.iterator();
-        for(int i = 0; i < num; i++) {
-            if(!itr.hasNext())
-                return false;
-            passedEntities[i] = itr.next();
-        }
-        boolean pass = checkTarget(passedEntities,target,hordeTarget,player) &&
-                checkHealth(passedEntities,(float)health,(float)hordeHealth);
+        HashSet<EntityLiving> matchedEntities = new HashSet<>(player.getServerWorld().getEntitiesWithinAABB(
+                EntityLiving.class,box,e -> entityWhitelist(e,resources,infernal,champion,nbt)));
+        if(matchedEntities.size()<num) return false;
+        boolean pass = checkSpecifics(matchedEntities,num,player,target,hordeTarget,health,hordeHealth);
         Victory victory = this.victoryTriggers.get(victoryID);
         if(Objects.nonNull(victory)) {
-            for(EntityLiving entity : passedEntities)
-                victory.add(trigger,entity);
+            if(pass)
+                for(EntityLiving entity : matchedEntities)
+                    victory.add(trigger,entity);
             victory.setActive(trigger,pass);
         }
         return pass;
+    }
+
+    private boolean entityWhitelist(EntityLiving entity, List<String> resources, List<String> infernal,
+                                    List<String> champion, String nbtParser) {
+        return Objects.nonNull(entity) && checkEntityName(entity, resources) &&
+                checkModExtensions(entity, infernal, champion) && checkNBT(entity, nbtParser);
     }
 
     private boolean checkEntityName(EntityLiving entity, List<String> resources) {
@@ -383,43 +373,38 @@ public class ServerChannels {
         }
         return resources.contains(displayName) || (Objects.nonNull(id) && partiallyMatches(id.toString(),resources));
     }
-
-    private boolean partiallyMatches(String thing, List<String> partials) {
-        for(String partial : partials)
-            if(thing.contains(partial)) return true;
-        return false;
+    private boolean checkSpecifics(HashSet<EntityLiving> entities, int num, EntityPlayerMP player, boolean target,
+                                   float targetRatio, float health, float healthRatio) {
+        return checkTarget(entities,num,target,targetRatio,player) && checkHealth(entities,num,health,healthRatio);
     }
 
-    private boolean checkTarget(EntityLiving[] entities, boolean target, float ratio, EntityPlayerMP player) {
+    private boolean checkTarget(HashSet<EntityLiving> entities, int num, boolean target, float ratio, EntityPlayerMP player) {
         if(!target || ratio<=0) return true;
-        float size = entities.length;
         float counter = 0f;
         for(EntityLiving entity : entities) {
             if(Objects.isNull(entity) || Objects.isNull(entity.getAttackTarget())) continue;
             if(entity.getAttackTarget() == player)
                 counter++;
         }
-        return counter/size>=ratio/100f;
+        return counter/num>=ratio/100f;
     }
 
-    private boolean checkHealth(EntityLiving[] entities, float health, float ratio) {
+    private boolean checkHealth(HashSet<EntityLiving> entities, int num, float health, float ratio) {
         if(health>=100 || ratio<=0) return true;
-        float size = entities.length;
         float counter = 0f;
         for(EntityLiving entity : entities)
             if(entity.getHealth()/entity.getMaxHealth()<=health/100f)
                 counter++;
-        return counter/size>=ratio/100f;
+        return counter/num>=ratio/100f;
     }
 
-    private boolean checkBossHealth(BossInfoServer[] info, float health, float ratio) {
+    private boolean checkBossHealth(HashSet<BossInfoServer> bars, int num, float health, float ratio) {
         if(health>=100 || ratio<=0) return true;
-        float size = info.length;
         float counter = 0f;
-        for(BossInfoServer inf : info)
-            if(inf.getPercent()<=health)
+        for(BossInfoServer bar : bars)
+            if(bar.getPercent()<=health)
                 counter++;
-        return counter/size>=ratio/100f;
+        return counter/num>=ratio/100f;
     }
 
     private boolean checkNBT(EntityLiving entity, String nbt) {
@@ -565,5 +550,11 @@ public class ServerChannels {
             }
         } else victory.setActive(trigger,false);
         return pass;
+    }
+
+    private boolean partiallyMatches(String thing, List<String> partials) {
+        for(String partial : partials)
+            if(thing.contains(partial)) return true;
+        return false;
     }
 }
