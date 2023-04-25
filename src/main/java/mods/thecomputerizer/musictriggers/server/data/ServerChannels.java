@@ -403,8 +403,9 @@ public class ServerChannels {
         boolean pass = checkSpecifics(matchedEntities,num,player,target,hordeTarget,health,hordeHealth);
         Victory victory = this.victoryTriggers.get(victoryID);
         if(Objects.nonNull(victory)) {
-            for(LivingEntity entity : matchedEntities)
-                victory.add(trigger,entity);
+            if(pass)
+                for(LivingEntity entity : matchedEntities)
+                    victory.add(trigger,entity);
             victory.setActive(trigger,pass);
         }
         return pass;
