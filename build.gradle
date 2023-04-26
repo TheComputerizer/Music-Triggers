@@ -62,8 +62,8 @@ dependencies {
 
 	//mods
 	modImplementation "maven.modrinth:the-impossible-library:${project.minecraft_version}-fabric-${project.lib_version}"
-	modImplementation "curse.maven:cloth-config-319057:${project.cloth_version}"
-	modImplementation "curse.maven:modmenu-308702:${project.modmenu_version}"
+	modApi "curse.maven:cloth-config-319057:${project.cloth_version}"
+	modApi "curse.maven:modmenu-308702:${project.modmenu_version}"
 }
 
 processResources {

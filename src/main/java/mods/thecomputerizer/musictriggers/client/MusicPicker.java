@@ -26,7 +26,7 @@ public class MusicPicker {
     public final List<Trigger> dynamicTemp = new ArrayList<>();
     public final List<Trigger> removePersistentPlayable = new ArrayList<>();
 
-    public static final List<String> effectList = new ArrayList<>();
+    public static final List<String> EFFECT_LIST = new ArrayList<>();
 
     private boolean hasLoaded = false;
     public int fadeIn = 0;
@@ -174,6 +174,7 @@ public class MusicPicker {
         playableTriggers.removeIf(Objects::isNull);
         this.dynamicTemp.clear();
         this.dynamicTemp.addAll(playableTriggers);
+        this.dynamicTemp.removeIf(trigger -> this.channel.getSongPool(trigger).isEmpty());
         Trigger priorityTrigger = priorityHandler(playableTriggers);
         if(Objects.isNull(priorityTrigger)) return null;
         this.triggerDelay = priorityTrigger.getParameter("trigger_delay");
@@ -259,12 +260,6 @@ public class MusicPicker {
                 if (!trigger.getParameterBool("passive_persistence")) this.removePersistentPlayable.add(trigger);
             }
         }
-        return ret;
-    }
-
-    public boolean getVictory(int id) {
-        boolean ret = this.victory.get(id)!=null && this.victory.get(id);
-        if(ret) this.victory.put(id,false);
         return ret;
     }
 

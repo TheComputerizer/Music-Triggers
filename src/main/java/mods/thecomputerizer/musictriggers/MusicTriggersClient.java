@@ -5,6 +5,7 @@ import mods.thecomputerizer.musictriggers.client.ClientEvents;
 import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import mods.thecomputerizer.musictriggers.events.AdvancementEvent;
+import mods.thecomputerizer.musictriggers.network.NetworkHandler;
 import mods.thecomputerizer.musictriggers.registry.ItemRegistry;
 import mods.thecomputerizer.musictriggers.registry.items.CustomRecord;
 import mods.thecomputerizer.musictriggers.registry.items.MusicTriggersRecord;
@@ -17,7 +18,6 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.InteractionResult;
 import org.apache.logging.log4j.Level;
 import org.lwjgl.glfw.GLFW;
 
@@ -42,6 +42,7 @@ public class MusicTriggersClient implements ClientModInitializer {
             MusicTriggers.logExternally(Level.FATAL,"Could not initialize channels!");
             throw new RuntimeException(e);
         }
+        if(!ConfigRegistry.CLIENT_SIDE_ONLY) NetworkHandler.registerReceivers(true);
         setUpClientEvents();
         GUI = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "key.musictriggers.gui",
@@ -76,10 +77,7 @@ public class MusicTriggersClient implements ClientModInitializer {
             ClientEvents.onTick();
         });
 
-        AdvancementEvent.EVENT.register(((advancement) -> {
-            ClientEvents.onAdvancement(advancement);
-            return InteractionResult.PASS;
-        }));
+        AdvancementEvent.EVENT.register((ClientEvents::onAdvancement));
 
         ServerLifecycleEvents.SERVER_STARTING.register((server) -> ChannelManager.readResourceLocations());
 

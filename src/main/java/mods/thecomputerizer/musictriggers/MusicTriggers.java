@@ -14,25 +14,27 @@ import mods.thecomputerizer.theimpossiblelibrary.util.file.LogUtil;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Tuple;
 import org.apache.logging.log4j.Level;
 
 import java.io.File;
-import java.util.LinkedHashMap;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 
 public class MusicTriggers implements ModInitializer {
     private static LogUtil.ModLogger MOD_LOG;
-    public static final LinkedHashMap<String, Integer> savedMessages = new LinkedHashMap<>();
-    private static Random random;
+    private static final LinkedHashMap<Integer, Tuple<String, Integer>> ORDERED_LOG_MESSAGES = new LinkedHashMap<>();
+    private static int MESSAGE_COUNTER;
+    private static Random RANDOM;
 
     @Override
     public void onInitialize() {
         MOD_LOG = LogUtil.create(Constants.MODID);
-        random = new Random();
+        MESSAGE_COUNTER = 0;
+        RANDOM = new Random();
         if(!Constants.CONFIG_DIR.exists())
-            if(!Constants.CONFIG_DIR.mkdir())
+            if(!Constants.CONFIG_DIR.mkdirs())
                 throw new RuntimeException("Unable to create file directory at "+Constants.CONFIG_DIR.getPath()+
                         "! Music Triggers is unable to load any further.");
         ConfigRegistry.initialize(new File(Constants.CONFIG_DIR,"registration.toml"),false);
@@ -42,13 +44,14 @@ public class MusicTriggers implements ModInitializer {
             ItemRegistry.register();
             TileRegistry.register();
         }
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> TriggerCommand.register(dispatcher));
-        if(!ConfigRegistry.CLIENT_SIDE_ONLY) NetworkHandler.registerReceivers();
+        if(!ConfigRegistry.CLIENT_SIDE_ONLY) NetworkHandler.registerReceivers(false);
         setUpCommonEvents();
     }
 
     private void setUpCommonEvents() {
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> TriggerCommand.register(dispatcher));
         ServerTickEvents.END_SERVER_TICK.register(server -> ServerEvents.onServerTick());
+        AttackEntityCallback.EVENT.register(((player, world, hand, entity, hitResult) -> ServerEvents.livingAttack(player,entity)));
     }
 
     public static ResourceLocation getIcon(String type, String name) {
@@ -61,7 +64,7 @@ public class MusicTriggers implements ModInitializer {
     }
 
     public static int randomInt(int max) {
-        return random.nextInt(max);
+        return RANDOM.nextInt(max);
     }
 
     /*
@@ -79,7 +82,7 @@ public class MusicTriggers implements ModInitializer {
             min = temp;
         }
         if(max-min<=0) return min;
-        return min+random.nextInt(max-min);
+        return min+RANDOM.nextInt(max-min);
     }
 
     private static int parse(String parameter, String element, int fallback) {
@@ -105,7 +108,7 @@ public class MusicTriggers implements ModInitializer {
         }
         float h = max-min;
         if(h<=0) return min;
-        return min+(random.nextFloat()*h);
+        return min+(RANDOM.nextFloat()*h);
     }
 
     private static float parse(String parameter, String element, float fallback) {
@@ -120,7 +123,9 @@ public class MusicTriggers implements ModInitializer {
 
     public static void logExternally(Level level, String message, Object ... parameters) {
         MOD_LOG.log(level, message, parameters);
-        savedMessages.put("["+String.format("%-5s",level.toString())+"] "+LogUtil.injectParameters(message, parameters),colorizeLogLevel(level));
+        ORDERED_LOG_MESSAGES.put(MESSAGE_COUNTER,new Tuple<>("["+String.format("%-5s",level.toString())+"] "+
+                LogUtil.injectParameters(message, parameters),colorizeLogLevel(level)));
+        MESSAGE_COUNTER++;
     }
 
     private static int colorizeLogLevel(Level level) {
@@ -129,6 +134,15 @@ public class MusicTriggers implements ModInitializer {
         else if(level==Level.WARN) return GuiUtil.makeRGBAInt(255,215,0,255);
         else if(level==Level.ERROR) return GuiUtil.makeRGBAInt(255,0,0,255);
         return GuiUtil.makeRGBAInt(100,0,0,255);
+    }
+
+    public static Set<Map.Entry<Integer,Tuple<String,Integer>>> getLogEntries() {
+        return ORDERED_LOG_MESSAGES.entrySet();
+    }
+
+    public static void clearLog() {
+        ORDERED_LOG_MESSAGES.clear();
+        MESSAGE_COUNTER = 0;
     }
 
     public static <T> T clone(final T o) {

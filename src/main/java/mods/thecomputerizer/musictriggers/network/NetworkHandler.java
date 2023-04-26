@@ -17,26 +17,37 @@ public class NetworkHandler {
 
     private static final Map<Class<?>,ResourceLocation> ID_MAP = new HashMap<>();
 
-    public static void registerReceivers() {
+    public static void registerReceivers(boolean isClient) {
         registerServerReceiver(PacketInitChannels.class,PacketInitChannels::handle);
         registerServerReceiver(PacketDynamicChannelInfo.class,PacketDynamicChannelInfo::handle);
-        registerClientReceiver(PacketJukeBoxCustom.class,PacketJukeBoxCustom::handle);
-        registerClientReceiver(PacketReceiveCommand.class,PacketReceiveCommand::handle);
-        registerClientReceiver(PacketSyncServerInfo.class,PacketSyncServerInfo::handle);
+        if(isClient) {
+            registerClientReceiver(PacketJukeBoxCustom.class, PacketJukeBoxCustom::handle);
+            registerClientReceiver(PacketReceiveCommand.class, PacketReceiveCommand::handle);
+            registerClientReceiver(PacketSyncServerInfo.class, PacketSyncServerInfo::handle);
+        } else {
+            addSenderID(PacketJukeBoxCustom.class);
+            addSenderID(PacketReceiveCommand.class);
+            addSenderID(PacketSyncServerInfo.class);
+        }
+    }
+
+    private static void addSenderID(Class<? extends IPacket> classType) {
+        ResourceLocation id = new ResourceLocation(Constants.MODID,classType.getSimpleName().toLowerCase());
+        ID_MAP.putIfAbsent(classType,id);
     }
 
     private static void registerClientReceiver(Class<? extends IPacket> classType,
                                                Supplier<ClientPlayNetworking.PlayChannelHandler> handler) {
         ResourceLocation id = new ResourceLocation(Constants.MODID,classType.getSimpleName().toLowerCase());
         ClientPlayNetworking.registerGlobalReceiver(id,handler.get());
-        ID_MAP.put(classType,id);
+        ID_MAP.putIfAbsent(classType,id);
     }
 
     private static void registerServerReceiver(Class<? extends IPacket> classType,
                                                Supplier<ServerPlayNetworking.PlayChannelHandler> handler) {
         ResourceLocation id = new ResourceLocation(Constants.MODID,classType.getSimpleName().toLowerCase());
         ServerPlayNetworking.registerGlobalReceiver(id,handler.get());
-        ID_MAP.put(classType,id);
+        ID_MAP.putIfAbsent(classType,id);
     }
 
     public static void sendTo(IPacket packet, ServerPlayer player) {

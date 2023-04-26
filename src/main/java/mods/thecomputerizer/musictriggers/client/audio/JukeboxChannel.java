@@ -8,7 +8,6 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -65,7 +64,6 @@ public class JukeboxChannel {
     }
 
     public void playTrack(AudioTrack track, BlockPos jukeboxPos) {
-        Constants.MAIN_LOG.error("PLAYING JUKEBOX TRACK");
         MusicTriggers.logExternally(Level.INFO,"Playing track for jukebox");
         if(track!=null) {
             track.setPosition(0);

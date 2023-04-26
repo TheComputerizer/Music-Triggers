@@ -73,7 +73,7 @@ public class Toggle {
                     "parsed correctly!");
         else {
             String condition = to.getValOrDefault("condition","no");
-            if(!condition.matches("true") || !condition.matches("false") || !condition.matches("switch"))
+            if(!condition.matches("true") && !condition.matches("false") && !condition.matches("switch"))
                 MusicTriggers.logExternally(Level.ERROR,"\"to\" table in toggle has invalid condition! " +
                         "Accepted values are true, false, or switch");
             else {
@@ -112,12 +112,19 @@ public class Toggle {
         return !this.fromThese.isEmpty() && !this.toThese.isEmpty();
     }
 
-    public void runToggle(int condition, List<Trigger> triggers) {
-        if(this.fromThese.containsKey(condition))
-            if(new HashSet<>(triggers).containsAll(this.fromThese.get(condition)))
-                for(Map.Entry<String, List<Trigger>> entry : this.toThese.entrySet())
-                    for(Trigger trigger : entry.getValue())
+    public List<Trigger> runToggle(int condition, List<Trigger> triggers) {
+        List<Trigger> toggledOn = new ArrayList<>();
+        if(this.fromThese.containsKey(condition)) {
+            if (new HashSet<>(triggers).containsAll(this.fromThese.get(condition))) {
+                for (Map.Entry<String, List<Trigger>> entry : this.toThese.entrySet()) {
+                    for (Trigger trigger : entry.getValue()) {
                         trigger.setToggle(entry.getKey().matches("true") || entry.getKey().matches("false") ?
-                            Boolean.parseBoolean(entry.getKey()) : !trigger.isToggled());
+                                Boolean.parseBoolean(entry.getKey()) : !trigger.isToggled());
+                        if(trigger.isToggled()) toggledOn.add(trigger);
+                    }
+                }
+            }
+        }
+        return toggledOn;
     }
 }

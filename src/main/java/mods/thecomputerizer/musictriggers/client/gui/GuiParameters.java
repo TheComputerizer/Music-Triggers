@@ -391,7 +391,7 @@ public class GuiParameters extends GuiSuperType {
                 if(!this.varHover) return new ArrayList<>();
                 List<String> ret = ((List<?>)this.var.get()).isEmpty() ? Translate.singletonHoverExtra(this.display,"parameter_list","empty") :
                         Collections.singletonList(Translate.condenseList((List<?>)this.var.get()));
-                return ret.stream().map(line -> (Component) MutableComponent.create(new LiteralContents(line))).toList();
+                return ret.stream().map(line -> (Component) MutableComponent.create(new LiteralContents(line))).collect(Collectors.toList());
             } else {
                 int width = fontRenderer.width(this.var.get().toString())+6;
                 int height = fontRenderer.lineHeight+4;
