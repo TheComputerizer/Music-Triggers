@@ -54,11 +54,12 @@ public class ClientEvents {
     public static void playSound(PlaySoundEvent e) {
         if(Objects.isNull(e.getSound())) return;
         SimpleSound silenced = new SimpleSound(e.getSound().getLocation(), e.getSound().getSource(),
-                Float.MIN_VALUE*10000, 1F, false, 0, ISound.AttenuationType.NONE, 0F, 0F, 0F,true);
+                Float.MIN_VALUE*10000, 1F, false, 0, ISound.AttenuationType.NONE,
+                0F, 0F, 0F,true);
         for(String s : ConfigDebug.BLOCKED_MOD_CATEGORIES) {
-            String modid = s.contains("\\;") ? s.substring(0,s.indexOf(';')-1) : s;
+            String modid = s.contains(";") ? s.substring(0,s.indexOf(';')) : s;
             if(!e.getSound().getLocation().getNamespace().matches(modid)) continue;
-            String categoryName = s.contains("\\;") && s.indexOf(';')+1<s.length() ? s.substring(s.indexOf(';')+1) : "music";
+            String categoryName = s.contains(";") && s.indexOf(';')+1<s.length() ? s.substring(s.indexOf(';')+1) : "music";
             if(e.getSound().getLocation().getPath().matches(categoryName))
                 if(ChannelManager.handleSoundEventOverride(e.getSound()))
                     e.setResultSound(silenced);

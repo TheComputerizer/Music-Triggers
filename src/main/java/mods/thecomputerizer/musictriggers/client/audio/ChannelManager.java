@@ -134,8 +134,9 @@ public class ChannelManager {
         return channelMap.values();
     }
 
+    @SuppressWarnings("ConstantValue")
     public static boolean handleSoundEventOverride(ISound sound) {
-        if(!ConfigDebug.PLAY_NORMAL_MUSIC) return true;
+        if(!ConfigDebug.PLAY_NORMAL_MUSIC || Objects.isNull(sound.getSound())) return true;
         if(!sound.getSound().shouldStream() && ConfigDebug.BLOCK_STREAMING_ONLY) return false;
         for(Channel channel : getAllChannels())
             if(channel.getOverrideStatus(sound)) return true;
