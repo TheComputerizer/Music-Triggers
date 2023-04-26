@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.network.packets;
 
-import mods.thecomputerizer.musictriggers.server.ServerData;
+import mods.thecomputerizer.musictriggers.server.data.ServerChannels;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -9,13 +9,13 @@ import java.util.function.Supplier;
 @SuppressWarnings("unused")
 public class PacketInitChannels {
 
-    private ServerData data;
+    private ServerChannels data;
 
     public PacketInitChannels(FriendlyByteBuf buf) {
-        ServerData.initializePlayerChannels(buf);
+        ServerChannels.initializePlayerChannels(buf);
     }
 
-    public PacketInitChannels(ServerData channelData) {
+    public PacketInitChannels(ServerChannels channelData) {
         this.data = channelData;
     }
 

@@ -3,9 +3,10 @@ package mods.thecomputerizer.musictriggers.client.audio;
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.ClientSync;
+import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.musictriggers.client.gui.instance.ChannelHolder;
 import mods.thecomputerizer.musictriggers.client.gui.instance.ChannelInstance;
-import mods.thecomputerizer.musictriggers.server.ServerData;
+import mods.thecomputerizer.musictriggers.server.data.ServerChannels;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import mods.thecomputerizer.musictriggers.network.NetworkHandler;
@@ -21,23 +22,29 @@ import mods.thecomputerizer.theimpossiblelibrary.util.CustomTick;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.TomlUtil;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.client.sounds.ChannelAccess;
+import net.minecraft.client.sounds.SoundEngine;
 import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.JukeboxBlock;
 import net.minecraft.world.level.block.entity.JukeboxBlockEntity;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import org.apache.commons.lang3.EnumUtils;
 import org.apache.logging.log4j.Level;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-@OnlyIn(Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = Constants.MODID, value = Dist.CLIENT)
 public class ChannelManager {
     public static char blinker = ' ';
     private static JukeboxChannel jukeboxChannel;
@@ -45,6 +52,7 @@ public class ChannelManager {
     private static final HashMap<String,Channel> channelMap = new HashMap<>();
     public static final HashMap<String, File[]> openAudioFiles = new HashMap<>();
     public static final Map<Table, Renderable> tickingRenderables = new ConcurrentHashMap<>();
+    private static final HashSet<SoundInstance> PAUSED_VANILLA_SOUNDS = new HashSet<>();
 
     private static int tickCounter = 0;
     public static boolean reloading = true;
@@ -56,6 +64,8 @@ public class ChannelManager {
             card.stop();
         }
         tickingRenderables.clear();
+        PAUSED_VANILLA_SOUNDS.clear();
+        Trigger.loadDefaultData();
         jukeboxChannel = new JukeboxChannel("jukebox");
         channelsConfig = channelsFile;
         FileUtil.generateNestedFile(channelsFile,false);
@@ -121,26 +131,67 @@ public class ChannelManager {
         return channelMap.get(channel);
     }
 
-    public static boolean channelExists(String channel) {
-        return channelMap.containsKey(channel);
-    }
-
     public static Collection<Channel> getAllChannels() {
         return channelMap.values();
     }
 
-    public static List<String> getChannelNames() {
-        return new ArrayList<>(channelMap.keySet());
+    @SuppressWarnings("ConstantValue")
+    public static boolean handleSoundEventOverride(SoundInstance sound) {
+        if(!ConfigDebug.PLAY_NORMAL_MUSIC || Objects.isNull(sound.getSound())) return true;
+        if(!sound.getSound().shouldStream() && ConfigDebug.BLOCK_STREAMING_ONLY) return false;
+        for(Channel channel : getAllChannels())
+            if(channel.getOverrideStatus(sound)) return true;
+        return false;
     }
 
-    public static boolean canAnyChannelOverrideMusic() {
-        for(Channel channel : getAllChannels()) if(channel.overridesNormalMusic() && channel.isPlaying()) return true;
-        return false;
+    public static HashSet<SoundSource> getInterrputedCategories() {
+        HashSet<SoundSource> ret = new HashSet<>();
+        for(String interrputed : ConfigDebug.INTERRUPTED_AUDIO_CATEGORIES) {
+            if(EnumUtils.isValidEnumIgnoreCase(SoundSource.class,interrputed)) {
+                SoundSource toAdd = EnumUtils.getEnumIgnoreCase(SoundSource.class,interrputed);
+                ret.add(toAdd);
+            }
+        }
+        return ret;
+    }
+
+    public static void handleAudioStart(boolean pause, HashSet<SoundSource> categories) {
+        if(categories.isEmpty()) return;
+        SoundEngine engine = Minecraft.getInstance().getSoundManager().soundEngine;
+        Consumer<SoundInstance> handler = sound -> {
+            ChannelAccess.ChannelHandle entry = engine.instanceToChannel.get(sound);
+            if(pause) {
+                entry.execute(com.mojang.blaze3d.audio.Channel::pause);
+                PAUSED_VANILLA_SOUNDS.add(sound);
+            }
+            else entry.execute(com.mojang.blaze3d.audio.Channel::stop);
+        };
+        HashSet<SoundInstance> sounds = new HashSet<>();
+        for(SoundSource category : categories)
+            sounds.addAll(engine.instanceBySource.get(category));
+        for(SoundInstance sound : sounds)
+            if(Objects.nonNull(sound) && engine.instanceToChannel.containsKey(sound))
+                handler.accept(sound);
+    }
+
+    public static void handleAudioStop(HashSet<SoundSource> categories) {
+        SoundEngine engine = Minecraft.getInstance().getSoundManager().soundEngine;
+        Iterator<SoundInstance> pausedItr = PAUSED_VANILLA_SOUNDS.iterator();
+        while(pausedItr.hasNext()) {
+            SoundInstance paused = pausedItr.next();
+            for(SoundSource category : categories) {
+                if(engine.instanceBySource.get(category).contains(paused)) {
+                    engine.instanceToChannel.get(paused).execute(com.mojang.blaze3d.audio.Channel::unpause);
+                    pausedItr.remove();
+                    break;
+                }
+            }
+        }
     }
 
     public static void initializeServerInfo() {
         if(!ConfigRegistry.CLIENT_SIDE_ONLY) {
-            ServerData data = new ServerData();
+            ServerChannels data = new ServerChannels();
             for (Channel channel : channelMap.values())
                 channel.initializeServerData(data);
             NetworkHandler.sendToServer(new PacketInitChannels(data));

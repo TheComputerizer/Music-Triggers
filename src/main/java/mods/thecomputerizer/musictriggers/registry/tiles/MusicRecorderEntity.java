@@ -3,13 +3,12 @@ package mods.thecomputerizer.musictriggers.registry.tiles;
 import mods.thecomputerizer.musictriggers.registry.BlockRegistry;
 import mods.thecomputerizer.musictriggers.registry.TileRegistry;
 import mods.thecomputerizer.musictriggers.registry.blocks.MusicRecorder;
-import mods.thecomputerizer.musictriggers.server.ServerData;
+import mods.thecomputerizer.musictriggers.server.data.ServerChannels;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -44,7 +43,7 @@ public class MusicRecorderEntity extends BlockEntity {
         this.player = player;
     }
 
-    public static void serverTick(Level level, BlockPos pos, BlockState state, MusicRecorderEntity entity) {
+    public static void serverTick(MusicRecorderEntity entity) {
         if(entity.counter>0) {
             entity.counter--;
             if(entity.counter<=0) entity.record();
@@ -52,7 +51,7 @@ public class MusicRecorderEntity extends BlockEntity {
     }
 
     private void record() {
-        ItemStack stack = ServerData.recordAudioData(this.player.getUUID(),this.record);
+        ItemStack stack = ServerChannels.recordAudioData(this.player.getUUID(),this.record);
         if(stack != ItemStack.EMPTY) {
             BlockState state = this.level.getBlockState(this.worldPosition);
             if(state.getBlock()== BlockRegistry.MUSIC_RECORDER.get()) {

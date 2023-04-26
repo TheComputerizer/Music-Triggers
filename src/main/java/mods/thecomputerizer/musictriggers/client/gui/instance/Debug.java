@@ -26,6 +26,8 @@ public class Debug extends AbstractConfig {
                         fileData.getOrCreateVar(null,"SHOW_DEBUG",false)),
                 new GuiParameters.Parameter(type.getId(),"current_song_only",
                         fileData.getOrCreateVar(null,"CURRENT_SONG_ONLY",false)),
+                new GuiParameters.Parameter(type.getId(),"allow_timestamps",
+                        fileData.getOrCreateVar(null,"ALLOW_TIMESTAMPS",false)),
                 new GuiParameters.Parameter(type.getId(),"log_level",
                         fileData.getOrCreateVar(null,"LOG_LEVEL","INFO")),
                 new GuiParameters.Parameter(type.getId(),"play_normal_music",
@@ -36,10 +38,12 @@ public class Debug extends AbstractConfig {
                         fileData.getOrCreateVar(null,"COMBINE_EQUAL_PRIORITY",false)),
                 new GuiParameters.Parameter(type.getId(),"pause_when_tabbed",
                         fileData.getOrCreateVar(null,"PAUSE_WHEN_TABBED",true)),
-                new GuiParameters.Parameter(type.getId(),"blocked_mod_music",
-                        fileData.getOrCreateVar(null,"BLOCKED_MOD_MUSIC",new ArrayList<String>())),
-                new GuiParameters.Parameter(type.getId(),"blocked_mod_records",
-                        fileData.getOrCreateVar(null,"BLOCKED_MOD_RECORDS",new ArrayList<String>())));
+                new GuiParameters.Parameter(type.getId(),"blocked_mod_categories",
+                        fileData.getOrCreateVar(null,"BLOCKED_MOD_CATEGORIES",Collections.singletonList("minecraft;music"))),
+                new GuiParameters.Parameter(type.getId(),"block_streaming_only",
+                        fileData.getOrCreateVar(null,"BLOCK_STREAMING_ONLY",true)),
+                new GuiParameters.Parameter(type.getId(),"interrupted_audio_categories",
+                        fileData.getOrCreateVar(null,"INTERRUPTED_AUDIO_CATEGORIES",Collections.singletonList("music"))));
     }
 
     @Override

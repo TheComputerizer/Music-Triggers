@@ -1,4 +1,4 @@
-package mods.thecomputerizer.musictriggers.server;
+package mods.thecomputerizer.musictriggers.server.data;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
@@ -37,17 +37,16 @@ import top.theillusivec4.champions.common.capability.ChampionCapability;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public class ServerData {
-    private static final Map<String, ServerData> SERVER_DATA = new HashMap<>();
+public class ServerChannels {
+    private static final Map<String, ServerChannels> SERVER_DATA = new HashMap<>();
     private static final Map<String, List<ServerBossEvent>> QUEUED_BOSS_BARS = new HashMap<>();
     private static final List<String> NBT_MODES = Arrays.asList("KEY_PRESENT","VAL_PRESENT","GREATER","LESSER","EQUAL","INVERT");
-    private static final List<String> TRIGGER_HOLDERS = Arrays.asList("difficulty","time","light","height","riding",
-            "dimension","biome","structure","mob","victory","gui","zones","pvp","advancement","statistic","command","raid",
-            "gamestage","rainintensity","tornado","moon","season");
+    private static final List<String> SERVER_TRIGGER_HOLDERS = Arrays.asList("biome","structure","mob","victory","pvp","raid");
 
     public static void initializePlayerChannels(FriendlyByteBuf buf) {
-        ServerData data = new ServerData(buf);
+        ServerChannels data = new ServerChannels(buf);
         if(SERVER_DATA.containsKey(data.playerUUID.toString()))
             data.bossInfo.addAll(SERVER_DATA.get(data.playerUUID.toString()).bossInfo);
         SERVER_DATA.put(data.playerUUID.toString(),data);
@@ -66,22 +65,22 @@ public class ServerData {
             boolean isPlaying = buf.readBoolean();
             String track = isPlaying ? NetworkUtil.readString(buf) : null;
             String trigger = isPlaying ? NetworkUtil.readString(buf) : null;
-            ServerData data = SERVER_DATA.get(playerUUID);
+            ServerChannels data = SERVER_DATA.get(playerUUID);
             if(Objects.nonNull(data) && data.isValid()) data.updateDynamicInfo(channel,commands,track,trigger);
         }
     }
 
     public static void runServerChecks() {
-        Iterator<Map.Entry<String,ServerData>> itr = SERVER_DATA.entrySet().iterator();
+        Iterator<Map.Entry<String, ServerChannels>> itr = SERVER_DATA.entrySet().iterator();
         while(itr.hasNext()) {
-            ServerData data = itr.next().getValue();
+            ServerChannels data = itr.next().getValue();
             if(data.isValid()) data.runChecks();
             else itr.remove();
         }
     }
 
     public static void addBossBarTracking(UUID playerUUID, ServerBossEvent info) {
-        ServerData data = SERVER_DATA.get(playerUUID.toString());
+        ServerChannels data = SERVER_DATA.get(playerUUID.toString());
         if(Objects.nonNull(data)) {
             if (data.isValid()) data.bossInfo.add(info);
         } else {
@@ -92,7 +91,7 @@ public class ServerData {
     }
 
     public static void removeBossBarTracking(UUID playerUUID, ServerBossEvent info) {
-        ServerData data = SERVER_DATA.get(playerUUID.toString());
+        ServerChannels data = SERVER_DATA.get(playerUUID.toString());
         if(Objects.nonNull(data)) {
             if (data.isValid()) data.bossInfo.remove(info);
         } else if(QUEUED_BOSS_BARS.containsKey(playerUUID.toString()))
@@ -100,15 +99,22 @@ public class ServerData {
     }
 
     public static ItemStack recordAudioData(UUID playerUUID, ItemStack recordStack) {
-        ServerData data = SERVER_DATA.get(playerUUID.toString());
+        ServerChannels data = SERVER_DATA.get(playerUUID.toString());
         if(data.isValid()) return data.recordAudioData(recordStack);
         return ItemStack.EMPTY;
+    }
+
+    public static void setPVP(ServerPlayer attacker, String playerUUID) {
+        ServerChannels data = SERVER_DATA.get(playerUUID);
+        if(Objects.nonNull(data))
+            if(data.isValid()) data.setPVP(attacker);
     }
 
     private final Map<String, List<Table>> mappedTriggers;
     private final List<Table> allTriggers;
     private final Map<Table, Boolean> triggerStatus = new HashMap<>();
     private final Map<String, Map<String, Boolean>> updatedTriggers = new HashMap<>();
+    private final Map<String, Victory> victoryTriggers;
     private final Map<String, List<String>> menuSongs;
     private final List<ServerBossEvent> bossInfo = new ArrayList<>();
     private final UUID playerUUID;
@@ -118,20 +124,42 @@ public class ServerData {
     private final Map<String, String> currentTriggers = new HashMap<>();
     private String curStruct;
     private String prevStruct;
-    public ServerData(FriendlyByteBuf buf) {
+    private ServerPlayer attacker = null;
+    public ServerChannels(FriendlyByteBuf buf) {
         this.mappedTriggers = NetworkUtil.readGenericMap(buf, NetworkUtil::readString, buf1 ->
                 NetworkUtil.readGenericList(buf1,buf2 -> TomlPart.getByID(NetworkUtil.readString(buf2)).decode(buf2,null))
                 .stream().filter(Table.class::isInstance).map(Table.class::cast).collect(Collectors.toList()));
         this.allTriggers = mappedTriggers.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
+        this.victoryTriggers = initVictories();
         this.menuSongs = NetworkUtil.readGenericMap(buf,NetworkUtil::readString,
                 buf1 -> NetworkUtil.readGenericList(buf1,NetworkUtil::readString));
         this.server = ServerLifecycleHooks.getCurrentServer();
         this.playerUUID = UUID.fromString(NetworkUtil.readString(buf));
     }
 
-    public ServerData() {
+    private HashMap<String, Victory> initVictories() {
+        HashMap<String, Victory> ret = new HashMap<>();
+        for(Table trigger : this.allTriggers) {
+            if (trigger.getName().matches("victory")) {
+                String id = trigger.getValOrDefault("identifier","not_set");
+                if(!id.matches("not_set")) {
+                    Stream<Table> references = this.allTriggers.stream().filter(table -> {
+                        if(!table.getName().matches("mob") && !table.getName().matches("pvp")) return false;
+                        return !table.getValOrDefault("identifier","not_set").matches("not_set");
+                    });
+                    if(references.findAny().isPresent()) ret.put(id,new Victory(references,
+                            trigger.getValOrDefault("victory_timeout",20)));
+                    else references.close();
+                }
+            }
+        }
+        return ret;
+    }
+
+    public ServerChannels() {
         this.mappedTriggers = new HashMap<>();
         this.allTriggers = new ArrayList<>();
+        this.victoryTriggers = new HashMap<>();
         this.menuSongs = new HashMap<>();
         this.server = null;
         this.playerUUID = null;
@@ -198,6 +226,10 @@ public class ServerData {
         return ret;
     }
 
+    private void setPVP(ServerPlayer attacker) {
+        this.attacker = attacker;
+    }
+
     private void runChecks() {
         runCommands();
         ServerPlayer player = this.server.getPlayerList().getPlayer(this.playerUUID);
@@ -214,8 +246,12 @@ public class ServerData {
                 potentiallyUpdate(trigger, calculateBiome(trigger,player.getLevel(),pos));
             else if (trigger.getName().matches("structure"))
                 potentiallyUpdate(trigger, calculateStruct(player.getLevel(), pos, trigger.getValOrDefault("resource_name", Collections.singletonList("any"))));
+            else if (trigger.getName().matches("victory"))
+                potentiallyUpdate(trigger, calculateVictory(trigger.getValOrDefault("identifier", "not_set")));
             else if (trigger.getName().matches("mob"))
                 potentiallyUpdate(trigger, calculateMob(trigger, player, pos));
+            else if (trigger.getName().matches("pvp"))
+                potentiallyUpdate(trigger, calculatePVP(trigger));
             else if (trigger.getName().matches("raid"))
                 potentiallyUpdate(trigger, calculateRaid(player.getLevel(),pos,trigger.getValOrDefault("level",-1)));
             else toRemove.add(trigger);
@@ -260,7 +296,7 @@ public class ServerData {
 
     private String triggerWithID(Table trigger) {
         String name = trigger.getName();
-        String id = TRIGGER_HOLDERS.contains(name) ? trigger.getValOrDefault("identifier","not_set") : null;
+        String id = SERVER_TRIGGER_HOLDERS.contains(name) ? trigger.getValOrDefault("identifier","not_set") : null;
         if(Objects.nonNull(id) && id.matches("not_set")) return null;
         return Objects.nonNull(id) ? name+"-"+id : name;
     }
@@ -328,95 +364,106 @@ public class ServerData {
 
     private boolean calculateMob(Table mobTrigger, ServerPlayer player, BlockPos pos) {
         List<String> resources = mobTrigger.getValOrDefault("resource_name",Collections.singletonList("any"));
-        if(resources.isEmpty()) return false;
+        int num = mobTrigger.getValOrDefault("level",1);
+        if(resources.isEmpty() || num<=0) return false;
         List<String> infernal = mobTrigger.getValOrDefault("infernal", Collections.singletonList("any"));
         List<String> champion = mobTrigger.getValOrDefault("champion",Collections.singletonList("any"));
         boolean checkTarget = mobTrigger.getValOrDefault("mob_targeting",true);
         int hordeTarget = mobTrigger.getValOrDefault("horde_targeting_percentage",50);
-        int num = mobTrigger.getValOrDefault("level",1);
         int range = mobTrigger.getValOrDefault("detection_range",16);
         int health = mobTrigger.getValOrDefault("health",100);
         int hordeHealth = mobTrigger.getValOrDefault("horde_health_percentage",50);
         String nbt = mobTrigger.getValOrDefault("mob_nbt","any");
+        String victoryID = mobTrigger.getValOrDefault("victory_id","not_set");
         if (resources.contains("BOSS")) {
-            List<ServerBossEvent> correctBosses = this.bossInfo.stream().filter(
-                            info -> !info.getName().getString().matches("Raid") && (resources.size()==1 || partiallyMatches(info.getName().getString(),resources
-                                    .stream().filter(element -> !element.matches("BOSS")).toList()))).toList();
-            ServerBossEvent[] passedBosses = new ServerBossEvent[num];
-            for (int i = 0; i < num; i++) {
-                if (i >= correctBosses.size())
-                    return false;
-                passedBosses[i] = correctBosses.get(i);
+            HashSet<ServerBossEvent> matchedBosses = new HashSet<>(resources.size() == 1 ? this.bossInfo : this.bossInfo.stream().filter(
+                            info -> partiallyMatches(info.getName().getString(),resources.stream()
+                                    .filter(element -> !element.matches("BOSS")).collect(Collectors.toList())))
+                    .collect(Collectors.toList()));
+            if(matchedBosses.size()<num) return false;
+            boolean pass = checkBossHealth(matchedBosses,num,health,hordeHealth);
+            Victory victory = this.victoryTriggers.get(victoryID);
+            if(Objects.nonNull(victory)) {
+                if(pass)
+                    for(ServerBossEvent info : matchedBosses)
+                        victory.add(mobTrigger, info);
+                victory.setActive(mobTrigger,pass);
             }
-            return checkBossHealth(passedBosses, health, hordeHealth);
+            return pass;
         }
-        return checkMobs(player,pos,num,range,resources,infernal,champion,checkTarget,hordeTarget,health,hordeHealth,nbt);
+        return checkMobs(mobTrigger,player,pos,num,range,resources,infernal,champion,checkTarget,hordeTarget,health,
+                hordeHealth,nbt,victoryID);
     }
 
-    private boolean checkMobs(ServerPlayer player, BlockPos pos, int num, int range, List<String> resources,
+    private boolean checkMobs(Table trigger, ServerPlayer player, BlockPos pos, int num, int range, List<String> resources,
                               List<String> infernal, List<String> champion, boolean target, int hordeTarget, int health,
-                              int hordeHealth, String nbt) {
-        if(num<=0) return false;
-        LivingEntity[] passedEntities = new LivingEntity[num];
+                              int hordeHealth, String nbt, String victoryID) {
         AABB box = new AABB(pos.getX()-range,pos.getY()-range,pos.getZ()-range,
                 pos.getX()+range,pos.getY()+range,pos.getZ()+range);
-        List<LivingEntity> livingWithBlacklist = player.getLevel().getEntitiesOfClass(
-                LivingEntity.class,box,e -> e!=player && checkEntityName(e,resources));
-        livingWithBlacklist.removeIf(living -> !checkNBT(living,nbt) || !checkModExtensions(living,infernal,champion));
-        for(int i=0;i<num;i++) {
-            if(i>=livingWithBlacklist.size())
-                return false;
-            passedEntities[i] = livingWithBlacklist.get(i);
+        HashSet<LivingEntity> matchedEntities = new HashSet<>(player.getLevel().getEntitiesOfClass(
+                LivingEntity.class,box,e -> entityWhitelist(e,resources,infernal,champion,nbt)));
+        if(matchedEntities.size()<num) return false;
+        boolean pass = checkSpecifics(matchedEntities,num,player,target,hordeTarget,health,hordeHealth);
+        Victory victory = this.victoryTriggers.get(victoryID);
+        if(Objects.nonNull(victory)) {
+            for(LivingEntity entity : matchedEntities)
+                victory.add(trigger,entity);
+            victory.setActive(trigger,pass);
         }
-        return checkTarget(passedEntities,target,hordeTarget,player) && checkHealth(passedEntities,health,hordeHealth);
+        return pass;
+    }
+
+    private boolean entityWhitelist(LivingEntity entity, List<String> resources, List<String> infernal,
+                                    List<String> champion, String nbtParser) {
+        return Objects.nonNull(entity) && checkEntityName(entity, resources) &&
+                checkModExtensions(entity, infernal, champion) && checkNBT(entity, nbtParser);
     }
 
     private boolean checkEntityName(LivingEntity entity, List<String> resources) {
+        if(resources.isEmpty()) return false;
         String displayName = entity.getName().getString();
         ResourceLocation id = ForgeRegistries.ENTITIES.getKey(entity.getType());
         if(resources.contains("MOB")) {
             if(!(entity instanceof Mob)) return false;
             List<String> blackList = resources.stream().filter(element -> !element.matches("MOB")).collect(Collectors.toList());
+            if(blackList.isEmpty()) return true;
             return !blackList.contains(displayName) && (Objects.isNull(id) || !partiallyMatches(id.toString(),blackList));
         }
         return resources.contains(displayName) || (Objects.nonNull(id) && partiallyMatches(id.toString(),resources));
     }
 
-    private boolean partiallyMatches(String thing, List<String> partials) {
-        for(String partial : partials)
-            if(thing.contains(partial)) return true;
-        return false;
+    private boolean checkSpecifics(HashSet<LivingEntity> entities, int num, ServerPlayer player, boolean target,
+                                   float targetRatio, float health, float healthRatio) {
+        return checkTarget(entities,num,target,targetRatio,player) && checkHealth(entities,num,health,healthRatio);
     }
 
-    private boolean checkTarget(LivingEntity[] entities, boolean target, float ratio, ServerPlayer player) {
+    private boolean checkTarget(HashSet<LivingEntity> entities, int num, boolean target, float ratio, ServerPlayer player) {
         if(!target || ratio<=0) return true;
-        float size = entities.length;
         float counter = 0f;
-        for(LivingEntity entity : entities)
-            if(entity instanceof Mob)
-                if(((Mob)entity).getTarget()==player)
-                    counter++;
-        return counter/size>=ratio/100f;
+        for(LivingEntity entity : entities) {
+            if(!(entity instanceof Mob)) continue;
+            if(((Mob) entity).getTarget() == player)
+                counter++;
+        }
+        return counter/num>=ratio/100f;
     }
 
-    private boolean checkHealth(LivingEntity[] entities, float health, float ratio) {
+    private boolean checkHealth(HashSet<LivingEntity> entities, int num, float health, float ratio) {
         if(health>=100 || ratio<=0) return true;
-        float size = entities.length;
         float counter = 0f;
         for(LivingEntity entity : entities)
-            if(entity.getHealth()/entity.getMaxHealth()<=health)
+            if(entity.getHealth()/entity.getMaxHealth()<=health/100f)
                 counter++;
-        return counter/size>=ratio/100f;
+        return counter/num>=ratio/100f;
     }
 
-    private boolean checkBossHealth(ServerBossEvent[] info, float health, float ratio) {
+    private boolean checkBossHealth(HashSet<ServerBossEvent> bars, int num, float health, float ratio) {
         if(health>=100 || ratio<=0) return true;
-        float size = info.length;
         float counter = 0f;
-        for(ServerBossEvent inf : info)
-            if(inf.getProgress()<=health)
+        for(ServerBossEvent bar : bars)
+            if(bar.getProgress()<=health)
                 counter++;
-        return counter/size>=ratio/100f;
+        return counter/num>=ratio/100f;
     }
 
     private boolean checkNBT(LivingEntity entity, String nbt) {
@@ -552,5 +599,29 @@ public class ServerData {
         Raid raid = world.getRaidAt(pos);
         if(Objects.isNull(raid)) return false;
         return raid.getGroupsSpawned() >= wave;
+    }
+
+    private boolean calculateVictory(String id) {
+        if(id.matches("not_set") || !this.victoryTriggers.containsKey(id)) return false;
+        return this.victoryTriggers.get(id).runCalculation();
+    }
+
+    private boolean calculatePVP(Table trigger) {
+        boolean pass = Objects.nonNull(this.attacker);
+        String victoryID = trigger.getValOrDefault("victory_id","not_set");
+        Victory victory = this.victoryTriggers.get(victoryID);
+        if(Objects.nonNull(this.attacker)) {
+            if(Objects.nonNull(victory)) {
+                victory.add(trigger,this.attacker);
+                victory.setActive(trigger,true);
+            }
+        } else victory.setActive(trigger,false);
+        return pass;
+    }
+
+    private boolean partiallyMatches(String thing, List<String> partials) {
+        for(String partial : partials)
+            if(thing.contains(partial)) return true;
+        return false;
     }
 }

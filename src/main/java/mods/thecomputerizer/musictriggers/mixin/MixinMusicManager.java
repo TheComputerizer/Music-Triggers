@@ -1,6 +1,5 @@
 package mods.thecomputerizer.musictriggers.mixin;
 
-import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import net.minecraft.client.sounds.MusicManager;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,6 +16,6 @@ public class MixinMusicManager {
 
     @Inject(at = @At(value = "HEAD"), method = "tick", cancellable = true)
     private void musictriggers_tick(CallbackInfo info) {
-        if(!ConfigDebug.PLAY_NORMAL_MUSIC || ChannelManager.canAnyChannelOverrideMusic()) info.cancel();
+        if(!ConfigDebug.PLAY_NORMAL_MUSIC) info.cancel();
     }
 }

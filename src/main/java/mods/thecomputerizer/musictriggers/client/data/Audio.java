@@ -4,6 +4,7 @@ import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
 import org.apache.logging.log4j.Level;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 public class Audio {
@@ -16,14 +17,20 @@ public class Audio {
     private final int chance;
     private final int playOnce;
     private final boolean mustFinish;
+    private final long milliStart;
 
-    public Audio(Table song, List<Trigger> triggers) {
+    public Audio(Table song, List<Trigger> triggers, @Nullable Table universal) {
         this.data = song;
-        this.volume = song.getValOrDefault("volume",1f);
-        this.pitch = song.getValOrDefault("pitch",1f);
+        this.volume = song.getValOrDefault("volume",Objects.nonNull(universal) ?
+                universal.getValOrDefault("volume",1f) : 1f);
+        this.pitch = song.getValOrDefault("pitch",Objects.nonNull(universal) ?
+                universal.getValOrDefault("pitch",1f) : 1f);
         this.chance = song.getValOrDefault("chance",100);
-        this.playOnce = song.getValOrDefault("play_once",0);
-        this.mustFinish = song.getValOrDefault("must_finish",false);
+        this.playOnce = song.getValOrDefault("play_once",Objects.nonNull(universal) ?
+                universal.getValOrDefault("play_once",0) : 0);
+        this.mustFinish = song.getValOrDefault("must_finish",Objects.nonNull(universal) ?
+                universal.getValOrDefault("must_finish",false) : false);
+        this.milliStart = song.getValOrDefault("start_at",0L);
         this.triggers = parseTriggers(triggers, song.getValOrDefault("triggers",new ArrayList<>()));
         this.loopMap = readLoops(song.getTablesByName("loop"));
     }
@@ -83,6 +90,10 @@ public class Audio {
 
     public boolean mustFinish() {
         return this.mustFinish;
+    }
+
+    public long getMilliStart() {
+        return milliStart;
     }
 
     public List<Trigger> getTriggers() {
