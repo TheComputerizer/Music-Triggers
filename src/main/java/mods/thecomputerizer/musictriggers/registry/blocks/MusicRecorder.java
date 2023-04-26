@@ -135,6 +135,7 @@ public class MusicRecorder extends BaseEntityBlock {
     @Nullable
     private static <T extends BlockEntity> BlockEntityTicker<T> createTicker(Level level, BlockEntityType<T> serverType,
                                                                                       BlockEntityType<MusicRecorderEntity> clientType) {
-        return level.isClientSide ? null : createTickerHelper(serverType, clientType, MusicRecorderEntity::serverTick);
+        return level.isClientSide ? null : createTickerHelper(serverType, clientType,
+                (level1,pos,state,entity) -> MusicRecorderEntity.serverTick(entity));
     }
 }
