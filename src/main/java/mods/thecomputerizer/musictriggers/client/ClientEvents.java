@@ -61,12 +61,15 @@ public class ClientEvents {
         PositionedSoundRecord silenced = new PositionedSoundRecord(e.getSound().getSoundLocation(), e.getSound().getCategory(),
                 Float.MIN_VALUE*10000, 1F, false, 1, ISound.AttenuationType.LINEAR, 0F, 0F, 0F);
         for(String s : ConfigDebug.BLOCKED_MOD_CATEGORIES) {
-            String modid = s.contains("\\;") ? s.substring(0,s.indexOf(';')-1) : s;
+            String modid = s.contains(";") ? s.substring(0,s.indexOf(';')) : s;
             if(!e.getSound().getSoundLocation().getNamespace().matches(modid)) continue;
-            String categoryName = s.contains("\\;") && s.indexOf(';')+1<s.length() ? s.substring(s.indexOf(';')+1) : "music";
-            if(e.getSound().getCategory().getName().matches(categoryName))
-                if(ChannelManager.handleSoundEventOverride(e.getSound()))
+            String categoryName = s.contains(";") && s.indexOf(';')+1<s.length() ? s.substring(s.indexOf(';')+1) : "music";
+            if(e.getSound().getCategory().getName().matches(categoryName)) {
+                if(ChannelManager.handleSoundEventOverride(e.getSound())) {
                     e.setResultSound(silenced);
+                    return;
+                }
+            }
         }
     }
 
