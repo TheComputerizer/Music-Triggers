@@ -55,6 +55,7 @@ public class ButtonSuperType extends ExtendedButton {
         if(isHovering((int)mouseX, (int)mouseY)) {
             incrementMode();
             this.onClick.accept(parent,this,this.mode);
+            parent.playGenericClickSound();
             return true;
         }
         return false;
