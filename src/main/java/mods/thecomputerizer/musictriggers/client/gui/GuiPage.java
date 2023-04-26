@@ -66,8 +66,8 @@ public class GuiPage extends GuiSuperType {
             addSuperButton(createBottomButton(displayName, width, 2,
                     Translate.guiNumberedList(3, "button", "delete_mode", "desc"),
                     (screen, button, mode) -> {
-                        this.deleteMode = mode > 1;
                         TextFormatting color = mode == 1 ? TextFormatting.WHITE : TextFormatting.RED;
+                        this.deleteMode = color==TextFormatting.RED;
                         button.updateDisplay(color + finalDisplayName);
                     }), left);
         }
@@ -90,7 +90,7 @@ public class GuiPage extends GuiSuperType {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
-        super.mouseClicked(mouseX, mouseY, mouseButton);
+        if(super.mouseClicked(mouseX, mouseY, mouseButton)) return true;
         if (mouseButton == 0) {
             Iterator<Icon> itr = this.icons.iterator();
             while (itr.hasNext()) {
@@ -102,10 +102,10 @@ public class GuiPage extends GuiSuperType {
                     save();
                     return true;
                 }
-                else icon.onClick(this);
+                else if(icon.onClick(this)) return true;
             }
         }
-        return super.mouseClicked(mouseX, mouseY, mouseButton);
+        return false;
     }
 
     @Override
@@ -224,11 +224,13 @@ public class GuiPage extends GuiSuperType {
             }
         }
 
-        public void onClick(GuiSuperType parent) {
+        public boolean onClick(GuiSuperType parent) {
             if(this.hover) {
                 parent.playGenericClickSound();
                 this.handlerFunction.accept(parent,this.id);
+                return true;
             }
+            return false;
         }
 
         public boolean getHover() {
