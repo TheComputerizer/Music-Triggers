@@ -518,7 +518,7 @@ public class Trigger {
     }
 
     public boolean handleHeight(int playerY, boolean visibleSky) {
-        return (getParameterBool("check_above_level") && playerY>getParameterInt("level")) ||
+        return getParameterBool("check_above_level") ? playerY>getParameterInt("level") :
                 ((!visibleSky || !getParameterBool("check_for_sky")) && playerY<getParameterInt("level"));
     }
 
