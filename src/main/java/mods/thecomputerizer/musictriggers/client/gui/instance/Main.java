@@ -75,6 +75,8 @@ public class Main extends AbstractChannelConfig {
                 matcher.addCondition("play_once",(val -> !((val instanceof Number && ((Number) val).intValue()==0) ||
                         val.toString().matches("0"))));
                 matcher.addCondition("must_finish", val -> !val.toString().toLowerCase().matches("false"));
+                matcher.addCondition("start_at",(val -> !((val instanceof Number && ((Number) val).longValue()==0L) ||
+                        val.toString().matches("0"))));
                 song.addMatcher(matcher);
             }
         }
@@ -333,7 +335,7 @@ public class Main extends AbstractChannelConfig {
                         song.getName(), songInfoParameters(song),getChannelName())), null));
         ret.add(new GuiSelection.MonoElement("loops",1,
                 Translate.guiGeneric(false, "selection", "loops"),
-                Translate.singletonHoverExtra("" + song.getTablesByName("loop").size(), "selection", "loop", "set_loops"),
+                Translate.singletonHoverExtra(String.valueOf(song.getTablesByName("loop").size()), "selection", "loop", "set_loops"),
                 (parent) -> Minecraft.getInstance().setScreen(
                 new GuiSelection(parent, GuiType.SELECTION_GENERIC, parent.getInstance(),
                         Translate.withSongInstance(song.getName(), "selection", "group", "loops"),true,
@@ -355,7 +357,9 @@ public class Main extends AbstractChannelConfig {
                 new GuiParameters.Parameter("song_info","play_once",
                         this.fileData.getOrCreateVar(audio,"play_once",0)),
                 new GuiParameters.Parameter("song_info","must_finish",
-                        this.fileData.getOrCreateVar(audio,"must_finish",false)));
+                        this.fileData.getOrCreateVar(audio,"must_finish",false)),
+                new GuiParameters.Parameter("song_info","start_at",
+                        this.fileData.getOrCreateVar(audio,"start_at",0L)));
     }
 
     public ButtonSuperType[] loopInstanceButtons(GuiSuperType grandfather, Table song) {

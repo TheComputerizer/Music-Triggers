@@ -6,7 +6,8 @@
     "MixinServerBossEvent"
   ],
   "client": [
-    "MixinMusicManager"
+    "MixinMusicManager",
+    "MixinSoundEngine"
   ],
   "injectors": {
     "defaultRequire": 1
