@@ -24,6 +24,8 @@ public class ConfigDebug {
     public static boolean SHOW_DEBUG = false;
     public static boolean CURRENT_SONG_ONLY = false;
     public static boolean ALLOW_TIMESTAMPS = false;
+    public static int ENCODING_QUALITY = 10;
+    public static String RESAMPLING_QUALITY = "HIGH";
     public static String LOG_LEVEL = "INFO";
     public static boolean PLAY_NORMAL_MUSIC = false;
     public static boolean REVERSE_PRIORITY = false;
@@ -62,6 +64,12 @@ public class ConfigDebug {
         lines.add("# If SHOW_DEBUG and CURRENT_SONG_ONLY are both enabled, but you want to see the timestamps as well");
         lines.add(LogUtil.injectParameters("ALLOW_TIMESTAMPS = {}",ALLOW_TIMESTAMPS));
         lines.add("");
+        lines.add("# Turing this down will potentially help with audio stutters (Min:1/Max:10)");
+        lines.add(LogUtil.injectParameters("ENCODING_QUALITY = {}",ENCODING_QUALITY));
+        lines.add("");
+        lines.add("# Turing this down will potentially help with audio stutters (HIGH/MEDIUM/LOW)");
+        lines.add(LogUtil.injectParameters("RESAMPLING_QUALITY = {}",RESAMPLING_QUALITY));
+        lines.add("");
         lines.add("# The lowest level of logging (DEBUG/INFO/WARN/ERROR/FATAL) to include in the GUI log visualizer");
         lines.add(LogUtil.injectParameters("LOG_LEVEL = \"{}\"",LOG_LEVEL));
         lines.add("");
@@ -99,6 +107,8 @@ public class ConfigDebug {
         SHOW_DEBUG = TomlUtil.readIfExists(toml,"SHOW_DEBUG",SHOW_DEBUG);
         CURRENT_SONG_ONLY = TomlUtil.readIfExists(toml,"CURRENT_SONG_ONLY",CURRENT_SONG_ONLY);
         ALLOW_TIMESTAMPS = TomlUtil.readIfExists(toml,"ALLOW_TIMESTAMPS",ALLOW_TIMESTAMPS);
+        ENCODING_QUALITY = TomlUtil.readIfExists(toml,"ENCODING_QUALITY",ENCODING_QUALITY);
+        RESAMPLING_QUALITY = TomlUtil.readIfExists(toml,"RESAMPLING_QUALITY",RESAMPLING_QUALITY);
         LOG_LEVEL = TomlUtil.readIfExists(toml,"LOG_LEVEL",LOG_LEVEL);
         PLAY_NORMAL_MUSIC = TomlUtil.readIfExists(toml,"PLAY_NORMAL_MUSIC",PLAY_NORMAL_MUSIC);
         REVERSE_PRIORITY = TomlUtil.readIfExists(toml,"REVERSE_PRIORITY",REVERSE_PRIORITY);
@@ -115,6 +125,8 @@ public class ConfigDebug {
         SHOW_DEBUG = data.getValOrDefault("SHOW_DEBUG",false);
         CURRENT_SONG_ONLY = data.getValOrDefault("CURRENT_SONG_ONLY",false);
         ALLOW_TIMESTAMPS = data.getValOrDefault("ALLOW_TIMESTAMPS",false);
+        ENCODING_QUALITY = data.getValOrDefault("ENCODING_QUALITY",10);
+        RESAMPLING_QUALITY = data.getValOrDefault("RESAMPLING_QUALITY","HIGH");
         LOG_LEVEL = data.getValOrDefault("LOG_LEVEL","INFO");
         PLAY_NORMAL_MUSIC = data.getValOrDefault("PLAY_NORMAL_MUSIC",false);
         REVERSE_PRIORITY = data.getValOrDefault("REVERSE_PRIORITY",false);

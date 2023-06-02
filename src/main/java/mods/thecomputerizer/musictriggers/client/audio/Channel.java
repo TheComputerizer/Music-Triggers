@@ -16,6 +16,7 @@ import mods.thecomputerizer.musictriggers.client.data.Audio;
 import mods.thecomputerizer.musictriggers.client.data.Toggle;
 import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.musictriggers.client.gui.instance.*;
+import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.musictriggers.config.ConfigJukebox;
 import mods.thecomputerizer.musictriggers.config.ConfigRedirect;
 import mods.thecomputerizer.musictriggers.server.data.ServerChannels;
@@ -33,6 +34,7 @@ import net.minecraft.util.SoundCategory;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.EnumUtils;
 import org.apache.logging.log4j.Level;
 import org.lwjgl.input.Keyboard;
 
@@ -108,8 +110,12 @@ public class Channel {
         this.loadedTracks = new HashMap<>();
         this.playerManager.setFrameBufferDuration(1000);
         this.playerManager.setPlayerCleanupThreshold(Long.MAX_VALUE);
-        this.playerManager.getConfiguration().setResamplingQuality(AudioConfiguration.ResamplingQuality.HIGH);
-        this.playerManager.getConfiguration().setOpusEncodingQuality(AudioConfiguration.OPUS_QUALITY_MAX);
+        String resamplingQuality = ConfigDebug.RESAMPLING_QUALITY.toUpperCase();
+        this.playerManager.getConfiguration().setResamplingQuality(EnumUtils.isValidEnum(
+                AudioConfiguration.ResamplingQuality.class,resamplingQuality) ?
+                AudioConfiguration.ResamplingQuality.valueOf(resamplingQuality) :
+                AudioConfiguration.ResamplingQuality.HIGH);
+        this.playerManager.getConfiguration().setOpusEncodingQuality(ConfigDebug.ENCODING_QUALITY);
         this.playerManager.getConfiguration().setOutputFormat(StandardAudioDataFormats.DISCORD_PCM_S16_BE);
         this.oncePerTrigger = new ArrayList<>();
         this.onceUntilEmpty = new ArrayList<>();
