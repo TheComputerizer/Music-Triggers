@@ -14,7 +14,7 @@ import java.util.stream.IntStream;
 
 public class Translate {
 
-    /*
+    /**
      * Gets the identifier of a trigger id
      */
     public static String triggerID(Table trigger) {
@@ -22,7 +22,7 @@ public class Translate {
         return id.matches("not_set") ? trigger.getValOrDefault("id","not_set") : id;
     }
 
-    /*
+    /**
      * Formats the translation of a trigger with an identifier.
     */
     public static String triggerWithID(String triggerIdentifier) {
@@ -30,7 +30,7 @@ public class Translate {
         return guiGeneric(false,"trigger",split[0])+"-"+ split[1];
     }
 
-    /*
+    /**
      * Converts a collection of strings into a single bracketed string.
     */
     public static String condenseList(Collection<?> things) {
@@ -50,14 +50,14 @@ public class Translate {
                         millis-TimeUnit.SECONDS.toMillis(TimeUnit.MILLISECONDS.toSeconds(millis)));
     }
 
-    /*
+    /**
      * Converts a collection of triggers into a single line for use in hover text specifically for toggles.
     */
     public static String toggleTriggers(Collection<String> triggers) {
         return condenseList(triggers.stream().map(Translate::triggerWithID).collect(Collectors.toList()));
     }
 
-    /*
+    /**
      * Parameter name translation. Also handles when triggers have unique descriptions for certain parameters.
     */
     public static String parameter(String ... stuff) {
@@ -66,42 +66,49 @@ public class Translate {
         guiGeneric(false,ArrayUtils.remove(stuff,3));
     }
 
-    /*
+    /**
      * Allows for custom song names to display or uses the registered name if no key is set.
     */
     public static String songInstance(String name) {
         return libHook(buildLangKey("audio",name,"name"),name);
     }
 
-    /*
+    /**
      * Translation for any title or single line string that includes a song name.
     */
     public static String withSongInstance(String name, String ... elements) {
         return guiGeneric(false,elements)+" "+ songInstance(name);
     }
 
-    /*
+    /**
      * Translation for any title or single line string that includes a generic non song name string
      */
     public static String withOther(String extra, String ... elements) {
         return guiGeneric(false,elements)+" "+ extra;
     }
 
-    /*
+    /**
+     * Hover translation for when a button is disabled from a resource pack or server config
+     */
+    public static List<String> disabledHover() {
+        return singletonHover("disabled");
+    }
+
+    /**
      * Generic hover translations that need to be returned as a list but only have 1 element.
     */
     public static List<String> singletonHover(String ... elements) {
         return Collections.singletonList(guiGeneric(false, elements));
     }
 
-    /*
+    /**
      * Generic hover translations that need to be returned as a list but only have 1 element which needs an extra string
      */
     public static List<String> singletonHoverExtra(String extra, String ... elements) {
         return Collections.singletonList(guiGeneric(false, elements)+" "+extra);
     }
 
-    /*
+    /**
      * Hover translation for song instances.
     */
     public static List<String> songHover(int loadOrder, List<String> triggers) {
@@ -110,7 +117,7 @@ public class Translate {
                         condenseList(triggers));
     }
 
-    /*
+    /**
      * Hover translation for song info within instances.
     */
     public static List<String> songInfoHover(Table audio) {
@@ -119,7 +126,7 @@ public class Translate {
                 guiGeneric(false,"parameter","song_info","pitch","name")+ ": "+ audio.getValOrDefault("pitch",1f));
     }
 
-    /*
+    /**
      * Hover translation for potential triggers.
     */
     public static List<String> potentialTriggerHover(String triggerName, boolean hasTrigger, Collection<String> ids) {
@@ -135,7 +142,7 @@ public class Translate {
         return translated;
     }
 
-    /*
+    /**
      * Hover translation for a trigger instance.
     */
     public static List<String> triggerElementHover(Table trigger) {
@@ -154,7 +161,7 @@ public class Translate {
                 withOther(formatMillis(loop.getValOrDefault("to",0L)),"selection","loop","to"));
     }
 
-    /*
+    /**
      * Hover translation for a title card
      */
     public static List<String> hoverLinesTitle(Table title) {
@@ -169,7 +176,7 @@ public class Translate {
                         condenseList(triggers));
     }
 
-    /*
+    /**
      * Hover translation for an image card
      */
     public static List<String> hoverLinesImage(Table image) {
@@ -178,7 +185,7 @@ public class Translate {
         return triggers.isEmpty() ? Collections.singletonList(name) : Arrays.asList(name,condenseList(triggers));
     }
 
-    /*
+    /**
      * Hover translation for a toggle instance.
     */
     public static List<String> hoverLinesToggle(Table toggle) {
@@ -189,7 +196,7 @@ public class Translate {
                         guiGeneric(false,"selection","toggles","to"));
     }
 
-    /*
+    /**
      * Hover translation for a trigger within a toggle instance.
     */
     public static List<String> hoverLinesTrigger(Table trigger) {
@@ -198,7 +205,7 @@ public class Translate {
                         toggleTriggers(trigger.getValOrDefault("triggers", new ArrayList<>())));
     }
 
-    /*
+    /**
      * Hover translation for a target within a toggle instance.
     */
     public static List<String> hoverLinesTarget(Table target) {
@@ -207,7 +214,7 @@ public class Translate {
                         toggleTriggers(target.getValOrDefault("triggers", new ArrayList<>())));
     }
 
-    /*
+    /**
      * Generic numbered list used for hover translations that are split into multiple lines for aesthetic purposes.
     */
     public static List<String> guiNumberedList(int numLines, String ... elements) {
@@ -215,7 +222,7 @@ public class Translate {
                 .collect(Collectors.toList());
     }
 
-    /*
+    /**
      * Translation for potential song entries.
     */
     public static String selectionSong(String song, String ... elements) {
@@ -223,7 +230,7 @@ public class Translate {
         return I18n.hasKey(key) ? libHook(key,null) : song;
     }
 
-    /*
+    /**
      * Returns the key if asKey is true or otherwise the actual translation.
     */
     public static String guiGeneric(boolean asKey, String ... elements) {
@@ -231,7 +238,7 @@ public class Translate {
         return asKey ? key : libHook(key, null);
     }
 
-    /*
+    /**
      * Builds a lang key from a variable of elements assuming a base of a category and the modid.
     */
     @SuppressWarnings("SameParameterValue")
@@ -252,7 +259,7 @@ public class Translate {
         return builder.toString();
     }
 
-    /*
+    /**
      * This will assume the name ending has already been handled. The lang key will only get checked for validity if the
      * fallback value is nonnull. In that case the fallback is returned if the key is not found.
     */

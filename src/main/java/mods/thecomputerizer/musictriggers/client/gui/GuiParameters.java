@@ -1,8 +1,8 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
-import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.Translate;
-import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
+import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Variable;
@@ -12,12 +12,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.Vec2f;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import javax.annotation.Nullable;
-import javax.vecmath.Point2i;
-import javax.vecmath.Point4i;
+import javax.vecmath.Point4f;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -125,9 +125,17 @@ public class GuiParameters extends GuiSuperType {
     @Override
     protected void keyTyped(char c, int key) {
         super.keyTyped(c, key);
-        if(Minecraft.getMinecraft().currentScreen==this && isKeyValid(c, key))
-            for (Parameter parameter : this.searchedParameters)
-                parameter.onType(key == Keyboard.KEY_BACK, c);
+        if(isActive(this)) {
+            for(Parameter parameter : this.searchedParameters) {
+                if(checkCopy(key,parameter.onCopy())) continue;
+                String paste = checkPaste(key);
+                if(!paste.isEmpty()) {
+                    parameter.onPaste(paste);
+                    continue;
+                }
+                if(isKeyValid(c, key)) parameter.onType(key == Keyboard.KEY_BACK, c);
+            }
+        }
     }
 
     @Override
@@ -151,24 +159,24 @@ public class GuiParameters extends GuiSuperType {
         int textX = left+(this.spacing/2);
         for(Parameter parameter : this.searchedParameters) {
             if(parameter.isSelected()) {
-                GuiUtil.drawLine(new Point2i(left, top), new Point2i(centerX, top), white(128), 1f, this.zLevel);
+                GuiUtil.drawLine(new Vec2f(left, top), new Vec2f(centerX, top), white(128), 1f, this.zLevel);
                 top += this.spacing;
                 drawString(fontRenderer, parameter.getDisplayName(), textX, top, GuiUtil.WHITE);
                 top += (textHeight + this.spacing);
-                GuiUtil.drawLine(new Point2i(left, top), new Point2i(centerX, top), white(128), 1f, this.zLevel);
+                GuiUtil.drawLine(new Vec2f(left, top), new Vec2f(centerX, top), white(128), 1f, this.zLevel);
                 top += this.spacing;
                 top = GuiUtil.drawMultiLineString(fontRenderer,parameter.getDescription(),textX,centerX,top,
                         textHeight+(this.spacing/2),10,parameter.getScrollPos(),GuiUtil.WHITE)+(this.spacing/2);
-                GuiUtil.drawLine(new Point2i(left, top), new Point2i(centerX, top), white(128), 1f, this.zLevel);
+                GuiUtil.drawLine(new Vec2f(left, top), new Vec2f(centerX, top), white(128), 1f, this.zLevel);
                 int topScroll = (this.spacing*3)+24+this.fontRenderer.FONT_HEIGHT;
                 int bottomScroll = top;
                 top += this.spacing;
                 if(Minecraft.getMinecraft().currentScreen==this && parameter.canScroll()) {
                     parameter.drawScrollBar(topScroll,bottomScroll,left,this.zLevel);
-                    this.mouseHoverLeft = this.mouseHover(new Point2i(left,topScroll),mouseX,mouseY,
+                    this.mouseHoverLeft = this.mouseHover(new Vec2f(left,topScroll),mouseX,mouseY,
                             (width/2)-left,bottomScroll-topScroll);
                 }
-                List<String> hoverLines = parameter.drawVariableElement(new Point2i(left,top),this.spacing,mouseX,mouseY,
+                List<String> hoverLines = parameter.drawVariableElement(new Vec2f(left,top),this.spacing,mouseX,mouseY,
                         fontRenderer,this.zLevel, Minecraft.getMinecraft().currentScreen==this);
                 if(Minecraft.getMinecraft().currentScreen==this && !hoverLines.isEmpty())
                     drawHoveringText(hoverLines,mouseX,mouseY);
@@ -180,11 +188,11 @@ public class GuiParameters extends GuiSuperType {
     private void drawRightSide(int mouseX, int mouseY, int textHeight) {
         int top = this.spacing+24;
         int sideWidth = this.longestParameterName+(this.spacing*3);
-        GuiUtil.drawBox(new Point2i(this.rightSide,0),sideWidth,this.height,
-                new Point4i(0,0,0,128),this.zLevel);
+        GuiUtil.drawBox(new Vec2f(this.rightSide,0),sideWidth,this.height,
+                new Point4f(0,0,0,128),this.zLevel);
         int lineX = this.width-this.spacing;
-        GuiUtil.drawLine(new Point2i(lineX,0),new Point2i(lineX, this.height),
-                new Point4i(255,255,255,194),1f,this.zLevel);
+        GuiUtil.drawLine(new Vec2f(lineX,0),new Vec2f(lineX, this.height),
+                new Point4f(255,255,255,194),1f,this.zLevel);
         int textX = this.rightSide+this.spacing;
         drawString(this.fontRenderer,this.title,textX,top,GuiUtil.WHITE);
         this.mouseHoverRight = mouseX>this.rightSide && mouseX<=lineX;
@@ -196,8 +204,8 @@ public class GuiParameters extends GuiSuperType {
                         mouseY>=startY && mouseY<(startY+textHeight+this.spacing);
                 parameter.setDisplayHover(mouseHover);
                 if(mouseHover) {
-                    GuiUtil.drawBox(new Point2i(this.rightSide,startY),this.width-this.rightSide-this.spacing,textHeight+this.spacing,
-                            new Point4i(255,255,255,194),this.zLevel);
+                    GuiUtil.drawBox(new Vec2f(this.rightSide,startY),this.width-this.rightSide-this.spacing,textHeight+this.spacing,
+                            new Point4f(255,255,255,194),this.zLevel);
                     drawString(this.fontRenderer,parameter.getDisplayName(),textX,startY+(this.spacing/2),
                             GuiUtil.makeRGBAInt(50,50,50,255));
                 } else drawString(this.fontRenderer,parameter.getDisplayName(),textX,startY+(this.spacing/2),GuiUtil.WHITE);
@@ -215,9 +223,9 @@ public class GuiParameters extends GuiSuperType {
         float perIndex = height/indices;
         int top = (int)(perIndex*this.scrollPos);
         int x = this.width-1;
-        Point2i start = new Point2i(x, top);
+        Vec2f start = new Vec2f(x, top);
         if(perIndex<1) perIndex = 1;
-        Point2i end = new Point2i(x, (int)(top+perIndex));
+        Vec2f end = new Vec2f(x, (int)(top+perIndex));
         GuiUtil.drawLine(start,end,white(192), 2f, this.zLevel);
     }
 
@@ -292,7 +300,7 @@ public class GuiParameters extends GuiSuperType {
         }
 
         public void onClick(boolean wasRightSide, GuiSuperType parent, int left, int right, int top, int spacing) {
-            if(Minecraft.getMinecraft().currentScreen==parent) {
+            if(parent.isActive(parent)) {
                 if (wasRightSide) {
                     this.selected = this.displayHover;
                     if (this.selected)
@@ -302,15 +310,20 @@ public class GuiParameters extends GuiSuperType {
                     if(this.varHover) {
                         if (this.var.getAsBool(true).isPresent()) toggleCheckBox();
                         else if (this.var.get() instanceof List<?>) {
-                            GuiSuperType next = this.var.getName().matches("triggers") ?
-                                    parent.getInstance().createMultiSelectTriggerScreen(parent, parent.getChannel(),
+                            GuiSuperType next;
+                            if(this.var.getName().matches("triggers"))
+                                next = parent.getInstance().createMultiSelectTriggersScreen(parent, parent.getChannel(),
                                             (elements) -> {
                                                 this.setList(elements.stream().map(this::makeTriggerString)
                                                         .filter(Objects::nonNull).collect(Collectors.toList()));
                                                 this.hasEdits = true;
                                                 parent.save();
-                                            }) : new GuiParameterList(parent, GuiType.PARAMETER_GENERIC,
-                                    parent.getInstance(), this);
+                                            });
+                            else next = new GuiParameterList(parent,GuiType.PARAMETER_GENERIC,parent.getInstance(),this);
+                            parent.playGenericClickSound();
+                            Minecraft.getMinecraft().displayGuiScreen(next);
+                        } else if (this.var.getName().matches("channel")) {
+                            GuiSuperType next = parent.getInstance().createChannelSelectParameterScreen(parent,this);
                             parent.playGenericClickSound();
                             Minecraft.getMinecraft().displayGuiScreen(next);
                         }
@@ -325,6 +338,25 @@ public class GuiParameters extends GuiSuperType {
             if(element instanceof GuiSelection.MonoElement)
                 return ((GuiSelection.MonoElement) element).getID();
             return null;
+        }
+
+        public String onCopy() {
+            if(this.selected) {
+                Optional<String> optional = this.var.getAsString(true);
+                if(optional.isPresent()) return optional.get();
+            }
+            return "";
+        }
+
+        public void onPaste(String pasted) {
+            if(this.selected) {
+                Optional<String> optional = this.var.getAsString(true);
+                if(optional.isPresent()) {
+                    this.var.set(optional.get()+pasted);
+                    this.hasEdits = true;
+                    this.saveScreen();
+                }
+            }
         }
 
         public void onType(boolean backspace, char c) {
@@ -342,20 +374,21 @@ public class GuiParameters extends GuiSuperType {
             }
         }
 
-        public List<String> drawVariableElement(Point2i topLeft, int spacing, int mouseX, int mouseY, FontRenderer fontRenderer,
-                                        float zLevel, boolean isCurrent) {
+        @SuppressWarnings("DuplicateExpressions")
+        public List<String> drawVariableElement(Vec2f topLeft, int spacing, int mouseX, int mouseY, FontRenderer fontRenderer,
+                                                float zLevel, boolean isCurrent) {
             if(this.var.getAsBool(true).isPresent()) {
                 float center = ((float)spacing)*2.5f;
                 this.varHover = isCurrent && mouseX>=topLeft.x && mouseX<topLeft.x+(spacing*5) && mouseY>=topLeft.y
                         && mouseY< topLeft.y+(spacing*5);
-                GuiUtil.bufferSquareTexture(new Point2i((int)(topLeft.x+center),(int)(topLeft.y+center)),center,
+                GuiUtil.bufferSquareTexture(new Vec2f((int)(topLeft.x+center),(int)(topLeft.y+center)),center,
                         getCheckboxTexture());
                 return new ArrayList<>();
-            } else if(this.var.get() instanceof List<?>) {
+            } else if(this.var.get() instanceof List<?> || this.var.getName().matches("channel")) {
                 float center = ((float)spacing)*2.5f;
                 this.varHover = isCurrent && mouseX>=topLeft.x && mouseX<topLeft.x+(spacing*5) && mouseY>=topLeft.y
                         && mouseY< topLeft.y+(spacing*5);
-                GuiUtil.bufferSquareTexture(new Point2i((int)(topLeft.x+center),(int)(topLeft.y+center)),center,
+                GuiUtil.bufferSquareTexture(new Vec2f((int)(topLeft.x+center),(int)(topLeft.y+center)),center,
                         ButtonType.getIcons("edit",this.varHover));
                 if(!this.varHover) return new ArrayList<>();
                 return ((List<?>)this.var.get()).isEmpty() ? Translate.singletonHoverExtra(this.display,"parameter_list","empty") :
@@ -365,20 +398,19 @@ public class GuiParameters extends GuiSuperType {
                 int height = fontRenderer.FONT_HEIGHT+4;
                 this.varHover = isCurrent && mouseX>topLeft.x && mouseX<topLeft.x+(width*2) && mouseY>topLeft.y &&
                         mouseY<topLeft.y+(height*2);
-                topLeft.setX(topLeft.x/2);
-                topLeft.setY(topLeft.y/2);
-                Point2i textCorner = new Point2i(topLeft.x+2,topLeft.y+2);
+                topLeft = new Vec2f(topLeft.x/2,topLeft.y/2);
+                Vec2f textCorner = new Vec2f(topLeft.x+2,topLeft.y+2);
                 GlStateManager.pushMatrix();
                 GlStateManager.scale(2f, 2f, 2f);
-                char extra = this.selected ? ChannelManager.blinker : ' ';
+                char extra = this.selected ? ChannelManager.blinkerChar : ' ';
                 if(this.varHover) {
-                    GuiUtil.drawBoxWithOutline(topLeft, width, height, new Point4i(255, 255, 255, 192),
-                            new Point4i(0, 0, 0, 192), 1f, zLevel);
+                    GuiUtil.drawBoxWithOutline(topLeft, width, height, new Point4f(255, 255, 255, 192),
+                            new Point4f(0, 0, 0, 192), 1f, zLevel);
                     fontRenderer.drawStringWithShadow(this.var.get().toString()+extra, textCorner.x, textCorner.y,
-                            GuiUtil.makeRGBAInt(new Point4i(0, 0, 0, 192)));
+                            GuiUtil.makeRGBAInt(new Point4f(0, 0, 0, 192)));
                 } else {
-                    GuiUtil.drawBoxWithOutline(topLeft, width, height, new Point4i(0, 0, 0, 192),
-                            new Point4i(255, 255, 255, 192), 1f, zLevel);
+                    GuiUtil.drawBoxWithOutline(topLeft, width, height, new Point4f(0, 0, 0, 192),
+                            new Point4f(255, 255, 255, 192), 1f, zLevel);
                     fontRenderer.drawStringWithShadow(this.var.get().toString()+extra, textCorner.x, textCorner.y, GuiUtil.WHITE);
                 }
                 GlStateManager.popMatrix();
@@ -395,10 +427,10 @@ public class GuiParameters extends GuiSuperType {
             float indices = this.descLines-9;
             float perIndex = height/indices;
             int top = (int)(scrollTop+(perIndex*this.scrollPos));
-            Point2i start = new Point2i(left, top);
+            Vec2f start = new Vec2f(left, top);
             if(perIndex<1) perIndex = 1;
-            Point2i end = new Point2i(left,(int)(top+perIndex));
-            GuiUtil.drawLine(start,end,new Point4i(255,255,255,128), 2f, zLevel);
+            Vec2f end = new Vec2f(left,(int)(top+perIndex));
+            GuiUtil.drawLine(start,end,new Point4f(255,255,255,128), 2f, zLevel);
         }
 
         private ResourceLocation getCheckboxTexture() {
@@ -407,15 +439,16 @@ public class GuiParameters extends GuiSuperType {
             if(optional.isPresent() && optional.get()) checked = "checked";
             String path = "white_icons";
             if(this.varHover) path = "black_icons";
-            return new ResourceLocation(Constants.MODID,LogUtil.injectParameters("textures/gui/{}/{}.png",
-                    path,checked));
+            return MusicTriggers.res(LogUtil.injectParameters("textures/gui/{}/{}.png",path,checked));
         }
 
         public boolean hasEdits() {
-            return this.hasEdits;
+            boolean hadEdits = this.hasEdits;
+            this.hasEdits = false;
+            return hadEdits;
         }
 
-        private void saveScreen() {
+        public void saveScreen() {
             if(Minecraft.getMinecraft().currentScreen instanceof GuiSuperType)
                 ((GuiSuperType)Minecraft.getMinecraft().currentScreen).save();
         }
@@ -426,6 +459,11 @@ public class GuiParameters extends GuiSuperType {
 
         public List<String> getList() {
             return ((List<?>)this.var.get()).stream().map(Objects::toString).collect(Collectors.toList());
+        }
+
+        public void setChannelParameter(String channel) {
+            if(this.var.getName().matches("channel"))
+                this.var.set(channel);
         }
     }
 }

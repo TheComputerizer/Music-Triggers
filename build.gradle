@@ -73,6 +73,9 @@ repositories {
     maven {
         url = uri('https://jitpack.io')
     }
+    flatDir {
+        dirs 'build/libs'
+    }
 }
 
 configurations {
@@ -105,10 +108,10 @@ dependencies {
     annotationProcessor("org.spongepowered:mixin:${project.mixin_version}:processor")
 
     //required mod dependencies
-    implementation(fg.deobf("maven.modrinth:the-impossible-library:${project.minecraft_version}-${project.lib_version}"))
+    //implementation(fg.deobf("maven.modrinth:the-impossible-library:${project.minecraft_version}-${project.lib_version}"))
     //local versions of required dependencies for testing
     //noinspection DependencyNotationArgument
-    //implementation name: "theimpossiblelibrary-${project.minecraft_version}-${project.lib_version}"
+    implementation name: "theimpossiblelibrary-${project.minecraft_version}-${project.lib_version}"
 
     //mod support dependencies
     implementation(fg.deobf("curse.maven:bloodmoon-226321:${project.bloodmoon_version}"))

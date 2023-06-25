@@ -6,9 +6,9 @@ import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Tuple;
+import net.minecraft.util.math.Vec2f;
 import org.lwjgl.input.Mouse;
 
-import javax.vecmath.Point2i;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
@@ -106,9 +106,9 @@ public class GuiLogVisualizer extends GuiSuperType {
         float perIndex = this.height/indices;
         int top = (int)(perIndex*(indices-this.scrollPos-1));
         int x = this.width-1;
-        Point2i start = new Point2i(x, top);
+        Vec2f start = new Vec2f(x, top);
         if(perIndex<1) perIndex = 1;
-        Point2i end = new Point2i(x, (int)(top+perIndex));
+        Vec2f end = new Vec2f(x, (int)(top+perIndex));
         GuiUtil.drawLine(start,end,white(192), 2f, this.zLevel);
     }
 

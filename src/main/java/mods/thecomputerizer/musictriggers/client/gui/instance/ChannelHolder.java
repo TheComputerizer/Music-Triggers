@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.client.gui.instance;
 
+import mods.thecomputerizer.musictriggers.client.Translate;
 import mods.thecomputerizer.musictriggers.client.gui.*;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
@@ -68,5 +69,26 @@ public class ChannelHolder extends AbstractConfig {
 
     public void deleteChannel(String channelName) {
         this.channelInstances.remove(channelName);
+    }
+
+    public GuiSelection createChannelSelectParameterScreen(GuiSuperType parent, GuiParameters.Parameter channelParameter) {
+        return new GuiSelection(parent,GuiType.SELECTION_GENERIC,parent.getInstance(),
+                Translate.guiGeneric(false,"selection","channel_parameter"),false,true,
+                () -> multiSelectChannelElements(channelParameter));
+    }
+
+    public List<GuiSelection.Element> multiSelectChannelElements(GuiParameters.Parameter channelParameter) {
+        List<GuiSelection.Element> elements = new ArrayList<>();
+        int index = 0;
+        for(String channel : this.channelInstances.keySet()) {
+            elements.add(new GuiSelection.MonoElement(channel, index, channel,
+                    Translate.singletonHover("selection","channel"),(parent) -> {
+                channelParameter.setChannelParameter(channel);
+                channelParameter.saveScreen();
+                parent.saveAndDisplay(parent.getParent());
+            }));
+            index++;
+        }
+        return elements;
     }
 }

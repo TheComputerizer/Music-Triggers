@@ -1,4 +1,4 @@
-package mods.thecomputerizer.musictriggers.client.audio;
+package mods.thecomputerizer.musictriggers.client.channels;
 
 import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat;
 import com.sedmelluq.discord.lavaplayer.format.Pcm16AudioDataFormat;
@@ -9,11 +9,13 @@ import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import net.minecraft.block.BlockJukebox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.apache.commons.lang3.EnumUtils;
 import org.apache.logging.log4j.Level;
 
 import java.util.Objects;
@@ -24,7 +26,7 @@ public class JukeboxChannel {
     private final AudioPlayer player;
     private BlockPos pos;
 
-    public JukeboxChannel(String channel) {
+    public JukeboxChannel() {
         AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
         AudioSourceManagers.registerRemoteSources(playerManager);
         AudioSourceManagers.registerLocalSource(playerManager);
@@ -33,10 +35,14 @@ public class JukeboxChannel {
         new ChannelListener(this.player, FORMAT, null);
         playerManager.setFrameBufferDuration(1000);
         playerManager.setPlayerCleanupThreshold(Long.MAX_VALUE);
-        playerManager.getConfiguration().setResamplingQuality(AudioConfiguration.ResamplingQuality.HIGH);
-        playerManager.getConfiguration().setOpusEncodingQuality(AudioConfiguration.OPUS_QUALITY_MAX);
+        String resamplingQuality = ConfigDebug.RESAMPLING_QUALITY.toUpperCase();
+        playerManager.getConfiguration().setResamplingQuality(EnumUtils.isValidEnum(
+                AudioConfiguration.ResamplingQuality.class,resamplingQuality) ?
+                AudioConfiguration.ResamplingQuality.valueOf(resamplingQuality) :
+                AudioConfiguration.ResamplingQuality.HIGH);
+        playerManager.getConfiguration().setOpusEncodingQuality(ConfigDebug.ENCODING_QUALITY);
         playerManager.getConfiguration().setOutputFormat(FORMAT);
-        MusicTriggers.logExternally(Level.INFO,"Registered jukebox channel "+channel);
+        MusicTriggers.logExternally(Level.INFO,"Registered jukebox channel");
     }
 
     public AudioPlayer getPlayer() {

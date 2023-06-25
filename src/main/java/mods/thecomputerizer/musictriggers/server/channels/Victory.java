@@ -1,4 +1,4 @@
-package mods.thecomputerizer.musictriggers.server.data;
+package mods.thecomputerizer.musictriggers.server.channels;
 
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
@@ -24,16 +24,16 @@ class Victory {
     private final Map<Table,HashSet<Tuple<BossInfoServer,MutableInt>>> BOSS_CACHE;
     private final Map<Table,HashSet<Tuple<EntityPlayerMP,MutableInt>>> PLAYER_CACHE;
 
-    Victory(Stream<Table> references, int timeout) {
+    Victory(Stream<Table> references, int timeout, ServerTriggerStatus calculator) {
         this.TIMEOUT = timeout;
         this.REFERNCES = references.collect(Collectors.toCollection(HashSet::new));
         this.ACTIVE_REFERENCES = new HashMap<>();
         for(Table reference : this.REFERNCES)
             this.ACTIVE_REFERENCES.put(reference,false);
         this.ENTITY_CACHE = buildCache(reference -> reference.getName().matches("mob") &&
-                !reference.getValOrDefault("resource_name",Collections.singletonList("any")).contains("BOSS"));
+                !calculator.getParameterStringList(reference,"resource_name").contains("BOSS"));
         this.BOSS_CACHE = buildCache(reference -> reference.getName().matches("mob") &&
-                reference.getValOrDefault("resource_name",Collections.singletonList("any")).contains("BOSS"));
+                calculator.getParameterStringList(reference,"resource_name").contains("BOSS"));
         this.PLAYER_CACHE = buildCache(reference -> reference.getName().matches("pvp"));
     }
 
@@ -46,10 +46,10 @@ class Victory {
     }
 
     @SuppressWarnings("unchecked")
-    protected <T> void add(Table trigger, T obj) {
+    protected <T> void add(Table trigger, List<String> resources, T obj) {
         try {
             if (trigger.getName().matches("mob")) {
-                if (trigger.getValOrDefault("resource_name", Collections.singletonList("any")).contains("BOSS"))
+                if (resources.contains("BOSS"))
                     innerAdd(trigger, obj, (Map<Table, HashSet<Tuple<T, MutableInt>>>) (Object) this.BOSS_CACHE);
                 else innerAdd(trigger, obj, (Map<Table, HashSet<Tuple<T, MutableInt>>>) (Object) this.ENTITY_CACHE);
             } else innerAdd(trigger, obj, (Map<Table, HashSet<Tuple<T, MutableInt>>>) (Object) this.PLAYER_CACHE);
@@ -77,17 +77,17 @@ class Victory {
                 trigger.getValOrDefault("identifier","not_set"));
     }
 
-    protected boolean runCalculation() {
+    protected boolean runCalculation(ServerTriggerStatus calculator) {
         for(Table reference : this.REFERNCES) {
             if(this.ACTIVE_REFERENCES.get(reference)) continue;
             if(this.ENTITY_CACHE.containsKey(reference)) {
-                int num = reference.getValOrDefault("level", 0);
+                int num = calculator.getParameterInt(reference,"level");
                 if (num > 0) {
                     boolean pass = false;
                     HashSet<Tuple<EntityLiving,MutableInt>> entities = this.ENTITY_CACHE.get(reference);
                     if (entities.size()==0) continue;
                     if (entities.size() >= num) {
-                        float percent = reference.getValOrDefault("victory_percentage", 100f) / 100f;
+                        float percent = calculator.getParameterFloat(reference,"victory_percentage") / 100f;
                         float count = 0;
                         for (Tuple<EntityLiving,MutableInt> entityTuple : entities)
                             if (entityTuple.getFirst().isDead || entityTuple.getFirst().getHealth() <= 0f)
@@ -99,13 +99,13 @@ class Victory {
                 }
             }
             else if(this.BOSS_CACHE.containsKey(reference)) {
-                int num = reference.getValOrDefault("level", 0);
+                int num = calculator.getParameterInt(reference,"level");
                 if (num > 0) {
                     boolean pass = false;
                     HashSet<Tuple<BossInfoServer,MutableInt>> bossBars = this.BOSS_CACHE.get(reference);
                     if (bossBars.size()==0) continue;
                     if(bossBars.size() >= num) {
-                        float percent = reference.getValOrDefault("victory_percentage", 100f) / 100f;
+                        float percent = calculator.getParameterFloat(reference,"victory_percentage") / 100f;
                         float count = 0;
                         for(Tuple<BossInfoServer,MutableInt> bossTuple : bossBars)
                             if(bossTuple.getFirst().getPercent() <= 0f)
@@ -117,11 +117,11 @@ class Victory {
                 }
             }
             else if(this.PLAYER_CACHE.containsKey(reference)) {
-                int num = reference.getValOrDefault("level", 0);
+                int num = calculator.getParameterInt(reference,"level");
                 if (num > 0) {
                     HashSet<Tuple<EntityPlayerMP, MutableInt>> players = this.PLAYER_CACHE.get(reference);
                     if (players.size() == 0) continue;
-                    float percent = reference.getValOrDefault("victory_percentage", 100f) / 100f;
+                    float percent = calculator.getParameterFloat(reference,"victory_percentage") / 100f;
                     float count = 0;
                     for (Tuple<EntityPlayerMP, MutableInt> playerTuple : players)
                         if (playerTuple.getFirst().isDead || playerTuple.getFirst().getHealth() <= 0f)

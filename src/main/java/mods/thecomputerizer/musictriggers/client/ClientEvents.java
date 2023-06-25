@@ -3,8 +3,8 @@ package mods.thecomputerizer.musictriggers.client;
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.audio.Channel;
-import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
+import mods.thecomputerizer.musictriggers.client.channels.Channel;
+import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.musictriggers.client.gui.GuiSuperType;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
@@ -88,18 +88,19 @@ public class ClientEvents {
     }
 
     public static boolean commandHelper(Trigger trigger) {
-        String id = trigger.getParameter("identifier");
+        String id = trigger.getParameterString("identifier");
         return COMMAND_MAP.containsKey(id) && COMMAND_MAP.get(id);
     }
 
     public static void commandFinish(Trigger trigger) {
-        String id = trigger.getParameter("identifier");
+        String id = trigger.getParameterString("identifier");
         COMMAND_MAP.put(id,false);
     }
 
     @SubscribeEvent
     public static void clientDisconnected(FMLNetworkEvent.ClientDisconnectionFromServerEvent e) {
-        IS_WORLD_RENDERED =false;
+        IS_WORLD_RENDERED=false;
+        ChannelManager.onClientLogout();
     }
 
     @SubscribeEvent
@@ -123,7 +124,8 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent e) {
-        if(Channel.GUI.isKeyDown()) Minecraft.getMinecraft().displayGuiScreen(Instance.createGui());
+        if(Channel.GUI.isKeyDown() && ChannelManager.isButtonEnabled("gui"))
+            Minecraft.getMinecraft().displayGuiScreen(Instance.createGui());
     }
 
     @SubscribeEvent
@@ -139,7 +141,6 @@ public class ClientEvents {
                     Minecraft.getMinecraft().player.sendMessage(new TextComponentString(
                             I18n.translateToLocal("misc.musictriggers.reload_finished"))
                             .setStyle(new Style().setItalic(true).setColor(TextFormatting.GREEN)));
-                    ChannelManager.reloading = false;
                 }
             }
         }

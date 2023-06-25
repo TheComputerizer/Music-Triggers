@@ -1,4 +1,4 @@
-package mods.thecomputerizer.musictriggers.client.audio;
+package mods.thecomputerizer.musictriggers.client.channels;
 
 import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat;
 import com.sedmelluq.discord.lavaplayer.format.AudioPlayerInputStream;
@@ -44,7 +44,7 @@ public class ChannelListener extends AudioEventAdapter {
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
         if(Objects.nonNull(this.channel))
-            this.channel.onTrackStop();
+            this.channel.onTrackStop(endReason);
     }
 
     @Override
@@ -53,7 +53,7 @@ public class ChannelListener extends AudioEventAdapter {
         exception.printStackTrace();
         this.AUDIO_THREAD.setRunAudioLoop(false);
         if(Objects.nonNull(this.channel))
-            this.channel.onTrackStop();
+            this.channel.onTrackStop(AudioTrackEndReason.LOAD_FAILED);
     }
 
     @SuppressWarnings("BusyWait")

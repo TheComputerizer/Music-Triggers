@@ -1,16 +1,28 @@
 package mods.thecomputerizer.musictriggers;
 
+import com.google.common.collect.Lists;
 import com.rits.cloning.Cloner;
-import mods.thecomputerizer.musictriggers.client.audio.Channel;
-import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
+import mods.thecomputerizer.musictriggers.client.channels.Channel;
+import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
-import mods.thecomputerizer.musictriggers.network.NetworkHandler;
+import mods.thecomputerizer.musictriggers.network.*;
+import mods.thecomputerizer.musictriggers.registry.RegistryHandler;
+import mods.thecomputerizer.musictriggers.server.channels.ServerChannelManager;
+import mods.thecomputerizer.musictriggers.server.data.IPersistentTriggerData;
+import mods.thecomputerizer.musictriggers.server.data.PersistentTriggerData;
+import mods.thecomputerizer.musictriggers.server.data.PersistentTriggerDataStorage;
+import mods.thecomputerizer.theimpossiblelibrary.network.NetworkHandler;
 import mods.thecomputerizer.theimpossiblelibrary.util.CustomTick;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.LogUtil;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.IResourcePack;
+import net.minecraft.client.resources.ResourcePackRepository;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Tuple;
+import net.minecraftforge.common.IRarity;
+import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Mod;
@@ -18,6 +30,7 @@ import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import org.apache.commons.io.FileExistsException;
 import org.apache.logging.log4j.Level;
@@ -42,32 +55,71 @@ public class MusicTriggers {
                 throw new FileExistsException("Unable to create file directory at "+Constants.CONFIG_DIR.getPath()+
                         "! Music Triggers is unable to load any further.");
         ConfigRegistry.initialize(new File(Constants.CONFIG_DIR,"registration.toml"),FMLCommonHandler.instance().getSide()==Side.CLIENT);
-        if(FMLCommonHandler.instance().getSide()==Side.CLIENT)
-            ChannelManager.initialize(configFile("channels","toml"),true);
-    }
-
-    @EventHandler
-    public void preInit(FMLPreInitializationEvent event) {
-        if(!ConfigRegistry.CLIENT_SIDE_ONLY) NetworkHandler.init();
-        if(event.getSide()==Side.CLIENT) {
-            CustomTick.addCustomTickEvent(20);
-            ChannelManager.reloading = false;
+        if(!ConfigRegistry.CLIENT_SIDE_ONLY) {
+            NetworkHandler.queueServerPacketRegistries(PacketDynamicChannelInfo.class,PacketInitChannels.class,
+                    PacketRequestServerConfig.class);
+            NetworkHandler.queueClientPacketRegistries(PacketJukeBoxCustom.class, PacketMusicTriggersLogin.class,
+                    PacketSendServerConfig.class,PacketSyncServerInfo.class);
         }
     }
 
     @EventHandler
+    public void preInit(FMLPreInitializationEvent event) {
+        if(!ConfigRegistry.CLIENT_SIDE_ONLY)
+            CapabilityManager.INSTANCE.register(IPersistentTriggerData.class,
+                    new PersistentTriggerDataStorage(), PersistentTriggerData::new);
+    }
+
+    @EventHandler
     public void init(FMLInitializationEvent e) {
-        if(e.getSide()==Side.CLIENT) ClientRegistry.registerKeyBinding(Channel.GUI);
+        if(e.getSide()==Side.CLIENT) {
+            try {
+                ChannelManager.initClient(configFile("channels", "toml"), true);
+                ChannelManager.readResourceLocations();
+                ClientRegistry.registerKeyBinding(Channel.GUI);
+                CustomTick.addCustomTickEvent(20);
+                ChannelManager.reloading = false;
+            } catch (IOException ex) {
+                throw new RuntimeException("Caught a fatal error in Music Triggers configuration registration! Please " +
+                        "report this and make sure to include the full crash report.",ex);
+            }
+        }
     }
 
     @EventHandler
     public void postInit(FMLPostInitializationEvent e) {
-        if(e.getSide()==Side.CLIENT) ChannelManager.readResourceLocations();
+
+    }
+
+    @EventHandler
+    public void serverStarting(FMLServerStartingEvent e) {
+        RegistryHandler.registerCommands(e);
+        try {
+            if(FMLCommonHandler.instance().getSide().isServer())
+                ServerChannelManager.initialize(configFile("channels", "toml"));
+        } catch (IOException ex) {
+            logExternally(Level.FATAL,"Could not initialize server channels!");
+            Constants.MAIN_LOG.fatal("Count not initialize server channels!",ex);
+        }
+    }
+
+    public static ResourceLocation res(String path) {
+        return new ResourceLocation(Constants.MODID,path);
+    }
+
+    public static List<IResourcePack> getActiveResourcePacks() {
+        Minecraft mc = Minecraft.getMinecraft();
+        ResourcePackRepository repo = mc.getResourcePackRepository();
+        List<IResourcePack> packs = Lists.newArrayList(mc.defaultResourcePacks);
+        for(ResourcePackRepository.Entry entry : repo.getRepositoryEntries())
+            packs.add(entry.getResourcePack());
+        IResourcePack serverPack = repo.getServerResourcePack();
+        if(Objects.nonNull(serverPack)) packs.add(serverPack);
+        return packs;
     }
 
     public static ResourceLocation getIcon(String type, String name) {
-        return Objects.nonNull(type) ? new ResourceLocation(Constants.MODID,"textures/"+type+"/"+name+".png") :
-                new ResourceLocation(Constants.MODID,"textures/"+name);
+        return Objects.nonNull(type) ? res("textures/"+type+"/"+name+".png") : res("textures/"+name);
     }
 
     public static String[] stringBreaker(String s, String regex) {
@@ -78,7 +130,7 @@ public class MusicTriggers {
         return RANDOM.nextInt(max);
     }
 
-    /*
+    /**
      * Uses a fallback in case someone decides to add something that is not a number to a number parameter
      */
     public static int randomInt(String parameter, String toConvert, int fallback) {

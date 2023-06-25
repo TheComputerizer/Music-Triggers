@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.registry.items;
 
 import mods.thecomputerizer.musictriggers.Constants;
-import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
+import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.item.ItemStack;
@@ -28,8 +28,8 @@ public class CustomRecord extends MusicTriggersRecord {
 
     @Override
     @SideOnly(Side.CLIENT)
-    public void addInformation(ItemStack stack, @Nullable World worldIn, @Nonnull List<String> tooltip,
-                               @Nonnull ITooltipFlag flagIn) {
+    public void addInformation(ItemStack stack, @Nullable World world, @Nonnull List<String> tooltip,
+                               @Nonnull ITooltipFlag flag) {
         if(stack.hasTagCompound() && Objects.requireNonNull(stack.getTagCompound()).hasKey("songName"))
             tooltip.add(
                     AssetUtil.extraLang(Constants.MODID,"record","custom_record",

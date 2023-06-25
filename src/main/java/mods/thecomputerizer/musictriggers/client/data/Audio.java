@@ -16,8 +16,12 @@ public class Audio {
     private final float pitch;
     private final int chance;
     private final int playOnce;
+    private final int playX;
     private final boolean mustFinish;
     private final long milliStart;
+    private final boolean resume;
+    private long lastKnownTime;
+    private boolean hasPlayed = false;
 
     public Audio(Table song, List<Trigger> triggers, @Nullable Table universal) {
         this.data = song;
@@ -28,9 +32,12 @@ public class Audio {
         this.chance = song.getValOrDefault("chance",100);
         this.playOnce = song.getValOrDefault("play_once",Objects.nonNull(universal) ?
                 universal.getValOrDefault("play_once",0) : 0);
+        this.playX = song.getValOrDefault("play_x",1);
         this.mustFinish = song.getValOrDefault("must_finish",Objects.nonNull(universal) ?
                 universal.getValOrDefault("must_finish",false) : false);
         this.milliStart = song.getValOrDefault("start_at",0L);
+        this.resume = song.getValOrDefault("resume_on_play",false);
+        this.lastKnownTime = this.milliStart;
         this.triggers = parseTriggers(triggers, song.getValOrDefault("triggers",new ArrayList<>()));
         this.loopMap = readLoops(song.getTablesByName("loop"));
     }
@@ -58,7 +65,7 @@ public class Audio {
         for(Table loop : loops) {
             Loop readLoop = new Loop(loop);
             if (readLoop.isValid()) {
-                readLoop.initialize();
+                readLoop.setNum();
                 ret.put(index, readLoop);
                 index++;
             } else MusicTriggers.logExternally(Level.WARN, "Loop table at index {} for song {} was invalid! " +
@@ -88,12 +95,16 @@ public class Audio {
         return this.playOnce;
     }
 
+    public int getPlayX() {
+        return this.playX;
+    }
+
     public boolean mustFinish() {
         return this.mustFinish;
     }
 
     public long getMilliStart() {
-        return milliStart;
+        return this.milliStart;
     }
 
     public List<Trigger> getTriggers() {
@@ -102,6 +113,27 @@ public class Audio {
 
     public Collection<Loop> getLoops() {
         return this.loopMap.values();
+    }
+
+    public boolean hasPlayed() {
+        return this.hasPlayed;
+    }
+
+    public void onAudioPlayed() {
+        this.hasPlayed = true;
+    }
+
+    public long getResumeTime() {
+        return this.lastKnownTime;
+    }
+
+    public void onAudioStopped(long time) {
+        this.lastKnownTime = Math.max(time,this.milliStart);
+        for(Loop loop : getLoops()) loop.setNum();
+    }
+
+    public void onLogOut() {
+        if(this.playOnce==3) this.hasPlayed = false;
     }
 
     public static final class Loop {
@@ -127,7 +159,7 @@ public class Audio {
             return this.setTo!=this.whenAt || this.num_loops>0;
         }
 
-        public void initialize() {
+        public void setNum() {
             this.loopsLeft = this.num_loops;
         }
 

@@ -1,18 +1,18 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import mods.thecomputerizer.musictriggers.client.Translate;
-import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
+import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.text.TextFormatting;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.logging.log4j.util.BiConsumer;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
-import javax.vecmath.Point2i;
-import javax.vecmath.Point4i;
+import javax.vecmath.Point4f;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
@@ -163,10 +163,8 @@ public class GuiSelection extends GuiSuperType {
                         element.setSelected(true);
                     }
                 }
-                else {
-                    for (Element element1 : searchedElements)
+                else for (Element element1 : this.searchedElements)
                         element1.onClick(this, mouseX <= this.width / 2);
-                }
             }
         }
     }
@@ -174,11 +172,21 @@ public class GuiSelection extends GuiSuperType {
     @Override
     protected void keyTyped(char c, int key) {
         super.keyTyped(c, key);
-        if(isKeyValid(c, key))
-            for(Element element : this.searchedElements) {
-                if(element.onType(key == Keyboard.KEY_BACK, c)) this.hasEdits = true;
+        boolean shouldUpdateSearch = false;
+        for(Element element : this.searchedElements) {
+            if(checkCopy(key,element.onCopy())) continue;
+            String paste = checkPaste(key);
+            if(!paste.isEmpty() && element.onPaste(paste)) {
+                shouldUpdateSearch = true;
+                continue;
             }
-        updateSearch();
+            if(isKeyValid(c, key))
+                if(element.onType(key == Keyboard.KEY_BACK, c)) shouldUpdateSearch = true;
+        }
+        if(shouldUpdateSearch) {
+            updateSearch();
+            this.hasEdits = true;
+        }
     }
 
     @Override
@@ -212,9 +220,9 @@ public class GuiSelection extends GuiSuperType {
     @Override
     protected void drawStuff(int mouseX, int mouseY, float partialTicks) {
         MutableInt top = new MutableInt(this.spacing+24);
-        GuiUtil.drawBox(new Point2i(0,top.getValue()),this.width,this.height-this.spacing*2-48,black(196),this.zLevel);
-        Point2i start = new Point2i(0, top.getValue());
-        Point2i end = new Point2i(this.width, top.getValue());
+        GuiUtil.drawBox(new Vec2f(0,top.getValue()),this.width,this.height-this.spacing*2-48,black(196),this.zLevel);
+        Vec2f start = new Vec2f(0, top.getValue());
+        Vec2f end = new Vec2f(this.width, top.getValue());
         GuiUtil.drawLine(start,end,white(192), 1f, this.zLevel);
         drawCenteredString(this.fontRenderer,this.customTitle,this.width/2,top.addAndGet(this.spacing),GuiUtil.WHITE);
         top.add(fontRenderer.FONT_HEIGHT+this.spacing+this.verticalSpace);
@@ -232,8 +240,8 @@ public class GuiSelection extends GuiSuperType {
             index++;
         }
         if(!hoverAny) this.elementHover = -1;
-        start.setY(this.height-this.spacing-24);
-        end.setY(this.height-this.spacing-24);
+        start = new Vec2f(start.x,this.height-this.spacing-24);
+        end = new Vec2f(end.x,this.height-this.spacing-24);
         GuiUtil.drawLine(start,end,white(192), 1f, this.zLevel);
         if(this.searchedElements.size()>this.numElements) drawScrollBar();
         if(hoverAny) {
@@ -252,9 +260,9 @@ public class GuiSelection extends GuiSuperType {
         float perIndex = height/indices;
         int top = (int)(24+spacing+(perIndex*this.scrollPos));
         int x = this.width-1;
-        Point2i start = new Point2i(x, top);
+        Vec2f start = new Vec2f(x, top);
         if(perIndex<1) perIndex = 1;
-        Point2i end = new Point2i(x, (int)(top+perIndex));
+        Vec2f end = new Vec2f(x, (int)(top+perIndex));
         GuiUtil.drawLine(start,end,white(192), 2f, this.zLevel);
     }
 
@@ -270,8 +278,10 @@ public class GuiSelection extends GuiSuperType {
     @Override
     protected void save() {
         for(Element element: this.elementCache) element.onSave();
-        if(this.hasEdits)
+        if(this.hasEdits) {
             this.madeChange(true);
+            this.hasEdits = false;
+        }
         updateSearch();
     }
 
@@ -307,6 +317,10 @@ public class GuiSelection extends GuiSuperType {
         public abstract String getDisplay(boolean isLeft);
 
         public abstract List<String> getHoverLines(boolean isLeft);
+
+        public abstract String onCopy();
+
+        public abstract boolean onPaste(String pasted);
 
         public abstract boolean onType(boolean backspace, char c);
 
@@ -360,14 +374,14 @@ public class GuiSelection extends GuiSuperType {
         @Override
         public boolean renderElement(GuiSuperType parent, FontRenderer font, int mouseX, int mouseY, MutableInt top,
                                      int spacing, float zLevel) {
-            boolean hover = parent.mouseHover(new Point2i(0, top.getValue()),mouseX,mouseY,
+            boolean hover = parent.mouseHover(new Vec2f(0, top.getValue()),mouseX,mouseY,
                     parent.width,font.FONT_HEIGHT+spacing*2);
             boolean isLeft = mouseX<=parent.width/2;
             int textColor = GuiUtil.WHITE;
             if (hover || this.multiSelect) {
                 textColor = GuiUtil.makeRGBAInt(200, 200, 200, 255);
-                GuiUtil.drawBox(new Point2i(0, top.getValue()), parent.width, font.FONT_HEIGHT+spacing*2,
-                        new Point4i(64, 64, 46, 96), zLevel);
+                GuiUtil.drawBox(new Vec2f(0, top.getValue()), parent.width, font.FONT_HEIGHT+spacing*2,
+                        new Point4f(64, 64, 46, 96), zLevel);
             }
             parent.drawCenteredString(font,getDisplay(isLeft),parent.width/2, top.addAndGet(spacing), textColor);
             top.add(spacing+font.FONT_HEIGHT);
@@ -383,6 +397,16 @@ public class GuiSelection extends GuiSuperType {
         @Override
         public List<String> getHoverLines(boolean isLeft) {
             return this.hoverText;
+        }
+
+        @Override
+        public String onCopy() {
+            return "";
+        }
+
+        @Override
+        public boolean onPaste(String pasted) {
+            return false;
         }
 
         @Override
@@ -434,22 +458,22 @@ public class GuiSelection extends GuiSuperType {
         @Override
         public boolean renderElement(GuiSuperType parent, FontRenderer font, int mouseX, int mouseY, MutableInt top,
                                      int spacing, float zLevel) {
-            boolean hover = parent.mouseHover(new Point2i(0, top.getValue()),mouseX,mouseY,
+            boolean hover = parent.mouseHover(new Vec2f(0, top.getValue()),mouseX,mouseY,
                     parent.width,font.FONT_HEIGHT+spacing*2);
             boolean isLeft = mouseX<=parent.width/2;
             int keyColor = GuiUtil.WHITE;
             int valColor = GuiUtil.WHITE;
-            char keyExtra = this.isSelected && this.keySelected ? ChannelManager.blinker : ' ';
-            char valExtra = this.isSelected  && !this.keySelected ? ChannelManager.blinker : ' ';
+            char keyExtra = this.isSelected && this.keySelected ? ChannelManager.blinkerChar : ' ';
+            char valExtra = this.isSelected  && !this.keySelected ? ChannelManager.blinkerChar : ' ';
             if (hover) {
                 if(isLeft) {
                     keyColor = GuiUtil.makeRGBAInt(200, 200, 200, 255);
-                    GuiUtil.drawBox(new Point2i(0, top.getValue()), parent.width/2, font.FONT_HEIGHT + spacing * 2,
-                            new Point4i(64, 64, 46, 96), zLevel);
+                    GuiUtil.drawBox(new Vec2f(0, top.getValue()), parent.width/2, font.FONT_HEIGHT + spacing * 2,
+                            new Point4f(64, 64, 46, 96), zLevel);
                 } else {
                     valColor = GuiUtil.makeRGBAInt(200, 200, 200, 255);
-                    GuiUtil.drawBox(new Point2i(parent.width/2, top.getValue()), parent.width/2, font.FONT_HEIGHT + spacing * 2,
-                            new Point4i(64, 64, 46, 96), zLevel);
+                    GuiUtil.drawBox(new Vec2f((float)parent.width/2, top.getValue()), parent.width/2, font.FONT_HEIGHT + spacing * 2,
+                            new Point4f(64, 64, 46, 96), zLevel);
                 }
             }
             parent.drawCenteredString(font,getDisplay(true)+keyExtra,parent.width/4, top.addAndGet(spacing), keyColor);
@@ -467,6 +491,21 @@ public class GuiSelection extends GuiSuperType {
         @Override
         public List<String> getHoverLines(boolean isLeft) {
             return isLeft ? this.hoverTextKey : this.hoverTextVal;
+        }
+
+        @Override
+        public String onCopy() {
+            return this.isSelected ? this.keySelected ? this.key : this.val : "";
+        }
+
+        @Override
+        public boolean onPaste(String pasted) {
+            if(this.isSelected) {
+                if(this.keySelected) this.key += pasted;
+                else this.val += pasted;
+                return true;
+            }
+            return false;
         }
 
         @Override

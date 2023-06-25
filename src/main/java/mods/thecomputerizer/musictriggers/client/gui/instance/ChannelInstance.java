@@ -110,8 +110,8 @@ public class ChannelInstance {
                         this.info.getOrCreateVar("songs_folder","config/MusicTriggers/songs")),
                 new GuiParameters.Parameter("channel_info","paused_by_jukebox",
                         this.info.getOrCreateVar("paused_by_jukebox",true)),
-                new GuiParameters.Parameter("channel_info","overrides_default_audio",
-                        this.info.getOrCreateVar("overrides_default_audio",true)),
+                new GuiParameters.Parameter("channel_info","overrides_normal_music",
+                        this.info.getOrCreateVar("overrides_normal_music",true)),
                 new GuiParameters.Parameter("channel_info","pause_overrides",
                         this.info.getOrCreateVar("pause_overrides",false)),
                 new GuiParameters.Parameter("channel_info","explicit_overrides",
@@ -162,7 +162,7 @@ public class ChannelInstance {
         writeOptionalParameter(lines,"jukebox",info.getName()+"/jukebox",true);
         writeOptionalParameter(lines,"songs_folder","config/MusicTriggers/songs",true);
         writeOptionalParameter(lines,"paused_by_jukebox","true",false);
-        writeOptionalParameter(lines,"overrides_normal_audio","true",false);
+        writeOptionalParameter(lines,"overrides_normal_music","true",false);
         writeOptionalParameter(lines,"pause_overrides","true",false);
         writeOptionalParameter(lines,"explicit_overrides","true",false);
         lines.add("");

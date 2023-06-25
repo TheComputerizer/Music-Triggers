@@ -1,10 +1,9 @@
 package mods.thecomputerizer.musictriggers.registry.items;
 
 import mods.thecomputerizer.musictriggers.Constants;
-import mods.thecomputerizer.musictriggers.network.NetworkHandler;
 import mods.thecomputerizer.musictriggers.registry.BlockRegistry;
 import mods.thecomputerizer.musictriggers.registry.blocks.MusicRecorder;
-import mods.thecomputerizer.musictriggers.network.packets.PacketJukeBoxCustom;
+import mods.thecomputerizer.musictriggers.network.PacketJukeBoxCustom;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
 import net.minecraft.block.BlockJukebox;
 import net.minecraft.block.state.IBlockState;
@@ -60,8 +59,8 @@ public class MusicTriggersRecord extends EpicItem {
                 if (stack.getTagCompound() != null && stack.getTagCompound().hasKey("trackID") &&
                         stack.getTagCompound().hasKey("channelFrom")) {
                     ((BlockJukebox) state.getBlock()).insertRecord(world, pos, state, stack);
-                    NetworkHandler.sendToPlayer(new PacketJukeBoxCustom.Message(pos,
-                            stack.getTagCompound().getString("channelFrom"), stack.getTagCompound().getString("trackID")), (EntityPlayerMP) player);
+                    new PacketJukeBoxCustom(pos,stack.getTagCompound().getString("channelFrom"),
+                            stack.getTagCompound().getString("trackID")).addPlayers((EntityPlayerMP) player).send();
                     stack.shrink(1);
                     player.addStat(StatList.RECORD_PLAYED);
                 }
@@ -73,8 +72,8 @@ public class MusicTriggersRecord extends EpicItem {
 
     @Override
     @SideOnly(Side.CLIENT)
-    public void addInformation(ItemStack stack, @Nullable World worldIn, @Nonnull List<String> tooltip,
-                               @Nonnull ITooltipFlag flagIn) {
+    public void addInformation(ItemStack stack, @Nullable World world, @Nonnull List<String> tooltip,
+                               @Nonnull ITooltipFlag flag) {
         if(stack.hasTagCompound() && Objects.requireNonNull(stack.getTagCompound()).hasKey("trackID"))
             tooltip.add(
                     AssetUtil.extraLang(Constants.MODID,"item","music_triggers_record","description",false)
@@ -173,6 +172,4 @@ public class MusicTriggersRecord extends EpicItem {
                 return 0f;
         }
     }
-
-
 }

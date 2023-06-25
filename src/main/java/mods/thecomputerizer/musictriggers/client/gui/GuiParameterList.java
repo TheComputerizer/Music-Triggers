@@ -1,15 +1,15 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import mods.thecomputerizer.musictriggers.client.Translate;
-import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
+import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
+import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.text.TextFormatting;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
-import javax.vecmath.Point2i;
-import javax.vecmath.Point4i;
+import javax.vecmath.Point4f;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -143,17 +143,31 @@ public class GuiParameterList extends GuiSuperType {
     @Override
     protected void keyTyped(char c, int key) {
         super.keyTyped(c, key);
-        if(isKeyValid(c, key) && this.selectedIndex>=0)
-            addCharToKey(key == Keyboard.KEY_BACK,c);
-        updateSearch();
+        if(this.selectedIndex>=0) {
+            if(checkCopy(key,getParameter(this.selectedIndex))) return;
+            String paste = checkPaste(key);
+            if(!paste.isEmpty()) {
+                updateKey(getParameter(this.selectedIndex)+paste);
+                updateSearch();
+                return;
+            }
+            if(isKeyValid(c, key)) {
+                addCharToKey(key == Keyboard.KEY_BACK, c);
+                updateSearch();
+            }
+        }
     }
 
-    private void addCharToKey(boolean backspace,char c) {
+    private void addCharToKey(boolean backspace, char c) {
         String newVal = getParameter(this.selectedIndex);
         if (backspace) {
             if (!newVal.isEmpty())
                 newVal = newVal.substring(0, newVal.length() - 1);
         } else newVal += c;
+        updateKey(newVal);
+    }
+
+    private void updateKey(String newVal) {
         List<String> things = this.parameter.getList();
         things.set(this.selectedIndex,newVal);
         this.parameter.setList(things);
@@ -164,7 +178,7 @@ public class GuiParameterList extends GuiSuperType {
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         this.parent.drawScreen(mouseX, mouseY, partialTicks);
-        GuiUtil.drawBox(new Point2i(0,0),this.width,this.height,new Point4i(0,0,0,128),this.zLevel);
+        GuiUtil.drawBox(new Vec2f(0,0),this.width,this.height,new Point4f(0,0,0,128),this.zLevel);
         super.drawScreen(mouseX, mouseY, partialTicks);
         drawStuff(mouseX, mouseY, partialTicks);
     }
@@ -172,9 +186,9 @@ public class GuiParameterList extends GuiSuperType {
     @Override
     protected void drawStuff(int mouseX, int mouseY, float partialTicks) {
         int top = this.spacing + 24;
-        GuiUtil.drawBox(new Point2i(0, top), this.width, this.height - this.spacing * 2 - 48, black(196), this.zLevel);
-        Point2i start = new Point2i(0, top);
-        Point2i end = new Point2i(this.width, top);
+        GuiUtil.drawBox(new Vec2f(0, top), this.width, this.height - this.spacing * 2 - 48, black(196), this.zLevel);
+        Vec2f start = new Vec2f(0, top);
+        Vec2f end = new Vec2f(this.width, top);
         GuiUtil.drawLine(start, end, white(192), 1f, this.zLevel);
         top += this.spacing;
         String header = Translate.guiGeneric(false, "parameter_list", "header") +" "+
@@ -184,22 +198,22 @@ public class GuiParameterList extends GuiSuperType {
         this.indexHover = -1;
         for(int i=0;i<this.parameter.getList().size();i++) {
             if(this.searchedElements.contains(i)) {
-                boolean hover = mouseHover(new Point2i(0, top), mouseX, mouseY, this.width, fontRenderer.FONT_HEIGHT + this.spacing);
+                boolean hover = mouseHover(new Vec2f(0, top), mouseX, mouseY, this.width, fontRenderer.FONT_HEIGHT + this.spacing);
                 int textColor = GuiUtil.WHITE;
                 if (hover) {
                     this.indexHover = i;
                     textColor = GuiUtil.makeRGBAInt(192, 192, 192, 255);
-                    GuiUtil.drawBox(new Point2i(0, top), this.width, fontRenderer.FONT_HEIGHT + this.spacing * 2,
-                            new Point4i(64, 64, 46, 96), this.zLevel);
+                    GuiUtil.drawBox(new Vec2f(0, top), this.width, fontRenderer.FONT_HEIGHT + this.spacing * 2,
+                            new Point4f(64, 64, 46, 96), this.zLevel);
                 }
                 top += this.spacing;
-                char extra = this.selectedIndex>=0 && i==this.selectedIndex ? ChannelManager.blinker : ' ';
+                char extra = this.selectedIndex>=0 && i==this.selectedIndex ? ChannelManager.blinkerChar : ' ';
                 drawCenteredString(this.fontRenderer, getParameter(i) + extra, width / 2, top, textColor);
                 top += this.spacing;
             }
         }
-        start.setY(this.height - this.spacing - 24);
-        end.setY(this.height - this.spacing - 24);
+        start = new Vec2f(start.x, this.height - this.spacing - 24);
+        end = new Vec2f(end.x, this.height - this.spacing - 24);
         GuiUtil.drawLine(start, end, white(192), 1f, this.zLevel);
         boolean size = this.searchedElements.size() > this.numElements;
         if (size) drawScrollBar();
@@ -213,15 +227,18 @@ public class GuiParameterList extends GuiSuperType {
         int perIndex = (int)(emptyHeight/(num-this.numElements));
         int top = 24+(perIndex*this.scrollPos);
         int x = this.width-1;
-        Point2i start = new Point2i(x, top);
-        Point2i end = new Point2i(x, top+scrollBarHeight);
+        Vec2f start = new Vec2f(x, top);
+        Vec2f end = new Vec2f(x, top+scrollBarHeight);
         GuiUtil.drawLine(start,end,white(192), 2f, this.zLevel);
     }
 
     @Override
     protected void save() {
         this.parent.save();
-        if(this.hasEdits) madeChange(true);
+        if(this.hasEdits) {
+            madeChange(true);
+            this.hasEdits = false;
+        }
     }
 
     private String getParameter(int index) {

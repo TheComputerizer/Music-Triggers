@@ -1,15 +1,14 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import mods.thecomputerizer.musictriggers.client.Translate;
-import mods.thecomputerizer.musictriggers.client.audio.Channel;
-import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
+import mods.thecomputerizer.musictriggers.client.channels.Channel;
+import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.theimpossiblelibrary.client.gui.RadialProgressBar;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.math.Vec2f;
 
-import javax.vecmath.Point2i;
-import javax.vecmath.Point4i;
+import javax.vecmath.Point4f;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -60,12 +59,13 @@ public class GuiPlayback extends GuiRadial {
     }
 
     public void click(float percent) {
-        //this.currentChannel.setMillis((long)(this.currentChannel.getTotalMillis()*percent));
+        if(Objects.nonNull(this.currentChannel) && this.currentChannel.isPlayingSeekable())
+            this.currentChannel.setMillis((long)(this.currentChannel.getTotalMillis()*percent));
     }
 
     private void updateProgressBar() {
         float percent = 1f;
-        if(this.currentChannel.isPlaying())
+        if(this.currentChannel.isPlayingSeekable())
             percent = ((float)this.currentChannel.getMillis())/((float)this.currentChannel.getTotalMillis());
         this.radialBar.setProgress(percent);
     }
@@ -73,16 +73,16 @@ public class GuiPlayback extends GuiRadial {
     @Override
     public void drawStuff(int mouseX, int mouseY, float partialTicks) {
         if(Objects.nonNull(this.radialBar)) {
-            GuiUtil.drawColoredRing(new Point2i((int)(((float)this.width)/2f),(int)(((float)this.height)/2f)),
-                    new Point2i(110,112),new Point4i(255,255,255,192),100,this.zLevel);
+            GuiUtil.drawColoredRing(new Vec2f((int)(((float)this.width)/2f),(int)(((float)this.height)/2f)),
+                    new Vec2f(110,112),new Point4f(255,255,255,192),100,this.zLevel);
             circleButton.render(this.zLevel,mouseX,mouseY);
-            Point2i center = new Point2i(this.width / 2, this.height / 2);
-            String display = "Playback unavailable";
-            if (Objects.nonNull(this.currentChannel)) {
-                //updateProgressBar();
+            Vec2f center = new Vec2f((float)this.width / 2, (float)this.height / 2);
+            String display = "Playback Unavailable";
+            if(Objects.nonNull(this.currentChannel)) {
+                updateProgressBar();
                 display = this.currentChannel.formatPlayback();
             } else this.radialBar.setProgress(1f);
-            drawCenteredString(this.fontRenderer, display, center.x, center.y-this.spacing-this.fontRenderer.FONT_HEIGHT-112, GuiUtil.WHITE);
+            drawCenteredString(this.fontRenderer, display, (int)center.x, (int)(center.y-this.spacing-this.fontRenderer.FONT_HEIGHT-112), GuiUtil.WHITE);
         }
     }
 

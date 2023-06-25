@@ -8,10 +8,10 @@ import mods.thecomputerizer.theimpossiblelibrary.client.gui.RadialElement;
 import mods.thecomputerizer.theimpossiblelibrary.client.gui.RadialProgressBar;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.Vec2f;
 import org.apache.logging.log4j.util.TriConsumer;
 
 import javax.annotation.Nullable;
-import javax.vecmath.Point2i;
 import java.util.*;
 
 public enum GuiType {
@@ -45,7 +45,7 @@ public enum GuiType {
     private final String id;
     private final ResourceLocation iconLocation;
     private final ResourceLocation altIconLocation;
-    private final ProgressCreator<Integer, Integer, Float, Integer, TriConsumer<GuiScreen, RadialProgressBar, Point2i>, RadialProgressBar> progressBar;
+    private final ProgressCreator<Integer, Integer, Float, Integer, TriConsumer<GuiScreen, RadialProgressBar, Vec2f>, RadialProgressBar> progressBar;
     private final String text;
     private final List<String> tooltips;
     private final Float resolution;
@@ -55,7 +55,7 @@ public enum GuiType {
             Integer, Integer, Integer, Integer, Integer, String, List<String>, Float, Float, ButtonType[],
             RadialElement> circleConstructor;
     private final Integer progressRes;
-    private final TriConsumer<GuiScreen, RadialProgressBar, Point2i> progressClick;
+    private final TriConsumer<GuiScreen, RadialProgressBar, Vec2f> progressClick;
 
     GuiType(String id, ButtonType[] buttonHolders) {
         this(id, null, null, null, null, null, null, buttonHolders,
@@ -63,10 +63,10 @@ public enum GuiType {
     }
     GuiType(String id, @Nullable ResourceLocation iconLocation, @Nullable ResourceLocation altIconLocation,
             List<String> tooltips, Float resolution, Float iconIncrease, ButtonType[] buttonHolders,
-            ProgressCreator<Integer, Integer, Float, Integer, TriConsumer<GuiScreen, RadialProgressBar, Point2i>, RadialProgressBar> progressBar,
+            ProgressCreator<Integer, Integer, Float, Integer, TriConsumer<GuiScreen, RadialProgressBar, Vec2f>, RadialProgressBar> progressBar,
             @Nullable RadialElement.CreatorFunction<GuiScreen, ResourceLocation, ResourceLocation, RadialProgressBar,
                     Integer, Integer, Integer, Integer, Integer, String, List<String>, Float, Float, ButtonType[],
-                    RadialElement> circleConstructor, Integer progressRes, TriConsumer<GuiScreen, RadialProgressBar, Point2i> progressClick) {
+                    RadialElement> circleConstructor, Integer progressRes, TriConsumer<GuiScreen, RadialProgressBar, Vec2f> progressClick) {
         this(id, iconLocation, altIconLocation, null, tooltips, resolution, iconIncrease, buttonHolders,
                 progressBar, circleConstructor, progressRes, progressClick);
     }
@@ -80,10 +80,10 @@ public enum GuiType {
     }
     GuiType(String id, @Nullable ResourceLocation iconLocation, @Nullable ResourceLocation altIconLocation,
             @Nullable String text, List<String> tooltips, Float resolution, Float iconIncrease, ButtonType[] buttonHolders,
-            @Nullable ProgressCreator<Integer, Integer, Float, Integer, TriConsumer<GuiScreen, RadialProgressBar, Point2i>, RadialProgressBar> progressBar,
+            @Nullable ProgressCreator<Integer, Integer, Float, Integer, TriConsumer<GuiScreen, RadialProgressBar, Vec2f>, RadialProgressBar> progressBar,
             @Nullable RadialElement.CreatorFunction<GuiScreen, ResourceLocation, ResourceLocation, RadialProgressBar,
                     Integer, Integer, Integer, Integer, Integer, String, List<String>, Float, Float, ButtonType[],
-                    RadialElement> circleConstructor, Integer progressRes, TriConsumer<GuiScreen, RadialProgressBar, Point2i> progressClick) {
+                    RadialElement> circleConstructor, Integer progressRes, TriConsumer<GuiScreen, RadialProgressBar, Vec2f> progressClick) {
         this.id = id;
         this.iconLocation = iconLocation;
         this.altIconLocation = altIconLocation;
@@ -103,7 +103,7 @@ public enum GuiType {
     }
 
     public RadialElement getCircleForType(GuiScreen parentScreen, Integer[] loc, @Nullable RadialProgressBar bar) {
-        if(this.circleConstructor==null) return null;
+        if(Objects.isNull(this.circleConstructor)) return null;
         return this.circleConstructor.apply(parentScreen, this.iconLocation, this.altIconLocation, bar, loc[0], loc[1],
                 loc[2], loc[3], loc[4], this.text, this.tooltips, this.resolution, this.iconIncrease, this.buttonHolders);
     }

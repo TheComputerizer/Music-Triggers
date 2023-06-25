@@ -9,6 +9,7 @@
     "MixinBossInfoServer"
   ],
   "client": [
+    "MixinMinecraft",
     "MixinMusicTicker"
   ]
 }

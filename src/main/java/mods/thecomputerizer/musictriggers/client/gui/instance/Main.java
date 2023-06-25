@@ -8,7 +8,6 @@ import mods.thecomputerizer.theimpossiblelibrary.common.toml.Comment;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.VarMatcher;
-import mods.thecomputerizer.theimpossiblelibrary.util.TextUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.util.TriConsumer;
@@ -53,12 +52,7 @@ public class Main extends AbstractChannelConfig {
                 for(Table trigger : getOrCreateTable(null,"triggers").getTablesByName(triggerName)) {
                     VarMatcher matcher = new VarMatcher();
                     for(String parameter : Trigger.getAcceptedParameters(triggerName))
-                        matcher.addCondition(parameter,val -> {
-                            if(val instanceof List<?>)
-                                return !TextUtil.listToString(((List<?>)val).stream().map(Objects::toString)
-                                        .collect(Collectors.toList()),";").matches(Trigger.getDefaultParameter(parameter));
-                            return !val.toString().matches(Trigger.getDefaultParameter(parameter));
-                        });
+                        matcher.addCondition(parameter,val -> Trigger.isNonDefaultParameter(triggerName,parameter,val));
                     trigger.addMatcher(matcher);
                 }
             }
@@ -74,9 +68,12 @@ public class Main extends AbstractChannelConfig {
                         val.toString().matches("100"))));
                 matcher.addCondition("play_once",(val -> !((val instanceof Number && ((Number) val).intValue()==0) ||
                         val.toString().matches("0"))));
+                matcher.addCondition("play_x",(val -> !((val instanceof Number && ((Number) val).intValue()==0) ||
+                        val.toString().matches("1"))));
                 matcher.addCondition("must_finish", val -> !val.toString().toLowerCase().matches("false"));
                 matcher.addCondition("start_at",(val -> !((val instanceof Number && ((Number) val).longValue()==0L) ||
                         val.toString().matches("0"))));
+                matcher.addCondition("resume_on_play", val -> !val.toString().toLowerCase().matches("false"));
                 song.addMatcher(matcher);
             }
         }
@@ -211,18 +208,15 @@ public class Main extends AbstractChannelConfig {
                 new GuiParameters.Parameter("universal", "song_delay",
                         this.fileData.getOrCreateVar(universal,"song_delay", "0")),
                 new GuiParameters.Parameter("universal", "start_delay",
-                        this.fileData.getOrCreateVar(universal,"start_delay", "0")));
+                        this.fileData.getOrCreateVar(universal,"start_delay", "0")),
+                new GuiParameters.Parameter("universal", "stop_delay",
+                        this.fileData.getOrCreateVar(universal,"stop_delay", "0")));
     }
 
     public List<GuiParameters.Parameter> triggerInfoParameters(Table trigger) {
         return Trigger.getAcceptedParameters(trigger.getName())
-                .stream().map(parameter -> {
-                    String defVal = Trigger.getDefaultParameter(parameter);
-                    Object actualDefVal = parameter.matches("resource_name") || parameter.matches("infernal") ||
-                            parameter.matches("champion") || parameter.matches("biome_category") ? Arrays.asList(defVal.split(";")) : defVal;
-                    return new GuiParameters.Parameter("trigger_info",parameter,trigger.getName()
-                            ,this.fileData.getOrCreateVar(trigger,parameter,actualDefVal));
-                })
+                .stream().map(parameter -> new GuiParameters.Parameter("trigger_info",parameter,trigger.getName()
+                        ,this.fileData.getOrCreateVar(trigger,parameter,Trigger.getDefaultParameter(trigger.getName(),parameter))))
                 .collect(Collectors.toList());
     }
 
@@ -357,8 +351,12 @@ public class Main extends AbstractChannelConfig {
                         this.fileData.getOrCreateVar(audio,"chance",100)),
                 new GuiParameters.Parameter("song_info","play_once",
                         this.fileData.getOrCreateVar(audio,"play_once",0)),
+                new GuiParameters.Parameter("song_info","play_x",
+                        this.fileData.getOrCreateVar(audio,"play_x",1)),
                 new GuiParameters.Parameter("song_info","must_finish",
                         this.fileData.getOrCreateVar(audio,"must_finish",false)),
+                new GuiParameters.Parameter("song_info","resume_on_play",
+                        this.fileData.getOrCreateVar(audio,"resume_on_play",false)),
                 new GuiParameters.Parameter("song_info","start_at",
                         this.fileData.getOrCreateVar(audio,"start_at",0L)));
     }

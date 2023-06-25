@@ -4,10 +4,12 @@ import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.registry.blocks.MusicRecorder;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@GameRegistry.ObjectHolder(Constants.MODID)
 public class BlockRegistry {
 
     public static final Block MUSIC_RECORDER = makeBlock("music_recorder", MusicRecorder::new,

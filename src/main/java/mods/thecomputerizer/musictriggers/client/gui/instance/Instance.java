@@ -2,7 +2,7 @@ package mods.thecomputerizer.musictriggers.client.gui.instance;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.ClientEvents;
-import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
+import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.*;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
@@ -52,14 +52,14 @@ public class Instance {
     public void writeAndReload() {
         this.debugInstance.write(null);
         this.registrationInstance.write(null);
-        if(this.needsReload) {
+        if(ChannelManager.isClientConfig() || !this.needsReload) {
+            MusicTriggers.logExternally(Level.INFO,"In-game changes detected for non-channel files - Refreshing debug information");
+            ChannelManager.refreshDebug();
+        }
+        else {
             MusicTriggers.logExternally(Level.INFO,"In-game changes detected for channel files - Reloading audio system");
             this.channelHolder.write(null);
             ClientEvents.initReload();
-        }
-        else {
-            MusicTriggers.logExternally(Level.INFO,"In-game changes detected for non-channel files - Refreshing debug information");
-            ChannelManager.refreshDebug();
         }
         Minecraft.getMinecraft().setIngameFocus();
     }
@@ -120,10 +120,14 @@ public class Instance {
         this.channelHolder.deleteChannel(channel);
     }
 
-    public GuiSelection createMultiSelectTriggerScreen(GuiSuperType parent, @Nullable String channel,
-                                                       Consumer<List<GuiSelection.Element>> multiSelectHandler) {
+    public GuiSelection createMultiSelectTriggersScreen(GuiSuperType parent, @Nullable String channel,
+                                                        Consumer<List<GuiSelection.Element>> multiSelectHandler) {
         return Objects.isNull(channel) ? null :
                 this.channelHolder.getChannel(channel).createMultiSelectTriggerScreen(parent, multiSelectHandler);
+    }
+
+    public GuiSelection createChannelSelectParameterScreen(GuiSuperType parent, GuiParameters.Parameter channelParameter) {
+        return this.channelHolder.createChannelSelectParameterScreen(parent, channelParameter);
     }
 
     public List<String> findAllRegisteredSounds() {

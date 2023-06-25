@@ -1,15 +1,17 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.Translate;
+import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.text.TextFormatting;
 import org.lwjgl.input.Mouse;
 
-import javax.vecmath.Point2i;
-import javax.vecmath.Point4i;
+import javax.vecmath.Point4f;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -29,7 +31,7 @@ public class GuiPage extends GuiSuperType {
 
     public GuiPage(GuiSuperType parent, GuiType type, Instance configInstance, String id, List<Icon> icons, boolean buttons) {
         super(parent, type, configInstance);
-        this.id = id==null ? type.getId() : id;
+        this.id = Objects.isNull(id) ? type.getId() : id;
         this.icons = icons;
         this.canEdit = buttons;
         this.deleteMode = false;
@@ -55,10 +57,12 @@ public class GuiPage extends GuiSuperType {
             int left = 16;
             addSuperButton(createBottomButton(displayName, width, 1, new ArrayList<>(),
                     (screen, button, mode) -> {
-                        Minecraft.getMinecraft().displayGuiScreen(
-                                new GuiPopUp(this,GuiType.POPUP,this.getInstance(),this.id,true,new ArrayList<>(this.icons)));
-                        this.hasEdits = true;
-                        save();
+                        if(ChannelManager.isClientConfig()) {
+                            Minecraft.getMinecraft().displayGuiScreen(new GuiPopUp(this, GuiType.POPUP,
+                                    this.getInstance(), this.id, true, new ArrayList<>(this.icons)));
+                            this.hasEdits = true;
+                            save();
+                        }
                     }),left);
             left+=(width+16);
             displayName = Translate.guiGeneric(false, "button", "delete_mode");
@@ -113,14 +117,11 @@ public class GuiPage extends GuiSuperType {
 
     private void drawIcons(int mouseX, int mouseY, int top) {
         int left = this.width-(this.spacing*15);
-        Point2i topLeft = new Point2i(left,top);
+        Vec2f topLeft = new Vec2f(left,top);
         boolean isLeft = true;
         for(Icon icon : this.icons) {
-            if(isLeft) {
-                topLeft.setX(left);
-                topLeft.setY(top);
-            }
-            else topLeft.setX(left+(this.spacing*7));
+            if(isLeft) topLeft = new Vec2f(left,top);
+            else topLeft = new Vec2f(left+(this.spacing*7),topLeft.y);
             icon.drawIcon(topLeft,this.spacing,mouseX,mouseY,black(192),this.zLevel,
                     Minecraft.getMinecraft().currentScreen == this);
             if(!isLeft) top+=this.spacing*7;
@@ -129,22 +130,26 @@ public class GuiPage extends GuiSuperType {
     }
 
     private void drawLeftSide(int top) {
-        if(Minecraft.getMinecraft().currentScreen==this) {
+        if(isActive(this)) {
             int textHeight = this.fontRenderer.FONT_HEIGHT;
             int centerX = this.width / 2;
             int left = this.spacing;
             int textX = left + (this.spacing / 2);
             for (Icon icon : this.icons) {
                 if (icon.getHover()) {
-                    GuiUtil.drawLine(new Point2i(left, top), new Point2i(centerX, top), white(128), 1f, this.zLevel);
+                    boolean enabled = ChannelManager.isClientConfig();
+                    if(icon.id.matches("debug") || icon.id.matches("registration"))
+                        enabled = enabled && ChannelManager.isButtonEnabled(icon.id);
+                    GuiUtil.drawLine(new Vec2f(left, top), new Vec2f(centerX, top), white(128), 1f, this.zLevel);
                     top += this.spacing;
-                    drawString(fontRenderer, icon.getDisplay(), textX, top, GuiUtil.WHITE);
+                    drawString(this.fontRenderer, icon.getDisplay(enabled), textX, top, GuiUtil.WHITE);
                     top += (textHeight + this.spacing);
-                    GuiUtil.drawLine(new Point2i(left, top), new Point2i(centerX, top), white(128), 1f, this.zLevel);
+                    GuiUtil.drawLine(new Vec2f(left, top), new Vec2f(centerX, top), white(128), 1f, this.zLevel);
+                    if(!enabled) break;
                     top += this.spacing;
                     top = GuiUtil.drawMultiLineString(this.fontRenderer, icon.getDescription(), textX, centerX, top, textHeight + (this.spacing / 2),
                             100, 0, GuiUtil.WHITE) + (this.spacing / 2);
-                    GuiUtil.drawLine(new Point2i(left, top), new Point2i(centerX, top), white(128), 1f, this.zLevel);
+                    GuiUtil.drawLine(new Vec2f(left, top), new Vec2f(centerX, top), white(128), 1f, this.zLevel);
                     break;
                 }
             }
@@ -153,8 +158,10 @@ public class GuiPage extends GuiSuperType {
 
     @Override
     protected void save() {
-        if(this.hasEdits)
+        if(this.hasEdits) {
             this.madeChange(true);
+            this.hasEdits = false;
+        }
     }
 
     public static class Icon {
@@ -197,22 +204,22 @@ public class GuiPage extends GuiSuperType {
             return this.hover && this.canDelete;
         }
 
-        /*
+        /**
             This can only be done since the only case where an icon can be deleted is on the channel selection page
         */
         public String channelName() {
             return this.id;
         }
 
-        private boolean isHovering(int mouseX, int mouseY, Point2i topLeft, int sideLength) {
+        private boolean isHovering(int mouseX, int mouseY, Vec2f topLeft, int sideLength) {
             return mouseX>topLeft.x && mouseX<(topLeft.x+sideLength) && mouseY>topLeft.y && mouseY<(topLeft.y+sideLength);
         }
 
-        public void drawIcon(Point2i topLeft, int spacing, int mouseX, int mouseY, Point4i color, float zLevel, boolean curScreen) {
-            GuiUtil.drawBoxOutline(topLeft,spacing*6,spacing*6,new Point4i(255,255,255,192),
+        public void drawIcon(Vec2f topLeft, int spacing, int mouseX, int mouseY, Point4f color, float zLevel, boolean curScreen) {
+            GuiUtil.drawBoxOutline(topLeft,spacing*6,spacing*6,new Point4f(255,255,255,192),
                     1f,zLevel);
-            Point2i backgroundTopLeft = new Point2i(topLeft.x+(spacing/2),topLeft.y+(spacing/2));
-            Point2i iconCenter = new Point2i((int)(backgroundTopLeft.x+(spacing*2.5f)),(int)(backgroundTopLeft.y+(spacing*2.5f)));
+            Vec2f backgroundTopLeft = new Vec2f(topLeft.x+((float)spacing/2),topLeft.y+((float)spacing/2));
+            Vec2f iconCenter = new Vec2f((int)(backgroundTopLeft.x+(spacing*2.5f)),(int)(backgroundTopLeft.y+(spacing*2.5f)));
             this.hover = curScreen && isHovering(mouseX,mouseY,backgroundTopLeft,spacing*5);
             if(hover) {
                 GuiUtil.drawBox(backgroundTopLeft,spacing*5,spacing*5,GuiUtil.reverseColors(color),zLevel);
@@ -234,9 +241,12 @@ public class GuiPage extends GuiSuperType {
             return this.hover;
         }
 
-        public String getDisplay() {
-            if(this.separateDisplay) return this.display+" - "+this.id;
-            return this.display;
+        public String getDisplay(boolean enabled) {
+            if(enabled) {
+                if (this.separateDisplay) return this.display + " - " + this.id;
+                return this.display;
+            }
+            return Translate.disabledHover().get(0);
         }
 
         public String getDescription() {

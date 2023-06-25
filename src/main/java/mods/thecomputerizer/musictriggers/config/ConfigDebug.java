@@ -68,7 +68,7 @@ public class ConfigDebug {
         lines.add(LogUtil.injectParameters("ENCODING_QUALITY = {}",ENCODING_QUALITY));
         lines.add("");
         lines.add("# Turing this down will potentially help with audio stutters (HIGH/MEDIUM/LOW)");
-        lines.add(LogUtil.injectParameters("RESAMPLING_QUALITY = {}",RESAMPLING_QUALITY));
+        lines.add(LogUtil.injectParameters("RESAMPLING_QUALITY = \"{}\"",RESAMPLING_QUALITY));
         lines.add("");
         lines.add("# The lowest level of logging (DEBUG/INFO/WARN/ERROR/FATAL) to include in the GUI log visualizer");
         lines.add(LogUtil.injectParameters("LOG_LEVEL = \"{}\"",LOG_LEVEL));

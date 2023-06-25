@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatAllowedCharacters;
+import net.minecraft.util.math.Vec2f;
 import net.minecraftforge.client.event.RenderTooltipEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.config.GuiUtils;
@@ -19,8 +20,7 @@ import org.lwjgl.input.Keyboard;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.vecmath.Point2i;
-import javax.vecmath.Point4i;
+import javax.vecmath.Point4f;
 import java.util.*;
 
 public abstract class GuiSuperType extends GuiScreen {
@@ -62,12 +62,12 @@ public abstract class GuiSuperType extends GuiScreen {
         return this.channel;
     }
 
-    public Point4i white(int alpha) {
-        return new Point4i(255,255,255,alpha);
+    public Point4f white(int alpha) {
+        return new Point4f(255,255,255,alpha);
     }
 
-    public Point4i black(int alpha) {
-        return new Point4i(0,0,0,alpha);
+    public Point4f black(int alpha) {
+        return new Point4f(0,0,0,alpha);
     }
 
     @Override
@@ -75,15 +75,29 @@ public abstract class GuiSuperType extends GuiScreen {
         if (keyCode == Keyboard.KEY_ESCAPE) {
             if(!getInstance().hasEdits()) {
                 this.mc.displayGuiScreen(null);
-                if (this.mc.currentScreen == null) this.mc.setIngameFocus();
+                if(noActiveScreens()) this.mc.setIngameFocus();
             } else this.mc.displayGuiScreen(new GuiPopUp(this,GuiType.POPUP,getInstance(),"confirm"));
         }
-        this.searchBar.textboxKeyTyped(typedChar, keyCode);
-        updateSearch();
+        if(this.searchBar.textboxKeyTyped(typedChar, keyCode))
+            updateSearch();
     }
 
     protected boolean isKeyValid(char c, int keyCode) {
         return ChatAllowedCharacters.isAllowedCharacter(c) || keyCode == Keyboard.KEY_BACK;
+    }
+
+    protected boolean checkCopy(int keyCode, String text) {
+        if(Objects.isNull(text) || text.isEmpty()) return false;
+        if(GuiScreen.isKeyComboCtrlC(keyCode)) {
+            GuiScreen.setClipboardString(text);
+            return true;
+        }
+        return false;
+    }
+
+    protected String checkPaste(int keyCode) {
+        if(GuiScreen.isKeyComboCtrlV(keyCode)) return GuiScreen.getClipboardString();
+        return "";
     }
 
     protected String backspace(String value) {
@@ -185,14 +199,14 @@ public abstract class GuiSuperType extends GuiScreen {
             superButton.drawButton(this.mc,mouseX,mouseY,partialTicks);
         this.searchBar.drawTextBox();
         for(ButtonSuperType superButton : this.superButtons) {
-            if(Minecraft.getMinecraft().currentScreen == this) {
+            if(isActive(this)) {
                 List<String> hoverText = superButton.getHoverText(mouseX,mouseY);
                 if(!hoverText.isEmpty()) drawHoveringText(hoverText,mouseX,mouseY);
             }
         }
     }
 
-    public boolean mouseHover(Point2i topLeft, int mouseX, int mouseY, int width, int height) {
+    public boolean mouseHover(Vec2f topLeft, int mouseX, int mouseY, int width, int height) {
         return Minecraft.getMinecraft().currentScreen == this &&
                 mouseX>=topLeft.x && mouseX<topLeft.x+width && mouseY>=topLeft.y && mouseY<topLeft.y+height;
     }
@@ -240,6 +254,14 @@ public abstract class GuiSuperType extends GuiScreen {
             this.parent.applyButton();
         }
         else this.getInstance().writeAndReload();
+    }
+
+    public boolean noActiveScreens() {
+        return Objects.isNull(Minecraft.getMinecraft().currentScreen);
+    }
+
+    public boolean isActive(GuiSuperType screen) {
+        return Minecraft.getMinecraft().currentScreen == screen;
     }
 
     @Override

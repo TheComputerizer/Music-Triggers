@@ -2,7 +2,7 @@ package mods.thecomputerizer.musictriggers.registry.tiles;
 
 import mods.thecomputerizer.musictriggers.registry.BlockRegistry;
 import mods.thecomputerizer.musictriggers.registry.blocks.MusicRecorder;
-import mods.thecomputerizer.musictriggers.server.data.ServerChannels;
+import mods.thecomputerizer.musictriggers.server.channels.ServerTriggerStatus;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
@@ -29,9 +29,9 @@ public class MusicRecorderEntity extends TileEntity implements ITickable {
         return this.record == ItemStack.EMPTY;
     }
 
-    public void insertRecord(ItemStack recordStack, EntityPlayer player) {
-        this.record = recordStack.copy();
-        recordStack.setCount(0);
+    public void insertRecord(ItemStack stack, EntityPlayer player) {
+        this.record = stack.copy();
+        stack.setCount(0);
         this.counter = this.random.nextInt(600);
         this.player = player;
     }
@@ -45,8 +45,8 @@ public class MusicRecorderEntity extends TileEntity implements ITickable {
     }
 
     private void record() {
-        ItemStack stack = ServerChannels.recordAudioData(this.player.getUniqueID(),this.record);
-        if(stack != ItemStack.EMPTY) {
+        ItemStack stack = ServerTriggerStatus.recordAudioData(this.player.getUniqueID(),this.record);
+        if(!stack.isEmpty()) {
             IBlockState state = this.world.getBlockState(this.pos);
             if(state.getBlock()== BlockRegistry.MUSIC_RECORDER) {
                 this.record = stack;

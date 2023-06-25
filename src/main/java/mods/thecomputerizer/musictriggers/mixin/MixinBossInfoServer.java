@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.mixin;
 
-import mods.thecomputerizer.musictriggers.server.data.ServerChannels;
+import mods.thecomputerizer.musictriggers.server.channels.ServerTriggerStatus;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.world.BossInfoServer;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,11 +18,11 @@ public class MixinBossInfoServer {
     @Inject(at = @At(value = "HEAD"), method = "addPlayer")
     private void musictriggers_addPlayer(EntityPlayerMP player, CallbackInfo ci) {
         if(this.visible)
-            ServerChannels.addBossBarTracking(player.getUniqueID(),(BossInfoServer)(Object)this);
+            ServerTriggerStatus.addBossBarTracking(player.getUniqueID(),(BossInfoServer)(Object)this);
     }
 
     @Inject(at = @At(value = "HEAD"), method = "removePlayer")
     private void musictriggers_removePlayer(EntityPlayerMP player, CallbackInfo ci) {
-        ServerChannels.removeBossBarTracking(player.getUniqueID(),(BossInfoServer)(Object)this);
+        ServerTriggerStatus.removeBossBarTracking(player.getUniqueID(),(BossInfoServer)(Object)this);
     }
 }
