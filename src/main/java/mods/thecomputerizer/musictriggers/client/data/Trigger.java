@@ -11,7 +11,9 @@ import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.ClientEvents;
 import mods.thecomputerizer.musictriggers.client.MusicPicker;
 import mods.thecomputerizer.musictriggers.client.channels.Channel;
+import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
+import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
 import mods.thecomputerizer.theimpossiblelibrary.util.NetworkUtil;
 import net.darkhax.gamestages.GameStageHelper;
 import net.minecraft.block.material.Material;
@@ -92,7 +94,7 @@ public class Trigger {
         addParameter("fade_out",0);
         addParameter("trigger_delay",0);
         addParameter("song_delay",0);
-        addParameter("level",Integer.MIN_VALUE);
+        addParameter("level",0);
         addParameter("persistence",0);
         addParameter("start_delay",0);
         addParameter("stop_delay",0);
@@ -127,7 +129,7 @@ public class Trigger {
         addParameter("light_type","ANY");
         addParameter("is_whitelist",true);
         addParameter("biome_category",Collections.singletonList("ANY"));
-        addParameter("rain_type","any");
+        addParameter("rain_type","ANY");
         addParameter("biome_temperature",Float.MIN_VALUE);
         addParameter("check_lower_temp",false);
         addParameter("biome_rainfall",Float.MIN_VALUE);
@@ -372,6 +374,9 @@ public class Trigger {
 
     private static void addDefaultParameterOverrides() {
         addTriggerParameterDefualt("mob","level",1);
+        addTriggerParameterDefualt("drowning","level",100);
+        addTriggerParameterDefualt("light","level",7);
+        addTriggerParameterDefualt("lowhp","level",30);
     }
 
     public static <T> void addParameter(String name, T defaultValue) throws IllegalArgumentException {
@@ -498,13 +503,17 @@ public class Trigger {
     private final Channel channel;
     private final String name;
     private final HashMap<String, Object> parameters;
+    private final List<Table> linkTables;
+    private final HashMap<Integer, Link> parsedLinkMap;
     private boolean isToggled;
     private boolean canPlayMoreAudio;
 
-    public Trigger(String name, Channel channel) {
+    public Trigger(String name, Channel channel, List<Table> links) {
         this.name = name;
         this.channel = channel;
         this.parameters = buildDefaultParameters(name);
+        this.linkTables = links;
+        this.parsedLinkMap = new HashMap<>();
         this.isToggled = false;
         this.canPlayMoreAudio = true;
     }
@@ -712,10 +721,10 @@ public class Trigger {
     public boolean checkBiome(Biome b, List<String> names, List<String> categories, String rainType,
                               float temperature, boolean cold, float rainfall, boolean togglerainfall) {
         if(Objects.isNull(b.getRegistryName())) return false;
-        boolean pass = names.isEmpty() || names.contains("ANY") ||
-                checkResourceList(b.getRegistryName().toString(),names,false);
-        if(!pass) pass = categories.isEmpty() || categories.contains("ANY") ||
-                checkResourceList(b.getTempCategory().toString(),categories,false);
+        boolean pass = !names.contains("ANY") && (names.isEmpty() ||
+                checkResourceList(b.getRegistryName().toString(),names,false));
+        if(!pass) pass = !categories.contains("ANY") && (categories.isEmpty() ||
+                checkResourceList(b.getTempCategory().toString(),categories,false));
         if(!pass) return false;
         pass = false;
         if(rainfall==Float.MIN_VALUE) pass = true;
@@ -823,7 +832,12 @@ public class Trigger {
             if(parts.length==2) return true;
             if(stack.getCount()>=MusicTriggers.randomInt("parsed_item_count",parts[2],0)) {
                 if(parts.length==3) return true;
-                return checkNBT(stack, parts[3]);
+                StringBuilder builder = new StringBuilder();
+                for(int i=3;i<parts.length;i++) {
+                    builder.append(parts[i]);
+                    if(i<parts.length-1) builder.append(":");
+                }
+                return checkNBT(stack, builder.toString());
             }
         }
         return false;
@@ -944,7 +958,7 @@ public class Trigger {
                 for(TileEntity loadedTile : player.getEntityWorld().loadedTileEntityList) {
                     if(tileClass.isAssignableFrom(loadedTile.getClass())) {
                         BlockPos tilePos = loadedTile.getPos();
-                        return tilePos.getX()<=box.maxX && tilePos.getX()>=box.minX && tilePos.getY()<=box.maxX &&
+                        return tilePos.getX()<=box.maxX && tilePos.getX()>=box.minX && tilePos.getY()<=box.maxY &&
                                 tilePos.getY()>=box.minY && tilePos.getZ()<=box.maxZ && tilePos.getZ()>=box.minZ;
                     }
                 }
@@ -979,6 +993,23 @@ public class Trigger {
     public void onLogOut() {
         if(getParameterInt("toggle_save_status")>=1)
             this.isToggled = getParameterBool("start_toggled");
+    }
+
+    public void parseLinks() {
+        int index = 0;
+        for(Table link : this.linkTables) {
+            Link readLink = new Link(this.channel.getChannelName(),this,link);
+            if (readLink.isValid()) {
+                this.parsedLinkMap.put(index, readLink);
+                index++;
+            } else MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Link table at index {} for song {} " +
+                    "was invalid! Please double check that the channel is valid and there is at least 1 valid trigger " +
+                    "set.",this.channel.getChannelName(),index,getName());
+        }
+    }
+
+    public Collection<Link> getLinks() {
+        return Collections.unmodifiableCollection(this.parsedLinkMap.values());
     }
 
     public static final class DefaultParameter {
@@ -1054,6 +1085,71 @@ public class Trigger {
             NetworkUtil.writeString(buf,this.name);
             NetworkUtil.writeGenericObj(buf,this.value);
             NetworkUtil.writeGenericMap(buf,triggerDefualts,NetworkUtil::writeString,NetworkUtil::writeGenericObj);
+        }
+    }
+
+    public static final class Link {
+
+        private final Channel channel;
+        private final Trigger parentTrigger;
+        private final List<Trigger> requiredTriggers;
+        private final List<Trigger> linkTo;
+
+        private Link(String parentChannel, Trigger parentTrigger, Table data) {
+            String channel = data.getValOrDefault("channel","jukebox");
+            this.channel = Objects.nonNull(channel) && !channel.isEmpty() && !channel.matches("jukebox") ? null :
+                    ChannelManager.getNonDefaultChannel(channel);
+            if(Objects.isNull(this.channel)) {
+                MusicTriggers.logExternally(Level.WARN,"Channel [{}] - Incorrect channel name {} in link table " +
+                        "for trigger {}!",parentChannel,channel,parentTrigger.getName());
+                this.parentTrigger = null;
+                this.requiredTriggers = new ArrayList<>();
+                this.linkTo = new ArrayList<>();
+            }
+            else {
+                this.parentTrigger = parentTrigger;
+                this.requiredTriggers = parseTriggers(parentChannel,parentTrigger,parentTrigger.channel.getRegisteredTriggers(),
+                        data.getValOrDefault("required_triggers",new ArrayList<>()));
+                this.linkTo = parseTriggers(parentChannel,parentTrigger,this.channel.getRegisteredTriggers(),
+                        data.getValOrDefault("linked_triggers",new ArrayList<>()));
+            }
+        }
+
+        private List<Trigger> parseTriggers(String channel, Trigger parentTrigger, List<Trigger> triggers,
+                                            List<String> potentialTriggers) {
+            List<Trigger> ret = new ArrayList<>();
+            for(String potential : potentialTriggers) {
+                boolean found = false;
+                for(Trigger trigger : triggers) {
+                    if(trigger.getNameWithID().matches(potential)) {
+                        ret.add(trigger);
+                        found = true;
+                        break;
+                    }
+                }
+                if(!found) MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Trigger with name {} under " +
+                        "link for trigger {} was not recognized as a registered trigger and will be skipped",channel,
+                        potential,parentTrigger.getNameWithID());
+            }
+            return ret;
+        }
+
+        public boolean isValid() {
+            return Objects.nonNull(this.channel) && Objects.nonNull(this.parentTrigger) && !this.linkTo.isEmpty();
+        }
+
+        public boolean isActive(HashSet<Trigger> activeTriggers) {
+            if(this.requiredTriggers.size()==1 && this.requiredTriggers.get(0)==this.parentTrigger) return true;
+            HashSet<Trigger> otherActiveTriggers = new HashSet<>();
+            for(Trigger trigger : activeTriggers)
+                if(trigger!=this.parentTrigger)
+                    otherActiveTriggers.add(trigger);
+            return this.requiredTriggers.isEmpty() ? otherActiveTriggers.isEmpty() :
+                    otherActiveTriggers.containsAll(this.requiredTriggers);
+        }
+
+        public boolean shouldLink(HashSet<Trigger> otherTriggers) {
+            return otherTriggers.containsAll(this.linkTo);
         }
     }
 

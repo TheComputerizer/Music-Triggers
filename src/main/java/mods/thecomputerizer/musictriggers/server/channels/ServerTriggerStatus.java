@@ -75,6 +75,7 @@ public class ServerTriggerStatus {
                         buf1 -> NetworkUtil.readGenericList(buf1,NetworkUtil::readString));
                 EntityPlayerMP player = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList()
                         .getPlayerByUUID(UUID.fromString(playerUUID));
+                int preferredSortType = buf.readInt();
                 if(Objects.nonNull(player)) {
                     for(Map.Entry<String,Boolean> toggleEntry : toggleMap.entrySet())
                         PersistentDataHandler.getDataCapability(player).writeToggleStatus(channel,toggleEntry.getKey(),
@@ -82,6 +83,7 @@ public class ServerTriggerStatus {
                     for(Map.Entry<String,List<String>> playedOnceEntry : playedOnceMap.entrySet())
                         PersistentDataHandler.getDataCapability(player).setAudioPlayed(channel,playedOnceEntry.getKey(),
                                 playedOnceEntry.getValue());
+                    PersistentDataHandler.getDataCapability(player).writePreferredSort(preferredSortType);
                 }
             }
         }

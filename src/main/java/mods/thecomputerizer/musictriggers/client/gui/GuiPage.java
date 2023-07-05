@@ -1,6 +1,5 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.Translate;
 import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
@@ -26,6 +25,9 @@ public class GuiPage extends GuiSuperType {
     private final boolean canEdit;
     private boolean deleteMode;
     private int scrollPos;
+    private int numIconsAdjusted;
+    private int numVisibleRows;
+    private boolean canScroll;
     private boolean canScrollDown;
     private boolean hasEdits;
 
@@ -35,8 +37,7 @@ public class GuiPage extends GuiSuperType {
         this.icons = icons;
         this.canEdit = buttons;
         this.deleteMode = false;
-        this.scrollPos = 0;
-        this.canScrollDown = false;
+        this.numIconsAdjusted = icons.size()%2==0 ? icons.size() : icons.size()+1;
     }
 
     public String getID() {
@@ -46,11 +47,47 @@ public class GuiPage extends GuiSuperType {
     public void updateIcons(List<Icon> icons) {
         this.icons.clear();
         this.icons.addAll(icons);
+        this.numIconsAdjusted = icons.size()%2==0 ? icons.size() : icons.size()+1;
+    }
+
+    private void calculateScrollSize() {
+        this.scrollPos = 0;
+        int iconSlot = this.spacing*7;
+        int totalHeight = this.height-(this.spacing+24);
+        int runningHeight = iconSlot;
+        int runningTotal = 1;
+        while(runningHeight+iconSlot<totalHeight) {
+            runningTotal++;
+            runningHeight+=iconSlot;
+        }
+        this.numVisibleRows = runningTotal;
+        this.canScroll = this.numVisibleRows*2 < this.numIconsAdjusted;
+        this.canScrollDown = this.canScroll;
+    }
+
+    @Override
+    public void handleMouseInput() throws IOException {
+        super.handleMouseInput();
+        if(this.canScroll) {
+            int scroll = Mouse.getEventDWheel();
+            if (scroll != 0) {
+                if (scroll >= 1) {
+                    if (this.scrollPos>0) {
+                        this.scrollPos--;
+                        this.canScrollDown = true;
+                    }
+                } else if (this.canScrollDown) {
+                    this.scrollPos++;
+                    this.canScrollDown = (this.scrollPos+this.numVisibleRows)*2 < this.numIconsAdjusted;
+                }
+            }
+        }
     }
 
     @Override
     public void initGui() {
         super.initGui();
+        calculateScrollSize();
         if(this.canEdit) {
             String displayName = Translate.guiGeneric(false,"button",this.id + "_add");
             int width = this.fontRenderer.getStringWidth(displayName)+8;
@@ -76,18 +113,7 @@ public class GuiPage extends GuiSuperType {
                         button.updateDisplay(color + finalDisplayName,this.fontRenderer);
                     }), left);
         }
-    }
-
-    @Override
-    public void handleMouseInput() throws IOException {
-        super.handleMouseInput();
-        int scroll = Mouse.getEventDWheel();
-        if(scroll!=0) {
-            if(scroll<1 && this.canScrollDown) {
-                this.scrollPos++;
-                this.canScrollDown = false;
-            } else if(this.scrollPos>0) this.scrollPos--;
-        }
+        for(Icon icon : this.icons) icon.disableHover();
     }
 
     @Override
@@ -119,14 +145,33 @@ public class GuiPage extends GuiSuperType {
         int left = this.width-(this.spacing*15);
         Vec2f topLeft = new Vec2f(left,top);
         boolean isLeft = true;
+        int skip = this.scrollPos*2;
         for(Icon icon : this.icons) {
+            if(skip>0) {
+                icon.disableHover();
+                skip--;
+                continue;
+            }
             if(isLeft) topLeft = new Vec2f(left,top);
             else topLeft = new Vec2f(left+(this.spacing*7),topLeft.y);
             icon.drawIcon(topLeft,this.spacing,mouseX,mouseY,black(192),this.zLevel,
                     Minecraft.getMinecraft().currentScreen == this);
             if(!isLeft) top+=this.spacing*7;
+            if(top+(this.spacing*7)>=this.height) break;
             isLeft = !isLeft;
         }
+        if(this.canScroll) drawScrollBar();
+    }
+
+    private void drawScrollBar() {
+        float indices = (((float)this.numIconsAdjusted-((float)this.numVisibleRows*2f))/2f)+1f;
+        float perIndex = this.height/indices;
+        int top = (int)(perIndex*this.scrollPos);
+        int x = this.width-1;
+        Vec2f start = new Vec2f(x, top);
+        if(perIndex<1) perIndex = 1;
+        Vec2f end = new Vec2f(x, (int)(top+perIndex));
+        GuiUtil.drawLine(start,end,white(192), 2f, this.zLevel);
     }
 
     private void drawLeftSide(int top) {
@@ -211,6 +256,10 @@ public class GuiPage extends GuiSuperType {
             return this.id;
         }
 
+        public void disableHover() {
+            this.hover = false;
+        }
+
         private boolean isHovering(int mouseX, int mouseY, Vec2f topLeft, int sideLength) {
             return mouseX>topLeft.x && mouseX<(topLeft.x+sideLength) && mouseY>topLeft.y && mouseY<(topLeft.y+sideLength);
         }
@@ -221,7 +270,7 @@ public class GuiPage extends GuiSuperType {
             Vec2f backgroundTopLeft = new Vec2f(topLeft.x+((float)spacing/2),topLeft.y+((float)spacing/2));
             Vec2f iconCenter = new Vec2f((int)(backgroundTopLeft.x+(spacing*2.5f)),(int)(backgroundTopLeft.y+(spacing*2.5f)));
             this.hover = curScreen && isHovering(mouseX,mouseY,backgroundTopLeft,spacing*5);
-            if(hover) {
+            if(this.hover) {
                 GuiUtil.drawBox(backgroundTopLeft,spacing*5,spacing*5,GuiUtil.reverseColors(color),zLevel);
                 GuiUtil.bufferSquareTexture(iconCenter,spacing*1.5f,this.hoverTexture);
             } else {

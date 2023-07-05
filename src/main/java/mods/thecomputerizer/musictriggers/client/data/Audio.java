@@ -23,7 +23,7 @@ public class Audio {
     private long lastKnownTime;
     private boolean hasPlayed = false;
 
-    public Audio(Table song, List<Trigger> triggers, @Nullable Table universal) {
+    public Audio(String channel, Table song, List<Trigger> triggers, @Nullable Table universal) {
         this.data = song;
         this.volume = song.getValOrDefault("volume",Objects.nonNull(universal) ?
                 universal.getValOrDefault("volume",1f) : 1f);
@@ -38,11 +38,11 @@ public class Audio {
         this.milliStart = song.getValOrDefault("start_at",0L);
         this.resume = song.getValOrDefault("resume_on_play",false);
         this.lastKnownTime = this.milliStart;
-        this.triggers = parseTriggers(triggers, song.getValOrDefault("triggers",new ArrayList<>()));
-        this.loopMap = readLoops(song.getTablesByName("loop"));
+        this.triggers = parseTriggers(channel,triggers,song.getValOrDefault("triggers",new ArrayList<>()));
+        this.loopMap = readLoops(channel,song.getTablesByName("loop"));
     }
 
-    private List<Trigger> parseTriggers(List<Trigger> triggers, List<String> potentialTriggers) {
+    private List<Trigger> parseTriggers(String channel, List<Trigger> triggers, List<String> potentialTriggers) {
         List<Trigger> ret = new ArrayList<>();
         for(String potential : potentialTriggers) {
             boolean found = false;
@@ -53,13 +53,13 @@ public class Audio {
                     break;
                 }
             }
-            if(!found) MusicTriggers.logExternally(Level.WARN, "Trigger with name {} under audio {} was not " +
-                    "recognized as a registered trigger and will be skipped", potential, getName());
+            if(!found) MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Trigger with name {} under audio " +
+                    "{} was not recognized as a registered trigger and will be skipped",channel,potential,getName());
         }
         return ret;
     }
 
-    private HashMap<Integer, Loop> readLoops(List<Table> loops) {
+    private HashMap<Integer, Loop> readLoops(String channel, List<Table> loops) {
         HashMap<Integer, Loop> ret = new HashMap<>();
         int index = 0;
         for(Table loop : loops) {
@@ -68,9 +68,9 @@ public class Audio {
                 readLoop.setNum();
                 ret.put(index, readLoop);
                 index++;
-            } else MusicTriggers.logExternally(Level.WARN, "Loop table at index {} for song {} was invalid! " +
-                        "Please double check that the parameters are correct, the from and to are different, and " +
-                        "that the num_loops is set to a value greater than 0.", index + 1, getName());
+            } else MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Loop table at index {} for song {} " +
+                    "was invalid! Please double check that the parameters are correct, the from and to are different, " +
+                    "and that the num_loops is set to a value greater than 0.",channel,index,getName());
         }
         return ret;
     }

@@ -8,6 +8,7 @@ import java.util.List;
 public interface IPersistentTriggerData {
 
     void onLogin(EntityPlayerMP player);
+    void writePreferredSort(int preferredSort);
     void initChannel(String channel);
     void writeToggleStatus(String channel, String trigger, boolean isToggled);
     void setAudioPlayed(String channel, String audio, List<String> audioTriggers);

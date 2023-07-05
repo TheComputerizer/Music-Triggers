@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.client;
 
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.client.data.Trigger;
+import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
 import net.minecraft.client.resources.I18n;
@@ -39,7 +40,11 @@ public class Translate {
         for(Object element : things) {
             builder.append("[").append(element).append("]");
             checkMax++;
-            if(checkMax>things.size()) builder.append(" ");
+            if(checkMax<things.size()) builder.append(" ");
+            if(checkMax>=ConfigDebug.MAX_HOVER_ELEMENTS) {
+                builder.append("...");
+                break;
+            }
         }
         return builder.toString();
     }
@@ -149,9 +154,6 @@ public class Translate {
         if(trigger.getName().matches("menu") || trigger.getName().matches("generic") ||
                 trigger.getName().matches("loading"))
             return new ArrayList<>();
-        if(Trigger.isParameterAccepted(trigger.getName(),"identifier"))
-            return Arrays.asList(guiGeneric(false,"trigger","identifier")+ ": "+triggerID(trigger),
-                    guiGeneric(false,"trigger","priority")+ ": "+trigger.getValOrDefault("priority",1));
         return Collections.singletonList(guiGeneric(false,"trigger","priority")+": "+
                 trigger.getValOrDefault("priority",1));
     }

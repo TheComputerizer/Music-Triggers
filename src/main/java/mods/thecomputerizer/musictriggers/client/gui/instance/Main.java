@@ -178,9 +178,11 @@ public class Main extends AbstractChannelConfig {
                     if (type instanceof Table) {
                         Table trigger = (Table) type;
                         String triggerWithNumber = trigger.getArrIndex()+"-"+trigger.getName();
+                        String identifier = !Trigger.isParameterAccepted(trigger.getName(),"identifier") ? "" :
+                                "-"+Translate.triggerID(trigger);
                         return new GuiSelection.MonoElement(triggerWithNumber,trigger.getAbsoluteIndex()+1,
-                                Translate.songInstance(trigger.getName()), Translate.triggerElementHover(trigger),
-                                (parent) -> Minecraft.getMinecraft().displayGuiScreen(
+                                Translate.guiGeneric(false,"trigger",trigger.getName())+identifier,
+                                Translate.triggerElementHover(trigger), (parent) -> Minecraft.getMinecraft().displayGuiScreen(
                                 new GuiParameters(parent,GuiType.PARAMETER_GENERIC, parent.getInstance(),
                                         "trigger_info",Translate.guiGeneric(false, "selection", "trigger_info"),
                                         triggerInfoParameters(trigger),getChannelName())), (id) -> this.fileData.removeTable(trigger));

@@ -18,6 +18,9 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class Instance {
+
+    private static int preferredSortType = 1;
+    private static boolean changedSort = false;
     private final List<String> registeredSounds;
     private final HashMap<GuiType, AbstractConfig> moduleMap;
     private final Debug debugInstance;
@@ -25,6 +28,21 @@ public class Instance {
     private final ChannelHolder channelHolder;
     private boolean hasChanges;
     private boolean needsReload;
+
+    public static void setPreferredSort(int sort) {
+        preferredSortType = sort;
+        changedSort = true;
+    }
+
+    public static int getPreferredSort() {
+        return preferredSortType;
+    }
+
+    public static boolean changedPreferredSort() {
+        boolean ret = changedSort;
+        changedSort = false;
+        return ret;
+    }
 
     public static GuiSuperType createGui() {
         return new GuiRadial(null, GuiType.MAIN, new Instance(ConfigDebug.copyToGui(), ConfigRegistry.copyToGui(),
@@ -52,7 +70,7 @@ public class Instance {
     public void writeAndReload() {
         this.debugInstance.write(null);
         this.registrationInstance.write(null);
-        if(ChannelManager.isClientConfig() || !this.needsReload) {
+        if(!ChannelManager.isClientConfig() || !this.needsReload) {
             MusicTriggers.logExternally(Level.INFO,"In-game changes detected for non-channel files - Refreshing debug information");
             ChannelManager.refreshDebug();
         }

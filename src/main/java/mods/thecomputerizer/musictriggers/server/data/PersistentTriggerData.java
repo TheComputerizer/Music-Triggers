@@ -9,6 +9,7 @@ import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
+import net.minecraft.util.math.MathHelper;
 import org.apache.logging.log4j.Level;
 
 import java.util.*;
@@ -17,6 +18,7 @@ public class PersistentTriggerData implements IPersistentTriggerData {
 
     private final Map<String,Map<String,Boolean>> toggleMap;
     private final Map<String,Map<String,ImmutableList<String>>> playedOnceMap;
+    private int preferredSort = 1;
 
     public PersistentTriggerData() {
         this.toggleMap = new HashMap<>();
@@ -24,8 +26,12 @@ public class PersistentTriggerData implements IPersistentTriggerData {
     }
 
     public void onLogin(EntityPlayerMP player) {
-        new PacketMusicTriggersLogin(ServerChannelManager.hasConfig(),this.toggleMap,this.playedOnceMap)
+        new PacketMusicTriggersLogin(ServerChannelManager.hasConfig(),this.toggleMap,this.playedOnceMap,this.preferredSort)
                 .addPlayers(player).send();
+    }
+
+    public void writePreferredSort(int preferredSort) {
+        this.preferredSort = preferredSort;
     }
 
     public void initChannel(String channel) {
@@ -71,6 +77,7 @@ public class PersistentTriggerData implements IPersistentTriggerData {
     @Override
     public NBTTagCompound writeToNBT() {
         NBTTagCompound compound = new NBTTagCompound();
+        compound.setInteger("preferredSort",this.preferredSort);
         NBTTagList channelsList = new NBTTagList();
         for(String channel : this.toggleMap.keySet()) {
             NBTTagCompound channelTag = new NBTTagCompound();
@@ -102,6 +109,7 @@ public class PersistentTriggerData implements IPersistentTriggerData {
 
     @Override
     public void readFromNBT(NBTTagCompound tag) {
+        this.preferredSort = MathHelper.clamp(tag.getInteger("preferredSort"),1,3);
         NBTBase channelsListTest = tag.getTag("channels");
         if(channelsListTest instanceof NBTTagList) {
             NBTTagList channelsTag = (NBTTagList)channelsListTest;

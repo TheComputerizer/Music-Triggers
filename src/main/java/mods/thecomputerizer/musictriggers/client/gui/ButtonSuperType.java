@@ -29,6 +29,10 @@ public class ButtonSuperType extends GuiButtonExt {
         this.visible = is;
     }
 
+    public void setMode(int mode) {
+        this.mode = mode;
+    }
+
     public void updateDisplay(String newDisplay, FontRenderer font) {
         this.displayString = newDisplay;
         this.width = font.getStringWidth(this.displayString) + 8;

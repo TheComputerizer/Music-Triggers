@@ -117,8 +117,7 @@ public class GuiParameters extends GuiSuperType {
         if (mouseButton == 0) {
             for (Parameter parameter : this.searchedParameters)
                 parameter.onClick(mouseX>this.rightSide && mouseX<=(this.width-this.spacing),this,
-                        this.spacing+(this.spacing/2),this.width/2,(spacing*4)+24+this.fontRenderer.FONT_HEIGHT,
-                        this.fontRenderer.FONT_HEIGHT+(this.spacing/2));
+                        this.spacing+(this.spacing/2),this.width/2);
         }
     }
 
@@ -299,13 +298,12 @@ public class GuiParameters extends GuiSuperType {
             this.saveScreen();
         }
 
-        public void onClick(boolean wasRightSide, GuiSuperType parent, int left, int right, int top, int spacing) {
+        public void onClick(boolean wasRightSide, GuiSuperType parent, int left, int right) {
             if(parent.isActive(parent)) {
                 if (wasRightSide) {
                     this.selected = this.displayHover;
                     if (this.selected)
-                        this.descLines = GuiUtil.howManyLinesWillThisBe(parent.mc.fontRenderer, this.description, left,
-                                right, top, spacing);
+                        this.descLines = GuiUtil.howManyLinesWillThisBe(parent.mc.fontRenderer,this.description,left,right);
                 } else if(this.selected) {
                     if(this.varHover) {
                         if (this.var.getAsBool(true).isPresent()) toggleCheckBox();

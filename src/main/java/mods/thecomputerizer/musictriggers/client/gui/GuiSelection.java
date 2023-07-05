@@ -108,13 +108,20 @@ public class GuiSelection extends GuiSuperType {
         if(this.canSort) {
             displayName = Translate.guiGeneric(false, "button", "sort", "original");
             width = this.fontRenderer.getStringWidth(displayName) + 8;
-            addSuperButton(createBottomButton(displayName, width, 3,
+            ButtonSuperType superButton = createBottomButton(displayName, width, 3,
                     Translate.guiNumberedList(3, "button", "sort", "desc"),
                     (screen, button, mode) -> {
                         this.sortType = mode - 1;
                         TextFormatting color = mode == 1 ? TextFormatting.WHITE : mode == 2 ? TextFormatting.GRAY : TextFormatting.DARK_GRAY;
                         button.updateDisplay(color + sortElements(),this.fontRenderer);
-                    }), left);
+                        Instance.setPreferredSort(mode);
+                    });
+            int mode = Instance.getPreferredSort();
+            superButton.setMode(mode);
+            this.sortType = mode-1;
+            TextFormatting color = mode == 1 ? TextFormatting.WHITE : mode == 2 ? TextFormatting.GRAY : TextFormatting.DARK_GRAY;
+            superButton.updateDisplay(color + sortElements(),this.fontRenderer);
+            addSuperButton(superButton,left);
             left += (width + 16);
         }
         for(ButtonSuperType button : this.bottomButtons) {
@@ -122,6 +129,7 @@ public class GuiSelection extends GuiSuperType {
             left += (button.width + 16);
         }
         updateSearch();
+        sortElements();
     }
     @Override
     public void handleMouseInput() throws IOException {

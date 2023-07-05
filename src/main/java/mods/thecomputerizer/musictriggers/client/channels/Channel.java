@@ -51,7 +51,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @SideOnly(value = Side.CLIENT)
-public class Channel {
+public class Channel implements IChannel {
     public static final KeyBinding GUI = new KeyBinding("key.musictriggers.gui", Keyboard.KEY_R, "key.categories.musictriggers");
     private final Table info;
     private final SoundCategory category;
@@ -65,7 +65,9 @@ public class Channel {
     private final boolean explicitlyOverrides;
     private final AudioPlayerManager playerManager;
     private final AudioPlayer player;
+    private final ChannelListener listener;
     private final HashMap<String, AudioTrack> loadedTracks;
+    private final HashMap<String, String> loadedTrackTypes;
     private final ClientSync sync;
     private final List<String> commandsForPacket;
     private final List<String> erroredSongDownloads;
@@ -155,8 +157,9 @@ public class Channel {
         AudioSourceManagers.registerLocalSource(this.playerManager);
         this.player = this.playerManager.createPlayer();
         this.player.setVolume(100);
-        new ChannelListener(this.player, StandardAudioDataFormats.DISCORD_PCM_S16_BE, this);
+        this.listener = new ChannelListener(this);
         this.loadedTracks = new HashMap<>();
+        this.loadedTrackTypes = new HashMap<>();
         this.toggleStorage = new HashMap<>();
         this.futureToggles = new HashMap<>();
         this.playerManager.setFrameBufferDuration(1000);
@@ -210,6 +213,7 @@ public class Channel {
         return this.jukebox.recordMap;
     }
 
+    @Override
     public String getChannelName() {
         return this.info.getName();
     }
@@ -380,8 +384,7 @@ public class Channel {
                             if (Objects.nonNull(audio)) {
                                 MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Attempting to play track \"{}\"",
                                         getChannelName(), audio.getName());
-                                float pitch = audio.getPitch();
-                                setPitch(pitch);
+                                this.listener.setPitch(audio.getPitch());
                                 if(this.triggerStarted) this.tempFadeIn = this.picker.fadeIn;
                                 this.triggerStarted = false;
                                 playTrack(audio);
@@ -438,7 +441,7 @@ public class Channel {
         this.savedFadeOut = this.picker.fadeOut;
         this.tempFadeOut = this.picker.fadeOut;
         this.triggerStarted = true;
-        setVolume(0.01f/this.getChannelVolume());
+        setVolume(0.01f*this.getChannelVolume());
         this.fadingIn = true;
         this.audioCounter = 0;
     }
@@ -538,6 +541,7 @@ public class Channel {
         return this.picker.getInfo().getPlayableTriggers();
     }
 
+    @Override
     public AudioPlayer getPlayer() {
         return this.player;
     }
@@ -590,7 +594,8 @@ public class Channel {
 
     public void resetTrack() {
         if(isPlaying()) {
-            MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Attempting to reset currently playing track",getChannelName());
+            MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Attempting to reset currently playing track",
+                    getChannelName());
             AudioTrack cloned = this.getPlayer().getPlayingTrack().makeClone();
             if(Objects.nonNull(this.curTrack)) cloned.setPosition(this.curTrack.getMilliStart());
             if (!this.getPlayer().startTrack(cloned, false))
@@ -604,32 +609,39 @@ public class Channel {
         if(Objects.nonNull(track)) {
             try {
                 if (!this.getPlayer().startTrack(track, false))
-                    MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Could not start track!",getChannelName());
+                    MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Could not start track!",
+                            getChannelName());
                 else {
                     if(Objects.nonNull(this.curTrack)) this.prevTrack = this.curTrack;
                     track.setPosition(audio.getResumeTime());
                     this.curTrack = audio;
                 }
-                MusicTriggers.logExternally(Level.DEBUG, "Channel[{}] - Track with id {} is seekable: {}",getChannelName(),id,track.isSeekable());
+                MusicTriggers.logExternally(Level.DEBUG, "Channel[{}] - Track with id {} is seekable: {}",
+                        getChannelName(),id,track.isSeekable());
             } catch (IllegalStateException e) {
                 AudioTrack cloned = track.makeClone();
                 if (!this.getPlayer().startTrack(cloned, false))
-                    MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Could not start track!",getChannelName());
+                    MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Could not start track!",
+                            getChannelName());
                 else {
                     if(Objects.nonNull(this.curTrack)) this.prevTrack = this.curTrack;
                     track.setPosition(audio.getResumeTime());
                     this.curTrack = audio;
                 }
-                MusicTriggers.logExternally(Level.DEBUG, "Channel[{}] - Track with id {} is seekable: {}",getChannelName(),id,track.isSeekable());
+                MusicTriggers.logExternally(Level.DEBUG, "Channel[{}] - Track with id {} is seekable: {}",
+                        getChannelName(),id,track.isSeekable());
             }
         } else {
             MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Track with id {} was null! Attempting to " +
                     "refresh track...",getChannelName(),id);
+            String type = this.loadedTrackTypes.get(id);
+            type = type.substring(0,type.indexOf("["));
             this.loadedTracks.remove(id);
-            if(this.redirect.urlMap.containsKey(id)) loadFromURL(id,this.redirect.urlMap.get(id),audio);
-            else if(this.redirect.resourceLocationMap.containsKey(id))
+            this.loadedTrackTypes.remove(id);
+            if(type.matches("url")) loadFromURL(id,this.redirect.urlMap.get(id),audio);
+            else if(type.matches("resource"))
                 loadFromResourceLocation(id,this.redirect.resourceLocationMap.get(id),audio);
-            else {
+            else if(type.matches("file")) {
                 boolean foundFile = false;
                 for(File file : ChannelManager.OPEN_AUDIO_FILES.get(this.localFolderPath)) {
                     if (FilenameUtils.getBaseName(file.getName()).matches(id)) {
@@ -639,10 +651,15 @@ public class Channel {
                     }
                 }
                 if(!foundFile) {
-                    MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Track with id {} does not seem to exist! All " +
-                            "instances using this song will be removed until reloading.", getChannelName(), id);
+                    MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Track with id {} does not seem to " +
+                            "exist! All instances using this song will be removed until reloading.",getChannelName(),id);
                     unregisterAudio(audio);
                 }
+            } else {
+                MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Track with id {} was registered as " +
+                        "unknown type {}! All instances using this audio will be removed until reloading.",
+                        getChannelName(),id,type);
+                unregisterAudio(audio);
             }
         }
     }
@@ -652,6 +669,7 @@ public class Channel {
                 ChannelManager.getInterrputedCategories();
     }
 
+    @Override
     public void onTrackStart() {
         ChannelManager.handleAudioStart(this.pausesOverrides,getOverrideCategories());
         if(Objects.nonNull(this.curTrack)) {
@@ -668,6 +686,7 @@ public class Channel {
         this.audioCounter++;
     }
 
+    @Override
     public void onTrackStop(AudioTrackEndReason endReason) {
         if(isPlaying() && (endReason == AudioTrackEndReason.STOPPED || endReason == AudioTrackEndReason.REPLACED))
             this.curTrack.onAudioStopped(getCurPlaying().getPosition());
@@ -709,15 +728,6 @@ public class Channel {
         }
     }
 
-    public void setPitch(float pitch) {
-        setFilters(pitch);
-    }
-
-    @SuppressWarnings("unused")
-    private void setFilters(float pitch) {
-        //getPlayer().setFilterFactory((track, format, output) -> {});
-    }
-
     public void stopTrack(boolean shouldFade) {
         if(!shouldFade) {
             this.picker.startMap.entrySet().removeIf(entry -> !this.picker.getInfo().getPlayableTriggers().contains(entry.getKey()));
@@ -728,7 +738,6 @@ public class Channel {
 
     public void parseRedirect(ConfigRedirect redirect) {
         redirect.parse();
-        this.erroredSongDownloads.clear();
         for(String id : redirect.urlMap.keySet()) loadFromURL(id,redirect.urlMap.get(id),null);
         for (String folderPath : ChannelManager.OPEN_AUDIO_FILES.keySet()) {
             if (this.localFolderPath.matches(folderPath)) {
@@ -740,18 +749,71 @@ public class Channel {
             }
         }
         if(!this.erroredSongDownloads.isEmpty())
-            MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Could not read audio from these sources",getChannelName());
+            MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Could not read audio from the sources " +
+                    "listed below",getChannelName());
         for(String error : this.erroredSongDownloads) MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - {}",
                 getChannelName(),error);
+        this.erroredSongDownloads.clear();
     }
 
     public void readResourceLocations() {
         for(String id : redirect.resourceLocationMap.keySet())
             loadFromResourceLocation(id,redirect.resourceLocationMap.get(id),null);
+        if(!this.erroredSongDownloads.isEmpty())
+            MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Could not read audio from the sources " +
+                    "listed below",getChannelName());
+        for(String error : this.erroredSongDownloads) MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - {}",
+                getChannelName(),error);
+        this.erroredSongDownloads.clear();
     }
 
-    public void addTrackToMap(String id, AudioTrack track) {
-        this.loadedTracks.put(id, track);
+    private void tryAddTrack(AudioTrack track, String id, String type) {
+        this.AUDIO_QUEUE.decrementAndGet();
+        if(Objects.nonNull(track)) {
+            if (!this.loadedTracks.containsKey(id)) {
+                this.loadedTracks.put(id, track);
+                this.loadedTrackTypes.put(id, type);
+                String seekable = track.isSeekable() ? "Seekable" : "Nonseekable";
+                MusicTriggers.logExternally(Level.INFO, "Channel[{}] - {} track loaded to id {} from {}",
+                        getChannelName(),seekable,id,type);
+            } else MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Audio track with id {} already exists " +
+                    "as type {}!",getChannelName(), id, this.loadedTrackTypes.get(id));
+        } else MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Audio track with id {} was null and could " +
+                "not be loaded from {}!",getChannelName(), id, type);
+    }
+
+    private void tryAddPlaylist(AudioPlaylist playlist, String id, String type, String typeVal) {
+        this.AUDIO_QUEUE.decrementAndGet();
+        MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Attempting to load  a playlist with name to id" +
+                        " {} from {}[{}]",getChannelName(),playlist.getName(),id,type,typeVal);
+        int i = 1;
+        for(AudioTrack track : playlist.getTracks()) {
+            tryAddTrack(track,id+"_"+i,type+"[{[playlist_name:"+playlist.getName()+"] [type_id:"+typeVal+"]}]");
+            i++;
+        }
+    }
+
+    private void noMatches(String id, String type, @Nullable Audio audioReference) {
+        this.AUDIO_QUEUE.decrementAndGet();
+        MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - There was no valid audio able to be extracted " +
+                        "to id {} from type {}!",getChannelName(),id,type);
+        handleErroredAudio(id, type, audioReference);
+    }
+
+    private void loadFailed(String id, String type, FriendlyException ex, @Nullable Audio audioReference) {
+        this.AUDIO_QUEUE.decrementAndGet();
+        MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - There was an exception when attempting to " +
+                "extract audio to id {} from type {}! See the main log for the full stacktrack of the error '{}'.",
+                getChannelName(),id,type,ex.getLocalizedMessage());
+        handleErroredAudio(id, type, audioReference);
+    }
+
+    private void handleErroredAudio(String id, String type, @Nullable Audio audioReference) {
+        if(Objects.nonNull(audioReference)) {
+            MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - There was an audio object attached to the " +
+                    "errored id {}! It will be removed from the registry until the next reload.",getChannelName(),id);
+            unregisterAudio(audioReference);
+        } else this.erroredSongDownloads.add("from "+type+" into "+id);
     }
 
     private void loadFromURL(String id, String url, @Nullable Audio audioReference) {
@@ -759,51 +821,22 @@ public class Channel {
         this.playerManager.loadItem(url, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
-                Channel.this.AUDIO_QUEUE.decrementAndGet();
-                if(!Channel.this.loadedTracks.containsKey(id)) {
-                    Channel.this.addTrackToMap(id,track);
-                    MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Track loaded from url {}",getChannelName(),url);
-                } else MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Audio file with id {}} already exists!",
-                        getChannelName(),id);
+                Channel.this.tryAddTrack(track,id,"url["+url+"]");
             }
 
             @Override
             public void playlistLoaded(AudioPlaylist playlist) {
-                Channel.this.AUDIO_QUEUE.decrementAndGet();
-                MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Loaded a playlist from {}",getChannelName(),url);
-                for(int i=1;i<playlist.getTracks().size()+1;i++) {
-                    if(!Channel.this.loadedTracks.containsKey(id+"_"+i)) {
-                        Channel.this.addTrackToMap(id,playlist.getTracks().get(i));
-                        MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Track {} loaded from playlist url {}",
-                                getChannelName(),i,url);
-                    } else MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Audio file with id {}_{} " +
-                            "already exists!",getChannelName(),id,i);
-                }
+                Channel.this.tryAddPlaylist(playlist,id,"url",url);
             }
 
             @Override
             public void noMatches() {
-                Channel.this.AUDIO_QUEUE.decrementAndGet();
-                MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - No audio able to be extracted from url {}",
-                        getChannelName(),url);
-                Channel.this.erroredSongDownloads.add(id+" -> "+url);
-                if(Objects.nonNull(audioReference)) {
-                    MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Audio track with id {} has errored twice in " +
-                                    "row and will be removed from the registry!",getChannelName());
-                    unregisterAudio(audioReference);
-                }
+                Channel.this.noMatches(id,"url["+url+"]",audioReference);
             }
 
             @Override
-            public void loadFailed(FriendlyException exception) {
-                Channel.this.AUDIO_QUEUE.decrementAndGet();
-                MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Load failed! {}",getChannelName(),url);
-                exception.printStackTrace();
-                if(Objects.nonNull(audioReference)) {
-                    MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Audio track with id {} has errored twice in " +
-                            "row and will be removed from the registry!",getChannelName());
-                    unregisterAudio(audioReference);
-                }
+            public void loadFailed(FriendlyException ex) {
+                Channel.this.loadFailed(id,"url["+url+"]",ex,audioReference);
             }
         });
     }
@@ -847,53 +880,37 @@ public class Channel {
                     AudioLoadResultHandler handler = new AudioLoadResultHandler() {
                         @Override
                         public void trackLoaded(AudioTrack track) {
-                            Channel.this.AUDIO_QUEUE.decrementAndGet();
-                            Channel.this.addTrackToMap(id, track);
-                            MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Track loaded from resource " +
-                                    "location {}",getChannelName(),source);
+                            Channel.this.tryAddTrack(track,id,"resource["+source+"]");
                         }
 
                         @Override
                         public void playlistLoaded(AudioPlaylist playlist) {
-                            Channel.this.AUDIO_QUEUE.decrementAndGet();
-                            MusicTriggers.logExternally(Level.INFO, "Channel[{}] - no playlists here",getChannelName());
+                            Channel.this.tryAddPlaylist(playlist,id,"resource",source.toString());
                         }
 
                         @Override
                         public void noMatches() {
-                            Channel.this.AUDIO_QUEUE.decrementAndGet();
-                            MusicTriggers.logExternally(Level.INFO, "Channel[{}] - no matches from resource " +
-                                    "location {}",getChannelName(),source);
-                            if(Objects.nonNull(audioReference)) {
-                                MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Audio track with id {} has errored twice in " +
-                                        "row and will be removed from the registry!",getChannelName());
-                                unregisterAudio(audioReference);
-                            }
+                            Channel.this.noMatches(id,"resource["+source+"]",audioReference);
                         }
 
                         @Override
-                        public void loadFailed(FriendlyException exception) {
-                            Channel.this.AUDIO_QUEUE.decrementAndGet();
-                            MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Track loaded failed resource " +
-                                    "location {}",getChannelName(),source);
-                            if(Objects.nonNull(audioReference)) {
-                                MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Audio track with id {} has errored twice in " +
-                                        "row and will be removed from the registry!",getChannelName());
-                                unregisterAudio(audioReference);
-                            }
+                        public void loadFailed(FriendlyException ex) {
+                            Channel.this.loadFailed(id,"resource["+source+"]",ex,audioReference);
                         }
                     };
                     if(Objects.nonNull(second)) this.playerManager.loadItem(new AudioReference(first, second),handler);
                     else this.playerManager.loadItem(first,handler);
                 } else MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Failed to get URI for resource " +
-                        "location {}",getChannelName(),source);
-            } else MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Audio file with id {} already exists!",
-                    getChannelName(),id);
+                        "location {} when attempting to load from id {}",getChannelName(),source,id);
+            } else MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Audio track with id {} already exists " +
+                    "as type '{}'!",getChannelName(), id, this.loadedTrackTypes.get(id));
         } catch (Exception e) {
             Channel.this.AUDIO_QUEUE.decrementAndGet();
             MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Could not decode track from resource " +
-                    "location {}! See the main log for the full error",getChannelName(),source);
-            Constants.MAIN_LOG.error("Channel[{}] - Could not decode track from resource location",getChannelName(),e);
+                    "location {} when attempting to load from id {}! See the main log for the full error of '{}'",
+                    getChannelName(),source,id,e.getLocalizedMessage());
+            Constants.MAIN_LOG.error("Channel[{}] - Could not decode track from resource location {} to id {}",
+                    getChannelName(),source,id,e);
             e.printStackTrace();
         }
     }
@@ -904,60 +921,31 @@ public class Channel {
             this.playerManager.loadItem(new AudioReference(file.getPath(), file.getName()), new AudioLoadResultHandler() {
                 @Override
                 public void trackLoaded(AudioTrack track) {
-                    Channel.this.AUDIO_QUEUE.decrementAndGet();
-                    if (!Channel.this.loadedTracks.containsKey(id)) {
-                        Channel.this.addTrackToMap(id, track);
-                        MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Track loaded from file {}",
-                                getChannelName(),file.getName());
-                    } else MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Audio file with id {} already " +
-                            "exists!",getChannelName(),id);
+                    Channel.this.tryAddTrack(track,id,"file["+file.getName()+"]");
                 }
 
                 @Override
                 public void playlistLoaded(AudioPlaylist playlist) {
-                    Channel.this.AUDIO_QUEUE.decrementAndGet();
-                    MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Loaded track from file {}",
-                            getChannelName(),file.getName());
-                    for (int i = 1; i < playlist.getTracks().size() + 1; i++) {
-                        if (!Channel.this.loadedTracks.containsKey(id + "_" + i)) {
-                            Channel.this.addTrackToMap(id, playlist.getTracks().get(i));
-                            MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Track {}_{} loaded from playlist " +
-                                    "file {}",getChannelName(),id,i,file.getName());
-                        } else MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Audio file with id {}_{} " +
-                                "already exists!",getChannelName(),id,i);
-                    }
+                    Channel.this.tryAddPlaylist(playlist,id,"file",file.getName());
                 }
 
                 @Override
                 public void noMatches() {
-                    Channel.this.AUDIO_QUEUE.decrementAndGet();
-                    MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - No audio able to be extracted from " +
-                            "file {}",getChannelName(),file.getName());
-                    Channel.this.erroredSongDownloads.add(id + " -> " + file.getName());
-                    if(Objects.nonNull(audioReference)) {
-                        MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Audio track with id {} has errored twice in " +
-                                "row and will be removed from the registry!",getChannelName());
-                        unregisterAudio(audioReference);
-                    }
+                    Channel.this.noMatches(id,"file["+file.getName()+"]",audioReference);
                 }
 
                 @Override
-                public void loadFailed(FriendlyException exception) {
-                    Channel.this.AUDIO_QUEUE.decrementAndGet();
-                    MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Load failed! {}",getChannelName(),file.getName());
-                    exception.printStackTrace();
-                    if(Objects.nonNull(audioReference)) {
-                        MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Audio track with id {} has errored twice in " +
-                                "row and will be removed from the registry!",getChannelName());
-                        unregisterAudio(audioReference);
-                    }
+                public void loadFailed(FriendlyException ex) {
+                    Channel.this.loadFailed(id,"file["+file.getName()+"]",ex,audioReference);
                 }
             });
         } catch (Exception e) {
             Channel.this.AUDIO_QUEUE.decrementAndGet();
-            MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Could not load track from file {}! See the " +
-                    "main log for the full error",getChannelName(),id);
-            Constants.MAIN_LOG.error("Channel[{}] - Could not load track from file",getChannelName(),e);
+            MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Could not load track from file {} to id! " +
+                    "See the main log for the full error of '{}'",getChannelName(),file.getName(),id,
+                    e.getLocalizedMessage());
+            Constants.MAIN_LOG.error("Channel[{}] - Could not load track from file {} to id {}",
+                    getChannelName(),file.getName(),id,e);
             e.printStackTrace();
         }
     }
@@ -1032,13 +1020,15 @@ public class Channel {
     /**
      * This needs to be called after all triggers are registered so ordering of registration does not have to be forced
      */
-    public void parseToggles() {
+    public void parseMoreConfigs() {
+        this.data.parseAudio();
         this.data.parseToggles();
+        for(Trigger trigger : getRegisteredTriggers()) trigger.parseLinks();
     }
 
     public Trigger getSimpleTrigger(String name) {
-        return this.data.registeredTriggerMap.containsKey(name) ? this.data.registeredTriggerMap.get(name).get("not_accepted") :
-                null;
+        return this.data.registeredTriggerMap.containsKey(name) ?
+                this.data.registeredTriggerMap.get(name).get("not_accepted") : null;
     }
 
     public List<Trigger> getRegisteredTriggers() {
@@ -1083,6 +1073,7 @@ public class Channel {
     public void clear() {
         this.player.destroy();
         this.loadedTracks.clear();
+        this.loadedTrackTypes.clear();
         this.changedStatus = false;
     }
 
@@ -1139,9 +1130,7 @@ public class Channel {
             this.registeredTriggerMap = parseTriggers(main.getTableByName("triggers"));
             this.menuSongs = new ArrayList<>();
             this.songPools = new HashMap<>();
-            this.registeredAudio = parseAudio(main.getTableByName("songs"));
-            for(Trigger trigger : this.registeredTriggers)
-                if(!this.songPools.containsKey(trigger)) this.songPools.put(trigger,new ArrayList<>());
+            this.registeredAudio = new ArrayList<>();
             this.titleCards = transitions.getTablesByName("title").stream().filter(table -> table.hasVar("triggers") &&
                             checkTriggerListParameter(table,"title card")).collect(Collectors.toMap(table -> table,
                     this::triggerList));
@@ -1213,7 +1202,7 @@ public class Channel {
         }
 
         private Optional<Trigger> createTrigger(Table triggerTable) {
-            Trigger trigger = new Trigger(triggerTable.getName(), Channel.this);
+            Trigger trigger = new Trigger(triggerTable.getName(), Channel.this, triggerTable.getTablesByName("link"));
             for (Variable parameter : triggerTable.getVars()) {
                 if (!Trigger.isParameterAccepted(trigger.getName(),parameter.getName()))
                     MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Parameter {} is not accepted for " +
@@ -1237,19 +1226,20 @@ public class Channel {
             return trigger.getValOrDefault("identifier",trigger.getValOrDefault("id","missing_id"));
         }
 
-        private List<Audio> parseAudio(Table songs) {
-            List<Audio> ret = new ArrayList<>();
+        private void parseAudio() {
+            this.registeredAudio.clear();
+            Table songs = this.main.getTableByName("songs");
             Table universal = Objects.isNull(songs) ? null :
                     songs.hasTable("universal") ? songs.getTableByName("universal") : null;
             if(Objects.nonNull(songs)) {
                 for (Table audio : songs.getChildren().values()) {
                     if(!audio.getName().matches("universal")) {
-                        Audio potential = new Audio(audio, this.registeredTriggers,universal);
+                        Audio potential = new Audio(Channel.this.getChannelName(),audio,this.registeredTriggers,universal);
                         if (potential.getTriggers().isEmpty())
                             MusicTriggers.logExternally(Level.WARN, "Channel[{}] - No valid triggers were " +
                                     "registered for audio {} so it has been skipped!",info.getName(),audio.getName());
                         else {
-                            ret.add(potential);
+                            this.registeredAudio.add(potential);
                             for (Trigger trigger : potential.getTriggers()) {
                                 this.songPools.putIfAbsent(trigger, new ArrayList<>());
                                 this.songPools.get(trigger).add(potential);
@@ -1260,7 +1250,8 @@ public class Channel {
                     }
                 }
             }
-            return ret;
+            for(Trigger trigger : this.registeredTriggers)
+                if(!this.songPools.containsKey(trigger)) this.songPools.put(trigger,new ArrayList<>());
         }
 
         private boolean checkTriggerListParameter(Table table, String type) {

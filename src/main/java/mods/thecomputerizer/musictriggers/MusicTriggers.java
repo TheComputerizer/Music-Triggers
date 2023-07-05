@@ -199,8 +199,8 @@ public class MusicTriggers {
         return GuiUtil.makeRGBAInt(100,0,0,255);
     }
 
-    public static Set<Map.Entry<Integer,Tuple<String,Integer>>> getLogEntries() {
-        return ORDERED_LOG_MESSAGES.entrySet();
+    public static Map<Integer,Tuple<String,Integer>> getLogEntries() {
+        return Collections.unmodifiableMap(ORDERED_LOG_MESSAGES);
     }
 
     public static void clearLog() {

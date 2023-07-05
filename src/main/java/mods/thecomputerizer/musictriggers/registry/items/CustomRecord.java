@@ -33,17 +33,17 @@ public class CustomRecord extends MusicTriggersRecord {
         if(stack.hasTagCompound() && Objects.requireNonNull(stack.getTagCompound()).hasKey("songName"))
             tooltip.add(
                     AssetUtil.extraLang(Constants.MODID,"record","custom_record",
-                            ChannelManager.getChannel(stack.getTagCompound().getString("channelFrom")).getRecordMap()
-                                    .get(stack.getTagCompound().getString("trackID"))));
+                            ChannelManager.getNonDefaultChannel(stack.getTagCompound().getString("channelFrom"))
+                                    .getRecordMap().get(stack.getTagCompound().getString("trackID"))));
         else tooltip.add(
                 AssetUtil.extraLang(Constants.MODID,"item","music_triggers_record","blank_description",false));
     }
 
     private float mapTriggerToFloat(String channel, String song) {
         float index = 1f;
-        String name = ChannelManager.getChannel(channel).getRecordMap().get(song);
+        String name = ChannelManager.getNonDefaultChannel(channel).getRecordMap().get(song);
         if(Objects.isNull(name)) return 0f;
-        for(String key : ChannelManager.getChannel(channel).getRecordMap().values()) {
+        for(String key : ChannelManager.getNonDefaultChannel(channel).getRecordMap().values()) {
             if(name.matches(key))
                 return 0.01f*index;
             index++;

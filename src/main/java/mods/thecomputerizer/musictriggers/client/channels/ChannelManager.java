@@ -8,6 +8,7 @@ import mods.thecomputerizer.musictriggers.client.ClientSync;
 import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.musictriggers.client.gui.instance.ChannelHolder;
 import mods.thecomputerizer.musictriggers.client.gui.instance.ChannelInstance;
+import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import mods.thecomputerizer.musictriggers.network.PacketDynamicChannelInfo;
@@ -36,6 +37,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -55,22 +57,21 @@ import java.util.stream.Collectors;
 public class ChannelManager {
     private static final HashSet<String> VALID_FILE_EXTENSIONS = new HashSet<>(Arrays.asList(".acc",".flac",".m3u",
             ".m4a",".mkv",".mp3",".mp4",".pls",".ogg",".wav",".webm"));
-    private static final HashMap<String,Channel> CHANNEL_MAP = new HashMap<>();
+    private static final HashMap<String,IChannel> CHANNEL_MAP = new HashMap<>();
     public static final HashMap<String, HashSet<File>> OPEN_AUDIO_FILES = new HashMap<>();
     public static final Map<Table, Renderable> TICKING_RENDERABLES = new ConcurrentHashMap<>();
     private static final HashSet<String> PAUSED_VANILLA_SOUNDS = new HashSet<>();
-
-    private static JukeboxChannel jukeboxChannel;
     private static File channelsFile;
     public static char blinkerChar = ' ';
     private static int tickCounter = 0;
     public static boolean reloading = true;
+    private static boolean caughtNullJukebox = false;
     private static boolean isResourceControlled = false;
     private static boolean isServerdControlled = false;
     private static DataStorage worldDataStorage;
 
     public static void preInit() {
-        for(Channel channel : CHANNEL_MAP.values())
+        for(Channel channel : getAllChannels())
             channel.clear();
         CHANNEL_MAP.clear();
         for(Renderable card : TICKING_RENDERABLES.values()) {
@@ -80,7 +81,8 @@ public class ChannelManager {
         TICKING_RENDERABLES.clear();
         PAUSED_VANILLA_SOUNDS.clear();
         Trigger.loadData();
-        jukeboxChannel = new JukeboxChannel();
+        CHANNEL_MAP.put("jukebox",new JukeboxChannel());
+        caughtNullJukebox = false;
     }
 
     public static void initServer() throws IOException {
@@ -145,31 +147,49 @@ public class ChannelManager {
     }
 
     public static boolean verifyOtherFilePath(String filePath) {
-        for(Channel channel : CHANNEL_MAP.values())
+        for(Channel channel : getAllChannels())
             if(!channel.verifyOtherFilePath(filePath)) return false;
         return true;
     }
 
-    public static void playCustomJukeboxSong(boolean start, String channel, String id, BlockPos pos) {
-        if(!start) jukeboxChannel.stopTrack();
-        else jukeboxChannel.playTrack(CHANNEL_MAP.get(channel).getCopyOfTrackFromID(id),pos);
+    public static JukeboxChannel getJukeBoxChannel() {
+        IChannel channel = getChannel("jukebox");
+        if(channel instanceof JukeboxChannel) return (JukeboxChannel)channel;
+        MusicTriggers.logExternally(Level.ERROR,"Jukebox channel does not exist! This is an issue!");
+        caughtNullJukebox = true;
+        return null;
+    }
+
+    public static void playCustomJukeboxSong(boolean start, String otherChannelName, String id, BlockPos pos) {
+        if(!caughtNullJukebox) {
+            JukeboxChannel jukebox = getJukeBoxChannel();
+            if (Objects.nonNull(jukebox)) {
+                if (!start) jukebox.stopTrack();
+                else {
+                    Channel channel = getNonDefaultChannel(otherChannelName);
+                    if (Objects.nonNull(channel)) jukebox.playTrack(channel.getCopyOfTrackFromID(id), pos);
+                    else MusicTriggers.logExternally(Level.ERROR, "Cannot play jukebox track from unknown channel " +
+                            "{}", otherChannelName);
+                }
+            }
+        }
     }
 
     public static void parseConfigFiles(boolean startup) {
         collectSongs();
-        for(Channel channel : CHANNEL_MAP.values()) channel.parseConfigs(startup);
-        for(Channel channel : CHANNEL_MAP.values()) channel.parseToggles();
+        for(Channel channel : getAllChannels()) channel.parseConfigs(startup);
+        for(Channel channel : getAllChannels()) channel.parseMoreConfigs();
         ConfigDebug.initialize(new File(Constants.CONFIG_DIR,"debug.toml"));
         if(!startup) initializeServerInfo();
     }
 
     public static void readResourceLocations() {
-        for(Channel channel : CHANNEL_MAP.values()) channel.readResourceLocations();
+        for(Channel channel : getAllChannels()) channel.readResourceLocations();
     }
 
     public static void collectSongs() {
         OPEN_AUDIO_FILES.clear();
-        for(Channel channel : CHANNEL_MAP.values()) {
+        for(Channel channel : getAllChannels()) {
             File folder = new File(channel.getLocalFolder());
             if(!folder.exists()) {
                 if(!folder.mkdirs()) {
@@ -194,12 +214,20 @@ public class ChannelManager {
         return CHANNEL_MAP.containsKey(channel);
     }
 
-    public static Channel getChannel(String channel) {
-        return CHANNEL_MAP.get(channel);
+    public static IChannel getChannel(String channelName) {
+        return CHANNEL_MAP.get(channelName);
+    }
+
+    public static Channel getNonDefaultChannel(String channelName) {
+        IChannel channel = getChannel(channelName);
+        return channel instanceof Channel ? (Channel)channel : null;
     }
 
     public static Collection<Channel> getAllChannels() {
-        return CHANNEL_MAP.values();
+        HashSet<Channel> channels = new HashSet<>();
+        for(IChannel channel : CHANNEL_MAP.values())
+            if(channel instanceof Channel) channels.add((Channel)channel);
+        return channels;
     }
 
     public static boolean checkMusicTickerCancel() {
@@ -267,7 +295,7 @@ public class ChannelManager {
     public static void initializeServerInfo() {
         if(!ConfigRegistry.CLIENT_SIDE_ONLY) {
             ServerTriggerStatus data = new ServerTriggerStatus();
-            for (Channel channel : CHANNEL_MAP.values())
+            for (Channel channel : getAllChannels())
                 channel.initializeServerData(data);
             new PacketInitChannels(data).send();
         }
@@ -275,7 +303,7 @@ public class ChannelManager {
 
     public static void syncInfoFromServer(ClientSync sync) {
         try {
-            getChannel(sync.getChannel()).sync(sync);
+            getNonDefaultChannel(sync.getChannel()).sync(sync);
         } catch (NullPointerException exception) {
             MusicTriggers.logExternally(Level.ERROR, "Channel "+sync.getChannel()+" did not exist and could " +
                     "not be synced!");
@@ -283,20 +311,20 @@ public class ChannelManager {
     }
 
     public static void jukeboxPause() {
-        for(Channel channel : CHANNEL_MAP.values()) channel.jukeBoxPause();
+        for(Channel channel : getAllChannels()) channel.jukeBoxPause();
     }
 
     public static void jukeboxUnpause() {
-        for(Channel channel : CHANNEL_MAP.values()) channel.jukeBoxUnpause();
+        for(Channel channel : getAllChannels()) channel.jukeBoxUnpause();
     }
 
     public static void pauseAllChannels() {
-        for(Channel channel : CHANNEL_MAP.values())
+        for(Channel channel : getAllChannels())
             channel.setPausedGeneric(true);
     }
 
     public static void unpauseAllChannels() {
-        for(Channel channel : CHANNEL_MAP.values())
+        for(Channel channel : getAllChannels())
             channel.setPausedGeneric(false);
     }
 
@@ -349,7 +377,10 @@ public class ChannelManager {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void tickChannels(CustomTick event) {
-        jukeboxChannel.checkStopPlaying(reloading);
+        if(!caughtNullJukebox) {
+            JukeboxChannel jukebox = getJukeBoxChannel();
+            if (Objects.nonNull(jukebox)) jukebox.checkStopPlaying(reloading);
+        }
         if(!reloading) {
             try {
                 if (event.checkTickRate(20)) {
@@ -362,10 +393,10 @@ public class ChannelManager {
                     if ((ConfigDebug.PAUSE_WHEN_TABBED && !ClientEvents.IS_DISPLAY_FOCUSED) || Minecraft.getMinecraft().isGamePaused())
                         pauseAllChannels();
                     else unpauseAllChannels();
-                    for (Channel channel : CHANNEL_MAP.values())
+                    for (Channel channel : getAllChannels())
                         if(!channel.isPaused() && !channel.isFrozen()) channel.tickFast();
                     if (tickCounter % 4 == 0) {
-                        for(Channel channel : CHANNEL_MAP.values())
+                        for(Channel channel : getAllChannels())
                             if(!channel.isFrozen()) channel.tickSlow();
                         runToggles();
                         sendUpdatePacket();
@@ -379,7 +410,8 @@ public class ChannelManager {
             } catch (Exception e) {
                 Constants.MAIN_LOG.fatal("Caught unknown exception while checking audio conditions!",e);
                 MusicTriggers.logExternally(Level.FATAL,"Caught unknown exception while checking audio conditions! " +
-                        "Freezing all channels until reloaded. See the main log for the full stacktrace of the error.");
+                        "Freezing all channels until reloaded. See the main log for the full stacktrace of the error '{}'.",
+                        e.getLocalizedMessage());
                 reloading = true;
             }
         }
@@ -387,7 +419,7 @@ public class ChannelManager {
 
     public static void runToggles() {
         Map<Channel,Map<String,HashSet<Trigger>>> targetMaps = new HashMap<>();
-        for(Channel channel : CHANNEL_MAP.values()) {
+        for(Channel channel : getAllChannels()) {
             for(Map.Entry<Channel,Map<String,HashSet<Trigger>>> targetMapEntry : channel.getToggleTargets().entrySet()) {
                 for(Map.Entry<String,HashSet<Trigger>> targetEntry : targetMapEntry.getValue().entrySet()) {
                     Channel targetChannel = targetMapEntry.getKey();
@@ -426,16 +458,17 @@ public class ChannelManager {
     private static void sendUpdatePacket() {
         if(Objects.nonNull(Minecraft.getMinecraft().player) && !ConfigRegistry.CLIENT_SIDE_ONLY) {
             List<Channel> updatedChannels = new ArrayList<>();
-            for(Channel channel : CHANNEL_MAP.values())
+            for(Channel channel : getAllChannels())
                 if(channel.needsUpdatePacket()) updatedChannels.add(channel);
-            if(!updatedChannels.isEmpty())
+            if(!updatedChannels.isEmpty() || Instance.changedPreferredSort())
                 new PacketDynamicChannelInfo(updatedChannels).send();
         }
     }
 
     public static ChannelHolder createGuiData() {
         Map<String, ChannelInstance> channels = CHANNEL_MAP.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().createGuiData()));
+                .filter(entry -> entry.getValue() instanceof Channel)
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> ((Channel)entry.getValue()).createGuiData()));
         return new ChannelHolder(MusicTriggers.configFile("channels","toml"),channels);
     }
 
@@ -448,9 +481,13 @@ public class ChannelManager {
     }
 
     public static void readStoredData() {
-        for(Map.Entry<String,Channel> channelEntry : CHANNEL_MAP.entrySet())
-            channelEntry.getValue().readStoredData(worldDataStorage.toggleMap.get(channelEntry.getKey()),
-                    worldDataStorage.playedOnceMap.get(channelEntry.getKey()));
+        for(Map.Entry<String,IChannel> channelEntry : CHANNEL_MAP.entrySet()) {
+            if(channelEntry.getValue() instanceof Channel) {
+                Channel channel = (Channel)channelEntry.getValue();
+                channel.readStoredData(worldDataStorage.toggleMap.get(channelEntry.getKey()),
+                        worldDataStorage.playedOnceMap.get(channelEntry.getKey()));
+            }
+        }
         reloading = false;
     }
 
@@ -462,6 +499,7 @@ public class ChannelManager {
                 buf1 -> NetworkUtil.readGenericMap(buf1,NetworkUtil::readString,ByteBuf::readBoolean)),
                 NetworkUtil.readGenericMap(buf,NetworkUtil::readString, buf1 -> NetworkUtil.readGenericMap(buf1,
                         NetworkUtil::readString, buf2 -> NetworkUtil.readGenericList(buf2,NetworkUtil::readString))));
+        Instance.setPreferredSort(MathHelper.clamp(buf.readInt(),1,3));
         worldDataStorage.inheritStartupData(previousStorage);
         if(isServerdControlled) new PacketRequestServerConfig().send();
         else readStoredData();
@@ -474,7 +512,7 @@ public class ChannelManager {
             reloading = true;
             reloadAllChannels();
         } else
-            for(Channel channel : CHANNEL_MAP.values())
+            for(Channel channel : getAllChannels())
                 channel.onLogOut();
 
     }

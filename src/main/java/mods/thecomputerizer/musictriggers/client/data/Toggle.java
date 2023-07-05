@@ -65,7 +65,7 @@ public class Toggle {
                                 "needs at least 1 trigger to be parsed correctly!", defChannel);
                     else {
                         List<Trigger> parsedTriggers = new ArrayList<>();
-                        Channel channel = ChannelManager.getChannel(defChannel);
+                        Channel channel = ChannelManager.getNonDefaultChannel(defChannel);
                         for (String parsed : from.getValOrDefault("triggers", new ArrayList<String>())) {
                             boolean found = false;
                             for (Trigger trigger : channel.getRegisteredTriggers()) {
@@ -124,7 +124,7 @@ public class Toggle {
                             MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - \"to\" table in toggle " +
                                     "needs at least 1 trigger or have channel_activation enabled to be parsed correctly!",defChannel);
                         else {
-                            Channel channel = ChannelManager.getChannel(channelTo);
+                            Channel channel = ChannelManager.getNonDefaultChannel(channelTo);
                             if(channelActivation) {
                                 this.toChannels.put(condition,channel);
                                 this.channelActivations.put(channel, condition);

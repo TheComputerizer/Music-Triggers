@@ -18,6 +18,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.text.Style;
@@ -230,6 +231,11 @@ public class ClientEvents {
                             String infernal = infernalChecker(entity);
                             if(Objects.nonNull(infernal))
                                 e.getLeft().add("Infernal Mob Mod Name: " + infernal);
+                        } else if(res.typeOfHit == RayTraceResult.Type.BLOCK) {
+                            BlockPos pos = res.getBlockPos();
+                            TileEntity tile = mc.world.getTileEntity(pos);
+                            if(Objects.nonNull(tile))
+                                e.getLeft().add("Current Tile Name: " + TileEntity.getKey(tile.getClass()));
                         }
                     }
                 }

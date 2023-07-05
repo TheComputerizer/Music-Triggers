@@ -16,14 +16,16 @@ public class PacketMusicTriggersLogin extends MessageImpl {
     private boolean hasServerConfig;
     private Map<String,Map<String,Boolean>> toggleData;
     private Map<String,Map<String,ImmutableList<String>>> playOnceData;
+    private int sortType;
 
     public PacketMusicTriggersLogin() {}
 
     public PacketMusicTriggersLogin(boolean hasServerConfig, Map<String,Map<String,Boolean>> toggleData,
-                                    Map<String,Map<String,ImmutableList<String>>> playOnceData) {
+                                    Map<String,Map<String,ImmutableList<String>>> playOnceData, int sortType) {
         this.hasServerConfig = hasServerConfig;
         this.toggleData = toggleData;
         this.playOnceData = playOnceData;
+        this.sortType = sortType;
     }
 
     @Override
@@ -49,5 +51,6 @@ public class PacketMusicTriggersLogin extends MessageImpl {
         NetworkUtil.writeGenericMap(buf,this.playOnceData,NetworkUtil::writeString,(buf1,map) ->
                 NetworkUtil.writeGenericMap(buf1,map,NetworkUtil::writeString,(buf2,list) ->
                         NetworkUtil.writeGenericList(buf2,list,NetworkUtil::writeString)));
+        buf.writeInt(this.sortType);
     }
 }

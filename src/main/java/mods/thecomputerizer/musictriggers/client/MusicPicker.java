@@ -29,6 +29,7 @@ public class MusicPicker {
     public static final HashSet<String> EFFECT_LIST = new HashSet<>();
 
     private boolean hasLoaded = false;
+    public HashSet<Trigger.Link> activeLinks = new HashSet<>();
     public int fadeIn = 0;
     public int fadeOut = 0;
     public String triggerDelay = "0";
@@ -49,6 +50,7 @@ public class MusicPicker {
      */
     public void skipQuery() {
         this.getInfo().clear();
+        this.activeLinks.clear();
         this.triggerPersistence.clear();
         this.startMap.clear();
         this.dynamicTemp.clear();
@@ -68,6 +70,8 @@ public class MusicPicker {
                     this.getInfo().updateActiveTriggers(Collections.singletonList(menu));
                     this.getInfo().updateSongList(this.channel.getSongPool(menu));
                     this.info.runToggles();
+                    this.activeLinks.clear();
+                    this.activeLinks.addAll(menu.getLinks());
                     return;
                 }
             }
@@ -78,6 +82,8 @@ public class MusicPicker {
                     this.getInfo().updateActiveTriggers(Collections.singletonList(loading));
                     this.getInfo().updateSongList(this.channel.getSongPool(loading));
                     this.info.runToggles();
+                    this.activeLinks.clear();
+                    this.activeLinks.addAll(loading.getLinks());
                     return;
                 }
             }
@@ -93,6 +99,7 @@ public class MusicPicker {
                 this.dynamicTemp.clear();
                 this.getInfo().updateSongList(activeSongs);
                 this.info.runToggles();
+                this.activeLinks.removeIf(link -> !link.isActive(this.getInfo().activeTriggers));
                 return;
             }
             Trigger generic = this.channel.getSimpleTrigger("generic");
@@ -115,6 +122,8 @@ public class MusicPicker {
                 if (this.fadeOut == 0) this.fadeIn = universal.map(table -> MusicTriggers.randomInt("universal_fade_out",
                         table.getValOrDefault("fade_out", "0"), 0)).orElse(0);
                 this.info.runToggles();
+                this.activeLinks.clear();
+                this.activeLinks.addAll(generic.getLinks());
                 return;
             }
         }
@@ -125,6 +134,7 @@ public class MusicPicker {
         this.songDelay = "0";
         this.fadeIn = 0;
         this.fadeOut = 0;
+        this.activeLinks.clear();
     }
 
     private List<Audio> removeEmptyCombinations(Trigger priorityTrigger, List<Audio> found) {
@@ -200,6 +210,8 @@ public class MusicPicker {
         this.fadeOut = priorityTrigger.getParameterInt("fade_out");
         if (this.fadeOut == 0) this.fadeOut = universal.map(table -> MusicTriggers.randomInt("universal_fade_out",
                 table.getValOrDefault("fade_out", "0"), 0)).orElse(0);
+        this.activeLinks.clear();
+        this.activeLinks.addAll(priorityTrigger.getLinks());
         return priorityTrigger;
     }
 
