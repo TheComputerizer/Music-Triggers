@@ -5,7 +5,9 @@ import mods.thecomputerizer.musictriggers.client.ClientEvents;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
-import net.minecraft.client.gui.*;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
@@ -21,20 +23,24 @@ import org.lwjgl.input.Keyboard;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.vecmath.Point4f;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
 
 public abstract class GuiSuperType extends GuiScreen {
 
     protected final GuiSuperType parent;
     protected final GuiType type;
     private final Instance configInstance;
-    private final List<ButtonSuperType> superButtons;
+    private final HashSet<ButtonSuperType> superButtons;
     private final String channel;
     private ButtonSuperType applyButton;
     protected int spacing;
     private int buttonIDCounter;
     protected GuiTextField searchBar;
     protected boolean isInitialized;
+
 
     public GuiSuperType(GuiSuperType parent, GuiType type, Instance configInstance) {
         this(parent,type,configInstance,null);
@@ -45,7 +51,7 @@ public abstract class GuiSuperType extends GuiScreen {
         this.type = type;
         this.configInstance = configInstance;
         this.channel = channel;
-        this.superButtons = new ArrayList<>();
+        this.superButtons = new HashSet<>();
         this.spacing = 16;
         this.isInitialized = false;
     }
@@ -74,12 +80,11 @@ public abstract class GuiSuperType extends GuiScreen {
     protected void keyTyped(char typedChar, int keyCode) {
         if (keyCode == Keyboard.KEY_ESCAPE) {
             if(!getInstance().hasEdits()) {
-                this.mc.displayGuiScreen(null);
+                this.mc.displayGuiScreen(this.configInstance.getMainParent());
                 if(noActiveScreens()) this.mc.setIngameFocus();
             } else this.mc.displayGuiScreen(new GuiPopUp(this,GuiType.POPUP,getInstance(),"confirm"));
         }
-        if(this.searchBar.textboxKeyTyped(typedChar, keyCode))
-            updateSearch();
+        if(this.searchBar.textboxKeyTyped(typedChar, keyCode)) updateSearch();
     }
 
     protected boolean isKeyValid(char c, int keyCode) {
@@ -132,7 +137,10 @@ public abstract class GuiSuperType extends GuiScreen {
                 ButtonSuperType button = buttonHolder.getNormalButton(this.buttonIDCounter++, this);
                 if(buttonHolder.getID().contains("apply"))
                     this.applyButton = button;
-                addSuperButton(button);
+                boolean addButton = true;
+                if(buttonHolder.getID().contains("back") && this.type==GuiType.MAIN)
+                    addButton = Objects.nonNull(configInstance.getMainParent());
+                if(addButton) addSuperButton(button);
             }
         }
         if(this.configInstance.hasEdits() && Objects.nonNull(this.applyButton)) this.applyButton.setEnable(true);
@@ -170,6 +178,24 @@ public abstract class GuiSuperType extends GuiScreen {
     protected void addSuperButton(ButtonSuperType button, int x) {
         if(x>=0) button.x=x;
         this.superButtons.add(button);
+    }
+
+    public void buttonWidthUpdate() {
+        for(ButtonSuperType button1 : this.superButtons) {
+            for(ButtonSuperType button2 : this.superButtons) {
+                if(button1!=button2 && doButtonsOverlap(button1,button2)) {
+                    if(button1.x<=button2.x) button2.x = button1.x+button1.width+16;
+                    else button1.x = button2.x+button2.width+16;
+                }
+            }
+        }
+    }
+
+    private boolean doButtonsOverlap(ButtonSuperType button1, ButtonSuperType button2) {
+        return ((button1.x>button2.x && button1.x<button2.x+button2.x+button2.width) ||
+                (button1.x+button1.width>button2.x && button1.x+button1.width<button2.x+button2.x+button2.width)) &&
+               ((button1.y>button2.y && button1.y<button2.y+button2.y+button2.height) ||
+                (button1.y+button1.height>button2.y && button1.y+button1.height<button2.y+button2.y+button2.height));
     }
 
     public void madeChange(boolean needReload) {
@@ -219,6 +245,7 @@ public abstract class GuiSuperType extends GuiScreen {
                     this.selectedButton = superButton;
                     superButton.playPressSound(this.mc.getSoundHandler());
                     superButton.handle(this);
+                    return;
                 }
             }
         }
@@ -241,9 +268,13 @@ public abstract class GuiSuperType extends GuiScreen {
         if(reload) {
             if(this.configInstance.hasEdits())
                 applyButton();
-            MusicTriggers.logExternally(Level.INFO,"No in-game changes were detected - Loading file changes");
+            else {
+                MusicTriggers.logExternally(Level.INFO, "No in-game changes were detected - Loading file changes");
+                GuiScreen mainParent = this.configInstance.getMainParent();
+                if(Objects.isNull(mainParent)) Minecraft.getMinecraft().setIngameFocus();
+                else Minecraft.getMinecraft().displayGuiScreen(mainParent);
+            }
             ClientEvents.initReload();
-            Minecraft.getMinecraft().setIngameFocus();
         } else this.mc.displayGuiScreen(this.parent);
     }
 
@@ -274,7 +305,9 @@ public abstract class GuiSuperType extends GuiScreen {
                 PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
     }
 
-    //Forges drawHoveringText implementation but without disabling lighting
+    /**
+     * Forges drawHoveringText implementation but without disabling lighting
+     */
     @Override
     public void drawHoveringText(List<String> textLines, int x, int y, @Nonnull FontRenderer font) {
         if (!textLines.isEmpty()) {

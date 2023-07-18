@@ -43,7 +43,7 @@ public class GuiPlayback extends GuiRadial {
                     Translate.guiNumberedList(1, "button", "selected_channel", "desc"),
                     (screen, button, mode) -> {
                         this.currentChannel = this.channels.get(mode-1);
-                        button.updateDisplay(displayName+" "+this.currentChannel.getChannelName(),this.fontRenderer);
+                        button.updateDisplay(displayName+" "+this.currentChannel.getChannelName(),this.fontRenderer,this);
                     }), 16);
         }
     }

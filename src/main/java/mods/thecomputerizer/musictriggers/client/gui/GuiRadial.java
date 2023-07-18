@@ -4,14 +4,20 @@ import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.theimpossiblelibrary.client.gui.RadialElement;
 import mods.thecomputerizer.theimpossiblelibrary.client.gui.RadialProgressBar;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.math.Vec2f;
 
+import javax.annotation.Nullable;
 import javax.vecmath.Point4f;
 
 public class GuiRadial extends GuiSuperType {
 
     protected RadialElement circleButton;
 
+    public GuiRadial(@Nullable GuiScreen mainParent, GuiSuperType parent, GuiType type, Instance configInstance) {
+        super(parent, type, configInstance);
+        getInstance().setMainParent(mainParent);
+    }
     public GuiRadial(GuiSuperType parent, GuiType type, Instance configInstance) {
         super(parent, type, configInstance);
     }

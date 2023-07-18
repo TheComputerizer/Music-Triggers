@@ -34,13 +34,13 @@ public class MusicRecorder extends Block implements ITileEntityProvider {
     }
 
     public void insertRecord(World world, BlockPos pos, ItemStack stack, EntityPlayer player) {
-        if (!world.isRemote) {
-            if (stack.getItem()== ItemRegistry.BLANK_RECORD || stack.getItem()== ItemRegistry.MUSIC_TRIGGERS_RECORD) {
-                int meta = stack.getItem()== ItemRegistry.BLANK_RECORD ? 1 : 2;
+        if(!world.isRemote) {
+            if(stack.getItem()==ItemRegistry.BLANK_RECORD || stack.getItem()==ItemRegistry.MUSIC_TRIGGERS_RECORD) {
+                int meta = stack.getItem()==ItemRegistry.BLANK_RECORD ? 1 : 2;
                 TileEntity entity = world.getTileEntity(pos);
-                if (entity instanceof MusicRecorderEntity) {
+                if(entity instanceof MusicRecorderEntity) {
                     MusicRecorderEntity recorderEntity = (MusicRecorderEntity) entity;
-                    if (recorderEntity.isEmpty()) {
+                    if(recorderEntity.isEmpty()) {
                         recorderEntity.validate();
                         recorderEntity.insertRecord(stack, player);
                         set(world,pos,meta);

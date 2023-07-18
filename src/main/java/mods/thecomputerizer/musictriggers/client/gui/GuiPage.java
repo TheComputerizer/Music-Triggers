@@ -110,7 +110,7 @@ public class GuiPage extends GuiSuperType {
                     (screen, button, mode) -> {
                         this.deleteMode = mode > 1;
                         TextFormatting color = mode == 1 ? TextFormatting.WHITE : TextFormatting.RED;
-                        button.updateDisplay(color + finalDisplayName,this.fontRenderer);
+                        button.updateDisplay(color + finalDisplayName,this.fontRenderer,this);
                     }), left);
         }
         for(Icon icon : this.icons) icon.disableHover();

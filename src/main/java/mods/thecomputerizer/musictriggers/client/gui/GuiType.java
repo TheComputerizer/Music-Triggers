@@ -16,7 +16,7 @@ import java.util.*;
 
 public enum GuiType {
     MAIN("main", Constants.ICON_LOCATION,null,Collections.EMPTY_LIST, 100f,0f,
-            new ButtonType[]{ButtonType.LOG,ButtonType.PLAYBACK,ButtonType.EDIT,ButtonType.RELOAD}, functionImpl()),
+            new ButtonType[]{ButtonType.LOG,ButtonType.PLAYBACK,ButtonType.EDIT,ButtonType.RELOAD,ButtonType.BACK}, functionImpl()),
     LOG("log_visualizer", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
     PLAYBACK("playback", MusicTriggers.getIcon("gui/white_icons","playback"), null, Collections.EMPTY_LIST, 100f, 0f,
             new ButtonType[]{ButtonType.BACK,ButtonType.APPLY,ButtonType.SKIP_SONG,ButtonType.RESET_SONG},

@@ -48,7 +48,7 @@ public class MusicRecorderEntity extends TileEntity implements ITickable {
         ItemStack stack = ServerTriggerStatus.recordAudioData(this.player.getUniqueID(),this.record);
         if(!stack.isEmpty()) {
             IBlockState state = this.world.getBlockState(this.pos);
-            if(state.getBlock()== BlockRegistry.MUSIC_RECORDER) {
+            if(state.getBlock()==BlockRegistry.MUSIC_RECORDER) {
                 this.record = stack;
                 this.world.playSound(null,this.pos, SoundEvents.ENTITY_LIGHTNING_THUNDER, SoundCategory.BLOCKS,
                         1f,1f);

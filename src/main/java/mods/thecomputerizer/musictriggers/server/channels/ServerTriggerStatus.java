@@ -4,6 +4,7 @@ import atomicstryker.infernalmobs.common.InfernalMobsCore;
 import c4.champions.common.capability.CapabilityChampionship;
 import c4.champions.common.capability.IChampionship;
 import io.netty.buffer.ByteBuf;
+import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.musictriggers.network.PacketSyncServerInfo;
@@ -15,6 +16,7 @@ import mods.thecomputerizer.theimpossiblelibrary.util.NetworkUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -22,6 +24,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Tuple;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.BossInfoServer;
@@ -33,28 +36,24 @@ import org.apache.logging.log4j.Level;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class ServerTriggerStatus {
-    private static final Map<String, ServerTriggerStatus> SERVER_DATA = new HashMap<>();
-    private static final Map<String, List<BossInfoServer>> QUEUED_BOSS_BARS = new HashMap<>();
+    private static final Map<String,ServerTriggerStatus> SERVER_DATA = new HashMap<>();
+    private static final Map<BossInfoServer,Class<? extends EntityLivingBase>> INSTANTIATED_BOSS_BARS = new HashMap<>();
+    private static final Map<BossInfoServer,EntityLivingBase> BOSS_BAR_ENTITIES = new HashMap<>();
     private static final List<String> NBT_MODES = Arrays.asList("KEY_PRESENT","VAL_PRESENT","GREATER","LESSER","EQUAL","INVERT");
     private static final List<String> TRIGGER_HOLDERS = Arrays.asList("structure","mob","victory","pvp");
 
     public static void initializePlayerChannels(ByteBuf buf) {
         ServerTriggerStatus data = new ServerTriggerStatus(buf);
-        if(SERVER_DATA.containsKey(data.playerUUID.toString()))
-            data.bossInfo.addAll(SERVER_DATA.get(data.playerUUID.toString()).bossInfo);
         SERVER_DATA.put(data.playerUUID.toString(),data);
-        if(data.isValid() && QUEUED_BOSS_BARS.containsKey(data.playerUUID.toString())) {
-            data.bossInfo.addAll(QUEUED_BOSS_BARS.get(data.playerUUID.toString()));
-            QUEUED_BOSS_BARS.remove(data.playerUUID.toString());
-        }
     }
 
     @SuppressWarnings("ConstantValue")
     public static void decodeDynamicInfo(ByteBuf buf) {
         String playerUUID = NetworkUtil.readString(buf);
+        EntityPlayerMP player = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList()
+                .getPlayerByUUID(UUID.fromString(playerUUID));
         int size = buf.readInt();
         for(int i=0;i<size;i++) {
             String channel = NetworkUtil.readString(buf);
@@ -69,27 +68,35 @@ public class ServerTriggerStatus {
             }
             boolean isStorageUpdate = buf.readBoolean();
             if(isStorageUpdate) {
+                PersistentDataHandler.getDataCapability(player).initChannel(channel);
                 Map<String,Boolean> toggleMap = NetworkUtil.readGenericMap(buf,NetworkUtil::readString,
                         ByteBuf::readBoolean);
-                Map<String,List<String>> playedOnceMap = NetworkUtil.readGenericMap(buf,NetworkUtil::readString,
-                        buf1 -> NetworkUtil.readGenericList(buf1,NetworkUtil::readString));
-                EntityPlayerMP player = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList()
-                        .getPlayerByUUID(UUID.fromString(playerUUID));
-                int preferredSortType = buf.readInt();
+                Map<String, Tuple<List<String>,Integer>> playedOnceMap = NetworkUtil.readGenericMap(buf,NetworkUtil::readString,
+                        buf1 -> new Tuple<>(NetworkUtil.readGenericList(buf1,NetworkUtil::readString),buf1.readInt()));
                 if(Objects.nonNull(player)) {
                     for(Map.Entry<String,Boolean> toggleEntry : toggleMap.entrySet())
                         PersistentDataHandler.getDataCapability(player).writeToggleStatus(channel,toggleEntry.getKey(),
                                 toggleEntry.getValue());
-                    for(Map.Entry<String,List<String>> playedOnceEntry : playedOnceMap.entrySet())
+                    for(Map.Entry<String,Tuple<List<String>,Integer>> playedOnceEntry : playedOnceMap.entrySet())
                         PersistentDataHandler.getDataCapability(player).setAudioPlayed(channel,playedOnceEntry.getKey(),
-                                playedOnceEntry.getValue());
-                    PersistentDataHandler.getDataCapability(player).writePreferredSort(preferredSortType);
+                                playedOnceEntry.getValue().getFirst(),playedOnceEntry.getValue().getSecond());
                 }
             }
         }
+        int preferredSortType = buf.readInt();
+        if(Objects.nonNull(player))
+            PersistentDataHandler.getDataCapability(player).writePreferredSort(preferredSortType);
     }
 
     public static void runServerChecks() {
+        BOSS_BAR_ENTITIES.entrySet().removeIf(entry -> {
+            boolean ret = entry.getKey().getPercent()<=0;
+            if(ret) {
+                INSTANTIATED_BOSS_BARS.remove(entry.getKey());
+                Constants.debugErrorServer("BOSS BAR REMOVED");
+            }
+            return ret;
+        });
         Iterator<Map.Entry<String, ServerTriggerStatus>> itr = SERVER_DATA.entrySet().iterator();
         while(itr.hasNext()) {
             ServerTriggerStatus data = itr.next().getValue();
@@ -98,23 +105,15 @@ public class ServerTriggerStatus {
         }
     }
 
-    public static void addBossBarTracking(UUID playerUUID, BossInfoServer info) {
-        ServerTriggerStatus data = SERVER_DATA.get(playerUUID.toString());
-        if(Objects.nonNull(data)) {
-            if (data.isValid()) data.bossInfo.add(info);
-        } else {
-            QUEUED_BOSS_BARS.putIfAbsent(playerUUID.toString(),new ArrayList<>());
-            if(!QUEUED_BOSS_BARS.get(playerUUID.toString()).contains(info))
-                QUEUED_BOSS_BARS.get(playerUUID.toString()).add(info);
-        }
+    public static void bossBarInstantiated(BossInfoServer info, Class<? extends EntityLivingBase> entityClass) {
+        Constants.debugErrorServer("BOSS BAR MADE");
+        INSTANTIATED_BOSS_BARS.put(info,entityClass);
     }
 
-    public static void removeBossBarTracking(UUID playerUUID, BossInfoServer info) {
-        ServerTriggerStatus data = SERVER_DATA.get(playerUUID.toString());
-        if(Objects.nonNull(data)) {
-            if (data.isValid()) data.bossInfo.remove(info);
-        } else if(QUEUED_BOSS_BARS.containsKey(playerUUID.toString()))
-            QUEUED_BOSS_BARS.get(playerUUID.toString()).remove(info);
+    public static void checkIfBossSpawned(EntityLivingBase entity) {
+        for(Map.Entry<BossInfoServer,Class<? extends EntityLivingBase>> entry : INSTANTIATED_BOSS_BARS.entrySet())
+            if(entry.getValue()==entity.getClass())
+                BOSS_BAR_ENTITIES.put(entry.getKey(),entity);
     }
 
     public static ItemStack recordAudioData(UUID playerUUID, ItemStack recordStack) {
@@ -136,7 +135,6 @@ public class ServerTriggerStatus {
     private final Map<String, Map<String, Boolean>> updatedTriggers = new HashMap<>();
     private final Map<String, Victory> victoryTriggers;
     private final Map<String, List<String>> menuSongs;
-    private final List<BossInfoServer> bossInfo = new ArrayList<>();
     private final UUID playerUUID;
     private final MinecraftServer server;
     private final List<String> commandQueue = new ArrayList<>();
@@ -148,7 +146,8 @@ public class ServerTriggerStatus {
         this.mappedTriggers = NetworkUtil.readGenericMap(buf,NetworkUtil::readString,buf1 ->
                 NetworkUtil.readGenericList(buf1,buf2 -> TomlPart.getByID(NetworkUtil.readString(buf2)).decode(buf2,null))
                 .stream().filter(Table.class::isInstance).map(Table.class::cast).collect(Collectors.toList()));
-        this.allTriggers = mappedTriggers.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
+        this.allTriggers = Collections.synchronizedList(mappedTriggers.values().stream().flatMap(Collection::stream)
+                .collect(Collectors.toList()));
         this.victoryTriggers = initVictories();
         this.menuSongs = NetworkUtil.readGenericMap(buf,NetworkUtil::readString,
                 buf1 -> NetworkUtil.readGenericList(buf1,NetworkUtil::readString));
@@ -158,17 +157,18 @@ public class ServerTriggerStatus {
 
     private HashMap<String, Victory> initVictories() {
         HashMap<String, Victory> ret = new HashMap<>();
-        for(Table trigger : this.allTriggers) {
-            if (trigger.getName().matches("victory")) {
-                String id = getParameterString(trigger,"identifier");
-                if(!id.matches("not_set")) {
-                    Stream<Table> references = this.allTriggers.stream().filter(table -> {
-                        if(!table.getName().matches("mob") && !table.getName().matches("pvp")) return false;
-                        return !getParameterString(table,"identifier").matches("not_set");
-                    });
-                    if(references.findAny().isPresent()) ret.put(id,new Victory(references,
-                            getParameterInt(trigger,"victory_timeout"),this));
-                    else references.close();
+        synchronized (this.allTriggers) {
+            for (Table trigger : this.allTriggers) {
+                if (trigger.getName().matches("victory")) {
+                    String id = getParameterString(trigger, "identifier");
+                    if (!id.matches("not_set")) {
+                        List<Table> references = this.allTriggers.stream().filter(table -> {
+                            if (!table.getName().matches("mob") && !table.getName().matches("pvp")) return false;
+                            return getParameterString(table, "victory_id").matches(id);
+                        }).collect(Collectors.toList());
+                        if (!references.isEmpty()) ret.put(id, new Victory(references,
+                                getParameterInt(trigger, "victory_timeout")));
+                    }
                 }
             }
         }
@@ -218,19 +218,19 @@ public class ServerTriggerStatus {
     }
 
     private ItemStack recordAudioData(ItemStack recordStack) {
-        if (this.currentSongs.isEmpty() || this.currentTriggers.isEmpty()) return ItemStack.EMPTY;
+        if(this.currentSongs.isEmpty() || this.currentTriggers.isEmpty()) return ItemStack.EMPTY;
         int index = ThreadLocalRandom.current().nextInt(this.currentSongs.size());
         String channel = null;
-        for (String ch : this.currentSongs.keySet()) {
-            if (index == 0) {
+        for(String ch : this.currentSongs.keySet()) {
+            if(index == 0) {
                 channel = ch;
                 break;
             }
             index--;
         }
-        if (Objects.isNull(channel)) return ItemStack.EMPTY;
+        if(Objects.isNull(channel)) return ItemStack.EMPTY;
         ItemStack ret = new ItemStack(ItemRegistry.MUSIC_TRIGGERS_RECORD);
-        if (recordStack.getItem()== ItemRegistry.BLANK_RECORD) {
+        if(recordStack.getItem()==ItemRegistry.BLANK_RECORD) {
             NBTTagCompound tag = new NBTTagCompound();
             tag.setString("channelFrom", channel);
             tag.setString("trackID", this.currentSongs.get(channel));
@@ -238,7 +238,7 @@ public class ServerTriggerStatus {
             ret.setTagCompound(tag);
             return ret;
         }
-        if (this.menuSongs.get(channel).isEmpty()) return ItemStack.EMPTY;
+        if(this.menuSongs.get(channel).isEmpty()) return ItemStack.EMPTY;
         index = ThreadLocalRandom.current().nextInt(this.menuSongs.get(channel).size());
         NBTTagCompound tag = new NBTTagCompound();
         tag.setString("channelFrom", channel);
@@ -298,13 +298,20 @@ public class ServerTriggerStatus {
 
     public List<String> getParameterStringList(Table trigger, String parameter) {
         List<?> defVal = getDefaultListParameter(trigger.getName(),parameter);
-        List<?> val = trigger.getValOrDefault(parameter,defVal);
-        if(val.isEmpty()) {
+        Object val = trigger.getVarMap().get(parameter);
+        if(val instanceof String) return Collections.singletonList((String)val);
+        if(!(val instanceof List<?>)) {
+            if(Objects.nonNull(val)) MusicTriggers.logExternally(Level.ERROR,"Tried to access parameter {} as " +
+                    "a list when it was not stored as a list or string! Using default value {}",parameter,defVal);
+            return makeStringList(defVal);
+        }
+        List<?> ret = (List<?>)val;
+        if(ret.isEmpty()) {
             MusicTriggers.logExternally(Level.ERROR,"Parameter {} was stored as an empty list! Using default " +
                     "value {}",parameter,defVal);
             return makeStringList(defVal);
         }
-        return makeStringList(val);
+        return makeStringList(ret);
     }
 
     private List<String> makeStringList(List<?> genericList) {
@@ -325,25 +332,28 @@ public class ServerTriggerStatus {
             runCommands();
             List<Table> toRemove = new ArrayList<>();
             BlockPos pos = roundedPos(player);
-            for (Table trigger : this.allTriggers) {
-                if (trigger.getName().matches("home"))
-                    potentiallyUpdate(trigger, calculateHome(player, pos,
-                                    getParameterInt(trigger,"detection_range"),
-                                    getParameterFloat(trigger,"detection_y_ratio")));
-                else if (trigger.getName().matches("structure"))
-                    potentiallyUpdate(trigger, calculateStruct(player.getServerWorld(), pos,
-                            getParameterStringList(trigger,"resource_name")));
-                else if (trigger.getName().matches("victory"))
-                    potentiallyUpdate(trigger, calculateVictory(getParameterString(trigger,"identifier")));
-                else if (trigger.getName().matches("mob"))
-                    potentiallyUpdate(trigger, calculateMob(trigger, player, pos));
-                else if (trigger.getName().matches("pvp"))
-                    potentiallyUpdate(trigger, calculatePVP(trigger));
-                else toRemove.add(trigger);
+            synchronized (this.allTriggers) {
+                for (Table trigger : this.allTriggers) {
+                    if (trigger.getName().matches("home"))
+                        potentiallyUpdate(trigger, calculateHome(player, pos,
+                                getParameterInt(trigger, "detection_range"),
+                                getParameterFloat(trigger, "detection_y_ratio")));
+                    else if (trigger.getName().matches("structure"))
+                        potentiallyUpdate(trigger, calculateStruct(player.getServerWorld(), pos,
+                                getParameterStringList(trigger, "resource_name")));
+                    else if (trigger.getName().matches("victory"))
+                        potentiallyUpdate(trigger, calculateVictory(getParameterString(trigger, "identifier")));
+                    else if (trigger.getName().matches("mob"))
+                        potentiallyUpdate(trigger, calculateMob(trigger, player, pos));
+                    else if (trigger.getName().matches("pvp"))
+                        potentiallyUpdate(trigger, calculatePVP(trigger));
+                    else toRemove.add(trigger);
+                }
             }
             this.attacker = null;
-            this.bossInfo.removeIf(info -> info.getPercent() <= 0 || !info.visible);
-            if (!toRemove.isEmpty()) this.allTriggers.removeAll(toRemove);
+            synchronized (this.allTriggers) {
+                if (!toRemove.isEmpty()) this.allTriggers.removeAll(toRemove);
+            }
             if (!this.updatedTriggers.isEmpty())
                 new PacketSyncServerInfo(this.updatedTriggers).addPlayers(player).send();
         }
@@ -356,7 +366,6 @@ public class ServerTriggerStatus {
     }
 
     private void potentiallyUpdate(Table trigger, boolean pass) {
-        if(getParameterBool(trigger,"not")) pass = !pass;
         if(!this.triggerStatus.containsKey(trigger) || this.triggerStatus.get(trigger) != pass) {
             String nameWithID = triggerWithID(trigger);
             if(Objects.nonNull(nameWithID)) {
@@ -372,7 +381,11 @@ public class ServerTriggerStatus {
                     this.updatedTriggers.get(channel).put(triggerWithID(trigger), pass);
                     this.triggerStatus.put(trigger, pass);
                 }
-            } else this.allTriggers.remove(trigger);
+            } else {
+                synchronized (this.allTriggers) {
+                    this.allTriggers.remove(trigger);
+                }
+            }
         }
     }
 
@@ -416,53 +429,53 @@ public class ServerTriggerStatus {
         float health = getParameterFloat(mobTrigger,"health");
         float hordeHealth = getParameterFloat(mobTrigger,"horde_health_percentage");
         String nbt = getParameterString(mobTrigger,"mob_nbt");
-        String victoryID = getParameterString(mobTrigger,"victory_id");
+        Victory victory = this.victoryTriggers.get(getParameterString(mobTrigger,"victory_id"));
+        boolean pass;
         if (resources.contains("BOSS")) {
-            HashSet<BossInfoServer> matchedBosses = new HashSet<>(resources.size() == 1 ? this.bossInfo : this.bossInfo.stream().filter(
-                    info -> partiallyMatches(info.getName().getUnformattedText(),resources.stream()
-                            .filter(element -> !element.matches("BOSS")).collect(Collectors.toList())))
-                    .collect(Collectors.toList()));
-            if(matchedBosses.size()<num) return false;
-            boolean pass = checkBossHealth(matchedBosses, num, health, hordeHealth);
-            Victory victory = this.victoryTriggers.get(victoryID);
+            String id = getParameterString(mobTrigger,"identifier");
+            Set<EntityLivingBase> bossEntities = BOSS_BAR_ENTITIES.entrySet().stream()
+                    .filter(entry -> entry.getKey().visible && entry.getKey().players.contains(player)).map(Map.Entry::getValue)
+                    .filter(entity -> entityWhitelist(entity,resources,infernal,champion,nbt)).collect(Collectors.toSet());
+            if(bossEntities.size()<num) return false;
+            pass = checkSpecifics(bossEntities,num,player,checkTarget,hordeTarget,health,hordeHealth);
+            if(id.matches("genericBoss")) Constants.debugErrorServer("[{}] DID IT PASS? {}",pass);
             if(Objects.nonNull(victory)) {
                 if(pass)
-                    for(BossInfoServer info : matchedBosses)
-                        victory.add(mobTrigger, getParameterStringList(mobTrigger,"resource_name"), info);
+                    for(EntityLivingBase entity : bossEntities)
+                        victory.add(mobTrigger,true,entity);
                 victory.setActive(mobTrigger,pass);
             }
             return pass;
         }
-        return checkMobs(mobTrigger,player,pos,num,range,yRatio,resources,infernal,champion,checkTarget,hordeTarget,
-                health,hordeHealth,nbt,victoryID);
+        pass = checkMobs(mobTrigger,player,pos,num,range,yRatio,resources,infernal,champion,checkTarget,hordeTarget,
+                health,hordeHealth,nbt,victory);
+        if(Objects.nonNull(victory)) victory.setActive(mobTrigger,pass);
+        return pass;
     }
 
     private boolean checkMobs(Table trigger, EntityPlayerMP player, BlockPos pos, int num, float range, float yRatio,
                               List<String> resources, List<String> infernal, List<String> champion, boolean target,
-                              float hordeTarget, float health, float hordeHealth, String nbt, String victoryID) {
+                              float hordeTarget, float health, float hordeHealth, String nbt, Victory victory) {
         AxisAlignedBB box = new AxisAlignedBB(pos.getX()-range,pos.getY()-(range*yRatio),pos.getZ()-range,
                 pos.getX()+range,pos.getY()+(range*yRatio),pos.getZ()+range);
-        HashSet<EntityLiving> matchedEntities = new HashSet<>(player.getServerWorld().getEntitiesWithinAABB(
+        HashSet<EntityLivingBase> matchedEntities = new HashSet<>(player.getServerWorld().getEntitiesWithinAABB(
                 EntityLiving.class,box,e -> entityWhitelist(e,resources,infernal,champion,nbt)));
         if(matchedEntities.size()<num) return false;
         boolean pass = checkSpecifics(matchedEntities,num,player,target,hordeTarget,health,hordeHealth);
-        Victory victory = this.victoryTriggers.get(victoryID);
-        if(Objects.nonNull(victory)) {
-            if(pass)
-                for(EntityLiving entity : matchedEntities)
-                    victory.add(trigger,getParameterStringList(trigger,"resource_name"),entity);
-            victory.setActive(trigger,pass);
+        if(Objects.nonNull(victory) && pass) {
+            for(EntityLivingBase entity : matchedEntities)
+                victory.add(trigger,true,entity);
         }
         return pass;
     }
 
-    private boolean entityWhitelist(EntityLiving entity, List<String> resources, List<String> infernal,
+    private boolean entityWhitelist(EntityLivingBase entity, List<String> resources, List<String> infernal,
                                     List<String> champion, String nbtParser) {
         return Objects.nonNull(entity) && checkEntityName(entity, resources) &&
                 checkModExtensions(entity, infernal, champion) && checkNBT(entity, nbtParser);
     }
 
-    private boolean checkEntityName(EntityLiving entity, List<String> resources) {
+    private boolean checkEntityName(EntityLivingBase entity, List<String> resources) {
         if(resources.isEmpty()) return false;
         String displayName = entity.getName();
         ResourceLocation id = EntityList.getKey(entity);
@@ -472,43 +485,39 @@ public class ServerTriggerStatus {
             if(blackList.isEmpty()) return true;
             return !blackList.contains(displayName) && (Objects.isNull(id) || !partiallyMatches(id.toString(),blackList));
         }
+        else if(resources.contains("BOSS")) {
+            if(resources.size()==1) return true;
+            List<String> whitelist = resources.stream().filter(element -> !element.matches("BOSS")).collect(Collectors.toList());
+            return whitelist.contains(displayName) || (Objects.nonNull(id) && partiallyMatches(id.toString(),whitelist));
+        }
         return resources.contains(displayName) || (Objects.nonNull(id) && partiallyMatches(id.toString(),resources));
     }
-    private boolean checkSpecifics(HashSet<EntityLiving> entities, int num, EntityPlayerMP player, boolean target,
+    private boolean checkSpecifics(Collection<EntityLivingBase> entities, int num, EntityPlayerMP player, boolean target,
                                    float targetRatio, float health, float healthRatio) {
         return checkTarget(entities,num,target,targetRatio,player) && checkHealth(entities,num,health,healthRatio);
     }
 
-    private boolean checkTarget(HashSet<EntityLiving> entities, int num, boolean target, float ratio, EntityPlayerMP player) {
+    private boolean checkTarget(Collection<EntityLivingBase> entities, int num, boolean target, float ratio, EntityPlayerMP player) {
         if(!target || ratio<=0) return true;
         float counter = 0f;
-        for(EntityLiving entity : entities) {
-            if(Objects.isNull(entity) || Objects.isNull(entity.getAttackTarget())) continue;
-            if(entity.getAttackTarget() == player)
+        for(EntityLivingBase entity : entities) {
+            if(!(entity instanceof EntityLiving) || Objects.isNull(((EntityLiving)entity).getAttackTarget())) continue;
+            if(((EntityLiving)entity).getAttackTarget() == player)
                 counter++;
         }
         return counter/num>=ratio/100f;
     }
 
-    private boolean checkHealth(HashSet<EntityLiving> entities, int num, float health, float ratio) {
+    private boolean checkHealth(Collection<EntityLivingBase> entities, int num, float health, float ratio) {
         if(health>=100 || ratio<=0) return true;
         float counter = 0f;
-        for(EntityLiving entity : entities)
+        for(EntityLivingBase entity : entities)
             if(entity.getHealth()/entity.getMaxHealth()<=health/100f)
                 counter++;
         return counter/num>=ratio/100f;
     }
 
-    private boolean checkBossHealth(HashSet<BossInfoServer> bars, int num, float health, float ratio) {
-        if(health>=100 || ratio<=0) return true;
-        float counter = 0f;
-        for(BossInfoServer bar : bars)
-            if(bar.getPercent()<=health)
-                counter++;
-        return counter/num>=ratio/100f;
-    }
-
-    private boolean checkNBT(EntityLiving entity, String nbt) {
+    private boolean checkNBT(EntityLivingBase entity, String nbt) {
         if(nbt.matches("ANY")) return true;
         String[] parts = nbt.split(";");
         try {
@@ -610,27 +619,24 @@ public class ServerTriggerStatus {
         return greater ? equal ? val>=comp : val>comp : equal ? val<=comp : val<comp;
     }
 
-    private boolean checkModExtensions(EntityLiving entity, List<String> infernal, List<String> champion) {
-        if(Loader.isModLoaded("champions")) {
-            if (!champion.isEmpty() && !champion.contains("ANY")) {
-                IChampionship champ = CapabilityChampionship.getChampionship(entity);
-                if(Objects.isNull(champ)) return false;
-                else if(Objects.nonNull(champ.getName()))
-                    if(!champion.contains("ALL"))
-                        if(!partiallyMatches(champ.getName(),champion)) return false;
-            }
+    private boolean checkModExtensions(EntityLivingBase entity, List<String> infernal, List<String> champion) {
+        if(Loader.isModLoaded("champions") && entity instanceof EntityLiving && !champion.isEmpty() &&
+                !champion.contains("ANY")) {
+            IChampionship champ = CapabilityChampionship.getChampionship((EntityLiving)entity);
+            if (Objects.isNull(champ)) return false;
+            else if (Objects.nonNull(champ.getName()))
+                if (!champion.contains("ALL"))
+                    if (!partiallyMatches(champ.getName(), champion)) return false;
         }
-        if(Loader.isModLoaded("infernalmobs")) {
-            if(!infernal.isEmpty() && !infernal.contains("ANY")) {
-                if(InfernalMobsCore.getIsRareEntity(entity)) {
-                    if(infernal.contains("ALL")) return true;
-                    String[] names = InfernalMobsCore.getMobModifiers(entity).getDisplayNames();
-                    for(String name : names)
-                        if(partiallyMatches(name,infernal))
-                            return true;
-                }
-                return false;
+        if(Loader.isModLoaded("infernalmobs") && !infernal.isEmpty() && !infernal.contains("ANY")) {
+            if (InfernalMobsCore.getIsRareEntity(entity)) {
+                if (infernal.contains("ALL")) return true;
+                String[] names = InfernalMobsCore.getMobModifiers(entity).getDisplayNames();
+                for (String name : names)
+                    if (partiallyMatches(name, infernal))
+                        return true;
             }
+            return false;
         }
         return true;
     }
@@ -644,12 +650,10 @@ public class ServerTriggerStatus {
         boolean pass = Objects.nonNull(this.attacker);
         String victoryID = getParameterString(trigger,"victory_id");
         Victory victory = this.victoryTriggers.get(victoryID);
-        if(Objects.nonNull(this.attacker)) {
-            if(Objects.nonNull(victory)) {
-                victory.add(trigger,getParameterStringList(trigger,"resource_name"),this.attacker);
-                victory.setActive(trigger,true);
-            }
-        } else victory.setActive(trigger,false);
+        if(Objects.nonNull(victory)) {
+            if(pass) victory.add(trigger,false,this.attacker);
+            victory.setActive(trigger,pass);
+        }
         return pass;
     }
 

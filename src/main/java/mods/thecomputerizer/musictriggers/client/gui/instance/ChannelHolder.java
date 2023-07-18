@@ -8,7 +8,6 @@ import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 
 import java.io.File;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ChannelHolder extends AbstractConfig {
 
@@ -35,7 +34,11 @@ public class ChannelHolder extends AbstractConfig {
 
     @Override
     public List<GuiPage.Icon> getPageIcons(String channel) {
-        return this.channelInstances.keySet().stream().map(this::getPageIcon).collect(Collectors.toList());
+        List<String> orderedChannelNames = new ArrayList<>(this.channelInstances.keySet());
+        Collections.sort(orderedChannelNames);
+        List<GuiPage.Icon> ret = new ArrayList<>();
+        for(String orderedChannel : orderedChannelNames) ret.add(getPageIcon(orderedChannel));
+        return ret;
     }
 
     @Override
@@ -81,8 +84,10 @@ public class ChannelHolder extends AbstractConfig {
         List<GuiSelection.Element> elements = new ArrayList<>();
         int index = 0;
         for(String channel : this.channelInstances.keySet()) {
+            int triggers = this.channelInstances.get(channel).getRegisteredTriggerCount();
+            int songs = this.channelInstances.get(channel).getRegisteredSongCount();
             elements.add(new GuiSelection.MonoElement(channel, index, channel,
-                    Translate.singletonHover("selection","channel"),(parent) -> {
+                    Translate.registeredChannelHover(triggers,songs),(parent) -> {
                 channelParameter.setChannelParameter(channel);
                 channelParameter.saveScreen();
                 parent.saveAndDisplay(parent.getParent());

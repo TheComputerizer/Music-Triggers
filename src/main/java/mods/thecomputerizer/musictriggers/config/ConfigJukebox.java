@@ -2,13 +2,17 @@ package mods.thecomputerizer.musictriggers.config;
 
 
 import io.netty.buffer.ByteBuf;
+import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.client.channels.Channel;
 import mods.thecomputerizer.theimpossiblelibrary.util.NetworkUtil;
+import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.apache.logging.log4j.Level;
 
 import java.io.*;
 import java.util.*;
@@ -41,12 +45,14 @@ public class ConfigJukebox {
                 "song1 = dragon");
     }
 
+    @SideOnly(Side.CLIENT)
     private Reader makeReader() throws IOException {
         return Objects.nonNull(this.file) ? new FileReader(this.file) : new InputStreamReader(Minecraft.getMinecraft()
                 .getResourceManager().getResource(this.fileSource).getInputStream());
     }
 
-    public void parse() {
+    @SideOnly(Side.CLIENT)
+    public void parse(Channel channel) {
         if(Objects.isNull(this.file) && Objects.isNull(this.fileSource)) return;
         try {
             BufferedReader br = new BufferedReader(makeReader());
@@ -54,7 +60,7 @@ public class ConfigJukebox {
             while(Objects.nonNull(line)) {
                 if(!line.contains("Format") && line.contains("=") && !line.contains("==")) {
                     String[] broken = MusicTriggers.stringBreaker(line,"=");
-                    recordMap.put(broken[0].trim(),broken[1].trim());
+                    tryAddTrack(channel,broken[0].trim(),broken[1].trim());
                 }
                 line = br.readLine();
             }
@@ -62,6 +68,21 @@ public class ConfigJukebox {
         } catch(Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @SideOnly(Side.CLIENT)
+    private void tryAddTrack(Channel channel, String track, String lang) {
+        if(channel.isTrackLoaded(track)) {
+            if(!this.recordMap.containsKey(track)) {
+                this.recordMap.put(track, lang);
+                MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Track with id {} is now playable by a " +
+                        "custom record and has a translation of {}",channel.getChannelName(),track,
+                        AssetUtil.genericLang(Constants.MODID,"record",lang,false));
+            } else MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Track with id {} has already been " +
+                            "loaded to a custom record with a translation of {}!",channel.getChannelName(),
+                    AssetUtil.genericLang(Constants.MODID,"record",this.recordMap.get(track),false));
+        } else MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Unable to load unknown track id {} to "+
+                "a custom record!",channel.getChannelName(),track);
     }
 
     @SideOnly(Side.CLIENT)

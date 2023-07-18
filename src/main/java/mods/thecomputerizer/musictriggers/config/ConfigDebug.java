@@ -1,11 +1,9 @@
 package mods.thecomputerizer.musictriggers.config;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import mods.thecomputerizer.shadowed.moandjiezana.toml.Toml;
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Debug;
+import mods.thecomputerizer.shadowed.moandjiezana.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.util.TextUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
@@ -33,7 +31,7 @@ public class ConfigDebug {
     public static boolean COMBINE_EQUAL_PRIORITY = false;
     public static boolean PAUSE_WHEN_TABBED = true;
     public static HashSet<String> BLOCKED_MOD_CATEGORIES = new HashSet<>(Collections.singleton("minecraft;music"));
-    public static HashSet<String> FORMATTED_BLOCKED_MODS = new HashSet<>(Collections.singleton("minecraft[music]"));
+    public static final HashMap<String,HashSet<String>> FORMATTED_BLOCKED_MODS = new HashMap<>();
     public static boolean BLOCK_STREAMING_ONLY = true;
     public static HashSet<String> INTERRUPTED_AUDIO_CATEGORIES = new HashSet<>(Collections.singleton("music"));
 
@@ -103,7 +101,7 @@ public class ConfigDebug {
                 "dependeing on the channel settings. Only affects blocked audio");
         lines.add(LogUtil.injectParameters("INTERRUPTED_AUDIO_CATEGORIES = {}", TextUtil.compileCollection(INTERRUPTED_AUDIO_CATEGORIES)));
         FileUtil.writeLinesToFile(FILE,lines,false);
-        FORMATTED_BLOCKED_MODS = formatBlockedMods();
+        formatBlockedMods();
     }
 
     public static void read() {
@@ -146,17 +144,19 @@ public class ConfigDebug {
         write();
     }
 
-    private static HashSet<String> formatBlockedMods() {
-        Multimap<String, String> compiled = HashMultimap.create();
+    private static void formatBlockedMods() {
+        FORMATTED_BLOCKED_MODS.clear();
+        FORMATTED_BLOCKED_MODS.put("all",new HashSet<>());
         for(String blocked : BLOCKED_MOD_CATEGORIES) {
             String modid = blocked.contains(";") ? blocked.substring(0,blocked.indexOf(';')) : blocked;
             String category = blocked.contains(";") && blocked.indexOf(';')+1<blocked.length() ?
                     blocked.substring(blocked.indexOf(';')+1) : "music";
-            if(!compiled.containsEntry(modid,category)) compiled.put(modid,category);
+            if(modid.matches("all")) FORMATTED_BLOCKED_MODS.get("all").add(category);
+            else if(!FORMATTED_BLOCKED_MODS.get("all").contains(category)) {
+                FORMATTED_BLOCKED_MODS.putIfAbsent(modid,new HashSet<>());
+                FORMATTED_BLOCKED_MODS.get(modid).add(category);
+            }
         }
-        HashSet<String> ret = new HashSet<>();
-        for(String mod : compiled.keySet())
-            ret.add(mod+"["+TextUtil.listToString(compiled.get(mod),",")+"]");
-        return ret;
+        FORMATTED_BLOCKED_MODS.entrySet().removeIf(entry -> entry.getValue().isEmpty());
     }
 }

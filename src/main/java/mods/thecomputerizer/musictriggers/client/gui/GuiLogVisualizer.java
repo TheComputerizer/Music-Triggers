@@ -10,7 +10,9 @@ import net.minecraft.util.math.Vec2f;
 import org.lwjgl.input.Mouse;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class GuiLogVisualizer extends GuiSuperType {
 
@@ -19,32 +21,29 @@ public class GuiLogVisualizer extends GuiSuperType {
     private boolean canScroll;
     private boolean canScrollUp;
     private final Map<Integer,Tuple<List<String>,Integer>> messageLines;
+    private final Map<Integer,Tuple<List<String>,Integer>> searchedMessageLines;
     private int filteredSize;
 
     public GuiLogVisualizer(GuiSuperType parent, GuiType type, Instance configInstance) {
         super(parent, type, configInstance);
         this.spacing = Minecraft.getMinecraft().fontRenderer.FONT_HEIGHT/2;
         this.messageLines = new HashMap<>();
-        calculateSizes(false);
+        this.searchedMessageLines = new HashMap<>();
+        this.filteredSize = 0;
     }
 
-    private void calculateSizes(boolean includeScrollSize) {
+    private void calculateSizes() {
         this.messageLines.clear();
-        this.filteredSize = 0;
         int logCounter = 0;
-        Map<Integer,Tuple<String,Integer>> logEntries = MusicTriggers.getLogEntries();
-        for(int i=0;i<logEntries.size();i++) {
-            if(Objects.nonNull(logEntries.get(i))) {
-                String message = logEntries.get(i).getFirst();
-                List<String> lines = GuiUtil.splitLines(Minecraft.getMinecraft().fontRenderer, message, 16, this.width - 16);
-                if(lines.size() > 0 && renderLevel(message)) {
-                    this.filteredSize += lines.size();
-                    this.messageLines.put(logCounter, new Tuple<>(lines, logEntries.get(i).getSecond()));
-                    logCounter++;
-                }
+        List<Tuple<String,Integer>> logEntries = MusicTriggers.getLogEntries();
+        for(Tuple<String,Integer> logEntry : logEntries) {
+            String message = logEntry.getFirst();
+            List<String> lines = GuiUtil.splitLines(Minecraft.getMinecraft().fontRenderer, message, 16, this.width - 16);
+            if (lines.size() > 0 && renderLevel(message)) {
+                this.messageLines.put(logCounter, new Tuple<>(lines, logEntry.getSecond()));
+                logCounter++;
             }
         }
-        if(includeScrollSize) calculateScrollSize();
     }
 
     private void calculateScrollSize() {
@@ -72,7 +71,7 @@ public class GuiLogVisualizer extends GuiSuperType {
                 if (scroll >= 1) {
                     if (this.canScrollUp) {
                         this.scrollPos++;
-                        this.canScrollUp = this.scrollPos + this.numLines + 1 < this.filteredSize;
+                        this.canScrollUp = this.scrollPos + this.numLines < this.filteredSize;
                     }
                 } else if (this.scrollPos > 0) {
                     this.scrollPos--;
@@ -83,9 +82,35 @@ public class GuiLogVisualizer extends GuiSuperType {
     }
 
     @Override
+    protected void updateSearch() {
+        int prevScroll = this.scrollPos;
+        this.searchedMessageLines.clear();
+        this.filteredSize = 0;
+        int searchCounter = 0;
+        for(Map.Entry<Integer,Tuple<List<String>,Integer>> messageEntry : this.messageLines.entrySet()) {
+            boolean include = false;
+            for(String line : messageEntry.getValue().getFirst()) {
+                if(checkSearch(line)) {
+                    include = true;
+                    break;
+                }
+            }
+            if(include) {
+                this.filteredSize+=messageEntry.getValue().getFirst().size();
+                this.searchedMessageLines.put(searchCounter,messageEntry.getValue());
+                searchCounter++;
+            }
+        }
+        calculateScrollSize();
+        this.scrollPos = Math.min(prevScroll,this.canScroll ? this.filteredSize-this.numLines : 0);
+    }
+
+    @Override
     public void initGui() {
         super.initGui();
-        calculateSizes(true);
+        enableSearch();
+        calculateSizes();
+        updateSearch();
     }
 
     @Override
@@ -94,12 +119,12 @@ public class GuiLogVisualizer extends GuiSuperType {
         int y = this.canScroll ? 32 : this.height-(this.numLines*textSpacing);
         int skip = this.canScroll ? this.filteredSize-this.numLines-this.scrollPos : 0;
         int finish = this.numLines;
-        for(int i=0;i<this.messageLines.size();i++) {
+        for(int i=0;i<this.searchedMessageLines.size();i++) {
             if(finish<=0) break;
-            for(String line : this.messageLines.get(i).getFirst()) {
+            for(String line : this.searchedMessageLines.get(i).getFirst()) {
                 if(skip>0) skip--;
                 else {
-                    drawString(this.fontRenderer, line, 16, y, this.messageLines.get(i).getSecond());
+                    drawString(this.fontRenderer, line, 16, y, this.searchedMessageLines.get(i).getSecond());
                     y += textSpacing;
                     finish--;
                     if(finish <= 0) break;

@@ -5,6 +5,7 @@ import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.ClientEvents;
 import mods.thecomputerizer.musictriggers.client.ClientSync;
+import mods.thecomputerizer.musictriggers.client.data.Audio;
 import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.musictriggers.client.gui.instance.ChannelHolder;
 import mods.thecomputerizer.musictriggers.client.gui.instance.ChannelInstance;
@@ -28,7 +29,7 @@ import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.TomlUtil;
 import net.minecraft.block.BlockJukebox;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.ISound;
+import net.minecraft.client.audio.Sound;
 import net.minecraft.client.audio.SoundManager;
 import net.minecraft.client.resources.IResource;
 import net.minecraft.client.resources.IResourcePack;
@@ -36,6 +37,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.Tuple;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.fml.common.Mod;
@@ -58,9 +60,12 @@ public class ChannelManager {
     private static final HashSet<String> VALID_FILE_EXTENSIONS = new HashSet<>(Arrays.asList(".acc",".flac",".m3u",
             ".m4a",".mkv",".mp3",".mp4",".pls",".ogg",".wav",".webm"));
     private static final HashMap<String,IChannel> CHANNEL_MAP = new HashMap<>();
+    private static final List<Channel> ORDERED_CHANNELS = new ArrayList<>();
     public static final HashMap<String, HashSet<File>> OPEN_AUDIO_FILES = new HashMap<>();
     public static final Map<Table, Renderable> TICKING_RENDERABLES = new ConcurrentHashMap<>();
     private static final HashSet<String> PAUSED_VANILLA_SOUNDS = new HashSet<>();
+    private static final HashMap<Channel,Trigger.Link> ACTIVE_LINKS_FROM = new HashMap<>();
+    private static final HashMap<Channel,Trigger.Link> ACTIVE_LINKS_TO = new HashMap<>();
     private static File channelsFile;
     public static char blinkerChar = ' ';
     private static int tickCounter = 0;
@@ -71,6 +76,7 @@ public class ChannelManager {
     private static DataStorage worldDataStorage;
 
     public static void preInit() {
+        ORDERED_CHANNELS.clear();
         for(Channel channel : getAllChannels())
             channel.clear();
         CHANNEL_MAP.clear();
@@ -176,6 +182,8 @@ public class ChannelManager {
     }
 
     public static void parseConfigFiles(boolean startup) {
+        ORDERED_CHANNELS.addAll(getAllChannels());
+        ORDERED_CHANNELS.sort(Comparator.comparing(Channel::getChannelName));
         collectSongs();
         for(Channel channel : getAllChannels()) channel.parseConfigs(startup);
         for(Channel channel : getAllChannels()) channel.parseMoreConfigs();
@@ -211,7 +219,7 @@ public class ChannelManager {
     }
 
     public static boolean channelDoesNotExist(String channel) {
-        return CHANNEL_MAP.containsKey(channel);
+        return !CHANNEL_MAP.containsKey(channel);
     }
 
     public static IChannel getChannel(String channelName) {
@@ -230,19 +238,23 @@ public class ChannelManager {
         return channels;
     }
 
+    public static List<Channel> getOrderedChannels() {
+        return ORDERED_CHANNELS;
+    }
+
     public static boolean checkMusicTickerCancel() {
-        if(!ConfigDebug.PLAY_NORMAL_MUSIC || ConfigDebug.BLOCKED_MOD_CATEGORIES.contains("minecraft;music")) return true;
+        if(!ConfigDebug.PLAY_NORMAL_MUSIC || ConfigDebug.BLOCKED_MOD_CATEGORIES.contains("all;music") ||
+                ConfigDebug.BLOCKED_MOD_CATEGORIES.contains("minecraft;music")) return true;
         for(Channel channel : getAllChannels())
             if(channel.canOverrideMusic()) return true;
         return false;
     }
 
-    @SuppressWarnings("ConstantValue")
-    public static boolean handleSoundEventOverride(ISound sound) {
-        if(!ConfigDebug.PLAY_NORMAL_MUSIC || Objects.isNull(sound.getSound())) return true;
-        if(!sound.getSound().isStreaming() && ConfigDebug.BLOCK_STREAMING_ONLY) return false;
+    public static boolean handleSoundEventOverride(Sound sound, SoundCategory category) {
+        if(!ConfigDebug.PLAY_NORMAL_MUSIC || Objects.isNull(sound)) return true;
+        if(!sound.isStreaming() && ConfigDebug.BLOCK_STREAMING_ONLY) return false;
         for(Channel channel : getAllChannels())
-            if(channel.getOverrideStatus(sound)) return true;
+            if(channel.getOverrideStatus(category)) return true;
         return false;
     }
 
@@ -377,11 +389,11 @@ public class ChannelManager {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void tickChannels(CustomTick event) {
-        if(!caughtNullJukebox) {
-            JukeboxChannel jukebox = getJukeBoxChannel();
-            if (Objects.nonNull(jukebox)) jukebox.checkStopPlaying(reloading);
-        }
         if(!reloading) {
+            if(!caughtNullJukebox) {
+                JukeboxChannel jukebox = getJukeBoxChannel();
+                if(Objects.nonNull(jukebox)) jukebox.checkStopPlaying(reloading);
+            }
             try {
                 if (event.checkTickRate(20)) {
                     synchronized (TICKING_RENDERABLES) {
@@ -394,10 +406,10 @@ public class ChannelManager {
                         pauseAllChannels();
                     else unpauseAllChannels();
                     for (Channel channel : getAllChannels())
-                        if(!channel.isPaused() && !channel.isFrozen()) channel.tickFast();
+                        if(!channel.isPaused() && channel.isNotFrozen()) channel.tickFast();
                     if (tickCounter % 4 == 0) {
                         for(Channel channel : getAllChannels())
-                            if(!channel.isFrozen()) channel.tickSlow();
+                            if(channel.isNotFrozen()) channel.tickSlow();
                         runToggles();
                         sendUpdatePacket();
                     }
@@ -415,6 +427,57 @@ public class ChannelManager {
                 reloading = true;
             }
         }
+    }
+
+    public static void activateLink(Trigger.Link link) {
+        ACTIVE_LINKS_FROM.put(link.getParentChannel(),link);
+        ACTIVE_LINKS_TO.put(link.getLinkedChannel(),link);
+        link.activate();
+    }
+
+    public static boolean isLinkedFrom(Channel channel, boolean slowVersion) {
+        Trigger.Link link = ACTIVE_LINKS_FROM.get(channel);
+        if(Objects.isNull(link)) return false;
+        if(link.areChannelsDifferent()) {
+            if (!slowVersion) return true;
+            Channel linkedChannel = link.getLinkedChannel();
+            return ACTIVE_LINKS_TO.containsKey(linkedChannel) &&
+                    (!linkedChannel.isFadingOut() || ACTIVE_LINKS_FROM.containsKey(linkedChannel));
+        }
+        return false;
+    }
+
+    public static void checkRemoveLinkedFrom(Channel channel) {
+        Trigger.Link link = ACTIVE_LINKS_TO.get(channel);
+        if(Objects.nonNull(link)) {
+            if(channel.getActiveTriggers().isEmpty() || !link.isActive(channel.getActiveTriggers())) {
+                ACTIVE_LINKS_TO.remove(channel);
+                ACTIVE_LINKS_FROM.remove(link.getLinkedChannel());
+            }
+        }
+    }
+
+    public static long getLinkedTime(Channel channel) {
+        Trigger.Link link = ACTIVE_LINKS_FROM.get(channel);
+        if(Objects.isNull(link)) link = ACTIVE_LINKS_TO.get(channel);
+        return Objects.nonNull(link) ? link.getTime(channel) : 0;
+    }
+
+    public static Audio getLinkedAudio(Channel channel) {
+        Trigger.Link link = ACTIVE_LINKS_FROM.get(channel);
+        if(Objects.isNull(link)) link = ACTIVE_LINKS_TO.get(channel);
+        return Objects.nonNull(link) ? link.getResumedAudio(channel) : null;
+    }
+
+    public static void checkRemoveLinkedTo(Channel channel, boolean emptyActive) {
+        if(emptyActive) ACTIVE_LINKS_TO.remove(channel);
+        else ACTIVE_LINKS_TO.entrySet().removeIf(entry -> entry.getKey()==channel &&
+                 !ACTIVE_LINKS_FROM.containsKey(channel) && !entry.getValue().shouldLink(channel.getActiveTriggers()));
+    }
+
+    public static void setLinkedToTime(Channel channel, long time) {
+        if(ACTIVE_LINKS_TO.containsKey(channel))
+            ACTIVE_LINKS_TO.get(channel).setTime(channel,time,channel.getCurTrack());
     }
 
     public static void runToggles() {
@@ -498,7 +561,8 @@ public class ChannelManager {
         worldDataStorage = new DataStorage(NetworkUtil.readGenericMap(buf,NetworkUtil::readString,
                 buf1 -> NetworkUtil.readGenericMap(buf1,NetworkUtil::readString,ByteBuf::readBoolean)),
                 NetworkUtil.readGenericMap(buf,NetworkUtil::readString, buf1 -> NetworkUtil.readGenericMap(buf1,
-                        NetworkUtil::readString, buf2 -> NetworkUtil.readGenericList(buf2,NetworkUtil::readString))));
+                        NetworkUtil::readString, buf2 -> new Tuple<>(NetworkUtil.readGenericList(buf2,
+                                NetworkUtil::readString),buf2.readInt()))));
         Instance.setPreferredSort(MathHelper.clamp(buf.readInt(),1,3));
         worldDataStorage.inheritStartupData(previousStorage);
         if(isServerdControlled) new PacketRequestServerConfig().send();
@@ -532,7 +596,7 @@ public class ChannelManager {
 
     private static class DataStorage {
         private final Map<String,Map<String,Boolean>> toggleMap;
-        private final Map<String,Map<String,List<String>>> playedOnceMap;
+        private final Map<String,Map<String,Tuple<List<String>,Integer>>> playedOnceMap;
         private final List<ServerChannel> serverChannels;
         private boolean canOpenGui = true;
         private boolean canOpenPlayBack = true;
@@ -550,7 +614,7 @@ public class ChannelManager {
             this.serverChannels = new ArrayList<>();
         }
 
-        private DataStorage(Map<String,Map<String,Boolean>> toggleMap,Map<String,Map<String,List<String>>> playedOnceMap) {
+        private DataStorage(Map<String,Map<String,Boolean>> toggleMap,Map<String,Map<String,Tuple<List<String>,Integer>>> playedOnceMap) {
             this.toggleMap = toggleMap;
             this.playedOnceMap = playedOnceMap;
             this.serverChannels = new ArrayList<>();

@@ -22,6 +22,8 @@ public class Audio {
     private final boolean resume;
     private long lastKnownTime;
     private boolean hasPlayed = false;
+    private boolean wasInterrupted = false;
+    private int playCounter = 0;
 
     public Audio(String channel, Table song, List<Trigger> triggers, @Nullable Table universal) {
         this.data = song;
@@ -95,12 +97,8 @@ public class Audio {
         return this.playOnce;
     }
 
-    public int getPlayX() {
-        return this.playX;
-    }
-
-    public boolean mustFinish() {
-        return this.mustFinish;
+    public boolean mustNotFinish() {
+        return !this.mustFinish;
     }
 
     public long getMilliStart() {
@@ -115,25 +113,53 @@ public class Audio {
         return this.loopMap.values();
     }
 
+    public int getPlayX() {
+        return this.playX;
+    }
+
+    public void readPlayCount(int count) {
+        this.playCounter = count;
+    }
+
+    public int getPlayCount() {
+        return this.playCounter;
+    }
+
+    public void resetPlayCount() {
+        this.playCounter = 0;
+    }
+
+    public boolean hasPlayedEnough() {
+        return this.playCounter>=this.playX;
+    }
+
     public boolean hasPlayed() {
         return this.hasPlayed;
     }
 
-    public void onAudioPlayed() {
-        this.hasPlayed = true;
+    public void onAudioStarted() {
+        if(this.playX>0) this.playCounter++;
+        if(hasPlayedEnough() && this.playOnce==3) this.hasPlayed = true;
+        this.wasInterrupted = false;
     }
 
     public long getResumeTime() {
         return this.lastKnownTime;
     }
 
-    public void onAudioStopped(long time) {
-        this.lastKnownTime = Math.max(time,this.milliStart);
-        for(Loop loop : getLoops()) loop.setNum();
+    public void onAudioStopping(long time) {
+        if(!this.wasInterrupted) {
+            if (time > 0) this.wasInterrupted = true;
+            if (this.resume) this.lastKnownTime = Math.max(time, this.milliStart);
+            for (Loop loop : getLoops()) loop.setNum();
+        }
     }
 
     public void onLogOut() {
-        if(this.playOnce==3) this.hasPlayed = false;
+        if(this.playOnce==3) {
+            this.hasPlayed = false;
+            this.playCounter = 0;
+        }
     }
 
     public static final class Loop {

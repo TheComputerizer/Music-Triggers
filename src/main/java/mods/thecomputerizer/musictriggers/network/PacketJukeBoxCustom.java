@@ -18,9 +18,7 @@ public class PacketJukeBoxCustom extends MessageImpl {
     private String channel;
     private String id;
 
-    public PacketJukeBoxCustom() {
-
-    }
+    public PacketJukeBoxCustom() {}
 
     public PacketJukeBoxCustom(BlockPos pos, String channel, String id) {
         this.start = Objects.nonNull(pos);

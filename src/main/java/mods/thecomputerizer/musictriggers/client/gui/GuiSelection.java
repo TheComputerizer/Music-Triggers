@@ -33,6 +33,7 @@ public class GuiSelection extends GuiSuperType {
     private int numElements;
     private int verticalSpace;
     private int scrollPos;
+    private boolean canScroll;
     private boolean canScrollDown;
     private int elementHover;
     private int sortType;
@@ -65,16 +66,17 @@ public class GuiSelection extends GuiSuperType {
 
     private void calculateScrollSize() {
         this.scrollPos = 0;
-        int textSlot = mc.fontRenderer.FONT_HEIGHT+(this.spacing*2);
-        int totalHeight = this.height-((this.spacing*3)+textSlot+48);
-        int runningHeight = (textSlot*2)-this.spacing;
+        int textSlot = this.mc.fontRenderer.FONT_HEIGHT+(this.spacing*2);
+        int totalHeight = this.height-(this.spacing*4)-48-this.mc.fontRenderer.FONT_HEIGHT;
+        int runningHeight = textSlot;
         int runningTotal = 1;
         while(runningHeight+textSlot<totalHeight) {
             runningTotal++;
             runningHeight+=textSlot;
         }
         this.numElements = runningTotal;
-        this.canScrollDown = this.numElements < this.searchedElements.size();
+        this.canScroll = this.numElements < this.searchedElements.size();
+        this.canScrollDown = this.canScroll;
         this.verticalSpace = (totalHeight-runningHeight)/2;
     }
 
@@ -101,7 +103,7 @@ public class GuiSelection extends GuiSuperType {
                     (screen, button, mode) -> {
                         TextFormatting color = mode == 1 ? TextFormatting.WHITE : TextFormatting.RED;
                         this.deleteMode = color==TextFormatting.RED;
-                        button.updateDisplay(color + finalDisplayName,this.fontRenderer);
+                        button.updateDisplay(color + finalDisplayName,this.fontRenderer,this);
                     }), left);
             left += (width + 16);
         }
@@ -113,16 +115,16 @@ public class GuiSelection extends GuiSuperType {
                     (screen, button, mode) -> {
                         this.sortType = mode - 1;
                         TextFormatting color = mode == 1 ? TextFormatting.WHITE : mode == 2 ? TextFormatting.GRAY : TextFormatting.DARK_GRAY;
-                        button.updateDisplay(color + sortElements(),this.fontRenderer);
+                        button.updateDisplay(color + sortElements(),this.fontRenderer,this);
                         Instance.setPreferredSort(mode);
                     });
             int mode = Instance.getPreferredSort();
             superButton.setMode(mode);
             this.sortType = mode-1;
             TextFormatting color = mode == 1 ? TextFormatting.WHITE : mode == 2 ? TextFormatting.GRAY : TextFormatting.DARK_GRAY;
-            superButton.updateDisplay(color + sortElements(),this.fontRenderer);
+            superButton.updateDisplay(color + sortElements(),this.fontRenderer,this);
             addSuperButton(superButton,left);
-            left += (width + 16);
+            left += (superButton.width + 16);
         }
         for(ButtonSuperType button : this.bottomButtons) {
             addSuperButton(button,left);
@@ -134,16 +136,18 @@ public class GuiSelection extends GuiSuperType {
     @Override
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
-        int scroll = Mouse.getEventDWheel();
-        if(scroll!=0) {
-            if(scroll<1) {
-                if (this.canScrollDown) {
-                    this.scrollPos++;
-                    this.canScrollDown = this.numElements + this.scrollPos + 1 < this.searchedElements.size();
+        if(this.canScroll) {
+            int scroll = Mouse.getEventDWheel();
+            if (scroll != 0) {
+                if (scroll < 1) {
+                    if (this.canScrollDown) {
+                        this.scrollPos++;
+                        this.canScrollDown = this.numElements + this.scrollPos < this.searchedElements.size();
+                    }
+                } else if (this.scrollPos > 0) {
+                    this.scrollPos--;
+                    this.canScrollDown = true;
                 }
-            } else if(this.scrollPos>0) {
-                this.scrollPos--;
-                this.canScrollDown = true;
             }
         }
     }
@@ -171,8 +175,12 @@ public class GuiSelection extends GuiSuperType {
                         element.setSelected(true);
                     }
                 }
-                else for (Element element1 : this.searchedElements)
-                        element1.onClick(this, mouseX <= this.width / 2);
+                else {
+                    if(element.onClick(this, mouseX <= this.width / 2))
+                        for(Element otherElement : this.searchedElements)
+                            if(element instanceof DualElement && element!=otherElement)
+                                otherElement.setSelected(false);
+                }
             }
         }
     }
@@ -199,11 +207,13 @@ public class GuiSelection extends GuiSuperType {
 
     @Override
     protected void updateSearch() {
+        int prevScroll = this.scrollPos;
         this.searchedElements.clear();
         for(Element element : this.elementCache)
             if(checkSearch(element))
                 this.searchedElements.add(element);
         calculateScrollSize();
+        this.scrollPos = Math.min(prevScroll,this.canScroll ? this.searchedElements.size()-this.numElements : 0);
     }
 
     private boolean checkSearch(Element element) {
@@ -220,9 +230,28 @@ public class GuiSelection extends GuiSuperType {
         this.searchedElements.sort(Comparator.comparing(element -> element.getDisplay(true)));
         if(this.sortType>1) {
             Collections.reverse(this.searchedElements);
+            universalIsAlwaysFirst();
             return Translate.guiGeneric(false,"button","sort","reverse");
         }
+        universalIsAlwaysFirst();
         return Translate.guiGeneric(false,"button","sort","alphabetical");
+    }
+
+    private void universalIsAlwaysFirst() {
+        MonoElement universal = null;
+        for(Element element : this.searchedElements) {
+            if(element instanceof MonoElement) {
+                MonoElement mono = (MonoElement)element;
+                if(mono.id.matches("universal_trigger") || mono.id.matches("universal_song")) {
+                    universal = mono;
+                    break;
+                }
+            }
+        }
+        if(Objects.nonNull(universal)) {
+            this.searchedElements.remove(universal);
+            this.searchedElements.add(0,universal);
+        }
     }
 
     @Override
@@ -251,7 +280,7 @@ public class GuiSelection extends GuiSuperType {
         start = new Vec2f(start.x,this.height-this.spacing-24);
         end = new Vec2f(end.x,this.height-this.spacing-24);
         GuiUtil.drawLine(start,end,white(192), 1f, this.zLevel);
-        if(this.searchedElements.size()>this.numElements) drawScrollBar();
+        if(this.canScroll) drawScrollBar();
         if(hoverAny) {
             for (Element element : this.searchedElements) {
                 if(element==this.searchedElements.get(this.elementHover)) {
@@ -264,13 +293,14 @@ public class GuiSelection extends GuiSuperType {
 
     private void drawScrollBar() {
         float height = this.height-(this.spacing*2)-48;
-        float indices = this.searchedElements.size()-this.numElements;
+        float indices = (this.searchedElements.size()-this.numElements)+1;
         float perIndex = height/indices;
         int top = (int)(24+spacing+(perIndex*this.scrollPos));
         int x = this.width-1;
         Vec2f start = new Vec2f(x, top);
         if(perIndex<1) perIndex = 1;
-        Vec2f end = new Vec2f(x, (int)(top+perIndex));
+        int bottom = (int)(top+perIndex);
+        Vec2f end = new Vec2f(x, this.canScrollDown ? bottom : Math.max(bottom,this.height-this.spacing-24));
         GuiUtil.drawLine(start,end,white(192), 2f, this.zLevel);
     }
 
@@ -332,7 +362,7 @@ public class GuiSelection extends GuiSuperType {
 
         public abstract boolean onType(boolean backspace, char c);
 
-        public abstract void onClick(GuiSelection parent, boolean isLeft);
+        public abstract boolean onClick(GuiSelection parent, boolean isLeft);
 
         public abstract boolean onDelete(boolean isLeft);
 
@@ -423,12 +453,13 @@ public class GuiSelection extends GuiSuperType {
         }
 
         @Override
-        public void onClick(GuiSelection parent, boolean isLeft) {
+        public boolean onClick(GuiSelection parent, boolean isLeft) {
             if(this.hover && Objects.nonNull(this.onClick)) {
                 this.onClick.accept(parent);
                 parent.playGenericClickSound();
             }
-            this.isSelected = hover;
+            this.isSelected = this.hover;
+            return this.isSelected;
         }
 
         @Override
@@ -545,9 +576,15 @@ public class GuiSelection extends GuiSuperType {
         }
 
         @Override
-        public void onClick(GuiSelection parent, boolean isLeft) {
+        public void setSelected(boolean selected) {
+            this.isSelected = selected;
+        }
+
+        @Override
+        public boolean onClick(GuiSelection parent, boolean isLeft) {
             this.isSelected = this.hover;
             this.keySelected = isLeft;
+            return this.isSelected;
         }
 
         @Override

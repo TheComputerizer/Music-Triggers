@@ -6,6 +6,5 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 public interface IChannel {
     String getChannelName();
     AudioPlayer getPlayer();
-    void onTrackStart();
     void onTrackStop(AudioTrackEndReason endReason);
 }

@@ -32,10 +32,10 @@ public class BlankRecord extends EpicItem {
         if(!world.isRemote) {
             IBlockState state = world.getBlockState(pos);
             if (state.getBlock() instanceof MusicRecorder) {
-                MusicRecorder mr = (MusicRecorder) state.getBlock();
+                MusicRecorder recorder = (MusicRecorder) state.getBlock();
                 if (!state.getValue(MusicRecorder.HAS_RECORD) && !state.getValue(MusicRecorder.HAS_DISC)) {
-                    ItemStack itemstack = player.getHeldItem(hand);
-                    mr.insertRecord(world, pos, itemstack, player);
+                    ItemStack stack = player.getHeldItem(hand);
+                    recorder.insertRecord(world,pos,stack,player);
                 }
                 return EnumActionResult.SUCCESS;
             }
@@ -46,7 +46,7 @@ public class BlankRecord extends EpicItem {
     @Override
     @SideOnly(Side.CLIENT)
     public void addInformation(@Nonnull ItemStack stack, @Nullable World world, List<String> tooltip,
-                               @Nonnull ITooltipFlag flagIn) {
+                               @Nonnull ITooltipFlag flag) {
         tooltip.add(AssetUtil.extraLang(Constants.MODID,"item","blank_record","description",false));
     }
 }

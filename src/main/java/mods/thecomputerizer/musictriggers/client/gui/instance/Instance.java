@@ -10,6 +10,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISoundEventAccessor;
 import net.minecraft.client.audio.Sound;
 import net.minecraft.client.audio.SoundEventAccessor;
+import net.minecraft.client.gui.GuiScreen;
 import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nullable;
@@ -21,6 +22,7 @@ public class Instance {
 
     private static int preferredSortType = 1;
     private static boolean changedSort = false;
+    private GuiScreen mainParent;
     private final List<String> registeredSounds;
     private final HashMap<GuiType, AbstractConfig> moduleMap;
     private final Debug debugInstance;
@@ -44,8 +46,8 @@ public class Instance {
         return ret;
     }
 
-    public static GuiSuperType createGui() {
-        return new GuiRadial(null, GuiType.MAIN, new Instance(ConfigDebug.copyToGui(), ConfigRegistry.copyToGui(),
+    public static GuiSuperType createGui(@Nullable GuiScreen parent) {
+        return new GuiRadial(parent,null, GuiType.MAIN, new Instance(ConfigDebug.copyToGui(), ConfigRegistry.copyToGui(),
                 ChannelManager.createGuiData()));
     }
 
@@ -79,7 +81,8 @@ public class Instance {
             this.channelHolder.write(null);
             ClientEvents.initReload();
         }
-        Minecraft.getMinecraft().setIngameFocus();
+        if(Objects.isNull(this.mainParent)) Minecraft.getMinecraft().setIngameFocus();
+        else Minecraft.getMinecraft().displayGuiScreen(this.mainParent);
     }
 
     public void madeChanges(boolean needsReload) {
@@ -159,5 +162,13 @@ public class Instance {
         }
         Collections.sort(ret);
         return ret;
+    }
+
+    public void setMainParent(GuiScreen parent) {
+        this.mainParent = parent;
+    }
+
+    public GuiScreen getMainParent() {
+        return this.mainParent;
     }
 }

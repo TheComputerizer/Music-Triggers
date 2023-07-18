@@ -4,6 +4,7 @@ import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.util.TextUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
 import net.minecraft.client.resources.I18n;
 import org.apache.commons.lang3.ArrayUtils;
@@ -29,6 +30,15 @@ public class Translate {
     public static String triggerWithID(String triggerIdentifier) {
         String[] split = triggerIdentifier.split("-", 2);
         return guiGeneric(false,"trigger",split[0])+"-"+ split[1];
+    }
+
+    /**
+     * Formats the translation of a trigger with an identifier.
+     */
+    public static String triggerWithID(Table trigger) {
+        String id = triggerID(trigger);
+        id = id.matches("not_set") ? "" : "-"+id;
+        return guiGeneric(false,"trigger",trigger.getName())+id;
     }
 
     /**
@@ -123,12 +133,11 @@ public class Translate {
     }
 
     /**
-     * Hover translation for song info within instances.
+     * Hover translation for choosing a registered channel
     */
-    public static List<String> songInfoHover(Table audio) {
-        return Arrays.asList(guiGeneric(false,"parameter","song_info","volume","name")+ ": "+
-                        audio.getValOrDefault("volume",1f),
-                guiGeneric(false,"parameter","song_info","pitch","name")+ ": "+ audio.getValOrDefault("pitch",1f));
+    public static List<String> registeredChannelHover(int triggers, int songs) {
+        return Arrays.asList(triggers+" "+guiGeneric(false,"selection","channel","triggers"),
+                songs+" "+guiGeneric(false,"selection","channel","songs"));
     }
 
     /**
@@ -156,6 +165,18 @@ public class Translate {
             return new ArrayList<>();
         return Collections.singletonList(guiGeneric(false,"trigger","priority")+": "+
                 trigger.getValOrDefault("priority",1));
+    }
+
+    /**
+     * Hover translation for a trigger link instance.
+     */
+    public static List<String> triggerLinkHover(Table link) {
+        List<String> ret = new ArrayList<>();
+        List<String> from = link.getValOrDefault("required_triggers", new ArrayList<>());
+        ret.add(guiGeneric(false,"selection","link","from","hover")+" "+TextUtil.compileCollection(from));
+        List<String> to = link.getValOrDefault("linked_triggers", new ArrayList<>());
+        ret.add(guiGeneric(false,"selection","link","to","hover")+" "+TextUtil.compileCollection(to));
+        return ret;
     }
 
     public static List<String> loopHover(Table loop) {

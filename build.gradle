@@ -1,8 +1,7 @@
-//file:noinspection GroovyAssignabilityCheck
 
 plugins {
-    id 'net.minecraftforge.gradle' version '6.+'
-    id 'com.github.johnrengelman.shadow' version '8.1.+'
+    id 'net.minecraftforge.gradle' version '6.0.+'
+    id 'com.github.johnrengelman.shadow' version '7.1.+'
     id 'wtf.gofancy.fancygradle' version '1.1.+'
     id 'org.spongepowered.mixin' version '0.7.+'
 }
@@ -20,10 +19,10 @@ version = "${project.minecraft_version}-${project.mod_version}"
 group = project.maven_group
 archivesBaseName = project.base_name
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+java.toolchain.getLanguageVersion().set(JavaLanguageVersion.of(8))
 
 minecraft {
-    mappings channel: 'stable', version: project.mappings_version
+    mappings channel: 'stable', version: mappings_version
     accessTransformer = file('src/main/resources/META-INF/musictriggers_at.cfg')
     runs {
         def args = [
@@ -32,7 +31,7 @@ minecraft {
                 '-Dmixin.checks.interfaces=true'
         ]
         client {
-            workingDirectory project.file('run')
+            workingDirectory(file('run'))
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'debug'
             jvmArgs args
@@ -46,6 +45,8 @@ minecraft {
 }
 
 repositories {
+    google()
+    mavenCentral()
     maven {
         url = uri('https://www.cursemaven.com')
         content {
@@ -89,8 +90,9 @@ dependencies {
 
     //external dependencies
     shade("io.github.kostaskougios:cloning:${project.cloning_version}")
-    shade("com.github.walkyst:lavaplayer-fork:${project.lava_version}") {
+    shade("com.github.walkyst:lavaplayer-fork:1.4.2") {
         exclude module: 'commons-io'
+        exclude module: 'commons-codec'
     }
     //mixin
     shade("org.spongepowered:mixin:${project.mixin_version}") {
@@ -127,22 +129,25 @@ dependencies {
     runtimeOnly(fg.deobf("curse.maven:bookshelf-228525:${project.bookshelf_version}"))
     runtimeOnly(fg.deobf("curse.maven:orelib-307806:${project.orelib_version}"))
     runtimeOnly(fg.deobf("curse.maven:had-enough-items-557549:${project.hei_version}"))
+
+    //mods used for testing only
+    //noinspection DependencyNotationArgument
+    runtimeOnly name: "themidnight-0.3.5"
 }
 
 shadowJar {
     //necessary relocation
-    exclude "LICENSE.txt", "META-INF/MANIFSET.MF", "META-INF/maven/**", "META-INF/*.RSA", "META-INF/*.SF"
-    relocate 'org.apache.commons.codec', "${project.shadow_group}.apache.commons.codec"
-    relocate 'org.apache.commons.logging', "${project.shadow_group}.apache.commons.logging"
-    relocate 'org.apache.http', "${project.shadow_group}.apache.http"
-    relocate 'org.jsoup', "${project.shadow_group}.jsoup"
-    relocate 'org.objenesis', "${project.shadow_group}.objenesis"
-    relocate 'org.slf4j', "${project.shadow_group}.slf4j"
-    relocate 'net.iharder', "${project.shadow_group}.iharder"
-    relocate 'mozilla', "${project.shadow_group}"
-    relocate 'com.fasterxml', "${project.shadow_group}.fasterxml"
-    relocate 'com.rits', "${project.shadow_group}.rits"
-    relocate 'certificates', "${project.shadow_group}"
+    relocate 'org.apache.commons.codec', "${shadow_group}.apache.commons.codec"
+    relocate 'org.apache.commons.logging', "${shadow_group}.apache.commons.logging"
+    relocate 'org.apache.http', "${shadow_group}.apache.http"
+    relocate 'org.jsoup', "${shadow_group}.jsoup"
+    relocate 'org.objenesis', "${shadow_group}.objenesis"
+    relocate 'org.slf4j', "${shadow_group}.slf4j"
+    relocate 'net.iharder', "${shadow_group}.iharder"
+    relocate 'mozilla', "${shadow_group}"
+    relocate 'com.fasterxml', "${shadow_group}.fasterxml"
+    relocate 'com.rits', "${shadow_group}.rits"
+    relocate 'certificates', "${shadow_group}"
     configurations = [project.configurations.shadow]
     setArchiveClassifier('')
     mergeServiceFiles()
@@ -158,10 +163,10 @@ reobf {
 processResources {
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
     inputs.property 'version', project.version
-    inputs.property 'mcversion', project.minecraft_version
+    inputs.property 'mcversion', minecraft_version
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
-        expand 'version': project.version, 'mcversion': project.minecraft_version
+        expand 'version': project.version, 'mcversion': minecraft_version
     }
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'

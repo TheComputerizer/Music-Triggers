@@ -1,9 +1,11 @@
 package mods.thecomputerizer.musictriggers.registry;
 
 import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.registry.tiles.MusicRecorderEntity;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
-import mods.thecomputerizer.musictriggers.server.TriggerCommand;
+import mods.thecomputerizer.musictriggers.server.MTCommand;
+import mods.thecomputerizer.musictriggers.server.MusicTriggersCommand;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.creativetab.CreativeTabs;
@@ -38,7 +40,8 @@ public final class RegistryHandler {
 
     public static void registerCommands(FMLServerStartingEvent event) {
         if(!ConfigRegistry.CLIENT_SIDE_ONLY) {
-            event.registerServerCommand(new TriggerCommand());
+            event.registerServerCommand(new MusicTriggersCommand());
+            event.registerServerCommand(new MTCommand());
         }
     }
 
@@ -52,7 +55,7 @@ public final class RegistryHandler {
     public static void registerBlocks(RegistryEvent.Register<Block> event) {
         if(ConfigRegistry.REGISTER_DISCS) {
             event.getRegistry().register(BlockRegistry.MUSIC_RECORDER);
-            GameRegistry.registerTileEntity(MusicRecorderEntity.class,new ResourceLocation(Constants.MODID,"tile.music_recorder"));
+            GameRegistry.registerTileEntity(MusicRecorderEntity.class,MusicTriggers.res("tile.music_recorder"));
         }
     }
 
@@ -61,15 +64,19 @@ public final class RegistryHandler {
     @SubscribeEvent
     public static void onModelRegister(ModelRegistryEvent event) {
         if(ConfigRegistry.REGISTER_DISCS) {
-            ModelLoader.setCustomModelResourceLocation(MUSIC_TRIGGERS_RECORD, 0,
-                    new ModelResourceLocation(Objects.requireNonNull(MUSIC_TRIGGERS_RECORD.getRegistryName()), "inventory"));
-            ModelLoader.setCustomModelResourceLocation(CUSTOM_RECORD, 0,
-                    new ModelResourceLocation(Objects.requireNonNull(CUSTOM_RECORD.getRegistryName()), "inventory"));
-            ModelLoader.setCustomModelResourceLocation(BLANK_RECORD, 0,
-                    new ModelResourceLocation(Objects.requireNonNull(BLANK_RECORD.getRegistryName()), "inventory"));
-            ModelLoader.setCustomModelResourceLocation(MUSIC_RECORDER, 0,
-                    new ModelResourceLocation(Objects.requireNonNull(MUSIC_RECORDER.getRegistryName()), "normal"));
+            registerGenericItemModel(MUSIC_TRIGGERS_RECORD);
+            registerGenericItemModel(CUSTOM_RECORD);
+            registerGenericItemModel(BLANK_RECORD);
+            registerGenericItemModel(MUSIC_RECORDER);
         }
     }
 
+    @SideOnly(Side.CLIENT)
+    private static void registerGenericItemModel(Item item) {
+        ResourceLocation resource  = item.getRegistryName();
+        if(Objects.nonNull(resource)) {
+            ModelResourceLocation modelLoc = new ModelResourceLocation(resource,"inventory");
+            ModelLoader.setCustomModelResourceLocation(item,0,modelLoc);
+        }
+    }
 }

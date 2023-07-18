@@ -62,7 +62,8 @@ public class JukeboxChannel implements IChannel {
         if(isPlaying()) {
             if(isPlaying())  {
                 if(reloading) stopTrack();
-                else if(this.pos!=null && Minecraft.getMinecraft().world.getTileEntity(this.pos) instanceof BlockJukebox.TileEntityJukebox && Objects.requireNonNull(Minecraft.getMinecraft().world.getTileEntity(this.pos)).getBlockMetadata()==0)
+                else if(this.pos!=null && Minecraft.getMinecraft().world.getTileEntity(this.pos) instanceof BlockJukebox.TileEntityJukebox &&
+                        Objects.requireNonNull(Minecraft.getMinecraft().world.getTileEntity(this.pos)).getBlockMetadata()==0)
                     stopTrack();
             }
         }
@@ -90,11 +91,6 @@ public class JukeboxChannel implements IChannel {
 
     public void stopTrack() {
         this.getPlayer().stopTrack();
-    }
-
-    @Override
-    public void onTrackStart() {
-
     }
 
     @Override

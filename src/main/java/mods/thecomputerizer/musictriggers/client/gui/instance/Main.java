@@ -54,6 +54,17 @@ public class Main extends AbstractChannelConfig {
                     for(String parameter : Trigger.getAcceptedParameters(triggerName))
                         matcher.addCondition(parameter,val -> Trigger.isNonDefaultParameter(triggerName,parameter,val));
                     trigger.addMatcher(matcher);
+                    for(Table link : trigger.getTablesByName("link")) {
+                        VarMatcher linkMatcher = new VarMatcher();
+                        linkMatcher.addCondition("inherit_time",
+                                val -> !val.toString().toLowerCase().matches("false"));
+                        linkMatcher.addCondition("resume_after_link",
+                                val -> !val.toString().toLowerCase().matches("true"));
+                        linkMatcher.addCondition("linked_triggers",val -> val instanceof List<?>);
+                        linkMatcher.addCondition("required_triggers",val -> val instanceof List<?>);
+                        linkMatcher.addCondition("channel",val -> !val.toString().matches(getChannelName()));
+                        link.addMatcher(linkMatcher);
+                    }
                 }
             }
         }
@@ -131,7 +142,7 @@ public class Main extends AbstractChannelConfig {
         for(Table trigger : getOrCreateTable(null,"triggers").getChildren().values()) {
             if(Trigger.getAcceptedTriggers().contains(trigger.getName())) {
                 elements.add(new GuiSelection.MonoElement(makeTriggerID(trigger),
-                        index, Translate.songInstance(trigger.getName()), Translate.triggerElementHover(trigger)));
+                        index, Translate.triggerWithID(trigger), Translate.triggerElementHover(trigger)));
                 index++;
             }
         }
@@ -180,7 +191,7 @@ public class Main extends AbstractChannelConfig {
                         String triggerWithNumber = trigger.getArrIndex()+"-"+trigger.getName();
                         String identifier = !Trigger.isParameterAccepted(trigger.getName(),"identifier") ? "" :
                                 "-"+Translate.triggerID(trigger);
-                        return new GuiSelection.MonoElement(triggerWithNumber,trigger.getAbsoluteIndex()+1,
+                        return new GuiSelection.MonoElement(triggerWithNumber,0,
                                 Translate.guiGeneric(false,"trigger",trigger.getName())+identifier,
                                 Translate.triggerElementHover(trigger), (parent) -> Minecraft.getMinecraft().displayGuiScreen(
                                 new GuiParameters(parent,GuiType.PARAMETER_GENERIC, parent.getInstance(),
@@ -216,10 +227,58 @@ public class Main extends AbstractChannelConfig {
     }
 
     public List<GuiParameters.Parameter> triggerInfoParameters(Table trigger) {
-        return Trigger.getAcceptedParameters(trigger.getName())
-                .stream().map(parameter -> new GuiParameters.Parameter("trigger_info",parameter,trigger.getName()
-                        ,this.fileData.getOrCreateVar(trigger,parameter,Trigger.getDefaultParameter(trigger.getName(),parameter))))
+        List<GuiParameters.Parameter> ret = Trigger.getAcceptedParameters(trigger.getName())
+                .stream().map(parameter -> new GuiParameters.Parameter("trigger_info",parameter,trigger.getName(),
+                        this.fileData.getOrCreateVar(trigger,parameter, Trigger.getDefaultParameter(trigger.getName(),parameter)),
+                        Trigger.isDefaultList(parameter),null))
                 .collect(Collectors.toList());
+        ret.add(new GuiParameters.Parameter("trigger_info","links",(parent) ->
+                Minecraft.getMinecraft().displayGuiScreen(new GuiSelection(parent,GuiType.SELECTION_GENERIC,
+                        parent.getInstance(),Translate.guiGeneric(false,"selection","group","links")+" "+
+                        Translate.triggerWithID(trigger),true,true,() ->
+                        triggerLinkElements(trigger.getTablesByName("link")),linkInstanceButtons(parent,trigger)))));
+        return ret;
+    }
+
+    public List<GuiSelection.Element> triggerLinkElements(List<Table> links) {
+        List<GuiSelection.Element> elements = new ArrayList<>();
+        for(Table link : links) {
+            elements.add(new GuiSelection.MonoElement("link",0,
+                    Translate.guiGeneric(false,"selection","link")+" "+
+                            link.getValOrDefault("channel",getChannelName()), Translate.triggerLinkHover(link),
+                    (parent) -> Minecraft.getMinecraft().displayGuiScreen(new GuiParameters(parent,GuiType.PARAMETER_GENERIC,
+                            parent.getInstance(),"links",Translate.guiGeneric(false,
+                            "selection","group","links")+" "+ Translate.triggerWithID(link.getParent()),
+                            triggerLinkParameters(link),getChannelName())),id -> this.fileData.removeTable(link)));
+        }
+        return elements;
+    }
+
+    public ButtonSuperType[] linkInstanceButtons(GuiSuperType grandfather, Table trigger) {
+        List<ButtonSuperType> buttons = new ArrayList<>();
+        String displayName = Translate.guiGeneric(false, "button", "add_link");
+        int width = Minecraft.getMinecraft().fontRenderer.getStringWidth(displayName)+8;
+        List<String> hoverText = Translate.singletonHover("button","add_link","hover");
+        TriConsumer<GuiSuperType, ButtonSuperType, Integer> onClick =
+                (parent, button, type) -> {
+                    this.fileData.addTable(trigger,"link");
+                    parent.parentUpdate();
+                };
+        buttons.add(grandfather.createBottomButton(displayName,width,1,hoverText,onClick));
+        return buttons.toArray(new ButtonSuperType[]{});
+    }
+
+    private List<GuiParameters.Parameter> triggerLinkParameters(Table link) {
+        return Arrays.asList(new GuiParameters.Parameter("link", "channel",
+                        this.fileData.getOrCreateVar(link,"channel", getChannelName())),
+                new GuiParameters.Parameter("link", "inherit_time",
+                        this.fileData.getOrCreateVar(link,"inherit_time",false)),
+                new GuiParameters.Parameter("link", "resume_after_link",
+                        this.fileData.getOrCreateVar(link,"resume_after_link",true)),
+                new GuiParameters.Parameter("link", "required_triggers",
+                        this.fileData.getOrCreateVar(link,"required_triggers",new ArrayList<String>()),true),
+                new GuiParameters.Parameter("link", "linked_triggers",
+                        this.fileData.getOrCreateVar(link,"linked_triggers",new ArrayList<String>()),true));
     }
 
     public ButtonSuperType[] triggerInstanceButtons(GuiSuperType grandfather) {
@@ -282,10 +341,9 @@ public class Main extends AbstractChannelConfig {
                         return new GuiSelection.MonoElement(songWithNumber,song.getAbsoluteIndex()+1,
                                 Translate.songInstance(song.getName()), Translate.songHover(song.getAbsoluteIndex(),
                                 song.getValOrDefault("triggers",new ArrayList<>())),
-                                (parent) -> Minecraft.getMinecraft().displayGuiScreen(
-                                new GuiSelection(parent, GuiType.PARAMETER_GENERIC, parent.getInstance(),
-                                        Translate.withSongInstance(song.getName(), "selection", "group", "song_instance"),
-                                        false,false,() -> songInstanceElements(song))),
+                                (parent) -> Minecraft.getMinecraft().displayGuiScreen(new GuiParameters(parent,
+                                        GuiType.PARAMETER_GENERIC, parent.getInstance(), "song_info",
+                                                song.getName(), songInfoParameters(song),getChannelName())),
                                 (id) -> this.fileData.removeTable(song));
                     } else {
                         Comment comment = (Comment) type;
@@ -318,32 +376,19 @@ public class Main extends AbstractChannelConfig {
         TriConsumer<GuiSuperType, ButtonSuperType, Integer> onClick = (parent, button, type) ->
                 Minecraft.getMinecraft().displayGuiScreen(new GuiSelection(parent,GuiType.SELECTION_GENERIC, parent.getInstance(),
                 Translate.guiGeneric(false,"selection","group","potential_songs")+" "+getChannelName(),
-                        false,true, () -> parent.getInstance().getChannel(getChannelName()).getPotentialSongs(parent)));
+                        false,true, () -> parent.getInstance().getChannel(getChannelName())
+                        .getPotentialSongs(parent,false)));
         buttons.add(grandfather.createBottomButton(displayName,width,1,hoverText,onClick));
         return buttons.toArray(new ButtonSuperType[]{});
     }
 
-    public List<GuiSelection.Element> songInstanceElements(Table song) {
-        List<GuiSelection.Element> ret = new ArrayList<>();
-        ret.add(new GuiSelection.MonoElement("song_info",0,
-                Translate.guiGeneric(false, "selection", "song_info"), Translate.songInfoHover(song),
-                (parent) -> Minecraft.getMinecraft().displayGuiScreen(
-                new GuiParameters(parent, GuiType.PARAMETER_GENERIC, parent.getInstance(), "song_info",
-                        song.getName(), songInfoParameters(song),getChannelName())), null));
-        ret.add(new GuiSelection.MonoElement("loops",1,
-                Translate.guiGeneric(false, "selection", "loops"),
-                Translate.singletonHoverExtra(String.valueOf(song.getTablesByName("loop").size()), "selection", "loop", "set_loops"),
-                (parent) -> Minecraft.getMinecraft().displayGuiScreen(
-                new GuiSelection(parent, GuiType.SELECTION_GENERIC, parent.getInstance(),
-                        Translate.withSongInstance(song.getName(), "selection", "group", "loops"),true,
-                        true, () -> getLoopInstances(song),
-                        loopInstanceButtons(parent,song))), null));
-        return ret.stream().filter((Objects::nonNull))
-                .sorted(Comparator.comparingInt(GuiSelection.Element::getIndex)).collect(Collectors.toList());
-    }
-
     public List<GuiParameters.Parameter> songInfoParameters(Table audio) {
-        return Arrays.asList(new GuiParameters.Parameter("song_info","triggers",
+        return Arrays.asList(new GuiParameters.Parameter("song_info","loops",(parent) ->
+                        Minecraft.getMinecraft().displayGuiScreen(new GuiSelection(parent, GuiType.SELECTION_GENERIC,
+                                parent.getInstance(), Translate.withSongInstance(audio.getName(),"selection",
+                                "group","loops"), true,true,() -> getLoopInstances(audio),
+                                loopInstanceButtons(parent,audio)))),
+                new GuiParameters.Parameter("song_info","triggers",
                         this.fileData.getOrCreateVar(audio,"triggers",new ArrayList<String>())),
                 new GuiParameters.Parameter("song_info","volume",
                         this.fileData.getOrCreateVar(audio,"volume",1f)),

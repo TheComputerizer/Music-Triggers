@@ -111,6 +111,14 @@ public class Transitions extends AbstractChannelConfig {
                         this.fileData.getOrCreateVar(table,"scale_y", 1f)),
                 new GuiParameters.Parameter("title","subtitle_scale",
                         this.fileData.getOrCreateVar(table,"subtitle_scale", 0.75f)),
+                new GuiParameters.Parameter("title","time",
+                        this.fileData.getOrCreateVar(table,"time", 100)),
+                new GuiParameters.Parameter("title","fade_in",
+                        this.fileData.getOrCreateVar(table,"fade_in", 20)),
+                new GuiParameters.Parameter("title","fade_out",
+                        this.fileData.getOrCreateVar(table,"fade_out", 20)),
+                new GuiParameters.Parameter("title","opacity",
+                        this.fileData.getOrCreateVar(table,"opacity", 1f)),
                 new GuiParameters.Parameter("title","play_once",
                         this.fileData.getOrCreateVar(table,"play_once", false)),
                 new GuiParameters.Parameter("title","vague",
@@ -140,6 +148,10 @@ public class Transitions extends AbstractChannelConfig {
                         this.fileData.getOrCreateVar(table,"x", 0)),
                 new GuiParameters.Parameter("image","y",
                         this.fileData.getOrCreateVar(table,"y", 0)),
+                new GuiParameters.Parameter("image","animated",
+                        this.fileData.getOrCreateVar(table,"animated", false)),
+                new GuiParameters.Parameter("image","fps",
+                        this.fileData.getOrCreateVar(table,"fps", 20)),
                 new GuiParameters.Parameter("image","play_once",
                         this.fileData.getOrCreateVar(table,"play_once", false)),
                 new GuiParameters.Parameter("image","vague",
@@ -167,7 +179,7 @@ public class Transitions extends AbstractChannelConfig {
             TextFormatting color = type == 1 ? TextFormatting.WHITE : TextFormatting.RED;
             String extraThing = type == 1 ? "title_view" : "image_view";
             String display = Translate.guiGeneric(false, "button", extraThing);
-            button.updateDisplay(color + display,Minecraft.getMinecraft().fontRenderer);
+            button.updateDisplay(color + display,Minecraft.getMinecraft().fontRenderer,parent);
             parent.parentUpdate();
         };
         buttons.add(grandfather.createBottomButton(displayName,width,2,hoverText,onClick));

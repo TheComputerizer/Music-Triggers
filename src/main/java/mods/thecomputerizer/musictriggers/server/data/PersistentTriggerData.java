@@ -9,6 +9,7 @@ import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
+import net.minecraft.util.Tuple;
 import net.minecraft.util.math.MathHelper;
 import org.apache.logging.log4j.Level;
 
@@ -17,7 +18,7 @@ import java.util.*;
 public class PersistentTriggerData implements IPersistentTriggerData {
 
     private final Map<String,Map<String,Boolean>> toggleMap;
-    private final Map<String,Map<String,ImmutableList<String>>> playedOnceMap;
+    private final Map<String,Map<String,Tuple<ImmutableList<String>,Integer>>> playedOnceMap;
     private int preferredSort = 1;
 
     public PersistentTriggerData() {
@@ -50,10 +51,10 @@ public class PersistentTriggerData implements IPersistentTriggerData {
     }
 
     @Override
-    public void setAudioPlayed(String channel, String audio, List<String> audioTriggers) {
+    public void setAudioPlayed(String channel, String audio, List<String> audioTriggers, int timesPlayed) {
         if(this.playedOnceMap.containsKey(channel)) {
             if (Objects.nonNull(audio))
-                this.playedOnceMap.get(channel).put(audio, ImmutableList.copyOf(audioTriggers));
+                this.playedOnceMap.get(channel).put(audio,new Tuple<>(ImmutableList.copyOf(audioTriggers),timesPlayed));
             else MusicTriggers.logExternally(Level.WARN, "Could not set play status for null audio in " +
                     "channel {}!", channel);
         } else MusicTriggers.logExternally(Level.WARN,"Could not set play status for audio {} in " +
@@ -90,13 +91,14 @@ public class PersistentTriggerData implements IPersistentTriggerData {
                 triggersList.appendTag(triggerTag);
             }
             NBTTagList songsList = new NBTTagList();
-            for(Map.Entry<String,ImmutableList<String>> playStatus : this.playedOnceMap.get(channel).entrySet()) {
+            for(Map.Entry<String,Tuple<ImmutableList<String>,Integer>> playStatus : this.playedOnceMap.get(channel).entrySet()) {
                 NBTTagCompound audioTag = new NBTTagCompound();
                 audioTag.setString("name",playStatus.getKey());
                 NBTTagList audioTriggersList = new NBTTagList();
-                for(String trigger : playStatus.getValue())
+                for(String trigger : playStatus.getValue().getFirst())
                     audioTriggersList.appendTag(new NBTTagString(trigger));
                 audioTag.setTag("triggers",audioTriggersList);
+                audioTag.setInteger("timesPlayed",playStatus.getValue().getSecond());
                 songsList.appendTag(audioTag);
             }
             channelTag.setTag("toggleStatus",triggersList);
@@ -139,6 +141,7 @@ public class PersistentTriggerData implements IPersistentTriggerData {
                                 if (audioTagTest instanceof NBTTagCompound) {
                                     NBTTagCompound audioTag = (NBTTagCompound)audioTagTest;
                                     String name = audioTag.getString("name");
+                                    int timesPlayed = audioTag.getInteger("timesPlayed");
                                     if(!name.isEmpty()) {
                                         NBTBase audioTriggersListTest = audioTag.getTag("triggers");
                                         if(audioTriggersListTest instanceof NBTTagList) {
@@ -148,7 +151,8 @@ public class PersistentTriggerData implements IPersistentTriggerData {
                                                 if(audioTriggerTagTest instanceof NBTTagString)
                                                     triggers.add(((NBTTagString)audioTriggerTagTest).getString());
                                             if(!triggers.isEmpty())
-                                                this.playedOnceMap.get(channel).put(name,ImmutableList.copyOf(triggers));
+                                                this.playedOnceMap.get(channel).put(name,
+                                                        new Tuple<>(ImmutableList.copyOf(triggers),timesPlayed));
                                         }
                                     }
                                 }

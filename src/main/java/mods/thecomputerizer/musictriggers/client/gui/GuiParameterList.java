@@ -23,6 +23,7 @@ public class GuiParameterList extends GuiSuperType {
     private int indexHover;
     private int selectedIndex;
     private int scrollPos;
+    private boolean canScroll;
     private boolean canScrollDown;
     private boolean deleteMode;
     private boolean hasEdits;
@@ -49,12 +50,14 @@ public class GuiParameterList extends GuiSuperType {
             runningHeight+=textSlot;
         }
         this.numElements = runningTotal;
-        this.canScrollDown = this.numElements<this.searchedElements.size();
+        this.canScroll = this.numElements<this.searchedElements.size();
+        this.canScrollDown = this.canScroll;
         this.verticalSpace = (totalHeight-runningHeight)/2;
     }
 
     @Override
     protected void updateSearch() {
+        int prevScroll = this.scrollPos;
         this.searchedElements.clear();
         for(int i=0;i<this.parameter.getList().size();i++) {
             if(checkSearch(getParameter(i)))
@@ -63,6 +66,7 @@ public class GuiParameterList extends GuiSuperType {
         if(this.selectedIndex>=0)
             this.selectedIndex = this.searchedElements.contains(this.selectedIndex) ? this.selectedIndex : -1;
         calculateScrollSize();
+        this.scrollPos = Math.min(prevScroll,this.canScroll ? this.searchedElements.size()-this.numElements : 0);
     }
 
     @Override
@@ -87,7 +91,7 @@ public class GuiParameterList extends GuiSuperType {
                 (screen, button, mode) -> {
                     this.deleteMode = mode > 1;
                     TextFormatting color = mode == 1 ? TextFormatting.WHITE : TextFormatting.RED;
-                    button.updateDisplay(color + finalDisplayName,this.fontRenderer);
+                    button.updateDisplay(color + finalDisplayName,this.fontRenderer,this);
                 }), left);
     }
 
@@ -118,14 +122,16 @@ public class GuiParameterList extends GuiSuperType {
     @Override
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
-        int scroll = Mouse.getEventDWheel();
-        if(scroll!=0) {
-            if(scroll>1 && this.canScrollDown) {
-                this.scrollPos++;
-                this.canScrollDown = this.numElements+this.scrollPos<this.searchedElements.size();
-            } else if(this.scrollPos>0) {
-                this.scrollPos--;
-                this.canScrollDown = true;
+        if(this.canScroll) {
+            int scroll = Mouse.getEventDWheel();
+            if (scroll != 0) {
+                if (scroll > 1 && this.canScrollDown) {
+                    this.scrollPos++;
+                    this.canScrollDown = this.numElements + this.scrollPos < this.searchedElements.size();
+                } else if (this.scrollPos > 0) {
+                    this.scrollPos--;
+                    this.canScrollDown = true;
+                }
             }
         }
     }
@@ -145,13 +151,13 @@ public class GuiParameterList extends GuiSuperType {
         super.keyTyped(c, key);
         if(this.selectedIndex>=0) {
             if(checkCopy(key,getParameter(this.selectedIndex))) return;
-            String paste = checkPaste(key);
+            String paste = checkPaste(key).replaceAll("\"","");
             if(!paste.isEmpty()) {
                 updateKey(getParameter(this.selectedIndex)+paste);
                 updateSearch();
                 return;
             }
-            if(isKeyValid(c, key)) {
+            if(isKeyValid(c, key) && c!='"') {
                 addCharToKey(key == Keyboard.KEY_BACK, c);
                 updateSearch();
             }

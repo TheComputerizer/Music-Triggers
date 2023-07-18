@@ -7,6 +7,7 @@ import de.ellpeck.nyx.lunarevents.HarvestMoon;
 import de.ellpeck.nyx.lunarevents.StarShower;
 import io.netty.buffer.ByteBuf;
 import lumien.bloodmoon.Bloodmoon;
+import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.ClientEvents;
 import mods.thecomputerizer.musictriggers.client.MusicPicker;
@@ -46,12 +47,14 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
+import org.apache.commons.lang3.mutable.MutableLong;
 import org.apache.logging.log4j.Level;
 import org.orecruncher.dsurround.client.weather.Weather;
 import sereneseasons.api.season.Season;
 import sereneseasons.api.season.SeasonHelper;
 import weather2.api.WeatherDataHelper;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.BiFunction;
 
@@ -116,15 +119,15 @@ public class Trigger {
         addParameter("toggle_inactive_playable",false);
         addParameter("detection_range",16);
         addParameter("mob_targeting",true);
-        addParameter("health",100);
-        addParameter("horde_targeting_percentage",50);
-        addParameter("horde_health_percentage",50);
-        addParameter("mob_nbt","any");
+        addParameter("health",100f);
+        addParameter("horde_targeting_percentage",50f);
+        addParameter("horde_health_percentage",50f);
+        addParameter("mob_nbt","ANY");
         addParameter("infernal",Collections.singletonList("ANY"));
         addParameter("champion",Collections.singletonList("ANY"));
         addParameter("victory_id","not_set");
         addParameter("victory_timeout",20);
-        addParameter("victory_percentage",100);
+        addParameter("victory_percentage",100f);
         addParameter("moon_phase",0);
         addParameter("light_type","ANY");
         addParameter("is_whitelist",true);
@@ -329,9 +332,9 @@ public class Trigger {
                 Arrays.asList("identifier","items"),new ArrayList<>(),Trigger::checkInventory,true);
         addTrigger("blockentity",false,makeParameterSet(true,"resource_name","detection_range","detection_y_ratio"),
                 Arrays.asList("identifier","resource_name"),new ArrayList<>(),Trigger::checkForTile,true);
-        addTrigger("gamestage",false,Collections.singletonList("resource_name"),
+        addTrigger("gamestage",false,Collections.singletonList("gamestages"),
                 makeParameterSet(true,"resource_name","is_whitelist"),
-                Arrays.asList("identifier","resource_name","is_whitelist"),new ArrayList<>(),
+                Arrays.asList("identifier","resource_name"),new ArrayList<>(),
                 (trigger,player) -> trigger.whitelistHelper(GameStageHelper.clientHasAnyOf(
                         player,trigger.getResource())),true);
         addTrigger("bloodmoon",false,Arrays.asList("bloodmoon","nyx"),makeParameterSet(false),
@@ -473,6 +476,10 @@ public class Trigger {
         return ACCEPTED_PARAMETERS.containsKey(trigger) && ACCEPTED_PARAMETERS.get(trigger).contains(parameter);
     }
 
+    public static boolean isDefaultList(String parameter) {
+        return DEFAULT_PARAMETER_MAP.get(parameter).value instanceof List<?>;
+    }
+
     public static boolean isNonDefaultParameter(String trigger, String parameter, Object val) {
         return !DEFAULT_PARAMETER_MAP.get(parameter).isEquivalent(trigger,val);
     }
@@ -564,6 +571,11 @@ public class Trigger {
         return getName();
     }
 
+    @Override
+    public String toString() {
+        return getNameWithID();
+    }
+
     public void setParameter(String parameter, Object value) {
         if(parameter.matches("id")) parameter = "identifier";
         this.parameters.put(parameter, value);
@@ -630,9 +642,10 @@ public class Trigger {
     private List<String> getParameterStringList(String parameter) {
         List<?> defVal = getDefaultListParameter(parameter);
         Object val = this.parameters.get(parameter);
+        if(val instanceof String) return Collections.singletonList((String)val);
         if(!(val instanceof List<?>)) {
             MusicTriggers.logExternally(Level.ERROR,"Tried to access parameter {} as a list when it was not " +
-                    "stored as a list! Using default value {}",parameter,defVal);
+                    "stored as a list or string! Using default value {}",parameter,defVal);
             return makeStringList(defVal);
         }
         List<?> ret = (List<?>)val;
@@ -844,7 +857,7 @@ public class Trigger {
     }
 
     private boolean checkNBT(ItemStack stack, String nbt) {
-        if(nbt.matches("any")) return true;
+        if(nbt.matches("ANY")) return true;
         String[] parts = nbt.split(";");
         try {
             if(parts.length==0) return true;
@@ -1000,6 +1013,7 @@ public class Trigger {
         for(Table link : this.linkTables) {
             Link readLink = new Link(this.channel.getChannelName(),this,link);
             if (readLink.isValid()) {
+                Constants.debugError("VALIDATED LINK FROM {} TO {}",readLink.parentChannel,readLink.linkedChannel);
                 this.parsedLinkMap.put(index, readLink);
                 index++;
             } else MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Link table at index {} for song {} " +
@@ -1032,7 +1046,9 @@ public class Trigger {
         private void addTriggerDefault(String trigger, Object triggerValue) {
             if(this.value.getClass().isAssignableFrom(triggerValue.getClass()))
                 this.triggerValues.put(trigger, triggerValue);
-            else MusicTriggers.logExternally(Level.ERROR,"Cannot");
+            else MusicTriggers.logExternally(Level.ERROR,"Cannot add trigger based default for trigger {} with " +
+                    "type {} to parameter {} that has type {}",trigger,triggerValue.getClass().getName(),this.name,
+                    this.value.getClass().getName());
         }
 
         public Object getValue(String trigger) {
@@ -1090,16 +1106,24 @@ public class Trigger {
 
     public static final class Link {
 
-        private final Channel channel;
+        private final Channel parentChannel;
+        private final Channel linkedChannel;
         private final Trigger parentTrigger;
         private final List<Trigger> requiredTriggers;
         private final List<Trigger> linkTo;
+        private final boolean inheritTime;
+        private final boolean resume;
+        private final MutableLong interuptedTime;
+        private final MutableLong linkedTime;
+        private Audio resumeFrom;
+        private Audio resumeTo;
 
         private Link(String parentChannel, Trigger parentTrigger, Table data) {
+            this.parentChannel = parentTrigger.channel;
             String channel = data.getValOrDefault("channel","jukebox");
-            this.channel = Objects.nonNull(channel) && !channel.isEmpty() && !channel.matches("jukebox") ? null :
-                    ChannelManager.getNonDefaultChannel(channel);
-            if(Objects.isNull(this.channel)) {
+            this.linkedChannel = Objects.nonNull(channel) && !channel.isEmpty() && !channel.matches("jukebox") ?
+                    ChannelManager.getNonDefaultChannel(channel) : null;
+            if(Objects.isNull(this.linkedChannel)) {
                 MusicTriggers.logExternally(Level.WARN,"Channel [{}] - Incorrect channel name {} in link table " +
                         "for trigger {}!",parentChannel,channel,parentTrigger.getName());
                 this.parentTrigger = null;
@@ -1110,9 +1134,13 @@ public class Trigger {
                 this.parentTrigger = parentTrigger;
                 this.requiredTriggers = parseTriggers(parentChannel,parentTrigger,parentTrigger.channel.getRegisteredTriggers(),
                         data.getValOrDefault("required_triggers",new ArrayList<>()));
-                this.linkTo = parseTriggers(parentChannel,parentTrigger,this.channel.getRegisteredTriggers(),
+                this.linkTo = parseTriggers(parentChannel,parentTrigger,this.linkedChannel.getRegisteredTriggers(),
                         data.getValOrDefault("linked_triggers",new ArrayList<>()));
             }
+            this.inheritTime = data.getValOrDefault("inherit_time",false);
+            this.resume = data.getValOrDefault("resume_after_link",true);
+            this.interuptedTime = new MutableLong();
+            this.linkedTime = new MutableLong();
         }
 
         private List<Trigger> parseTriggers(String channel, Trigger parentTrigger, List<Trigger> triggers,
@@ -1135,7 +1163,7 @@ public class Trigger {
         }
 
         public boolean isValid() {
-            return Objects.nonNull(this.channel) && Objects.nonNull(this.parentTrigger) && !this.linkTo.isEmpty();
+            return Objects.nonNull(this.linkedChannel) && Objects.nonNull(this.parentTrigger) && !this.linkTo.isEmpty();
         }
 
         public boolean isActive(HashSet<Trigger> activeTriggers) {
@@ -1150,6 +1178,47 @@ public class Trigger {
 
         public boolean shouldLink(HashSet<Trigger> otherTriggers) {
             return otherTriggers.containsAll(this.linkTo);
+        }
+
+        public void activate() {
+            this.resumeFrom = null;
+            this.resumeTo = null;
+        }
+
+        public boolean inheritTime() {
+            return this.inheritTime;
+        }
+
+        public Channel getParentChannel() {
+            return this.parentChannel;
+        }
+
+        public Channel getLinkedChannel() {
+            return this.linkedChannel;
+        }
+
+        public boolean areChannelsDifferent() {
+            return this.parentChannel!=this.linkedChannel;
+        }
+
+        public long getTime(Channel channel) {
+            return channel==this.parentChannel ? this.resume ? this.inheritTime ? this.linkedTime.longValue() :
+                    this.interuptedTime.longValue() : 0L : this.linkedTime.longValue();
+        }
+
+        public void setTime(Channel channel, long time, @Nullable Audio audio) {
+            if(channel==this.parentChannel) {
+                this.interuptedTime.setValue(time);
+                this.linkedTime.setValue(time);
+                if(Objects.nonNull(audio)) this.resumeFrom = audio;
+            } else if(channel==this.linkedChannel) {
+                this.linkedTime.setValue(time);
+                if(Objects.nonNull(audio)) this.resumeTo = audio;
+            }
+        }
+
+        public Audio getResumedAudio(Channel channel) {
+            return channel==this.parentChannel ? this.resumeFrom : channel==this.linkedChannel ? this.resumeTo : null;
         }
     }
 

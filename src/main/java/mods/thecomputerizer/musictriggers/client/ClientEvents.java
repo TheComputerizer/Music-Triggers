@@ -9,7 +9,7 @@ import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.musictriggers.client.gui.GuiSuperType;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
-import mods.thecomputerizer.musictriggers.server.TriggerCommand;
+import mods.thecomputerizer.theimpossiblelibrary.util.TextUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.PositionedSoundRecord;
@@ -19,6 +19,8 @@ import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.text.Style;
@@ -29,7 +31,6 @@ import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
-import net.minecraftforge.event.CommandEvent;
 import net.minecraftforge.event.entity.player.AdvancementEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
@@ -43,6 +44,8 @@ import org.lwjgl.opengl.Display;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 
 @SuppressWarnings("deprecation")
@@ -57,18 +60,20 @@ public class ClientEvents {
     public static boolean IS_DISPLAY_FOCUSED = true;
 
     @SubscribeEvent
-    public static void playSound(PlaySoundEvent e) {
-        if(Objects.isNull(e.getSound())) return;
-        PositionedSoundRecord silenced = new PositionedSoundRecord(e.getSound().getSoundLocation(), e.getSound().getCategory(),
-                Float.MIN_VALUE*10000, 1F, false, 1, ISound.AttenuationType.LINEAR, 0F, 0F, 0F);
-        for(String s : ConfigDebug.BLOCKED_MOD_CATEGORIES) {
-            String modid = s.contains(";") ? s.substring(0,s.indexOf(';')) : s;
-            if(!e.getSound().getSoundLocation().getNamespace().matches(modid)) continue;
-            String categoryName = s.contains(";") && s.indexOf(';')+1<s.length() ? s.substring(s.indexOf(';')+1) : "music";
-            if(e.getSound().getCategory().getName().matches(categoryName)) {
-                if(ChannelManager.handleSoundEventOverride(e.getSound())) {
-                    e.setResultSound(silenced);
-                    return;
+    public static void playSound(PlaySoundEvent event) {
+        if(Objects.isNull(event.getSound())) return;
+        ResourceLocation location = event.getSound().getSoundLocation();
+        SoundCategory category = event.getSound().getCategory();
+        PositionedSoundRecord silenced = new PositionedSoundRecord(location,category,
+                1f/1000000f,1f,false,1,ISound.AttenuationType.LINEAR,0,0,0);
+        for(Map.Entry<String,HashSet<String>> modEntry : ConfigDebug.FORMATTED_BLOCKED_MODS.entrySet()) {
+            if(!modEntry.getKey().matches("all") && !location.getNamespace().matches(modEntry.getKey())) continue;
+            for(String categoryMatch : modEntry.getValue()) {
+                if(category.getName().toLowerCase().matches(categoryMatch.toLowerCase())) {
+                    if(ChannelManager.handleSoundEventOverride(event.getSound().getSound(),category)) {
+                        event.setResultSound(silenced);
+                        return;
+                    }
                 }
             }
         }
@@ -80,12 +85,12 @@ public class ClientEvents {
         GAINED_NEW_ADVANCEMENT = true;
     }
 
-    @SubscribeEvent
-    public static void onCommand(CommandEvent e) {
-        if(e.getCommand() instanceof TriggerCommand) {
-            TriggerCommand command = (TriggerCommand) e.getCommand();
-            if(!command.getIdentifier().matches("any")) COMMAND_MAP.put(command.getIdentifier(),true);
-        }
+    public static void onCommand(String identifier, boolean isCommand, boolean isReload, boolean isDebug) {
+        if(isCommand && !identifier.matches("not_set")) COMMAND_MAP.put(identifier,true);
+        else if(isDebug) {
+            ConfigDebug.SHOW_DEBUG = !ConfigDebug.SHOW_DEBUG;
+            ConfigDebug.write();
+        } else if(isReload) initReload();
     }
 
     public static boolean commandHelper(Trigger trigger) {
@@ -126,7 +131,7 @@ public class ClientEvents {
     @SubscribeEvent
     public static void onKeyInput(InputEvent.KeyInputEvent e) {
         if(Channel.GUI.isKeyDown() && ChannelManager.isButtonEnabled("gui"))
-            Minecraft.getMinecraft().displayGuiScreen(Instance.createGui());
+            Minecraft.getMinecraft().displayGuiScreen(Instance.createGui(null));
     }
 
     @SubscribeEvent
@@ -152,16 +157,20 @@ public class ClientEvents {
     public static void debugInfo(RenderGameOverlayEvent.Text e) {
         if(ConfigDebug.SHOW_DEBUG && IS_WORLD_RENDERED && SHOULD_RENDER_DEBUG) {
             e.getLeft().add("Music Triggers Debug Information");
-            for(Channel channel : ChannelManager.getAllChannels()) {
-                if (Objects.nonNull(channel.curPlayingName()))
-                    e.getLeft().add("Channel[" + channel.getChannelName() + "] Current Song: " + channel.curPlayingName());
+            for(Channel channel : ChannelManager.getOrderedChannels()) {
+                String curPlaying = channel.curPlayingName();
+                if (Objects.nonNull(curPlaying))
+                    e.getLeft().add("Channel[" + channel.getChannelName() + "] Current Song: " + curPlaying);
                 if (!ConfigDebug.CURRENT_SONG_ONLY || ConfigDebug.ALLOW_TIMESTAMPS) {
-                    if (!channel.formatSongTime().matches("No song playing"))
-                        e.getLeft().add("Channel[" + channel.getChannelName() + "] Current Song Time: " + channel.formatSongTime());
-                    if (Objects.nonNull(channel.formattedFadeOutTime()))
-                        e.getLeft().add("Channel[" + channel.getChannelName() + "] Fading Out: " + channel.formattedFadeOutTime());
-                    if (Objects.nonNull(channel.formattedFadeInTime()))
-                        e.getLeft().add("Channel[" + channel.getChannelName() + "] Fading In: " + channel.formattedFadeInTime());
+                    String time = channel.formatSongTime();
+                    String fadeOut = channel.formattedFadeOutTime();
+                    String fadeIn = channel.formattedFadeInTime();
+                    if (!time.matches("No song playing"))
+                        e.getLeft().add("Channel[" + channel.getChannelName() + "] Current Song Time: " + time);
+                    if (Objects.nonNull(fadeOut))
+                        e.getLeft().add("Channel[" + channel.getChannelName() + "] Fading Out: " + fadeOut);
+                    if (Objects.nonNull(fadeIn))
+                        e.getLeft().add("Channel[" + channel.getChannelName() + "] Fading In: " + fadeIn);
                 }
                 if (!ConfigDebug.CURRENT_SONG_ONLY) {
                     synchronized(channel.getPlayableTriggers()) {
@@ -186,7 +195,8 @@ public class ClientEvents {
             if (!ConfigDebug.CURRENT_SONG_ONLY) {
                 StringBuilder builder = new StringBuilder("Blocked Mods:");
                 boolean first = true;
-                for (String blocked : ConfigDebug.FORMATTED_BLOCKED_MODS) {
+                for(Map.Entry<String,HashSet<String>> modEntry : ConfigDebug.FORMATTED_BLOCKED_MODS.entrySet()) {
+                    String blocked = modEntry.getKey()+"["+TextUtil.listToString(modEntry.getValue(),",")+"]";
                     if(!first) {
                         if (checkStringWidth(e.getResolution(), builder + " " + blocked)) {
                             e.getLeft().add(builder.toString());

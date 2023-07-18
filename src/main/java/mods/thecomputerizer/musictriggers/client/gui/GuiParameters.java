@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.client.gui;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.Translate;
 import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
+import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Variable;
@@ -20,6 +21,7 @@ import javax.annotation.Nullable;
 import javax.vecmath.Point4f;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class GuiParameters extends GuiSuperType {
@@ -31,6 +33,7 @@ public class GuiParameters extends GuiSuperType {
     private int longestParameterName;
     private int rightSide;
     private int scrollPos;
+    private boolean canScroll;
     private boolean canScrollDown;
     private int numElements;
     private boolean mouseHoverRight;
@@ -74,39 +77,48 @@ public class GuiParameters extends GuiSuperType {
             runningHeight+=textSlot;
         }
         this.numElements = runningTotal;
-        this.canScrollDown = this.numElements < this.searchedParameters.size();
+        this.canScroll = this.numElements < this.searchedParameters.size();
+        this.canScrollDown = this.canScroll;
     }
 
     @Override
     protected void updateSearch() {
+        int prevScroll = 0;
         this.searchedParameters.clear();
         for(Parameter parameter : this.parameters)
             if (checkSearch(parameter.getDisplayName()))
                 this.searchedParameters.add(parameter);
         calculateScrollSize();
+        this.searchedParameters.sort((p1,p2) -> {
+            if(p1.varName.matches("loops") || p1.varName.matches("links")) return -1;
+            return p1.getDisplayName().compareToIgnoreCase(p2.getDisplayName());
+        });
+        this.scrollPos = Math.min(prevScroll,this.canScroll ? this.searchedParameters.size()-this.numElements : 0);
     }
 
     @Override
     public void handleMouseInput() throws IOException {
         super.handleMouseInput();
-        int scroll = Mouse.getEventDWheel();
-        if(scroll!=0) {
-            if(this.mouseHoverRight) {
-                if (scroll < 1) {
-                    if (this.canScrollDown) {
-                        this.scrollPos++;
-                        this.canScrollDown = this.numElements + this.scrollPos + 1 < this.searchedParameters.size();
+        if(this.canScroll) {
+            int scroll = Mouse.getEventDWheel();
+            if (scroll != 0) {
+                if (this.mouseHoverRight) {
+                    if (scroll < 1) {
+                        if (this.canScrollDown) {
+                            this.scrollPos++;
+                            this.canScrollDown = this.numElements + this.scrollPos + 1 < this.searchedParameters.size();
+                        }
+                    } else if (this.scrollPos > 0) {
+                        this.scrollPos--;
+                        this.canScrollDown = true;
                     }
-                } else if (this.scrollPos > 0) {
-                    this.scrollPos--;
-                    this.canScrollDown = true;
+                } else if (this.mouseHoverLeft) {
+                    for (Parameter parameter : this.searchedParameters)
+                        if (parameter.isSelected()) {
+                            parameter.scroll(scroll);
+                            break;
+                        }
                 }
-            } else if(this.mouseHoverLeft) {
-                for (Parameter parameter : this.searchedParameters)
-                    if (parameter.isSelected()) {
-                        parameter.scroll(scroll);
-                        break;
-                    }
             }
         }
     }
@@ -127,12 +139,12 @@ public class GuiParameters extends GuiSuperType {
         if(isActive(this)) {
             for(Parameter parameter : this.searchedParameters) {
                 if(checkCopy(key,parameter.onCopy())) continue;
-                String paste = checkPaste(key);
+                String paste = checkPaste(key).replaceAll("\"","");
                 if(!paste.isEmpty()) {
                     parameter.onPaste(paste);
                     continue;
                 }
-                if(isKeyValid(c, key)) parameter.onType(key == Keyboard.KEY_BACK, c);
+                if(isKeyValid(c, key) && c!='"') parameter.onType(key == Keyboard.KEY_BACK, c);
             }
         }
     }
@@ -207,6 +219,7 @@ public class GuiParameters extends GuiSuperType {
                             new Point4f(255,255,255,194),this.zLevel);
                     drawString(this.fontRenderer,parameter.getDisplayName(),textX,startY+(this.spacing/2),
                             GuiUtil.makeRGBAInt(50,50,50,255));
+                    if(Objects.nonNull(parameter.var)) drawHoveringText(parameter.var.getName(),mouseX,mouseY);
                 } else drawString(this.fontRenderer,parameter.getDisplayName(),textX,startY+(this.spacing/2),GuiUtil.WHITE);
                 startY+=(textHeight+this.spacing);
                 if (this.height-startY<(textHeight+(this.spacing/2))) break;
@@ -239,6 +252,8 @@ public class GuiParameters extends GuiSuperType {
     }
 
     public static class Parameter {
+        private final Consumer<GuiSuperType> specialClickFunc;
+        private final String varName;
         private final String display;
         private final String description;
         private final Variable var;
@@ -249,17 +264,32 @@ public class GuiParameters extends GuiSuperType {
         private int descLines;
         private int scrollPos;
 
-        public Parameter(String id, String trigger, Variable var) {
-            this(id,trigger,null,var);
+        public Parameter(String id, String trigger, Consumer<GuiSuperType> specialClickFunc) {
+            this(id,trigger,null,null,false,specialClickFunc);
         }
 
-        public Parameter(String id, String trigger, String extra, Variable var) {
+        public Parameter(String id, String trigger, Variable var) {
+            this(id,trigger,null,var,false,null);
+        }
+
+        public Parameter(String id, String trigger, Variable var, boolean forceList) {
+            this(id,trigger,null,var,forceList,null);
+        }
+
+        public Parameter(String id, String trigger, String extra, Variable var, boolean forceList,
+                         Consumer<GuiSuperType> specialClickFunc) {
+            this.varName = trigger;
             this.display = Translate.parameter("parameter",id,trigger,extra,"name");
             this.description = Translate.parameter("parameter",id,trigger,extra,"desc");
+            if(Objects.nonNull(var) && forceList && !(var.get() instanceof List<?>)) {
+                if(var.get() instanceof String) var.set(Collections.singletonList((String)var.get()));
+                else var.set(Trigger.getDefaultParameter(extra,trigger));
+            }
             this.var = var;
             this.hasEdits = false;
             this.descLines = 0;
             this.scrollPos = 0;
+            this.specialClickFunc = specialClickFunc;
         }
 
         public int displayNameLength(FontRenderer fontRenderer) {
@@ -301,16 +331,24 @@ public class GuiParameters extends GuiSuperType {
         public void onClick(boolean wasRightSide, GuiSuperType parent, int left, int right) {
             if(parent.isActive(parent)) {
                 if (wasRightSide) {
-                    this.selected = this.displayHover;
-                    if (this.selected)
-                        this.descLines = GuiUtil.howManyLinesWillThisBe(parent.mc.fontRenderer,this.description,left,right);
+                    if(Objects.isNull(this.var) && Objects.nonNull(this.specialClickFunc) && this.displayHover)
+                        this.specialClickFunc.accept(parent);
+                    else {
+                        this.selected = this.displayHover;
+                        if (this.selected)
+                            this.descLines = GuiUtil.howManyLinesWillThisBe(parent.mc.fontRenderer, this.description, left, right);
+                    }
                 } else if(this.selected) {
                     if(this.varHover) {
                         if (this.var.getAsBool(true).isPresent()) toggleCheckBox();
                         else if (this.var.get() instanceof List<?>) {
+                            String name = this.var.getName();
+                            String channel = name.matches("linked_triggers") ? this.var.getParent()
+                                    .getValOrDefault("channel",parent.getChannel()) : parent.getChannel();
                             GuiSuperType next;
-                            if(this.var.getName().matches("triggers"))
-                                next = parent.getInstance().createMultiSelectTriggersScreen(parent, parent.getChannel(),
+                            if(name.matches("triggers") || name.matches("required_triggers") ||
+                            name.matches("linked_triggers"))
+                                next = parent.getInstance().createMultiSelectTriggersScreen(parent, channel,
                                             (elements) -> {
                                                 this.setList(elements.stream().map(this::makeTriggerString)
                                                         .filter(Objects::nonNull).collect(Collectors.toList()));
@@ -389,6 +427,7 @@ public class GuiParameters extends GuiSuperType {
                 GuiUtil.bufferSquareTexture(new Vec2f((int)(topLeft.x+center),(int)(topLeft.y+center)),center,
                         ButtonType.getIcons("edit",this.varHover));
                 if(!this.varHover) return new ArrayList<>();
+                if(this.var.getName().matches("channel")) return Collections.singletonList(this.var.get().toString());
                 return ((List<?>)this.var.get()).isEmpty() ? Translate.singletonHoverExtra(this.display,"parameter_list","empty") :
                         Collections.singletonList(Translate.condenseList((List<?>)this.var.get()));
             } else {

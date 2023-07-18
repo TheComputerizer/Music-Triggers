@@ -21,7 +21,6 @@ import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.ResourcePackRepository;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Tuple;
-import net.minecraftforge.common.IRarity;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.FMLCommonHandler;
@@ -31,7 +30,6 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
-import net.minecraftforge.fml.relauncher.Side;
 import org.apache.commons.io.FileExistsException;
 import org.apache.logging.log4j.Level;
 
@@ -39,27 +37,26 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-@Mod(modid = Constants.MODID, name = Constants.NAME, version = Constants.VERSION, dependencies = Constants.DEPENDENCIES)
+@Mod(modid = Constants.MODID, name = Constants.NAME, version = Constants.VERSION, dependencies = Constants.DEPENDENCIES,
+        guiFactory = "mods.thecomputerizer.musictriggers.client.gui.Factory")
 public class MusicTriggers {
     private static LogUtil.ModLogger MOD_LOG;
-    private static final LinkedHashMap<Integer, Tuple<String, Integer>> ORDERED_LOG_MESSAGES = new LinkedHashMap<>();
-    private static int MESSAGE_COUNTER;
+    private static final List<Tuple<String, Integer>> ORDERED_LOG_MESSAGES = Collections.synchronizedList(new ArrayList<>());
     private static Random RANDOM;
 
     public MusicTriggers() throws IOException {
         MOD_LOG = LogUtil.create(Constants.MODID);
-        MESSAGE_COUNTER = 0;
         RANDOM = new Random();
         if (!Constants.CONFIG_DIR.exists())
             if(!Constants.CONFIG_DIR.mkdirs())
                 throw new FileExistsException("Unable to create file directory at "+Constants.CONFIG_DIR.getPath()+
                         "! Music Triggers is unable to load any further.");
-        ConfigRegistry.initialize(new File(Constants.CONFIG_DIR,"registration.toml"),FMLCommonHandler.instance().getSide()==Side.CLIENT);
+        ConfigRegistry.initialize(new File(Constants.CONFIG_DIR,"registration.toml"),FMLCommonHandler.instance().getSide().isClient());
         if(!ConfigRegistry.CLIENT_SIDE_ONLY) {
             NetworkHandler.queueServerPacketRegistries(PacketDynamicChannelInfo.class,PacketInitChannels.class,
                     PacketRequestServerConfig.class);
             NetworkHandler.queueClientPacketRegistries(PacketJukeBoxCustom.class, PacketMusicTriggersLogin.class,
-                    PacketSendServerConfig.class,PacketSyncServerInfo.class);
+                    PacketSendCommand.class,PacketSendServerConfig.class,PacketSyncServerInfo.class);
         }
     }
 
@@ -72,7 +69,7 @@ public class MusicTriggers {
 
     @EventHandler
     public void init(FMLInitializationEvent e) {
-        if(e.getSide()==Side.CLIENT) {
+        if(e.getSide().isClient()) {
             try {
                 ChannelManager.initClient(configFile("channels", "toml"), true);
                 ChannelManager.readResourceLocations();
@@ -186,9 +183,8 @@ public class MusicTriggers {
 
     public static void logExternally(Level level, String message, Object ... parameters) {
         MOD_LOG.log(level, message, parameters);
-        ORDERED_LOG_MESSAGES.put(MESSAGE_COUNTER,new Tuple<>("["+String.format("%-5s",level.toString())+"] "+
+        ORDERED_LOG_MESSAGES.add(new Tuple<>("["+String.format("%-5s",level.toString())+"] "+
                 LogUtil.injectParameters(message, parameters),colorizeLogLevel(level)));
-        MESSAGE_COUNTER++;
     }
 
     private static int colorizeLogLevel(Level level) {
@@ -199,13 +195,12 @@ public class MusicTriggers {
         return GuiUtil.makeRGBAInt(100,0,0,255);
     }
 
-    public static Map<Integer,Tuple<String,Integer>> getLogEntries() {
-        return Collections.unmodifiableMap(ORDERED_LOG_MESSAGES);
+    public static List<Tuple<String,Integer>> getLogEntries() {
+        return Collections.unmodifiableList(ORDERED_LOG_MESSAGES);
     }
 
     public static void clearLog() {
         ORDERED_LOG_MESSAGES.clear();
-        MESSAGE_COUNTER = 0;
     }
 
     public static <T> T clone(final T o) {

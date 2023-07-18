@@ -1,10 +1,12 @@
 package mods.thecomputerizer.musictriggers.registry.items;
 
 import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.network.PacketJukeBoxCustom;
 import mods.thecomputerizer.musictriggers.registry.BlockRegistry;
 import mods.thecomputerizer.musictriggers.registry.blocks.MusicRecorder;
-import mods.thecomputerizer.musictriggers.network.PacketJukeBoxCustom;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
+import mods.thecomputerizer.theimpossiblelibrary.util.object.ItemUtil;
 import net.minecraft.block.BlockJukebox;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.util.ITooltipFlag;
@@ -16,7 +18,6 @@ import net.minecraft.stats.StatList;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
@@ -30,12 +31,16 @@ import java.util.Objects;
 public class MusicTriggersRecord extends EpicItem {
 
     public MusicTriggersRecord() {
-        addPropertyOverride(new ResourceLocation(Constants.MODID, "trigger"),
+        addPropertyOverride(MusicTriggers.res("trigger"),
                 (stack, worldIn, entityIn) -> {
-                    if(stack.getTagCompound()!=null && stack.getTagCompound().hasKey("triggerID"))
-                        return mapTriggerToFloat(stack.getTagCompound().getString("triggerID"));
-                    return 0f;
+                    String triggerID = tagString(stack,"triggerID");
+                    return Objects.nonNull(triggerID) ? mapTriggerToFloat(triggerID) : 0f;
                 });
+    }
+
+    protected String tagString(ItemStack stack,String key) {
+        String ret = ItemUtil.getOrCreateTag(stack).getString(key);
+        return ret.matches("") ? null : ret;
     }
 
     @Override
@@ -44,7 +49,7 @@ public class MusicTriggersRecord extends EpicItem {
                                       @Nonnull EnumHand hand, @Nonnull EnumFacing facing, float hitX, float hitY,
                                       float hitZ) {
         IBlockState state = world.getBlockState(pos);
-        if(state.getBlock()== BlockRegistry.MUSIC_RECORDER && !state.getValue(MusicRecorder.HAS_RECORD)
+        if(state.getBlock()==BlockRegistry.MUSIC_RECORDER && !state.getValue(MusicRecorder.HAS_RECORD)
                 && !state.getValue(MusicRecorder.HAS_DISC)) {
             if (!world.isRemote) {
                 MusicRecorder mr = (MusicRecorder) state.getBlock();
@@ -53,14 +58,14 @@ public class MusicTriggersRecord extends EpicItem {
                 stack.shrink(1);
             }
             return EnumActionResult.SUCCESS;
-        } else if (state.getBlock() == Blocks.JUKEBOX && !state.getValue(BlockJukebox.HAS_RECORD)) {
+        } else if (state.getBlock()==Blocks.JUKEBOX && !state.getValue(BlockJukebox.HAS_RECORD)) {
             if (!world.isRemote) {
                 ItemStack stack = player.getHeldItem(hand);
-                if (stack.getTagCompound() != null && stack.getTagCompound().hasKey("trackID") &&
-                        stack.getTagCompound().hasKey("channelFrom")) {
+                String channel = tagString(stack,"channelFrom");
+                String trackID = tagString(stack,"trackID");
+                if (Objects.nonNull(channel) && Objects.nonNull(trackID)) {
                     ((BlockJukebox) state.getBlock()).insertRecord(world, pos, state, stack);
-                    new PacketJukeBoxCustom(pos,stack.getTagCompound().getString("channelFrom"),
-                            stack.getTagCompound().getString("trackID")).addPlayers((EntityPlayerMP) player).send();
+                    new PacketJukeBoxCustom(pos,channel,trackID).addPlayers((EntityPlayerMP) player).send();
                     stack.shrink(1);
                     player.addStat(StatList.RECORD_PLAYED);
                 }
@@ -70,16 +75,26 @@ public class MusicTriggersRecord extends EpicItem {
         return EnumActionResult.PASS;
     }
 
+    @SideOnly(Side.CLIENT)
+    protected String getLang(String ... elements) {
+        if(Objects.isNull(elements) || elements.length==0) return Constants.MODID;
+        if(elements.length==1) return elements[0]+"."+Constants.MODID;
+        StringBuilder builder = new StringBuilder(elements[0]+"."+Constants.MODID+".");
+        for(int i=1;i<elements.length;i++) {
+            builder.append(elements[i]);
+            if(i<elements.length-1) builder.append(".");
+        }
+        return AssetUtil.customLang(builder.toString(),false);
+    }
+
     @Override
     @SideOnly(Side.CLIENT)
     public void addInformation(ItemStack stack, @Nullable World world, @Nonnull List<String> tooltip,
                                @Nonnull ITooltipFlag flag) {
-        if(stack.hasTagCompound() && Objects.requireNonNull(stack.getTagCompound()).hasKey("trackID"))
-            tooltip.add(
-                    AssetUtil.extraLang(Constants.MODID,"item","music_triggers_record","description",false)
-                            +": "+stack.getTagCompound().getString("trackID"));
-        else tooltip.add(
-                AssetUtil.extraLang(Constants.MODID,"item","music_triggers_record","blank_description",false));
+        String trackID = tagString(stack,"trackID");
+        if(Objects.nonNull(trackID))
+            tooltip.add(getLang("item","music_triggers_record","description")+": "+trackID);
+        else tooltip.add(getLang("item","music_triggers_record","blank_description"));
     }
 
     private float mapTriggerToFloat(String trigger) {

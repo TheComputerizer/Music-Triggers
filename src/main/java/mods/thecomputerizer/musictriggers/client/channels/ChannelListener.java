@@ -30,11 +30,6 @@ public class ChannelListener extends AudioEventAdapter {
     }
 
     @Override
-    public void onTrackStart(AudioPlayer player, AudioTrack track) {
-        this.channel.onTrackStart();
-    }
-
-    @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
         this.channel.onTrackStop(endReason);
     }

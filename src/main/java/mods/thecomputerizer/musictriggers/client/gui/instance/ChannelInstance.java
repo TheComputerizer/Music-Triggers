@@ -118,29 +118,39 @@ public class ChannelInstance {
                         this.info.getOrCreateVar("explicit_overrides",false)));
     }
 
-    public List<GuiSelection.Element> getPotentialSongs(GuiSuperType grandfather) {
-        return Stream.of(makeSongList(getFolderSongs(),grandfather,0),
-                        makeSongList(this.redirectInstance.internalSongs(),grandfather,1),
-                        makeSongList(this.redirectInstance.externalSongs(),grandfather,2))
+    public List<GuiSelection.Element> getPotentialSongs(GuiSuperType grandfather, boolean isJukebox) {
+        return Stream.of(makeSongList(getFolderSongs(),grandfather,0,isJukebox),
+                        makeSongList(this.redirectInstance.internalSongs(),grandfather,1,isJukebox),
+                        makeSongList(this.redirectInstance.externalSongs(),grandfather,2,isJukebox))
                 .flatMap(Collection::stream)
                 .sorted(Comparator.comparingInt(GuiSelection.Element::getIndex))
                 .collect(Collectors.toList());
     }
 
-    private List<GuiSelection.Element> makeSongList(Map<String, String> songMap, GuiSuperType grandfather, int priorityIndex) {
+    private List<GuiSelection.Element> makeSongList(Map<String, String> songMap, GuiSuperType grandfather,
+                                                    int priorityIndex, boolean isJukebox) {
         return songMap.entrySet().stream()
                 .map(entry -> new GuiSelection.MonoElement(entry.getKey(),priorityIndex,
                         Translate.selectionSong(entry.getKey(),"selection",entry.getKey()),
-                        Collections.singletonList(entry.getValue()),(parent) -> {
-                    this.mainInstance.getFileData().addTable(this.mainInstance.getOrCreateTable(null,"songs"),entry.getKey());
-                    grandfather.parentUpdate();
-                    Minecraft.getMinecraft().displayGuiScreen(grandfather);
-                })).collect(Collectors.toList());
+                        Collections.singletonList(entry.getValue()),songEntryClick(grandfather,entry.getKey(),isJukebox)))
+                .collect(Collectors.toList());
+    }
+
+    private Consumer<GuiSelection> songEntryClick(GuiSuperType grandfather, String key, boolean isJukebox) {
+        return isJukebox ? parent -> {
+            this.jukeboxInstance.addRecord(key);
+            grandfather.parentUpdate();
+            Minecraft.getMinecraft().displayGuiScreen(grandfather);
+        } : parent -> {
+            this.mainInstance.getFileData().addTable(this.mainInstance.getOrCreateTable(null,"songs"),key);
+            grandfather.parentUpdate();
+            Minecraft.getMinecraft().displayGuiScreen(grandfather);
+        };
     }
 
     private Map<String, String> getFolderSongs() {
         File[] files = new File(this.info.getValOrDefault("songs_folder","config/MusicTriggers/songs")).listFiles();
-        if(files!=null)
+        if(Objects.nonNull(files))
             return Arrays.stream(files).collect(Collectors.toMap(file -> noEXT(file.getName()),
                     file -> this.info.getValOrDefault("songs_folder","config/MusicTriggers/songs")));
         return new HashMap<>();
@@ -148,6 +158,14 @@ public class ChannelInstance {
 
     private String noEXT(String filename) {
         return filename.substring(0, filename.lastIndexOf('.'));
+    }
+
+    public int getRegisteredTriggerCount() {
+        return this.mainInstance.getOrCreateTable(null,"triggers").getChildren().size();
+    }
+
+    public int getRegisteredSongCount() {
+        return this.mainInstance.getOrCreateTable(null,"songs").getChildren().size();
     }
 
     public List<String> write() {

@@ -1,6 +1,9 @@
 package mods.thecomputerizer.musictriggers;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,4 +17,24 @@ public class Constants {
     public static final String DEPENDENCIES = "required-after:theimpossiblelibrary;";
     public static final Logger MAIN_LOG = LogManager.getLogger(MODID);
     public static final File CONFIG_DIR = new File("config/MusicTriggers");
+
+    /**
+     * In case I forget to or choose not remove some log spam, this will only ensure it only happens in dev
+     */
+    private static final boolean IS_DEV = false;
+
+    /**
+     * Used for dev purposes only for easier debuging purposes
+     */
+    @SideOnly(Side.CLIENT)
+    public static void debugError(String message, Object ... parameters) {
+        if(IS_DEV && !Minecraft.getMinecraft().isGamePaused()) MAIN_LOG.error(message,parameters);
+    }
+
+    /**
+     * Minecraft is a client only class so it cant be checked from the server without packets
+     */
+    public static void debugErrorServer(String message, Object ... parameters) {
+        if(IS_DEV) MAIN_LOG.error(message,parameters);
+    }
 }
