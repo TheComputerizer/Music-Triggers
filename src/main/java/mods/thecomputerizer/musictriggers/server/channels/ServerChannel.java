@@ -70,7 +70,7 @@ public class ServerChannel {
 
     @SideOnly(Side.CLIENT)
     public Channel convertToClient() throws IOException {
-        return new Channel(this.info,false,this.main,this.transitions,this.commands,this.toggles,this.redirect,
+        return new Channel(this.info,this.main,this.transitions,this.commands,this.toggles,this.redirect,
                 this.jukebox);
     }
 }
