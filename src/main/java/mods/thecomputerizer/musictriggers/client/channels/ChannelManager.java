@@ -70,6 +70,7 @@ public class ChannelManager {
     public static char blinkerChar = ' ';
     private static int tickCounter = 0;
     public static boolean reloading = true;
+    private static boolean isServerInfoInitialized = false;
     private static boolean caughtNullJukebox = false;
     private static boolean isResourceControlled = false;
     private static boolean isServerdControlled = false;
@@ -313,6 +314,10 @@ public class ChannelManager {
         }
     }
 
+    public static void finalizeServerChannelInit() {
+        isServerInfoInitialized = true;
+    }
+
     public static void syncInfoFromServer(ClientSync sync) {
         try {
             getNonDefaultChannel(sync.getChannel()).sync(sync);
@@ -411,7 +416,7 @@ public class ChannelManager {
                         for(Channel channel : getAllChannels())
                             if(channel.isNotFrozen()) channel.tickSlow();
                         runToggles();
-                        sendUpdatePacket();
+                        if(isServerInfoInitialized) sendUpdatePacket();
                     }
                     if (tickCounter % 10 == 0) {
                         if (blinkerChar == ' ') blinkerChar = '|';
@@ -570,6 +575,7 @@ public class ChannelManager {
     }
 
     public static void onClientLogout() {
+        isServerInfoInitialized = false;
         boolean needsReload = isServerdControlled;
         isServerdControlled = false;
         if(needsReload) {

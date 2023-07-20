@@ -55,8 +55,9 @@ public class MusicTriggers {
         if(!ConfigRegistry.CLIENT_SIDE_ONLY) {
             NetworkHandler.queueServerPacketRegistries(PacketDynamicChannelInfo.class,PacketInitChannels.class,
                     PacketRequestServerConfig.class);
-            NetworkHandler.queueClientPacketRegistries(PacketJukeBoxCustom.class, PacketMusicTriggersLogin.class,
-                    PacketSendCommand.class,PacketSendServerConfig.class,PacketSyncServerInfo.class);
+            NetworkHandler.queueClientPacketRegistries(PacketFinishedServerInit.class,PacketJukeBoxCustom.class,
+                    PacketMusicTriggersLogin.class, PacketSendCommand.class,PacketSendServerConfig.class,
+                    PacketSyncServerInfo.class);
         }
     }
 

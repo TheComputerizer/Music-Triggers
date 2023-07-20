@@ -7,6 +7,7 @@ import io.netty.buffer.ByteBuf;
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.data.Trigger;
+import mods.thecomputerizer.musictriggers.network.PacketFinishedServerInit;
 import mods.thecomputerizer.musictriggers.network.PacketSyncServerInfo;
 import mods.thecomputerizer.musictriggers.registry.ItemRegistry;
 import mods.thecomputerizer.musictriggers.server.PersistentDataHandler;
@@ -47,6 +48,9 @@ public class ServerTriggerStatus {
     public static void initializePlayerChannels(ByteBuf buf) {
         ServerTriggerStatus data = new ServerTriggerStatus(buf);
         SERVER_DATA.put(data.playerUUID.toString(),data);
+        EntityPlayerMP player = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList()
+                .getPlayerByUUID(data.playerUUID);
+        new PacketFinishedServerInit().addPlayers(player).send();
     }
 
     @SuppressWarnings("ConstantValue")
@@ -146,7 +150,7 @@ public class ServerTriggerStatus {
         this.mappedTriggers = NetworkUtil.readGenericMap(buf,NetworkUtil::readString,buf1 ->
                 NetworkUtil.readGenericList(buf1,buf2 -> TomlPart.getByID(NetworkUtil.readString(buf2)).decode(buf2,null))
                 .stream().filter(Table.class::isInstance).map(Table.class::cast).collect(Collectors.toList()));
-        this.allTriggers = Collections.synchronizedList(mappedTriggers.values().stream().flatMap(Collection::stream)
+        this.allTriggers = Collections.synchronizedList(this.mappedTriggers.values().stream().flatMap(Collection::stream)
                 .collect(Collectors.toList()));
         this.victoryTriggers = initVictories();
         this.menuSongs = NetworkUtil.readGenericMap(buf,NetworkUtil::readString,
