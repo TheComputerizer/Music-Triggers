@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 
 public class ServerTriggerStatus {
     private static final Map<String,ServerTriggerStatus> SERVER_DATA = new HashMap<>();
-    private static final Map<BossInfoServer,Class<? extends EntityLivingBase>> INSTANTIATED_BOSS_BARS = new HashMap<>();
+    private static final Map<BossInfoServer,Class<? extends EntityLivingBase>> INSTANTIATED_BOSS_BARS = Collections.synchronizedMap(new HashMap<>());
     private static final Map<BossInfoServer,EntityLivingBase> BOSS_BAR_ENTITIES = new HashMap<>();
     private static final List<String> NBT_MODES = Arrays.asList("KEY_PRESENT","VAL_PRESENT","GREATER","LESSER","EQUAL","INVERT");
     private static final List<String> TRIGGER_HOLDERS = Arrays.asList("structure","mob","victory","pvp");
@@ -96,8 +96,10 @@ public class ServerTriggerStatus {
         BOSS_BAR_ENTITIES.entrySet().removeIf(entry -> {
             boolean ret = entry.getKey().getPercent()<=0;
             if(ret) {
-                INSTANTIATED_BOSS_BARS.remove(entry.getKey());
-                Constants.debugErrorServer("BOSS BAR REMOVED");
+                synchronized (INSTANTIATED_BOSS_BARS) {
+                    INSTANTIATED_BOSS_BARS.remove(entry.getKey());
+                    Constants.debugErrorServer("BOSS BAR REMOVED");
+                }
             }
             return ret;
         });
@@ -110,14 +112,18 @@ public class ServerTriggerStatus {
     }
 
     public static void bossBarInstantiated(BossInfoServer info, Class<? extends EntityLivingBase> entityClass) {
-        Constants.debugErrorServer("BOSS BAR MADE");
-        INSTANTIATED_BOSS_BARS.put(info,entityClass);
+        synchronized (INSTANTIATED_BOSS_BARS) {
+            Constants.debugErrorServer("BOSS BAR MADE");
+            INSTANTIATED_BOSS_BARS.put(info, entityClass);
+        }
     }
 
     public static void checkIfBossSpawned(EntityLivingBase entity) {
-        for(Map.Entry<BossInfoServer,Class<? extends EntityLivingBase>> entry : INSTANTIATED_BOSS_BARS.entrySet())
-            if(entry.getValue()==entity.getClass())
-                BOSS_BAR_ENTITIES.put(entry.getKey(),entity);
+        synchronized (INSTANTIATED_BOSS_BARS) {
+            for (Map.Entry<BossInfoServer, Class<? extends EntityLivingBase>> entry : INSTANTIATED_BOSS_BARS.entrySet())
+                if (entry.getValue() == entity.getClass())
+                    BOSS_BAR_ENTITIES.put(entry.getKey(), entity);
+        }
     }
 
     public static ItemStack recordAudioData(UUID playerUUID, ItemStack recordStack) {

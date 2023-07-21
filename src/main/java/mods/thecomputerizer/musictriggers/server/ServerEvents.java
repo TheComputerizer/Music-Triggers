@@ -39,9 +39,8 @@ public class ServerEvents {
     @SubscribeEvent
     public static void onEntitySpawned(EntityJoinWorldEvent e) {
         Entity entity = e.getEntity();
-        if(entity instanceof EntityLivingBase) {
+        if(entity instanceof EntityLivingBase)
             ServerTriggerStatus.checkIfBossSpawned((EntityLivingBase)entity);
-        }
     }
 
     @SubscribeEvent
