@@ -2,7 +2,7 @@ package mods.thecomputerizer.musictriggers.client.gui;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import mods.thecomputerizer.musictriggers.client.Translate;
-import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
+import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
 import net.minecraft.client.Minecraft;
@@ -25,6 +25,7 @@ public class GuiParameterList extends GuiSuperType {
     private int indexHover;
     private int selectedIndex;
     private int scrollPos;
+    private boolean canScroll;
     private boolean canScrollDown;
     private boolean deleteMode;
     private boolean hasEdits;
@@ -51,12 +52,14 @@ public class GuiParameterList extends GuiSuperType {
             runningHeight+=textSlot;
         }
         this.numElements = runningTotal;
-        this.canScrollDown = this.numElements<this.searchedElements.size();
+        this.canScroll = this.numElements<this.searchedElements.size();
+        this.canScrollDown = this.canScroll;
         this.verticalSpace = (totalHeight-runningHeight)/2;
     }
 
     @Override
     protected void updateSearch() {
+        int prevScroll = this.scrollPos;
         this.searchedElements.clear();
         for(int i=0;i<this.parameter.getList().size();i++) {
             if(checkSearch(getParameter(i)))
@@ -65,6 +68,7 @@ public class GuiParameterList extends GuiSuperType {
         if(this.selectedIndex>=0)
             this.selectedIndex = this.searchedElements.contains(this.selectedIndex) ? this.selectedIndex : -1;
         calculateScrollSize();
+        this.scrollPos = Math.min(prevScroll,this.canScroll ? this.searchedElements.size()-this.numElements : 0);
     }
 
     @Override
@@ -89,7 +93,7 @@ public class GuiParameterList extends GuiSuperType {
                 (screen, button, mode) -> {
                     this.deleteMode = mode > 1;
                     TextFormatting color = mode == 1 ? TextFormatting.WHITE : TextFormatting.RED;
-                    button.updateDisplay(color + finalDisplayName);
+                    button.updateDisplay(color + finalDisplayName,this.font,this);
                 }), left);
     }
 
@@ -119,15 +123,17 @@ public class GuiParameterList extends GuiSuperType {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scroll) {
-        if(scroll!=0) {
-            if(scroll>1 && this.canScrollDown) {
-                this.scrollPos++;
-                this.canScrollDown = this.numElements+this.scrollPos<this.searchedElements.size();
-                return true;
-            } else if(this.scrollPos>0) {
-                this.scrollPos--;
-                this.canScrollDown = true;
-                return true;
+        if(this.canScroll) {
+            if (scroll != 0) {
+                if (scroll > 1 && this.canScrollDown) {
+                    this.scrollPos++;
+                    this.canScrollDown = this.numElements + this.scrollPos < this.searchedElements.size();
+                    return true;
+                } else if (this.scrollPos > 0) {
+                    this.scrollPos--;
+                    this.canScrollDown = true;
+                    return true;
+                }
             }
         }
         return false;
@@ -150,10 +156,19 @@ public class GuiParameterList extends GuiSuperType {
     @Override
     public boolean keyPressed(int keyCode, int x, int y) {
         if(super.keyPressed(keyCode, x, y)) return true;
-        if(this.selectedIndex>=0 && keyCode == GLFW.GLFW_KEY_BACKSPACE) {
-            addCharToKey(true, ' ');
-            updateSearch();
-            return true;
+        if(this.selectedIndex>=0) {
+            if(checkCopy(keyCode,getParameter(this.selectedIndex))) return true;
+            String paste = checkPaste(keyCode).replaceAll("\"","");
+            if(!paste.isEmpty()) {
+                updateKey(getParameter(this.selectedIndex)+paste);
+                updateSearch();
+                return true;
+            }
+            if(keyCode == GLFW.GLFW_KEY_BACKSPACE) {
+                addCharToKey(true, ' ');
+                updateSearch();
+                return true;
+            }
         }
         return false;
     }
@@ -169,12 +184,16 @@ public class GuiParameterList extends GuiSuperType {
         return false;
     }
 
-    private void addCharToKey(boolean backspace,char c) {
+    private void addCharToKey(boolean backspace, char c) {
         String newVal = getParameter(this.selectedIndex);
         if (backspace) {
             if (!newVal.isEmpty())
                 newVal = newVal.substring(0, newVal.length() - 1);
         } else newVal += c;
+        updateKey(newVal);
+    }
+
+    private void updateKey(String newVal) {
         List<String> things = this.parameter.getList();
         things.set(this.selectedIndex,newVal);
         this.parameter.setList(things);
@@ -214,7 +233,7 @@ public class GuiParameterList extends GuiSuperType {
                             new Vector4f(64, 64, 46, 96), this.getBlitOffset());
                 }
                 top += this.spacing;
-                char extra = this.selectedIndex>=0 && i==this.selectedIndex ? ChannelManager.blinker : ' ';
+                char extra = this.selectedIndex>=0 && i==this.selectedIndex ? ChannelManager.blinkerChar : ' ';
                 drawCenteredString(matrix,this.font, getParameter(i) + extra, width / 2, top, textColor);
                 top += this.spacing;
             }
@@ -242,7 +261,10 @@ public class GuiParameterList extends GuiSuperType {
     @Override
     protected void save() {
         this.parent.save();
-        if(this.hasEdits) madeChange(true);
+        if(this.hasEdits) {
+            madeChange(true);
+            this.hasEdits = false;
+        }
     }
 
     private String getParameter(int index) {

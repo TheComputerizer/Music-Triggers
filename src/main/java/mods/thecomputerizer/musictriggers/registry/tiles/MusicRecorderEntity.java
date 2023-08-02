@@ -3,7 +3,7 @@ package mods.thecomputerizer.musictriggers.registry.tiles;
 import mods.thecomputerizer.musictriggers.registry.BlockRegistry;
 import mods.thecomputerizer.musictriggers.registry.TileRegistry;
 import mods.thecomputerizer.musictriggers.registry.blocks.MusicRecorder;
-import mods.thecomputerizer.musictriggers.server.data.ServerChannels;
+import mods.thecomputerizer.musictriggers.server.channels.ServerTriggerStatus;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -36,9 +36,9 @@ public class MusicRecorderEntity extends TileEntity implements ITickableTileEnti
         return this.record == ItemStack.EMPTY;
     }
 
-    public void insertRecord(ItemStack recordStack, PlayerEntity player) {
-        this.record = recordStack.copy();
-        recordStack.setCount(0);
+    public void insertRecord(ItemStack stack, PlayerEntity player) {
+        this.record = stack.copy();
+        stack.setCount(0);
         this.counter = this.random.nextInt(600);
         this.player = player;
     }
@@ -52,10 +52,10 @@ public class MusicRecorderEntity extends TileEntity implements ITickableTileEnti
     }
 
     private void record() {
-        ItemStack stack = ServerChannels.recordAudioData(this.player.getUUID(),this.record);
-        if(stack != ItemStack.EMPTY) {
+        ItemStack stack = ServerTriggerStatus.recordAudioData(this.player.getUUID(),this.record);
+        if(!stack.isEmpty()) {
             BlockState state = this.level.getBlockState(this.worldPosition);
-            if(state.getBlock()== BlockRegistry.MUSIC_RECORDER.get()) {
+            if(state.getBlock()==BlockRegistry.MUSIC_RECORDER.get()) {
                 this.record = stack;
                 this.level.playSound(null,this.worldPosition, SoundEvents.LIGHTNING_BOLT_THUNDER,
                         SoundCategory.BLOCKS, 1f,1f);

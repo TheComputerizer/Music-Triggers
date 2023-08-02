@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.fml.client.gui.widget.ExtendedButton;
@@ -32,9 +32,14 @@ public class ButtonSuperType extends ExtendedButton {
         this.visible = is;
     }
 
-    public void updateDisplay(String newDisplay) {
+    public void setMode(int mode) {
+        this.mode = mode;
+    }
+
+    public void updateDisplay(String newDisplay, FontRenderer font, GuiSuperType screenToUpdate) {
         this.message = new StringTextComponent(newDisplay);
-        this.width = Minecraft.getInstance().font.width(this.message) + 8;
+        this.width = font.width(this.message) + 8;
+        screenToUpdate.buttonWidthUpdate();
     }
 
 

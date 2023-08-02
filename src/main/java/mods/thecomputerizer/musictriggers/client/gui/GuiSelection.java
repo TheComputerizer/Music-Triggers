@@ -2,10 +2,9 @@ package mods.thecomputerizer.musictriggers.client.gui;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import mods.thecomputerizer.musictriggers.client.Translate;
-import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
+import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.util.SharedConstants;
 import net.minecraft.util.math.vector.Vector2f;
@@ -37,6 +36,7 @@ public class GuiSelection extends GuiSuperType {
     private int numElements;
     private int verticalSpace;
     private int scrollPos;
+    private boolean canScroll;
     private boolean canScrollDown;
     private int elementHover;
     private int sortType;
@@ -69,16 +69,17 @@ public class GuiSelection extends GuiSuperType {
 
     private void calculateScrollSize() {
         this.scrollPos = 0;
-        int textSlot = Minecraft.getInstance().font.lineHeight +(this.spacing*2);
-        int totalHeight = this.height-((this.spacing*3)+textSlot+48);
-        int runningHeight = (textSlot*2)-this.spacing;
+        int textSlot = this.minecraft.font.lineHeight+(this.spacing*2);
+        int totalHeight = this.height-(this.spacing*4)-48-this.minecraft.font.lineHeight;
+        int runningHeight = textSlot;
         int runningTotal = 1;
         while(runningHeight+textSlot<totalHeight) {
             runningTotal++;
             runningHeight+=textSlot;
         }
         this.numElements = runningTotal;
-        this.canScrollDown = this.numElements < this.searchedElements.size();
+        this.canScroll = this.numElements < this.searchedElements.size();
+        this.canScrollDown = this.canScroll;
         this.verticalSpace = (totalHeight-runningHeight)/2;
     }
 
@@ -105,42 +106,53 @@ public class GuiSelection extends GuiSuperType {
                     (screen, button, mode) -> {
                         TextFormatting color = mode == 1 ? TextFormatting.WHITE : TextFormatting.RED;
                         this.deleteMode = color==TextFormatting.RED;
-                        button.updateDisplay(color + finalDisplayName);
+                        button.updateDisplay(color + finalDisplayName,this.font,this);
                     }), left);
             left += (width + 16);
         }
         if(this.canSort) {
             displayName = Translate.guiGeneric(false, "button", "sort", "original");
             width = this.font.width(displayName) + 8;
-            addSuperButton(createBottomButton(displayName, width, 3,
+            ButtonSuperType superButton = createBottomButton(displayName, width, 3,
                     Translate.guiNumberedList(3, "button", "sort", "desc"),
                     (screen, button, mode) -> {
                         this.sortType = mode - 1;
                         TextFormatting color = mode == 1 ? TextFormatting.WHITE : mode == 2 ? TextFormatting.GRAY : TextFormatting.DARK_GRAY;
-                        button.updateDisplay(color + sortElements());
-                    }), left);
-            left += (width + 16);
+                        button.updateDisplay(color + sortElements(),this.font,this);
+                        Instance.setPreferredSort(mode);
+                    });
+            int mode = Instance.getPreferredSort();
+            superButton.setMode(mode);
+            this.sortType = mode-1;
+            TextFormatting color = mode == 1 ? TextFormatting.WHITE : mode == 2 ? TextFormatting.GRAY : TextFormatting.DARK_GRAY;
+            superButton.updateDisplay(color + sortElements(),this.font,this);
+            addSuperButton(superButton,left);
+            left += (superButton.getWidth() + 16);
         }
         for(ButtonSuperType button : this.bottomButtons) {
             addSuperButton(button,left);
             left += (button.getWidth() + 16);
         }
         updateSearch();
+        sortElements();
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scroll) {
-        if(scroll!=0) {
-            if(scroll<1) {
-                if (this.canScrollDown) {
-                    this.scrollPos++;
-                    this.canScrollDown = this.numElements + this.scrollPos + 1 < this.searchedElements.size();
+        if(this.canScroll) {
+            if (scroll != 0) {
+                if (scroll < 1) {
+                    if (this.canScrollDown) {
+                        this.scrollPos++;
+                        this.canScrollDown = this.numElements + this.scrollPos < this.searchedElements.size();
+                        return true;
+                    }
+                } else if (this.scrollPos > 0) {
+                    this.scrollPos--;
+                    this.canScrollDown = true;
+                    return true;
                 }
-            } else if(this.scrollPos>0) {
-                this.scrollPos--;
-                this.canScrollDown = true;
             }
-            return true;
         }
         return false;
     }
@@ -170,8 +182,10 @@ public class GuiSelection extends GuiSuperType {
                     }
                 }
                 else {
-                    for (Element element1 : searchedElements)
-                        element1.onClick(this, mouseX <= ((float)this.width) / 2);
+                    if(element.onClick(this, mouseX <= ((float)this.width)/2f))
+                        for(Element otherElement : this.searchedElements)
+                            if(element instanceof DualElement && element!=otherElement)
+                                otherElement.setSelected(false);
                 }
                 return true;
             }
@@ -181,14 +195,19 @@ public class GuiSelection extends GuiSuperType {
 
     @Override
     public boolean keyPressed(int keyCode, int x, int y) {
-        if (super.keyPressed(keyCode, x, y)) return true;
-        if(keyCode == GLFW.GLFW_KEY_BACKSPACE) {
-            for (Element element : this.searchedElements) {
-                if (element.onType(true, ' ')) {
-                    this.hasEdits = true;
-                    updateSearch();
-                    return true;
-                }
+        if(super.keyPressed(keyCode, x, y)) return true;
+        for(Element element : this.searchedElements) {
+            if(checkCopy(keyCode,element.onCopy())) return true;
+            String paste = checkPaste(keyCode);
+            if(!paste.isEmpty() && element.onPaste(paste)) {
+                updateSearch();
+                this.hasEdits = true;
+                return true;
+            }
+            if(keyCode == GLFW.GLFW_KEY_BACKSPACE && element.onType(true, ' ')) {
+                this.hasEdits = true;
+                updateSearch();
+                return true;
             }
         }
         return false;
@@ -198,8 +217,8 @@ public class GuiSelection extends GuiSuperType {
     public boolean charTyped(char c, int mod) {
         if(super.charTyped(c, mod)) return true;
         if(SharedConstants.isAllowedChatCharacter(c)) {
-            for (Element element : this.searchedElements) {
-                if (element.onType(false, c)) {
+            for(Element element : this.searchedElements) {
+                if(element.onType(false, c)) {
                     this.hasEdits = true;
                     updateSearch();
                     return true;
@@ -211,11 +230,13 @@ public class GuiSelection extends GuiSuperType {
 
     @Override
     protected void updateSearch() {
+        int prevScroll = this.scrollPos;
         this.searchedElements.clear();
         for(Element element : this.elementCache)
             if(checkSearch(element))
                 this.searchedElements.add(element);
         calculateScrollSize();
+        this.scrollPos = Math.min(prevScroll,this.canScroll ? this.searchedElements.size()-this.numElements : 0);
     }
 
     private boolean checkSearch(Element element) {
@@ -232,9 +253,28 @@ public class GuiSelection extends GuiSuperType {
         this.searchedElements.sort(Comparator.comparing(element -> element.getDisplay(true)));
         if(this.sortType>1) {
             Collections.reverse(this.searchedElements);
+            universalIsAlwaysFirst();
             return Translate.guiGeneric(false,"button","sort","reverse");
         }
+        universalIsAlwaysFirst();
         return Translate.guiGeneric(false,"button","sort","alphabetical");
+    }
+
+    private void universalIsAlwaysFirst() {
+        MonoElement universal = null;
+        for(Element element : this.searchedElements) {
+            if(element instanceof MonoElement) {
+                MonoElement mono = (MonoElement)element;
+                if(mono.id.matches("universal_trigger") || mono.id.matches("universal_song")) {
+                    universal = mono;
+                    break;
+                }
+            }
+        }
+        if(Objects.nonNull(universal)) {
+            this.searchedElements.remove(universal);
+            this.searchedElements.add(0,universal);
+        }
     }
 
     @Override
@@ -263,7 +303,7 @@ public class GuiSelection extends GuiSuperType {
         start = new Vector2f(start.x,this.height-this.spacing-24);
         end = new Vector2f(end.x,this.height-this.spacing-24);
         GuiUtil.drawLine(start,end,white(192), 1f, this.getBlitOffset());
-        if(this.searchedElements.size()>this.numElements) drawScrollBar();
+        if(this.canScroll) drawScrollBar();
         if(hoverAny) {
             for (Element element : this.searchedElements) {
                 if(element==this.searchedElements.get(this.elementHover)) {
@@ -276,13 +316,14 @@ public class GuiSelection extends GuiSuperType {
 
     private void drawScrollBar() {
         float height = this.height-(this.spacing*2)-48;
-        float indices = this.searchedElements.size()-this.numElements;
+        float indices = (this.searchedElements.size()-this.numElements)+1;
         float perIndex = height/indices;
         int top = (int)(24+spacing+(perIndex*this.scrollPos));
         int x = this.width-1;
         Vector2f start = new Vector2f(x, top);
         if(perIndex<1) perIndex = 1;
-        Vector2f end = new Vector2f(x, (int)(top+perIndex));
+        int bottom = (int)(top+perIndex);
+        Vector2f end = new Vector2f(x, this.canScrollDown ? bottom : Math.max(bottom,this.height-this.spacing-24));
         GuiUtil.drawLine(start,end,white(192), 2f, this.getBlitOffset());
     }
 
@@ -298,8 +339,10 @@ public class GuiSelection extends GuiSuperType {
     @Override
     protected void save() {
         for(Element element: this.elementCache) element.onSave();
-        if(this.hasEdits)
+        if(this.hasEdits) {
             this.madeChange(true);
+            this.hasEdits = false;
+        }
         updateSearch();
     }
 
@@ -336,9 +379,13 @@ public class GuiSelection extends GuiSuperType {
 
         public abstract List<ITextComponent> getHoverLines(boolean isLeft);
 
+        public abstract String onCopy();
+
+        public abstract boolean onPaste(String pasted);
+
         public abstract boolean onType(boolean backspace, char c);
 
-        public abstract void onClick(GuiSelection parent, boolean isLeft);
+        public abstract boolean onClick(GuiSelection parent, boolean isLeft);
 
         public abstract boolean onDelete(boolean isLeft);
 
@@ -414,17 +461,28 @@ public class GuiSelection extends GuiSuperType {
         }
 
         @Override
+        public String onCopy() {
+            return "";
+        }
+
+        @Override
+        public boolean onPaste(String pasted) {
+            return false;
+        }
+
+        @Override
         public boolean onType(boolean backspace, char c) {
             return false;
         }
 
         @Override
-        public void onClick(GuiSelection parent, boolean isLeft) {
+        public boolean onClick(GuiSelection parent, boolean isLeft) {
             if(this.hover && Objects.nonNull(this.onClick)) {
                 this.onClick.accept(parent);
                 parent.playGenericClickSound();
             }
-            this.isSelected = hover;
+            this.isSelected = this.hover;
+            return this.isSelected;
         }
 
         @Override
@@ -467,8 +525,8 @@ public class GuiSelection extends GuiSuperType {
             boolean isLeft = mouseX<=parent.width/2;
             int keyColor = GuiUtil.WHITE;
             int valColor = GuiUtil.WHITE;
-            char keyExtra = this.isSelected && this.keySelected ? ChannelManager.blinker : ' ';
-            char valExtra = this.isSelected  && !this.keySelected ? ChannelManager.blinker : ' ';
+            char keyExtra = this.isSelected && this.keySelected ? ChannelManager.blinkerChar : ' ';
+            char valExtra = this.isSelected  && !this.keySelected ? ChannelManager.blinkerChar : ' ';
             if (hover) {
                 if(isLeft) {
                     keyColor = GuiUtil.makeRGBAInt(200, 200, 200, 255);
@@ -495,6 +553,21 @@ public class GuiSelection extends GuiSuperType {
         @Override
         public List<ITextComponent> getHoverLines(boolean isLeft) {
             return isLeft ? this.hoverTextKey : this.hoverTextVal;
+        }
+
+        @Override
+        public String onCopy() {
+            return this.isSelected ? this.keySelected ? this.key : this.val : "";
+        }
+
+        @Override
+        public boolean onPaste(String pasted) {
+            if(this.isSelected) {
+                if(this.keySelected) this.key += pasted;
+                else this.val += pasted;
+                return true;
+            }
+            return false;
         }
 
         @Override
@@ -526,9 +599,15 @@ public class GuiSelection extends GuiSuperType {
         }
 
         @Override
-        public void onClick(GuiSelection parent, boolean isLeft) {
+        public void setSelected(boolean selected) {
+            this.isSelected = selected;
+        }
+
+        @Override
+        public boolean onClick(GuiSelection parent, boolean isLeft) {
             this.isSelected = this.hover;
             this.keySelected = isLeft;
+            return this.isSelected;
         }
 
         @Override

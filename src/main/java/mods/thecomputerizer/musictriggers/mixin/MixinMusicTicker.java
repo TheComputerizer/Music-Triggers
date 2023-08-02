@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.mixin;
 
-import mods.thecomputerizer.musictriggers.config.ConfigDebug;
+import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import net.minecraft.client.audio.MusicTicker;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -16,6 +16,6 @@ public class MixinMusicTicker {
 
     @Inject(at = @At(value = "HEAD"), method = "tick", cancellable = true)
     private void musictriggers_tick(CallbackInfo info) {
-        if(!ConfigDebug.PLAY_NORMAL_MUSIC) info.cancel();
+        if(ChannelManager.checkMusicTickerCancel("minecraft")) info.cancel();
     }
 }

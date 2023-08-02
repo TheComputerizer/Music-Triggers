@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.client.gui;
 
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.client.Translate;
+import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.theimpossiblelibrary.client.gui.RadialButton;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
@@ -20,32 +21,50 @@ public enum ButtonType {
             parent.saveAndClose(false),ButtonSuperType::new),
     APPLY(-16,8,96,16,"apply_changes",2,false,(parent, button, mode) ->
             parent.applyButton(),ButtonSuperType::new),
-    LOG("log",2, 0.25f, null, (screen, button) ->
-            ((GuiSuperType)screen).saveAndDisplay(
-                new GuiLogVisualizer((GuiSuperType)screen,GuiType.LOG,((GuiSuperType)screen).getInstance())),RadialButton::new),
-    PLAYBACK("playback",3, 0.25f, null, (screen, button) ->
-            ((GuiSuperType)screen).saveAndDisplay(
-                    new GuiPlayback((GuiSuperType)screen,GuiType.PLAYBACK,((GuiSuperType)screen).getInstance())),RadialButton::new),
-    EDIT("edit",3, 0.25f, null, (screen, button) ->
-            guiPageShortcut(screen,GuiType.EDIT,true),RadialButton::new),
-    RELOAD("reload",4, 0.25f, null,(screen, button) ->
-            ((GuiSuperType)screen).saveAndClose(true),RadialButton::new),
+    LOG("log",2, 0.25f, null, (screen, button) -> {
+        if(ChannelManager.isButtonEnabled("log")) ((GuiSuperType)screen).saveAndDisplay(
+                new GuiLogVisualizer((GuiSuperType)screen,GuiType.LOG,((GuiSuperType)screen).getInstance()));
+    },RadialButton::new),
+    PLAYBACK("playback",3, 0.25f, null, (screen, button) -> {
+        if(ChannelManager.isButtonEnabled("playback")) ((GuiSuperType)screen).saveAndDisplay(
+                new GuiPlayback((GuiSuperType)screen,GuiType.PLAYBACK,((GuiSuperType)screen).getInstance()));
+    },RadialButton::new),
+    EDIT("edit",3, 0.25f, null, (screen, button) -> {
+        if(ChannelManager.isClientConfig() || ChannelManager.isButtonEnabled("debug") ||
+                ChannelManager.isButtonEnabled("registration"))
+            guiPageShortcut(screen,ChannelManager.isClientConfig());
+    },RadialButton::new),
+    RELOAD("reload",4, 0.25f, null,(screen, button) -> {
+        if(ChannelManager.isButtonEnabled("reload"))
+            ((GuiSuperType)screen).saveAndClose(true);
+    },RadialButton::new),
     SKIP_SONG("skip_song",2, 0.25f, null,(screen, button) ->
             ((GuiPlayback)screen).skip(),RadialButton::new),
     RESET_SONG("reset_song",2, 0.25f, null,(screen, button) ->
             ((GuiPlayback)screen).reset(),RadialButton::new),
-    DEBUG("debug",(screen, id) -> guiParameterShortcut(screen,GuiType.DEBUG),GuiPage.Icon::new),
-    REGISTRATION("registration",(screen, id) -> guiParameterShortcut(screen,GuiType.REGISTRATION),GuiPage.Icon::new),
-    CHANNEL("channel",(screen, id) -> screen.getInstance().pageClick(GuiType.EDIT, screen, id),GuiPage.Icon::new),
-    CHANNEL_INFO("channel_info",(screen, id) -> screen.getInstance().pageClick(GuiType.CHANNEL, screen, id),GuiPage.Icon::new),
-    MAIN("main",(screen, id) -> screen.getInstance().pageClick(GuiType.CHANNEL, screen, id),GuiPage.Icon::new),
-    TRANSITIONS("transitions",(screen, id) -> screen.getInstance().pageClick(GuiType.CHANNEL, screen, id),GuiPage.Icon::new),
-    COMMANDS("commands",(screen, id) -> screen.getInstance().pageClick(GuiType.CHANNEL, screen, id),GuiPage.Icon::new),
-    TOGGLES("toggles",(screen, id) -> screen.getInstance().pageClick(GuiType.CHANNEL, screen, id),GuiPage.Icon::new),
-    REDIRECT("redirect",(screen, id) -> screen.getInstance().pageClick(GuiType.CHANNEL, screen, id),GuiPage.Icon::new),
-    JUKEBOX("jukebox",(screen, id) -> screen.getInstance().pageClick(GuiType.CHANNEL, screen, id),GuiPage.Icon::new);
+    DEBUG("debug",(screen, id) -> {
+        if(ChannelManager.isButtonEnabled("debug"))
+            guiParameterShortcut(screen,GuiType.DEBUG);
+    }),
+    REGISTRATION("registration",(screen, id) -> {
+        if(ChannelManager.isButtonEnabled("registration"))
+            guiParameterShortcut(screen,GuiType.REGISTRATION);
+    }),
+    CHANNEL("channel",(screen, id) -> {
+        if(ChannelManager.isClientConfig())
+            screen.getInstance().pageClick(GuiType.EDIT, screen, id);
+    }),
+    CHANNEL_INFO("channel_info",(screen, id) -> screen.getInstance().pageClick(GuiType.CHANNEL, screen, id)),
+    MAIN("main",(screen, id) -> screen.getInstance().pageClick(GuiType.CHANNEL, screen, id)),
+    TRANSITIONS("transitions",(screen, id) -> screen.getInstance().pageClick(GuiType.CHANNEL, screen, id)),
+    COMMANDS("commands",(screen, id) -> screen.getInstance().pageClick(GuiType.CHANNEL, screen, id)),
+    TOGGLES("toggles",(screen, id) -> screen.getInstance().pageClick(GuiType.CHANNEL, screen, id)),
+    REDIRECT("redirect",(screen, id) -> screen.getInstance().pageClick(GuiType.CHANNEL, screen, id)),
+    JUKEBOX("jukebox",(screen, id) -> screen.getInstance().pageClick(GuiType.CHANNEL, screen, id));
 
-    //normal buttons variables
+    /**
+     * Super Button Variables
+     */
     private final ButtonSuperType.CreatorFunction<Integer, Integer, Integer, Integer, Integer, String, List<String>,
             TriConsumer<GuiSuperType, ButtonSuperType, Integer>, Boolean, ButtonSuperType> normalCreatorFunction;
     private final int x;
@@ -56,7 +75,9 @@ public enum ButtonType {
     private final int hoverLines;
     private final boolean startEnabled;
     private final TriConsumer<GuiSuperType, ButtonSuperType, Integer> normalClick;
-    //radial button variables
+    /**
+     * Radial Button Variables
+     */
     private final RadialButton.CreatorFunction<List<String>, ResourceLocation, ResourceLocation, Float, String,
             BiConsumer<Screen, RadialButton>, RadialButton> radialCreatorFunction;
     private final String iconName;
@@ -64,32 +85,44 @@ public enum ButtonType {
     private final Float hoverIncrease;
     private final String centerText;
     private final BiConsumer<Screen, RadialButton> radialClick;
-    //page icon variables
+    /**
+     * Page Icon Variables
+     */
     private final String id;
     private final BiConsumer<GuiSuperType,String> iconClick;
-    private final IconCreatorFunction<String,ResourceLocation,ResourceLocation,Boolean,BiConsumer<GuiSuperType,String>, GuiPage.Icon> iconCreator;
 
+    /**
+     * Super Button Constructor
+     */
     ButtonType(int x, int y, int width, int height, String name, int hoverLines, Boolean startEnabled,
                TriConsumer<GuiSuperType, ButtonSuperType, Integer> normalClick,
                ButtonSuperType.CreatorFunction<Integer, Integer, Integer, Integer, Integer, String, List<String>,
                        TriConsumer<GuiSuperType, ButtonSuperType, Integer>, Boolean, ButtonSuperType> creatorFunction) {
         this(x,y,width,height,name,hoverLines,startEnabled,normalClick,creatorFunction,
-                null,null,0,0f,null,null,
-                null,null,null);
+                null,null,0,0f,null,null,null,null);
     }
+
+    /**
+     * Radial Button Constructor
+     */
     ButtonType(String iconName, int lines, Float hoverInc, @Nullable String centerText, BiConsumer<Screen, RadialButton> radialClick,
                RadialButton.CreatorFunction<List<String>, ResourceLocation, ResourceLocation, Float, String,
                        BiConsumer<Screen, RadialButton>, RadialButton> creatorFunction) {
         this(0,0,0,0,null,0,false,null,null,
-                creatorFunction,iconName,lines,hoverInc,centerText,radialClick,
-                null,null,null);
+                creatorFunction,iconName,lines,hoverInc,centerText,radialClick,null,null);
     }
-    ButtonType(String id, BiConsumer<GuiSuperType,String> iconClick,
-               IconCreatorFunction<String,ResourceLocation,ResourceLocation,Boolean,BiConsumer<GuiSuperType,String>, GuiPage.Icon> iconCreator) {
+    /**
+     * Page Ican Constructor
+     */
+    ButtonType(String id, BiConsumer<GuiSuperType,String> iconClick) {
         this(0,0,0,0,null,0,false,null,null,
                 null,null,0,0f,null,null,
-                id,iconClick,iconCreator);
+                id,iconClick);
     }
+
+    /**
+     * A mess of a constructor
+     */
     ButtonType(int x, int y, int width, int height, String name, int hoverLines, Boolean startEnabled,
                TriConsumer<GuiSuperType, ButtonSuperType, Integer> normalClick,
                ButtonSuperType.CreatorFunction<Integer, Integer, Integer, Integer, Integer, String, List<String>,
@@ -97,8 +130,7 @@ public enum ButtonType {
                RadialButton.CreatorFunction<List<String>, ResourceLocation, ResourceLocation, Float, String,
                        BiConsumer<Screen, RadialButton>, RadialButton> radialCreatorFunction, String iconName,
                int descLines, Float hoverIncrease, String centerText, BiConsumer<Screen, RadialButton> radialClick,
-               String id, BiConsumer<GuiSuperType,String> iconClick,
-               IconCreatorFunction<String,ResourceLocation,ResourceLocation,Boolean,BiConsumer<GuiSuperType,String>, GuiPage.Icon> iconCreator) {
+               String id, BiConsumer<GuiSuperType,String> iconClick) {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -116,7 +148,6 @@ public enum ButtonType {
         this.radialClick = radialClick;
         this.id = id;
         this.iconClick = iconClick;
-        this.iconCreator = iconCreator;
     }
 
     public boolean isNormal() {
@@ -149,19 +180,19 @@ public enum ButtonType {
 
     public RadialButton getRadialButton() {
         return this.radialCreatorFunction.apply(
-                Translate.guiNumberedList(this.descLines,"button",this.iconName,"desc"),
+                ChannelManager.isButtonEnabled(this.iconName) ?
+                        Translate.guiNumberedList(this.descLines,"button",this.iconName,"desc") : Translate.disabledHover(),
                 getIcons(this.iconName,false),getIcons(this.iconName,true),this.hoverIncrease,
                 this.centerText,this.radialClick);
     }
 
     public GuiPage.Icon getIconButton(String id, boolean canDelete) {
+        boolean enabled = ChannelManager.isButtonEnabled(this.id);
         if(Objects.isNull(id))
-            return new GuiPage.Icon(this.id,getIcons(this.id,false),getIcons(this.id,true),canDelete,this.iconClick);
-        return new GuiPage.Icon(id,this.id,getIcons(this.id,false),getIcons(this.id,true),canDelete,this.iconClick);
-    }
-
-    private static void guiParameterShortcut(Screen screen, GuiType type) {
-        guiParameterShortcut((GuiSuperType) screen, type);
+            return new GuiPage.Icon(this.id,getIcons(this.id,false),getIcons(this.id,enabled),canDelete,
+                    this.iconClick);
+        return new GuiPage.Icon(id,this.id,getIcons(this.id,false),getIcons(this.id,enabled),canDelete,
+                this.iconClick);
     }
 
     private static void guiParameterShortcut(GuiSuperType screen, GuiType type) {
@@ -172,11 +203,12 @@ public enum ButtonType {
                         configInstance.getParameters(type, null)));
     }
 
-    private static void guiPageShortcut(Screen screen, GuiType type, boolean canEdit) {
-        guiPageShortcut((GuiSuperType) screen, type, canEdit);
+    private static void guiPageShortcut(Screen screen, boolean canEdit) {
+        guiPageShortcut((GuiSuperType) screen, canEdit);
     }
 
-    private static void guiPageShortcut(GuiSuperType screen, GuiType type, boolean canEdit) {
+    private static void guiPageShortcut(GuiSuperType screen, boolean canEdit) {
+        GuiType type = GuiType.EDIT;
         Instance configInstance = screen.getInstance();
         screen.saveAndDisplay(
                 new GuiPage(screen, type, configInstance, type.getId(), configInstance.getPageIcons(type), canEdit));
@@ -186,11 +218,5 @@ public enum ButtonType {
         String base = "textures/gui/{}/{}.png";
         return AssetUtil.getAltResource(Constants.MODID,LogUtil.injectParameters(base,"black_icons",name),
                 LogUtil.injectParameters(base,"white_icons",name),hover);
-    }
-
-
-    @FunctionalInterface
-    private interface IconCreatorFunction<T,H,I,B,C,F> {
-        F apply(T texture, H hoverTex, I id, B delete, C click);
     }
 }

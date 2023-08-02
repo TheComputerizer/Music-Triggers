@@ -28,13 +28,13 @@ public class BlankRecord extends Item {
     @Override
     @Nonnull
     public ActionResultType useOn(ItemUseContext ctx) {
-        BlockState blockstate = ctx.getLevel().getBlockState(ctx.getClickedPos());
-        if (blockstate.getBlock() instanceof MusicRecorder) {
-            MusicRecorder mr = (MusicRecorder) blockstate.getBlock();
-            if(!ctx.getLevel().isClientSide() && !blockstate.getValue(MusicRecorder.HAS_RECORD) && !blockstate.getValue(MusicRecorder.HAS_DISC)) {
-                ItemStack itemstack = Objects.requireNonNull(ctx.getPlayer()).getItemInHand(ctx.getHand());
-                mr.insertRecord(ctx.getLevel(),ctx.getClickedPos(),itemstack,blockstate,ctx.getPlayer());
-                itemstack.shrink(1);
+        BlockState state = ctx.getLevel().getBlockState(ctx.getClickedPos());
+        if (state.getBlock() instanceof MusicRecorder) {
+            MusicRecorder recorder = (MusicRecorder) state.getBlock();
+            if(!ctx.getLevel().isClientSide() && !state.getValue(MusicRecorder.HAS_RECORD) && !state.getValue(MusicRecorder.HAS_DISC)) {
+                ItemStack stack = Objects.requireNonNull(ctx.getPlayer()).getItemInHand(ctx.getHand());
+                recorder.insertRecord(ctx.getLevel(),ctx.getClickedPos(),stack,state,ctx.getPlayer());
+                stack.shrink(1);
             }
             return ActionResultType.SUCCESS;
         } else return ActionResultType.PASS;
@@ -43,7 +43,6 @@ public class BlankRecord extends Item {
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(@Nonnull ItemStack stack, @Nullable World world, List<ITextComponent> components, @Nonnull ITooltipFlag flag) {
-        components.add(AssetUtil.extraLang(Constants.MODID,"item","blank_record",
-                "description",false));
+        components.add(AssetUtil.extraLang(Constants.MODID,"item","blank_record","description",false));
     }
 }

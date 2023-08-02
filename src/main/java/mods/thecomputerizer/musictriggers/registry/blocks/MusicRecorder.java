@@ -82,10 +82,10 @@ public class MusicRecorder extends Block implements ITileEntityProvider {
     }
 
     @Override
-    public void onRemove(BlockState state, World worldIn, BlockPos pos, BlockState state2, boolean b) {
-        if(!state.is(state2.getBlock())) {
-            this.dropRecord(worldIn, pos);
-            super.onRemove(state,worldIn,pos,state2,b);
+    public void onRemove(BlockState oldState, World world, BlockPos pos, BlockState newState, boolean b) {
+        if(!oldState.is(newState.getBlock())) {
+            this.dropRecord(world, pos);
+            super.onRemove(oldState,world,pos,newState,b);
         }
     }
 
@@ -95,8 +95,8 @@ public class MusicRecorder extends Block implements ITileEntityProvider {
     }
 
     @Override
-    public int getAnalogOutputSignal(BlockState blockState, World worldIn, BlockPos pos) {
-        TileEntity entity = worldIn.getBlockEntity(pos);
+    public int getAnalogOutputSignal(BlockState state, World world, BlockPos pos) {
+        TileEntity entity = world.getBlockEntity(pos);
         return entity instanceof MusicRecorderEntity && !((MusicRecorderEntity)entity).isEmpty() ? 15 : 0;
     }
 
@@ -107,13 +107,13 @@ public class MusicRecorder extends Block implements ITileEntityProvider {
 
 
     @Override
-    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> stateBuilder) {
-        stateBuilder.add(HAS_RECORD).add(HAS_DISC);
+    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
+        builder.add(HAS_RECORD).add(HAS_DISC);
     }
 
     @Nullable
     @Override
-    public TileEntity newBlockEntity(IBlockReader p_196283_1_) {
+    public TileEntity newBlockEntity(IBlockReader reader) {
         return new MusicRecorderEntity();
     }
 }

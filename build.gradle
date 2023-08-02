@@ -1,8 +1,6 @@
-//file:noinspection GroovyAssignabilityCheck
-
 plugins {
-    id 'net.minecraftforge.gradle' version '5.1+'
-    id 'com.github.johnrengelman.shadow' version '7.1.+'
+    id 'net.minecraftforge.gradle' version '6.+'
+    id 'com.github.johnrengelman.shadow' version '8.1.+'
     id 'org.spongepowered.mixin' version '0.7.+'
     id 'org.parchmentmc.librarian.forgegradle' version '1.+'
 }
@@ -11,10 +9,10 @@ version = "${project.minecraft_version}-${project.mod_version}"
 group = project.maven_group
 archivesBaseName = project.base_name
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+java.toolchain.getLanguageVersion().set(JavaLanguageVersion.of(8))
 
 minecraft {
-    mappings channel: 'parchment', version: "${project.parchment_version}-${project.minecraft_version}"
+    mappings channel: 'parchment', version: "${parchment_version}-${minecraft_version}"
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
     runs {
         def mixinStuff = [
@@ -24,7 +22,7 @@ minecraft {
                 '-mixin.config="musictriggers.mixin.json"'
         ]
         client {
-            workingDirectory project.file('run')
+            workingDirectory file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
             property 'mixin.env.remapRefMap', 'true'
@@ -37,7 +35,7 @@ minecraft {
             }
         }
         server {
-            workingDirectory project.file('run')
+            workingDirectory file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
             property 'mixin.env.remapRefMap', 'true'
@@ -50,7 +48,7 @@ minecraft {
             }
         }
         data {
-            workingDirectory project.file('run')
+            workingDirectory file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
             args '--mod', 'musictriggers', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
@@ -85,6 +83,9 @@ repositories {
     maven {
         url = uri('https://jitpack.io')
     }
+    flatDir {
+        dirs 'build/libs'
+    }
 }
 
 configurations {
@@ -101,24 +102,28 @@ dependencies {
     shade("io.github.kostaskougios:cloning:${project.cloning_version}")
     shade("com.github.walkyst:lavaplayer-fork:${project.lava_version}") {
         exclude module: 'commons-io'
+        exclude module: 'commons-codec'
     }
 
 
-    // required mod dependencies
-    implementation fg.deobf("maven.modrinth:the-impossible-library:${project.minecraft_version}-${project.lib_version}")
+    //required mod dependencies
+    //implementation(fg.deobf("maven.modrinth:the-impossible-library:${project.minecraft_version}-${project.lib_version}"))
+    //local versions of required dependencies for testing
+    //noinspection DependencyNotationArgument
+    implementation(name: "theimpossiblelibrary-${project.minecraft_version}-${project.lib_version}")
+
 
     //mixin
     annotationProcessor("org.spongepowered:mixin:${project.mixin_version}:processor")
 
     //mods
-    implementation fg.deobf("curse.maven:game-stages-268655:${project.gamestages_version}")
-    implementation fg.deobf("curse.maven:enhanced-celestials-438447:${project.celestials_version}")
-    implementation fg.deobf("curse.maven:atomicstrykers-infernal-mobs-227875:${project.infernal_version}")
-    implementation fg.deobf("curse.maven:dynamic-surroundings-238891:${project.dsurround_version}")
-    implementation fg.deobf("curse.maven:better-weather-400714:${project.weather_version}")
-    implementation fg.deobf("curse.maven:serene-seasons-291874:${project.seasons_version}")
-    implementation fg.deobf("curse.maven:champions-307152:${project.champions_version}")
-    implementation fg.deobf("curse.maven:blue-skies-312918:${project.blueskies_version}")
+    implementation(fg.deobf("curse.maven:game-stages-268655:${project.gamestages_version}"))
+    implementation(fg.deobf("curse.maven:enhanced-celestials-438447:${project.celestials_version}"))
+    implementation(fg.deobf("curse.maven:dynamic-surroundings-238891:${project.dsurround_version}"))
+    implementation(fg.deobf("curse.maven:better-weather-400714:${project.weather_version}"))
+    implementation(fg.deobf("curse.maven:serene-seasons-291874:${project.seasons_version}"))
+    implementation(fg.deobf("curse.maven:champions-307152:${project.champions_version}"))
+    implementation(fg.deobf("curse.maven:blue-skies-312918:${project.blueskies_version}"))
 
     runtimeOnly(fg.deobf("curse.maven:configured-457570:${project.configured_version}"))
     runtimeOnly(fg.deobf("curse.maven:bookshelf-228525:${project.bookshelf_version}"))
@@ -128,19 +133,19 @@ dependencies {
 
 shadowJar {
     //necessary relocation
-    relocate 'org.apache.commons.codec', "${project.shadow_group}.apache.commons.codec"
-    relocate 'org.apache.commons.logging', "${project.shadow_group}.apache.commons.logging"
-    relocate 'org.apache.http', "${project.shadow_group}.apache.http"
-    relocate 'org.jsoup', "${project.shadow_group}.jsoup"
-    relocate 'org.objenesis', "${project.shadow_group}.objenesis"
-    relocate 'org.slf4j', "${project.shadow_group}.slf4j"
-    relocate 'net.iharder', "${project.shadow_group}.iharder"
-    relocate 'mozilla', "${project.shadow_group}"
-    relocate 'com.fasterxml', "${project.shadow_group}.fasterxml"
-    relocate 'com.rits', "${project.shadow_group}.rits"
-    relocate 'certificates', "${project.shadow_group}"
+    relocate 'org.apache.commons.codec', "${shadow_group}.apache.commons.codec"
+    relocate 'org.apache.commons.logging', "${shadow_group}.apache.commons.logging"
+    relocate 'org.apache.http', "${shadow_group}.apache.http"
+    relocate 'org.jsoup', "${shadow_group}.jsoup"
+    relocate 'org.objenesis', "${shadow_group}.objenesis"
+    relocate 'org.slf4j', "${shadow_group}.slf4j"
+    relocate 'net.iharder', "${shadow_group}.iharder"
+    relocate 'mozilla', "${shadow_group}"
+    relocate 'com.fasterxml', "${shadow_group}.fasterxml"
+    relocate 'com.rits', "${shadow_group}.rits"
+    relocate 'certificates', "${shadow_group}"
     configurations = [project.configurations.shadow]
-    classifier ''
+    setArchiveClassifier('')
     mergeServiceFiles()
 }
 
@@ -173,6 +178,6 @@ jar {
     }
 }
 
-jar.finalizedBy('reobfJar')
-
-tasks.assemble.dependsOn shadowJar
+tasks.assemble.dependsOn('shadowJar')
+tasks.shadowJar.dependsOn('reobfJar')
+tasks.jar.finalizedBy('reobfJar')

@@ -11,14 +11,15 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.vector.Vector2f;
 import net.minecraft.util.math.vector.Vector4f;
-import net.minecraft.util.text.*;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.util.TriConsumer;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -27,7 +28,7 @@ public abstract class GuiSuperType extends Screen {
     protected final GuiSuperType parent;
     protected final GuiType type;
     private final Instance configInstance;
-    private final List<ButtonSuperType> superButtons;
+    private final HashSet<ButtonSuperType> superButtons;
     private final String channel;
     private ButtonSuperType applyButton;
     protected int spacing;
@@ -43,7 +44,7 @@ public abstract class GuiSuperType extends Screen {
         this.type = type;
         this.configInstance = configInstance;
         this.channel = channel;
-        this.superButtons = new ArrayList<>();
+        this.superButtons = new HashSet<>();
         this.spacing = 16;
     }
 
@@ -71,7 +72,8 @@ public abstract class GuiSuperType extends Screen {
     public boolean keyPressed(int keyCode, int x, int y) {
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             if(!getInstance().hasEdits()) {
-                this.onClose();
+                this.minecraft.setScreen(this.configInstance.getMainParent());
+                if(noActiveScreens()) onClose();
             } else this.getMinecraft().setScreen(new GuiPopUp(this,GuiType.POPUP,getInstance(),"confirm"));
             return true;
         }
@@ -85,6 +87,20 @@ public abstract class GuiSuperType extends Screen {
         boolean ret = this.searchBar.charTyped(c, mod);
         if(ret) updateSearch();
         return ret;
+    }
+
+    protected boolean checkCopy(int keyCode, String text) {
+        if(Objects.isNull(text) || text.isEmpty()) return false;
+        if(Screen.isCopy(keyCode)) {
+            this.minecraft.keyboardHandler.setClipboard(text);
+            return true;
+        }
+        return false;
+    }
+
+    protected String checkPaste(int keyCode) {
+        if(Screen.isPaste(keyCode)) return this.minecraft.keyboardHandler.getClipboard();
+        return "";
     }
 
     protected String backspace(String value) {
@@ -119,7 +135,10 @@ public abstract class GuiSuperType extends Screen {
                 ButtonSuperType button = buttonHolder.getNormalButton(this);
                 if(buttonHolder.getID().contains("apply"))
                     this.applyButton = button;
-                addSuperButton(button);
+                boolean addButton = true;
+                if(buttonHolder.getID().contains("back") && this.type==GuiType.MAIN)
+                    addButton = Objects.nonNull(this.configInstance.getMainParent());
+                if(addButton) addSuperButton(button);
             }
         }
         if(this.configInstance.hasEdits() && Objects.nonNull(this.applyButton)) this.applyButton.setEnable(true);
@@ -160,6 +179,24 @@ public abstract class GuiSuperType extends Screen {
         this.superButtons.add(button);
     }
 
+    public void buttonWidthUpdate() {
+        for(ButtonSuperType button1 : this.superButtons) {
+            for(ButtonSuperType button2 : this.superButtons) {
+                if(button1!=button2 && doButtonsOverlap(button1,button2)) {
+                    if(button1.x<=button2.x) button2.x = button1.x+button1.getWidth()+16;
+                    else button1.x = button2.x+button2.getWidth()+16;
+                }
+            }
+        }
+    }
+
+    private boolean doButtonsOverlap(ButtonSuperType button1, ButtonSuperType button2) {
+        return ((button1.x>button2.x && button1.x<button2.x+button2.x+button2.getWidth()) ||
+                (button1.x+button1.getWidth()>button2.x && button1.x+button1.getWidth()<button2.x+button2.x+button2.getWidth())) &&
+                ((button1.y>button2.y && button1.y<button2.y+button2.y+button2.getHeight()) ||
+                        (button1.y+button1.getHeight()>button2.y && button1.y+button1.getHeight()<button2.y+button2.y+button2.getHeight()));
+    }
+
     public void madeChange(boolean needReload) {
         if(!this.applyButton.active) {
             recursivelySetApply(this);
@@ -182,7 +219,7 @@ public abstract class GuiSuperType extends Screen {
             superButton.render(matrix,mouseX,mouseY,partialTicks);
         this.searchBar.render(matrix,mouseX,mouseY,partialTicks);
         for(ButtonSuperType superButton : this.superButtons) {
-            if(Minecraft.getInstance().screen == this) {
+            if(isActive(this)) {
                 List<ITextComponent> hoverText = superButton.getHoverText(mouseX,mouseY);
                 if(!hoverText.isEmpty()) renderComponentTooltip(matrix, hoverText, mouseX, mouseY);
             }
@@ -220,9 +257,13 @@ public abstract class GuiSuperType extends Screen {
         if(reload) {
             if(this.configInstance.hasEdits())
                 applyButton();
-            MusicTriggers.logExternally(Level.INFO,"No in-game changes were detected - Loading file changes");
+            else {
+                MusicTriggers.logExternally(Level.INFO, "No in-game changes were detected - Loading file changes");
+                Screen mainParent = this.configInstance.getMainParent();
+                if(Objects.isNull(mainParent)) onClose();
+                else Minecraft.getInstance().setScreen(mainParent);
+            }
             ClientEvents.initReload();
-            this.onClose();
         } else this.getMinecraft().setScreen(this.parent);
     }
 
@@ -232,10 +273,15 @@ public abstract class GuiSuperType extends Screen {
             Minecraft.getInstance().setScreen(this.parent);
             this.parent.applyButton();
         }
-        else {
-            this.getInstance().writeAndReload();
-            this.onClose();
-        }
+        else this.getInstance().writeAndReload(this);
+    }
+
+    public boolean noActiveScreens() {
+        return Objects.isNull(Minecraft.getInstance().screen);
+    }
+
+    public boolean isActive(GuiSuperType screen) {
+        return Minecraft.getInstance().screen == screen;
     }
 
     @Override
