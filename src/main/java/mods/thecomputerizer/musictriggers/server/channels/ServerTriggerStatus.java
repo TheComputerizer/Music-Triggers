@@ -492,14 +492,12 @@ public class ServerTriggerStatus {
         Victory victory = this.victoryTriggers.get(getParameterString(mobTrigger,"victory_id"));
         boolean pass;
         if (resources.contains("BOSS")) {
-            String id = getParameterString(mobTrigger,"identifier");
             Set<LivingEntity> bossEntities = BOSS_BAR_ENTITIES.entrySet().stream()
                     .filter(entry -> entry.getKey().isVisible() && entry.getKey().getPlayers().contains(player))
                     .map(Map.Entry::getValue).filter(entity -> entityWhitelist(entity,resources,champion,nbt))
                     .collect(Collectors.toSet());
             if(bossEntities.size()<num) return false;
             pass = checkSpecifics(bossEntities,num,player,checkTarget,hordeTarget,health,hordeHealth);
-            if(id.matches("genericBoss")) Constants.debugErrorServer("[{}] DID IT PASS? {}",pass);
             if(Objects.nonNull(victory)) {
                 if(pass)
                     for(LivingEntity entity : bossEntities)
@@ -682,7 +680,7 @@ public class ServerTriggerStatus {
     @SuppressWarnings("deprecation")
     private boolean checkModExtensions(LivingEntity entity, List<String> champion) {
         if(ModList.get().isLoaded("champions")) {
-            if (!champion.isEmpty() && !champion.contains("any")) {
+            if (!champion.isEmpty() && !champion.contains("ANY")) {
                 if(!ChampionCapability.getCapability(entity).isPresent() || !ChampionCapability.getCapability(entity).resolve().isPresent()) return false;
                 for(IAffix afix : ChampionCapability.getCapability(entity).resolve().get().getServer().getAffixes()) {
                     if(champion.contains("ALL")) break;

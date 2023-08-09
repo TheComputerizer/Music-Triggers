@@ -23,7 +23,6 @@ import net.minecraft.item.ItemModelsProperties;
 import net.minecraft.resources.IResourcePack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Tuple;
-import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -62,7 +61,7 @@ public class MusicTriggers {
             if(!Constants.CONFIG_DIR.mkdirs())
                 throw new FileExistsException("Unable to create file directory at "+Constants.CONFIG_DIR.getPath()+
                         "! Music Triggers is unable to load any further.");
-        ConfigRegistry.initialize(new File(Constants.CONFIG_DIR,"registration.toml"),FMLEnvironment.dist == Dist.CLIENT);
+        ConfigRegistry.initialize(new File(Constants.CONFIG_DIR,"registration.toml"),FMLEnvironment.dist.isClient());
         if(!ConfigRegistry.CLIENT_SIDE_ONLY) {
             if(ConfigRegistry.REGISTER_DISCS)
                 RegistryHandler.init(FMLJavaModLoadingContext.get().getModEventBus());
@@ -109,7 +108,7 @@ public class MusicTriggers {
     }
 
     public void loadComplete(FMLLoadCompleteEvent ev) {
-        if(FMLEnvironment.dist == Dist.CLIENT) {
+        if(FMLEnvironment.dist.isClient()) {
             try {
                 ChannelManager.initClient(configFile("channels", "toml"), true);
                 ChannelManager.readResourceLocations();
