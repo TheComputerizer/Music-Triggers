@@ -25,13 +25,13 @@ showAsResourcePack=false
   [[dependencies.musictriggers]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.18.1,1.19)"
+    versionRange="[1.18.2,1.19)"
     ordering="NONE"
     side="BOTH"
 
   [[dependencies.musictriggers]]
     modId="theimpossiblelibrary"
     mandatory=true
-    versionRange="[1.18.2-0.2.3,)"
+    versionRange="[1.18.2-0.3.0,)"
     ordering="NONE"
     side="BOTH"

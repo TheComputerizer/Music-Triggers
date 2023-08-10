@@ -1,14 +1,13 @@
 package mods.thecomputerizer.musictriggers.registry.items;
 
-import mods.thecomputerizer.musictriggers.network.NetworkHandler;
-import mods.thecomputerizer.musictriggers.network.packets.PacketJukeBoxCustom;
+import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.network.PacketJukeBoxCustom;
 import mods.thecomputerizer.musictriggers.registry.BlockRegistry;
 import mods.thecomputerizer.musictriggers.registry.blocks.MusicRecorder;
-import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionResult;
@@ -27,12 +26,19 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Objects;
 
 public class MusicTriggersRecord extends Item {
 
     public MusicTriggersRecord(Item.Properties p) {
         super(p);
     }
+
+    protected String tagString(ItemStack stack, String key) {
+        String ret = stack.getOrCreateTag().getString(key);
+        return ret.matches("") ? null : ret;
+    }
+
 
     @Override
     @Nonnull
@@ -51,11 +57,11 @@ public class MusicTriggersRecord extends Item {
             Player player = ctx.getPlayer();
             if (!ctx.getLevel().isClientSide && player instanceof ServerPlayer) {
                 ItemStack stack = player.getItemInHand(ctx.getHand());
-                CompoundTag tag = stack.getOrCreateTag();
-                if (tag.contains("trackID") && tag.contains("channelFrom")) {
+                String channel = tagString(stack,"channelFrom");
+                String trackID = tagString(stack,"trackID");
+                if (Objects.nonNull(channel) && Objects.nonNull(trackID)) {
                     ((JukeboxBlock) state.getBlock()).setRecord(ctx.getLevel(), ctx.getClickedPos(), state, stack);
-                    NetworkHandler.sendTo(new PacketJukeBoxCustom(ctx.getClickedPos(),tag.getString("channelFrom"),
-                            tag.getString("trackID")),(ServerPlayer)player);
+                    new PacketJukeBoxCustom(ctx.getClickedPos(),channel,trackID).addPlayers((ServerPlayer)player).send();
                     stack.shrink(1);
                     player.awardStat(Stats.PLAY_RECORD);
                 }
@@ -65,16 +71,26 @@ public class MusicTriggersRecord extends Item {
         return InteractionResult.PASS;
     }
 
+    @OnlyIn(Dist.CLIENT)
+    protected Component getLang(String ... elements) {
+        if(Objects.isNull(elements) || elements.length==0) return new TextComponent(Constants.MODID);
+        if(elements.length==1) return new TranslatableComponent(elements[0]+"."+Constants.MODID);
+        StringBuilder builder = new StringBuilder(elements[0]+"."+Constants.MODID+".");
+        for(int i=1;i<elements.length;i++) {
+            builder.append(elements[i]);
+            if(i<elements.length-1) builder.append(".");
+        }
+        return AssetUtil.customLang(builder.toString(),false);
+    }
+
     @Override
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack stack, @Nullable Level world, @Nonnull List<Component> components, @Nonnull TooltipFlag flag) {
-        CompoundTag tag = stack.getOrCreateTag();
-        if(tag.contains("trackID"))
-            components.add(new TextComponent(
-                    AssetUtil.extraLang(Constants.MODID,"item","music_triggers_record",
-                            "description",false).getString() +": "+tag.getString("trackID")));
-        else components.add(AssetUtil.extraLang(Constants.MODID,"item","music_triggers_record",
-                        "blank_description",false));
+        String trackID = tagString(stack,"trackID");
+        if(Objects.nonNull(trackID))
+            components.add(new TextComponent(getLang("item","music_triggers_record","description")
+                    .getString()+": "+trackID));
+        else components.add(getLang("item","music_triggers_record","blank_description"));
     }
 
     public static float mapTriggerToFloat(String trigger) {

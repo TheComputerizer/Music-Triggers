@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
 import mods.thecomputerizer.musictriggers.client.Translate;
+import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
 import net.minecraft.ChatFormatting;
@@ -23,17 +24,19 @@ public class GuiPage extends GuiSuperType {
     private final boolean canEdit;
     private boolean deleteMode;
     private int scrollPos;
+    private int numIconsAdjusted;
+    private int numVisibleRows;
+    private boolean canScroll;
     private boolean canScrollDown;
     private boolean hasEdits;
 
     public GuiPage(GuiSuperType parent, GuiType type, Instance configInstance, String id, List<Icon> icons, boolean buttons) {
         super(parent, type, configInstance);
-        this.id = id==null ? type.getId() : id;
+        this.id = Objects.isNull(id) ? type.getId() : id;
         this.icons = icons;
         this.canEdit = buttons;
         this.deleteMode = false;
-        this.scrollPos = 0;
-        this.canScrollDown = false;
+        this.numIconsAdjusted = icons.size()%2==0 ? icons.size() : icons.size()+1;
     }
 
     public String getID() {
@@ -43,21 +46,60 @@ public class GuiPage extends GuiSuperType {
     public void updateIcons(List<Icon> icons) {
         this.icons.clear();
         this.icons.addAll(icons);
+        this.numIconsAdjusted = icons.size()%2==0 ? icons.size() : icons.size()+1;
+    }
+
+    private void calculateScrollSize() {
+        this.scrollPos = 0;
+        int iconSlot = this.spacing*7;
+        int totalHeight = this.height-(this.spacing+24);
+        int runningHeight = iconSlot;
+        int runningTotal = 1;
+        while(runningHeight+iconSlot<totalHeight) {
+            runningTotal++;
+            runningHeight+=iconSlot;
+        }
+        this.numVisibleRows = runningTotal;
+        this.canScroll = this.numVisibleRows*2 < this.numIconsAdjusted;
+        this.canScrollDown = this.canScroll;
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scroll) {
+        if(this.canScroll) {
+            if (scroll != 0) {
+                if (scroll >= 1) {
+                    if (this.scrollPos>0) {
+                        this.scrollPos--;
+                        this.canScrollDown = true;
+                        return true;
+                    }
+                } else if (this.canScrollDown) {
+                    this.scrollPos++;
+                    this.canScrollDown = (this.scrollPos+this.numVisibleRows)*2 < this.numIconsAdjusted;
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Override
     public void init() {
         super.init();
+        calculateScrollSize();
         if(this.canEdit) {
             String displayName = Translate.guiGeneric(false,"button",this.id + "_add");
             int width = this.font.width(displayName)+8;
             int left = 16;
             addSuperButton(createBottomButton(displayName, width, 1, new ArrayList<>(),
                     (screen, button, mode) -> {
-                        Minecraft.getInstance().setScreen(
-                                new GuiPopUp(this,GuiType.POPUP,this.getInstance(),this.id,true, new ArrayList<>(this.icons)));
-                        this.hasEdits = true;
-                        save();
+                        if(ChannelManager.isClientConfig()) {
+                            Minecraft.getInstance().setScreen(new GuiPopUp(this, GuiType.POPUP,
+                                    this.getInstance(), this.id, true, new ArrayList<>(this.icons)));
+                            this.hasEdits = true;
+                            save();
+                        }
                     }),left);
             left+=(width+16);
             displayName = Translate.guiGeneric(false, "button", "delete_mode");
@@ -68,24 +110,10 @@ public class GuiPage extends GuiSuperType {
                     (screen, button, mode) -> {
                         ChatFormatting color = mode == 1 ? ChatFormatting.WHITE : ChatFormatting.RED;
                         this.deleteMode = color==ChatFormatting.RED;
-                        button.updateDisplay(color + finalDisplayName);
+                        button.updateDisplay(color + finalDisplayName,this.font,this);
                     }), left);
         }
-    }
-
-    @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scroll) {
-        if(scroll!=0) {
-            if(scroll<1 && this.canScrollDown) {
-                this.scrollPos++;
-                this.canScrollDown = false;
-                return true;
-            } else if(this.scrollPos>0) {
-                this.scrollPos--;
-                return true;
-            }
-        }
-        return super.mouseScrolled(mouseX, mouseY, scroll);
+        for(Icon icon : this.icons) icon.disableHover();
     }
 
     @Override
@@ -119,33 +147,55 @@ public class GuiPage extends GuiSuperType {
         int left = this.width-(this.spacing*15);
         Vector3f topLeft = new Vector3f(left,top,0);
         boolean isLeft = true;
+        int skip = this.scrollPos*2;
         for(Icon icon : this.icons) {
+            if(skip>0) {
+                icon.disableHover();
+                skip--;
+                continue;
+            }
             if(isLeft) topLeft = new Vector3f(left,top,0);
             else topLeft = new Vector3f(left+(this.spacing*7),topLeft.y(),0);
-            icon.drawIcon(matrix,topLeft,this.spacing,mouseX,mouseY,black(192),this.getBlitOffset(),
-                    Minecraft.getInstance().screen == this);
+            icon.drawIcon(matrix,topLeft,this.spacing,mouseX,mouseY,black(192),getBlitOffset(),isActive(this));
             if(!isLeft) top+=this.spacing*7;
+            if(top+(this.spacing*7)>=this.height) break;
             isLeft = !isLeft;
         }
+        if(this.canScroll) drawScrollBar();
+    }
+
+    private void drawScrollBar() {
+        float indices = (((float)this.numIconsAdjusted-((float)this.numVisibleRows*2f))/2f)+1f;
+        float perIndex = this.height/indices;
+        int top = (int)(perIndex*this.scrollPos);
+        int x = this.width-1;
+        Vector3f start = new Vector3f(x, top,0);
+        if(perIndex<1) perIndex = 1;
+        Vector3f end = new Vector3f(x, (int)(top+perIndex),0);
+        GuiUtil.drawLine(start,end,white(192), 2f, getBlitOffset());
     }
 
     private void drawLeftSide(PoseStack matrix, int top) {
-        if(Minecraft.getInstance().screen==this) {
+        if(isActive(this)) {
             int textHeight = this.font.lineHeight;
             int centerX = this.width / 2;
             int left = this.spacing;
             int textX = left + (this.spacing / 2);
             for (Icon icon : this.icons) {
                 if (icon.getHover()) {
-                    GuiUtil.drawLine(new Vector3f(left, top, 0), new Vector3f(centerX, top, 0), white(128), 1f, this.getBlitOffset());
+                    boolean enabled = ChannelManager.isClientConfig();
+                    if(icon.id.matches("debug") || icon.id.matches("registration"))
+                        enabled = enabled && ChannelManager.isButtonEnabled(icon.id);
+                    GuiUtil.drawLine(new Vector3f(left, top,0), new Vector3f(centerX, top,0), white(128), 1f,getBlitOffset());
                     top += this.spacing;
-                    drawString(matrix,font,icon.getDisplay(), textX, top, GuiUtil.WHITE);
+                    drawString(matrix,this.font,icon.getDisplay(enabled), textX, top, GuiUtil.WHITE);
                     top += (textHeight + this.spacing);
-                    GuiUtil.drawLine(new Vector3f(left, top,0), new Vector3f(centerX, top, 0), white(128), 1f, this.getBlitOffset());
+                    GuiUtil.drawLine(new Vector3f(left, top,0), new Vector3f(centerX, top,0), white(128), 1f,getBlitOffset());
+                    if(!enabled) break;
                     top += this.spacing;
                     top = GuiUtil.drawMultiLineString(matrix, this.font, icon.getDescription(), textX, centerX, top, textHeight + (this.spacing / 2),
                             100, 0, GuiUtil.WHITE) + (this.spacing / 2);
-                    GuiUtil.drawLine(new Vector3f(left, top, 0), new Vector3f(centerX, top, 0), white(128), 1f, this.getBlitOffset());
+                    GuiUtil.drawLine(new Vector3f(left, top,0), new Vector3f(centerX, top,0), white(128), 1f, getBlitOffset());
                     break;
                 }
             }
@@ -154,8 +204,10 @@ public class GuiPage extends GuiSuperType {
 
     @Override
     protected void save() {
-        if(this.hasEdits)
+        if(this.hasEdits) {
             this.madeChange(true);
+            this.hasEdits = false;
+        }
     }
 
     public static class Icon {
@@ -198,11 +250,15 @@ public class GuiPage extends GuiSuperType {
             return this.hover && this.canDelete;
         }
 
-        /*
+        /**
             This can only be done since the only case where an icon can be deleted is on the channel selection page
         */
         public String channelName() {
             return this.id;
+        }
+
+        public void disableHover() {
+            this.hover = false;
         }
 
         private boolean isHovering(int mouseX, int mouseY, Vector3f topLeft, int sideLength) {
@@ -212,10 +268,10 @@ public class GuiPage extends GuiSuperType {
         public void drawIcon(PoseStack matrix, Vector3f topLeft, int spacing, int mouseX, int mouseY, Vector4f color, float zLevel, boolean curScreen) {
             GuiUtil.drawBoxOutline(topLeft,spacing*6,spacing*6,new Vector4f(255,255,255,192),
                     1f,zLevel);
-            Vector3f backgroundTopLeft = new Vector3f(topLeft.x()+(((float)spacing)/2),topLeft.y()+(((float)spacing)/2),0);
+            Vector3f backgroundTopLeft = new Vector3f(topLeft.x()+((float)spacing/2),topLeft.y()+((float)spacing/2),0);
             Vector3f iconCenter = new Vector3f((int)(backgroundTopLeft.x()+(spacing*2.5f)),(int)(backgroundTopLeft.y()+(spacing*2.5f)),0);
             this.hover = curScreen && isHovering(mouseX,mouseY,backgroundTopLeft,spacing*5);
-            if(hover) {
+            if(this.hover) {
                 GuiUtil.drawBox(backgroundTopLeft,spacing*5,spacing*5,GuiUtil.reverseColors(color),zLevel);
                 GuiUtil.bufferSquareTexture(matrix, iconCenter,spacing*1.5f,this.hoverTexture);
             } else {
@@ -237,9 +293,12 @@ public class GuiPage extends GuiSuperType {
             return this.hover;
         }
 
-        public String getDisplay() {
-            if(this.separateDisplay) return this.display+" - "+this.id;
-            return this.display;
+        public String getDisplay(boolean enabled) {
+            if(enabled) {
+                if (this.separateDisplay) return this.display + " - " + this.id;
+                return this.display;
+            }
+            return Translate.disabledHover().get(0);
         }
 
         public String getDescription() {

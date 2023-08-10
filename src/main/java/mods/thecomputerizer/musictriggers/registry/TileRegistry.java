@@ -11,8 +11,9 @@ import net.minecraftforge.registries.RegistryObject;
 public final class TileRegistry {
 
     private static final DeferredRegister<BlockEntityType<?>> TILE_ENTITIES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITIES, Constants.MODID);
-    public static final RegistryObject<BlockEntityType<MusicRecorderEntity>> MUSIC_RECORDER_ENTITY = TILE_ENTITIES.register("music_recorder_entity",
-            () -> BlockEntityType.Builder.of(MusicRecorderEntity::new,BlockRegistry.MUSIC_RECORDER.get()).build(null));
+    public static final RegistryObject<BlockEntityType<MusicRecorderEntity>> MUSIC_RECORDER_ENTITY = TILE_ENTITIES
+            .register("music_recorder_entity", () -> BlockEntityType.Builder.of(MusicRecorderEntity::new,
+                    BlockRegistry.MUSIC_RECORDER.get()).build(null));
 
     public static void registerTiles(IEventBus bus) {
         TILE_ENTITIES.register(bus);
