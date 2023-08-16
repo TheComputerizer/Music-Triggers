@@ -9,35 +9,45 @@ import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Tuple;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class GuiLogVisualizer extends GuiSuperType {
 
     private int scrollPos;
-    private int numElements;
+    private int numLines;
     private boolean canScroll;
     private boolean canScrollUp;
-    private Set<Map.Entry<Integer, Tuple<String,Integer>>> orderedMessages;
+    private final Map<Integer,Tuple<List<String>,Integer>> messageLines;
+    private final Map<Integer,Tuple<List<String>,Integer>> searchedMessageLines;
     private int filteredSize;
 
     public GuiLogVisualizer(GuiSuperType parent, GuiType type, Instance configInstance) {
         super(parent, type, configInstance);
         this.spacing = Minecraft.getInstance().font.lineHeight/2;
-        this.orderedMessages = MusicTriggers.getLogEntries();
-        this.filteredSize = calculateFilteredSize();
+        this.messageLines = new HashMap<>();
+        this.searchedMessageLines = new HashMap<>();
+        this.filteredSize = 0;
     }
 
-    private int calculateFilteredSize() {
-        int size = 0;
-        for(Map.Entry<Integer, Tuple<String, Integer>> logEntry : this.orderedMessages)
-            if(renderLevel(logEntry.getValue().getA())) size++;
-        return size;
+    private void calculateSizes() {
+        this.messageLines.clear();
+        int logCounter = 0;
+        List<Tuple<String,Integer>> logEntries = MusicTriggers.getLogEntries();
+        for(Tuple<String,Integer> logEntry : logEntries) {
+            String message = logEntry.getA();
+            List<String> lines = GuiUtil.splitLines(Minecraft.getInstance().font, message, 16, this.width - 16);
+            if (!lines.isEmpty() && renderLevel(message)) {
+                this.messageLines.put(logCounter, new Tuple<>(lines, logEntry.getB()));
+                logCounter++;
+            }
+        }
     }
 
     private void calculateScrollSize() {
         this.scrollPos = 0;
-        int textSlot = Minecraft.getInstance().font.lineHeight+this.spacing;
+        int textSlot = this.minecraft.font.lineHeight+this.spacing;
         int totalHeight = this.height-40;
         int runningHeight = textSlot;
         int runningTotal = 1;
@@ -45,10 +55,10 @@ public class GuiLogVisualizer extends GuiSuperType {
             runningTotal++;
             runningHeight+=textSlot;
         }
-        this.numElements = runningTotal;
-        this.canScroll = this.numElements < this.filteredSize;
+        this.numLines = runningTotal;
+        this.canScroll = this.numLines < this.filteredSize;
         this.canScrollUp = this.canScroll;
-        if(!this.canScroll) this.numElements = this.filteredSize;
+        if(!this.canScroll) this.numLines = this.filteredSize;
     }
 
     @Override
@@ -58,7 +68,7 @@ public class GuiLogVisualizer extends GuiSuperType {
                 if (scroll >= 1) {
                     if (this.canScrollUp) {
                         this.scrollPos++;
-                        this.canScrollUp = this.scrollPos + this.numElements + 1 < this.filteredSize;
+                        this.canScrollUp = this.scrollPos + this.numLines < this.filteredSize;
                         return true;
                     }
                 } else if (this.scrollPos > 0) {
@@ -72,29 +82,52 @@ public class GuiLogVisualizer extends GuiSuperType {
     }
 
     @Override
+    protected void updateSearch() {
+        int prevScroll = this.scrollPos;
+        this.searchedMessageLines.clear();
+        this.filteredSize = 0;
+        int searchCounter = 0;
+        for(Map.Entry<Integer,Tuple<List<String>,Integer>> messageEntry : this.messageLines.entrySet()) {
+            boolean include = false;
+            for(String line : messageEntry.getValue().getA()) {
+                if(checkSearch(line)) {
+                    include = true;
+                    break;
+                }
+            }
+            if(include) {
+                this.filteredSize+=messageEntry.getValue().getA().size();
+                this.searchedMessageLines.put(searchCounter,messageEntry.getValue());
+                searchCounter++;
+            }
+        }
+        calculateScrollSize();
+        this.scrollPos = Math.min(prevScroll,this.canScroll ? this.filteredSize-this.numLines : 0);
+    }
+
+    @Override
     public void init() {
         super.init();
-        this.orderedMessages = MusicTriggers.getLogEntries();
-        this.filteredSize = calculateFilteredSize();
-        calculateScrollSize();
+        enableSearch();
+        calculateSizes();
+        updateSearch();
     }
 
     @Override
     protected void drawStuff(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
         int textSpacing = this.font.lineHeight+this.spacing;
-        int y = this.canScroll ? 32 : this.height-(this.numElements*textSpacing);
-        int skip = this.canScroll ? this.filteredSize-this.numElements-this.scrollPos : 0;
-        int finish = this.numElements;
-        for(Map.Entry<Integer, Tuple<String, Integer>> logEntry : this.orderedMessages) {
-            if(skip>0) skip--;
-            else {
-                if(finish>0) {
-                    Tuple<String, Integer> message = logEntry.getValue();
-                    if(renderLevel(message.getA())) {
-                        drawString(matrix,this.font, message.getA(), 16, y, message.getB());
-                        y += textSpacing;
-                        finish--;
-                    }
+        int y = this.canScroll ? 32 : this.height-(this.numLines*textSpacing);
+        int skip = this.canScroll ? this.filteredSize-this.numLines-this.scrollPos : 0;
+        int finish = this.numLines;
+        for(int i=0;i<this.searchedMessageLines.size();i++) {
+            if(finish<=0) break;
+            for(String line : this.searchedMessageLines.get(i).getA()) {
+                if(skip>0) skip--;
+                else {
+                    drawString(matrix,this.font, line, 16, y, this.searchedMessageLines.get(i).getB());
+                    y += textSpacing;
+                    finish--;
+                    if(finish <= 0) break;
                 }
             }
         }
@@ -102,14 +135,14 @@ public class GuiLogVisualizer extends GuiSuperType {
     }
 
     private void drawScrollBar() {
-        float indices = this.filteredSize-this.numElements;
+        float indices = this.filteredSize-this.numLines;
         float perIndex = this.height/indices;
         int top = (int)(perIndex*(indices-this.scrollPos-1));
         int x = this.width-1;
-        Vector3f start = new Vector3f(x, top, 0);
+        Vector3f start = new Vector3f(x, top,0);
         if(perIndex<1) perIndex = 1;
-        Vector3f end = new Vector3f(x, (int)(top+perIndex), 0);
-        GuiUtil.drawLine(start,end,white(192), 2f, this.getBlitOffset());
+        Vector3f end = new Vector3f(x, (int)(top+perIndex),0);
+        GuiUtil.drawLine(start,end,white(192), 2f, getBlitOffset());
     }
 
     private boolean renderLevel(String level) {

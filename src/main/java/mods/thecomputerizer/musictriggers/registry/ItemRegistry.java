@@ -12,17 +12,20 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
-
 public final class ItemRegistry {
     private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, Constants.MODID);
     public static final RegistryObject<Item> MUSIC_TRIGGERS_RECORD = ITEMS.register("music_triggers_record",
-            () -> new MusicTriggersRecord(new Item.Properties().stacksTo(1).tab(Tabs.MUSIC_TRIGGERS_TAB).rarity(Rarity.EPIC)));
+            () -> new MusicTriggersRecord(new Item.Properties().stacksTo(1)
+                    .tab(RegistryHandler.MUSIC_TRIGGERS_TAB).rarity(Rarity.EPIC)));
     public static final RegistryObject<Item> CUSTOM_RECORD = ITEMS.register("custom_record",
-            () -> new CustomRecord(new Item.Properties().stacksTo(1).tab(Tabs.MUSIC_TRIGGERS_TAB).rarity(Rarity.EPIC)));
+            () -> new CustomRecord(new Item.Properties().stacksTo(1)
+                    .tab(RegistryHandler.MUSIC_TRIGGERS_TAB).rarity(Rarity.EPIC)));
     public static final RegistryObject<Item> BLANK_RECORD = ITEMS.register("blank_record",
-            () -> new BlankRecord(new Item.Properties().stacksTo(1).tab(Tabs.MUSIC_TRIGGERS_TAB).rarity(Rarity.EPIC)));
+            () -> new BlankRecord(new Item.Properties().stacksTo(1)
+                    .tab(RegistryHandler.MUSIC_TRIGGERS_TAB).rarity(Rarity.EPIC)));
     public static final RegistryObject<Item> MUSIC_RECORDER = ITEMS.register("music_recorder",
-            () -> new BlockItem(BlockRegistry.MUSIC_RECORDER.get(), new Item.Properties().stacksTo(1).tab(Tabs.MUSIC_TRIGGERS_TAB).rarity(Rarity.EPIC)));
+            () -> new BlockItem(BlockRegistry.MUSIC_RECORDER.get(), new Item.Properties().stacksTo(1)
+                    .tab(RegistryHandler.MUSIC_TRIGGERS_TAB).rarity(Rarity.EPIC)));
 
     public static void registerItems(IEventBus bus) {
         ITEMS.register(bus);

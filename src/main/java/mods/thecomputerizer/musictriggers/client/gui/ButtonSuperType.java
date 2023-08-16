@@ -1,13 +1,13 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
+import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.contents.LiteralContents;
 import net.minecraftforge.client.gui.widget.ExtendedButton;
 import org.apache.logging.log4j.util.TriConsumer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ButtonSuperType extends ExtendedButton {
     private final List<Component> hoverLines;
@@ -17,8 +17,8 @@ public class ButtonSuperType extends ExtendedButton {
     public ButtonSuperType(int xPos, int yPos, int width, int height, int numModes, String displayString,
                            List<String> hoverText, TriConsumer<GuiSuperType, ButtonSuperType, Integer> onClick,
                            boolean isEnabled) {
-        super(xPos, yPos, width, height, MutableComponent.create(new LiteralContents(displayString)), null);
-        this.hoverLines = hoverText.stream().map(line -> (Component)MutableComponent.create(new LiteralContents(line))).toList();
+        super(xPos, yPos, width, height, Component.literal(displayString), null);
+        this.hoverLines = hoverText.stream().map(Component::literal).collect(Collectors.toList());
         this.numModes = numModes;
         this.mode = 1;
         this.onClick = onClick;
@@ -31,8 +31,14 @@ public class ButtonSuperType extends ExtendedButton {
         this.visible = is;
     }
 
-    public void updateDisplay(String newDisplay) {
-        this.message = MutableComponent.create(new LiteralContents(newDisplay));
+    public void setMode(int mode) {
+        this.mode = mode;
+    }
+
+    public void updateDisplay(String newDisplay, Font font, GuiSuperType screenToUpdate) {
+        this.message = Component.literal(newDisplay);
+        this.width = font.width(this.message) + 8;
+        screenToUpdate.buttonWidthUpdate();
     }
 
 

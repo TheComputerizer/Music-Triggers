@@ -26,7 +26,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-@SuppressWarnings("deprecation")
+@SuppressWarnings({"NullableProblems", "deprecation"})
 public class MusicRecorder extends BaseEntityBlock {
 
     public static final BooleanProperty HAS_RECORD = BlockStateProperties.HAS_RECORD;
@@ -37,7 +37,6 @@ public class MusicRecorder extends BaseEntityBlock {
         this.registerDefaultState(this.stateDefinition.any().setValue(HAS_RECORD, Boolean.FALSE).setValue(HAS_DISC, Boolean.FALSE));
     }
 
-    @Nonnull
     @Override
     public InteractionResult use(BlockState state, @Nonnull Level world, @Nonnull BlockPos pos, @Nonnull Player player,
                                  @Nonnull InteractionHand hand, @Nonnull BlockHitResult ray) {
@@ -56,14 +55,14 @@ public class MusicRecorder extends BaseEntityBlock {
         }
     }
 
-    public void insertRecord(Level world, BlockPos pos, ItemStack recordStack, BlockState state, Player player) {
+    public void insertRecord(Level world, BlockPos pos, ItemStack stack, BlockState state, Player player) {
         if (!world.isClientSide) {
-            if (recordStack.getItem()==ItemRegistry.BLANK_RECORD.get() || recordStack.getItem()==ItemRegistry.MUSIC_TRIGGERS_RECORD.get()) {
-                boolean wasBlank = recordStack.getItem()==ItemRegistry.BLANK_RECORD.get();
+            if (stack.getItem()==ItemRegistry.BLANK_RECORD.get() || stack.getItem()==ItemRegistry.MUSIC_TRIGGERS_RECORD.get()) {
+                boolean wasBlank = stack.getItem()==ItemRegistry.BLANK_RECORD.get();
                 BlockEntity entity = world.getBlockEntity(pos);
                 if (entity instanceof MusicRecorderEntity recorderEntity) {
                     if (recorderEntity.isEmpty()) {
-                        recorderEntity.insertRecord(recordStack, player);
+                        recorderEntity.insertRecord(stack, player);
                         world.setBlock(pos,state.setValue(HAS_RECORD,wasBlank).setValue(HAS_DISC,!wasBlank),2);
                     }
                 }
@@ -89,20 +88,20 @@ public class MusicRecorder extends BaseEntityBlock {
     }
 
     @Override
-    public void onRemove(BlockState state, @Nonnull Level world, @Nonnull BlockPos pos, BlockState state2, boolean b) {
-        if(!state.is(state2.getBlock())) {
+    public void onRemove(BlockState oldState, Level world, BlockPos pos, BlockState newState, boolean b) {
+        if(!oldState.is(newState.getBlock())) {
             this.dropRecord(world, pos);
-            super.onRemove(state,world,pos,state2,b);
+            super.onRemove(oldState,world,pos,newState,b);
         }
     }
 
     @Override
-    public boolean hasAnalogOutputSignal(@Nonnull BlockState state) {
+    public boolean hasAnalogOutputSignal(BlockState state) {
         return true;
     }
 
     @Override
-    public int getAnalogOutputSignal(@Nonnull BlockState state, Level world, @Nonnull BlockPos pos) {
+    public int getAnalogOutputSignal(BlockState state, Level world, BlockPos pos) {
         BlockEntity entity = world.getBlockEntity(pos);
         return entity instanceof MusicRecorderEntity && !((MusicRecorderEntity)entity).isEmpty() ? 15 : 0;
     }
@@ -129,13 +128,14 @@ public class MusicRecorder extends BaseEntityBlock {
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@Nonnull Level level, @Nonnull BlockState state,
                                                                   @Nonnull BlockEntityType<T> type) {
-        return createTicker(level, type, TileRegistry.MUSIC_RECORDER_ENTITY.get());
+        return createTicker(level,type,TileRegistry.MUSIC_RECORDER_ENTITY.get());
     }
 
+    @SuppressWarnings("unchecked")
     @Nullable
-    private static <T extends BlockEntity> BlockEntityTicker<T> createTicker(Level level, BlockEntityType<T> serverType,
-                                                                                      BlockEntityType<MusicRecorderEntity> clientType) {
-        return level.isClientSide ? null : createTickerHelper(serverType, clientType,
-                (level1,pos,state,entity) -> MusicRecorderEntity.serverTick(entity));
+    private static <T extends BlockEntity> BlockEntityTicker<T> createTicker(
+            Level level, BlockEntityType<? extends BlockEntity> serverType,BlockEntityType<MusicRecorderEntity> clientType) {
+        return (BlockEntityTicker<T>)(level.isClientSide ? null : createTickerHelper(serverType, clientType,
+                (level1,pos,state,entity) -> MusicRecorderEntity.serverTick(entity)));
     }
 }

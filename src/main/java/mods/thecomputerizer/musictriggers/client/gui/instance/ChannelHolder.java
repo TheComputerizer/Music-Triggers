@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.client.gui.instance;
 
+import mods.thecomputerizer.musictriggers.client.Translate;
 import mods.thecomputerizer.musictriggers.client.gui.*;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
@@ -7,7 +8,6 @@ import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 
 import java.io.File;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ChannelHolder extends AbstractConfig {
 
@@ -34,7 +34,11 @@ public class ChannelHolder extends AbstractConfig {
 
     @Override
     public List<GuiPage.Icon> getPageIcons(String channel) {
-        return this.channelInstances.keySet().stream().map(this::getPageIcon).collect(Collectors.toList());
+        List<String> orderedChannelNames = new ArrayList<>(this.channelInstances.keySet());
+        Collections.sort(orderedChannelNames);
+        List<GuiPage.Icon> ret = new ArrayList<>();
+        for(String orderedChannel : orderedChannelNames) ret.add(getPageIcon(orderedChannel));
+        return ret;
     }
 
     @Override
@@ -68,5 +72,28 @@ public class ChannelHolder extends AbstractConfig {
 
     public void deleteChannel(String channelName) {
         this.channelInstances.remove(channelName);
+    }
+
+    public GuiSelection createChannelSelectParameterScreen(GuiSuperType parent, GuiParameters.Parameter channelParameter) {
+        return new GuiSelection(parent,GuiType.SELECTION_GENERIC,parent.getInstance(),
+                Translate.guiGeneric(false,"selection","channel_parameter"),false,true,
+                () -> multiSelectChannelElements(channelParameter));
+    }
+
+    public List<GuiSelection.Element> multiSelectChannelElements(GuiParameters.Parameter channelParameter) {
+        List<GuiSelection.Element> elements = new ArrayList<>();
+        int index = 0;
+        for(String channel : this.channelInstances.keySet()) {
+            int triggers = this.channelInstances.get(channel).getRegisteredTriggerCount();
+            int songs = this.channelInstances.get(channel).getRegisteredSongCount();
+            elements.add(new GuiSelection.MonoElement(channel, index, channel,
+                    Translate.registeredChannelHover(triggers,songs),(parent) -> {
+                channelParameter.setChannelParameter(channel);
+                channelParameter.saveScreen();
+                parent.saveAndDisplay(parent.getParent());
+            }));
+            index++;
+        }
+        return elements;
     }
 }

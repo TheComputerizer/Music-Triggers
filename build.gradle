@@ -1,7 +1,6 @@
-//file:noinspection GroovyAssignabilityCheck
 plugins {
-    id 'net.minecraftforge.gradle' version '5.1.69'
-    id 'com.github.johnrengelman.shadow' version '7.1.+'
+    id 'net.minecraftforge.gradle' version '6.0.+'
+    id 'com.github.johnrengelman.shadow' version '8.1.+'
     id 'org.spongepowered.mixin' version '0.7.+'
     id 'org.parchmentmc.librarian.forgegradle' version '1.+'
 }
@@ -10,7 +9,7 @@ version = "${project.minecraft_version}-${project.mod_version}"
 group = project.maven_group
 archivesBaseName = project.base_name
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+java.toolchain.getLanguageVersion().set(JavaLanguageVersion.of(17))
 
 minecraft {
     mappings channel: 'parchment', version: "${project.parchment_version}-${project.minecraft_version}"
@@ -23,34 +22,37 @@ minecraft {
                 '-mixin.config="musictriggers.mixin.json"'
         ]
         client {
-            workingDirectory project.file('run')
+            workingDirectory file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
             args mixinStuff
             mods {
                 musictriggers {
+                    //noinspection GroovyAssignabilityCheck
                     source sourceSets.main
                 }
             }
         }
         server {
-            workingDirectory project.file('run')
+            workingDirectory file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
             args mixinStuff
             mods {
                 musictriggers {
+                    //noinspection GroovyAssignabilityCheck
                     source sourceSets.main
                 }
             }
         }
         data {
-            workingDirectory project.file('run')
+            workingDirectory file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
             args '--mod', 'examplemod', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
             mods {
                 musictriggers {
+                    //noinspection GroovyAssignabilityCheck
                     source sourceSets.main
                 }
             }
@@ -78,9 +80,10 @@ repositories {
     maven {
         url = uri("https://jitpack.io")
     }
+    flatDir {
+        dirs 'build/libs'
+    }
 }
-
-sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 configurations {
     shade
@@ -95,38 +98,45 @@ dependencies {
     shade("io.github.kostaskougios:cloning:${project.cloning_version}")
     shade("com.github.walkyst:lavaplayer-fork:${project.lava_version}") {
         exclude module: 'commons-io'
+        exclude module: 'commons-codec'
     }
 
     //required mod dependencies
-    implementation fg.deobf("maven.modrinth:the-impossible-library:${project.minecraft_version}-${project.lib_version}")
+    //implementation(fg.deobf("maven.modrinth:the-impossible-library:${project.minecraft_version}-${project.lib_version}"))
+    //local versions of required dependencies for testing
+    //noinspection DependencyNotationArgument
+    implementation(name: "theimpossiblelibrary-${project.minecraft_version}-${project.lib_version}")
 
     //mixin
     annotationProcessor("org.spongepowered:mixin:${project.mixin_version}:processor")
 
     //mods
     implementation fg.deobf("curse.maven:game-stages-268655:${project.gamestages_version}")
+    implementation(fg.deobf("curse.maven:enhanced-celestials-438447:${project.celestials_version}"))
     implementation fg.deobf("curse.maven:atomicstrykers-infernal-mobs-227875:${project.infernal_version}")
     implementation fg.deobf("curse.maven:serene-seasons-291874:${project.seasons_version}")
+    implementation(fg.deobf("curse.maven:blue-skies-312918:${project.blueskies_version}"))
 
     runtimeOnly(fg.deobf("curse.maven:bookshelf-228525:${project.bookshelf_version}"))
     runtimeOnly(fg.deobf("curse.maven:jei-238222:${project.jei_version}"))
+    runtimeOnly(fg.deobf("curse.maven:structure-gel-378802:${project.gel_version}"))
 }
 
 shadowJar {
     //necessary relocation
-    relocate 'org.apache.commons.codec', "${project.shadow_group}.apache.commons.codec"
-    relocate 'org.apache.commons.logging', "${project.shadow_group}.apache.commons.logging"
-    relocate 'org.apache.http', "${project.shadow_group}.apache.http"
-    relocate 'org.jsoup', "${project.shadow_group}.jsoup"
-    relocate 'org.objenesis', "${project.shadow_group}.objenesis"
-    relocate 'org.slf4j', "${project.shadow_group}.slf4j"
-    relocate 'net.iharder', "${project.shadow_group}.iharder"
-    relocate 'mozilla', "${project.shadow_group}"
-    relocate 'com.fasterxml', "${project.shadow_group}.fasterxml"
-    relocate 'com.rits', "${project.shadow_group}.rits"
-    relocate 'certificates', "${project.shadow_group}"
+    relocate 'org.apache.commons.codec', "${shadow_group}.apache.commons.codec"
+    relocate 'org.apache.commons.logging', "${shadow_group}.apache.commons.logging"
+    relocate 'org.apache.http', "${shadow_group}.apache.http"
+    relocate 'org.jsoup', "${shadow_group}.jsoup"
+    relocate 'org.objenesis', "${shadow_group}.objenesis"
+    relocate 'org.slf4j', "${shadow_group}.slf4j"
+    relocate 'net.iharder', "${shadow_group}.iharder"
+    relocate 'mozilla', "${shadow_group}"
+    relocate 'com.fasterxml', "${shadow_group}.fasterxml"
+    relocate 'com.rits', "${shadow_group}.rits"
+    relocate 'certificates', "${shadow_group}"
     configurations = [project.configurations.shadow]
-    classifier ''
+    setArchiveClassifier('')
     mergeServiceFiles()
 }
 
@@ -162,6 +172,6 @@ jar {
     }
 }
 
-jar.finalizedBy('reobfJar')
-
-tasks.assemble.dependsOn shadowJar
+tasks.assemble.dependsOn('shadowJar')
+tasks.shadowJar.dependsOn('reobfJar')
+tasks.jar.finalizedBy('reobfJar')
