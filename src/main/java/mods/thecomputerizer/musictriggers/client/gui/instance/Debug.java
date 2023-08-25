@@ -34,6 +34,8 @@ public class Debug extends AbstractConfig {
                         fileData.getOrCreateVar(null,"RESAMPLING_QUALITY","HIGH")),
                 new GuiParameters.Parameter(type.getId(),"log_level",
                         fileData.getOrCreateVar(null,"LOG_LEVEL","INFO")),
+                new GuiParameters.Parameter(type.getId(),"max_hover_elements",
+                        fileData.getOrCreateVar(null,"MAX_HOVER_ELEMENTS",15)),
                 new GuiParameters.Parameter(type.getId(),"play_normal_music",
                         fileData.getOrCreateVar(null,"PLAY_NORMAL_MUSIC",false)),
                 new GuiParameters.Parameter(type.getId(),"reverse_priority",

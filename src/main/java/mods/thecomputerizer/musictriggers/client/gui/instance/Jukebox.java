@@ -1,10 +1,12 @@
 package mods.thecomputerizer.musictriggers.client.gui.instance;
 
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.Translate;
 import mods.thecomputerizer.musictriggers.client.gui.*;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.util.TriConsumer;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.*;
@@ -13,7 +15,7 @@ public class Jukebox extends AbstractChannelConfig {
     private final Map<String, String> recordMap;
     public Jukebox(String channelName, Map<String, String> recordMap) {
         super(channelName);
-        this.recordMap = recordMap;
+        this.recordMap = MusicTriggers.clone(recordMap);
     }
 
     @Override
@@ -67,16 +69,26 @@ public class Jukebox extends AbstractChannelConfig {
         int width = Minecraft.getInstance().font.width(displayName)+8;
         List<String> hoverText = Translate.singletonHover("button","add_jukebox","hover");
         TriConsumer<GuiSuperType, ButtonSuperType, Integer> onClick = (parent, button, type) -> {
+            Instance instance = parent.getInstance();
+            Minecraft.getInstance().setScreen(new GuiSelection(parent,GuiType.SELECTION_GENERIC,
+                    instance,Translate.guiGeneric(false,"selection","group","potential_songs")+
+                    " "+getChannelName(), false,true,() ->
+                    instance.getChannel(getChannelName()).getPotentialSongs(parent,true)));
+        };
+        buttons.add(grandfather.createBottomButton(displayName,width,1,hoverText,onClick));
+        return buttons.toArray(new ButtonSuperType[]{});
+    }
+
+    public void addRecord(@Nullable String key) {
+        if(Objects.nonNull(key)) this.recordMap.put(key,"record");
+        else {
             int i = 0;
             String temp = "temp" + i;
-            while (this.recordMap.containsKey(temp)) {
+            while(this.recordMap.containsKey(temp)) {
                 i++;
                 temp = "temp" + i;
             }
             this.recordMap.put(temp,"record");
-            parent.parentUpdate();
-        };
-        buttons.add(grandfather.createBottomButton(displayName,width,1,hoverText,onClick));
-        return buttons.toArray(new ButtonSuperType[]{});
+        }
     }
 }

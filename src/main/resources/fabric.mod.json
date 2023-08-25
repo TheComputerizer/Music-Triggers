@@ -35,7 +35,7 @@
     "fabric": "*",
     "minecraft": "~1.19.2",
     "java": ">=17",
-    "theimpossiblelibrary": ">=1.19.2-fabric-0.2.3"
+    "theimpossiblelibrary": ">=1.19.2-fabric-0.3.0"
   },
   "suggests": {
     "another-mod": "*"

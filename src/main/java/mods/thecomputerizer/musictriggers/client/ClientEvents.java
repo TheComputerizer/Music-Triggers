@@ -4,17 +4,17 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.vertex.PoseStack;
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
-import mods.thecomputerizer.musictriggers.client.audio.Channel;
-import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
+import mods.thecomputerizer.musictriggers.client.channels.Channel;
+import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.musictriggers.client.gui.GuiSuperType;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
-import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
+import mods.thecomputerizer.theimpossiblelibrary.util.TextUtil;
+import mods.thecomputerizer.theimpossiblelibrary.util.file.LogUtil;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.ChatFormatting;
-import net.minecraft.advancements.Advancement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.player.LocalPlayer;
@@ -23,13 +23,14 @@ import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.biome.Biome;
 import org.apache.logging.log4j.Level;
@@ -39,7 +40,6 @@ import java.util.*;
 
 @Environment(EnvType.CLIENT)
 public class ClientEvents {
-    public static boolean IS_WORLD_RENDERED;
     public static int RELOAD_COUNTER = 0;
     public static String LAST_ADVANCEMENT;
     public static boolean GAINED_NEW_ADVANCEMENT;
@@ -48,45 +48,57 @@ public class ClientEvents {
 
     public static SoundInstance playSound(SoundInstance sound) {
         if(Objects.nonNull(sound)) {
-            SimpleSoundInstance silenced = new SimpleSoundInstance(sound.getLocation(), sound.getSource(),
-                    Float.MIN_VALUE * 10000, 1F, RandomSource.create(),false, 0,
-                    SoundInstance.Attenuation.NONE, 0F, 0F, 0F, true);
-            for (String s : ConfigDebug.BLOCKED_MOD_CATEGORIES) {
-                String modid = s.contains(";") ? s.substring(0, s.indexOf(';')) : s;
-                if (!sound.getLocation().getNamespace().matches(modid)) continue;
-                String categoryName = s.contains(";") && s.indexOf(';') + 1 < s.length() ? s.substring(s.indexOf(';') + 1) : "music";
-                if (sound.getSource().getName().matches(categoryName)) {
-                    if (ChannelManager.handleSoundEventOverride(sound)) {
-                        return silenced;
-                    }
-                }
+            ResourceLocation location = sound.getLocation();
+            SoundSource category = sound.getSource();
+            SimpleSoundInstance silenced = new SimpleSoundInstance(location,category,1f/1000000f,1f,
+                    RandomSource.create(),false,1,SoundInstance.Attenuation.NONE,0,0,0,true);
+            for (Map.Entry<String, HashSet<String>> modEntry : ConfigDebug.FORMATTED_BLOCKED_MODS.entrySet()) {
+                if (!modEntry.getKey().matches("all") && !location.getNamespace().matches(modEntry.getKey())) continue;
+                for (String categoryMatch : modEntry.getValue())
+                    if (category.getName().toLowerCase().matches(categoryMatch.toLowerCase()) &&
+                            ChannelManager.handleSoundEventOverride(sound.getSound(), category)) return silenced;
+
             }
         }
         return sound;
     }
 
-    public static InteractionResult onAdvancement(Advancement adv) {
-        LAST_ADVANCEMENT = adv.getId().toString();
+    public static void onAdvancement(ResourceLocation advLocation) {
+        LAST_ADVANCEMENT = advLocation.toString();
         GAINED_NEW_ADVANCEMENT = true;
-        return InteractionResult.PASS;
+    }
+
+    public static void onCommand(String identifier, boolean isCommand, boolean isReload, boolean isDebug) {
+        if(isCommand && !identifier.matches("not_set")) COMMAND_MAP.put(identifier,true);
+        else if(isDebug) {
+            ConfigDebug.SHOW_DEBUG = !ConfigDebug.SHOW_DEBUG;
+            ConfigDebug.write();
+        } else if(isReload) initReload();
     }
 
     public static boolean commandHelper(Trigger trigger) {
-        String id = trigger.getParameter("identifier");
+        String id = trigger.getParameterString("identifier");
         return COMMAND_MAP.containsKey(id) && COMMAND_MAP.get(id);
     }
 
     public static void commandFinish(Trigger trigger) {
-        String id = trigger.getParameter("identifier");
+        String id = trigger.getParameterString("identifier");
         COMMAND_MAP.put(id,false);
     }
 
-    public static void onDisconnect() {
-        IS_WORLD_RENDERED =false;
+    public static void clientDisconnected() {
+        ChannelManager.onClientLogout();
     }
 
+    /*
+    @SubscribeEvent
+    public static void cancelRenders(RenderGameOverlayEvent.Pre e) {
+        if(e.getType()==RenderGameOverlayEvent.ElementType.ALL && !SHOULD_RENDER_DEBUG) e.setCanceled(true);
+    }
+     */
+
     public static void initReload() {
-        Component reload = MutableComponent.create(AssetUtil.genericLang(Constants.MODID,"misc","reload_start",false))
+        Component reload = Component.translatable(Constants.MODID+"misc"+"reload_start")
                 .withStyle(ChatFormatting.RED).withStyle(ChatFormatting.ITALIC);
         if(Objects.nonNull(Minecraft.getInstance().player))
             Minecraft.getInstance().player.sendSystemMessage(reload);
@@ -97,114 +109,111 @@ public class ClientEvents {
     }
 
     public static void onKeyInput() {
-        if(Minecraft.getInstance().player!=null)
-            Minecraft.getInstance().setScreen(Instance.createGui());
+        if(Objects.nonNull(Minecraft.getInstance().player) && ChannelManager.isButtonEnabled("gui"))
+            Minecraft.getInstance().setScreen(Instance.createGui(null));
     }
 
     public static void onTick() {
-        if (!Minecraft.getInstance().isPaused() && !(Minecraft.getInstance().screen instanceof GuiSuperType) && !SHOULD_RENDER_DEBUG)
+        if(!Minecraft.getInstance().isPaused() && !(Minecraft.getInstance().screen instanceof GuiSuperType) && !SHOULD_RENDER_DEBUG)
             SHOULD_RENDER_DEBUG = true;
-        if (RELOAD_COUNTER > 0) {
+        if(RELOAD_COUNTER > 0) {
             RELOAD_COUNTER -= 1;
             if (RELOAD_COUNTER == 1) {
                 ChannelManager.reloadAllChannels();
-                Component reload = MutableComponent.create(AssetUtil.genericLang(Constants.MODID, "misc", "reload_finished",false))
+                Component reload = Component.translatable(Constants.MODID+"misc"+"reload_finished")
                         .withStyle(ChatFormatting.GREEN).withStyle(ChatFormatting.ITALIC);
                 if (Objects.nonNull(Minecraft.getInstance().player))
                     Minecraft.getInstance().player.sendSystemMessage(reload);
-                ChannelManager.reloading = false;
             }
         }
     }
 
-    @SuppressWarnings({"ConstantConditions"})
     public static void debugInfo(PoseStack matrix) {
-        if(!IS_WORLD_RENDERED) {
-            ChannelManager.initializeServerInfo();
-            IS_WORLD_RENDERED = true;
-        }
-        if(ConfigDebug.SHOW_DEBUG && IS_WORLD_RENDERED && SHOULD_RENDER_DEBUG) {
+        if(ConfigDebug.SHOW_DEBUG && SHOULD_RENDER_DEBUG) {
             List<String> lines = new ArrayList<>();
-            lines.add("Music Triggers Debug Information");
-            for(Channel channel : ChannelManager.getAllChannels()) {
-                if (Objects.nonNull(channel.curPlayingName()))
-                    lines.add("Channel[" + channel.getChannelName() + "] Current Song: " + channel.curPlayingName());
+            addDebug(lines,"Music Triggers Debug Information");
+            for(Channel channel : ChannelManager.getOrderedChannels()) {
+                String curPlaying = channel.curPlayingName();
+                if (Objects.nonNull(curPlaying))
+                    addDebug(lines,"Channel[{}] Current Song: {}",channel.getChannelName(),curPlaying);
                 if (!ConfigDebug.CURRENT_SONG_ONLY || ConfigDebug.ALLOW_TIMESTAMPS) {
-                    if (!channel.formatSongTime().matches("No song playing"))
-                        lines.add("Channel[" + channel.getChannelName() + "] Current Song Time: " + channel.formatSongTime());
-                    if (Objects.nonNull(channel.formattedFadeOutTime()))
-                        lines.add("Channel[" + channel.getChannelName() + "] Fading Out: " + channel.formattedFadeOutTime());
-                    if (Objects.nonNull(channel.formattedFadeInTime()))
-                        lines.add("Channel[" + channel.getChannelName() + "] Fading In: " + channel.formattedFadeInTime());
+                    String time = channel.formatSongTime();
+                    String fadeOut = channel.formattedFadeOutTime();
+                    String fadeIn = channel.formattedFadeInTime();
+                    if (!time.matches("No song playing"))
+                        addDebug(lines,"Channel[{}] Current Song Time: {}",channel.getChannelName(),time);
+                    if (Objects.nonNull(fadeOut))
+                        addDebug(lines,"Channel[{}] Fading Out: {}",channel.getChannelName(),fadeOut);
+                    if (Objects.nonNull(fadeIn))
+                        addDebug(lines,"Channel[{}] Fading In: {}",channel.getChannelName(),fadeIn);
                 }
                 if (!ConfigDebug.CURRENT_SONG_ONLY) {
                     synchronized(channel.getPlayableTriggers()) {
                         if (!channel.getPlayableTriggers().isEmpty()) {
-                            StringBuilder builder = new StringBuilder("Channel[" + channel.getChannelName() + "] Playable Events:");
+                            StringBuilder builder = MusicTriggers.stringBuilder("Channel[{}] Playable Events:",channel.getChannelName());
                             boolean first = true;
                             for (Trigger trigger : channel.getPlayableTriggers()) {
                                 String name = trigger.getNameWithID();
                                 if(!first) {
                                     if (checkStringWidth(Minecraft.getInstance().getWindow(), builder + " " + name)) {
-                                        lines.add(builder.toString());
-                                        builder = new StringBuilder("Channel[" + channel.getChannelName() + "] Playable Events:");
+                                        addDebug(lines,builder.toString());
+                                        builder = MusicTriggers.stringBuilder("Channel[{}] Playable Events:",channel.getChannelName());
                                     }
                                 } else first = false;
                                 builder.append(" ").append(name);
                             }
-                            lines.add(builder.toString());
+                            addDebug(lines,builder.toString());
                         }
                     }
                 }
             }
             if (!ConfigDebug.CURRENT_SONG_ONLY) {
-                StringBuilder builder = new StringBuilder("Blocked Mods:");
+                StringBuilder builder = MusicTriggers.stringBuilder("Blocked Mods:");
                 boolean first = true;
-                for (String blocked : ConfigDebug.FORMATTED_BLOCKED_MODS) {
+                for(Map.Entry<String,HashSet<String>> modEntry : ConfigDebug.FORMATTED_BLOCKED_MODS.entrySet()) {
+                    String blocked = modEntry.getKey()+"["+ TextUtil.listToString(modEntry.getValue(),",")+"]";
                     if(!first) {
                         if (checkStringWidth(Minecraft.getInstance().getWindow(), builder + " " + blocked)) {
-                            lines.add(builder.toString());
-                            builder = new StringBuilder("Blocked Mods:");
+                            addDebug(lines,builder.toString());
+                            builder = MusicTriggers.stringBuilder("Blocked Mods:");
                         }
                     } else first = false;
                     builder.append(" ").append(blocked);
                 }
-                lines.add(builder.toString());
+                addDebug(lines,builder.toString());
                 Minecraft mc = Minecraft.getInstance();
                 LocalPlayer player = mc.player;
                 if(Objects.nonNull(player)) {
                     net.minecraft.world.level.Level world = player.clientLevel;
                     if(Objects.nonNull(mc.screen))
-                        lines.add("Current GUI Class Name: " + mc.screen.getClass().getName());
+                        addDebug(lines,"Current GUI Class Name: {}",mc.screen.getClass().getName());
                     ResourceKey<Biome> biomeKey = world.getBiome(player.blockPosition()).unwrapKey().orElse(null);
-                    lines.add("Current Biome Name: " + (Objects.nonNull(biomeKey) ? biomeKey.location().toString() : "Unknown Biome"));
-                    lines.add("Current Dimension: " + world.dimension().location());
-                    lines.add("Current Structure: " + ChannelManager.CUR_STRUCT);
-                    lines.add("Current Total Light: " +  world.getRawBrightness(roundedPos(player), 0));
-                    lines.add("Current Block Light: " + world.getBrightness(LightLayer.BLOCK, roundedPos(player)));
-                    if (Objects.nonNull(MusicPicker.EFFECT_LIST) && !MusicPicker.EFFECT_LIST.isEmpty()) {
-                        builder = new StringBuilder("Effect List:");
+                    addDebug(lines,"Current Biome Name: {}",(Objects.nonNull(biomeKey) ? biomeKey.location().toString() : "Unknown Biome"));
+                    addDebug(lines,"Current Dimension: {}",world.dimension().location());
+                    addDebug(lines,"Current Structure: {}",ChannelManager.CUR_STRUCT);
+                    addDebug(lines,"Current Total Light: {}",world.getRawBrightness(roundedPos(player), 0));
+                    addDebug(lines,"Current Block Light: {}",world.getBrightness(LightLayer.BLOCK,roundedPos(player)));
+                    Set<String> effectSet = Trigger.getCachedEffects();
+                    if(!effectSet.isEmpty()) {
+                        builder = MusicTriggers.stringBuilder("Effect List:");
                         first = true;
-                        for (String effect : MusicPicker.EFFECT_LIST) {
+                        for (String effect : effectSet) {
                             if(!first) {
                                 if (checkStringWidth(Minecraft.getInstance().getWindow(), builder + " " + effect)) {
-                                    lines.add(builder.toString());
-                                    builder = new StringBuilder("Effect List:");
+                                    addDebug(lines,builder.toString());
+                                    builder = MusicTriggers.stringBuilder("Effect List:");
                                 }
                             }
                             else first = false;
                             builder.append(" ").append(effect);
                         }
-                        lines.add(builder.toString());
+                        addDebug(lines,builder.toString());
                     }
-                    Entity entity = mc.crosshairPickEntity;
+                    LivingEntity entity = getLivingFromEntity(mc.crosshairPickEntity);
                     if(Objects.nonNull(entity)) {
-                        LivingEntity living = getLivingFromEntity(entity);
-                        if (Objects.nonNull(living)) {
-                            lines.add("Current Entity Name: " + living.getName().getString());
-                            Optional<? extends Registry<EntityType<?>>> reg = world.registryAccess().registry(Registry.ENTITY_TYPE_REGISTRY);
-                            reg.ifPresent(entityTypes -> lines.add("Current Entity ID: " + entityTypes.getKey(living.getType())));
-                        }
+                        addDebug(lines,"Current Entity Name: {}",entity.getName().getString());
+                        Registry<EntityType<?>> reg = world.registryAccess().registry(Registry.ENTITY_TYPE_REGISTRY).orElse(null);
+                        if(Objects.nonNull(reg)) addDebug(lines,"Current Entity ID: {}",reg.getKey(entity.getType()));
                     }
                 }
             }
@@ -217,13 +226,17 @@ public class ClientEvents {
             }
         }
     }
+    
+    private static void addDebug(List<String> lines, String msg, Object ... parameters) {
+        lines.add(LogUtil.injectParameters(msg,parameters));
+    }
 
     private static boolean checkStringWidth(Window window, String s) {
         return (window.getGuiScaledWidth()*0.9f)<=Minecraft.getInstance().font.width(s);
     }
 
-    private static BlockPos roundedPos(LocalPlayer p) {
-        return new BlockPos((Math.round(p.getX() * 2) / 2.0), (Math.round(p.getY() * 2) / 2.0), (Math.round(p.getZ() * 2) / 2.0));
+    private static BlockPos roundedPos(Player p) {
+        return new BlockPos((Math.round(p.getX()*2d)/2d),(Math.round(p.getY()*2d)/2d),(Math.round(p.getZ()*2d)/2d));
     }
 
     private static @Nullable LivingEntity getLivingFromEntity(Entity entity) {

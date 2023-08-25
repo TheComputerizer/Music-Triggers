@@ -1,17 +1,12 @@
 package mods.thecomputerizer.musictriggers.registry.items;
 
-import mods.thecomputerizer.musictriggers.network.NetworkHandler;
-import mods.thecomputerizer.musictriggers.network.packets.PacketJukeBoxCustom;
+import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.network.PacketJukeBoxCustom;
 import mods.thecomputerizer.musictriggers.registry.BlockRegistry;
 import mods.thecomputerizer.musictriggers.registry.blocks.MusicRecorder;
-import mods.thecomputerizer.musictriggers.Constants;
-import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.contents.LiteralContents;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionResult;
@@ -24,9 +19,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.JukeboxBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 
 public class MusicTriggersRecord extends Item {
 
@@ -34,7 +31,14 @@ public class MusicTriggersRecord extends Item {
         super(p);
     }
 
+    protected String tagString(ItemStack stack, String key) {
+        String ret = stack.getOrCreateTag().getString(key);
+        return ret.matches("") ? null : ret;
+    }
+
+
     @Override
+    @NotNull
     public InteractionResult useOn(UseOnContext ctx) {
         BlockState state = ctx.getLevel().getBlockState(ctx.getClickedPos());
         if(state.getBlock()==BlockRegistry.MUSIC_RECORDER && !state.getValue(MusicRecorder.HAS_RECORD)
@@ -50,11 +54,11 @@ public class MusicTriggersRecord extends Item {
             Player player = ctx.getPlayer();
             if (!ctx.getLevel().isClientSide && player instanceof ServerPlayer) {
                 ItemStack stack = player.getItemInHand(ctx.getHand());
-                CompoundTag tag = stack.getOrCreateTag();
-                if (tag.contains("trackID") && tag.contains("channelFrom")) {
-                    ((JukeboxBlock) state.getBlock()).setRecord(player, ctx.getLevel(), ctx.getClickedPos(), state, stack);
-                    NetworkHandler.sendTo(new PacketJukeBoxCustom(ctx.getClickedPos(),tag.getString("channelFrom"),
-                            tag.getString("trackID")),(ServerPlayer)player);
+                String channel = tagString(stack,"channelFrom");
+                String trackID = tagString(stack,"trackID");
+                if (Objects.nonNull(channel) && Objects.nonNull(trackID)) {
+                    ((JukeboxBlock) state.getBlock()).setRecord(ctx.getPlayer(),ctx.getLevel(),ctx.getClickedPos(),state,stack);
+                    new PacketJukeBoxCustom(ctx.getClickedPos(),channel,trackID).addPlayers((ServerPlayer)player).send();
                     stack.shrink(1);
                     player.awardStat(Stats.PLAY_RECORD);
                 }
@@ -64,16 +68,26 @@ public class MusicTriggersRecord extends Item {
         return InteractionResult.PASS;
     }
 
+    @Environment(EnvType.CLIENT)
+    protected Component getLang(String ... elements) {
+        if(Objects.isNull(elements) || elements.length==0) return Component.literal(Constants.MODID);
+        if(elements.length==1) return Component.translatable(elements[0]+"."+Constants.MODID);
+        StringBuilder builder = new StringBuilder(elements[0]+"."+Constants.MODID+".");
+        for(int i=1;i<elements.length;i++) {
+            builder.append(elements[i]);
+            if(i<elements.length-1) builder.append(".");
+        }
+        return Component.translatable(builder.toString());
+    }
+
     @Override
     @Environment(EnvType.CLIENT)
-    public void appendHoverText(ItemStack stack, @Nullable Level world, List<Component> components, TooltipFlag flag) {
-        CompoundTag tag = stack.getOrCreateTag();
-        if(tag.contains("trackID"))
-            components.add(MutableComponent.create(new LiteralContents(MutableComponent.create(
-                    AssetUtil.extraLang(Constants.MODID,"item","music_triggers_record",
-                            "description",false)).getString() +": "+tag.getString("trackID"))));
-        else components.add(MutableComponent.create(AssetUtil.extraLang(Constants.MODID,"item","music_triggers_record",
-                "blank_description",false)));
+    public void appendHoverText(ItemStack stack, @Nullable Level world, @NotNull List<Component> components, @NotNull TooltipFlag flag) {
+        String trackID = tagString(stack,"trackID");
+        if(Objects.nonNull(trackID))
+            components.add(Component.literal(getLang("item","music_triggers_record","description")
+                    .getString()+": "+trackID));
+        else components.add(getLang("item","music_triggers_record","blank_description"));
     }
 
     public static float mapTriggerToFloat(String trigger) {

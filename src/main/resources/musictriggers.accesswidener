@@ -9,3 +9,7 @@ accessible field net/minecraft/client/sounds/WeighedSoundEvents list Ljava/util/
 accessible field net/minecraft/client/gui/components/AbstractWidget message Lnet/minecraft/network/chat/Component;
 accessible field net/minecraft/client/gui/screens/Screen renderables Ljava/util/List;
 accessible method net/minecraft/client/renderer/item/ItemProperties register (Lnet/minecraft/world/item/Item;Lnet/minecraft/resources/ResourceLocation;Lnet/minecraft/client/renderer/item/ClampedItemPropertyFunction;)V
+accessible field net/minecraft/core/MappedRegistry byLocation Ljava/util/Map;
+accessible field net/minecraft/core/MappedRegistry byValue Ljava/util/Map;
+accessible field net/minecraft/server/MinecraftServer storageSource Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;
+accessible field net/minecraft/world/entity/player/Inventory compartments Ljava/util/List;

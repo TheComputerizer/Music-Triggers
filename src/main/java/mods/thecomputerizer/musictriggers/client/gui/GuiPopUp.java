@@ -4,19 +4,20 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
 import mods.thecomputerizer.musictriggers.client.Translate;
-import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
+import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.contents.LiteralContents;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class GuiPopUp extends GuiSuperType {
 
@@ -41,7 +42,7 @@ public class GuiPopUp extends GuiSuperType {
         this.id = id;
         this.title = Translate.guiGeneric(false,"popup",id,"name");
         this.hoverText = Translate.guiNumberedList(4,"button","add_channel","hover").stream()
-                .map(line -> (Component) MutableComponent.create(new LiteralContents(line))).toList();
+                .map(Component::literal).collect(Collectors.toList());
         this.icons = icons;
         this.spacing = 16;
         this.value = "channel_name";
@@ -57,9 +58,17 @@ public class GuiPopUp extends GuiSuperType {
             Minecraft.getInstance().setScreen(this.parent);
             return true;
         }
-        if (this.canType && keyCode == GLFW.GLFW_KEY_BACKSPACE) {
-            this.value = backspace(this.value);
-            return true;
+        if(this.canType) {
+            if(checkCopy(keyCode,this.value)) return true;
+            String paste = checkPaste(keyCode);
+            if(!paste.isEmpty()) {
+                this.value += paste;
+                return true;
+            }
+            if(keyCode == GLFW.GLFW_KEY_BACKSPACE) {
+                this.value = backspace(this.value);
+                return true;
+            }
         }
         return false;
     }
@@ -95,7 +104,7 @@ public class GuiPopUp extends GuiSuperType {
     }
 
     private void click() {
-        if(this.value==null || this.value.isEmpty()) this.error = "blank";
+        if(Objects.isNull(this.value) || this.value.isEmpty()) this.error = "blank";
         else if(this.getInstance().channelExists(this.value)) this.error = "duplicate";
         else if(this.value.trim().contains(" ")) this.error = "space";
         else {
@@ -110,7 +119,7 @@ public class GuiPopUp extends GuiSuperType {
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+    public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
         this.parent.render(matrix,mouseX, mouseY, partialTicks);
         drawStuff(matrix, mouseX, mouseY, partialTicks);
     }
@@ -126,7 +135,7 @@ public class GuiPopUp extends GuiSuperType {
     }
 
     private void drawError(PoseStack matrix, Vector3f center, Font font) {
-        if(this.error!=null && !this.error.isEmpty()) {
+        if(Objects.nonNull(this.error) && !this.error.isEmpty()) {
             int boxHeight = (font.lineHeight*2)+(this.spacing*4);
             GuiUtil.drawBox(new Vector3f(0,this.height-boxHeight,0),this.width,boxHeight,black(255),this.getBlitOffset());
             int red = GuiUtil.makeRGBAInt(255,0,0,255);
@@ -158,7 +167,7 @@ public class GuiPopUp extends GuiSuperType {
         drawSelectionBox(topLeft,width,boxHeight,this.isHover);
         int color = GuiUtil.WHITE;
         if(this.isHover) color = GuiUtil.makeRGBAInt(200,200,200,255);
-        drawCenteredString(matrix,font,this.value+ ChannelManager.blinker,(int)center.x(),(int)topLeft.y()+this.spacing,color);
+        drawCenteredString(matrix,font,this.value+ChannelManager.blinkerChar, (int)center.x(),(int)(topLeft.y()+this.spacing),color);
         if(this.isHover) renderComponentTooltip(matrix,this.hoverText,mouseX,mouseY);
     }
 

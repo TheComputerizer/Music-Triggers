@@ -4,8 +4,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Vector3f;
 import com.mojang.math.Vector4f;
 import mods.thecomputerizer.musictriggers.client.Translate;
-import mods.thecomputerizer.musictriggers.client.audio.Channel;
-import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
+import mods.thecomputerizer.musictriggers.client.channels.Channel;
+import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.theimpossiblelibrary.client.gui.RadialProgressBar;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.GuiUtil;
@@ -44,7 +44,7 @@ public class GuiPlayback extends GuiRadial {
                     Translate.guiNumberedList(1, "button", "selected_channel", "desc"),
                     (screen, button, mode) -> {
                         this.currentChannel = this.channels.get(mode-1);
-                        button.updateDisplay(displayName+" "+this.currentChannel.getChannelName());
+                        button.updateDisplay(displayName+" "+this.currentChannel.getChannelName(),this.font,this);
                     }), 16);
         }
     }
@@ -60,12 +60,13 @@ public class GuiPlayback extends GuiRadial {
     }
 
     public void click(float percent) {
-        //this.currentChannel.setMillis((long)(this.currentChannel.getTotalMillis()*percent));
+        if(Objects.nonNull(this.currentChannel) && this.currentChannel.isPlayingSeekable())
+            this.currentChannel.setMillis((long)(this.currentChannel.getTotalMillis()*percent));
     }
 
     private void updateProgressBar() {
         float percent = 1f;
-        if(this.currentChannel.isPlaying())
+        if(this.currentChannel.isPlayingSeekable())
             percent = ((float)this.currentChannel.getMillis())/((float)this.currentChannel.getTotalMillis());
         this.radialBar.setProgress(percent);
     }
@@ -74,15 +75,15 @@ public class GuiPlayback extends GuiRadial {
     public void drawStuff(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
         if(Objects.nonNull(this.radialBar)) {
             GuiUtil.drawColoredRing(new Vector3f((int)(((float)this.width)/2f),(int)(((float)this.height)/2f),0),
-                    new Vector3f(110,112,0),new Vector4f(255,255,255,192),100,this.getBlitOffset());
-            circleButton.render(matrix,this.getBlitOffset(),mouseX,mouseY);
-            Vector3f center = new Vector3f(((float)this.width) / 2, ((float)this.height) / 2, 0);
-            String display = "Playback unavailable";
-            if (Objects.nonNull(this.currentChannel)) {
-                //updateProgressBar();
+                    new Vector3f(110,112,0),new Vector4f(255,255,255,192),100,getBlitOffset());
+            this.circleButton.render(matrix,getBlitOffset(),mouseX,mouseY);
+            Vector3f center = new Vector3f((float)this.width / 2, (float)this.height / 2,0);
+            String display = "Playback Unavailable";
+            if(Objects.nonNull(this.currentChannel)) {
+                updateProgressBar();
                 display = this.currentChannel.formatPlayback();
             } else this.radialBar.setProgress(1f);
-            drawCenteredString(matrix,this.font, display, (int)center.x(), (int)(center.y()-this.spacing-this.font.lineHeight-112), GuiUtil.WHITE);
+            drawCenteredString(matrix,this.font,display,(int)center.x(),(int)(center.y()-this.spacing-this.font.lineHeight-112),GuiUtil.WHITE);
         }
     }
 

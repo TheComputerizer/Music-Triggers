@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.client.gui.instance;
 
+import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.Translate;
 import mods.thecomputerizer.musictriggers.client.gui.*;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
@@ -19,8 +20,8 @@ public class Redirect extends AbstractChannelConfig {
     public Redirect(String channelName, Map<String,String> urlMap,
                     Map<String, ResourceLocation> resourceLocationMap) {
         super(channelName);
-        this.urlMap = urlMap;
-        this.resourceLocationMap = resourceLocationMap;
+        this.urlMap = MusicTriggers.clone(urlMap);
+        this.resourceLocationMap = MusicTriggers.clone(resourceLocationMap);
     }
 
     @Override
@@ -46,9 +47,9 @@ public class Redirect extends AbstractChannelConfig {
     protected void write(String newFilePath) {
         File file = FileUtil.generateNestedFile("config/MusicTriggers/"+newFilePath+".txt",true);
         List<String> lines = new ArrayList<>(headerLines());
-        for(Map.Entry<String, ResourceLocation> internals : resourceLocationMap.entrySet())
+        for(Map.Entry<String, ResourceLocation> internals : this.resourceLocationMap.entrySet())
             lines.add(LogUtil.injectParameters("{} == {}",internals.getKey(),internals.getValue()));
-        for(Map.Entry<String, String> urls : urlMap.entrySet())
+        for(Map.Entry<String, String> urls : this.urlMap.entrySet())
             lines.add(LogUtil.injectParameters("{} = {}",urls.getKey(),urls.getValue()));
         FileUtil.writeLinesToFile(file,lines,false);
     }
@@ -58,8 +59,7 @@ public class Redirect extends AbstractChannelConfig {
         int index = 0;
         for(Map.Entry<String, String> externalEntry : this.urlMap.entrySet()) {
             elements.add(new GuiSelection.DualElement(externalEntry.getKey(),externalEntry.getValue(),index,
-                    Translate.singletonHover("selection","redirect","external"),
-                    Translate.singletonHover("selection","redirect","external"),
+                    new ArrayList<>(),new ArrayList<>(),
                     (newKey) -> this.urlMap.entrySet().remove(externalEntry),(key, val) -> {
                 this.urlMap.entrySet().remove(externalEntry);
                 this.urlMap.put(key,val);
@@ -68,8 +68,7 @@ public class Redirect extends AbstractChannelConfig {
         }
         for(Map.Entry<String, ResourceLocation> internalEntry : this.resourceLocationMap.entrySet()) {
             elements.add(new GuiSelection.DualElement(internalEntry.getKey(),internalEntry.getValue().toString(),index,
-                    Translate.singletonHover("selection","redirect","internal"),
-                    Translate.singletonHover("selection","redirect","internal"),
+                    new ArrayList<>(),new ArrayList<>(),
                     (newKey) -> this.resourceLocationMap.entrySet().remove(internalEntry),(key, val) -> {
                 this.resourceLocationMap.entrySet().remove(internalEntry);
                 this.resourceLocationMap.put(key,new ResourceLocation(val));

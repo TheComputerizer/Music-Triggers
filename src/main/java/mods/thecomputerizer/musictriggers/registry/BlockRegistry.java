@@ -11,17 +11,15 @@ import net.minecraft.world.level.material.Material;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
 public final class BlockRegistry {
-
     public static final Map<ResourceLocation, Block> BLOCK_MAP = new HashMap<>();
     public static final Block MUSIC_RECORDER = addBlockRegistry("music_recorder",
-            () -> new MusicRecorder(BlockBehaviour.Properties.of(Material.WOOD).strength(2F).sound(SoundType.WOOD)));
+            new MusicRecorder(BlockBehaviour.Properties.of(Material.WOOD).strength(2F).sound(SoundType.WOOD)));
 
-    private static Block addBlockRegistry(String id, Supplier<Block> supplier) {
-        Block block = supplier.get();
-        BLOCK_MAP.put(new ResourceLocation(Constants.MODID,id),block);
+    @SuppressWarnings("SameParameterValue")
+    private static Block addBlockRegistry(String id, Block block) {
+        BLOCK_MAP.put(Constants.res(id),block);
         return block;
     }
 

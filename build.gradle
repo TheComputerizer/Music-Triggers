@@ -1,13 +1,12 @@
-//file:noinspection GroovyAssignabilityCheck
 plugins {
-	id 'fabric-loom' version '1.0-SNAPSHOT'
+	id 'fabric-loom' version '1.2.+'
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
-
-archivesBaseName = project.base_name
-version = project.mod_version
+version = "${project.minecraft_version}-fabric-${project.mod_version}"
 group = project.maven_group
+archivesBaseName = project.base_name
+
+java.toolchain.getLanguageVersion().set(JavaLanguageVersion.of(17))
 
 repositories {
 	maven {
@@ -33,6 +32,9 @@ repositories {
 	maven {
 		url = uri('https://jitpack.io')
 	}
+	flatDir {
+		dirs 'build/libs'
+	}
 }
 
 dependencies {
@@ -53,7 +55,8 @@ dependencies {
 
 	//3rd party recursive dependencies
 	include (implementation("com.sedmelluq:lava-common:${project.lava_common_version}"))
-	include (implementation("com.sedmelluq:lavaplayer-natives:${project.lava_natives_version}"))
+	include (implementation("com.github.walkyst:lavaplayer-natives-fork:${project.lava_natives_version}"))
+	include (implementation("com.github.walkyst.JAADec-fork:jaadec-ext-aac:${project.lava_jaadec_version}"))
 	include (implementation("org.objenesis:objenesis:${project.objenesis_version}"))
 	include (implementation("com.fasterxml.jackson.core:jackson-core:${project.jackson_version}"))
 	include (implementation("com.fasterxml.jackson.core:jackson-databind:${project.jackson_version}"))
@@ -61,9 +64,12 @@ dependencies {
 	include (implementation("org.apache.commons:commons-lang3:${project.commons_version}"))
 
 	//mods
-	modImplementation "maven.modrinth:the-impossible-library:${project.minecraft_version}-fabric-${project.lib_version}"
-	modApi "curse.maven:cloth-config-319057:${project.cloth_version}"
-	modApi "curse.maven:modmenu-308702:${project.modmenu_version}"
+	//local versions of required dependencies for testing
+	//noinspection DependencyNotationArgument
+	modImplementation(name: "theimpossiblelibrary-${project.minecraft_version}-fabric-${project.lib_version}")
+	//modImplementation "maven.modrinth:the-impossible-library:${project.minecraft_version}-fabric-${project.lib_version}"
+	//modApi "curse.maven:cloth-config-319057:${project.cloth_version}"
+	//modApi "curse.maven:modmenu-308702:${project.modmenu_version}"
 }
 
 processResources {
@@ -71,10 +77,6 @@ processResources {
 	filesMatching("fabric.mod.json") {
 		expand "version": project.version
 	}
-}
-
-tasks.withType(JavaCompile).configureEach {
-	it.options.release = 17
 }
 
 java {
