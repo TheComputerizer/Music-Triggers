@@ -2,22 +2,27 @@ package mods.thecomputerizer.musictriggers.client.gui.instance;
 
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.ClientEvents;
-import mods.thecomputerizer.musictriggers.client.audio.ChannelManager;
+import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.*;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.sounds.WeighedSoundEvents;
 import net.minecraft.client.sounds.Weighted;
 import org.apache.logging.log4j.Level;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class Instance {
+
+    private static int preferredSortType = 1;
+    private static boolean changedSort = false;
+    private Screen mainParent;
     private final List<String> registeredSounds;
     private final HashMap<GuiType, AbstractConfig> moduleMap;
     private final Debug debugInstance;
@@ -26,8 +31,23 @@ public class Instance {
     private boolean hasChanges;
     private boolean needsReload;
 
-    public static GuiSuperType createGui() {
-        return new GuiRadial(null, GuiType.MAIN, new Instance(ConfigDebug.copyToGui(), ConfigRegistry.copyToGui(),
+    public static void setPreferredSort(int sort) {
+        preferredSortType = sort;
+        changedSort = true;
+    }
+
+    public static int getPreferredSort() {
+        return preferredSortType;
+    }
+
+    public static boolean changedPreferredSort() {
+        boolean ret = changedSort;
+        changedSort = false;
+        return ret;
+    }
+
+    public static GuiSuperType createGui(@Nullable Screen parent) {
+        return new GuiRadial(parent,null, GuiType.MAIN, new Instance(ConfigDebug.copyToGui(), ConfigRegistry.copyToGui(),
                 ChannelManager.createGuiData()));
     }
 
@@ -49,18 +69,20 @@ public class Instance {
         return ret;
     }
 
-    public void writeAndReload() {
+    public void writeAndReload(GuiSuperType screen) {
         this.debugInstance.write(null);
         this.registrationInstance.write(null);
-        if(this.needsReload) {
+        if(!ChannelManager.isClientConfig() || !this.needsReload) {
+            MusicTriggers.logExternally(Level.INFO,"In-game changes detected for non-channel files - Refreshing debug information");
+            ChannelManager.refreshDebug();
+        }
+        else {
             MusicTriggers.logExternally(Level.INFO,"In-game changes detected for channel files - Reloading audio system");
             this.channelHolder.write(null);
             ClientEvents.initReload();
         }
-        else {
-            MusicTriggers.logExternally(Level.INFO,"In-game changes detected for non-channel files - Refreshing debug information");
-            ChannelManager.refreshDebug();
-        }
+        if(Objects.isNull(this.mainParent)) screen.onClose();
+        else Minecraft.getInstance().setScreen(this.mainParent);
     }
 
     public void madeChanges(boolean needsReload) {
@@ -119,10 +141,14 @@ public class Instance {
         this.channelHolder.deleteChannel(channel);
     }
 
-    public GuiSelection createMultiSelectTriggerScreen(GuiSuperType parent, @Nullable String channel,
-                                                       Consumer<List<GuiSelection.Element>> multiSelectHandler) {
+    public GuiSelection createMultiSelectTriggersScreen(GuiSuperType parent, @Nullable String channel,
+                                                        Consumer<List<GuiSelection.Element>> multiSelectHandler) {
         return Objects.isNull(channel) ? null :
                 this.channelHolder.getChannel(channel).createMultiSelectTriggerScreen(parent, multiSelectHandler);
+    }
+
+    public GuiSelection createChannelSelectParameterScreen(GuiSuperType parent, GuiParameters.Parameter channelParameter) {
+        return this.channelHolder.createChannelSelectParameterScreen(parent, channelParameter);
     }
 
     public List<String> findAllRegisteredSounds() {
@@ -135,5 +161,13 @@ public class Instance {
         }
         Collections.sort(ret);
         return ret;
+    }
+
+    public void setMainParent(Screen parent) {
+        this.mainParent = parent;
+    }
+
+    public Screen getMainParent() {
+        return this.mainParent;
     }
 }

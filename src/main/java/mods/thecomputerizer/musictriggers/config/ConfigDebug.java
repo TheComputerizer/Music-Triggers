@@ -1,7 +1,5 @@
 package mods.thecomputerizer.musictriggers.config;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import com.moandjiezana.toml.Toml;
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
@@ -24,13 +22,16 @@ public class ConfigDebug {
     public static boolean SHOW_DEBUG = false;
     public static boolean CURRENT_SONG_ONLY = false;
     public static boolean ALLOW_TIMESTAMPS = false;
+    public static int ENCODING_QUALITY = 10;
+    public static String RESAMPLING_QUALITY = "HIGH";
     public static String LOG_LEVEL = "INFO";
+    public static int MAX_HOVER_ELEMENTS = 15;
     public static boolean PLAY_NORMAL_MUSIC = false;
     public static boolean REVERSE_PRIORITY = false;
     public static boolean COMBINE_EQUAL_PRIORITY = false;
     public static boolean PAUSE_WHEN_TABBED = true;
     public static HashSet<String> BLOCKED_MOD_CATEGORIES = new HashSet<>(Collections.singleton("minecraft;music"));
-    public static HashSet<String> FORMATTED_BLOCKED_MODS = new HashSet<>(Collections.singleton("minecraft[music]"));
+    public static final HashMap<String,HashSet<String>> FORMATTED_BLOCKED_MODS = new HashMap<>();
     public static boolean BLOCK_STREAMING_ONLY = true;
     public static HashSet<String> INTERRUPTED_AUDIO_CATEGORIES = new HashSet<>(Collections.singleton("music"));
 
@@ -62,8 +63,17 @@ public class ConfigDebug {
         lines.add("# If SHOW_DEBUG and CURRENT_SONG_ONLY are both enabled, but you want to see the timestamps as well");
         lines.add(LogUtil.injectParameters("ALLOW_TIMESTAMPS = {}",ALLOW_TIMESTAMPS));
         lines.add("");
+        lines.add("# Turing this down will potentially help with audio stutters (Min:1/Max:10)");
+        lines.add(LogUtil.injectParameters("ENCODING_QUALITY = {}",ENCODING_QUALITY));
+        lines.add("");
+        lines.add("# Turing this down will potentially help with audio stutters (HIGH/MEDIUM/LOW)");
+        lines.add(LogUtil.injectParameters("RESAMPLING_QUALITY = \"{}\"",RESAMPLING_QUALITY));
+        lines.add("");
         lines.add("# The lowest level of logging (DEBUG/INFO/WARN/ERROR/FATAL) to include in the GUI log visualizer");
         lines.add(LogUtil.injectParameters("LOG_LEVEL = \"{}\"",LOG_LEVEL));
+        lines.add("");
+        lines.add("# The maximum number of elements that will be rendered in the GUI when hovering over something that lists things out");
+        lines.add(LogUtil.injectParameters("MAX_HOVER_ELEMENTS = {}",MAX_HOVER_ELEMENTS));
         lines.add("");
         lines.add("# Allows vanilla and blocked music to play when there is music from Music Triggers already playing");
         lines.add(LogUtil.injectParameters("PLAY_NORMAL_MUSIC = {}",PLAY_NORMAL_MUSIC));
@@ -91,7 +101,7 @@ public class ConfigDebug {
                 "dependeing on the channel settings. Only affects blocked audio");
         lines.add(LogUtil.injectParameters("INTERRUPTED_AUDIO_CATEGORIES = {}", TextUtil.compileCollection(INTERRUPTED_AUDIO_CATEGORIES)));
         FileUtil.writeLinesToFile(FILE,lines,false);
-        FORMATTED_BLOCKED_MODS = formatBlockedMods();
+        formatBlockedMods();
     }
 
     public static void read() {
@@ -99,7 +109,10 @@ public class ConfigDebug {
         SHOW_DEBUG = TomlUtil.readIfExists(toml,"SHOW_DEBUG",SHOW_DEBUG);
         CURRENT_SONG_ONLY = TomlUtil.readIfExists(toml,"CURRENT_SONG_ONLY",CURRENT_SONG_ONLY);
         ALLOW_TIMESTAMPS = TomlUtil.readIfExists(toml,"ALLOW_TIMESTAMPS",ALLOW_TIMESTAMPS);
+        ENCODING_QUALITY = TomlUtil.readIfExists(toml,"ENCODING_QUALITY",ENCODING_QUALITY);
+        RESAMPLING_QUALITY = TomlUtil.readIfExists(toml,"RESAMPLING_QUALITY",RESAMPLING_QUALITY);
         LOG_LEVEL = TomlUtil.readIfExists(toml,"LOG_LEVEL",LOG_LEVEL);
+        MAX_HOVER_ELEMENTS = TomlUtil.readIfExists(toml,"MAX_HOVER_ELEMENTS",MAX_HOVER_ELEMENTS);
         PLAY_NORMAL_MUSIC = TomlUtil.readIfExists(toml,"PLAY_NORMAL_MUSIC",PLAY_NORMAL_MUSIC);
         REVERSE_PRIORITY = TomlUtil.readIfExists(toml,"REVERSE_PRIORITY",REVERSE_PRIORITY);
         COMBINE_EQUAL_PRIORITY = TomlUtil.readIfExists(toml,"COMBINE_EQUAL_PRIORITY",COMBINE_EQUAL_PRIORITY);
@@ -115,7 +128,10 @@ public class ConfigDebug {
         SHOW_DEBUG = data.getValOrDefault("SHOW_DEBUG",false);
         CURRENT_SONG_ONLY = data.getValOrDefault("CURRENT_SONG_ONLY",false);
         ALLOW_TIMESTAMPS = data.getValOrDefault("ALLOW_TIMESTAMPS",false);
+        ENCODING_QUALITY = data.getValOrDefault("ENCODING_QUALITY",10);
+        RESAMPLING_QUALITY = data.getValOrDefault("RESAMPLING_QUALITY","HIGH");
         LOG_LEVEL = data.getValOrDefault("LOG_LEVEL","INFO");
+        MAX_HOVER_ELEMENTS = data.getValOrDefault("MAX_HOVER_ELEMENTS",15);
         PLAY_NORMAL_MUSIC = data.getValOrDefault("PLAY_NORMAL_MUSIC",false);
         REVERSE_PRIORITY = data.getValOrDefault("REVERSE_PRIORITY",false);
         COMBINE_EQUAL_PRIORITY = data.getValOrDefault("COMBINE_EQUAL_PRIORITY",false);
@@ -128,17 +144,19 @@ public class ConfigDebug {
         write();
     }
 
-    private static HashSet<String> formatBlockedMods() {
-        Multimap<String, String> compiled = HashMultimap.create();
+    private static void formatBlockedMods() {
+        FORMATTED_BLOCKED_MODS.clear();
+        FORMATTED_BLOCKED_MODS.put("all",new HashSet<>());
         for(String blocked : BLOCKED_MOD_CATEGORIES) {
             String modid = blocked.contains(";") ? blocked.substring(0,blocked.indexOf(';')) : blocked;
             String category = blocked.contains(";") && blocked.indexOf(';')+1<blocked.length() ?
                     blocked.substring(blocked.indexOf(';')+1) : "music";
-            if(!compiled.containsEntry(modid,category)) compiled.put(modid,category);
+            if(modid.matches("all")) FORMATTED_BLOCKED_MODS.get("all").add(category);
+            else if(!FORMATTED_BLOCKED_MODS.get("all").contains(category)) {
+                FORMATTED_BLOCKED_MODS.putIfAbsent(modid,new HashSet<>());
+                FORMATTED_BLOCKED_MODS.get(modid).add(category);
+            }
         }
-        HashSet<String> ret = new HashSet<>();
-        for(String mod : compiled.keySet())
-            ret.add(mod+"["+TextUtil.listToString(compiled.get(mod),",")+"]");
-        return ret;
+        FORMATTED_BLOCKED_MODS.entrySet().removeIf(entry -> entry.getValue().isEmpty());
     }
 }

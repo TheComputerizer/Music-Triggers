@@ -2,12 +2,13 @@
   "required": true,
   "package": "mods.thecomputerizer.musictriggers.mixin",
   "compatibilityLevel": "JAVA_17",
+  "refmap": "musictriggers.refmap.json",
   "mixins": [
     "MixinServerBossEvent"
   ],
   "client": [
-    "MixinMusicManager",
-    "MixinSoundEngine"
+    "MixinMinecraft",
+    "MixinMusicManager"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -10,17 +10,16 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
 public final class TileRegistry {
 
     public static final Map<ResourceLocation, BlockEntityType<? extends BlockEntity>> TILE_MAP = new HashMap<>();
     public static final BlockEntityType<MusicRecorderEntity> MUSIC_RECORDER_ENTITY = addTileRegistry("music_recorder_entity",
-            () -> FabricBlockEntityTypeBuilder.create(MusicRecorderEntity::new,BlockRegistry.MUSIC_RECORDER).build(null));
+            FabricBlockEntityTypeBuilder.create(MusicRecorderEntity::new,BlockRegistry.MUSIC_RECORDER).build(null));
 
-    private static <T extends BlockEntity> BlockEntityType<T> addTileRegistry(String id, Supplier<BlockEntityType<T>> supplier) {
-        BlockEntityType<T> type = supplier.get();
-        TILE_MAP.put(new ResourceLocation(Constants.MODID,id),type);
+    @SuppressWarnings("SameParameterValue")
+    private static <T extends BlockEntity> BlockEntityType<T> addTileRegistry(String id, BlockEntityType<T> type) {
+        TILE_MAP.put(Constants.res(id),type);
         return type;
     }
 

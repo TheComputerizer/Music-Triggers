@@ -10,13 +10,13 @@ import mods.thecomputerizer.theimpossiblelibrary.client.gui.RadialProgressBar;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.util.TriConsumer;
+import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 public enum GuiType {
     MAIN("main", Constants.ICON_LOCATION,null,Collections.EMPTY_LIST, 100f,0f,
-            new ButtonType[]{ButtonType.LOG,ButtonType.PLAYBACK,ButtonType.EDIT,ButtonType.RELOAD}, functionImpl()),
+            new ButtonType[]{ButtonType.LOG,ButtonType.PLAYBACK,ButtonType.EDIT,ButtonType.RELOAD,ButtonType.BACK}, functionImpl()),
     LOG("log_visualizer", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
     PLAYBACK("playback", MusicTriggers.getIcon("gui/white_icons","playback"), null, Collections.EMPTY_LIST, 100f, 0f,
             new ButtonType[]{ButtonType.BACK,ButtonType.APPLY,ButtonType.SKIP_SONG,ButtonType.RESET_SONG},
@@ -103,7 +103,7 @@ public enum GuiType {
     }
 
     public RadialElement getCircleForType(Screen parentScreen, Integer[] loc, @Nullable RadialProgressBar bar) {
-        if(this.circleConstructor==null) return null;
+        if(Objects.isNull(this.circleConstructor)) return null;
         return this.circleConstructor.apply(parentScreen, this.iconLocation, this.altIconLocation, bar, loc[0], loc[1],
                 loc[2], loc[3], loc[4], this.text, this.tooltips, this.resolution, this.iconIncrease, this.buttonHolders);
     }

@@ -1,8 +1,8 @@
 package mods.thecomputerizer.musictriggers.client;
 
-import net.minecraft.network.FriendlyByteBuf;
 import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.theimpossiblelibrary.util.NetworkUtil;
+import net.minecraft.network.FriendlyByteBuf;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,11 +19,11 @@ public class ClientSync {
 
     public ClientSync(FriendlyByteBuf buf) {
         this.channel = NetworkUtil.readString(buf);
-        this.triggerStatus = NetworkUtil.readGenericMap(buf,NetworkUtil::readString,FriendlyByteBuf::readBoolean);
+        this.triggerStatus = NetworkUtil.readGenericMap(buf,NetworkUtil::readString, FriendlyByteBuf::readBoolean);
     }
 
     public void merge(ClientSync statusUpdate) {
-        triggerStatus.putAll(statusUpdate.triggerStatus);
+        this.triggerStatus.putAll(statusUpdate.triggerStatus);
     }
 
     public String getChannel() {

@@ -175,8 +175,8 @@ public class Toggles extends AbstractChannelConfig {
     }
 
     private List<String> hoverLinesPotential(String con, boolean from) {
-        return Collections.singletonList(from ? Translate.guiGeneric(false, "toggle", "trigger" + con) :
-                Translate.guiGeneric(false, "toggle", "target", con));
+        return Collections.singletonList(from ? Translate.guiGeneric(false,"toggle","trigger"+con) :
+                Translate.guiGeneric(false,"toggle","target",con));
     }
 
     private boolean canAddCondition(Table toggle) {
@@ -192,7 +192,11 @@ public class Toggles extends AbstractChannelConfig {
     }
 
     public List<GuiParameters.Parameter> targetParameters(Table target) {
-        return Collections.singletonList(new GuiParameters.Parameter("toggle", "target_triggers",
-                this.fileData.getOrCreateVar(target,"triggers", new ArrayList<String>())));
+        return Arrays.asList(new GuiParameters.Parameter("toggle", "channel",
+                        this.fileData.getOrCreateVar(target,"channel",getChannelName())),
+                new GuiParameters.Parameter("toggle", "channel_activation",
+                        this.fileData.getOrCreateVar(target,"channel_activation",false)),
+                new GuiParameters.Parameter("toggle", "target_triggers",
+                        this.fileData.getOrCreateVar(target,"triggers", new ArrayList<String>())));
     }
 }
