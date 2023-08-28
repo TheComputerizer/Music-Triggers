@@ -191,10 +191,10 @@ public class Channel implements IChannel {
         this.playingAudio = new HashSet<>();
         this.playedOnce = new ArrayList<>();
         MusicTriggers.logExternally(Level.INFO, "Registered sound engine channel "+ info.getName());
+        this.picker = new MusicPicker(this);
         this.data = new Data(main,transitions,commands,toggles);
         this.redirect = redirect;
         this.jukebox = jukebox;
-        this.picker = new MusicPicker(this);
         this.localFolderPath = info.getValOrDefault("songs_folder", "config/MusicTriggers/songs");
         File file = new File(this.localFolderPath);
         if(!file.exists()) file.mkdirs();
