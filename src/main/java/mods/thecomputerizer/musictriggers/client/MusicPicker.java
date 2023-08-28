@@ -116,7 +116,7 @@ public class MusicPicker {
                 }
             }
         } else {
-            List<Audio> activeSongs = comboChecker(innerPriorityHandler(playableTriggers(player)));
+            List<Audio> activeSongs = comboChecker(priorityHandler(playableTriggers(player)));
             if (!activeSongs.isEmpty()) {
                 this.getInfo().updateActiveTriggers(activeSongs.stream().map(Audio::getTriggers)
                         .flatMap(Collection::stream).distinct().collect(Collectors.toList()));
