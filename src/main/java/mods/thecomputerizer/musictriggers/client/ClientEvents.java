@@ -14,6 +14,7 @@ import mods.thecomputerizer.theimpossiblelibrary.util.TextUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.LogUtil;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
@@ -236,6 +237,13 @@ public class ClientEvents {
                             lines.add("Infernal Mob Mod Name: " + infernal);
                     }
                 }
+            }
+            int top = 2;
+            for (String msg : lines) {
+                GuiComponent.fill(e.getPoseStack(), 1, top - 1, 2 + Minecraft.getInstance().font.width(msg) + 1,
+                        top + Minecraft.getInstance().font.lineHeight - 1, -1873784752);
+                Minecraft.getInstance().font.draw(e.getPoseStack(), msg, 2, top, 14737632);
+                top += Minecraft.getInstance().font.lineHeight;
             }
         }
     }
