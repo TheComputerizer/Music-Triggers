@@ -32,9 +32,9 @@ repositories {
 	maven {
 		url = uri('https://jitpack.io')
 	}
-	flatDir {
+	/*flatDir {
 		dirs 'build/libs'
-	}
+	}*/
 }
 
 dependencies {
@@ -66,8 +66,8 @@ dependencies {
 	//mods
 	//local versions of required dependencies for testing
 	//noinspection DependencyNotationArgument
-	modImplementation(name: "theimpossiblelibrary-${project.minecraft_version}-fabric-${project.lib_version}")
-	//modImplementation "maven.modrinth:the-impossible-library:${project.minecraft_version}-fabric-${project.lib_version}"
+	//modImplementation(name: "theimpossiblelibrary-${project.minecraft_version}-fabric-${project.lib_version}")
+	modImplementation "maven.modrinth:the-impossible-library:${project.minecraft_version}-fabric-${project.lib_version}"
 	//modApi "curse.maven:cloth-config-319057:${project.cloth_version}"
 	//modApi "curse.maven:modmenu-308702:${project.modmenu_version}"
 }
