@@ -3,11 +3,13 @@ package mods.thecomputerizer.musictriggers.server;
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.network.PacketSendCommand;
 import net.minecraft.command.CommandBase;
+import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 
 import javax.annotation.Nonnull;
+import java.util.Objects;
 
 public class MusicTriggersCommand extends CommandBase {
 
@@ -30,47 +32,62 @@ public class MusicTriggersCommand extends CommandBase {
 
     @Override
     public void execute(@Nonnull MinecraftServer server, @Nonnull ICommandSender sender, String[] args) {
-        if(args.length>=1) {
-            if (args.length==1) {
-                switch (args[0]) {
-                    case "reload" : {
-                        this.isReload = true;
-                        send(sender);
-                        return;
-                    }
-                    case "debug" : {
-                        this.isDebug = true;
-                        send(sender);
-                        return;
-                    }
-                    case "commandtrigger" : {
-                        notifyCommandListener(sender, this, "command.musictriggers.trigger.error");
-                        send(sender);
-                        return;
-                    }
-                    default : {
-                        notifyCommandListener(sender, this, "command.musictriggers.help");
-                    }
-                }
-            } else {
-                if(args[0].matches("commandtrigger")) {
-                    if(!args[1].matches("not_set")) {
-                        this.isCommandTrigger = true;
-                        this.identifier = args[1];
-                        send(sender);
-                    } else notifyCommandListener(sender, this, "command.musictriggers.trigger.not_set");
-                    return;
-                }
-                notifyCommandListener(sender, this, "command.musictriggers.help");
+        if(args.length>=2) {
+            String playerSelector = args[1];
+            EntityPlayerMP player;
+            try {
+                player = getPlayer(server,sender,args[1]);
+            } catch (CommandException ex) {
+                player = null;
+                Constants.MAIN_LOG.error("There was an error finding player from selector {} in command!",playerSelector,ex);
             }
+            if(Objects.nonNull(player)) {
+                if (args.length == 2) {
+                    switch (args[1]) {
+                        case "reload": {
+                            this.isReload = true;
+                            send(player);
+                            notifyCommandListener(sender, this, "command.musictriggers.success.reload");
+                            return;
+                        }
+                        case "debug": {
+                            this.isDebug = true;
+                            send(player);
+                            notifyCommandListener(sender, this, "command.musictriggers.success.debug");
+                            return;
+                        }
+                        case "commandtrigger": {
+                            notifyIssue(sender,"trigger.error");
+                            return;
+                        }
+                        default: notifyIssue(sender,"help");
+                    }
+                } else {
+                    if (args[1].matches("commandtrigger")) {
+                        if (!args[2].matches("not_set")) {
+                            this.isCommandTrigger = true;
+                            this.identifier = args[2];
+                            send(player);
+                        } else notifyIssue(sender,"trigger.not_set");
+                    } else notifyIssue(sender,"help");
+                }
+            } else notifyIssue(sender,"player.error");
         }
-        else notifyCommandListener(sender, this, "command.musictriggers.help");
+        else notifyIssue(sender,"help");
     }
 
-    private void send(ICommandSender sender) {
-        if(sender instanceof EntityPlayerMP)
-            new PacketSendCommand(this.identifier,this.isCommandTrigger,this.isReload,this.isDebug)
-                    .addPlayers((EntityPlayerMP)sender).send();
+    private void send(EntityPlayerMP player) {
+        new PacketSendCommand(this.identifier,this.isCommandTrigger,this.isReload,this.isDebug)
+                .addPlayers(player).send();
+        reset();
+    }
+
+    private void notifyIssue(@Nonnull ICommandSender sender, String key) {
+        notifyCommandListener(sender,this,"command.musictriggers."+key);
+        reset();
+    }
+
+    private void reset() {
         this.identifier = "not_set";
         this.isCommandTrigger = false;
         this.isReload = false;

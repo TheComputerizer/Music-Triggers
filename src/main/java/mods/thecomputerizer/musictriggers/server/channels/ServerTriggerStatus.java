@@ -587,7 +587,7 @@ public class ServerTriggerStatus {
                             if(parts.length==2) return false;
                             from = 2;
                         }
-                        NBTBase finalVal = getFinalTag(data,Arrays.copyOfRange(parts,from,parts.length));
+                        NBTBase finalVal = getFinalTag(data,Arrays.copyOfRange(parts,from,parts.length-1));
                         if(finalVal instanceof NBTTagCompound) return false;
                         if(finalVal instanceof  NBTTagByte) {
                             boolean compare = Boolean.parseBoolean(parts[parts.length-1]);

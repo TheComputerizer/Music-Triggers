@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.registry.items;
 
 import mods.thecomputerizer.musictriggers.Constants;
-import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.network.PacketJukeBoxCustom;
 import mods.thecomputerizer.musictriggers.registry.BlockRegistry;
 import mods.thecomputerizer.musictriggers.registry.blocks.MusicRecorder;
@@ -31,7 +30,7 @@ import java.util.Objects;
 public class MusicTriggersRecord extends EpicItem {
 
     public MusicTriggersRecord() {
-        addPropertyOverride(MusicTriggers.res("trigger"),
+        addPropertyOverride(Constants.res("trigger"),
                 (stack, worldIn, entityIn) -> {
                     String triggerID = tagString(stack,"triggerID");
                     return Objects.nonNull(triggerID) ? mapTriggerToFloat(triggerID) : 0f;

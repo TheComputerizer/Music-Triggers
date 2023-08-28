@@ -97,4 +97,9 @@ public class JukeboxChannel implements IChannel {
     public void onTrackStop(AudioTrackEndReason endReason) {
 
     }
+
+    @Override
+    public void initCache() {
+
+    }
 }

@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.client.Translate;
 import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.data.Trigger;
@@ -476,7 +476,7 @@ public class GuiParameters extends GuiSuperType {
             if(optional.isPresent() && optional.get()) checked = "checked";
             String path = "white_icons";
             if(this.varHover) path = "black_icons";
-            return MusicTriggers.res(LogUtil.injectParameters("textures/gui/{}/{}.png",path,checked));
+            return Constants.res(LogUtil.injectParameters("textures/gui/{}/{}.png",path,checked));
         }
 
         public boolean hasEdits() {

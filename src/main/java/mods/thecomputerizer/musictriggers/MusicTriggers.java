@@ -72,7 +72,7 @@ public class MusicTriggers {
     public void init(FMLInitializationEvent e) {
         if(e.getSide().isClient()) {
             try {
-                ChannelManager.initClient(configFile("channels", "toml"), true);
+                ChannelManager.initClient(configFile("channels", "toml",true), true);
                 ChannelManager.readResourceLocations();
                 ClientRegistry.registerKeyBinding(Channel.GUI);
                 CustomTick.addCustomTickEvent(20);
@@ -94,15 +94,11 @@ public class MusicTriggers {
         RegistryHandler.registerCommands(e);
         try {
             if(FMLCommonHandler.instance().getSide().isServer())
-                ServerChannelManager.initialize(configFile("channels", "toml"));
+                ServerChannelManager.initialize(configFile("channels", "toml",false));
         } catch (IOException ex) {
             logExternally(Level.FATAL,"Could not initialize server channels!");
             Constants.MAIN_LOG.fatal("Count not initialize server channels!",ex);
         }
-    }
-
-    public static ResourceLocation res(String path) {
-        return new ResourceLocation(Constants.MODID,path);
     }
 
     public static List<IResourcePack> getActiveResourcePacks() {
@@ -117,11 +113,15 @@ public class MusicTriggers {
     }
 
     public static ResourceLocation getIcon(String type, String name) {
-        return Objects.nonNull(type) ? res("textures/"+type+"/"+name+".png") : res("textures/"+name);
+        return Objects.nonNull(type) ? Constants.res("textures/"+type+"/"+name+".png") : Constants.res("textures/"+name);
     }
 
     public static String[] stringBreaker(String s, String regex) {
         return s.split(regex);
+    }
+
+    public static StringBuilder stringBuilder(String s, Object ... parameters) {
+        return new StringBuilder(LogUtil.injectParameters(s, parameters));
     }
 
     public static int randomInt(int max) {
@@ -208,7 +208,8 @@ public class MusicTriggers {
         return Cloner.standard().deepClone(o);
     }
 
-    public static File configFile(String path, String extension) {
-        return FileUtil.generateNestedFile(new File(Constants.CONFIG_DIR,path+"."+extension),false);
+    public static File configFile(String path, String extension, boolean createIfAbsent) {
+        File file = new File(Constants.CONFIG_DIR,path+"."+extension);
+        return createIfAbsent ? FileUtil.generateNestedFile(file,false) : file;
     }
 }

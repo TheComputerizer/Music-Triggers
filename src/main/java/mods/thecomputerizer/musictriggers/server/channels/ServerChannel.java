@@ -12,8 +12,11 @@ import mods.thecomputerizer.theimpossiblelibrary.util.NetworkUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.TomlUtil;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.apache.logging.log4j.Level;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 
 public class ServerChannel {
 
@@ -25,20 +28,38 @@ public class ServerChannel {
     private final ConfigRedirect redirect;
     private final ConfigJukebox jukebox;
 
+    private static Holder getConfigHolder(Table info, String type) throws IOException {
+        File file = MusicTriggers.configFile(info.getValOrDefault(
+                type,info.getName()+"/"+type), "toml",true);
+        return TomlUtil.readFully(file);
+    }
+
+    private static ConfigRedirect getRedirect(Table info) {
+        File file = MusicTriggers.configFile(info.getValOrDefault(
+                "redirect",info.getName()+"/redirect"), "txt",true);
+        return file.exists() ? new ConfigRedirect(true,file,info.getName()) : null;
+    }
+
+    private static ConfigJukebox getJukebox(Table info) {
+        File file = MusicTriggers.configFile(info.getValOrDefault(
+                "jukebox",info.getName()+"/jukebox"), "txt",true);
+        return file.exists() ? new ConfigJukebox(true,file,info.getName()) : null;
+    }
+
     public ServerChannel(Table info) throws IOException {
         this.info = info;
-        this.main = TomlUtil.readFully(MusicTriggers.configFile(info.getValOrDefault("main",
-                info.getName() + "/main"),"toml"));
-        this.transitions = TomlUtil.readFully(MusicTriggers.configFile(info.getValOrDefault("transitions",
-                info.getName() + "/transitions"),"toml"));
-        this.commands = TomlUtil.readFully(MusicTriggers.configFile(info.getValOrDefault("commands",
-                info.getName() + "/commands"),"toml"));
-        this.toggles = TomlUtil.readFully(MusicTriggers.configFile(info.getValOrDefault("main",
-                info.getName() + "/toggles"),"toml"));
-        this.redirect = new ConfigRedirect(MusicTriggers.configFile(
-                info.getValOrDefault("redirect", info.getName() + "/redirect"),"txt"));
-        this.jukebox = new ConfigJukebox(MusicTriggers.configFile(
-                info.getValOrDefault("jukebox", info.getName() + "/jukebox"),"txt"));
+        this.main = getConfigHolder(info,"main");
+        this.transitions = getConfigHolder(info,"transitions");
+        this.commands = getConfigHolder(info,"commands");
+        this.toggles = getConfigHolder(info,"toggles");
+        this.redirect = getRedirect(info);
+        this.jukebox = getJukebox(info);
+        MusicTriggers.logExternally(Level.INFO,"Channel[{}] - Successfully registered server channel!",info.getName());
+    }
+
+    public boolean isValid() {
+        return Objects.nonNull(this.main) && Objects.nonNull(this.transitions) && Objects.nonNull(this.commands) &&
+                Objects.nonNull(this.toggles);
     }
 
     public void encode(ByteBuf buf) {
@@ -64,7 +85,7 @@ public class ServerChannel {
         this.transitions = Holder.decoded(buf);
         this.commands = Holder.decoded(buf);
         this.toggles = Holder.decoded(buf);
-        this.redirect = new ConfigRedirect(buf);
+        this.redirect = new ConfigRedirect(buf,this.info.getName());
         this.jukebox = new ConfigJukebox(buf);
     }
 

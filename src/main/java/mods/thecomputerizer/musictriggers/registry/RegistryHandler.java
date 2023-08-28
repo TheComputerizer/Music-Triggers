@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.registry;
 
 import mods.thecomputerizer.musictriggers.Constants;
-import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.registry.tiles.MusicRecorderEntity;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import mods.thecomputerizer.musictriggers.server.MTCommand;
@@ -55,7 +54,7 @@ public final class RegistryHandler {
     public static void registerBlocks(RegistryEvent.Register<Block> event) {
         if(ConfigRegistry.REGISTER_DISCS) {
             event.getRegistry().register(BlockRegistry.MUSIC_RECORDER);
-            GameRegistry.registerTileEntity(MusicRecorderEntity.class,MusicTriggers.res("tile.music_recorder"));
+            GameRegistry.registerTileEntity(MusicRecorderEntity.class, Constants.res("tile.music_recorder"));
         }
     }
 

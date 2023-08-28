@@ -128,7 +128,7 @@ public class ChannelManager {
     }
 
     private static Holder getChannelsHolder(File channelsFile) throws IOException {
-        ResourceLocation channelsResource = MusicTriggers.res("config/channels.toml");
+        ResourceLocation channelsResource = Constants.res("config/channels.toml");
         try {
             IResource resource = Minecraft.getMinecraft().getResourceManager().getResource(channelsResource);
             isResourceControlled = true;
@@ -308,8 +308,11 @@ public class ChannelManager {
     public static void initializeServerInfo() {
         if(!ConfigRegistry.CLIENT_SIDE_ONLY) {
             ServerTriggerStatus data = new ServerTriggerStatus();
-            for (Channel channel : getAllChannels())
-                channel.initializeServerData(data);
+            for(IChannel channel : CHANNEL_MAP.values()) {
+                channel.initCache();
+                if(channel instanceof Channel)
+                    ((Channel)channel).initializeServerData(data);
+            }
             new PacketInitChannels(data).send();
         }
     }
@@ -347,7 +350,7 @@ public class ChannelManager {
 
     public static void checkResourceReload() {
         if(!reloading && !isServerdControlled) {
-            ResourceLocation channelsRes = MusicTriggers.res("config/channels.toml");
+            ResourceLocation channelsRes = Constants.res("config/channels.toml");
             for(IResourcePack pack : MusicTriggers.getActiveResourcePacks()) {
                 if(pack.resourceExists(channelsRes)) {
                     MusicTriggers.logExternally(Level.INFO,"Detected configuration in resource pack {}! " +
@@ -405,9 +408,11 @@ public class ChannelManager {
                         TICKING_RENDERABLES.entrySet().removeIf(entry -> !entry.getValue().canRender());
                     }
                     tickCounter++;
+                    Minecraft mc = Minecraft.getMinecraft();
+                    Trigger.updateEffectCache(mc.player);
                     if (checkForJukeBox()) jukeboxPause();
                     else jukeboxUnpause();
-                    if ((ConfigDebug.PAUSE_WHEN_TABBED && !ClientEvents.IS_DISPLAY_FOCUSED) || Minecraft.getMinecraft().isGamePaused())
+                    if ((ConfigDebug.PAUSE_WHEN_TABBED && !ClientEvents.IS_DISPLAY_FOCUSED) || mc.isGamePaused())
                         pauseAllChannels();
                     else unpauseAllChannels();
                     for (Channel channel : getAllChannels())
@@ -537,7 +542,7 @@ public class ChannelManager {
         Map<String, ChannelInstance> channels = CHANNEL_MAP.entrySet().stream()
                 .filter(entry -> entry.getValue() instanceof Channel)
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> ((Channel)entry.getValue()).createGuiData()));
-        return new ChannelHolder(MusicTriggers.configFile("channels","toml"),channels);
+        return new ChannelHolder(MusicTriggers.configFile("channels","toml",true),channels);
     }
 
     public static boolean isClientConfig() {
@@ -556,6 +561,7 @@ public class ChannelManager {
                         worldDataStorage.playedOnceMap.get(channelEntry.getKey()));
             }
         }
+        initializeServerInfo();
         reloading = false;
     }
 
@@ -597,6 +603,7 @@ public class ChannelManager {
             MusicTriggers.logExternally(Level.FATAL, "Failed to server channels");
             Constants.MAIN_LOG.fatal("Failed to reload server channels for Music Triggers!",ex);
         }
+        initializeServerInfo();
         reloading = false;
     }
 

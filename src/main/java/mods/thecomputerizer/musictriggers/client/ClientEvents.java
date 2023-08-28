@@ -10,9 +10,11 @@ import mods.thecomputerizer.musictriggers.client.gui.GuiSuperType;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.theimpossiblelibrary.util.TextUtil;
+import mods.thecomputerizer.theimpossiblelibrary.util.file.LogUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.PositionedSoundRecord;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
@@ -43,15 +45,11 @@ import org.apache.logging.log4j.Level;
 import org.lwjgl.opengl.Display;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @SuppressWarnings("deprecation")
 @Mod.EventBusSubscriber(modid = Constants.MODID, value = Side.CLIENT)
 public class ClientEvents {
-    public static boolean IS_WORLD_RENDERED = false;
     public static int RELOAD_COUNTER = 0;
     public static String LAST_ADVANCEMENT;
     public static boolean GAINED_NEW_ADVANCEMENT;
@@ -105,16 +103,11 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void clientDisconnected(FMLNetworkEvent.ClientDisconnectionFromServerEvent e) {
-        IS_WORLD_RENDERED=false;
         ChannelManager.onClientLogout();
     }
 
     @SubscribeEvent
     public static void cancelRenders(RenderGameOverlayEvent.Pre e) {
-        if(!IS_WORLD_RENDERED) {
-            ChannelManager.initializeServerInfo();
-            IS_WORLD_RENDERED = true;
-        }
         if(e.getType()==RenderGameOverlayEvent.ElementType.ALL && !SHOULD_RENDER_DEBUG) e.setCanceled(true);
     }
 
@@ -155,102 +148,107 @@ public class ClientEvents {
     @SuppressWarnings("ConstantConditions")
     @SubscribeEvent
     public static void debugInfo(RenderGameOverlayEvent.Text e) {
-        if(ConfigDebug.SHOW_DEBUG && IS_WORLD_RENDERED && SHOULD_RENDER_DEBUG) {
-            e.getLeft().add("Music Triggers Debug Information");
+        if(ConfigDebug.SHOW_DEBUG && SHOULD_RENDER_DEBUG) {
+            addDebug(e,"Music Triggers Debug Information");
             for(Channel channel : ChannelManager.getOrderedChannels()) {
                 String curPlaying = channel.curPlayingName();
                 if (Objects.nonNull(curPlaying))
-                    e.getLeft().add("Channel[" + channel.getChannelName() + "] Current Song: " + curPlaying);
+                    addDebug(e,"Channel[{}] Current Song: {}",channel.getChannelName(),curPlaying);
                 if (!ConfigDebug.CURRENT_SONG_ONLY || ConfigDebug.ALLOW_TIMESTAMPS) {
                     String time = channel.formatSongTime();
                     String fadeOut = channel.formattedFadeOutTime();
                     String fadeIn = channel.formattedFadeInTime();
                     if (!time.matches("No song playing"))
-                        e.getLeft().add("Channel[" + channel.getChannelName() + "] Current Song Time: " + time);
+                        addDebug(e,"Channel[{}] Current Song Time: {}",channel.getChannelName(),time);
                     if (Objects.nonNull(fadeOut))
-                        e.getLeft().add("Channel[" + channel.getChannelName() + "] Fading Out: " + fadeOut);
+                        addDebug(e,"Channel[{}] Fading Out: {}",channel.getChannelName(),fadeOut);
                     if (Objects.nonNull(fadeIn))
-                        e.getLeft().add("Channel[" + channel.getChannelName() + "] Fading In: " + fadeIn);
+                        addDebug(e,"Channel[{}] Fading In: {}",channel.getChannelName(),fadeIn);
                 }
                 if (!ConfigDebug.CURRENT_SONG_ONLY) {
                     synchronized(channel.getPlayableTriggers()) {
                         if (!channel.getPlayableTriggers().isEmpty()) {
-                            StringBuilder builder = new StringBuilder("Channel[" + channel.getChannelName() + "] Playable Events:");
+                            StringBuilder builder = MusicTriggers.stringBuilder("Channel[{}] Playable Events:",channel.getChannelName());
                             boolean first = true;
                             for (Trigger trigger : channel.getPlayableTriggers()) {
                                 String name = trigger.getNameWithID();
                                 if(!first) {
                                     if (checkStringWidth(e.getResolution(), builder + " " + name)) {
-                                        e.getLeft().add(builder.toString());
-                                        builder = new StringBuilder("Channel[" + channel.getChannelName() + "] Playable Events:");
+                                        addDebug(e,builder.toString());
+                                        builder = MusicTriggers.stringBuilder("Channel[{}] Playable Events:",channel.getChannelName());
                                     }
                                 } else first = false;
                                 builder.append(" ").append(name);
                             }
-                            e.getLeft().add(builder.toString());
+                            addDebug(e,builder.toString());
                         }
                     }
                 }
             }
             if (!ConfigDebug.CURRENT_SONG_ONLY) {
-                StringBuilder builder = new StringBuilder("Blocked Mods:");
+                StringBuilder builder = MusicTriggers.stringBuilder("Blocked Mods:");
                 boolean first = true;
                 for(Map.Entry<String,HashSet<String>> modEntry : ConfigDebug.FORMATTED_BLOCKED_MODS.entrySet()) {
-                    String blocked = modEntry.getKey()+"["+TextUtil.listToString(modEntry.getValue(),",")+"]";
+                    String blocked = modEntry.getKey()+"["+ TextUtil.listToString(modEntry.getValue(),",")+"]";
                     if(!first) {
                         if (checkStringWidth(e.getResolution(), builder + " " + blocked)) {
-                            e.getLeft().add(builder.toString());
-                            builder = new StringBuilder("Blocked Mods:");
+                            addDebug(e,builder.toString());
+                            builder = MusicTriggers.stringBuilder("Blocked Mods:");
                         }
                     } else first = false;
                     builder.append(" ").append(blocked);
                 }
-                e.getLeft().add(builder.toString());
+                addDebug(e,builder.toString());
                 Minecraft mc = Minecraft.getMinecraft();
-                EntityPlayer player = mc.player;
+                EntityPlayerSP player = mc.player;
                 if(Objects.nonNull(player)) {
                     World world = player.getEntityWorld();
                     if(Objects.nonNull(mc.currentScreen))
-                        e.getLeft().add("Current GUI Class Name: " + mc.currentScreen.getClass().getName());
-                    e.getLeft().add("Current Biome Name: " + world.getBiome(player.getPosition()).getRegistryName());
-                    e.getLeft().add("Current Biome Category: " + world.getBiome(player.getPosition()).getTempCategory());
-                    e.getLeft().add("Current Dimension: " + player.dimension);
-                    e.getLeft().add("Current Total Light: " + world.getLight(roundedPos(player), true));
-                    e.getLeft().add("Current Block Light: " + world.getLightFor(EnumSkyBlock.BLOCK, roundedPos(player)));
-                    if (Objects.nonNull(MusicPicker.EFFECT_LIST) && !MusicPicker.EFFECT_LIST.isEmpty()) {
-                        builder = new StringBuilder("Effect List:");
+                        addDebug(e,"Current GUI Class Name: {}",mc.currentScreen.getClass().getName());
+                    addDebug(e,"Current Biome Name: {}",world.getBiome(player.getPosition()).getRegistryName());
+                    addDebug(e,"Current Biome Category: {}",world.getBiome(player.getPosition()).getRegistryName());
+                    addDebug(e,"Current Dimension: {}",player.dimension);
+                    addDebug(e,"Current Total Light: {}",world.getLight(roundedPos(player), true));
+                    addDebug(e,"Current Block Light: {}",world.getLightFor(EnumSkyBlock.BLOCK, roundedPos(player)));
+                    Set<String> effectSet = Trigger.getCachedEffects();
+                    if(!effectSet.isEmpty()) {
+                        builder = MusicTriggers.stringBuilder("Effect List:");
                         first = true;
-                        for (String effect : MusicPicker.EFFECT_LIST) {
+                        for (String effect : effectSet) {
                             if(!first) {
                                 if (checkStringWidth(e.getResolution(), builder + " " + effect)) {
-                                    e.getLeft().add(builder.toString());
-                                    builder = new StringBuilder("Effect List:");
+                                    addDebug(e,builder.toString());
+                                    builder = MusicTriggers.stringBuilder("Effect List:");
                                 }
                             }
                             else first = false;
                             builder.append(" ").append(effect);
                         }
-                        e.getLeft().add(builder.toString());
+                        addDebug(e,builder.toString());
                     }
                     RayTraceResult res = mc.objectMouseOver;
                     if(Objects.nonNull(res)) {
                         EntityLiving entity = getLivingFromEntity(res.entityHit);
                         if (Objects.nonNull(entity)) {
-                            e.getLeft().add("Current Entity Name: " + entity.getName());
-                            e.getLeft().add("Current Entity ID: " + EntityList.getKey(entity));
+                            addDebug(e,"Current Entity Name: " + entity.getName());
+                            addDebug(e,"Current Entity ID: " + EntityList.getKey(entity));
                             String infernal = infernalChecker(entity);
                             if(Objects.nonNull(infernal))
-                                e.getLeft().add("Infernal Mob Mod Name: " + infernal);
+                                addDebug(e,"Infernal Mob Mod Name: " + infernal);
                         } else if(res.typeOfHit == RayTraceResult.Type.BLOCK) {
                             BlockPos pos = res.getBlockPos();
                             TileEntity tile = mc.world.getTileEntity(pos);
                             if(Objects.nonNull(tile))
-                                e.getLeft().add("Current Tile Name: " + TileEntity.getKey(tile.getClass()));
+                                addDebug(e,"Current Tile Name: " + TileEntity.getKey(tile.getClass()));
                         }
                     }
                 }
             }
         }
+    }
+
+    private static void addDebug(RenderGameOverlayEvent.Text e, String msg, Object ... parameters) {
+        e.getLeft().add(LogUtil.injectParameters(msg,parameters));
     }
 
     private static boolean checkStringWidth(ScaledResolution res, String s) {

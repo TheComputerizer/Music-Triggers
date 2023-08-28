@@ -21,11 +21,13 @@ public class ServerChannelManager {
             for(String type : new String[]{"gui","reload","log","playback","debug","registration"})
                 checkDisabledGuiButton(channels,type);
             for (Table channel : channels.getTables().values()) {
-                if (verifyChannelName(channel.getName()))
-                    SERVER_CHANNELS.put(channel.getName(), new ServerChannel(channel));
-                else
+                if (verifyChannelName(channel.getName())) {
+                    ServerChannel serverChannel = new ServerChannel(channel);
+                    if(serverChannel.isValid()) SERVER_CHANNELS.put(channel.getName(),serverChannel);
+                } else
                     MusicTriggers.logExternally(Level.ERROR, "Channel {} failed to register! See the above errors for" +
                             "more information.", channel.getName());
+
             }
         }
     }

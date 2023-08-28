@@ -10,7 +10,6 @@ import lumien.bloodmoon.Bloodmoon;
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.ClientEvents;
-import mods.thecomputerizer.musictriggers.client.MusicPicker;
 import mods.thecomputerizer.musictriggers.client.channels.Channel;
 import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
@@ -30,7 +29,6 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.*;
 import net.minecraft.network.play.client.CPacketClientStatus;
-import net.minecraft.potion.PotionEffect;
 import net.minecraft.stats.StatBase;
 import net.minecraft.stats.StatList;
 import net.minecraft.tileentity.TileEntity;
@@ -57,6 +55,7 @@ import weather2.api.WeatherDataHelper;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 @SuppressWarnings({"BooleanMethodIsAlwaysInverted"})
 public class Trigger {
@@ -69,6 +68,7 @@ public class Trigger {
     private static final HashMap<String, List<String>> REQUIRED_PARAMETERS = new HashMap<>();
     private static final HashMap<String, List<String>> CHOICE_REQUIRED_PARAMETERS = new HashMap<>();
     private static final HashMap<String, BiFunction<Trigger, EntityPlayerSP, Boolean>> TRIGGER_CONDITIONS = new HashMap<>();
+    private static final Set<String> CACHED_EFFECTS = Collections.synchronizedSet(new HashSet<>());
     private static final List<String> NBT_MODES = Arrays.asList("KEY_PRESENT","VAL_PRESENT","GREATER","LESSER","EQUAL","INVERT");
 
     public static void loadData() {
@@ -170,6 +170,7 @@ public class Trigger {
         addTrigger("difficulty",false,makeParameterSet(true,"level"),
                 Arrays.asList("identifier","level"),new ArrayList<>(),(trigger,player) -> {
             Minecraft mc = Minecraft.getMinecraft();
+            if(Objects.isNull(mc.world)) return false;
             return trigger.difficultyHelper(mc.world.getDifficulty(), mc.world.getWorldInfo().isHardcoreModeEnabled());
         },true);
         addTrigger("time",false,makeParameterSet(true,"time_bundle",
@@ -239,8 +240,7 @@ public class Trigger {
         addTrigger("creative",false,makeParameterSet(false),
                 (trigger,player) -> player.isCreative(),true);
         addTrigger("riding",false,makeParameterSet(true,"resource_name"),
-                Collections.singletonList("identifier"),new ArrayList<>(),
-                (trigger,player) -> trigger.checkRiding(trigger.getResource(),player),true);
+                Collections.singletonList("identifier"),new ArrayList<>(),Trigger::checkRiding,true);
         addTrigger("underwater",false,makeParameterSet(false),(trigger,player) ->
                 player.getEntityWorld().getBlockState(trigger.roundedPos(player)).getMaterial() == Material.WATER &&
                         player.getEntityWorld().getBlockState(trigger.roundedPos(player).up()).getMaterial() == Material.WATER,true);
@@ -265,12 +265,12 @@ public class Trigger {
                 (trigger,player) -> trigger.channel.getSyncStatus().isTriggerActive(trigger),true);
         addTrigger("dimension",false,makeParameterSet(true,"resource_name"),
                 Arrays.asList("identifier","resource_name"),new ArrayList<>(),
-                (trigger,player) -> trigger.checkDimensionList(player.dimension,trigger.getResource()),true);
+                (trigger,player) -> trigger.checkDimensionList(player.dimension),true);
         addTrigger("biome",false,makeParameterSet(true,"resource_name","biome_category",
                         "rain_type","biome_temperature","check_lower_temp","biome_rainfall","check_higher_rainfall"),
                 Collections.singletonList("identifier"),Arrays.asList("resource_name","biome_category","rain_type",
                         "biome_temperature","biome_rainfall"),(trigger, player) ->
-                trigger.checkBiome(player.getEntityWorld().getBiome(trigger.roundedPos(player)), trigger.getResource(),
+                trigger.checkBiome(player.getEntityWorld().getBiome(trigger.roundedPos(player)),
                         trigger.getParameterStringList("biome_category"),trigger.getParameterString("rain_type"),
                         trigger.getParameterFloat("biome_temperature"),trigger.getParameterBool("check_lower_temp"),
                         trigger.getParameterFloat("biome_rainfall"),trigger.getParameterBool("check_higher_rainfall")),true);
@@ -291,37 +291,36 @@ public class Trigger {
         },true);
         addTrigger("effect",false,makeParameterSet(true,"resource_name"),
                 Arrays.asList("identifier","resource_name"),new ArrayList<>(),(trigger,player) -> {
-            boolean pass = false;
-            MusicPicker.EFFECT_LIST.clear();
-            for (PotionEffect p : player.getActivePotionEffects()) {
-                MusicPicker.EFFECT_LIST.add(p.getEffectName());
-                if (trigger.checkResourceList(p.getEffectName(),trigger.getResource(),false))
-                    pass = true;
-            }
-            return pass;
-        },true);
+                    synchronized (CACHED_EFFECTS) {
+                        boolean pass = false;
+                        for(String effect : CACHED_EFFECTS)
+                            if (trigger.checkResourceMatch(effect,false))
+                                pass = true;
+                        return pass;
+                    }
+                },true);
         addTrigger("victory",true,makeParameterSet(true,"victory_timeout"),
                 Arrays.asList("identifier","persistence"),new ArrayList<>(),
                 (trigger,player) -> trigger.channel.getSyncStatus().isTriggerActive(trigger),true);
         addTrigger("gui",false,makeParameterSet(true,"resource_name"),
                 Arrays.asList("identifier","resource_name"),new ArrayList<>(),(trigger,player) -> {
             Minecraft mc = Minecraft.getMinecraft();
-            List<String> resources = trigger.getResource();
-            return (Objects.nonNull(mc.currentScreen) && (resources.isEmpty() || resources.contains("ANY") ||
-                    (trigger.checkResourceList(mc.currentScreen.getClass().getName(),resources,false)) ||
-                    (resources.contains("CREDITS") && mc.currentScreen instanceof GuiWinGame)));
+            return (Objects.nonNull(mc.currentScreen) && (trigger.getResource().isEmpty() ||
+                    trigger.getResource().contains("ANY") ||
+                    (trigger.checkResourceMatch(mc.currentScreen.getClass().getName(),false)) ||
+                    (trigger.getResource().contains("CREDITS") && mc.currentScreen instanceof GuiWinGame)));
         },true);
         addTrigger("advancement",false,makeParameterSet(true,"resource_name"),
                 Arrays.asList("identifier","resource_name","persistence"),new ArrayList<>(),(trigger,player) -> {
-                    List<String> resources = trigger.getResource();
-            boolean pass = (ClientEvents.GAINED_NEW_ADVANCEMENT && (resources.isEmpty() || resources.contains("ANY") ||
-                    trigger.checkResourceList(ClientEvents.LAST_ADVANCEMENT,resources,false)));
+            boolean pass = (ClientEvents.GAINED_NEW_ADVANCEMENT && (trigger.getResource().isEmpty() ||
+                    trigger.getResource().contains("ANY") ||
+                    trigger.checkResourceMatch(ClientEvents.LAST_ADVANCEMENT,false)));
             if(pass) ClientEvents.GAINED_NEW_ADVANCEMENT = false;
             return pass;
         },true);
         addTrigger("statistic",false,makeParameterSet(true,"resource_name","level"),
                 Arrays.asList("identifier","resource_name"),new ArrayList<>(),(trigger,player) ->
-                trigger.checkStat(trigger.getResource(),trigger.getParameterInt("level"),player),true);
+                trigger.checkStat(trigger.getParameterInt("level"),player),true);
         addTrigger("command",false,makeParameterSet(true),
                 Arrays.asList("identifier","persistence"),new ArrayList<>(),(trigger,player) -> {
             boolean pass = ClientEvents.commandHelper(trigger);
@@ -507,6 +506,43 @@ public class Trigger {
                 (buf1,parameter) -> parameter.encode(buf1));
     }
 
+
+    public static int getUniversalInt(@Nullable Table universal, String parameter, int fallback) {
+        return Objects.isNull(universal) ? fallback : MusicTriggers.randomInt("universal_"+parameter,
+                universal.getValOrDefault(parameter,String.valueOf(fallback)),fallback);
+    }
+
+    public static float getUniversalFloat(@Nullable Table universal, String parameter, float fallback) {
+        return Objects.isNull(universal) ? fallback : MusicTriggers.randomFloat("universal_"+parameter,
+                universal.getValOrDefault(parameter,String.valueOf(fallback)),fallback);
+    }
+
+    public static boolean getUniversalBool(@Nullable Table universal, String parameter, boolean fallback) {
+        return Objects.isNull(universal) ? fallback : universal.getValOrDefault(parameter,fallback);
+    }
+
+    public static String getUniversalString(@Nullable Table universal, String parameter, String fallback) {
+        return Objects.isNull(universal) ? fallback : universal.getValOrDefault(parameter,fallback);
+    }
+
+    public static void updateEffectCache(EntityPlayerSP player) {
+        if(Objects.isNull(player)) return;
+        Set<String> activeEffects = player.getActivePotionEffects().stream()
+                .map(instance -> Objects.isNull(instance) ? null : instance.getEffectName())
+                .filter(Objects::nonNull).collect(Collectors.toSet());
+        synchronized (CACHED_EFFECTS) {
+            CACHED_EFFECTS.addAll(activeEffects);
+            CACHED_EFFECTS.removeIf(effect -> !activeEffects.contains(effect));
+        }
+    }
+
+    public static Set<String> getCachedEffects() {
+        synchronized (CACHED_EFFECTS) {
+            return CACHED_EFFECTS;
+        }
+    }
+
+    private final Cache cache;
     private final Channel channel;
     private final String name;
     private final HashMap<String, Object> parameters;
@@ -516,6 +552,7 @@ public class Trigger {
     private boolean canPlayMoreAudio;
 
     public Trigger(String name, Channel channel, List<Table> links) {
+        this.cache = new Cache();
         this.name = name;
         this.channel = channel;
         this.parameters = buildDefaultParameters(name);
@@ -574,6 +611,10 @@ public class Trigger {
     @Override
     public String toString() {
         return getNameWithID();
+    }
+
+    public void initCache() {
+        this.cache.initCache();
     }
 
     public void setParameter(String parameter, Object value) {
@@ -670,6 +711,52 @@ public class Trigger {
         return TRIGGER_CONDITIONS.containsKey(getName()) && isActive(TRIGGER_CONDITIONS.get(getName()).apply(this,player));
     }
 
+    @SuppressWarnings("unchecked")
+    public <T> T getParameterWithUniversal(String parameter, @Nullable Table universal, T fallback) {
+        try {
+            return (T) this.cache.universalCache.getOrDefault(parameter,makeUniversalParameterCache(parameter,universal,fallback));
+        } catch (ClassCastException ex) {
+            MusicTriggers.logExternally(Level.ERROR,"Failed to get parameter with potential universal value {} "+
+                            "for trigger {}! Default value of {} will be set. See the main log for the full stacktrace.",
+                    parameter,getNameWithID(),DEFAULT_PARAMETER_MAP.get(parameter).value);
+            Constants.MAIN_LOG.error("Failed to get parameter with potential universal value {} "+
+                    "for trigger {}! Is the parameter stored incorrectly?",parameter,getNameWithID(),ex);
+            this.parameters.put(parameter,DEFAULT_PARAMETER_MAP.get(parameter).value);
+            return fallback;
+        }
+    }
+
+    private <T> T makeUniversalParameterCache(String parameter, @Nullable Table universal, T fallback) {
+        T cached = isDefault(parameter) ? getUniversalType(parameter,universal,fallback) : getParameterType(parameter,fallback);
+        this.cache.universalCache.put(parameter,cached);
+        return cached;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T getParameterType(String parameter, T fallback) {
+        if(fallback instanceof Number) {
+            if(fallback instanceof Float || fallback instanceof Double)
+                return (T)(Float)getParameterFloat(parameter);
+            return (T)(Integer)getParameterInt(parameter);
+        }
+        if(fallback instanceof Boolean) return (T)(Boolean)getParameterBool(parameter);
+        if(fallback instanceof String) return (T)getParameterString(parameter);
+        if(fallback instanceof Collection<?>) return (T)getParameterStringList(parameter);
+        return fallback;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T getUniversalType(String parameter, @Nullable Table universal, T fallback) {
+        if(fallback instanceof Number) {
+            if(fallback instanceof Float || fallback instanceof Double)
+                return (T)(Float)getUniversalFloat(universal,parameter,(Float)fallback);
+            return (T)(Integer)getUniversalInt(universal,parameter,(Integer)fallback);
+        }
+        if(fallback instanceof Boolean) return (T)(Boolean)getUniversalBool(universal,parameter,(Boolean)fallback);
+        if(fallback instanceof String) return (T)getUniversalString(universal,parameter,(String)fallback);
+        return fallback;
+    }
+
     private boolean isActive(boolean active) {
         if(getParameterBool("not")) return !active;
         return active;
@@ -691,8 +778,8 @@ public class Trigger {
         return health<(maxHealth*(((float) getParameterInt("level"))/100f));
     }
 
-    public List<String> getResource() {
-        return getParameterStringList("resource_name");
+    public Set<String> getResource() {
+        return this.cache.resourceCache;
     }
 
     public boolean zoneHelper(int x, int y, int z) {
@@ -731,13 +818,14 @@ public class Trigger {
         return world.getLight(p, true);
     }
 
-    public boolean checkBiome(Biome b, List<String> names, List<String> categories, String rainType,
+    public boolean checkBiome(Biome b, List<String> categories, String rainType,
                               float temperature, boolean cold, float rainfall, boolean togglerainfall) {
         if(Objects.isNull(b.getRegistryName())) return false;
+        Set<String> names = getResource();
         boolean pass = !names.contains("ANY") && (names.isEmpty() ||
-                checkResourceList(b.getRegistryName().toString(),names,false));
+                checkResourceMatch(b.getRegistryName().toString(),false));
         if(!pass) pass = !categories.contains("ANY") && (categories.isEmpty() ||
-                checkResourceList(b.getTempCategory().toString(),categories,false));
+                checkOtherMatch(b.getTempCategory().toString(),categories,false));
         if(!pass) return false;
         pass = false;
         if(rainfall==Float.MIN_VALUE) pass = true;
@@ -763,41 +851,56 @@ public class Trigger {
         else return bt <= temperature && cold;
     }
 
-    public boolean checkResourceList(String type, List<String> resourceList, boolean match) {
-        for(String resource : resourceList) {
-            if(match && type.matches(resource)) return true;
-            else if(!match && type.contains(resource)) return true;
+    public boolean checkResourceMatch(String type, boolean match) {
+        if(this.cache.isTypeCached("resource")) {
+            for(String resource : this.cache.resourceCache) {
+                if (match && type.matches(resource)) return true;
+                else if (!match && type.contains(resource)) return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean checkOtherMatch(String type, Collection<String> otherList, boolean match) {
+        for(String resource : otherList) {
+            if (match && type.matches(resource)) return true;
+            else if (!match && type.contains(resource)) return true;
         }
         return false;
     }
 
     @SuppressWarnings("ConstantConditions")
-    public boolean checkDimensionList(int playerDim, List<String> resourceList) {
-        for(String resource : resourceList)
-            if((String.valueOf(playerDim)).matches(resource)) return true;
-        try {
-            DimensionType dimension = DimensionType.getById(playerDim);
-            return Objects.nonNull(dimension.name()) && checkResourceList(dimension.name(), resourceList, false);
-        } catch (IllegalArgumentException ex) {
-            return false;
+    public boolean checkDimensionList(int playerDim) {
+        if(this.cache.isTypeCached("resource")) {
+            for (String resource : this.cache.resourceCache)
+                if ((String.valueOf(playerDim)).matches(resource)) return true;
+            try {
+                DimensionType dimension = DimensionType.getById(playerDim);
+                return Objects.nonNull(dimension.name()) && checkResourceMatch(dimension.name(), false);
+            } catch (IllegalArgumentException ex) {
+                return false;
+            }
         }
+        return false;
     }
 
-    public boolean checkRiding(List<String> resources, EntityPlayerSP player) {
+    public boolean checkRiding(EntityPlayerSP player) {
         if(!player.isRiding() || Objects.isNull(player.getRidingEntity())) return false;
-        if(resources.isEmpty() || resources.contains("ANY")) return true;
-        if(checkResourceList(player.getRidingEntity().getName(),resources,true)) return true;
+        if(getResource().isEmpty() || getResource().contains("ANY")) return true;
+        if(checkResourceMatch(player.getRidingEntity().getName(),true)) return true;
         if(Objects.isNull(EntityList.getKey(player.getRidingEntity()))) return false;
-        return checkResourceList(EntityList.getKey(player.getRidingEntity()).toString(),resources,false);
+        return checkResourceMatch(EntityList.getKey(player.getRidingEntity()).toString(),false);
     }
 
-    public boolean checkStat(List<String> stats, int level, EntityPlayerSP player) {
-        NetHandlerPlayClient net = Minecraft.getMinecraft().getConnection();
-        if(Objects.nonNull(net)) {
-            net.sendPacket(new CPacketClientStatus(CPacketClientStatus.State.REQUEST_STATS));
-            for (StatBase s : StatList.ALL_STATS)
-                if(checkResourceList(s.statId, stats, false) && player.getStatFileWriter().readStat(s) > level)
-                    return true;
+    public boolean checkStat(int level, EntityPlayerSP player) {
+        if(this.cache.isTypeCached("statistic")) {
+            NetHandlerPlayClient net = Minecraft.getMinecraft().getConnection();
+            if(Objects.nonNull(net)) {
+                net.sendPacket(new CPacketClientStatus(CPacketClientStatus.State.REQUEST_STATS));
+                for(StatBase s : this.cache.statCache)
+                    if(player.getStatFileWriter().readStat(s) > level)
+                        return true;
+            }
         }
         return false;
     }
@@ -805,7 +908,7 @@ public class Trigger {
     public boolean checkInventory(EntityPlayerSP player) {
         List<String> slotMatchers = getParameterStringList("slots");
         List<String> itemMatchers = getParameterStringList("items");
-        if(slotMatchers.size()==0 || itemMatchers.size()==0) return false;
+        if(slotMatchers.isEmpty() || itemMatchers.isEmpty()) return false;
         InventoryPlayer inventory = player.inventory;
         for(String slotMatcher : slotMatchers) {
             if(slotMatcher.matches("MAINHAND")) {
@@ -916,7 +1019,7 @@ public class Trigger {
                             if(parts.length==2) return false;
                             from = 2;
                         }
-                        NBTBase finalVal = getFinalTag(data,Arrays.copyOfRange(parts,from,parts.length));
+                        NBTBase finalVal = getFinalTag(data,Arrays.copyOfRange(parts,from,parts.length-1));
                         if(finalVal instanceof NBTTagCompound) return false;
                         if(finalVal instanceof  NBTTagByte) {
                             boolean compare = Boolean.parseBoolean(parts[parts.length-1]);
@@ -964,16 +1067,12 @@ public class Trigger {
         BlockPos pos = roundedPos(player);
         AxisAlignedBB box = new AxisAlignedBB(pos.getX()-range,pos.getY()-(range*yRatio), pos.getZ()-range,
                 pos.getX()+range,pos.getY()+(range*yRatio),pos.getZ()+range);
-        for(String resource : getResource()) {
-            ResourceLocation location = new ResourceLocation(resource);
-            if(TileEntity.REGISTRY.containsKey(location)) {
-                Class<? extends TileEntity> tileClass = TileEntity.REGISTRY.getObject(location);
-                for(TileEntity loadedTile : player.getEntityWorld().loadedTileEntityList) {
-                    if(tileClass.isAssignableFrom(loadedTile.getClass())) {
-                        BlockPos tilePos = loadedTile.getPos();
-                        return tilePos.getX()<=box.maxX && tilePos.getX()>=box.minX && tilePos.getY()<=box.maxY &&
-                                tilePos.getY()>=box.minY && tilePos.getZ()<=box.maxZ && tilePos.getZ()>=box.minZ;
-                    }
+        for(TileEntity loadedTile : player.getEntityWorld().loadedTileEntityList) {
+            for(Class<? extends TileEntity> tileClass : this.cache.blockEntityCache) {
+                if (tileClass.isAssignableFrom(loadedTile.getClass())) {
+                    BlockPos tilePos = loadedTile.getPos();
+                    return tilePos.getX() <= box.maxX && tilePos.getX() >= box.minX && tilePos.getY() <= box.maxY &&
+                            tilePos.getY() >= box.minY && tilePos.getZ() <= box.maxZ && tilePos.getZ() >= box.minZ;
                 }
             }
         }
@@ -1024,6 +1123,59 @@ public class Trigger {
 
     public Collection<Link> getLinks() {
         return Collections.unmodifiableCollection(this.parsedLinkMap.values());
+    }
+
+    class Cache {
+        private final Map<String, Object> universalCache;
+        /**
+         * Current types: [ "resource" "statistic" "blockentity" ]
+         */
+        private final Set<String> typesCached;
+        private final Set<String> resourceCache;
+        private final Set<StatBase> statCache;
+        private final Set<Class<? extends TileEntity>> blockEntityCache;
+
+        private Cache() {
+            this.universalCache = new HashMap<>();
+            this.typesCached = new HashSet<>();
+            this.resourceCache = new HashSet<>();
+            this.statCache = new HashSet<>();
+            this.blockEntityCache = new HashSet<>();
+        }
+
+        private boolean isTypeCached(String type) {
+            return this.typesCached.contains(type);
+        }
+
+        private boolean isTrigger(String trigger) {
+            return Trigger.this.name.matches(trigger);
+        }
+
+        private void initCache() {
+            if(isParameterAccepted(Trigger.this.name,"resource_name")) {
+                this.resourceCache.addAll(getParameterStringList("resource_name"));
+                this.typesCached.add("resource");
+            }
+            if(isTrigger("statistic")) {
+                makeStatCache();
+                this.typesCached.add("statistic");
+            }
+            if(isTrigger("blockentity")) {
+                for(String resource : this.resourceCache) {
+                    ResourceLocation location = new ResourceLocation(resource);
+                    if(TileEntity.REGISTRY.containsKey(location))
+                        this.blockEntityCache.add(TileEntity.REGISTRY.getObject(location));
+                }
+                this.typesCached.add("blockentity");
+            }
+        }
+
+        private void makeStatCache() {
+            this.statCache.clear();
+            for(StatBase stat : StatList.ALL_STATS)
+                if(Objects.nonNull(stat) && checkResourceMatch(stat.statId,false))
+                    this.statCache.add(stat);
+        }
     }
 
     public static final class DefaultParameter {

@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.registry.items;
 
-import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.item.ItemStack;
@@ -16,7 +16,7 @@ import java.util.Objects;
 
 public class CustomRecord extends MusicTriggersRecord {
     public CustomRecord() {
-        addPropertyOverride(MusicTriggers.res("custom_record"),
+        addPropertyOverride(Constants.res("custom_record"),
                 (stack, worldIn, entityIn) -> {
                     String trackID = tagString(stack,"trackID");
                     return Objects.nonNull(trackID) ? mapTriggerToFloat(tagString(stack,"channelFrom"),trackID) : 0f;
