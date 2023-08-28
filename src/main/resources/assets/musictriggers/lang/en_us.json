@@ -1,6 +1,10 @@
 {
   "command.musictriggers.help": "Valid Commands: `/musictriggers player reload` `/mt player reload` `/musictriggers player debug` `/mt player debug` `/musictriggers player commandtrigger identifier` `/mt player commandtrigger identifier`",
-  "command.musictriggers.trigger.error": "Usage: `/musictriggers commandtrigger identifier` or `/mt commandtrigger identifier`",
+  "command.musictriggers.player.error": "Command had invalid player selector! See the log for more specific information",
+  "command.musictriggers.success.debug": "Successfully toggled Music Triggers debug overlay!",
+  "command.musictriggers.success.reload": "Successfully triggered Music Triggers reload!",
+  "command.musictriggers.success.trigger": "Successfully triggered Music Triggers command trigger!",
+  "command.musictriggers.trigger.error": "Usage: `/musictriggers player commandtrigger identifier` or `/mt player commandtrigger identifier`",
   "command.musictriggers.trigger.not_set": "not_set is an invalid identifier for the command trigger!",
   "record.musictriggers.test": "Hello There",
   "itemGroup.musictriggers": "Music Triggers",
