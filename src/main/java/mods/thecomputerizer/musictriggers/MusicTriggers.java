@@ -76,7 +76,6 @@ public class MusicTriggers {
 
     private void clientSetup(final FMLClientSetupEvent ev) {
         ClientRegistry.registerKeyBinding(Channel.GUI);
-        CustomTick.addCustomTickEvent(20);
         //music disc texture overrides
         ev.enqueueWork(() -> ItemProperties.register(ItemRegistry.MUSIC_TRIGGERS_RECORD.get(), Constants.res("trigger"),
                 (stack, level, living, id) -> {
@@ -100,7 +99,7 @@ public class MusicTriggers {
     public void loadComplete(FMLLoadCompleteEvent ev) {
         if(FMLEnvironment.dist.isClient()) {
             try {
-                ChannelManager.initClient(configFile("channels", "toml"), true);
+                ChannelManager.initClient(configFile("channels", "toml",true), true);
                 ChannelManager.readResourceLocations();
                 CustomTick.addCustomTickEvent(20);
                 ChannelManager.reloading = false;
@@ -232,7 +231,8 @@ public class MusicTriggers {
         return Cloner.standard().deepClone(o);
     }
 
-    public static File configFile(String path, String extension) {
-        return FileUtil.generateNestedFile(new File(Constants.CONFIG_DIR,path+"."+extension),false);
+    public static File configFile(String path, String extension, boolean createIfAbsent) {
+        File file = new File(Constants.CONFIG_DIR,path+"."+extension);
+        return createIfAbsent ? FileUtil.generateNestedFile(file,false) : file;
     }
 }

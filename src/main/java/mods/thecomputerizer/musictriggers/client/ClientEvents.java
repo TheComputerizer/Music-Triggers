@@ -38,10 +38,7 @@ import net.minecraftforge.fml.common.Mod;
 import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Mod.EventBusSubscriber(modid = Constants.MODID, value = Dist.CLIENT)
 public class ClientEvents {
@@ -49,7 +46,7 @@ public class ClientEvents {
     public static String LAST_ADVANCEMENT;
     public static boolean GAINED_NEW_ADVANCEMENT;
     public static boolean SHOULD_RENDER_DEBUG = true;
-    public static final HashMap<String, Boolean> COMMAND_MAP = new HashMap<>();
+    public static final Map<String, Boolean> COMMAND_MAP = new HashMap<>();
 
     @SubscribeEvent
     public static void playSound(PlaySoundEvent event) {
@@ -206,10 +203,11 @@ public class ClientEvents {
                     addDebug(e,"Current Structure: {}",ChannelManager.CUR_STRUCT);
                     addDebug(e,"Current Total Light: {}",world.getRawBrightness(roundedPos(player), 0));
                     addDebug(e,"Current Block Light: {}",world.getBrightness(LightLayer.BLOCK,roundedPos(player)));
-                    if(!MusicPicker.EFFECT_LIST.isEmpty()) {
+                    Set<String> effectSet = Trigger.getCachedEffects();
+                    if(!effectSet.isEmpty()) {
                         builder = MusicTriggers.stringBuilder("Effect List:");
                         first = true;
-                        for (String effect : MusicPicker.EFFECT_LIST) {
+                        for (String effect : effectSet) {
                             if(!first) {
                                 if (checkStringWidth(e.getWindow(), builder + " " + effect)) {
                                     addDebug(e,builder.toString());

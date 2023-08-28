@@ -369,13 +369,18 @@ public class ServerTriggerStatus {
         synchronized (this.allTriggers) {
             if (!toRemove.isEmpty()) this.allTriggers.removeAll(toRemove);
         }
-        if(!this.updatedTriggers.isEmpty() || (Objects.nonNull(this.prevStruct) &&
-                (Objects.isNull(this.curStruct) || !this.prevStruct.matches(this.curStruct)))) {
+        if(!this.updatedTriggers.isEmpty() || checkStructName()) {
             String structToSend = Objects.nonNull(this.curStruct) && !(this.curStruct.isEmpty()) ? this.curStruct :
                     "Structure has not been synced";
             new PacketSyncServerInfo(this.updatedTriggers,structToSend).addPlayers(player).send();
-            this.prevStruct = structToSend;
+            this.prevStruct = this.curStruct;
         }
+    }
+
+    private boolean checkStructName() {
+        return (Objects.isNull(this.curStruct) && Objects.nonNull(this.prevStruct)) ||
+                (Objects.nonNull(this.prevStruct) && !this.curStruct.matches(this.prevStruct)) ||
+                (Objects.nonNull(this.curStruct) && Objects.isNull(this.prevStruct));
     }
 
     private void runCommands() {
