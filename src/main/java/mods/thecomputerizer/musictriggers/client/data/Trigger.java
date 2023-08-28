@@ -3,7 +3,6 @@ package mods.thecomputerizer.musictriggers.client.data;
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.ClientEvents;
-import mods.thecomputerizer.musictriggers.client.MusicPicker;
 import mods.thecomputerizer.musictriggers.client.channels.Channel;
 import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
@@ -11,6 +10,7 @@ import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
 import mods.thecomputerizer.theimpossiblelibrary.util.NetworkUtil;
 import net.darkhax.gamestages.GameStageHelper;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.WinScreen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
@@ -23,7 +23,6 @@ import net.minecraft.stats.Stat;
 import net.minecraft.stats.StatType;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.Difficulty;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -49,18 +48,20 @@ import sereneseasons.api.season.SeasonHelper;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 @SuppressWarnings({"BooleanMethodIsAlwaysInverted"})
 public class Trigger {
 
-    private static final HashSet<String> ALL_TRIGGERS = new HashSet<>();
-    private static final HashSet<String> ACCEPTED_TRIGGERS = new HashSet<>();
-    private static final HashSet<String> SERVER_TRIGGERS = new HashSet<>();
-    private static final HashMap<String, DefaultParameter> DEFAULT_PARAMETER_MAP = new HashMap<>();
-    private static final HashMap<String, HashSet<String>> ACCEPTED_PARAMETERS = new HashMap<>();
-    private static final HashMap<String, List<String>> REQUIRED_PARAMETERS = new HashMap<>();
-    private static final HashMap<String, List<String>> CHOICE_REQUIRED_PARAMETERS = new HashMap<>();
-    private static final HashMap<String, BiFunction<Trigger, LocalPlayer, Boolean>> TRIGGER_CONDITIONS = new HashMap<>();
+    private static final Set<String> ALL_TRIGGERS = new HashSet<>();
+    private static final Set<String> ACCEPTED_TRIGGERS = new HashSet<>();
+    private static final Set<String> SERVER_TRIGGERS = new HashSet<>();
+    private static final Map<String, DefaultParameter> DEFAULT_PARAMETER_MAP = new HashMap<>();
+    private static final Map<String, Set<String>> ACCEPTED_PARAMETERS = new HashMap<>();
+    private static final Map<String, List<String>> REQUIRED_PARAMETERS = new HashMap<>();
+    private static final Map<String, List<String>> CHOICE_REQUIRED_PARAMETERS = new HashMap<>();
+    private static final Map<String, BiFunction<Trigger,LocalPlayer,Boolean>> TRIGGER_CONDITIONS = new HashMap<>();
+    private static final Set<String> CACHED_EFFECTS = Collections.synchronizedSet(new HashSet<>());
     private static final List<String> NBT_MODES = Arrays.asList("KEY_PRESENT","VAL_PRESENT","GREATER","LESSER","EQUAL","INVERT");
 
     public static void loadData() {
@@ -162,6 +163,7 @@ public class Trigger {
         addTrigger("difficulty",false,makeParameterSet(true,"level"),
                 Arrays.asList("identifier","level"),new ArrayList<>(),(trigger,player) -> {
                     Minecraft mc = Minecraft.getInstance();
+                    if(Objects.isNull(mc.level)) return false;
                     return trigger.difficultyHelper(mc.level.getDifficulty(), mc.level.getLevelData().isHardcore());
                 },true);
         addTrigger("time",false,makeParameterSet(true,"time_bundle",
@@ -224,8 +226,7 @@ public class Trigger {
         addTrigger("spectator",false,makeParameterSet(false),(trigger,player) -> player.isSpectator(),true);
         addTrigger("creative",false,makeParameterSet(false),(trigger,player) -> player.isCreative(),true);
         addTrigger("riding",false,makeParameterSet(true,"resource_name"),
-                Collections.singletonList("identifier"),new ArrayList<>(),
-                (trigger,player) -> trigger.checkRiding(trigger.getResource(),player),true);
+                Collections.singletonList("identifier"),new ArrayList<>(),Trigger::checkRiding,true);
         addTrigger("underwater",false,makeParameterSet(false),(trigger,player) ->
                 (player.level.getBlockState(trigger.roundedPos(player)).getMaterial() == Material.WATER ||
                         player.level.getBlockState(trigger.roundedPos(player)).getMaterial() == Material.WATER_PLANT ||
@@ -254,7 +255,7 @@ public class Trigger {
                 (trigger,player) -> trigger.channel.getSyncStatus().isTriggerActive(trigger),true);
         addTrigger("dimension",false,makeParameterSet(true,"resource_name"),
                 Arrays.asList("identifier","resource_name"),new ArrayList<>(),
-                (trigger,player) -> trigger.checkResourceList(player.level.dimension().location().toString(),trigger.getResource(), false),true);
+                (trigger,player) -> trigger.checkResourceMatch(player.level.dimension().location().toString(), false),true);
         addTrigger("biome",true,makeParameterSet(true,"resource_name","biome_category",
                         "rain_type","biome_temperature","check_lower_temp","biome_rainfall","check_higher_rainfall"),
                 Collections.singletonList("identifier"),Arrays.asList("resource_name","biome_category","rain_type",
@@ -277,34 +278,30 @@ public class Trigger {
                 },true);
         addTrigger("effect",false,makeParameterSet(true,"resource_name"),
                 Arrays.asList("identifier","resource_name"),new ArrayList<>(),(trigger,player) -> {
-                    boolean pass = false;
-                    MusicPicker.EFFECT_LIST.clear();
-                    for (MobEffectInstance p : player.getActiveEffects()) {
-                        if(ForgeRegistries.MOB_EFFECTS.containsValue(p.getEffect())) {
-                            String name = ForgeRegistries.MOB_EFFECTS.getKey(p.getEffect()).toString();
-                            MusicPicker.EFFECT_LIST.add(name);
-                            if (trigger.checkResourceList(name, trigger.getResource(), false))
+                    synchronized (CACHED_EFFECTS) {
+                        boolean pass = false;
+                        for(String effect : CACHED_EFFECTS)
+                            if (trigger.checkResourceMatch(effect,false))
                                 pass = true;
-                        }
+                        return pass;
                     }
-                    return pass;
                 },true);
         addTrigger("victory",true,makeParameterSet(true,"victory_timeout"),
                 Arrays.asList("identifier","persistence"),new ArrayList<>(),
                 (trigger,player) -> trigger.channel.getSyncStatus().isTriggerActive(trigger),true);
         addTrigger("gui",false,makeParameterSet(true,"resource_name"),
                 Arrays.asList("identifier","resource_name"),new ArrayList<>(),(trigger,player) -> {
-                    Minecraft mc = Minecraft.getInstance();
-                    List<String> resources = trigger.getResource();
-                    return (Objects.nonNull(mc.screen) && (resources.isEmpty() || resources.contains("ANY") ||
-                            (trigger.checkResourceList(mc.screen.getClass().getName(),resources,false)) ||
-                            (resources.contains("CREDITS") && mc.screen instanceof WinScreen)));
+                    Screen curScreen = Minecraft.getInstance().screen;
+                    return (Objects.nonNull(curScreen) && (trigger.getResource().isEmpty() ||
+                            trigger.getResource().contains("ANY") ||
+                            (trigger.checkResourceMatch(curScreen.getClass().getName(),false)) ||
+                            (trigger.getResource().contains("CREDITS") && curScreen instanceof WinScreen)));
                 },true);
         addTrigger("advancement",false,makeParameterSet(true,"resource_name"),
                 Arrays.asList("identifier","resource_name","persistence"),new ArrayList<>(),(trigger,player) -> {
-                    List<String> resources = trigger.getResource();
-                    boolean pass = (ClientEvents.GAINED_NEW_ADVANCEMENT && (resources.isEmpty() || resources.contains("ANY") ||
-                            trigger.checkResourceList(ClientEvents.LAST_ADVANCEMENT,resources,false)));
+                    boolean pass = (ClientEvents.GAINED_NEW_ADVANCEMENT && (trigger.getResource().isEmpty() ||
+                            trigger.getResource().contains("ANY") ||
+                            trigger.checkResourceMatch(ClientEvents.LAST_ADVANCEMENT,false)));
                     if(pass) ClientEvents.GAINED_NEW_ADVANCEMENT = false;
                     return pass;
                 },true);
@@ -417,7 +414,7 @@ public class Trigger {
         else DEFAULT_PARAMETER_MAP.get(parameter).addTriggerDefault(trigger,value);
     }
 
-    public static HashSet<String> getAcceptedTriggers() {
+    public static Set<String> getAcceptedTriggers() {
         return ACCEPTED_TRIGGERS;
     }
 
@@ -425,7 +422,7 @@ public class Trigger {
         return SERVER_TRIGGERS.contains(name);
     }
 
-    public static HashSet<String> getAcceptedParameters(String trigger) {
+    public static Set<String> getAcceptedParameters(String trigger) {
         return ACCEPTED_PARAMETERS.get(trigger);
     }
 
@@ -464,24 +461,57 @@ public class Trigger {
                 (buf1,parameter) -> parameter.encode(buf1));
     }
 
+    public static int getUniversalInt(@Nullable Table universal, String parameter, int fallback) {
+        return Objects.isNull(universal) ? fallback : MusicTriggers.randomInt("universal_"+parameter,
+                universal.getValOrDefault(parameter,String.valueOf(fallback)),fallback);
+    }
+
+    public static float getUniversalFloat(@Nullable Table universal, String parameter, float fallback) {
+        return Objects.isNull(universal) ? fallback : MusicTriggers.randomFloat("universal_"+parameter,
+                universal.getValOrDefault(parameter,String.valueOf(fallback)),fallback);
+    }
+
+    public static boolean getUniversalBool(@Nullable Table universal, String parameter, boolean fallback) {
+        return Objects.isNull(universal) ? fallback : universal.getValOrDefault(parameter,fallback);
+    }
+
+    public static String getUniversalString(@Nullable Table universal, String parameter, String fallback) {
+        return Objects.isNull(universal) ? fallback : universal.getValOrDefault(parameter,fallback);
+    }
+
+    public static void updateEffectCache(LocalPlayer player) {
+        if(Objects.isNull(player)) return;
+        Set<String> activeEffects = player.getActiveEffects().stream()
+                .map(instance -> Objects.isNull(instance) ? null : ForgeRegistries.MOB_EFFECTS.getKey(instance.getEffect()).toString())
+                .filter(Objects::nonNull).collect(Collectors.toSet());
+        synchronized (CACHED_EFFECTS) {
+            CACHED_EFFECTS.addAll(activeEffects);
+            CACHED_EFFECTS.removeIf(effect -> !activeEffects.contains(effect));
+        }
+    }
+
+    public static Set<String> getCachedEffects() {
+        synchronized (CACHED_EFFECTS) {
+            return CACHED_EFFECTS;
+        }
+    }
+
+    private final Cache cache;
     private final Channel channel;
     private final String name;
     private final HashMap<String, Object> parameters;
     private final List<Table> linkTables;
     private final HashMap<Integer, Link> parsedLinkMap;
-    private final HashSet<Stat<?>> cachedStats;
-    private boolean areStatsCached;
     private boolean isToggled;
     private boolean canPlayMoreAudio;
 
     public Trigger(String name, Channel channel, List<Table> links) {
+        this.cache = new Cache();
         this.name = name;
         this.channel = channel;
         this.parameters = buildDefaultParameters(name);
         this.linkTables = links;
         this.parsedLinkMap = new HashMap<>();
-        this.cachedStats = new HashSet<>();
-        this.areStatsCached = false;
         this.isToggled = false;
         this.canPlayMoreAudio = true;
     }
@@ -535,6 +565,10 @@ public class Trigger {
     @Override
     public String toString() {
         return getNameWithID();
+    }
+
+    public void initCache() {
+        this.cache.initCache();
     }
 
     public void setParameter(String parameter, Object value) {
@@ -630,6 +664,52 @@ public class Trigger {
         return TRIGGER_CONDITIONS.containsKey(getName()) && isActive(TRIGGER_CONDITIONS.get(getName()).apply(this,player));
     }
 
+    @SuppressWarnings("unchecked")
+    public <T> T getParameterWithUniversal(String parameter, @Nullable Table universal, T fallback) {
+        try {
+            return (T) this.cache.universalCache.getOrDefault(parameter,makeUniversalParameterCache(parameter,universal,fallback));
+        } catch (ClassCastException ex) {
+            MusicTriggers.logExternally(Level.ERROR,"Failed to get parameter with potential universal value {} "+
+                            "for trigger {}! Default value of {} will be set. See the main log for the full stacktrace.",
+                    parameter,getNameWithID(),DEFAULT_PARAMETER_MAP.get(parameter).value);
+            Constants.MAIN_LOG.error("Failed to get parameter with potential universal value {} "+
+                    "for trigger {}! Is the parameter stored incorrectly?",parameter,getNameWithID(),ex);
+            this.parameters.put(parameter,DEFAULT_PARAMETER_MAP.get(parameter).value);
+            return fallback;
+        }
+    }
+
+    private <T> T makeUniversalParameterCache(String parameter, @Nullable Table universal, T fallback) {
+        T cached = isDefault(parameter) ? getUniversalType(parameter,universal,fallback) : getParameterType(parameter,fallback);
+        this.cache.universalCache.put(parameter,cached);
+        return cached;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T getParameterType(String parameter, T fallback) {
+        if(fallback instanceof Number) {
+            if(fallback instanceof Float || fallback instanceof Double)
+                return (T)(Float)getParameterFloat(parameter);
+            return (T)(Integer)getParameterInt(parameter);
+        }
+        if(fallback instanceof Boolean) return (T)(Boolean)getParameterBool(parameter);
+        if(fallback instanceof String) return (T)getParameterString(parameter);
+        if(fallback instanceof Collection<?>) return (T)getParameterStringList(parameter);
+        return fallback;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T getUniversalType(String parameter, @Nullable Table universal, T fallback) {
+        if(fallback instanceof Number) {
+            if(fallback instanceof Float || fallback instanceof Double)
+                return (T)(Float)getUniversalFloat(universal,parameter,(Float)fallback);
+            return (T)(Integer)getUniversalInt(universal,parameter,(Integer)fallback);
+        }
+        if(fallback instanceof Boolean) return (T)(Boolean)getUniversalBool(universal,parameter,(Boolean)fallback);
+        if(fallback instanceof String) return (T)getUniversalString(universal,parameter,(String)fallback);
+        return fallback;
+    }
+
     private boolean isActive(boolean active) {
         if(getParameterBool("not")) return !active;
         return active;
@@ -651,8 +731,8 @@ public class Trigger {
         return health<(maxHealth*(((float) getParameterInt("level"))/100f));
     }
 
-    public List<String> getResource() {
-        return getParameterStringList("resource_name");
+    public Set<String> getResource() {
+        return this.cache.resourceCache;
     }
 
     public boolean zoneHelper(int x, int y, int z) {
@@ -691,63 +771,35 @@ public class Trigger {
         return level.getRawBrightness(p, 0);
     }
 
-    public boolean checkResourceList(String type, List<String> resourceList, boolean match) {
-        for(String resource : resourceList) {
-            if(match && type.matches(resource)) return true;
-            else if(!match && type.contains(resource)) return true;
+    public boolean checkResourceMatch(String type, boolean match) {
+        if(this.cache.isTypeCached("resource")) {
+            for(String resource : this.cache.resourceCache) {
+                if (match && type.matches(resource)) return true;
+                else if (!match && type.contains(resource)) return true;
+            }
         }
         return false;
     }
 
-    public boolean checkRiding(List<String> resources, LocalPlayer player) {
+    public boolean checkRiding(LocalPlayer player) {
         Entity riding = player.getVehicle();
         if(Objects.isNull(riding)) return false;
-        else if(resources.contains("ANY")) return true;
-        else if(checkResourceList(riding.getName().getString(),resources,true)) return true;
+        else if(getResource().contains("ANY")) return true;
+        else if(checkResourceMatch(riding.getName().getString(),true)) return true;
         else if (Objects.isNull(ForgeRegistries.ENTITY_TYPES.getKey(riding.getType()))) return false;
-        return checkResourceList(ForgeRegistries.ENTITY_TYPES.getKey(riding.getType()).toString(),resources,false);
-    }
-
-
-    private void makeStatCache(StatType<?>... statTypes) {
-        this.cachedStats.clear();
-        for(StatType<?> type : statTypes)
-            for(Stat<?> stat : type)
-                if(statHasValidName(stat, getResource()))
-                    this.cachedStats.add(stat);
-        this.areStatsCached = true;
+        return checkResourceMatch(ForgeRegistries.ENTITY_TYPES.getKey(riding.getType()).toString(),false);
     }
 
     public boolean checkStat(LocalPlayer player) {
-        Minecraft mc = Minecraft.getInstance();
-        if(Objects.nonNull(player) && Objects.nonNull(mc.getConnection())) {
-            mc.getConnection().send(new ServerboundClientCommandPacket(ServerboundClientCommandPacket.Action.REQUEST_STATS));
-            if(!this.areStatsCached) makeStatCache(Stats.CUSTOM,Stats.BLOCK_MINED,Stats.ITEM_CRAFTED, Stats.ITEM_USED,
-                    Stats.ITEM_BROKEN,Stats.ITEM_PICKED_UP,Stats.ITEM_DROPPED,Stats.ENTITY_KILLED,Stats.ENTITY_KILLED_BY);
-
-            int level = getParameterInt("level");
-            for(Stat<?> stat : this.cachedStats)
-                if(player.getStats().getValue(stat)>level)
-                    return true;
-        }
-        return false;
-    }
-
-    private boolean statHasValidName(Stat<?> stat, List<String> stats) {
-        if(Objects.isNull(stat)) return false;
-        Object value = stat.getValue();
-        if(value instanceof ResourceLocation) return checkResourceList(value.toString(),stats,false);
-        if(value instanceof Block) {
-            ResourceLocation res = ForgeRegistries.BLOCKS.getKey((Block)value);
-            return Objects.nonNull(res) && checkResourceList(res.toString(),stats,false);
-        }
-        if(value instanceof Item) {
-            ResourceLocation res = ForgeRegistries.ITEMS.getKey((Item)value);
-            return Objects.nonNull(res) && checkResourceList(res.toString(),stats,false);
-        }
-        if(value instanceof EntityType<?>) {
-            ResourceLocation res = ForgeRegistries.ENTITY_TYPES.getKey((EntityType<?>)value);
-            return Objects.nonNull(res) && checkResourceList(res.toString(),stats,false);
+        if(this.cache.isTypeCached("statistic")) {
+            Minecraft mc = Minecraft.getInstance();
+            if (Objects.nonNull(player) && Objects.nonNull(mc.getConnection())) {
+                mc.getConnection().send(new ServerboundClientCommandPacket(ServerboundClientCommandPacket.Action.REQUEST_STATS));
+                int level = getParameterInt("level");
+                for (Stat<?> stat : this.cache.statCache)
+                    if (player.getStats().getValue(stat) > level)
+                        return true;
+            }
         }
         return false;
     }
@@ -913,22 +965,15 @@ public class Trigger {
         BlockPos pos = roundedPos(player);
         AABB box = new AABB(pos.getX()-range,pos.getY()-(range*yRatio), pos.getZ()-range,
                 pos.getX()+range,pos.getY()+(range*yRatio),pos.getZ()+range);
-        for(String resource : getResource()) {
-            ResourceLocation location = new ResourceLocation(resource);
-            if(ForgeRegistries.BLOCK_ENTITY_TYPES.containsKey(location))
-                return hasBlockEntityInRange(player.level,box,ForgeRegistries.BLOCK_ENTITY_TYPES.getValue(location));
-        }
-        return false;
-    }
-
-    private boolean hasBlockEntityInRange(net.minecraft.world.level.Level level, AABB box, BlockEntityType<?> type) {
-        if(Objects.isNull(level) || Objects.isNull(box) || Objects.isNull(type)) return false;
         double width = box.getXsize();
         if(width<1) return false;
-        for(ChunkAccess chunk : getChunksFromCoordMap(level,getChunkCoordMap(box,width,(int)(width/16d)+1)))
-            for(BlockPos blockEntityPos : chunk.getBlockEntitiesPos())
-                if(isPosInBox(blockEntityPos,box))
-                    return chunk.getBlockEntity(blockEntityPos).getType()==type;
+        for(BlockEntityType<?> tileType : this.cache.blockEntityCache) {
+            if(Objects.isNull(tileType)) continue;
+            for(ChunkAccess chunk : getChunksFromCoordMap(player.level,getChunkCoordMap(box,width,(int)(width/16d)+1)))
+                for(BlockPos blockEntityPos : chunk.getBlockEntitiesPos())
+                    if(isPosInBox(blockEntityPos,box))
+                        return chunk.getBlockEntity(blockEntityPos).getType()==tileType;
+        }
         return false;
     }
 
@@ -1024,6 +1069,80 @@ public class Trigger {
 
     public Collection<Link> getLinks() {
         return Collections.unmodifiableCollection(this.parsedLinkMap.values());
+    }
+
+    class Cache {
+        private final Map<String, Object> universalCache;
+        /**
+         * Current types: [ "resource" "statistic" "blockentity" ]
+         */
+        private final Set<String> typesCached;
+        private final Set<String> resourceCache;
+        private final Set<Stat<?>> statCache;
+        private final Set<BlockEntityType<?>> blockEntityCache;
+
+        private Cache() {
+            this.universalCache = new HashMap<>();
+            this.typesCached = new HashSet<>();
+            this.resourceCache = new HashSet<>();
+            this.statCache = new HashSet<>();
+            this.blockEntityCache = new HashSet<>();
+        }
+
+        private boolean isTypeCached(String type) {
+            return this.typesCached.contains(type);
+        }
+
+        private boolean isTrigger(String trigger) {
+            return Trigger.this.name.matches(trigger);
+        }
+
+        private void initCache() {
+            if(isParameterAccepted(Trigger.this.name,"resource_name")) {
+                this.resourceCache.addAll(getParameterStringList("resource_name"));
+                this.typesCached.add("resource");
+            }
+            if(isTrigger("statistic")) {
+                makeStatCache(Stats.CUSTOM, Stats.BLOCK_MINED, Stats.ITEM_CRAFTED, Stats.ITEM_USED,Stats.ITEM_BROKEN,
+                        Stats.ITEM_PICKED_UP, Stats.ITEM_DROPPED, Stats.ENTITY_KILLED, Stats.ENTITY_KILLED_BY);
+                this.typesCached.add("statistic");
+            }
+            if(isTrigger("blockentity")) {
+                for(String resource : this.resourceCache) {
+                    ResourceLocation location = new ResourceLocation(resource);
+                    if(ForgeRegistries.BLOCK_ENTITY_TYPES.containsKey(location))
+                        this.blockEntityCache.add(ForgeRegistries.BLOCK_ENTITY_TYPES.getValue(location));
+                }
+                this.typesCached.add("blockentity");
+            }
+        }
+
+        private void makeStatCache(StatType<?>... statTypes) {
+            this.statCache.clear();
+            for(StatType<?> type : statTypes)
+                for(Stat<?> stat : type)
+                    if(statHasValidName(stat))
+                        this.statCache.add(stat);
+        }
+
+        private boolean statHasValidName(Stat<?> stat) {
+            if(Objects.isNull(stat)) return false;
+            Object value = stat.getValue();
+            if(value instanceof ResourceLocation) return checkResourceMatch(value.toString(),false);
+            if(value instanceof Block) {
+                ResourceLocation res = ForgeRegistries.BLOCKS.getKey((Block)value);
+                return Objects.nonNull(res) && checkResourceMatch(res.toString(),false);
+            }
+            if(value instanceof Item) {
+                ResourceLocation res = ForgeRegistries.ITEMS.getKey((Item)value);
+                return Objects.nonNull(res) && checkResourceMatch(res.toString(),false);
+            }
+            if(value instanceof EntityType<?>) {
+                ResourceLocation res = ForgeRegistries.ENTITY_TYPES.getKey((EntityType<?>)value);
+                return Objects.nonNull(res) && checkResourceMatch(res.toString(),false);
+            }
+            return false;
+        }
     }
 
     public static final class DefaultParameter {

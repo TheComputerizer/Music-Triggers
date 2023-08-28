@@ -114,7 +114,8 @@ public class ChannelManager {
             checkDisabledGuiButton(channels,type);
         if(channels.getTables().isEmpty()) channels.addTable(null,"example");
         for(Table channel : channels.getTables().values()) {
-            if(verifyChannelName(channel.getName())) CHANNEL_MAP.put(channel.getName(),new Channel(channel,isResourceControlled));
+            if(verifyChannelName(channel.getName())) CHANNEL_MAP.put(channel.getName(),
+                    new Channel(channel,isResourceControlled,Minecraft.getInstance().getResourceManager()));
             else MusicTriggers.logExternally(Level.ERROR, "Channel {} failed to register! See the above errors for" +
                     "more information.",channel.getName());
         }
@@ -310,8 +311,11 @@ public class ChannelManager {
     public static void initializeServerInfo() {
         if(!ConfigRegistry.CLIENT_SIDE_ONLY) {
             ServerTriggerStatus data = new ServerTriggerStatus();
-            for (Channel channel : getAllChannels())
-                channel.initializeServerData(data);
+            for(IChannel channel : CHANNEL_MAP.values()) {
+                channel.initCache();
+                if(channel instanceof Channel)
+                    ((Channel)channel).initializeServerData(data);
+            }
             new PacketInitChannels(data).send();
         }
     }
@@ -407,9 +411,11 @@ public class ChannelManager {
                         TICKING_RENDERABLES.entrySet().removeIf(entry -> !entry.getValue().canRender());
                     }
                     tickCounter++;
+                    Minecraft mc = Minecraft.getInstance();
+                    Trigger.updateEffectCache(mc.player);
                     if (checkForJukeBox()) jukeboxPause();
                     else jukeboxUnpause();
-                    if ((ConfigDebug.PAUSE_WHEN_TABBED && !Minecraft.getInstance().isWindowActive()) || Minecraft.getInstance().isPaused())
+                    if ((ConfigDebug.PAUSE_WHEN_TABBED && !mc.isWindowActive()) || mc.isPaused())
                         pauseAllChannels();
                     else unpauseAllChannels();
                     for (Channel channel : getAllChannels())
@@ -537,7 +543,7 @@ public class ChannelManager {
         Map<String, ChannelInstance> channels = CHANNEL_MAP.entrySet().stream()
                 .filter(entry -> entry.getValue() instanceof Channel)
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> ((Channel)entry.getValue()).createGuiData()));
-        return new ChannelHolder(MusicTriggers.configFile("channels","toml"),channels);
+        return new ChannelHolder(MusicTriggers.configFile("channels","toml",true),channels);
     }
 
     public static boolean isClientConfig() {

@@ -1,14 +1,14 @@
 package mods.thecomputerizer.musictriggers.config;
 
-
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.channels.Channel;
 import mods.thecomputerizer.theimpossiblelibrary.util.NetworkUtil;
+import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraftforge.api.distmarker.Dist;
@@ -22,17 +22,20 @@ import java.util.*;
 public class ConfigJukebox {
 
     public final Map<String, String> recordMap;
+    private final boolean isServerSide;
     private final File file;
     private final ResourceLocation resource;
-    private final boolean isFromDataPack;
+    private final ResourceManager manager;
+    private Object channel;
 
     public ConfigJukebox(File file) {
-        this.resource = null;
+        this.recordMap = new HashMap<>();
+        this.isServerSide = false;
         boolean exists = file.exists();
         this.file = exists ? file : FileUtil.generateNestedFile(file,false);
         if(!exists) FileUtil.writeLinesToFile(this.file,headerLines(),false);
-        this.recordMap = new HashMap<>();
-        this.isFromDataPack = false;
+        this.resource = null;
+        this.manager = Minecraft.getInstance().getResourceManager();
     }
 
     private List<String> headerLines() {
@@ -45,24 +48,30 @@ public class ConfigJukebox {
                 "song1 = dragon");
     }
 
-    public ConfigJukebox(@Nullable ResourceManager manager, ResourceLocation resource, Object channel) throws IOException {
+    public void setChannel(Object channel) {
+        this.channel = channel;
+    }
+
+    public ConfigJukebox(boolean isServerSide, ResourceLocation resource, ResourceManager manager, @Nullable Object channel) throws IOException {
+        this.recordMap = new HashMap<>();
+        this.isServerSide = isServerSide;
         this.file = null;
         this.resource = resource;
-        this.recordMap = new HashMap<>();
-        this.isFromDataPack = Objects.nonNull(manager);
-        if(this.isFromDataPack) {
-            try(BufferedReader reader = new BufferedReader(new InputStreamReader(manager.getResourceOrThrow(resource).open()))) {
-                parse(reader,channel,true);
+        this.manager = manager;
+        this.channel = channel;
+        if(this.isServerSide) {
+            try(BufferedReader reader = new BufferedReader(new InputStreamReader(this.manager.getResourceOrThrow(resource).open()))) {
+                parse(reader);
             }
         }
     }
 
-    private void parse(BufferedReader reader, Object channel, boolean isDataPack) throws IOException {
+    private void parse(BufferedReader reader) throws IOException {
         String line = reader.readLine();
         while(Objects.nonNull(line)) {
             if(!line.contains("Format") && line.contains("=") && !line.contains("==")) {
                 String[] broken = MusicTriggers.stringBreaker(line,"=");
-                tryAddTrack(channel,broken[0].trim(),broken[1].trim(),isDataPack);
+                tryAddTrack(broken[0].trim(),broken[1].trim());
             }
             line = reader.readLine();
         }
@@ -70,54 +79,55 @@ public class ConfigJukebox {
 
     @OnlyIn(Dist.CLIENT)
     private Reader makeReader() throws IOException {
-        return Objects.nonNull(this.file) ? new FileReader(this.file) : new InputStreamReader(Minecraft.getInstance()
-                .getResourceManager().getResourceOrThrow(this.resource).open());
+        return Objects.nonNull(this.file) ? new FileReader(this.file) :
+                new InputStreamReader(this.manager.getResourceOrThrow(this.resource).open());
     }
 
     @OnlyIn(Dist.CLIENT)
     public void parse(Channel channel) {
-        if(this.isFromDataPack) return;
+        if(this.isServerSide) return;
         try(BufferedReader reader = new BufferedReader(makeReader())) {
-            parse(reader,channel,false);
+            parse(reader);
         } catch(Exception e) {
             Constants.MAIN_LOG.error("Channel[{}] - Failed to parse jukebox config!",channel.getChannelName(),e);
         }
     }
 
-    private void tryAddTrack(Object channel, String track, String lang, boolean isDataPack) {
-        if(isDataPack || checkIsLoaded(channel,track)) {
-            String hasTranslation = isDataPack ? "translation key" : "translation";
+    private void tryAddTrack(String track, String lang) {
+        if(this.isServerSide || checkIsLoaded(track)) {
+            String hasTranslation = this.isServerSide ? "translation key" : "translation";
             if(!this.recordMap.containsKey(track)) {
                 this.recordMap.put(track, lang);
-                String logThis = isDataPack ? lang : getTranslation(lang);
+                String logThis = this.isServerSide ? lang : getTranslation(lang);
                 MusicTriggers.logExternally(Level.INFO, "Channel[{}] - Track with id {} is now playable by a " +
-                        "custom record and has a {} of {}",channel,track,hasTranslation,logThis);
+                        "custom record and has a {} of {}",this.channel,track,hasTranslation,logThis);
             } else MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Track with id {} has already been " +
-                            "loaded to a custom record with a {} of {}!",channel,hasTranslation,
-                    isDataPack ? this.recordMap.get(track) : getTranslation(this.recordMap.get(track)));
+                            "loaded to a custom record with a {} of {}!",this.channel,hasTranslation,
+                    this.isServerSide ? this.recordMap.get(track) : getTranslation(this.recordMap.get(track)));
         } else MusicTriggers.logExternally(Level.ERROR, "Channel[{}] - Unable to load unknown track id {} to "+
-                "a custom record!",channel,track);
+                "a custom record!",this.channel,track);
     }
 
     /**
      * Client Only but the annotation is left off just in case it tries being loaded.
      */
-    private boolean checkIsLoaded(Object channel, String track) {
-        return ((Channel)channel).isTrackLoaded(track);
+    private boolean checkIsLoaded(String track) {
+        return ((Channel)this.channel).isTrackLoaded(track);
     }
 
     /**
      * Client Only but the annotation is left off just in case it tries being loaded.
      */
     private String getTranslation(String lang) {
-        return Component.translatable(Constants.MODID+"record"+lang).getString();
+        return MutableComponent.create(AssetUtil.genericLang(Constants.MODID,"record",lang,false)).getString();
     }
 
     @OnlyIn(Dist.CLIENT)
     public ConfigJukebox(FriendlyByteBuf buf) {
+        this.recordMap = NetworkUtil.readGenericMap(buf,NetworkUtil::readString,NetworkUtil::readString);
+        this.isServerSide = true;
         this.file = null;
         this.resource = null;
-        this.recordMap = NetworkUtil.readGenericMap(buf,NetworkUtil::readString,NetworkUtil::readString);
-        this.isFromDataPack = true;
+        this.manager = null;
     }
 }
