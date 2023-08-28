@@ -368,13 +368,18 @@ public class ServerTriggerStatus {
         synchronized (this.allTriggers) {
             if (!toRemove.isEmpty()) this.allTriggers.removeAll(toRemove);
         }
-        if(!this.updatedTriggers.isEmpty() || (Objects.nonNull(this.prevStruct) &&
-                (Objects.isNull(this.curStruct) || !this.prevStruct.matches(this.curStruct)))) {
+        if(!this.updatedTriggers.isEmpty() || checkStructName()) {
             String structToSend = Objects.nonNull(this.curStruct) && !(this.curStruct.isEmpty()) ? this.curStruct :
                     "Structure has not been synced";
             new PacketSyncServerInfo(this.updatedTriggers,structToSend).addPlayers(player).send();
-            this.prevStruct = structToSend;
+            this.prevStruct = this.curStruct;
         }
+    }
+
+    private boolean checkStructName() {
+        return (Objects.isNull(this.curStruct) && Objects.nonNull(this.prevStruct)) ||
+                (Objects.nonNull(this.prevStruct) && !this.curStruct.matches(this.prevStruct)) ||
+                (Objects.nonNull(this.curStruct) && Objects.isNull(this.prevStruct));
     }
 
     private void runCommands() {
@@ -437,29 +442,28 @@ public class ServerTriggerStatus {
         Biome biome = world.getBiome(pos);
         if(Objects.isNull(biome.getRegistryName())) return false;
         String curBiome = biome.getRegistryName().toString();
-        List<String> resources = biomeTrigger.getValOrDefault("resource_name",Collections.singletonList("any"));
-        if(resources.isEmpty()) resources.add("any");
-        List<String> categories = biomeTrigger.getValOrDefault("biome_category",Collections.singletonList("any"));
-        if(categories.isEmpty()) resources.add("any");
-        String rainType = biomeTrigger.getValOrDefault("rain_type","any");
-        float rainFall = biomeTrigger.getValOrDefault("biome_rainfall",Float.MIN_VALUE);
-        float temperature = biomeTrigger.getValOrDefault("biome_temperature",Float.MIN_VALUE);
-        boolean higherRain = biomeTrigger.getValOrDefault("check_higher_rainfall",true);
-        boolean colderTemp = biomeTrigger.getValOrDefault("check_lower_temp",false);
-        if (resources.contains("any") || partiallyMatches(curBiome,resources)) {
-            if (categories.contains("any") || partiallyMatches(biome.getBiomeCategory().getName(),categories)) {
-                if (rainType.matches("any") || biome.getPrecipitation().getName().contains(rainType)) {
-                    boolean pass = false;
-                    if (rainFall==Float.MIN_VALUE) pass = true;
-                    else if (biome.getDownfall() > rainFall && higherRain) pass = true;
-                    else if (biome.getDownfall() < rainFall && !higherRain) pass = true;
-                    if (pass) {
-                        float bt = biome.getBaseTemperature();
-                        if (temperature==Float.MIN_VALUE) return true;
-                        else if (bt >= temperature && !colderTemp) return true;
-                        else return bt <= temperature && colderTemp;
-                    }
-                }
+        List<String> resources = getParameterStringList(biomeTrigger,"resource_name");
+        List<String> categories = getParameterStringList(biomeTrigger,"biome_category");
+        String rainType = getParameterString(biomeTrigger,"rain_type");
+        float rainFall = getParameterFloat(biomeTrigger,"biome_rainfall");
+        float temperature = getParameterFloat(biomeTrigger,"biome_temperature");
+        boolean higherRain = getParameterBool(biomeTrigger,"check_higher_rainfall");
+        boolean colderTemp = getParameterBool(biomeTrigger,"check_lower_temp");
+        boolean pass = !resources.contains("ANY") && (resources.isEmpty() || partiallyMatches(curBiome,resources));
+        if(!pass) pass = !categories.contains("ANY") && (categories.isEmpty() ||
+                partiallyMatches(biome.getBiomeCategory().getName(),categories));
+        if(!pass) return false;
+        pass = rainType.matches("ANY") || biome.getPrecipitation().getName().contains(rainType);
+        if(pass) {
+            pass = false;
+            if (rainFall == Float.MIN_VALUE) pass = true;
+            else if (biome.getDownfall() > rainFall && higherRain) pass = true;
+            else if (biome.getDownfall() < rainFall && !higherRain) pass = true;
+            if (pass) {
+                float bt = biome.getBaseTemperature();
+                if (temperature == Float.MIN_VALUE) return true;
+                else if (bt >= temperature && !colderTemp) return true;
+                else return bt <= temperature && colderTemp;
             }
         }
         return false;

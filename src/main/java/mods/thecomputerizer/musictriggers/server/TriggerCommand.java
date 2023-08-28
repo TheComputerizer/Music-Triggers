@@ -9,6 +9,8 @@ import net.minecraft.command.CommandSource;
 import net.minecraft.command.Commands;
 import net.minecraft.command.arguments.EntityArgument;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.text.ChatType;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
 import java.util.Objects;
@@ -37,19 +39,22 @@ public class TriggerCommand {
         } catch (Exception e) {
             player = null;
         }
+        if(Objects.isNull(player)) throwException("player.error");
         String type;
         try {
             type = StringArgumentType.getString(ctx, "type");
         } catch (Exception e) {
             type = null;
         }
-        if(Objects.isNull(player) || Objects.isNull(type)) throwException("command.musictriggers.help");
+        if(Objects.isNull(type)) throwException("help");
         if(type.matches("reload")) {
             send(player,"not_set",false,true,false);
+            sendSuccess(player,"reload");
             return 1;
         }
         if(type.matches("debug")) {
             send(player,"not_set",false,false,true);
+            sendSuccess(player,"debug");
             return 1;
         }
 
@@ -60,17 +65,28 @@ public class TriggerCommand {
             } catch (Exception e) {
                 identifier = null;
             }
-            if(Objects.isNull(identifier)) throwException("command.musictriggers.trigger.error");
-            else if(identifier.matches("not_set")) throwException("command.musictriggers.trigger.not_set");
-            else send(player,identifier,true,false,false);
+            if(Objects.isNull(identifier)) throwException("trigger.error");
+            else if(identifier.matches("not_set")) throwException("trigger.not_set");
+            else {
+                send(player,identifier,true,false,false);
+                sendSuccess(player,"trigger");
+            }
             return 1;
         }
-        throwException("command.musictriggers.help");
+        throwException("help");
         return 0;
     }
 
     private static void throwException(String langKey) {
-        throw new CommandException(new TranslationTextComponent(langKey));
+        throw new CommandException(translate(langKey));
+    }
+
+    private static void sendSuccess(ServerPlayerEntity player, String successType) {
+        player.sendMessage(translate(successType),ChatType.SYSTEM,player.getUUID());
+    }
+
+    private static ITextComponent translate(String langKey) {
+        return new TranslationTextComponent("command.musictriggers."+langKey);
     }
 
     private static void send(ServerPlayerEntity player, String identifier, boolean isCommandTrigger, boolean isReload, boolean isDebug) {

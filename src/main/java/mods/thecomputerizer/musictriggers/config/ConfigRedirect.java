@@ -12,27 +12,29 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.apache.logging.log4j.Level;
 
-import javax.annotation.Nullable;
 import java.io.*;
 import java.util.*;
 
 public class ConfigRedirect {
 
-
     public final Map<String,String> urlMap;
     public final Map<String, ResourceLocation> resourceLocationMap;
+    private final boolean isServerSide;
     private final File file;
     private final ResourceLocation resource;
-    private final boolean isFromDataPack;
+    private final IResourceManager manager;
+    private final String channelName;
 
-    public ConfigRedirect(File file) {
-        this.resource = null;
+    public ConfigRedirect(File file, String channelName) {
+        this.urlMap = new HashMap<>();
+        this.resourceLocationMap = new HashMap<>();
+        this.isServerSide = false;
         boolean exists = file.exists();
         this.file = exists ? file : FileUtil.generateNestedFile(file,false);
         if(!exists) FileUtil.writeLinesToFile(this.file,headerLines(),false);
-        this.urlMap = new HashMap<>();
-        this.resourceLocationMap = new HashMap<>();
-        this.isFromDataPack = false;
+        this.resource = null;
+        this.manager = Minecraft.getInstance().getResourceManager();
+        this.channelName = channelName;
     }
 
     private List<String> headerLines() {
@@ -45,20 +47,22 @@ public class ConfigRedirect {
                 "title == minecraft:sounds/music/menu/menu1.ogg");
     }
 
-    public ConfigRedirect(@Nullable IResourceManager manager, ResourceLocation resource, String channel) throws IOException {
-        this.file = null;
-        this.resource = resource;
+    public ConfigRedirect(boolean isServerSide, ResourceLocation resource, IResourceManager manager, String channelName) throws IOException {
         this.urlMap = new HashMap<>();
         this.resourceLocationMap = new HashMap<>();
-        this.isFromDataPack = Objects.nonNull(manager);
-        if(this.isFromDataPack) {
-            try(BufferedReader reader = new BufferedReader(new InputStreamReader(manager.getResource(resource).getInputStream()))) {
-                parse(reader,channel);
+        this.isServerSide = isServerSide;
+        this.file = null;
+        this.resource = resource;
+        this.manager = manager;
+        this.channelName = channelName;
+        if(this.isServerSide) {
+            try(BufferedReader reader = new BufferedReader(new InputStreamReader(this.manager.getResource(resource).getInputStream()))) {
+                parse(reader);
             }
         }
     }
 
-    private void parse(BufferedReader reader, String channel) throws IOException {
+    private void parse(BufferedReader reader) throws IOException {
         String line = reader.readLine();
         while(Objects.nonNull(line)) {
             if(!line.contains("Format") && line.contains(" = ") && !line.contains(" == ")) {
@@ -69,7 +73,7 @@ public class ConfigRedirect {
                     this.resourceLocationMap.put(line.substring(0,line.indexOf('=')-1), new ResourceLocation(resource));
                 } catch (Exception ignored) {
                     MusicTriggers.logExternally(Level.ERROR,"Channel[{}] - Resource location {} was invalid!",
-                            channel,resource);
+                            this.channelName,resource);
                 }
             }
             line = reader.readLine();
@@ -78,27 +82,29 @@ public class ConfigRedirect {
 
     @OnlyIn(Dist.CLIENT)
     private Reader makeReader() throws IOException {
-        return Objects.nonNull(this.file) ? new FileReader(this.file) : new InputStreamReader(Minecraft.getInstance()
-                        .getResourceManager().getResource(this.resource).getInputStream());
+        return Objects.nonNull(this.file) ? new FileReader(this.file) :
+                new InputStreamReader(this.manager.getResource(this.resource).getInputStream());
     }
 
     @OnlyIn(Dist.CLIENT)
     public void parse(String channel) {
-        if(this.isFromDataPack) return;
+        if(this.isServerSide) return;
         try(BufferedReader reader = new BufferedReader(makeReader())) {
-            parse(reader,channel);
+            parse(reader);
         } catch(Exception e) {
             Constants.MAIN_LOG.error("Channel[{}] - Failed to parse redirect config!",channel,e);
         }
     }
 
     @OnlyIn(Dist.CLIENT)
-    public ConfigRedirect(PacketBuffer buf) {
-        this.file = null;
-        this.resource = null;
+    public ConfigRedirect(PacketBuffer buf, String channelName) {
         this.urlMap = NetworkUtil.readGenericMap(buf,NetworkUtil::readString,NetworkUtil::readString);
         this.resourceLocationMap = NetworkUtil.readGenericMap(buf,NetworkUtil::readString,
                 buf1 -> new ResourceLocation(NetworkUtil.readString(buf1)));
-        this.isFromDataPack = true;
+        this.isServerSide = true;
+        this.file = null;
+        this.resource = null;
+        this.manager = null;
+        this.channelName = channelName;
     }
 }

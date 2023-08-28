@@ -7,4 +7,5 @@ public interface IChannel {
     String getChannelName();
     AudioPlayer getPlayer();
     void onTrackStop(AudioTrackEndReason endReason);
+    void initCache();
 }

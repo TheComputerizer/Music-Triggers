@@ -35,12 +35,12 @@ public class ServerChannel {
 
     private static ConfigRedirect getRedirect(Table info, IResourceManager manager) throws IOException {
         String path = "config/"+info.getValOrDefault("redirect",info.getName()+"/redirect")+".txt";
-        return new ConfigRedirect(manager, Constants.res(path),info.getName());
+        return new ConfigRedirect(true,Constants.res(path),manager,info.getName());
     }
 
     private static ConfigJukebox getJukebox(Table info, IResourceManager manager) throws IOException {
         String path = "config/"+info.getValOrDefault("jukebox",info.getName()+"/jukebox")+".txt";
-        return new ConfigJukebox(manager, Constants.res(path),info.getName());
+        return new ConfigJukebox(true,Constants.res(path),manager,info.getName());
     }
 
     public ServerChannel(Table info, IResourceManager manager) throws IOException {
@@ -77,7 +77,7 @@ public class ServerChannel {
         this.transitions = Holder.decoded(buf);
         this.commands = Holder.decoded(buf);
         this.toggles = Holder.decoded(buf);
-        this.redirect = new ConfigRedirect(buf);
+        this.redirect = new ConfigRedirect(buf,this.info.getName());
         this.jukebox = new ConfigJukebox(buf);
     }
 
