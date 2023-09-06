@@ -17,6 +17,7 @@ public class Constants {
     public static final String DEPENDENCIES = "required-after:theimpossiblelibrary;";
     public static final Logger MAIN_LOG = LogManager.getLogger(NAME);
     public static final File CONFIG_DIR = new File("config/MusicTriggers");
+    public static final char[] BLACKLISTED_TABLE_CHARACTERS = new char[]{' ','.',')','(','[',']'};
 
     /**
      * In case I forget to or choose not remove some log spam, this will only ensure it only happens in dev

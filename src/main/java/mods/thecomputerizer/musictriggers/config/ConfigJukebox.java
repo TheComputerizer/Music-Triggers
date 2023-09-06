@@ -48,6 +48,10 @@ public class ConfigJukebox {
         }
     }
 
+    public void setChannel(Object channel) {
+        this.channel = channel;
+    }
+
     private List<String> headerLines() {
         return Arrays.asList("Format this like name = key",
                 "The key refers to a lang key in the format of record.musictriggers.key which ",

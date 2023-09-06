@@ -64,7 +64,7 @@ public class Trigger {
     private static final HashSet<String> ACCEPTED_TRIGGERS = new HashSet<>();
     private static final HashSet<String> SERVER_TRIGGERS = new HashSet<>();
     private static final HashMap<String, DefaultParameter> DEFAULT_PARAMETER_MAP = new HashMap<>();
-    private static final HashMap<String, HashSet<String>> ACCEPTED_PARAMETERS = new HashMap<>();
+    private static final HashMap<String, Set<String>> ACCEPTED_PARAMETERS = new HashMap<>();
     private static final HashMap<String, List<String>> REQUIRED_PARAMETERS = new HashMap<>();
     private static final HashMap<String, List<String>> CHOICE_REQUIRED_PARAMETERS = new HashMap<>();
     private static final HashMap<String, BiFunction<Trigger, EntityPlayerSP, Boolean>> TRIGGER_CONDITIONS = new HashMap<>();
@@ -149,11 +149,20 @@ public class Trigger {
     /**
      * Accepted parameter set
      */
-    public static HashSet<String> makeParameterSet(boolean isHolder, String ... parameters) {
+    public static Set<String> makeSpecialParameterSet() {
+        return new HashSet<>(Arrays.asList("fade_in","fade_out","trigger_delay","song_delay",
+                "start_toggled","not","persistence","start_delay","stop_delay","passive_persistence",
+                "toggle_inactive_playable","toggle_save_status","max_tracks"));
+    }
+
+    /**
+     * Accepted parameter set
+     */
+    public static Set<String> makeParameterSet(boolean isHolder, String ... parameters) {
         return makeParameterSet(true,isHolder,parameters);
     }
 
-    public static HashSet<String> makeParameterSet(boolean isAccepted, boolean isHolder, String ... parameters) {
+    public static Set<String> makeParameterSet(boolean isAccepted, boolean isHolder, String ... parameters) {
         HashSet<String> acceptedParameters = isAccepted ?
                 new HashSet<>(Arrays.asList("priority","fade_in","fade_out","trigger_delay","song_delay",
                         "start_toggled","not", "persistence","start_delay","stop_delay","passive_persistence",
@@ -164,9 +173,9 @@ public class Trigger {
     }
 
     private static void loadDefaultTriggers() {
-        addTrigger("loading",false,makeParameterSet(false),(trigger,player) -> false, true);
-        addTrigger("menu",false,makeParameterSet(false),(trigger,player) -> false,true);
-        addTrigger("generic",false,makeParameterSet(false),(trigger,player) -> false,true);
+        addTrigger("loading",false,makeSpecialParameterSet(),(trigger,player) -> false, true);
+        addTrigger("menu",false,makeSpecialParameterSet(),(trigger,player) -> false,true);
+        addTrigger("generic",false,makeSpecialParameterSet(),(trigger,player) -> false,true);
         addTrigger("difficulty",false,makeParameterSet(true,"level"),
                 Arrays.asList("identifier","level"),new ArrayList<>(),(trigger,player) -> {
             Minecraft mc = Minecraft.getMinecraft();
@@ -389,7 +398,7 @@ public class Trigger {
     /**
      * Vanilla + no required parameters
      */
-    public static void addTrigger(String name, boolean isServerSide, HashSet<String> acceptedParameters,
+    public static void addTrigger(String name, boolean isServerSide, Set<String> acceptedParameters,
                                   BiFunction<Trigger, EntityPlayerSP, Boolean> activationFunction,
                                   boolean forceOverwrite) throws IllegalArgumentException {
         addTrigger(name,isServerSide,new ArrayList<>(),acceptedParameters,new ArrayList<>(),new ArrayList<>(),
@@ -400,7 +409,7 @@ public class Trigger {
      * No required parameters
      */
     public static void addTrigger(String name, boolean isServerSide,
-                                  List<String> requiredMods,HashSet<String> acceptedParameters,
+                                  List<String> requiredMods,Set<String> acceptedParameters,
                                   BiFunction<Trigger, EntityPlayerSP, Boolean> activationFunction,
                                   boolean forceOverwrite) throws IllegalArgumentException {
         addTrigger(name,isServerSide,requiredMods,acceptedParameters,new ArrayList<>(),new ArrayList<>(),
@@ -410,7 +419,7 @@ public class Trigger {
     /**
      * Vanilla trigger
      */
-    public static void addTrigger(String name, boolean isServerSide, HashSet<String> acceptedParameters,
+    public static void addTrigger(String name, boolean isServerSide, Set<String> acceptedParameters,
                                   List<String> requiredParameters, List<String> choiceRequiredParameters,
                                   BiFunction<Trigger, EntityPlayerSP, Boolean> activationFunction,
                                   boolean forceOverwrite) throws IllegalArgumentException {
@@ -422,7 +431,7 @@ public class Trigger {
      * Only enable forceOverwrite if you know what you are doing as it can break compatability and base functionality.
      */
     public static void addTrigger(String name, boolean isServerSide, List<String> requiredMods,
-                                  HashSet<String> acceptedParameters, List<String> requiredParameters,
+                                  Set<String> acceptedParameters, List<String> requiredParameters,
                                   List<String> choiceRequiredParameters,
                                   BiFunction<Trigger, EntityPlayerSP, Boolean> activationFunction,
                                   boolean forceOverwrite) throws IllegalArgumentException {
@@ -459,7 +468,7 @@ public class Trigger {
         else DEFAULT_PARAMETER_MAP.get(parameter).addTriggerDefault(trigger,value);
     }
 
-    public static HashSet<String> getAcceptedTriggers() {
+    public static Set<String> getAcceptedTriggers() {
         return ACCEPTED_TRIGGERS;
     }
 
@@ -467,7 +476,7 @@ public class Trigger {
         return SERVER_TRIGGERS.contains(name);
     }
 
-    public static HashSet<String> getAcceptedParameters(String trigger) {
+    public static Set<String> getAcceptedParameters(String trigger) {
         return ACCEPTED_PARAMETERS.get(trigger);
     }
 
@@ -493,7 +502,7 @@ public class Trigger {
 
     public static void encodeDefaultParameters(ByteBuf buf) {
         HashSet<String> serverParameters = new HashSet<>();
-        HashSet<String> nonSpecificParameters = makeParameterSet(false);
+        Set<String> nonSpecificParameters = makeParameterSet(false);
         nonSpecificParameters.remove("not");
         for(String trigger : SERVER_TRIGGERS)
             for(String parameter : getAcceptedParameters(trigger))
@@ -639,6 +648,8 @@ public class Trigger {
     }
 
     public int getParameterInt(String parameter) {
+        if(parameter.matches("priority") && (this.name.matches("loading") || this.name.matches("menu") ||
+                this.name.matches("generic"))) return Integer.MIN_VALUE;
         int defVal = 0;
         try {
             defVal = DEFAULT_PARAMETER_MAP.get(parameter).getAsInt(this.name);

@@ -122,9 +122,8 @@ public class Channel implements IChannel {
 
     private static ConfigJukebox makeJukebox(Table info, boolean isResourcePack) {
         String path = getFilePath(info,"jukebox");
-        String name = info.getName();
-        return isResourcePack ? new ConfigJukebox(Constants.res("config/"+path+".txt"),name) :
-                new ConfigJukebox(false,MusicTriggers.configFile(path,"txt",true),name);
+        return isResourcePack ? new ConfigJukebox(Constants.res("config/"+path+".txt"),null) :
+                new ConfigJukebox(false,MusicTriggers.configFile(path,"txt",true),null);
     }
 
     /**
@@ -190,6 +189,7 @@ public class Channel implements IChannel {
         File file = new File(this.localFolderPath);
         if(!file.exists()) file.mkdirs();
         this.AUDIO_QUEUE = new AtomicInteger();
+        this.jukebox.setChannel(this);
     }
 
     private List<String> collectFilePaths(Table info) {

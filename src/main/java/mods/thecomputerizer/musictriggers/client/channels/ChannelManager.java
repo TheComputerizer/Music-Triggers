@@ -23,6 +23,7 @@ import mods.thecomputerizer.theimpossiblelibrary.client.render.Renderer;
 import mods.thecomputerizer.theimpossiblelibrary.client.render.Text;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.network.MessageImpl;
 import mods.thecomputerizer.theimpossiblelibrary.util.CustomTick;
 import mods.thecomputerizer.theimpossiblelibrary.util.NetworkUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
@@ -66,10 +67,12 @@ public class ChannelManager {
     private static final HashSet<String> PAUSED_VANILLA_SOUNDS = new HashSet<>();
     private static final HashMap<Channel,Trigger.Link> ACTIVE_LINKS_FROM = new HashMap<>();
     private static final HashMap<Channel,Trigger.Link> ACTIVE_LINKS_TO = new HashMap<>();
+    private static final List<MessageImpl> QUEUED_LOGIN_PACKETS = new ArrayList<>();
     private static File channelsFile;
     public static char blinkerChar = ' ';
     private static int tickCounter = 0;
     public static boolean reloading = true;
+    public static boolean isPlayerAssigned = false;
     private static boolean isServerInfoInitialized = false;
     private static boolean caughtNullJukebox = false;
     private static boolean isResourceControlled = false;
@@ -313,7 +316,8 @@ public class ChannelManager {
                 if(channel instanceof Channel)
                     ((Channel)channel).initializeServerData(data);
             }
-            new PacketInitChannels(data).send();
+            if(Objects.isNull(Minecraft.getMinecraft().player)) QUEUED_LOGIN_PACKETS.add(new PacketInitChannels(data));
+            else new PacketInitChannels(data).send();
         }
     }
 
@@ -363,8 +367,12 @@ public class ChannelManager {
     }
 
     public static void reloadAllChannels() {
+        QUEUED_LOGIN_PACKETS.clear();
         try {
-            if(isServerdControlled) new PacketRequestServerConfig().send();
+            if(isServerdControlled) {
+                if(Objects.isNull(Minecraft.getMinecraft().player)) QUEUED_LOGIN_PACKETS.add(new PacketRequestServerConfig());
+                else new PacketRequestServerConfig().send();
+            }
             else {
                 initClient(channelsFile,false);
                 reloading = false;
@@ -397,6 +405,13 @@ public class ChannelManager {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void tickChannels(CustomTick event) {
+        if(!isPlayerAssigned) {
+            if(Objects.nonNull(Minecraft.getMinecraft().player)) {
+                for(MessageImpl packet : QUEUED_LOGIN_PACKETS) packet.send();
+                QUEUED_LOGIN_PACKETS.clear();
+                isPlayerAssigned = true;
+            }
+        }
         if(!reloading) {
             if(!caughtNullJukebox) {
                 JukeboxChannel jukebox = getJukeBoxChannel();
@@ -576,7 +591,10 @@ public class ChannelManager {
                                 NetworkUtil::readString),buf2.readInt()))));
         Instance.setPreferredSort(MathHelper.clamp(buf.readInt(),1,3));
         worldDataStorage.inheritStartupData(previousStorage);
-        if(isServerdControlled) new PacketRequestServerConfig().send();
+        if(isServerdControlled) {
+            if(Objects.isNull(Minecraft.getMinecraft().player)) QUEUED_LOGIN_PACKETS.add(new PacketRequestServerConfig());
+            else new PacketRequestServerConfig().send();
+        }
         else readStoredData();
     }
 

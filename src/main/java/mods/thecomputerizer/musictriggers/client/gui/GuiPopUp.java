@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
+import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.client.Translate;
 import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Instance;
@@ -79,11 +80,21 @@ public class GuiPopUp extends GuiSuperType {
     private void click() {
         if(Objects.isNull(this.value) || this.value.isEmpty()) this.error = "blank";
         else if(this.getInstance().channelExists(this.value)) this.error = "duplicate";
-        else if(this.value.trim().contains(" ")) this.error = "space";
         else {
-            this.icons.add(this.getInstance().addChannel(this.value));
-            ((GuiPage)this.parent).updateIcons(this.icons);
-            Minecraft.getMinecraft().displayGuiScreen(this.parent);
+            String name = this.value.trim();
+            boolean isValid = true;
+            for(char c : Constants.BLACKLISTED_TABLE_CHARACTERS) {
+                if(name.contains(String.valueOf(c))) {
+                    isValid = false;
+                    break;
+                }
+            }
+            if(!isValid) this.error = "invalid";
+            else {
+                this.icons.add(this.getInstance().addChannel(this.value));
+                ((GuiPage) this.parent).updateIcons(this.icons);
+                Minecraft.getMinecraft().displayGuiScreen(this.parent);
+            }
         }
     }
 
