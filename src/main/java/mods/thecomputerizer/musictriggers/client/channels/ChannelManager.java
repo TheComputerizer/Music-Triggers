@@ -13,7 +13,6 @@ import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import mods.thecomputerizer.musictriggers.network.PacketDynamicChannelInfo;
 import mods.thecomputerizer.musictriggers.network.PacketInitChannels;
-import mods.thecomputerizer.musictriggers.network.PacketInitChannelsLogin;
 import mods.thecomputerizer.musictriggers.network.PacketRequestServerConfig;
 import mods.thecomputerizer.musictriggers.server.channels.ServerChannel;
 import mods.thecomputerizer.musictriggers.server.channels.ServerTriggerStatus;
@@ -23,6 +22,7 @@ import mods.thecomputerizer.theimpossiblelibrary.client.render.Renderer;
 import mods.thecomputerizer.theimpossiblelibrary.client.render.Text;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.network.MessageImpl;
 import mods.thecomputerizer.theimpossiblelibrary.util.CustomTick;
 import mods.thecomputerizer.theimpossiblelibrary.util.NetworkUtil;
 import mods.thecomputerizer.theimpossiblelibrary.util.file.FileUtil;
@@ -69,10 +69,12 @@ public class ChannelManager {
     private static final HashSet<ISound> PAUSED_VANILLA_SOUNDS = new HashSet<>();
     private static final HashMap<Channel,Trigger.Link> ACTIVE_LINKS_FROM = new HashMap<>();
     private static final HashMap<Channel,Trigger.Link> ACTIVE_LINKS_TO = new HashMap<>();
+    private static final List<MessageImpl> QUEUED_LOGIN_PACKETS = new ArrayList<>();
     private static File channelsFile;
     public static char blinkerChar = ' ';
     private static int tickCounter = 0;
     public static boolean reloading = true;
+    public static boolean isPlayerAssigned = false;
     public static String CUR_STRUCT = "Structure has not been synced";
     private static boolean isServerInfoInitialized = false;
     private static boolean caughtNullJukebox = false;
@@ -194,7 +196,7 @@ public class ChannelManager {
         for(Channel channel : getAllChannels()) channel.parseConfigs(startup);
         for(Channel channel : getAllChannels()) channel.parseMoreConfigs();
         ConfigDebug.initialize(new File(Constants.CONFIG_DIR,"debug.toml"));
-        if(!startup) initializeServerInfo(false);
+        if(!startup) initializeServerInfo();
     }
 
     public static void readResourceLocations() {
@@ -309,7 +311,7 @@ public class ChannelManager {
         }
     }
 
-    public static void initializeServerInfo(boolean isLogin) {
+    public static void initializeServerInfo() {
         if(!ConfigRegistry.CLIENT_SIDE_ONLY) {
             ServerTriggerStatus data = new ServerTriggerStatus();
             for(IChannel channel : CHANNEL_MAP.values()) {
@@ -317,7 +319,8 @@ public class ChannelManager {
                 if(channel instanceof Channel)
                     ((Channel)channel).initializeServerData(data);
             }
-            (isLogin ? new PacketInitChannelsLogin(data) : new PacketInitChannels(data)).send();
+            if(Objects.isNull(Minecraft.getInstance().player)) QUEUED_LOGIN_PACKETS.add(new PacketInitChannels(data));
+            else new PacketInitChannels(data).send();
         }
     }
 
@@ -367,8 +370,12 @@ public class ChannelManager {
     }
 
     public static void reloadAllChannels() {
+        QUEUED_LOGIN_PACKETS.clear();
         try {
-            if(isServerdControlled) new PacketRequestServerConfig().send();
+            if(isServerdControlled) {
+                if(Objects.isNull(Minecraft.getInstance().player)) QUEUED_LOGIN_PACKETS.add(new PacketRequestServerConfig());
+                else new PacketRequestServerConfig().send();
+            }
             else {
                 initClient(channelsFile,false);
                 reloading = false;
@@ -401,6 +408,13 @@ public class ChannelManager {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void tickChannels(CustomTick event) {
+        if(!isPlayerAssigned) {
+            if(Objects.nonNull(Minecraft.getInstance().player)) {
+                for(MessageImpl packet : QUEUED_LOGIN_PACKETS) packet.send();
+                QUEUED_LOGIN_PACKETS.clear();
+                isPlayerAssigned = true;
+            }
+        }
         if(!reloading) {
             if(!caughtNullJukebox) {
                 JukeboxChannel jukebox = getJukeBoxChannel();
@@ -570,7 +584,7 @@ public class ChannelManager {
                         worldDataStorage.playedOnceMap.get(channelEntry.getKey()));
             }
         }
-        initializeServerInfo(true);
+        initializeServerInfo();
         reloading = false;
     }
 
@@ -585,7 +599,10 @@ public class ChannelManager {
                                 NetworkUtil::readString),buf2.readInt()))));
         Instance.setPreferredSort(MathHelper.clamp(buf.readInt(),1,3));
         worldDataStorage.inheritStartupData(previousStorage);
-        if(isServerdControlled) new PacketRequestServerConfig().send();
+        if(isServerdControlled) {
+            if(Objects.isNull(Minecraft.getInstance().player)) QUEUED_LOGIN_PACKETS.add(new PacketRequestServerConfig());
+            else new PacketRequestServerConfig().send();
+        }
         else readStoredData();
     }
 
@@ -612,7 +629,7 @@ public class ChannelManager {
             MusicTriggers.logExternally(Level.FATAL, "Failed to server channels");
             Constants.MAIN_LOG.fatal("Failed to reload server channels for Music Triggers!",ex);
         }
-        initializeServerInfo(true);
+        initializeServerInfo();
         reloading = false;
     }
 

@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.client.gui.instance;
 
+import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.client.Translate;
 import mods.thecomputerizer.musictriggers.client.gui.*;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
@@ -132,11 +133,27 @@ public class ChannelInstance {
         return songMap.entrySet().stream()
                 .map(entry -> new GuiSelection.MonoElement(entry.getKey(),priorityIndex,
                         Translate.selectionSong(entry.getKey(),"selection",entry.getKey()),
-                        Collections.singletonList(entry.getValue()),songEntryClick(grandfather,entry.getKey(),isJukebox)))
+                        getPotentialSongHoverText(entry.getKey(),entry.getValue()),
+                        songEntryClick(grandfather,entry.getKey(),isJukebox)))
                 .collect(Collectors.toList());
     }
 
+    private List<String> getPotentialSongHoverText(String name, String val) {
+        boolean isValid = true;
+        for(char c : Constants.BLACKLISTED_TABLE_CHARACTERS) {
+            if(name.contains(String.valueOf(c))) {
+                isValid = false;
+                break;
+            }
+        }
+        if(isValid) return Collections.singletonList(val);
+        return Collections.singletonList(Translate.guiGeneric(false,"table","name","error"));
+    }
+
     private Consumer<GuiSelection> songEntryClick(GuiSuperType grandfather, String key, boolean isJukebox) {
+        for(char c : Constants.BLACKLISTED_TABLE_CHARACTERS)
+            if(key.contains(String.valueOf(c)))
+                return parent -> {};
         return isJukebox ? parent -> {
             this.jukeboxInstance.addRecord(key);
             grandfather.parentUpdate();

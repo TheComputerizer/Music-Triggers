@@ -14,6 +14,7 @@ public class Constants {
     public static final ResourceLocation ICON_LOCATION = new ResourceLocation(MODID,"textures/logo.png");
     public static final Logger MAIN_LOG = LogManager.getLogger();
     public static final File CONFIG_DIR = new File("config/MusicTriggers");
+    public static final char[] BLACKLISTED_TABLE_CHARACTERS = new char[]{' ','.',')','(','[',']'};
     public static ResourceLocation res(String path) {
         return new ResourceLocation(MODID,path);
     }
