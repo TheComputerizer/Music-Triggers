@@ -41,6 +41,7 @@ import java.util.*;
 @Mod(modid = Constants.MODID, name = Constants.NAME, version = Constants.VERSION, dependencies = Constants.DEPENDENCIES,
         guiFactory = "mods.thecomputerizer.musictriggers.client.gui.Factory")
 public class MusicTriggers {
+    public static final ResourceLocation ICON_LOCATION = Constants.res("textures/logo.png");
     private static LogUtil.ModLogger MOD_LOG;
     private static final List<Tuple<String, Integer>> ORDERED_LOG_MESSAGES = Collections.synchronizedList(new ArrayList<>());
     private static Random RANDOM;

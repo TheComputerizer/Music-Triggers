@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import com.google.common.collect.Maps;
-import mods.thecomputerizer.musictriggers.core.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.theimpossiblelibrary.client.gui.RadialButton;
 import mods.thecomputerizer.theimpossiblelibrary.client.gui.RadialElement;
@@ -15,7 +14,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 public enum GuiType {
-    MAIN("main", Constants.ICON_LOCATION,null,Collections.EMPTY_LIST, 100f,0f,
+    MAIN("main", MusicTriggers.ICON_LOCATION,null,Collections.EMPTY_LIST, 100f,0f,
             new ButtonType[]{ButtonType.LOG,ButtonType.PLAYBACK,ButtonType.EDIT,ButtonType.RELOAD,ButtonType.BACK}, functionImpl()),
     LOG("log_visualizer", new ButtonType[]{ButtonType.BACK,ButtonType.APPLY}),
     PLAYBACK("playback", MusicTriggers.getIcon("gui/white_icons","playback"), null, Collections.EMPTY_LIST, 100f, 0f,
