@@ -22,7 +22,7 @@ public class Constants {
     /**
      * In case I forget to or choose not remove some log spam, this will only ensure it only happens in dev
      */
-    private static final boolean IS_DEV = true;
+    private static final boolean IS_DEV = false;
 
     public static boolean isDev() {
         return IS_DEV;
