@@ -62,7 +62,6 @@ public class MusicTriggers {
                 RegistryHandler.init(FMLJavaModLoadingContext.get().getModEventBus());
             NetworkHandler.queuePacketRegisterToServer(PacketDynamicChannelInfo.class,PacketDynamicChannelInfo::new);
             NetworkHandler.queuePacketRegisterToServer(PacketInitChannels.class,PacketInitChannels::new);
-            NetworkHandler.queuePacketRegisterToServer(PacketInitChannelsLogin.class, PacketInitChannelsLogin::new);
             NetworkHandler.queuePacketRegisterToServer(PacketRequestServerConfig.class,buf -> new PacketRequestServerConfig(buf));
             NetworkHandler.queuePacketRegisterToClient(PacketFinishedServerInit.class,buf -> new PacketFinishedServerInit(buf));
             NetworkHandler.queuePacketRegisterToClient(PacketJukeBoxCustom.class,PacketJukeBoxCustom::new);
