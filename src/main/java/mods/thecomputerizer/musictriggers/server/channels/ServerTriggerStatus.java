@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
 public class ServerTriggerStatus {
     private static final Map<String,ServerTriggerStatus> SERVER_DATA = new HashMap<>();
     private static final Map<ServerBossEvent,Class<? extends LivingEntity>> INSTANTIATED_BOSS_BARS = Collections.synchronizedMap(new HashMap<>());
-    private static final Map<ServerBossEvent,LivingEntity> BOSS_BAR_ENTITIES = new HashMap<>();
+    private static final Map<ServerBossEvent,LivingEntity> BOSS_BAR_ENTITIES = Collections.synchronizedMap(new HashMap<>());
     private static final List<String> NBT_MODES = Arrays.asList("KEY_PRESENT","VAL_PRESENT","GREATER","LESSER","EQUAL","INVERT");
     private static final List<String> SERVER_TRIGGER_HOLDERS = Arrays.asList("biome","structure","mob","victory","pvp","raid");
 
@@ -95,16 +95,16 @@ public class ServerTriggerStatus {
     }
 
     public static void runServerChecks() {
-        BOSS_BAR_ENTITIES.entrySet().removeIf(entry -> {
-            boolean ret = entry.getKey().getProgress()<=0;
-            if(ret) {
-                synchronized (INSTANTIATED_BOSS_BARS) {
+        synchronized (INSTANTIATED_BOSS_BARS) {
+            BOSS_BAR_ENTITIES.entrySet().removeIf(entry -> {
+                boolean ret = entry.getKey().getProgress() <= 0;
+                if (ret) {
                     INSTANTIATED_BOSS_BARS.remove(entry.getKey());
                     Constants.debugErrorServer("BOSS BAR REMOVED");
                 }
-            }
-            return ret;
-        });
+                return ret;
+            });
+        }
         Iterator<Map.Entry<String, ServerTriggerStatus>> itr = SERVER_DATA.entrySet().iterator();
         while(itr.hasNext()) {
             ServerTriggerStatus data = itr.next().getValue();
@@ -501,19 +501,21 @@ public class ServerTriggerStatus {
         Victory victory = this.victoryTriggers.get(getParameterString(mobTrigger,"victory_id"));
         boolean pass;
         if (resources.contains("BOSS")) {
-            Set<LivingEntity> bossEntities = BOSS_BAR_ENTITIES.entrySet().stream()
-                    .filter(entry -> entry.getKey().isVisible() && entry.getKey().getPlayers().contains(player))
-                    .map(Map.Entry::getValue).filter(entity -> entityWhitelist(entity,resources,infernal,nbt))
-                    .collect(Collectors.toSet());
-            if(bossEntities.size()<num) return false;
-            pass = checkSpecifics(bossEntities,num,player,checkTarget,hordeTarget,health,hordeHealth);
-            if(Objects.nonNull(victory)) {
-                if(pass)
-                    for(LivingEntity entity : bossEntities)
-                        victory.add(mobTrigger,true,entity);
-                victory.setActive(mobTrigger,pass);
+            synchronized (BOSS_BAR_ENTITIES) {
+                Set<LivingEntity> bossEntities = BOSS_BAR_ENTITIES.entrySet().stream()
+                        .filter(entry -> entry.getKey().isVisible() && entry.getKey().getPlayers().contains(player))
+                        .map(Map.Entry::getValue).filter(entity -> entityWhitelist(entity, resources, infernal, nbt))
+                        .collect(Collectors.toSet());
+                if (bossEntities.size() < num) return false;
+                pass = checkSpecifics(bossEntities, num, player, checkTarget, hordeTarget, health, hordeHealth);
+                if (Objects.nonNull(victory)) {
+                    if (pass)
+                        for (LivingEntity entity : bossEntities)
+                            victory.add(mobTrigger, true, entity);
+                    victory.setActive(mobTrigger, pass);
+                }
+                return pass;
             }
-            return pass;
         }
         pass = checkMobs(mobTrigger,player,pos,num,range,yRatio,resources,infernal,checkTarget,hordeTarget,health,
                 hordeHealth,nbt,victory);
