@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.server;
 
-import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.core.Constants;
 import mods.thecomputerizer.musictriggers.network.PacketSendCommand;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;

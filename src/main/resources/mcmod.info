@@ -11,6 +11,6 @@
   "credits": "The_Computerizer",
   "logoFile": "musictriggers_logo",
   "screenshots": [],
-  "dependencies": ["theimpossiblelibrary"]
+  "dependencies": ["theimpossiblelibrary", "mixinbooter"]
 }
 ]

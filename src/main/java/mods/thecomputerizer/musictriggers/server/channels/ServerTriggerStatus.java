@@ -4,7 +4,7 @@ import atomicstryker.infernalmobs.common.InfernalMobsCore;
 import c4.champions.common.capability.CapabilityChampionship;
 import c4.champions.common.capability.IChampionship;
 import io.netty.buffer.ByteBuf;
-import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.core.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.musictriggers.network.PacketFinishedServerInit;

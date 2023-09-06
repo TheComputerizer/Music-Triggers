@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.config;
 
 import mods.thecomputerizer.shadowed.moandjiezana.toml.Toml;
-import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.core.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.gui.instance.Registration;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Holder;

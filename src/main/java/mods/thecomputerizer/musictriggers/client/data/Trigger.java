@@ -7,7 +7,7 @@ import de.ellpeck.nyx.lunarevents.HarvestMoon;
 import de.ellpeck.nyx.lunarevents.StarShower;
 import io.netty.buffer.ByteBuf;
 import lumien.bloodmoon.Bloodmoon;
-import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.core.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.ClientEvents;
 import mods.thecomputerizer.musictriggers.client.channels.Channel;

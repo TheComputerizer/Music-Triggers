@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.registry.items;
 
-import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.core.Constants;
 import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.item.ItemStack;

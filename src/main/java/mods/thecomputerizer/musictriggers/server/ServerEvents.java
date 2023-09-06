@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.server;
 
-import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.core.Constants;
 import mods.thecomputerizer.musictriggers.server.channels.ServerTriggerStatus;
 import mods.thecomputerizer.musictriggers.server.data.PersistentTriggerDataProvider;
 import net.minecraft.entity.Entity;

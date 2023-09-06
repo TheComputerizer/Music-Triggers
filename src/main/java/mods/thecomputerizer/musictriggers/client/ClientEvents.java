@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.client;
 
 import atomicstryker.infernalmobs.common.InfernalMobsCore;
-import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.core.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.channels.Channel;
 import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;

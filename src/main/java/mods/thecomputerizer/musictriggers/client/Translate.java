@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.client;
 
-import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.core.Constants;
 import mods.thecomputerizer.musictriggers.client.data.Trigger;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;

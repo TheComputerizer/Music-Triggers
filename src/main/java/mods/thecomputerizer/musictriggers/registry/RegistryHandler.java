@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.registry;
 
-import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.core.Constants;
 import mods.thecomputerizer.musictriggers.registry.tiles.MusicRecorderEntity;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
 import mods.thecomputerizer.musictriggers.server.MTCommand;

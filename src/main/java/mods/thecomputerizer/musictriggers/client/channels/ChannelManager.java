@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.client.channels;
 
 import io.netty.buffer.ByteBuf;
-import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.core.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.ClientEvents;
 import mods.thecomputerizer.musictriggers.client.ClientSync;

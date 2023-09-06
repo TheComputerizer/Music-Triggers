@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.registry;
 
-import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.core.Constants;
 import mods.thecomputerizer.musictriggers.registry.blocks.MusicRecorder;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;

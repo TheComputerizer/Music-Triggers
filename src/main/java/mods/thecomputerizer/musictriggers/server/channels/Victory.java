@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.server.channels;
 
-import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.core.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.theimpossiblelibrary.common.toml.Table;
 import net.minecraft.entity.EntityLivingBase;

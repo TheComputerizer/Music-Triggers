@@ -2,7 +2,7 @@ package mods.thecomputerizer.musictriggers.config;
 
 
 import io.netty.buffer.ByteBuf;
-import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.core.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.client.channels.Channel;
 import mods.thecomputerizer.theimpossiblelibrary.util.NetworkUtil;

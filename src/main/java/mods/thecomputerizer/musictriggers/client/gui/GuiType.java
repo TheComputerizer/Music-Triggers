@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.client.gui;
 
 import com.google.common.collect.Maps;
-import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.core.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.theimpossiblelibrary.client.gui.RadialButton;
 import mods.thecomputerizer.theimpossiblelibrary.client.gui.RadialElement;

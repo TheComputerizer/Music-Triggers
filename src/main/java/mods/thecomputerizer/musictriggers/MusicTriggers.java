@@ -5,6 +5,7 @@ import com.rits.cloning.Cloner;
 import mods.thecomputerizer.musictriggers.client.channels.Channel;
 import mods.thecomputerizer.musictriggers.client.channels.ChannelManager;
 import mods.thecomputerizer.musictriggers.config.ConfigRegistry;
+import mods.thecomputerizer.musictriggers.core.Constants;
 import mods.thecomputerizer.musictriggers.network.*;
 import mods.thecomputerizer.musictriggers.registry.RegistryHandler;
 import mods.thecomputerizer.musictriggers.server.channels.ServerChannelManager;

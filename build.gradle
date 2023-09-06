@@ -73,10 +73,6 @@ repositories {
     maven {
         url = uri('https://jitpack.io')
     }
-    /*
-    flatDir {
-        dirs 'build/libs'
-    }*/
 }
 
 configurations {
@@ -95,23 +91,13 @@ dependencies {
         exclude module: 'commons-io'
         exclude module: 'commons-codec'
     }
-    //mixin
-    shade("org.spongepowered:mixin:${project.mixin_version}") {
-        exclude module: 'asm-commons'
-        exclude module: 'asm-tree'
-        exclude module: 'commons-io'
-        exclude module: 'gson'
-        exclude module: 'guava'
-        exclude module: 'launchwrapper'
-        exclude module: 'log4j-core'
-    }
-    annotationProcessor("org.spongepowered:mixin:${project.mixin_version}:processor")
+
+    //mixin stuff
+    implementation(fg.deobf("curse.maven:mixin-booter-419286:${project.mixinbooter_version}"))
+    annotationProcessor "org.spongepowered:mixin:${project.mixin_version}:processor"
 
     //required mod dependencies
     implementation(fg.deobf("maven.modrinth:the-impossible-library:${project.minecraft_version}-${project.lib_version}"))
-    //local versions of required dependencies for testing
-    //noinspection DependencyNotationArgument
-    //implementation name: "theimpossiblelibrary-${project.minecraft_version}-${project.lib_version}"
 
     //mod support dependencies
     implementation(fg.deobf("curse.maven:bloodmoon-226321:${project.bloodmoon_version}"))
@@ -186,8 +172,6 @@ jar {
                 'FMLCorePlugin': 'mods.thecomputerizer.musictriggers.core.MixinLoadingPlugin',
                 'FMLCorePluginContainsFMLMod': true,
                 'ForceLoadAsMod': true,
-                'TweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
-                'MixinConfigs': 'musictriggers.mixin.json',
                 'FMLAT': 'musictriggers_at.cfg'
         ])
     }

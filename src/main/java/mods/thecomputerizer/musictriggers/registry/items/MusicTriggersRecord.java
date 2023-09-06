@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.registry.items;
 
-import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.core.Constants;
 import mods.thecomputerizer.musictriggers.network.PacketJukeBoxCustom;
 import mods.thecomputerizer.musictriggers.registry.BlockRegistry;
 import mods.thecomputerizer.musictriggers.registry.blocks.MusicRecorder;

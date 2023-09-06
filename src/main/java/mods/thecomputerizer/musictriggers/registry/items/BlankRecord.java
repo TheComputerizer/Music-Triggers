@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.registry.items;
 
-import mods.thecomputerizer.musictriggers.Constants;
+import mods.thecomputerizer.musictriggers.core.Constants;
 import mods.thecomputerizer.musictriggers.registry.blocks.MusicRecorder;
 import mods.thecomputerizer.theimpossiblelibrary.util.client.AssetUtil;
 import net.minecraft.block.state.IBlockState;
