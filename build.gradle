@@ -1,5 +1,6 @@
 plugins {
 	id 'fabric-loom' version '1.2.+'
+	id 'com.github.johnrengelman.shadow' version '8.1.+'
 }
 
 version = "${project.minecraft_version}-fabric-${project.mod_version}"
@@ -32,9 +33,13 @@ repositories {
 	maven {
 		url = uri('https://jitpack.io')
 	}
-	/*flatDir {
-		dirs 'build/libs'
-	}*/
+}
+
+configurations {
+	shade
+	implementation.extendsFrom(shade)
+	shadow.extendsFrom shade
+	shade.transitive = true
 }
 
 dependencies {
@@ -47,29 +52,39 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	//3rd party dependencies
-	include (implementation("io.github.kostaskougios:cloning:${project.cloning_version}"))
-	include (implementation("com.github.walkyst:lavaplayer-fork:${project.lava_version}"))
+	shade("io.github.kostaskougios:cloning:${project.cloning_version}")
+	shade("com.github.walkyst:lavaplayer-fork:${project.lava_version}") {
+		exclude module: 'commons-io'
+		exclude module: 'commons-codec'
+	}
 	implementation("com.moandjiezana.toml:toml4j:${project.toml4j_version}") {
 		exclude group: 'com.google.code.gson', module: 'gson'
 	}
 
-	//3rd party recursive dependencies
-	include (implementation("com.sedmelluq:lava-common:${project.lava_common_version}"))
-	include (implementation("com.github.walkyst:lavaplayer-natives-fork:${project.lava_natives_version}"))
-	include (implementation("com.github.walkyst.JAADec-fork:jaadec-ext-aac:${project.lava_jaadec_version}"))
-	include (implementation("org.objenesis:objenesis:${project.objenesis_version}"))
-	include (implementation("com.fasterxml.jackson.core:jackson-core:${project.jackson_version}"))
-	include (implementation("com.fasterxml.jackson.core:jackson-databind:${project.jackson_version}"))
-	include (implementation("com.fasterxml.jackson.core:jackson-annotations:${project.jackson_version}"))
-	include (implementation("org.apache.commons:commons-lang3:${project.commons_version}"))
-
 	//mods
-	//local versions of required dependencies for testing
-	//noinspection DependencyNotationArgument
-	//modImplementation(name: "theimpossiblelibrary-${project.minecraft_version}-fabric-${project.lib_version}")
 	modImplementation "maven.modrinth:the-impossible-library:${project.minecraft_version}-fabric-${project.lib_version}"
-	//modApi "curse.maven:cloth-config-319057:${project.cloth_version}"
-	//modApi "curse.maven:modmenu-308702:${project.modmenu_version}"
+}
+
+shadowJar {
+	//necessary relocation
+	relocate 'org.apache.commons.codec', "${shadow_group}.apache.commons.codec"
+	relocate 'org.apache.commons.logging', "${shadow_group}.apache.commons.logging"
+	relocate 'org.apache.http', "${shadow_group}.apache.http"
+	relocate 'org.jsoup', "${shadow_group}.jsoup"
+	relocate 'org.objenesis', "${shadow_group}.objenesis"
+	relocate 'org.slf4j', "${shadow_group}.slf4j"
+	relocate 'net.iharder', "${shadow_group}.iharder"
+	relocate 'mozilla', "${shadow_group}"
+	relocate 'com.fasterxml', "${shadow_group}.fasterxml"
+	relocate 'com.rits', "${shadow_group}.rits"
+	relocate 'certificates', "${shadow_group}"
+	configurations = [project.configurations.shadow]
+	setArchiveClassifier('shaded')
+	mergeServiceFiles()
+}
+
+remapJar {
+	inputFile = tasks.shadowJar.archiveFile
 }
 
 processResources {
@@ -79,16 +94,14 @@ processResources {
 	}
 }
 
-java {
-	withSourcesJar()
-}
-
 loom {
 	accessWidenerPath = file("src/main/resources/musictriggers.accesswidener")
 }
 
 jar {
-	from("LICENSE") {
-		rename { "${it}_${project.archivesBaseName}"}
-	}
+	from("LICENSE")
+	setArchiveClassifier('shaded')
 }
+
+tasks.remapJar.dependsOn('shadowJar')
+tasks.jar.finalizedBy('remapJar')
