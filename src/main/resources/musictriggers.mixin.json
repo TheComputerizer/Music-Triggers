@@ -9,7 +9,8 @@
   "client": [
     "MixinBlueSkiesMusic",
     "MixinMinecraft",
-    "MixinMusicTicker"
+    "MixinMusicTicker",
+    "MixinSoundHandler"
   ],
   "injectors": {
     "defaultRequire": 1

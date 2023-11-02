@@ -6,6 +6,8 @@ import net.minecraft.nbt.CompoundNBT;
 import java.util.List;
 
 public interface IPersistentTriggerData {
+
+    void of(PersistentTriggerData data);
     void onLogin(ServerPlayerEntity player);
     void writePreferredSort(int preferredSort);
     void initChannel(String channel);

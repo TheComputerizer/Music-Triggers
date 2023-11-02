@@ -2,6 +2,8 @@ package mods.thecomputerizer.musictriggers.server;
 
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.server.channels.ServerTriggerStatus;
+import mods.thecomputerizer.musictriggers.server.data.IPersistentTriggerData;
+import mods.thecomputerizer.musictriggers.server.data.PersistentTriggerData;
 import mods.thecomputerizer.musictriggers.server.data.PersistentTriggerDataProvider;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -14,6 +16,8 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.apache.commons.lang3.mutable.MutableInt;
+
+import java.util.Objects;
 
 @Mod.EventBusSubscriber(modid= Constants.MODID)
 public class ServerEvents {
@@ -53,6 +57,20 @@ public class ServerEvents {
         if(e.getPlayer() instanceof ServerPlayerEntity) {
             ServerPlayerEntity player = (ServerPlayerEntity)e.getPlayer();
             PersistentTriggerDataProvider.getPlayerCapability(player).onLogin(player);
+        }
+    }
+
+    @SuppressWarnings("ConstantValue")
+    @SubscribeEvent
+    public static void onPlayerClone(net.minecraftforge.event.entity.player.PlayerEvent.Clone event) {
+        if(event.getPlayer() instanceof ServerPlayerEntity) {
+            ServerPlayerEntity to = (ServerPlayerEntity) event.getPlayer();
+            IPersistentTriggerData capTo = PersistentTriggerDataProvider.getPlayerCapability(to);
+            if(Objects.nonNull(capTo)) {
+                ServerPlayerEntity from = (ServerPlayerEntity) event.getOriginal();
+                IPersistentTriggerData capFrom = PersistentTriggerDataProvider.getPlayerCapability(from);
+                if(Objects.nonNull(capFrom)) capTo.of((PersistentTriggerData)capFrom);
+            }
         }
     }
 }

@@ -523,7 +523,7 @@ public class ServerTriggerStatus {
                               float hordeTarget, float health, float hordeHealth, String nbt, Victory victory) {
         AxisAlignedBB box = new AxisAlignedBB(pos.getX()-range,pos.getY()-(range*yRatio),pos.getZ()-range,
                 pos.getX()+range,pos.getY()+(range*yRatio),pos.getZ()+range);
-        HashSet<LivingEntity> matchedEntities = new HashSet<>(player.getLevel().getEntitiesOfClass(
+        Set<LivingEntity> matchedEntities = new HashSet<>(player.getLevel().getEntitiesOfClass(
                 LivingEntity.class,box,e -> entityWhitelist(e,resources,champion,nbt)));
         if(matchedEntities.size()<num) return false;
         boolean pass = checkSpecifics(matchedEntities,num,player,target,hordeTarget,health,hordeHealth);

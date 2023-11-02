@@ -311,7 +311,7 @@ public class MusicPicker {
             this.highestActivePriority = Integer.MIN_VALUE;
         }
 
-        public HashSet<Audio> getCurrentSongSet() {
+        public Set<Audio> getCurrentSongSet() {
             return this.currentSongSet;
         }
 
@@ -319,7 +319,7 @@ public class MusicPicker {
             return !this.currentSongSet.equals(this.previousSongSet);
         }
 
-        public boolean canReverseFade(HashSet<Audio> playingAudio) {
+        public boolean canReverseFade(Set<Audio> playingAudio) {
             return !this.currentSongSet.isEmpty() && this.currentSongSet.equals(playingAudio);
         }
 
