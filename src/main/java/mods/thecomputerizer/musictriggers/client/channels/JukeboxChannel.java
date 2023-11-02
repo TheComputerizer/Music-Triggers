@@ -37,7 +37,7 @@ public class JukeboxChannel implements IChannel {
 
     public JukeboxChannel() {
         AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
-        AudioSourceManagers.registerRemoteSources(playerManager);
+        ChannelManager.registerRemoteSources(playerManager);
         AudioSourceManagers.registerLocalSource(playerManager);
         this.player = playerManager.createPlayer();
         this.player.setVolume(100);

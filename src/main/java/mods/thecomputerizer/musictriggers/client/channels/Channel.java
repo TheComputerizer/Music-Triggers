@@ -168,7 +168,7 @@ public class Channel implements IChannel {
         this.explicitlyOverrides = info.getValOrDefault("explicit_overrides",false);
         this.sync = new ClientSync(info.getName());
         this.playerManager = new DefaultAudioPlayerManager();
-        AudioSourceManagers.registerRemoteSources(this.playerManager);
+        ChannelManager.registerRemoteSources(this.playerManager);
         AudioSourceManagers.registerLocalSource(this.playerManager);
         this.player = this.playerManager.createPlayer();
         this.player.setVolume(0);
