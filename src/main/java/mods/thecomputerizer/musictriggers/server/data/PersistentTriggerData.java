@@ -17,13 +17,22 @@ import java.util.*;
 
 public class PersistentTriggerData implements IPersistentTriggerData {
 
-    private final Map<String, Map<String,Boolean>> toggleMap;
-    private final Map<String,Map<String, Tuple<ImmutableList<String>,Integer>>> playedOnceMap;
+    private final Map<String,Map<String,Boolean>> toggleMap;
+    private final Map<String,Map<String,Tuple<ImmutableList<String>,Integer>>> playedOnceMap;
     private int preferredSort = 1;
 
     public PersistentTriggerData() {
         this.toggleMap = new HashMap<>();
         this.playedOnceMap = new HashMap<>();
+    }
+
+    @Override
+    public void of(PersistentTriggerData data) {
+        this.toggleMap.clear();
+        this.toggleMap.entrySet().addAll(data.toggleMap.entrySet());
+        this.playedOnceMap.clear();
+        this.playedOnceMap.entrySet().addAll(data.playedOnceMap.entrySet());
+        this.preferredSort = data.preferredSort;
     }
 
     public void onLogin(ServerPlayer player) {

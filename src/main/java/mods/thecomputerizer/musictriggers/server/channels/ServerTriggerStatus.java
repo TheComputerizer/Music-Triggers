@@ -25,6 +25,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.raid.Raid;
 import net.minecraft.world.item.ItemStack;
@@ -501,17 +502,17 @@ public class ServerTriggerStatus {
         String nbt = getParameterString(mobTrigger,"mob_nbt");
         Victory victory = this.victoryTriggers.get(getParameterString(mobTrigger,"victory_id"));
         boolean pass;
-        if (resources.contains("BOSS")) {
-            synchronized (BOSS_BAR_ENTITIES) {
+        if(resources.contains("BOSS")) {
+            synchronized(BOSS_BAR_ENTITIES) {
                 Set<LivingEntity> bossEntities = BOSS_BAR_ENTITIES.entrySet().stream()
                         .filter(entry -> entry.getKey().isVisible() && entry.getKey().getPlayers().contains(player))
                         .map(Map.Entry::getValue).filter(entity -> entityWhitelist(entity, resources, champion, infernal, nbt))
                         .collect(Collectors.toSet());
-                if (bossEntities.size() < num) return false;
+                if(bossEntities.size()<num) return false;
                 pass = checkSpecifics(bossEntities, num, player, checkTarget, hordeTarget, health, hordeHealth);
-                if (Objects.nonNull(victory)) {
-                    if (pass)
-                        for (LivingEntity entity : bossEntities)
+                if(Objects.nonNull(victory)) {
+                    if(pass)
+                        for(LivingEntity entity : bossEntities)
                             victory.add(mobTrigger, true, entity);
                     victory.setActive(mobTrigger, pass);
                 }
@@ -529,14 +530,13 @@ public class ServerTriggerStatus {
                               float hordeTarget, float health, float hordeHealth, String nbt, Victory victory) {
         AABB box = new AABB(pos.getX()-range,pos.getY()-(range*yRatio),pos.getZ()-range,
                 pos.getX()+range,pos.getY()+(range*yRatio),pos.getZ()+range);
-        HashSet<LivingEntity> matchedEntities = new HashSet<>(player.getLevel().getEntitiesOfClass(
+        Set<LivingEntity> matchedEntities = new HashSet<>(player.getLevel().getEntitiesOfClass(
                 LivingEntity.class,box,e -> entityWhitelist(e,resources,champion,infernal,nbt)));
         if(matchedEntities.size()<num) return false;
         boolean pass = checkSpecifics(matchedEntities,num,player,target,hordeTarget,health,hordeHealth);
-        if(Objects.nonNull(victory) && pass) {
+        if(Objects.nonNull(victory) && pass)
             for(LivingEntity entity : matchedEntities)
                 victory.add(trigger,true,entity);
-        }
         return pass;
     }
 
@@ -551,7 +551,7 @@ public class ServerTriggerStatus {
         String displayName = entity.getName().getString();
         ResourceLocation id = ForgeRegistries.ENTITIES.getKey(entity.getType());
         if(resources.contains("MOB")) {
-            if(!(entity instanceof Mob)) return false;
+            if(!(entity instanceof Enemy)) return false;
             List<String> blackList = resources.stream().filter(element -> !element.matches("MOB")).collect(Collectors.toList());
             if(blackList.isEmpty()) return true;
             return !blackList.contains(displayName) && (Objects.isNull(id) || !partiallyMatches(id.toString(),blackList));
