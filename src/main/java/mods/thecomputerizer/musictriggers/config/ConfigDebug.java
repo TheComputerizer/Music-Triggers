@@ -30,10 +30,10 @@ public class ConfigDebug {
     public static boolean REVERSE_PRIORITY = false;
     public static boolean COMBINE_EQUAL_PRIORITY = false;
     public static boolean PAUSE_WHEN_TABBED = true;
-    public static HashSet<String> BLOCKED_MOD_CATEGORIES = new HashSet<>(Collections.singleton("minecraft;music"));
-    public static final HashMap<String,HashSet<String>> FORMATTED_BLOCKED_MODS = new HashMap<>();
+    public static Set<String> BLOCKED_MOD_CATEGORIES = new HashSet<>(Collections.singleton("minecraft;music"));
+    public static final Map<String,Set<String>> FORMATTED_BLOCKED_MODS = new HashMap<>();
     public static boolean BLOCK_STREAMING_ONLY = true;
-    public static HashSet<String> INTERRUPTED_AUDIO_CATEGORIES = new HashSet<>(Collections.singleton("music"));
+    public static Set<String> INTERRUPTED_AUDIO_CATEGORIES = new HashSet<>(Collections.singleton("music"));
 
     public static Debug copyToGui() {
         Holder holder = Holder.makeEmpty();

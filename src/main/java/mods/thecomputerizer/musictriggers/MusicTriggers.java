@@ -34,6 +34,7 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.commons.io.FileExistsException;
 import org.apache.logging.log4j.Level;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -147,10 +148,6 @@ public class MusicTriggers {
         return s.split(regex);
     }
 
-    public static StringBuilder stringBuilder(String s, Object ... parameters) {
-        return new StringBuilder(LogUtil.injectParameters(s, parameters));
-    }
-
     public static int randomInt(int max) {
         return RANDOM.nextInt(max);
     }
@@ -207,6 +204,17 @@ public class MusicTriggers {
                     fallback);
             return fallback;
         }
+    }
+
+    public static void logExternalException(String message, @Nullable String extraExternal, @Nullable Exception ex, Object ... parameters) {
+        logExternally(Level.ERROR,message+(Objects.nonNull(extraExternal) ? extraExternal : ""),parameters);
+        if(Objects.nonNull(ex)) Constants.MAIN_LOG.error(message,parameters,ex);
+        else Constants.MAIN_LOG.error(message,parameters);
+    }
+
+    public static void logBoth(Level level, String message, @Nullable String mainLogMessage, Object ... parameters) {
+        logExternally(level,message,parameters);
+        Constants.MAIN_LOG.log(level,Objects.nonNull(mainLogMessage) ? mainLogMessage : message,parameters);
     }
 
     public static void logExternally(Level level, String message, Object ... parameters) {

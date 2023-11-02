@@ -36,11 +36,10 @@ public class ChannelListener extends AudioEventAdapter {
     }
 
     @Override
-    public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
-        MusicTriggers.logExternally(Level.ERROR, "Track exception caught! Restarting audio output for channel" +
-                " {}",this.channel.getChannelName());
-        Constants.MAIN_LOG.error("Track exception caught! Restarting audio output for channel" +
-                " {}",this.channel.getChannelName(),exception);
+    public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException ex) {
+        String msg = "Track exception caught! Restarting audio output for channel {}";
+        MusicTriggers.logExternally(Level.ERROR, msg,this.channel.getChannelName());
+        Constants.MAIN_LOG.error(msg,this.channel.getChannelName(),ex);
         this.audioOutputThread.pauseAudioLoop();
         this.channel.onTrackStop(AudioTrackEndReason.LOAD_FAILED);
     }

@@ -1069,12 +1069,10 @@ public class Trigger {
         for(Table link : this.linkTables) {
             Link readLink = new Link(this.channel.getChannelName(),this,link);
             if (readLink.isValid()) {
-                Constants.debugError("VALIDATED LINK FROM {} TO {}",readLink.parentChannel,readLink.linkedChannel);
                 this.parsedLinkMap.put(index, readLink);
                 index++;
-            } else MusicTriggers.logExternally(Level.WARN, "Channel[{}] - Link table at index {} for song {} " +
-                    "was invalid! Please double check that the channel is valid and there is at least 1 valid trigger " +
-                    "set.",this.channel.getChannelName(),index,getName());
+            } else this.channel.logExternal(Level.WARN,"Link table at index {} for song {} was invalid! Please "+
+                    "double check that the channel is valid and there is at least 1 valid trigger set.",index,getName());
         }
     }
 

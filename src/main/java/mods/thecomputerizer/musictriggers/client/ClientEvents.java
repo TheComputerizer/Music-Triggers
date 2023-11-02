@@ -15,6 +15,8 @@ import mods.thecomputerizer.theimpossiblelibrary.util.file.LogUtil;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
@@ -52,7 +54,8 @@ public class ClientEvents {
     public static String LAST_ADVANCEMENT;
     public static boolean GAINED_NEW_ADVANCEMENT;
     public static boolean SHOULD_RENDER_DEBUG = true;
-    public static final Map<String, Boolean> COMMAND_MAP = new HashMap<>();
+    public static final Map<String,Boolean> COMMAND_MAP = new HashMap<>();
+    private static final List<Class<? extends Screen>> ERRORED_GUI_CLASSES = new ArrayList<>();
 
     @SubscribeEvent
     public static void playSound(PlaySoundEvent event) {
@@ -61,11 +64,11 @@ public class ClientEvents {
         SoundSource category = event.getSound().getSource();
         SimpleSoundInstance silenced = new SimpleSoundInstance(location,category,1f/1000000f,1f,
                 RandomSource.create(),false,1,SoundInstance.Attenuation.NONE,0,0,0,true);
-        for (Map.Entry<String, HashSet<String>> modEntry : ConfigDebug.FORMATTED_BLOCKED_MODS.entrySet()) {
-            if (!modEntry.getKey().matches("all") && !location.getNamespace().matches(modEntry.getKey())) continue;
-            for (String categoryMatch : modEntry.getValue()) {
-                if (category.getName().toLowerCase().matches(categoryMatch.toLowerCase())) {
-                    if (ChannelManager.handleSoundEventOverride(event.getSound().getSound(),category)) {
+        for(Map.Entry<String,Set<String>> modEntry : ConfigDebug.FORMATTED_BLOCKED_MODS.entrySet()) {
+            if(!modEntry.getKey().matches("all") && !location.getNamespace().matches(modEntry.getKey())) continue;
+            for(String categoryMatch : modEntry.getValue()) {
+                if(category.getName().toLowerCase().matches(categoryMatch.toLowerCase())) {
+                    if(ChannelManager.handleSoundEventOverride(event.getSound().getSound(),category)) {
                         event.setSound(silenced);
                         return;
                     }
@@ -112,8 +115,8 @@ public class ClientEvents {
     public static void initReload() {
         Component reload = Component.translatable(Constants.MODID+"misc"+"reload_start")
                 .withStyle(ChatFormatting.RED).withStyle(ChatFormatting.ITALIC);
-        if(Objects.nonNull(Minecraft.getInstance().player))
-            Minecraft.getInstance().player.sendSystemMessage(reload);
+        LocalPlayer player = Minecraft.getInstance().player;
+        if(Objects.nonNull(player)) player.sendSystemMessage(reload);
         RELOAD_COUNTER = 5;
         ChannelManager.reloading = true;
         MusicTriggers.clearLog();
@@ -129,16 +132,16 @@ public class ClientEvents {
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent event) {
         if(event.phase==TickEvent.Phase.END) {
-            if (!Minecraft.getInstance().isPaused() && !(Minecraft.getInstance().screen instanceof GuiSuperType) && !SHOULD_RENDER_DEBUG)
+            Minecraft mc = Minecraft.getInstance();
+            if(!mc.isPaused() && !(mc.screen instanceof GuiSuperType) && !SHOULD_RENDER_DEBUG)
                 SHOULD_RENDER_DEBUG = true;
-            if (RELOAD_COUNTER > 0) {
+            if(RELOAD_COUNTER > 0) {
                 RELOAD_COUNTER -= 1;
-                if (RELOAD_COUNTER == 1) {
+                if(RELOAD_COUNTER == 1) {
                     ChannelManager.reloadAllChannels();
                     Component reload = Component.translatable(Constants.MODID+"misc"+"reload_finished")
                             .withStyle(ChatFormatting.GREEN).withStyle(ChatFormatting.ITALIC);
-                    if (Objects.nonNull(Minecraft.getInstance().player))
-                        Minecraft.getInstance().player.sendSystemMessage(reload);
+                    if(Objects.nonNull(mc.player)) mc.player.sendSystemMessage(reload);
                 }
             }
         }
@@ -152,30 +155,30 @@ public class ClientEvents {
             addDebug(lines,"Music Triggers Debug Information");
             for(Channel channel : ChannelManager.getOrderedChannels()) {
                 String curPlaying = channel.curPlayingName();
-                if (Objects.nonNull(curPlaying))
-                    addDebug(lines,"Channel[{}] Current Song: {}",channel.getChannelName(),curPlaying);
-                if (!ConfigDebug.CURRENT_SONG_ONLY || ConfigDebug.ALLOW_TIMESTAMPS) {
+                if(Objects.nonNull(curPlaying))
+                    addDebug(lines,channel.getLogMessage("Current Song: {}"),channel.getChannelName(),curPlaying);
+                if(!ConfigDebug.CURRENT_SONG_ONLY || ConfigDebug.ALLOW_TIMESTAMPS) {
                     String time = channel.formatSongTime();
                     String fadeOut = channel.formattedFadeOutTime();
                     String fadeIn = channel.formattedFadeInTime();
-                    if (!time.matches("No song playing"))
-                        addDebug(lines,"Channel[{}] Current Song Time: {}",channel.getChannelName(),time);
-                    if (Objects.nonNull(fadeOut))
-                        addDebug(lines,"Channel[{}] Fading Out: {}",channel.getChannelName(),fadeOut);
-                    if (Objects.nonNull(fadeIn))
-                        addDebug(lines,"Channel[{}] Fading In: {}",channel.getChannelName(),fadeIn);
+                    if(!time.matches("No song playing"))
+                        addDebug(lines,channel.getLogMessage("Current Song Time: {}"),channel.getChannelName(),time);
+                    if(Objects.nonNull(fadeOut))
+                        addDebug(lines,channel.getLogMessage("Fading Out: {}"),channel.getChannelName(),fadeOut);
+                    if(Objects.nonNull(fadeIn))
+                        addDebug(lines,channel.getLogMessage("Fading In: {}"),channel.getChannelName(),fadeIn);
                 }
-                if (!ConfigDebug.CURRENT_SONG_ONLY) {
+                if(!ConfigDebug.CURRENT_SONG_ONLY) {
                     synchronized(channel.getPlayableTriggers()) {
-                        if (!channel.getPlayableTriggers().isEmpty()) {
-                            StringBuilder builder = MusicTriggers.stringBuilder("Channel[{}] Playable Events:",channel.getChannelName());
+                        if(!channel.getPlayableTriggers().isEmpty()) {
+                            StringBuilder builder = new StringBuilder(channel.getLogMessage("Playable Events:"));
                             boolean first = true;
-                            for (Trigger trigger : channel.getPlayableTriggers()) {
+                            for(Trigger trigger : channel.getPlayableTriggers()) {
                                 String name = trigger.getNameWithID();
                                 if(!first) {
-                                    if (checkStringWidth(e.getWindow(), builder + " " + name)) {
+                                    if(checkStringWidth(e.getWindow(), builder + " " + name)) {
                                         addDebug(lines,builder.toString());
-                                        builder = MusicTriggers.stringBuilder("Channel[{}] Playable Events:",channel.getChannelName());
+                                        builder = new StringBuilder(channel.getLogMessage("Playable Events:"));
                                     }
                                 } else first = false;
                                 builder.append(" ").append(name);
@@ -185,15 +188,15 @@ public class ClientEvents {
                     }
                 }
             }
-            if (!ConfigDebug.CURRENT_SONG_ONLY) {
-                StringBuilder builder = MusicTriggers.stringBuilder("Blocked Mods:");
+            if(!ConfigDebug.CURRENT_SONG_ONLY) {
+                StringBuilder builder = new StringBuilder("Blocked Mods:");
                 boolean first = true;
-                for(Map.Entry<String,HashSet<String>> modEntry : ConfigDebug.FORMATTED_BLOCKED_MODS.entrySet()) {
+                for(Map.Entry<String,Set<String>> modEntry : ConfigDebug.FORMATTED_BLOCKED_MODS.entrySet()) {
                     String blocked = modEntry.getKey()+"["+ TextUtil.listToString(modEntry.getValue(),",")+"]";
                     if(!first) {
-                        if (checkStringWidth(e.getWindow(), builder + " " + blocked)) {
+                        if(checkStringWidth(e.getWindow(),builder+" "+blocked)) {
                             addDebug(lines,builder.toString());
-                            builder = MusicTriggers.stringBuilder("Blocked Mods:");
+                            builder = new StringBuilder("Blocked Mods:");
                         }
                     } else first = false;
                     builder.append(" ").append(blocked);
@@ -202,24 +205,23 @@ public class ClientEvents {
                 Minecraft mc = Minecraft.getInstance();
                 LocalPlayer player = mc.player;
                 if(Objects.nonNull(player)) {
-                    net.minecraft.world.level.Level world = player.clientLevel;
-                    if(Objects.nonNull(mc.screen))
-                        addDebug(lines,"Current GUI Class Name: {}",mc.screen.getClass().getName());
-                    ResourceKey<Biome> biomeKey = world.getBiome(player.blockPosition()).unwrapKey().orElse(null);
+                    ClientLevel level = player.clientLevel;
+                    tryGuiClassDebug(lines,mc.screen);
+                    ResourceKey<Biome> biomeKey = level.getBiome(player.blockPosition()).unwrapKey().orElse(null);
                     addDebug(lines,"Current Biome Name: {}",(Objects.nonNull(biomeKey) ? biomeKey.location().toString() : "Unknown Biome"));
-                    addDebug(lines,"Current Dimension: {}",world.dimension().location());
+                    addDebug(lines,"Current Dimension: {}",level.dimension().location());
                     addDebug(lines,"Current Structure: {}",ChannelManager.CUR_STRUCT);
-                    addDebug(lines,"Current Total Light: {}",world.getRawBrightness(roundedPos(player), 0));
-                    addDebug(lines,"Current Block Light: {}",world.getBrightness(LightLayer.BLOCK,roundedPos(player)));
+                    addDebug(lines,"Current Total Light: {}",level.getRawBrightness(roundedPos(player), 0));
+                    addDebug(lines,"Current Block Light: {}",level.getBrightness(LightLayer.BLOCK,roundedPos(player)));
                     Set<String> effectSet = Trigger.getCachedEffects();
                     if(!effectSet.isEmpty()) {
-                        builder = MusicTriggers.stringBuilder("Effect List:");
+                        builder = new StringBuilder("Effect List:");
                         first = true;
-                        for (String effect : effectSet) {
+                        for(String effect : effectSet) {
                             if(!first) {
-                                if (checkStringWidth(e.getWindow(), builder + " " + effect)) {
+                                if(checkStringWidth(e.getWindow(),builder+" "+effect)) {
                                     addDebug(lines,builder.toString());
-                                    builder = MusicTriggers.stringBuilder("Effect List:");
+                                    builder = new StringBuilder("Effect List:");
                                 }
                             }
                             else first = false;
@@ -230,11 +232,10 @@ public class ClientEvents {
                     LivingEntity entity = getLivingFromEntity(mc.crosshairPickEntity);
                     if(Objects.nonNull(entity)) {
                         addDebug(lines,"Current Entity Name: {}",entity.getName().getString());
-                        Registry<EntityType<?>> reg = world.registryAccess().registry(Registry.ENTITY_TYPE_REGISTRY).orElse(null);
+                        Registry<EntityType<?>> reg = level.registryAccess().registry(Registry.ENTITY_TYPE_REGISTRY).orElse(null);
                         if(Objects.nonNull(reg)) addDebug(lines,"Current Entity ID: {}",reg.getKey(entity.getType()));
                         String infernal = infernalChecker(entity);
-                        if(Objects.nonNull(infernal))
-                            lines.add("Infernal Mob Mod Name: " + infernal);
+                        if(Objects.nonNull(infernal)) lines.add("Infernal Mob Mod Name: " + infernal);
                     }
                 }
             }
@@ -244,6 +245,18 @@ public class ClientEvents {
                         top + Minecraft.getInstance().font.lineHeight - 1, -1873784752);
                 Minecraft.getInstance().font.draw(e.getPoseStack(), msg, 2, top, 14737632);
                 top += Minecraft.getInstance().font.lineHeight;
+            }
+        }
+    }
+
+    private static void tryGuiClassDebug(List<String> lines, @Nullable Screen screen) {
+        if(Objects.nonNull(screen) && !ERRORED_GUI_CLASSES.contains(screen.getClass())) {
+            try {
+                addDebug(lines,"Current GUI Class Name: {}",screen.getClass().getName());
+            } catch(IllegalArgumentException ignored) {
+                MusicTriggers.logBoth(Level.ERROR, "There was an error displaying the name for GUI "+
+                        "class '{}' in the debug info! Class will be ignored",null,screen.getClass());
+                ERRORED_GUI_CLASSES.add(screen.getClass());
             }
         }
     }
