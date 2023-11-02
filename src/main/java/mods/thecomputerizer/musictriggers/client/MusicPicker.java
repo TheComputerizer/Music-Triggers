@@ -324,7 +324,7 @@ public class MusicPicker {
             return !this.currentSongSet.equals(this.previousSongSet);
         }
 
-        public boolean canReverseFade(HashSet<Audio> playingAudio) {
+        public boolean canReverseFade(Set<Audio> playingAudio) {
             return !this.currentSongSet.isEmpty() && this.currentSongSet.equals(playingAudio);
         }
 

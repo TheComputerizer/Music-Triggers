@@ -27,13 +27,14 @@ import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.util.Tuple;
 import org.apache.logging.log4j.Level;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.*;
 
 public class MusicTriggers implements ModInitializer {
     private static final LogUtil.ModLogger MOD_LOG = LogUtil.create(Constants.MODID);
-    private static final List<Tuple<String, Integer>> ORDERED_LOG_MESSAGES = Collections.synchronizedList(new ArrayList<>());
+    private static final List<Tuple<String,Integer>> ORDERED_LOG_MESSAGES = Collections.synchronizedList(new ArrayList<>());
     private static final Random RANDOM = new Random();
     public static final ResourceLocation PACKET_DYNAMIC_CHANNEL_INFO = Constants.res("packet_dynamic_channel_info");
     public static final ResourceLocation PACKET_FINISHED_SERVER_INIT= Constants.res("packet_finished_server_init");
@@ -116,10 +117,6 @@ public class MusicTriggers implements ModInitializer {
         return s.split(regex);
     }
 
-    public static StringBuilder stringBuilder(String s, Object ... parameters) {
-        return new StringBuilder(LogUtil.injectParameters(s, parameters));
-    }
-
     public static int randomInt(int max) {
         return RANDOM.nextInt(max);
     }
@@ -176,6 +173,17 @@ public class MusicTriggers implements ModInitializer {
                     fallback);
             return fallback;
         }
+    }
+
+    public static void logExternalException(String message, @Nullable String extraExternal, @Nullable Exception ex, Object ... parameters) {
+        logExternally(Level.ERROR,message+(Objects.nonNull(extraExternal) ? extraExternal : ""),parameters);
+        if(Objects.nonNull(ex)) Constants.MAIN_LOG.error(message,parameters,ex);
+        else Constants.MAIN_LOG.error(message,parameters);
+    }
+
+    public static void logBoth(Level level, String message, @Nullable String mainLogMessage, Object ... parameters) {
+        logExternally(level,message,parameters);
+        Constants.MAIN_LOG.log(level,Objects.nonNull(mainLogMessage) ? mainLogMessage : message,parameters);
     }
 
     public static void logExternally(Level level, String message, Object ... parameters) {

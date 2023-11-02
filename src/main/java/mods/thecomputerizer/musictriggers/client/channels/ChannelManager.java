@@ -1,5 +1,16 @@
 package mods.thecomputerizer.musictriggers.client.channels;
 
+import com.sedmelluq.discord.lavaplayer.container.MediaContainerRegistry;
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.source.AudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.bandcamp.BandcampAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.beam.BeamAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.getyarn.GetyarnAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.http.HttpAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import io.netty.buffer.ByteBuf;
 import mods.thecomputerizer.musictriggers.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
@@ -29,6 +40,7 @@ import mods.thecomputerizer.theimpossiblelibrary.util.file.TomlUtil;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.client.sounds.ChannelAccess;
@@ -42,7 +54,6 @@ import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Tuple;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.JukeboxBlock;
 import net.minecraft.world.level.block.entity.JukeboxBlockEntity;
 import org.apache.commons.lang3.EnumUtils;
@@ -54,6 +65,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Environment(EnvType.CLIENT)
@@ -62,12 +74,14 @@ public class ChannelManager {
             ".m4a",".mkv",".mp3",".mp4",".pls",".ogg",".wav",".webm"));
     private static final Map<String,IChannel> CHANNEL_MAP = new HashMap<>();
     private static final List<Channel> ORDERED_CHANNELS = new ArrayList<>();
-    public static final Map<String, HashSet<File>> OPEN_AUDIO_FILES = new HashMap<>();
-    public static final Map<Table, Renderable> TICKING_RENDERABLES = new ConcurrentHashMap<>();
+    public static final Map<String,Set<File>> OPEN_AUDIO_FILES = new HashMap<>();
+    public static final Map<Table,Renderable> TICKING_RENDERABLES = new ConcurrentHashMap<>();
     private static final Set<SoundInstance> PAUSED_VANILLA_SOUNDS = new HashSet<>();
     private static final Map<Channel,Trigger.Link> ACTIVE_LINKS_FROM = new HashMap<>();
     private static final Map<Channel,Trigger.Link> ACTIVE_LINKS_TO = new HashMap<>();
     private static final List<MessageImpl> QUEUED_LOGIN_PACKETS = new ArrayList<>();
+    private static String youtubeEmail = null;
+    private static String youtubePassword = null;
     private static File channelsFile;
     public static char blinkerChar = ' ';
     private static int tickCounter = 0;
@@ -171,6 +185,10 @@ public class ChannelManager {
         return null;
     }
 
+    public static void distributeSoundUpdate(SoundSource category, float volume) {
+        for(IChannel channel : CHANNEL_MAP.values()) channel.onSetSound(category,volume);
+    }
+
     public static void playCustomJukeboxSong(boolean start, String otherChannelName, String id, BlockPos pos) {
         if(!caughtNullJukebox) {
             JukeboxChannel jukebox = getJukeBoxChannel();
@@ -237,7 +255,7 @@ public class ChannelManager {
     }
 
     public static Collection<Channel> getAllChannels() {
-        HashSet<Channel> channels = new HashSet<>();
+        Set<Channel> channels = new HashSet<>();
         for(IChannel channel : CHANNEL_MAP.values())
             if(channel instanceof Channel) channels.add((Channel)channel);
         return channels;
@@ -245,6 +263,26 @@ public class ChannelManager {
 
     public static List<Channel> getOrderedChannels() {
         return ORDERED_CHANNELS;
+    }
+
+    public static void registerRemoteSources(AudioPlayerManager manager) {
+        registerRemoteSource(manager,"YouTube",() -> new YoutubeAudioSourceManager(true, youtubeEmail, youtubePassword));
+        registerRemoteSource(manager,"SoundCloud",SoundCloudAudioSourceManager::createDefault);
+        registerRemoteSource(manager,"BandCamp",BandcampAudioSourceManager::new);
+        registerRemoteSource(manager,"Vimeo",VimeoAudioSourceManager::new);
+        registerRemoteSource(manager,"Twitch",TwitchStreamAudioSourceManager::new);
+        registerRemoteSource(manager,"Beam",BeamAudioSourceManager::new);
+        registerRemoteSource(manager,"Getyarn",GetyarnAudioSourceManager::new);
+        registerRemoteSource(manager,"HTTPAudio",() -> new HttpAudioSourceManager(MediaContainerRegistry.DEFAULT_REGISTRY));
+    }
+
+    private static void registerRemoteSource(AudioPlayerManager manager, String sourceName, Supplier<AudioSourceManager> supplier) {
+        try {
+            manager.registerSourceManager(supplier.get());
+        } catch (Exception ex) {
+            MusicTriggers.logExternalException("Failed to register remote source for {}!"," See the main log for the "+
+                    "full stacktrace.",ex,sourceName);
+        }
     }
 
     public static boolean checkMusicTickerCancel(String modid) {
@@ -263,8 +301,8 @@ public class ChannelManager {
         return false;
     }
 
-    public static HashSet<SoundSource> getInterrputedCategories() {
-        HashSet<SoundSource> ret = new HashSet<>();
+    public static Set<SoundSource> getInterrputedCategories() {
+        Set<SoundSource> ret = new HashSet<>();
         for(String interrputed : ConfigDebug.INTERRUPTED_AUDIO_CATEGORIES) {
             if(EnumUtils.isValidEnumIgnoreCase(SoundSource.class,interrputed)) {
                 SoundSource toAdd = EnumUtils.getEnumIgnoreCase(SoundSource.class,interrputed);
@@ -274,7 +312,7 @@ public class ChannelManager {
         return ret;
     }
 
-    public static void handleAudioStart(boolean pause, HashSet<SoundSource> categories) {
+    public static void handleAudioStart(boolean pause, Set<SoundSource> categories) {
         if(categories.isEmpty()) return;
         SoundEngine engine = Minecraft.getInstance().getSoundManager().soundEngine;
         Consumer<SoundInstance> handler = sound -> {
@@ -293,7 +331,7 @@ public class ChannelManager {
                 handler.accept(sound);
     }
 
-    public static void handleAudioStop(HashSet<SoundSource> categories) {
+    public static void handleAudioStop(Set<SoundSource> categories) {
         SoundEngine engine = Minecraft.getInstance().getSoundManager().soundEngine;
         Iterator<SoundInstance> pausedItr = PAUSED_VANILLA_SOUNDS.iterator();
         while(pausedItr.hasNext()) {
@@ -367,6 +405,7 @@ public class ChannelManager {
     }
 
     public static void reloadAllChannels() {
+        QUEUED_LOGIN_PACKETS.clear();
         try {
             if(isServerdControlled) {
                 if(Objects.isNull(Minecraft.getInstance().player)) QUEUED_LOGIN_PACKETS.add(new PacketRequestServerConfig());
@@ -414,38 +453,42 @@ public class ChannelManager {
             if(!reloading) {
                 if(!caughtNullJukebox) {
                     JukeboxChannel jukebox = getJukeBoxChannel();
-                    if (Objects.nonNull(jukebox)) jukebox.checkStopPlaying(reloading);
+                    if(Objects.nonNull(jukebox)) jukebox.checkStopPlaying(reloading);
                 }
                 try {
-                    synchronized (TICKING_RENDERABLES) {
+                    synchronized(TICKING_RENDERABLES) {
                         TICKING_RENDERABLES.entrySet().removeIf(entry -> !entry.getValue().canRender());
                     }
                     tickCounter++;
                     Minecraft mc = Minecraft.getInstance();
                     Trigger.updateEffectCache(mc.player);
-                    if (checkForJukeBox()) jukeboxPause();
+                    if(checkForJukeBox()) jukeboxPause();
                     else jukeboxUnpause();
-                    if ((ConfigDebug.PAUSE_WHEN_TABBED && !mc.isWindowActive()) || mc.isPaused())
+                    if((ConfigDebug.PAUSE_WHEN_TABBED && !mc.isWindowActive()) || mc.isPaused())
                         pauseAllChannels();
                     else unpauseAllChannels();
-                    for (Channel channel : getAllChannels())
-                        if (!channel.isPaused() && channel.isNotFrozen()) channel.tickFast();
-                    if (tickCounter % 4 == 0) {
-                        for (Channel channel : getAllChannels())
-                            if (channel.isNotFrozen()) channel.tickSlow();
+                    for(IChannel ichannel : CHANNEL_MAP.values()) {
+                        if(ichannel instanceof Channel channel) {
+                            if(!channel.isPaused() && channel.isNotFrozen()) channel.tickFast();
+                        }
+                        else ichannel.tickFast();
+                    }
+                    if(tickCounter%4==0) {
+                        for(Channel channel : getAllChannels())
+                            if(channel.isNotFrozen()) channel.tickSlow();
                         runToggles();
                         if (isServerInfoInitialized) sendUpdatePacket();
                     }
-                    if(tickCounter % 10 == 0) {
-                        if (blinkerChar == ' ') blinkerChar = '|';
-                        else if (blinkerChar == '|') blinkerChar = ' ';
+                    if(tickCounter%10==0) {
+                        if(blinkerChar==' ') blinkerChar = '|';
+                        else if(blinkerChar=='|') blinkerChar = ' ';
                     }
-                    if(tickCounter >= 100) tickCounter = 0;
-                } catch (Exception e) {
+                    if(tickCounter>=100) tickCounter = 0;
+                } catch(Exception e) {
                     Constants.MAIN_LOG.fatal("Caught unknown exception while checking audio conditions!", e);
-                    MusicTriggers.logExternally(Level.FATAL, "Caught unknown exception while checking audio conditions! " +
-                                    "Freezing all channels until reloaded. See the main log for the full stacktrace of the error '{}'.",
-                            e.getLocalizedMessage());
+                    MusicTriggers.logExternally(Level.FATAL, "Caught unknown exception while checking audio "+
+                                    "conditions! Freezing all channels until reloaded. See the main log for the full "+
+                                    "stacktrace of the error '{}'.",e.getLocalizedMessage());
                     reloading = true;
                 }
             }
@@ -462,7 +505,7 @@ public class ChannelManager {
         Trigger.Link link = ACTIVE_LINKS_FROM.get(channel);
         if(Objects.isNull(link)) return false;
         if(link.areChannelsDifferent()) {
-            if (!slowVersion) return true;
+            if(!slowVersion) return true;
             Channel linkedChannel = link.getLinkedChannel();
             return ACTIVE_LINKS_TO.containsKey(linkedChannel) &&
                     (!linkedChannel.isFadingOut() || ACTIVE_LINKS_FROM.containsKey(linkedChannel));
@@ -495,7 +538,7 @@ public class ChannelManager {
     public static void checkRemoveLinkedTo(Channel channel, boolean emptyActive) {
         if(emptyActive) ACTIVE_LINKS_TO.remove(channel);
         else ACTIVE_LINKS_TO.entrySet().removeIf(entry -> entry.getKey()==channel &&
-                 !ACTIVE_LINKS_FROM.containsKey(channel) && !entry.getValue().shouldLink(channel.getActiveTriggers()));
+                !ACTIVE_LINKS_FROM.containsKey(channel) && !entry.getValue().shouldLink(channel.getActiveTriggers()));
     }
 
     public static void setLinkedToTime(Channel channel, long time) {
@@ -504,10 +547,10 @@ public class ChannelManager {
     }
 
     public static void runToggles() {
-        Map<Channel,Map<String,HashSet<Trigger>>> targetMaps = new HashMap<>();
+        Map<Channel,Map<String,Set<Trigger>>> targetMaps = new HashMap<>();
         for(Channel channel : getAllChannels()) {
-            for(Map.Entry<Channel,Map<String,HashSet<Trigger>>> targetMapEntry : channel.getToggleTargets().entrySet()) {
-                for(Map.Entry<String,HashSet<Trigger>> targetEntry : targetMapEntry.getValue().entrySet()) {
+            for(Map.Entry<Channel,Map<String,Set<Trigger>>> targetMapEntry : channel.getToggleTargets().entrySet()) {
+                for(Map.Entry<String,Set<Trigger>> targetEntry : targetMapEntry.getValue().entrySet()) {
                     Channel targetChannel = targetMapEntry.getKey();
                     String targetCon = targetEntry.getKey();
                     targetMaps.putIfAbsent(targetChannel,new HashMap<>());
@@ -519,13 +562,13 @@ public class ChannelManager {
         runToggleTargetMaps(targetMaps);
     }
 
-    public static void runToggleTargetMaps(Map<Channel,Map<String,HashSet<Trigger>>> targetMaps) {
-        for(Map.Entry<Channel,Map<String,HashSet<Trigger>>> targetMap : targetMaps.entrySet())
+    public static void runToggleTargetMaps(Map<Channel,Map<String,Set<Trigger>>> targetMaps) {
+        for(Map.Entry<Channel,Map<String,Set<Trigger>>> targetMap : targetMaps.entrySet())
             targetMap.getKey().runToggles(targetMap.getValue());
     }
 
     private static boolean checkForJukeBox() {
-        Player player = Minecraft.getInstance().player;
+        LocalPlayer player = Minecraft.getInstance().player;
         if(Objects.nonNull(player))
             for (int x = player.chunkPosition().x - 3; x <= player.chunkPosition().x + 3; x++)
                 for (int z = player.chunkPosition().z - 3; z <= player.chunkPosition().z + 3; z++)
@@ -565,10 +608,12 @@ public class ChannelManager {
     }
 
     public static void readStoredData() {
-        for(Map.Entry<String,IChannel> channelEntry : CHANNEL_MAP.entrySet())
-            if(channelEntry.getValue() instanceof Channel channel)
+        for(Map.Entry<String,IChannel> channelEntry : CHANNEL_MAP.entrySet()) {
+            if(channelEntry.getValue() instanceof Channel channel) {
                 channel.readStoredData(worldDataStorage.toggleMap.get(channelEntry.getKey()),
                         worldDataStorage.playedOnceMap.get(channelEntry.getKey()));
+            }
+        }
         initializeServerInfo();
         reloading = false;
     }
@@ -595,7 +640,6 @@ public class ChannelManager {
         isServerInfoInitialized = false;
         boolean needsReload = isServerdControlled;
         isServerdControlled = false;
-        isPlayerAssigned = false;
         if(needsReload) {
             reloading = true;
             reloadAllChannels();
@@ -663,19 +707,34 @@ public class ChannelManager {
 
         private void disableGuiButton(String type) {
             switch (type) {
-                case "gui" -> {
+                case "gui" : {
                     this.canOpenGui = false;
                     this.canOpenPlayBack = false;
                     this.canReload = false;
                     this.canOpenLog = false;
                     this.canOpenDebug = false;
                     this.canOpenRegistry = false;
+                    return;
                 }
-                case "playback" -> this.canOpenPlayBack = false;
-                case "reload" -> this.canReload = false;
-                case "log" -> this.canOpenLog = false;
-                case "debug" -> this.canOpenDebug = false;
-                case "registration" -> this.canOpenRegistry = false;
+                case "playback" : {
+                    this.canOpenPlayBack = false;
+                    return;
+                }
+                case "reload" : {
+                    this.canReload = false;
+                    return;
+                }
+                case "log" : {
+                    this.canOpenLog = false;
+                    return;
+                }
+                case "debug" : {
+                    this.canOpenDebug = false;
+                    return;
+                }
+                case "registration" : {
+                    this.canOpenRegistry = false;
+                }
             }
         }
 
