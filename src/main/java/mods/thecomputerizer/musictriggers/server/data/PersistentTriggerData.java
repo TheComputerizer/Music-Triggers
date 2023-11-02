@@ -26,6 +26,15 @@ public class PersistentTriggerData implements IPersistentTriggerData {
         this.playedOnceMap = new HashMap<>();
     }
 
+    @Override
+    public void of(PersistentTriggerData data) {
+        this.toggleMap.clear();
+        this.toggleMap.entrySet().addAll(data.toggleMap.entrySet());
+        this.playedOnceMap.clear();
+        this.playedOnceMap.entrySet().addAll(data.playedOnceMap.entrySet());
+        this.preferredSort = data.preferredSort;
+    }
+
     public void onLogin(EntityPlayerMP player) {
         new PacketMusicTriggersLogin(ServerChannelManager.hasConfig(),this.toggleMap,this.playedOnceMap,this.preferredSort)
                 .addPlayers(player).send();

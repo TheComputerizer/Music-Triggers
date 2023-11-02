@@ -162,7 +162,7 @@ public class Toggle {
     /**
      * Also handles toggling entire channels
      */
-    public Map<Channel,Tuple<String,List<Trigger>>> getTargets(int condition, HashSet<Trigger> triggers) {
+    public Map<Channel,Tuple<String,List<Trigger>>> getTargets(int condition, Set<Trigger> triggers) {
         Map<Channel,Tuple<String,List<Trigger>>> ret = new HashMap<>();
         List<Trigger> fromThis = this.fromThese.get(condition);
         if(Objects.nonNull(fromThis) && !fromThis.isEmpty()) {

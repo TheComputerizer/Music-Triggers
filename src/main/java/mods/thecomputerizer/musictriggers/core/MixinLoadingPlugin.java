@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.core;
 
 import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
-import org.spongepowered.asm.launch.MixinBootstrap;
 import zone.rong.mixinbooter.IEarlyMixinLoader;
 
 import javax.annotation.Nullable;
@@ -23,7 +22,7 @@ public class MixinLoadingPlugin implements IFMLLoadingPlugin, IEarlyMixinLoader 
 
     @Override
     public String getModContainerClass() {
-        return CoreContainer.class.getName();
+        return null;
     }
 
     @Nullable

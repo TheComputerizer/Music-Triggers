@@ -7,6 +7,7 @@ import java.util.List;
 
 public interface IPersistentTriggerData {
 
+    void of(PersistentTriggerData data);
     void onLogin(EntityPlayerMP player);
     void writePreferredSort(int preferredSort);
     void initChannel(String channel);

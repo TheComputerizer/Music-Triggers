@@ -15,6 +15,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.ISound;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
@@ -54,8 +55,9 @@ public class ClientEvents {
     public static String LAST_ADVANCEMENT;
     public static boolean GAINED_NEW_ADVANCEMENT;
     public static boolean SHOULD_RENDER_DEBUG = true;
-    public static final HashMap<String, Boolean> COMMAND_MAP = new HashMap<>();
+    public static final Map<String, Boolean> COMMAND_MAP = new HashMap<>();
     public static boolean IS_DISPLAY_FOCUSED = true;
+    private static final List<Class<? extends GuiScreen>> ERRORED_GUI_CLASSES = new ArrayList<>();
 
     @SubscribeEvent
     public static void playSound(PlaySoundEvent event) {
@@ -112,7 +114,8 @@ public class ClientEvents {
     }
 
     public static void initReload() {
-        Minecraft.getMinecraft().player.sendMessage(new TextComponentString(
+        EntityPlayerSP player = Minecraft.getMinecraft().player;
+        if(Objects.nonNull(player)) player.sendMessage(new TextComponentString(
                 I18n.translateToLocal("misc.musictriggers.reload_start"))
                 .setStyle(new Style().setItalic(true).setColor(TextFormatting.RED)));
         RELOAD_COUNTER = 5;
@@ -129,15 +132,16 @@ public class ClientEvents {
 
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent event) {
-        if(event.phase== TickEvent.Phase.END) {
+        if(event.phase==TickEvent.Phase.END) {
+            Minecraft mc = Minecraft.getMinecraft();
             IS_DISPLAY_FOCUSED = Display.isCreated() && Display.isActive();
-            if (!Minecraft.getMinecraft().isGamePaused() && !(Minecraft.getMinecraft().currentScreen instanceof GuiSuperType) && !SHOULD_RENDER_DEBUG)
+            if(!mc.isGamePaused() && !(mc.currentScreen instanceof GuiSuperType) && !SHOULD_RENDER_DEBUG)
                 SHOULD_RENDER_DEBUG = true;
-            if (RELOAD_COUNTER > 0) {
+            if(RELOAD_COUNTER>0) {
                 RELOAD_COUNTER -= 1;
-                if (RELOAD_COUNTER == 1) {
+                if(RELOAD_COUNTER == 1) {
                     ChannelManager.reloadAllChannels();
-                    Minecraft.getMinecraft().player.sendMessage(new TextComponentString(
+                    if(Objects.nonNull(mc.player)) mc.player.sendMessage(new TextComponentString(
                             I18n.translateToLocal("misc.musictriggers.reload_finished"))
                             .setStyle(new Style().setItalic(true).setColor(TextFormatting.GREEN)));
                 }
@@ -152,30 +156,30 @@ public class ClientEvents {
             addDebug(e,"Music Triggers Debug Information");
             for(Channel channel : ChannelManager.getOrderedChannels()) {
                 String curPlaying = channel.curPlayingName();
-                if (Objects.nonNull(curPlaying))
-                    addDebug(e,"Channel[{}] Current Song: {}",channel.getChannelName(),curPlaying);
-                if (!ConfigDebug.CURRENT_SONG_ONLY || ConfigDebug.ALLOW_TIMESTAMPS) {
+                if(Objects.nonNull(curPlaying))
+                    addDebug(e,channel.getLogMessage("Current Song: {}"),curPlaying);
+                if(!ConfigDebug.CURRENT_SONG_ONLY || ConfigDebug.ALLOW_TIMESTAMPS) {
                     String time = channel.formatSongTime();
                     String fadeOut = channel.formattedFadeOutTime();
                     String fadeIn = channel.formattedFadeInTime();
-                    if (!time.matches("No song playing"))
-                        addDebug(e,"Channel[{}] Current Song Time: {}",channel.getChannelName(),time);
-                    if (Objects.nonNull(fadeOut))
-                        addDebug(e,"Channel[{}] Fading Out: {}",channel.getChannelName(),fadeOut);
-                    if (Objects.nonNull(fadeIn))
-                        addDebug(e,"Channel[{}] Fading In: {}",channel.getChannelName(),fadeIn);
+                    if(!time.matches("No song playing"))
+                        addDebug(e,channel.getLogMessage("Current Song Time: {}"),time);
+                    if(Objects.nonNull(fadeOut))
+                        addDebug(e,channel.getLogMessage("Fading Out: {}"),fadeOut);
+                    if(Objects.nonNull(fadeIn))
+                        addDebug(e,channel.getLogMessage("Fading In: {}"),fadeIn);
                 }
-                if (!ConfigDebug.CURRENT_SONG_ONLY) {
+                if(!ConfigDebug.CURRENT_SONG_ONLY) {
                     synchronized(channel.getPlayableTriggers()) {
-                        if (!channel.getPlayableTriggers().isEmpty()) {
-                            StringBuilder builder = MusicTriggers.stringBuilder("Channel[{}] Playable Events:",channel.getChannelName());
+                        if(!channel.getPlayableTriggers().isEmpty()) {
+                            StringBuilder builder = new StringBuilder(channel.getLogMessage("Playable Events:"));
                             boolean first = true;
-                            for (Trigger trigger : channel.getPlayableTriggers()) {
+                            for(Trigger trigger : channel.getPlayableTriggers()) {
                                 String name = trigger.getNameWithID();
                                 if(!first) {
-                                    if (checkStringWidth(e.getResolution(), builder + " " + name)) {
+                                    if(checkStringWidth(e.getResolution(),builder+" "+name)) {
                                         addDebug(e,builder.toString());
-                                        builder = MusicTriggers.stringBuilder("Channel[{}] Playable Events:",channel.getChannelName());
+                                        builder = new StringBuilder(channel.getLogMessage("Playable Events:"));
                                     }
                                 } else first = false;
                                 builder.append(" ").append(name);
@@ -185,15 +189,15 @@ public class ClientEvents {
                     }
                 }
             }
-            if (!ConfigDebug.CURRENT_SONG_ONLY) {
-                StringBuilder builder = MusicTriggers.stringBuilder("Blocked Mods:");
+            if(!ConfigDebug.CURRENT_SONG_ONLY) {
+                StringBuilder builder = new StringBuilder("Blocked Mods:");
                 boolean first = true;
                 for(Map.Entry<String,HashSet<String>> modEntry : ConfigDebug.FORMATTED_BLOCKED_MODS.entrySet()) {
                     String blocked = modEntry.getKey()+"["+ TextUtil.listToString(modEntry.getValue(),",")+"]";
                     if(!first) {
                         if (checkStringWidth(e.getResolution(), builder + " " + blocked)) {
                             addDebug(e,builder.toString());
-                            builder = MusicTriggers.stringBuilder("Blocked Mods:");
+                            builder = new StringBuilder("Blocked Mods:");
                         }
                     } else first = false;
                     builder.append(" ").append(blocked);
@@ -203,8 +207,7 @@ public class ClientEvents {
                 EntityPlayerSP player = mc.player;
                 if(Objects.nonNull(player)) {
                     World world = player.getEntityWorld();
-                    if(Objects.nonNull(mc.currentScreen))
-                        addDebug(e,"Current GUI Class Name: {}",mc.currentScreen.getClass().getName());
+                    tryGuiClassDebug(e,mc.currentScreen);
                     addDebug(e,"Current Biome Name: {}",world.getBiome(player.getPosition()).getRegistryName());
                     addDebug(e,"Current Biome Category: {}",world.getBiome(player.getPosition()).getRegistryName());
                     addDebug(e,"Current Dimension: {}",player.dimension);
@@ -212,13 +215,13 @@ public class ClientEvents {
                     addDebug(e,"Current Block Light: {}",world.getLightFor(EnumSkyBlock.BLOCK, roundedPos(player)));
                     Set<String> effectSet = Trigger.getCachedEffects();
                     if(!effectSet.isEmpty()) {
-                        builder = MusicTriggers.stringBuilder("Effect List:");
+                        builder = new StringBuilder("Effect List:");
                         first = true;
-                        for (String effect : effectSet) {
+                        for(String effect : effectSet) {
                             if(!first) {
-                                if (checkStringWidth(e.getResolution(), builder + " " + effect)) {
+                                if(checkStringWidth(e.getResolution(),builder+" "+effect)) {
                                     addDebug(e,builder.toString());
-                                    builder = MusicTriggers.stringBuilder("Effect List:");
+                                    builder = new StringBuilder("Effect List:");
                                 }
                             }
                             else first = false;
@@ -247,6 +250,18 @@ public class ClientEvents {
         }
     }
 
+    private static void tryGuiClassDebug(RenderGameOverlayEvent.Text e, @Nullable GuiScreen screen) {
+        if(Objects.nonNull(screen) && !ERRORED_GUI_CLASSES.contains(screen.getClass())) {
+            try {
+                addDebug(e,"Current GUI Class Name: {}",screen.getClass().getName());
+            } catch(IllegalArgumentException ignored) {
+                MusicTriggers.logBoth(Level.ERROR, "There was an error displaying the name for GUI "+
+                        "class '{}' in the debug info! Class will be ignored",null,screen.getClass());
+                ERRORED_GUI_CLASSES.add(screen.getClass());
+            }
+        }
+    }
+
     private static void addDebug(RenderGameOverlayEvent.Text e, String msg, Object ... parameters) {
         e.getLeft().add(LogUtil.injectParameters(msg,parameters));
     }
@@ -256,7 +271,7 @@ public class ClientEvents {
     }
 
     private static BlockPos roundedPos(EntityPlayer p) {
-        return new BlockPos((Math.round(p.posX * 2) / 2.0), (Math.round(p.posY * 2) / 2.0), (Math.round(p.posZ * 2) / 2.0));
+        return new BlockPos((Math.round(p.posX*2d)/2f),(Math.round(p.posY*2d)/2f),(Math.round(p.posZ*2d)/2f));
     }
 
     private static @Nullable String infernalChecker(EntityLiving entity) {

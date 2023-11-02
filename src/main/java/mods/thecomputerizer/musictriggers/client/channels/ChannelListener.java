@@ -6,6 +6,7 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
+import mods.thecomputerizer.musictriggers.core.Constants;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.Level;
@@ -35,10 +36,10 @@ public class ChannelListener extends AudioEventAdapter {
     }
 
     @Override
-    public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
-        MusicTriggers.logExternally(Level.ERROR, "Track exception caught! Restarting audio output for channel" +
-                " {}",this.channel.getChannelName());
-        exception.printStackTrace();
+    public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException ex) {
+        String msg = "Track exception caught! Restarting audio output for channel {}";
+        MusicTriggers.logExternally(Level.ERROR,msg,this.channel.getChannelName());
+        Constants.MAIN_LOG.error(msg,this.channel.getChannelName(),ex);
         this.audioOutputThread.pauseAudioLoop();
         this.channel.onTrackStop(AudioTrackEndReason.LOAD_FAILED);
     }

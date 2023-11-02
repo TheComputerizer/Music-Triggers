@@ -1,5 +1,16 @@
 package mods.thecomputerizer.musictriggers.client.channels;
 
+import com.sedmelluq.discord.lavaplayer.container.MediaContainerRegistry;
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.source.AudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.bandcamp.BandcampAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.beam.BeamAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.getyarn.GetyarnAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.http.HttpAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import io.netty.buffer.ByteBuf;
 import mods.thecomputerizer.musictriggers.core.Constants;
 import mods.thecomputerizer.musictriggers.MusicTriggers;
@@ -54,20 +65,23 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Mod.EventBusSubscriber(modid = Constants.MODID, value = Side.CLIENT)
 public class ChannelManager {
     private static final HashSet<String> VALID_FILE_EXTENSIONS = new HashSet<>(Arrays.asList(".acc",".flac",".m3u",
             ".m4a",".mkv",".mp3",".mp4",".pls",".ogg",".wav",".webm"));
-    private static final HashMap<String,IChannel> CHANNEL_MAP = new HashMap<>();
+    private static final Map<String,IChannel> CHANNEL_MAP = new HashMap<>();
     private static final List<Channel> ORDERED_CHANNELS = new ArrayList<>();
-    public static final HashMap<String, HashSet<File>> OPEN_AUDIO_FILES = new HashMap<>();
-    public static final Map<Table, Renderable> TICKING_RENDERABLES = new ConcurrentHashMap<>();
-    private static final HashSet<String> PAUSED_VANILLA_SOUNDS = new HashSet<>();
-    private static final HashMap<Channel,Trigger.Link> ACTIVE_LINKS_FROM = new HashMap<>();
-    private static final HashMap<Channel,Trigger.Link> ACTIVE_LINKS_TO = new HashMap<>();
+    public static final Map<String,Set<File>> OPEN_AUDIO_FILES = new HashMap<>();
+    public static final Map<Table,Renderable> TICKING_RENDERABLES = new ConcurrentHashMap<>();
+    private static final Set<String> PAUSED_VANILLA_SOUNDS = new HashSet<>();
+    private static final Map<Channel,Trigger.Link> ACTIVE_LINKS_FROM = new HashMap<>();
+    private static final Map<Channel,Trigger.Link> ACTIVE_LINKS_TO = new HashMap<>();
     private static final List<MessageImpl> QUEUED_LOGIN_PACKETS = new ArrayList<>();
+    private static String youtubeEmail = null;
+    private static String youtubePassword = null;
     private static File channelsFile;
     public static char blinkerChar = ' ';
     private static int tickCounter = 0;
@@ -170,6 +184,12 @@ public class ChannelManager {
         return null;
     }
 
+    public static void distributeSoundUpdate(SoundCategory category, float volume) {
+        for(IChannel channel : CHANNEL_MAP.values()) {
+            channel.onSetSound(category,volume);
+        }
+    }
+
     public static void playCustomJukeboxSong(boolean start, String otherChannelName, String id, BlockPos pos) {
         if(!caughtNullJukebox) {
             JukeboxChannel jukebox = getJukeBoxChannel();
@@ -236,7 +256,7 @@ public class ChannelManager {
     }
 
     public static Collection<Channel> getAllChannels() {
-        HashSet<Channel> channels = new HashSet<>();
+        Set<Channel> channels = new HashSet<>();
         for(IChannel channel : CHANNEL_MAP.values())
             if(channel instanceof Channel) channels.add((Channel)channel);
         return channels;
@@ -244,6 +264,26 @@ public class ChannelManager {
 
     public static List<Channel> getOrderedChannels() {
         return ORDERED_CHANNELS;
+    }
+
+    public static void registerRemoteSources(AudioPlayerManager manager) {
+        registerRemoteSource(manager,"YouTube",() -> new YoutubeAudioSourceManager(true, youtubeEmail, youtubePassword));
+        registerRemoteSource(manager,"SoundCloud",SoundCloudAudioSourceManager::createDefault);
+        registerRemoteSource(manager,"BandCamp",BandcampAudioSourceManager::new);
+        registerRemoteSource(manager,"Vimeo",VimeoAudioSourceManager::new);
+        registerRemoteSource(manager,"Twitch",TwitchStreamAudioSourceManager::new);
+        registerRemoteSource(manager,"Beam",BeamAudioSourceManager::new);
+        registerRemoteSource(manager,"Getyarn",GetyarnAudioSourceManager::new);
+        registerRemoteSource(manager,"HTTPAudio",() -> new HttpAudioSourceManager(MediaContainerRegistry.DEFAULT_REGISTRY));
+    }
+
+    private static void registerRemoteSource(AudioPlayerManager manager, String sourceName, Supplier<AudioSourceManager> supplier) {
+        try {
+            manager.registerSourceManager(supplier.get());
+        } catch (Exception ex) {
+            MusicTriggers.logExternalException("Failed to register remote source for {}!"," See the main log for the "+
+                    "full stacktrace.",ex,sourceName);
+        }
     }
 
     public static boolean checkMusicTickerCancel() {
@@ -273,7 +313,7 @@ public class ChannelManager {
         return ret;
     }
 
-    public static void handleAudioStart(boolean pause, HashSet<SoundCategory> categories) {
+    public static void handleAudioStart(boolean pause, Set<SoundCategory> categories) {
         if(categories.isEmpty()) return;
         SoundManager sounds = Minecraft.getMinecraft().getSoundHandler().sndManager;
         SoundSystem sys = sounds.sndSystem;
@@ -284,7 +324,7 @@ public class ChannelManager {
             }
             else sys.stop(soundString);
         };
-        HashSet<String> soundStrings = new HashSet<>();
+        Set<String> soundStrings = new HashSet<>();
         for(SoundCategory category : categories)
             soundStrings.addAll(sounds.categorySounds.get(category));
         for(String sound : soundStrings)
@@ -292,7 +332,7 @@ public class ChannelManager {
                 handler.accept(sound);
     }
 
-    public static void handleAudioStop(HashSet<SoundCategory> categories) {
+    public static void handleAudioStop(Set<SoundCategory> categories) {
         SoundManager sounds = Minecraft.getMinecraft().getSoundHandler().sndManager;
         SoundSystem sys = sounds.sndSystem;
         Iterator<String> pausedItr = PAUSED_VANILLA_SOUNDS.iterator();
@@ -418,31 +458,36 @@ public class ChannelManager {
                 if(Objects.nonNull(jukebox)) jukebox.checkStopPlaying(reloading);
             }
             try {
-                if (event.checkTickRate(20)) {
-                    synchronized (TICKING_RENDERABLES) {
+                if(event.checkTickRate(20)) {
+                    synchronized(TICKING_RENDERABLES) {
                         TICKING_RENDERABLES.entrySet().removeIf(entry -> !entry.getValue().canRender());
                     }
                     tickCounter++;
                     Minecraft mc = Minecraft.getMinecraft();
                     Trigger.updateEffectCache(mc.player);
-                    if (checkForJukeBox()) jukeboxPause();
+                    if(checkForJukeBox()) jukeboxPause();
                     else jukeboxUnpause();
-                    if ((ConfigDebug.PAUSE_WHEN_TABBED && !ClientEvents.IS_DISPLAY_FOCUSED) || mc.isGamePaused())
+                    if((ConfigDebug.PAUSE_WHEN_TABBED && !ClientEvents.IS_DISPLAY_FOCUSED) || mc.isGamePaused())
                         pauseAllChannels();
                     else unpauseAllChannels();
-                    for (Channel channel : getAllChannels())
-                        if(!channel.isPaused() && channel.isNotFrozen()) channel.tickFast();
-                    if (tickCounter % 4 == 0) {
+                    for(IChannel ichannel : CHANNEL_MAP.values()) {
+                        if(ichannel instanceof Channel) {
+                            Channel channel = (Channel)ichannel;
+                            if(!channel.isPaused() && channel.isNotFrozen()) channel.tickFast();
+                        }
+                        else ichannel.tickFast();
+                    }
+                    if(tickCounter%4==0) {
                         for(Channel channel : getAllChannels())
                             if(channel.isNotFrozen()) channel.tickSlow();
                         runToggles();
                         if(isServerInfoInitialized) sendUpdatePacket();
                     }
-                    if (tickCounter % 10 == 0) {
-                        if (blinkerChar == ' ') blinkerChar = '|';
-                        else if (blinkerChar == '|') blinkerChar = ' ';
+                    if(tickCounter%10==0) {
+                        if(blinkerChar==' ') blinkerChar = '|';
+                        else if(blinkerChar=='|') blinkerChar = ' ';
                     }
-                    if (tickCounter >= 100) tickCounter = 0;
+                    if(tickCounter>=100) tickCounter = 0;
                 }
             } catch (Exception e) {
                 Constants.MAIN_LOG.fatal("Caught unknown exception while checking audio conditions!",e);
@@ -464,7 +509,7 @@ public class ChannelManager {
         Trigger.Link link = ACTIVE_LINKS_FROM.get(channel);
         if(Objects.isNull(link)) return false;
         if(link.areChannelsDifferent()) {
-            if (!slowVersion) return true;
+            if(!slowVersion) return true;
             Channel linkedChannel = link.getLinkedChannel();
             return ACTIVE_LINKS_TO.containsKey(linkedChannel) &&
                     (!linkedChannel.isFadingOut() || ACTIVE_LINKS_FROM.containsKey(linkedChannel));
@@ -506,10 +551,10 @@ public class ChannelManager {
     }
 
     public static void runToggles() {
-        Map<Channel,Map<String,HashSet<Trigger>>> targetMaps = new HashMap<>();
+        Map<Channel,Map<String,Set<Trigger>>> targetMaps = new HashMap<>();
         for(Channel channel : getAllChannels()) {
-            for(Map.Entry<Channel,Map<String,HashSet<Trigger>>> targetMapEntry : channel.getToggleTargets().entrySet()) {
-                for(Map.Entry<String,HashSet<Trigger>> targetEntry : targetMapEntry.getValue().entrySet()) {
+            for(Map.Entry<Channel,Map<String,Set<Trigger>>> targetMapEntry : channel.getToggleTargets().entrySet()) {
+                for(Map.Entry<String,Set<Trigger>> targetEntry : targetMapEntry.getValue().entrySet()) {
                     Channel targetChannel = targetMapEntry.getKey();
                     String targetCon = targetEntry.getKey();
                     targetMaps.putIfAbsent(targetChannel,new HashMap<>());
@@ -521,8 +566,8 @@ public class ChannelManager {
         runToggleTargetMaps(targetMaps);
     }
 
-    public static void runToggleTargetMaps(Map<Channel,Map<String,HashSet<Trigger>>> targetMaps) {
-        for(Map.Entry<Channel,Map<String,HashSet<Trigger>>> targetMap : targetMaps.entrySet())
+    public static void runToggleTargetMaps(Map<Channel,Map<String,Set<Trigger>>> targetMaps) {
+        for(Map.Entry<Channel,Map<String,Set<Trigger>>> targetMap : targetMaps.entrySet())
             targetMap.getKey().runToggles(targetMap.getValue());
     }
 

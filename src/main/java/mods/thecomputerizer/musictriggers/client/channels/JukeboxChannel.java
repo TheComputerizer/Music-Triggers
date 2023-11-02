@@ -12,22 +12,31 @@ import mods.thecomputerizer.musictriggers.MusicTriggers;
 import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import net.minecraft.block.BlockJukebox;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.logging.log4j.Level;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 @SideOnly(value = Side.CLIENT)
 public class JukeboxChannel implements IChannel {
     private final AudioPlayer player;
     private BlockPos pos;
+    private float masterVol = 1f;
+    private float recordsVol = 1f;
+    private boolean needsVolumeUpdate = false;
 
     public JukeboxChannel() {
         AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
-        AudioSourceManagers.registerRemoteSources(playerManager);
+        ChannelManager.registerRemoteSources(playerManager);
         AudioSourceManagers.registerLocalSource(playerManager);
         this.player = playerManager.createPlayer();
         this.player.setVolume(100);
@@ -54,6 +63,35 @@ public class JukeboxChannel implements IChannel {
         return this.player;
     }
 
+    @Override
+    public void tickFast() {
+        if(this.needsVolumeUpdate) setVolume(Minecraft.getMinecraft().player);
+    }
+
+    private void setVolume(@Nullable EntityPlayerSP player) {
+        if(Objects.nonNull(player)) {
+            float distFactor = Objects.nonNull(this.pos) ? getDistFactor(player,this.pos) : 0f;
+            this.player.setVolume((int)(this.masterVol*this.recordsVol*distFactor*100f));
+            this.needsVolumeUpdate = false;
+        }
+    }
+
+    private float getDistFactor(@Nonnull EntityPlayerSP player, @Nonnull BlockPos pos) {
+        return Math.max(0f,1f-((float)Math.sqrt(player.getDistanceSq(pos))/63f));
+    }
+
+    @Override
+    public void onSetSound(SoundCategory category, float volume) {
+        if(category==SoundCategory.MASTER) {
+            this.masterVol = volume;
+            this.needsVolumeUpdate = true;
+        }
+        else if(category==SoundCategory.RECORDS) {
+            this.recordsVol = volume;
+            this.needsVolumeUpdate = true;
+        }
+    }
+
     public AudioTrack getCurPlaying() {
         return this.player.getPlayingTrack();
     }
@@ -62,9 +100,11 @@ public class JukeboxChannel implements IChannel {
         if(isPlaying()) {
             if(isPlaying())  {
                 if(reloading) stopTrack();
-                else if(this.pos!=null && Minecraft.getMinecraft().world.getTileEntity(this.pos) instanceof BlockJukebox.TileEntityJukebox &&
-                        Objects.requireNonNull(Minecraft.getMinecraft().world.getTileEntity(this.pos)).getBlockMetadata()==0)
-                    stopTrack();
+                else if(Objects.nonNull(this.pos) && Objects.nonNull(Minecraft.getMinecraft().world)) {
+                    WorldClient world = Minecraft.getMinecraft().world;
+                    TileEntity tile = world.getTileEntity(this.pos);
+                    if(tile instanceof BlockJukebox.TileEntityJukebox && tile.getBlockMetadata()==0) stopTrack();
+                }
             }
         }
     }
@@ -78,7 +118,7 @@ public class JukeboxChannel implements IChannel {
         if(Objects.nonNull(track)) {
             track.setPosition(0);
             try {
-                if (!this.getPlayer().startTrack(track, false))
+                if(!this.getPlayer().startTrack(track,false))
                     MusicTriggers.logExternally(Level.ERROR,"Could not start track!");
                 else this.pos = jukeboxPos;
             } catch (IllegalStateException e) {
