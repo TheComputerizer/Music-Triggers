@@ -13,11 +13,16 @@ import mods.thecomputerizer.musictriggers.config.ConfigDebug;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.JukeboxBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.JukeboxBlockEntity;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.logging.log4j.Level;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -25,10 +30,13 @@ import java.util.Objects;
 public class JukeboxChannel implements IChannel {
     private final AudioPlayer player;
     private BlockPos pos;
+    private float masterVol = 1f;
+    private float recordsVol = 1f;
+    private boolean needsVolumeUpdate = false;
 
     public JukeboxChannel() {
         AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
-        AudioSourceManagers.registerRemoteSources(playerManager);
+        ChannelManager.registerRemoteSources(playerManager);
         AudioSourceManagers.registerLocalSource(playerManager);
         this.player = playerManager.createPlayer();
         this.player.setVolume(100);
@@ -55,6 +63,35 @@ public class JukeboxChannel implements IChannel {
         return this.player;
     }
 
+    @Override
+    public void tickFast() {
+        if(this.needsVolumeUpdate) setVolume(Minecraft.getInstance().player);
+    }
+
+    private void setVolume(@Nullable LocalPlayer player) {
+        if(Objects.nonNull(player)) {
+            float distFactor = Objects.nonNull(this.pos) ? getDistFactor(player,this.pos) : 0f;
+            this.player.setVolume((int)(this.masterVol*this.recordsVol*distFactor*100f));
+            this.needsVolumeUpdate = false;
+        }
+    }
+
+    private float getDistFactor(@NotNull LocalPlayer player, @NotNull BlockPos pos) {
+        return Math.max(0f,1f-((float)Math.sqrt(player.distanceToSqr(pos.getX(),pos.getY(),pos.getZ()))/63f));
+    }
+
+    @Override
+    public void onSetSound(SoundSource category, float volume) {
+        if(category==SoundSource.MASTER) {
+            this.masterVol = volume;
+            this.needsVolumeUpdate = true;
+        }
+        else if(category==SoundSource.RECORDS) {
+            this.recordsVol = volume;
+            this.needsVolumeUpdate = true;
+        }
+    }
+
     public AudioTrack getCurPlaying() {
         return this.player.getPlayingTrack();
     }
@@ -63,10 +100,11 @@ public class JukeboxChannel implements IChannel {
         if(isPlaying()) {
             if(isPlaying())  {
                 if(reloading) stopTrack();
-                else if(Objects.nonNull(this.pos) && Objects.nonNull(Minecraft.getInstance().level) &&
-                        Minecraft.getInstance().level.getChunk(this.pos).getBlockEntity(this.pos) instanceof JukeboxBlockEntity &&
-                        !Minecraft.getInstance().level.getChunk(this.pos).getBlockEntity(this.pos).getBlockState().getValue(JukeboxBlock.HAS_RECORD))
-                    stopTrack();
+                else if(Objects.nonNull(this.pos) && Objects.nonNull(Minecraft.getInstance().level)) {
+                    BlockEntity tile = Minecraft.getInstance().level.getChunk(this.pos).getBlockEntity(this.pos);
+                    if(tile instanceof JukeboxBlockEntity && !tile.getBlockState().getValue(JukeboxBlock.HAS_RECORD))
+                        stopTrack();
+                }
             }
         }
     }
@@ -80,11 +118,11 @@ public class JukeboxChannel implements IChannel {
         if(Objects.nonNull(track)) {
             track.setPosition(0);
             try {
-                if (!this.getPlayer().startTrack(track, false))
+                if(!this.getPlayer().startTrack(track,false))
                     MusicTriggers.logExternally(Level.ERROR,"Could not start track!");
                 else this.pos = jukeboxPos;
-            } catch (IllegalStateException e) {
-                if (!this.getPlayer().startTrack(track.makeClone(), false))
+            } catch(IllegalStateException e) {
+                if(!this.getPlayer().startTrack(track.makeClone(), false))
                     MusicTriggers.logExternally(Level.ERROR,"Could not start track!");
             }
         } else

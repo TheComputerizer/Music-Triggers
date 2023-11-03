@@ -17,8 +17,8 @@ import java.util.*;
 
 public class PersistentTriggerData {
 
-    private final Map<String, Map<String,Boolean>> toggleMap;
-    private final Map<String,Map<String, Tuple<ImmutableList<String>,Integer>>> playedOnceMap;
+    private final Map<String,Map<String,Boolean>> toggleMap;
+    private final Map<String,Map<String,Tuple<ImmutableList<String>,Integer>>> playedOnceMap;
     private int preferredSort = 1;
 
     public PersistentTriggerData() {

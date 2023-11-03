@@ -26,6 +26,7 @@ import net.minecraft.util.Tuple;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.raid.Raid;
 import net.minecraft.world.item.ItemStack;
@@ -503,18 +504,18 @@ public class ServerTriggerStatus {
         String nbt = getParameterString(mobTrigger,"mob_nbt");
         Victory victory = this.victoryTriggers.get(getParameterString(mobTrigger,"victory_id"));
         boolean pass;
-        if (resources.contains("BOSS")) {
-            synchronized (BOSS_BAR_ENTITIES) {
+        if(resources.contains("BOSS")) {
+            synchronized(BOSS_BAR_ENTITIES) {
                 Set<LivingEntity> bossEntities = BOSS_BAR_ENTITIES.entrySet().stream()
                         .filter(entry -> entry.getKey().isVisible() && entry.getKey().getPlayers().contains(player))
-                        .map(Map.Entry::getValue).filter(entity -> entityWhitelist(entity, resources, nbt))
+                        .map(Map.Entry::getValue).filter(entity -> entityWhitelist(entity,resources,nbt))
                         .collect(Collectors.toSet());
-                if (bossEntities.size() < num) return false;
-                pass = checkSpecifics(bossEntities, num, player, checkTarget, hordeTarget, health, hordeHealth);
-                if (Objects.nonNull(victory)) {
-                    if (pass)
-                        for (LivingEntity entity : bossEntities)
-                            victory.add(mobTrigger, true, entity);
+                if(bossEntities.size()<num) return false;
+                pass = checkSpecifics(bossEntities,num,player,checkTarget,hordeTarget,health,hordeHealth);
+                if(Objects.nonNull(victory)) {
+                    if(pass)
+                        for(LivingEntity entity : bossEntities)
+                            victory.add(mobTrigger,true, entity);
                     victory.setActive(mobTrigger, pass);
                 }
                 return pass;
@@ -530,14 +531,13 @@ public class ServerTriggerStatus {
                               String nbt, Victory victory) {
         AABB box = new AABB(pos.getX()-range,pos.getY()-(range*yRatio),pos.getZ()-range,
                 pos.getX()+range,pos.getY()+(range*yRatio),pos.getZ()+range);
-        HashSet<LivingEntity> matchedEntities = new HashSet<>(player.getLevel().getEntitiesOfClass(
+        Set<LivingEntity> matchedEntities = new HashSet<>(player.getLevel().getEntitiesOfClass(
                 LivingEntity.class,box,e -> entityWhitelist(e,resources,nbt)));
         if(matchedEntities.size()<num) return false;
         boolean pass = checkSpecifics(matchedEntities,num,player,target,hordeTarget,health,hordeHealth);
-        if(Objects.nonNull(victory) && pass) {
+        if(Objects.nonNull(victory) && pass)
             for(LivingEntity entity : matchedEntities)
                 victory.add(trigger,true,entity);
-        }
         return pass;
     }
 
@@ -550,7 +550,7 @@ public class ServerTriggerStatus {
         String displayName = entity.getName().getString();
         String id = getNullableRegistryKey(entity.getType());
         if(resources.contains("MOB")) {
-            if(!(entity instanceof Mob)) return false;
+            if(!(entity instanceof Enemy)) return false;
             List<String> blackList = resources.stream().filter(element -> !element.matches("MOB")).toList();
             if(blackList.isEmpty()) return true;
             return !blackList.contains(displayName) && (Objects.isNull(id) || !partiallyMatches(id,blackList));
@@ -565,7 +565,7 @@ public class ServerTriggerStatus {
     @Nullable
     private String getNullableRegistryKey(EntityType<?> type) {
         Holder.Reference<EntityType<?>> reference = Registry.ENTITY_TYPE.byValue.get(type);
-        return reference != null ? reference.key().location().toString() : null;
+        return Objects.nonNull(reference) ? reference.key().location().toString() : null;
     }
 
     private boolean checkSpecifics(Collection<LivingEntity> entities, int num, ServerPlayer player, boolean target,
@@ -578,8 +578,7 @@ public class ServerTriggerStatus {
         float counter = 0f;
         for(LivingEntity entity : entities) {
             if(!(entity instanceof Mob)) continue;
-            if(((Mob) entity).getTarget() == player)
-                counter++;
+            if(((Mob) entity).getTarget()==player) counter++;
         }
         return counter/num>=ratio/100f;
     }
