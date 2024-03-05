@@ -1,0 +1,128 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '8.1.+'
+    id 'net.minecraftforge.gradle' version '6.+'
+    id 'wtf.gofancy.fancygradle' version '1.1.+'
+}
+
+fancyGradle {
+    patches {
+        resources
+        coremods
+        asm
+        mergetool
+    }
+}
+
+java.toolchain.getLanguageVersion().set(JavaLanguageVersion.of(8))
+
+minecraft {
+    mappings channel: 'stable', version: mappings_version
+    accessTransformer = file("src/main/resources/META-INF/${mod_accesstransformer}")
+    runs {
+        def args = [
+                '-DtilDev=true'
+        ]
+        client {
+            workingDirectory file('run_client')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+            jvmArgs args
+        }
+        server {
+            workingDirectory file('run_server')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+            jvmArgs args
+        }
+    }
+}
+
+configurations {
+    shade
+    implementation.extendsFrom(shade)
+    shadow.extendsFrom(shade)
+}
+
+dependencies {
+    minecraft("net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}")
+
+    annotationProcessor("com.google.code.gson:gson:${project.gson_annotation}")
+    annotationProcessor("com.google.guava:guava:${project.guava_annotation}")
+    annotationProcessor("org.ow2.asm:asm-debug-all:${project.asm_debug_annotation}")
+    annotationProcessor("org.projectlombok:lombok:${project.lombok_version}")
+
+    compileOnly("org.projectlombok:lombok:${project.lombok_version}")
+
+    //noinspection DependencyNotationArgument
+    implementation project(':legacy')
+    shade("com.moandjiezana.toml:toml4j:${project.toml4j_version}") { transitive = false }
+    shade("org.joml:joml:${project.joml_version}")
+}
+
+shadowJar {
+    //relocate shaded dependencies to the shadow package to prevent library conflicts
+    relocate 'com.moandjiezana.toml', "${shadow_package}.com.moandjiezana.toml"
+    relocate 'org.joml', "${shadow_package}.org.joml"
+    configurations = [project.configurations.shadow]
+    setArchiveClassifier('')
+}
+
+reobf {
+    shadowJar {
+        dependsOn createMcpToSrg
+        mappings = createMcpToSrg.output
+    }
+}
+
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    var replacements = [
+            'minecraft_version': minecraft_version,
+            'mod_author': mod_authors,
+            'mod_description': mod_description,
+            'mod_license': mod_license,
+            'mod_id': mod_id,
+            'mod_name': mod_name,
+            'mod_version': version
+    ]
+    inputs.properties replacements
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+        expand replacements
+    }
+    //exclude '**/theimpossiblelibrary/test/**'
+}
+
+jar {
+    manifest {
+        attributes([
+                "Implementation-Title": project.name,
+                'FMLAT': mod_accesstransformer
+        ])
+    }
+}
+
+tasks.named("compileJava",JavaCompile) {
+    source(project(":api").sourceSets.main.allSource)
+}
+
+tasks.named("compileTestJava",JavaCompile) {
+    source(project(":api").sourceSets.test.allJava)
+}
+
+tasks.withType(Javadoc).configureEach {
+    source(project(":api").sourceSets.main.allJava)
+}
+
+tasks.withType(Jar).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from(project(":api").sourceSets.main.allSource)
+}
+
+tasks.withType(ProcessResources).configureEach {
+    from(project(":api").sourceSets.main.resources)
+}
+
+tasks.assemble.dependsOn('shadowJar')
+tasks.shadowJar.dependsOn('reobfJar')
+tasks.jar.finalizedBy('reobfJar')

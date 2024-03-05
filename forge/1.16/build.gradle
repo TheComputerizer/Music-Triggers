@@ -1,0 +1,127 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '8.1.+'
+    id 'net.minecraftforge.gradle' version '6.+'
+    id 'org.spongepowered.mixin' version '0.7.+'
+    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
+}
+
+java.toolchain.getLanguageVersion().set(JavaLanguageVersion.of(8))
+
+minecraft {
+    mappings channel: 'parchment', version: "${parchment_version}-${minecraft_version}"
+    accessTransformer = file("src/main/resources/META-INF/${mod_accesstransformer}")
+    runs {
+        def args = [
+                '-DtilDev=true'
+        ]
+        client {
+            workingDirectory file('run_client')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+            jvmArgs args
+        }
+        server {
+            workingDirectory file('run_server')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+            jvmArgs args
+        }
+    }
+}
+
+configurations {
+    shade
+    implementation.extendsFrom(shade)
+    shadow.extendsFrom(shade)
+}
+
+dependencies {
+    minecraft("net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}")
+
+    annotationProcessor("org.projectlombok:lombok:${project.lombok_version}")
+    annotationProcessor("org.spongepowered:mixin:${project.mixin_version}:processor")
+
+    compileOnly("org.projectlombok:lombok:${project.lombok_version}")
+
+    //noinspection DependencyNotationArgument
+    implementation project(':api')
+    shade("com.moandjiezana.toml:toml4j:${project.toml4j_version}") { transitive = false }
+    shade("org.joml:joml:${project.joml_version}")
+}
+
+shadowJar {
+    //relocate shaded dependencies to the shadow package to prevent library conflicts
+    relocate 'com.moandjiezana.toml', "${shadow_package}.com.moandjiezana.toml"
+    relocate 'org.joml', "${shadow_package}.org.joml"
+    configurations = [project.configurations.shadow]
+    setArchiveClassifier('')
+}
+
+reobf {
+    shadowJar {
+        dependsOn createMcpToSrg
+        mappings = createMcpToSrg.output
+    }
+}
+
+mixin {
+    add sourceSets.main, mod_refmap
+}
+
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    var replacements = [
+            'loader_range': forge_version_range,
+            'minecraft_range': minecraft_range,
+            'mod_author': mod_authors,
+            'mod_description': mod_description,
+            'mod_license': mod_license,
+            'mod_id': mod_id,
+            'mod_name': mod_name,
+            'mod_version': version,
+            'til_range': til_range
+    ]
+    inputs.properties replacements
+    from(sourceSets.main.resources.srcDirs) {
+        include 'META-INF/mods.toml'
+        expand replacements
+    }
+    //exclude '**/theimpossiblelibrary/test/**'
+}
+
+jar {
+    manifest {
+        attributes([
+                'FMLAT': project.mod_accesstransformer,
+                'Implementation-Title': project.name,
+                'MixinConfigs': project.mod_mixin,
+                'TweakClass': project.mod_tweakclass,
+                'TweakOrder': 0
+        ])
+    }
+}
+
+tasks.named("compileJava", JavaCompile) {
+    source(project(":api").sourceSets.main.allSource)
+}
+
+tasks.named("compileTestJava", JavaCompile) {
+    source(project(":api").sourceSets.test.allJava)
+}
+
+tasks.withType(Javadoc).configureEach {
+    source(project(":api").sourceSets.main.allJava)
+}
+
+tasks.withType(Jar).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from(project(":api").sourceSets.main.allSource)
+}
+
+tasks.withType(ProcessResources).configureEach {
+    from(project(":api").sourceSets.main.resources)
+}
+
+tasks.assemble.dependsOn('shadowJar')
+tasks.shadowJar.dependsOn('reobfJar')
+tasks.jar.finalizedBy('reobfJar')
