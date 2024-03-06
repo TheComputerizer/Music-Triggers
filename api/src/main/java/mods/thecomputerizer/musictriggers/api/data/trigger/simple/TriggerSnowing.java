@@ -12,4 +12,9 @@ public class TriggerSnowing extends SimpleTrigger {
     public boolean isActive() {
         return false;
     }
+
+    @Override
+    public boolean isServer() {
+        return true;
+    }
 }

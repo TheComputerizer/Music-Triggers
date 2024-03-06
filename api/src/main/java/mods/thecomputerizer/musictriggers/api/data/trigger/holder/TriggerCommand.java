@@ -2,19 +2,14 @@ package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 
 import mods.thecomputerizer.musictriggers.api.channel.IChannel;
 
-public class TriggerPVP extends HolderTrigger {
+public class TriggerCommand extends HolderTrigger {
 
-    public TriggerPVP(IChannel channel) {
-        super(channel,"pvp");
+    public TriggerCommand(IChannel channel) {
+        super(channel,"command");
     }
 
     @Override
     public boolean isActive() {
         return false;
-    }
-
-    @Override
-    public boolean isServer() {
-        return true;
     }
 }

@@ -1,31 +1,32 @@
-package mods.thecomputerizer.musictriggers.api.data.trigger.simple;
+package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 
 import mods.thecomputerizer.musictriggers.api.channel.IChannel;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
-import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterFloat;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
-public class TriggerHome extends SimpleTrigger {
+public class TriggerHurricane extends HolderTrigger {
 
-    public TriggerHome(IChannel channel) {
-        super(channel,"home");
+    public TriggerHurricane(IChannel channel) {
+        super(channel,"hurricane");
+    }
+
+    @Override
+    public List<String> getRequiredMods() {
+        return Collections.singletonList("weather2");
     }
 
     @Override
     protected void initExtraParameters(Map<String,Parameter<?>> map) {
+        super.initExtraParameters(map);
         addParameter(map,"detection_range",new ParameterInt(16));
-        addParameter(map,"detection_y_ratio",new ParameterFloat(0.5f));
     }
 
     @Override
     public boolean isActive() {
         return false;
-    }
-
-    @Override
-    public boolean isServer() {
-        return true;
     }
 }

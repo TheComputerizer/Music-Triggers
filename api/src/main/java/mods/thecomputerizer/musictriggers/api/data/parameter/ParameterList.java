@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.data.parameter;
 
 import io.netty.buffer.ByteBuf;
+import lombok.Getter;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.GenericUtils;
 
@@ -12,7 +13,7 @@ import java.util.Objects;
 public class ParameterList<E> extends Parameter<List<Parameter<E>>> {
 
     protected final Class<E> type;
-    protected final List<E> values;
+    @Getter protected final List<E> values;
 
     public ParameterList(Class<E> type, List<E> defaults) {
         super(ParameterHelper.parameterize(type,defaults));

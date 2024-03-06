@@ -20,7 +20,6 @@ public abstract class TriggerAPI extends ChannelData {
     private final Map<String,Parameter<?>> parameters;
     @Getter private final String name;
     @Getter @Setter private boolean enabled;
-    @Getter private boolean server;
 
     protected TriggerAPI(IChannel channel, String name) {
         super(channel);
@@ -46,6 +45,7 @@ public abstract class TriggerAPI extends ChannelData {
                     "substitured, but things may break!",name);
             return Collections.singletonList(parameter.getValue());
         }
+        return ((ParameterList<?>)parameter).getValues();
     }
 
     public Number getParameterAsNumber(String name) {
@@ -69,6 +69,10 @@ public abstract class TriggerAPI extends ChannelData {
     public String getParameterAsString(String name) {
         Parameter<?> parameter = getParameter(name);
         return parameter.getValue().toString();
+    }
+
+    public List<String> getRequiredMods() {
+        return Collections.emptyList();
     }
 
     protected Map<String,Parameter<?>> initParameterMap() {
@@ -98,6 +102,10 @@ public abstract class TriggerAPI extends ChannelData {
     protected abstract void initExtraParameters(Map<String,Parameter<?>> map);
 
     public abstract boolean isActive();
+
+    public boolean isServer() {
+        return false;
+    }
 
     public void onConnect() {
 
