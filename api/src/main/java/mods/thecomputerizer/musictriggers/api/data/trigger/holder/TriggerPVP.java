@@ -17,4 +17,9 @@ public class TriggerPVP extends HolderTrigger {
     public boolean isServer() {
         return true;
     }
+
+    @Override
+    protected boolean verifyRequiredParameters() {
+        return hasValidIdentifier();
+    }
 }

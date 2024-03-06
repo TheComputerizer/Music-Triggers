@@ -19,4 +19,9 @@ public abstract class SimpleTrigger extends TriggerAPI {
     public String getNameWithID() {
         return getName();
     }
+
+    @Override
+    protected boolean verifyRequiredParameters() {
+        return true;
+    }
 }

@@ -27,4 +27,9 @@ public class TriggerRaid extends HolderTrigger {
     public boolean isServer() {
         return true;
     }
+
+    @Override
+    protected boolean verifyRequiredParameters() {
+        return hasValidIdentifier();
+    }
 }

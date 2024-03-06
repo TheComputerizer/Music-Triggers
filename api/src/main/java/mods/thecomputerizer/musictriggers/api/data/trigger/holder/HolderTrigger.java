@@ -22,4 +22,10 @@ public abstract class HolderTrigger extends TriggerAPI {
     protected void initExtraParameters(Map<String,Parameter<?>> map) {
         addParameter(map,"identifier",new ParameterString("not_set"));
     }
+
+    protected boolean hasValidIdentifier() {
+        if(hasNonDefaultParameter("identifier")) return true;
+        logMissingParameter("identifier");
+        return false;
+    }
 }

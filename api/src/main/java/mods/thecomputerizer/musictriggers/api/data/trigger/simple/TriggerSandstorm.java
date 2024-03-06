@@ -1,16 +1,17 @@
-package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
+package mods.thecomputerizer.musictriggers.api.data.trigger.simple;
 
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
+import mods.thecomputerizer.musictriggers.api.data.trigger.holder.HolderTrigger;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class TriggerSandStorm extends HolderTrigger {
+public class TriggerSandstorm extends SimpleTrigger {
 
-    public TriggerSandStorm(ChannelAPI channel) {
+    public TriggerSandstorm(ChannelAPI channel) {
         super(channel,"sandstorm");
     }
 
@@ -21,7 +22,6 @@ public class TriggerSandStorm extends HolderTrigger {
 
     @Override
     protected void initExtraParameters(Map<String,Parameter<?>> map) {
-        super.initExtraParameters(map);
         addParameter(map,"detection_range",new ParameterInt(16));
     }
 

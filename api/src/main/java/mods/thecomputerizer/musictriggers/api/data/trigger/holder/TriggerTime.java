@@ -29,4 +29,14 @@ public class TriggerTime extends HolderTrigger {
     public boolean isActive() {
         return false;
     }
+
+    @Override
+    protected boolean verifyRequiredParameters() {
+        if(hasValidIdentifier()) {
+            String[] parameters = new String[]{"time_bundle","start_hour"};
+            if(hasAnyNonDefaultParameter(parameters)) return true;
+            logMissingPotentialParameter(parameters);
+        }
+        return false;
+    }
 }

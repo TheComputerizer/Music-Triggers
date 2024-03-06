@@ -25,4 +25,12 @@ public class TriggerStatistic extends HolderTrigger {
     public boolean isActive() {
         return false;
     }
+
+    @Override
+    protected boolean verifyRequiredParameters() {
+        String[] parameters = new String[]{"identifier","resource_name"};
+        if(hasAllNonDefaultParameter(parameters)) return true;
+        logMissingParameters(parameters);
+        return false;
+    }
 }

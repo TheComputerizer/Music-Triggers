@@ -22,4 +22,12 @@ public class TriggerDifficulty extends HolderTrigger {
     public boolean isActive() {
         return false;
     }
+
+    @Override
+    protected boolean verifyRequiredParameters() {
+        String[] parameters = new String[]{"identifier","level"};
+        if(hasAllNonDefaultParameter(parameters)) return true;
+        logMissingParameters(parameters);
+        return false;
+    }
 }

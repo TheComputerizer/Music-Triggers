@@ -20,6 +20,11 @@ public abstract class Parameter<T> {
         this.defaultValue = read(buf);
         this.value = read(buf);
     }
+
+    public boolean isDefault() {
+        return this.value==this.defaultValue || this.value.toString().equals(this.defaultValue.toString());
+    }
+
     protected abstract T read(ByteBuf buf);
 
     public void parseValue(String unparsed) {

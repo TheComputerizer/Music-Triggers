@@ -2,9 +2,8 @@ package mods.thecomputerizer.musictriggers.api.data.trigger;
 
 import lombok.Getter;
 import lombok.Setter;
-import mods.thecomputerizer.musictriggers.api.MTRef;
-import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.ChannelData;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterList;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
@@ -41,8 +40,8 @@ public abstract class TriggerAPI extends ChannelData {
     public List<?> getParameterAsList(String name) {
         Parameter<?> parameter = getParameter(name);
         if(!(parameter instanceof ParameterList<?>)) {
-            MTRef.logWarn("{}Attempting to access non list parameter `{}` as a list! A singleton list will be "+
-                    "substitured, but things may break!",qualified(),name);
+            logWarn("Attempting to access non list parameter `{}` as a list! A singleton list will be "+
+                    "substitured, but things may break!",name);
             return Collections.singletonList(parameter.getValue());
         }
         return ((ParameterList<?>)parameter).getValues();
@@ -52,17 +51,17 @@ public abstract class TriggerAPI extends ChannelData {
         Parameter<?> parameter = getParameter(name);
         if(parameter instanceof ParameterNumber<?>) return (Number)parameter.getValue();
         else if(parameter instanceof ParameterString) {
-            MTRef.logWarn("{}Attempting to access string parameter `{}` as a number! The type will be assumed to "+
-                    "be double",qualified(),name);
+            logWarn("Attempting to access string parameter `{}` as a number! The type will be assumed to "+
+                    "be double",name);
             String value = parameter.getValue().toString();
             try {
                 return Double.parseDouble(value);
             } catch(NumberFormatException ex) {
-                MTRef.logError("{}Failed to parse parameter `{}` with value `{}` as double!",qualified(),name,value);
+                logError("Failed to parse parameter `{}` with value `{}` as double!",name,value);
                 return 0;
             }
         }
-        MTRef.logError("{}Unable to get parameter `{}` as a number!",qualified(),name);
+        logError("Unable to get parameter `{}` as a number!",name);
         return 0;
     }
 
@@ -73,6 +72,39 @@ public abstract class TriggerAPI extends ChannelData {
 
     public List<String> getRequiredMods() {
         return Collections.emptyList();
+    }
+
+    public boolean hasAllNonDefaultParameter(String ... names) {
+        for(String name : names)
+            if(!hasNonDefaultParameter(name)) return false;
+        return true;
+    }
+
+    public boolean hasAllParameters(String ... names) {
+        for(String name : names)
+            if(!hasParameter(name)) return false;
+        return true;
+    }
+
+    public boolean hasAnyNonDefaultParameter(String ... names) {
+        for(String name : names)
+            if(hasNonDefaultParameter(name)) return true;
+        return false;
+    }
+
+    public boolean hasAnyParameter(String ... names) {
+        for(String name : names)
+            if(hasParameter(name)) return true;
+        return false;
+    }
+
+    public boolean hasNonDefaultParameter(String name) {
+        Parameter<?> parameter = getParameter(name);
+        return Objects.nonNull(parameter) && !parameter.isDefault();
+    }
+
+    public boolean hasParameter(String name) {
+        return Objects.nonNull(getParameter(name));
     }
 
     protected Map<String,Parameter<?>> initParameterMap() {
@@ -107,6 +139,18 @@ public abstract class TriggerAPI extends ChannelData {
         return false;
     }
 
+    protected void logMissingParameter(String name) {
+        logError("Trigger `{}` is missing a required `{}` parameter!",getName(),name);
+    }
+
+    protected void logMissingParameters(String ... names) {
+        logError("Trigger `{}` is missing a required `{}` parameter! (All of these are required)",getName(),names);
+    }
+
+    protected void logMissingPotentialParameter(String ... names) {
+        logError("Trigger `{}` is missing a required `{}` parameter! (Only 1 of these is required)",getName(),names);
+    }
+
     public void onConnect() {
 
     }
@@ -114,4 +158,6 @@ public abstract class TriggerAPI extends ChannelData {
     public void onDisconnect() {
 
     }
+
+    protected abstract boolean verifyRequiredParameters();
 }

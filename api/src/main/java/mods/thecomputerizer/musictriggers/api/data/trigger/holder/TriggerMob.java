@@ -44,4 +44,12 @@ public class TriggerMob extends HolderTrigger {
     public boolean isServer() {
         return true;
     }
+
+    @Override
+    protected boolean verifyRequiredParameters() {
+        String[] parameters = new String[]{"identifier","resource_name"};
+        if(hasAllNonDefaultParameter(parameters)) return true;
+        logMissingParameters(parameters);
+        return false;
+    }
 }

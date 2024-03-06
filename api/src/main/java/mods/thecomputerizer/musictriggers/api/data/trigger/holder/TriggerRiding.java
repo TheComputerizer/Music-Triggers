@@ -23,4 +23,9 @@ public class TriggerRiding extends HolderTrigger {
     public boolean isActive() {
         return false;
     }
+
+    @Override
+    protected boolean verifyRequiredParameters() {
+        return hasValidIdentifier();
+    }
 }

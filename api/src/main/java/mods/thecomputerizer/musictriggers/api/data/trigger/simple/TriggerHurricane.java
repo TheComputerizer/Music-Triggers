@@ -1,14 +1,15 @@
-package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
+package mods.thecomputerizer.musictriggers.api.data.trigger.simple;
 
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
+import mods.thecomputerizer.musictriggers.api.data.trigger.holder.HolderTrigger;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class TriggerHurricane extends HolderTrigger {
+public class TriggerHurricane extends SimpleTrigger {
 
     public TriggerHurricane(ChannelAPI channel) {
         super(channel,"hurricane");
@@ -21,7 +22,6 @@ public class TriggerHurricane extends HolderTrigger {
 
     @Override
     protected void initExtraParameters(Map<String,Parameter<?>> map) {
-        super.initExtraParameters(map);
         addParameter(map,"detection_range",new ParameterInt(16));
     }
 

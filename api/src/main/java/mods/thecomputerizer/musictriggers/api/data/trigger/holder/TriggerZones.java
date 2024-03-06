@@ -27,4 +27,14 @@ public class TriggerZones extends HolderTrigger {
     public boolean isActive() {
         return false;
     }
+
+    @Override
+    protected boolean verifyRequiredParameters() {
+        if(hasValidIdentifier()) {
+            String[] parameters = new String[]{"zone_min_x","zone_max_x","zone_min_y","zone_max_y","zone_min_z","zone_max_z"};
+            if(hasAnyNonDefaultParameter(parameters)) return true;
+            logMissingPotentialParameter(parameters);
+        }
+        return false;
+    }
 }

@@ -37,4 +37,14 @@ public class TriggerBiome extends HolderTrigger {
     public boolean isServer() {
         return true;
     }
+
+    @Override
+    protected boolean verifyRequiredParameters() {
+        if(hasValidIdentifier()) {
+            String[] parameters = new String[]{"resource_name","biome_tag","rain_type","biome_temperature","biome_rainfall"};
+            if(hasAnyNonDefaultParameter(parameters)) return true;
+            logMissingPotentialParameter(parameters);
+        }
+        return false;
+    }
 }
