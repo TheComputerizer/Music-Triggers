@@ -5,4 +5,4 @@ Here is a link to the curseforge project https://www.curseforge.com/minecraft/mc
 
 Alternatively, here is a link to the Modrinth project https://modrinth.com/mod/music-triggers
 
-(1.18.2 Forge branch)
+(Multiversion branch)
