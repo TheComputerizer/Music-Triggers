@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class TriggerLight extends HolderTrigger {
 
-    public TriggerLight(IChannel channel) {
+    public TriggerLight(ChannelAPI channel) {
         super(channel,"light");
     }
 

@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterFloat;
 
@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class TriggerRainIntensity extends HolderTrigger {
 
-    public TriggerRainIntensity(IChannel channel) {
+    public TriggerRainIntensity(ChannelAPI channel) {
         super(channel,"rainintensity");
     }
 

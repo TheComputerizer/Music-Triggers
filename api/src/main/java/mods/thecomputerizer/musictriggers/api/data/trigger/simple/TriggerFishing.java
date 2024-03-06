@@ -1,10 +1,10 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.simple;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 
 public class TriggerFishing extends SimpleTrigger {
 
-    public TriggerFishing(IChannel channel) {
+    public TriggerFishing(ChannelAPI channel) {
         super(channel,"fishing");
     }
 

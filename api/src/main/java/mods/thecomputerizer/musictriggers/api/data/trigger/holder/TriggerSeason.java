@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
 
@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class TriggerSeason extends HolderTrigger {
 
-    public TriggerSeason(IChannel channel) {
+    public TriggerSeason(ChannelAPI channel) {
         super(channel,"season");
     }
 

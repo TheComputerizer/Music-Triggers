@@ -1,10 +1,10 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.simple;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 
 public class TriggerSnowing extends SimpleTrigger {
 
-    public TriggerSnowing(IChannel channel) {
+    public TriggerSnowing(ChannelAPI channel) {
         super(channel,"snowing");
     }
 

@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterList;
 
@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class TriggerStructure extends HolderTrigger {
 
-    public TriggerStructure(IChannel channel) {
+    public TriggerStructure(ChannelAPI channel) {
         super(channel,"structure");
     }
 

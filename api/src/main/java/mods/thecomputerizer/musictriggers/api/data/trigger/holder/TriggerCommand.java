@@ -1,10 +1,10 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 
 public class TriggerCommand extends HolderTrigger {
 
-    public TriggerCommand(IChannel channel) {
+    public TriggerCommand(ChannelAPI channel) {
         super(channel,"command");
     }
 

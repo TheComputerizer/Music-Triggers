@@ -3,7 +3,7 @@ package mods.thecomputerizer.musictriggers.api.data.trigger;
 import lombok.Getter;
 import lombok.Setter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.ChannelData;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterList;
@@ -21,7 +21,7 @@ public abstract class TriggerAPI extends ChannelData {
     @Getter private final String name;
     @Getter @Setter private boolean enabled;
 
-    protected TriggerAPI(IChannel channel, String name) {
+    protected TriggerAPI(ChannelAPI channel, String name) {
         super(channel);
         this.parameters = initParameterMap();
         this.name = name;
@@ -41,8 +41,8 @@ public abstract class TriggerAPI extends ChannelData {
     public List<?> getParameterAsList(String name) {
         Parameter<?> parameter = getParameter(name);
         if(!(parameter instanceof ParameterList<?>)) {
-            MTRef.logWarn("Attempting to access non list parameter `{}` as a list! A singleton list will be "+
-                    "substitured, but things may break!",name);
+            MTRef.logWarn("{}Attempting to access non list parameter `{}` as a list! A singleton list will be "+
+                    "substitured, but things may break!",qualified(),name);
             return Collections.singletonList(parameter.getValue());
         }
         return ((ParameterList<?>)parameter).getValues();
@@ -52,17 +52,17 @@ public abstract class TriggerAPI extends ChannelData {
         Parameter<?> parameter = getParameter(name);
         if(parameter instanceof ParameterNumber<?>) return (Number)parameter.getValue();
         else if(parameter instanceof ParameterString) {
-            MTRef.logWarn("Attempting to access string parameter `{}` as a number! The type will be assumed to "+
-                    "be double",name);
+            MTRef.logWarn("{}Attempting to access string parameter `{}` as a number! The type will be assumed to "+
+                    "be double",qualified(),name);
             String value = parameter.getValue().toString();
             try {
                 return Double.parseDouble(value);
             } catch(NumberFormatException ex) {
-                MTRef.logError("Failed to parse parameter `{}` with value `{}` as double!",name,value);
+                MTRef.logError("{}Failed to parse parameter `{}` with value `{}` as double!",qualified(),name,value);
                 return 0;
             }
         }
-        MTRef.logError("Unable to get parameter `{}` as a number!",name);
+        MTRef.logError("{}Unable to get parameter `{}` as a number!",qualified(),name);
         return 0;
     }
 

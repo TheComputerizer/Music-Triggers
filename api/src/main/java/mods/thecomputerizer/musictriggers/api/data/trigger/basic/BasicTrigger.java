@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.basic;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 
@@ -9,7 +9,7 @@ import java.util.Map;
 
 public abstract class BasicTrigger extends TriggerAPI {
 
-    protected BasicTrigger(IChannel channel, String name) {
+    protected BasicTrigger(ChannelAPI channel, String name) {
         super(channel, name);
     }
 

@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterList;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterFloat;
@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class TriggerBlockEntity extends HolderTrigger {
 
-    public TriggerBlockEntity(IChannel channel) {
+    public TriggerBlockEntity(ChannelAPI channel) {
         super(channel,"blockentity");
     }
 

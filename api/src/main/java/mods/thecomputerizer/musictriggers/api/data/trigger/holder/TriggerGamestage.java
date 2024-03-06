@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterList;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class TriggerGamestage extends HolderTrigger {
 
-    public TriggerGamestage(IChannel channel) {
+    public TriggerGamestage(ChannelAPI channel) {
         super(channel,"gamestage");
     }
 

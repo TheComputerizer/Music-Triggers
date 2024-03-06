@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterList;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
@@ -12,7 +12,7 @@ import java.util.Map;
 
 public class TriggerBiome extends HolderTrigger {
 
-    public TriggerBiome(IChannel channel) {
+    public TriggerBiome(ChannelAPI channel) {
         super(channel,"biome");
     }
 

@@ -1,10 +1,10 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.basic;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 
 public class TriggerMenu extends BasicTrigger {
 
-    public TriggerMenu(IChannel channel) {
+    public TriggerMenu(ChannelAPI channel) {
         super(channel,"menu");
     }
 

@@ -1,10 +1,10 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.basic;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 
 public class TriggerGeneric extends BasicTrigger {
 
-    public TriggerGeneric(IChannel channel) {
+    public TriggerGeneric(ChannelAPI channel) {
         super(channel,"generic");
     }
 

@@ -1,13 +1,13 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.simple;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 
 import java.util.Collections;
 import java.util.List;
 
 public class TriggerBlizzard extends SimpleTrigger {
 
-    public TriggerBlizzard(IChannel channel) {
+    public TriggerBlizzard(ChannelAPI channel) {
         super(channel,"blizzard");
     }
 

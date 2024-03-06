@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.simple;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
 
@@ -8,7 +8,7 @@ import java.util.Map;
 
 public class TriggerLowHP extends SimpleTrigger {
 
-    public TriggerLowHP(IChannel channel) {
+    public TriggerLowHP(ChannelAPI channel) {
         super(channel,"lowhp");
     }
 

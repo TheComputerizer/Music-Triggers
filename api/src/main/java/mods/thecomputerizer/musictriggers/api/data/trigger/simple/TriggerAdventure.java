@@ -1,10 +1,10 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.simple;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 
 public class TriggerAdventure extends SimpleTrigger {
 
-    public TriggerAdventure(IChannel channel) {
+    public TriggerAdventure(ChannelAPI channel) {
         super(channel,"adventure");
     }
 

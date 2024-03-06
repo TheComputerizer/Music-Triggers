@@ -1,10 +1,10 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.simple;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 
 public class TriggerUnderwater extends SimpleTrigger {
 
-    public TriggerUnderwater(IChannel channel) {
+    public TriggerUnderwater(ChannelAPI channel) {
         super(channel,"underwater");
     }
 

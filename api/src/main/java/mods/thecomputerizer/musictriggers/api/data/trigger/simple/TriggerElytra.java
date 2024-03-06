@@ -1,10 +1,10 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.simple;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 
 public class TriggerElytra extends SimpleTrigger {
 
-    public TriggerElytra(IChannel channel) {
+    public TriggerElytra(ChannelAPI channel) {
         super(channel,"elytra");
     }
 

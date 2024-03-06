@@ -1,8 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
-import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterFloat;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
 
 import java.util.Collections;
@@ -11,7 +10,7 @@ import java.util.Map;
 
 public class TriggerTornado extends HolderTrigger {
 
-    public TriggerTornado(IChannel channel) {
+    public TriggerTornado(ChannelAPI channel) {
         super(channel,"tornado");
     }
 

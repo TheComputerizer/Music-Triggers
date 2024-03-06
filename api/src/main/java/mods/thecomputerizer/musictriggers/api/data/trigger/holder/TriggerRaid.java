@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
 
@@ -8,7 +8,7 @@ import java.util.Map;
 
 public class TriggerRaid extends HolderTrigger {
 
-    public TriggerRaid(IChannel channel) {
+    public TriggerRaid(ChannelAPI channel) {
         super(channel,"raid");
     }
 

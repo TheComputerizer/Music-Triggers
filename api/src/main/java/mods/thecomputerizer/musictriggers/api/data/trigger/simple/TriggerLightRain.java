@@ -1,13 +1,13 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.simple;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 
 import java.util.Collections;
 import java.util.List;
 
 public class TriggerLightRain extends SimpleTrigger {
 
-    public TriggerLightRain(IChannel channel) {
+    public TriggerLightRain(ChannelAPI channel) {
         super(channel,"lightrain");
     }
 

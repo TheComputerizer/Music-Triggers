@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.data;
 
 import lombok.Getter;
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 
 /**
  * Used for any piece of channel data for more consistently available shared info
@@ -9,9 +9,9 @@ import mods.thecomputerizer.musictriggers.api.channel.IChannel;
 @Getter
 public abstract class ChannelData {
 
-    protected final IChannel channel;
+    protected final ChannelAPI channel;
 
-    protected ChannelData(IChannel channel) {
+    protected ChannelData(ChannelAPI channel) {
         this.channel = channel;
     }
 
@@ -26,7 +26,7 @@ public abstract class ChannelData {
     /**
      * Qualifyies a message to be logged
      */
-    public String qualify(String msg) {
-        return "Channel["+getChannelName()+"]: "+msg;
+    public String qualified() {
+        return "Channel["+getChannelName()+"]: ";
     }
 }

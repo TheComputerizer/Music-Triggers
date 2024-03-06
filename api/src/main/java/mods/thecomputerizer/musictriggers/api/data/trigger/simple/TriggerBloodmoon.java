@@ -1,14 +1,13 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.simple;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class TriggerBloodmoon extends SimpleTrigger {
 
-    public TriggerBloodmoon(IChannel channel) {
+    public TriggerBloodmoon(ChannelAPI channel) {
         super(channel,"bloodmoon");
     }
 

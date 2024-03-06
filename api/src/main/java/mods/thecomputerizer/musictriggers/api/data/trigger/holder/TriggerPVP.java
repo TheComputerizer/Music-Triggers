@@ -1,10 +1,10 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 
 public class TriggerPVP extends HolderTrigger {
 
-    public TriggerPVP(IChannel channel) {
+    public TriggerPVP(ChannelAPI channel) {
         super(channel,"pvp");
     }
 

@@ -1,10 +1,10 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.basic;
 
-import mods.thecomputerizer.musictriggers.api.channel.IChannel;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 
 public class TriggerLoading extends BasicTrigger {
 
-    public TriggerLoading(IChannel channel) {
+    public TriggerLoading(ChannelAPI channel) {
         super(channel,"loading");
     }
 

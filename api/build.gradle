@@ -12,6 +12,7 @@ dependencies {
     //lavaplayer dependencies
     implementation("${walkyst_repo}.JAADec-fork:jaadec-ext-aac:${jaadec_version}") { transitive = false }
     implementation("${walkyst_repo}:lavaplayer-natives-fork:${lava_natives_version}") { transitive = false }
+    implementation("${lava_repo}:lavaplayer:${lava_version}") { transitive = false }
     implementation("${lava_repo}:lava-common:${lava_version}") { transitive = false }
     implementation("${lava_repo}:lavaplayer-ext-format-xm:${lava_version}") { transitive = false }
     implementation("${lava_repo}:lavaplayer-ext-youtube-rotator:${lava_version}") { transitive = false }

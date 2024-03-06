@@ -1,4 +1,5 @@
 //file:noinspection DependencyNotationArgument
+//file:noinspection GroovyAssignabilityCheck
 plugins {
     id 'com.github.johnrengelman.shadow' version '8.1.+'
     id 'idea'
@@ -18,6 +19,7 @@ dependencies {
     shadow("${walkyst_repo}.JAADec-fork:jaadec-ext-aac:${jaadec_version}") { transitive = false }
     shadow("${walkyst_repo}:lavaplayer-natives-fork:${lava_natives_version}") { transitive = false }
     shadow("${lava_repo}:lava-common:${lava_version}") { transitive = false }
+    shadow("${lava_repo}:lavaplayer:${lava_version}") { transitive = false }
     shadow("${lava_repo}:lavaplayer-ext-format-xm:${lava_version}") { transitive = false }
     shadow("${lava_repo}:lavaplayer-ext-youtube-rotator:${lava_version}") { transitive = false }
     shadow("${lava_repo}:lavaplayer-stream-merger:${lava_version}") { transitive = false }
