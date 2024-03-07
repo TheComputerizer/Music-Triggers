@@ -1,4 +1,4 @@
 package mods.thecomputerizer.musictriggers.api.data.audio;
 
-public abstract class AudioReference {
+public abstract class AudioRef {
 }

@@ -1,9 +1,8 @@
-package mods.thecomputerizer.musictriggers.api.data.audio;
+package mods.thecomputerizer.musictriggers.api.client.audio;
 
 import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat;
 import com.sedmelluq.discord.lavaplayer.format.AudioPlayerInputStream;
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
-import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 
 import javax.annotation.Nonnull;
@@ -63,8 +62,7 @@ public class AudioOutput extends Thread {
                 this.runAudioLoop = true;
             }
         } catch(Exception ex) {
-            MTRef.logError("An unkown error occured in the audio output thread for channel {}!",
-                    this.channel.getName(),ex);
+            this.channel.logError("An unkown error occured in the audio output thread!",ex);
         }
     }
 }

@@ -6,6 +6,7 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterList;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterFloat;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
 
 import java.util.Collections;
 import java.util.Map;
@@ -24,13 +25,16 @@ public class TriggerBiome extends HolderTrigger {
         addParameter(map,"biome_temperature",new ParameterFloat(Float.MIN_VALUE));
         addParameter(map,"check_higher_rainfall",new ParameterBoolean(true));
         addParameter(map,"check_lower_temp",new ParameterBoolean(false));
+        addParameter(map,"display_matcher",new ParameterString("EXACT"));
+        addParameter(map,"display_name",new ParameterList<>(String.class,Collections.singletonList("ANY")));
         addParameter(map,"rain_type",new ParameterString("ANY"));
+        addParameter(map,"resource_matcher",new ParameterString("PARTIAL"));
         addParameter(map,"resource_name",new ParameterList<>(String.class,Collections.singletonList("ANY")));
     }
 
     @Override
-    public boolean isActive() {
-        return false;
+    public boolean isActive(TriggerContextAPI ctx) {
+        return ctx.isActiveBiome(this);
     }
 
     @Override
@@ -41,7 +45,8 @@ public class TriggerBiome extends HolderTrigger {
     @Override
     protected boolean verifyRequiredParameters() {
         if(hasValidIdentifier()) {
-            String[] parameters = new String[]{"resource_name","biome_tag","rain_type","biome_temperature","biome_rainfall"};
+            String[] parameters = new String[]{"biome_rainfall","biome_tag","biome_temperature","display_name",
+                    "rain_type","resource_name"};
             if(hasAnyNonDefaultParameter(parameters)) return true;
             logMissingPotentialParameter(parameters);
         }

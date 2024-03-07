@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
 
 import java.util.Collections;
 import java.util.List;
@@ -27,8 +28,8 @@ public class TriggerTornado extends HolderTrigger {
     }
 
     @Override
-    public boolean isActive() {
-        return false;
+    public boolean isActive(TriggerContextAPI ctx) {
+        return ctx.isActiveTornado(getParameterAsInt("detection_range"),getParameterAsInt("level"));
     }
 
     @Override

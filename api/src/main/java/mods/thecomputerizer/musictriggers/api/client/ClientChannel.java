@@ -2,11 +2,21 @@ package mods.thecomputerizer.musictriggers.api.client;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
+import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
-public class Channel extends ChannelAPI {
+import java.util.List;
+
+public class ClientChannel extends ChannelAPI {
+
+    public ClientChannel(Table table) {
+        super(table);
+    }
+
     @Override
-    public String getName() {
+    public List<AudioRef> getAudio() {
         return null;
     }
 
@@ -16,8 +26,8 @@ public class Channel extends ChannelAPI {
     }
 
     @Override
-    public boolean isEnabled() {
-        return false;
+    public List<TriggerAPI> getTriggers() {
+        return null;
     }
 
     @Override

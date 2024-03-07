@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.simple;
 
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
 
 import java.util.Collections;
 import java.util.List;
@@ -17,7 +18,7 @@ public class TriggerLightRain extends SimpleTrigger {
     }
 
     @Override
-    public boolean isActive() {
-        return false;
+    public boolean isActive(TriggerContextAPI ctx) {
+        return ctx.isActiveLightRain();
     }
 }

@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
 
 public class TriggerCommand extends HolderTrigger {
 
@@ -9,8 +10,8 @@ public class TriggerCommand extends HolderTrigger {
     }
 
     @Override
-    public boolean isActive() {
-        return false;
+    public boolean isActive(TriggerContextAPI ctx) {
+        return ctx.isActiveCommand();
     }
 
     @Override

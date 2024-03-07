@@ -5,6 +5,7 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterFloat;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
 
 import java.util.Map;
 
@@ -26,8 +27,10 @@ public class TriggerTime extends HolderTrigger {
     }
 
     @Override
-    public boolean isActive() {
-        return false;
+    public boolean isActive(TriggerContextAPI ctx) {
+        return ctx.isActiveTime(getParameterAsString("time_bundle"),getParameterAsFloat("start_hour"),
+                getParameterAsFloat("end_hour"),getParameterAsInt("lowest_day_number"),
+                getParameterAsInt("highest_day_number"),getParameterAsInt("moon_phase"));
     }
 
     @Override

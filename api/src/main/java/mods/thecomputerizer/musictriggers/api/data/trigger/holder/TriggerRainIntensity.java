@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterFloat;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
 
 import java.util.Collections;
 import java.util.List;
@@ -26,8 +27,8 @@ public class TriggerRainIntensity extends HolderTrigger {
     }
 
     @Override
-    public boolean isActive() {
-        return false;
+    public boolean isActive(TriggerContextAPI ctx) {
+        return ctx.isActiveRainIntensity(getParameterAsFloat("level"));
     }
 
     @Override

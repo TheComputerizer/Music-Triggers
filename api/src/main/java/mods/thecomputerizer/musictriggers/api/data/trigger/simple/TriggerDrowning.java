@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.api.data.trigger.simple;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
 
 import java.util.Map;
 
@@ -18,7 +19,7 @@ public class TriggerDrowning extends SimpleTrigger {
     }
 
     @Override
-    public boolean isActive() {
-        return false;
+    public boolean isActive(TriggerContextAPI ctx) {
+        return ctx.isActiveDrowning(getParameterAsInt("level"));
     }
 }

@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.simple;
 
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
 
 public class TriggerSnowing extends SimpleTrigger {
 
@@ -9,8 +10,8 @@ public class TriggerSnowing extends SimpleTrigger {
     }
 
     @Override
-    public boolean isActive() {
-        return false;
+    public boolean isActive(TriggerContextAPI ctx) {
+        return ctx.isActiveSnowing();
     }
 
     @Override

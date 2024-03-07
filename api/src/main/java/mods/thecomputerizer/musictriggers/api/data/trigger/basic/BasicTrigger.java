@@ -14,11 +14,6 @@ public abstract class BasicTrigger extends TriggerAPI {
     }
 
     @Override
-    public String getNameWithID() {
-        return getName();
-    }
-
-    @Override
     protected @Nullable Parameter<?> initParameter(String parameter, Parameter<?> defaultParameter) {
         return parameter.equals("priority") ? null : defaultParameter;
     }

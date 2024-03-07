@@ -3,8 +3,10 @@ package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterList;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class TriggerInventory extends HolderTrigger {
@@ -20,9 +22,11 @@ public class TriggerInventory extends HolderTrigger {
         addParameter(map,"slots",new ParameterList<>(String.class,Collections.singletonList("ANY")));
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public boolean isActive() {
-        return false;
+    public boolean isActive(TriggerContextAPI ctx) {
+        return ctx.isActiveInventory((List<String>)getParameterAsList("items"),
+                (List<String>)getParameterAsList("slots"));
     }
 
     @Override

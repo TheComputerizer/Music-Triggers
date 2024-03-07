@@ -16,11 +16,6 @@ public abstract class SimpleTrigger extends TriggerAPI {
     protected void initExtraParameters(Map<String, Parameter<?>> map) {}
 
     @Override
-    public String getNameWithID() {
-        return getName();
-    }
-
-    @Override
     protected boolean verifyRequiredParameters() {
         return true;
     }

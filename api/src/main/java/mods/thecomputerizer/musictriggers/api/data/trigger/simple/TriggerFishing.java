@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.simple;
 
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
 
 public class TriggerFishing extends SimpleTrigger {
 
@@ -9,7 +10,7 @@ public class TriggerFishing extends SimpleTrigger {
     }
 
     @Override
-    public boolean isActive() {
-        return false;
+    public boolean isActive(TriggerContextAPI ctx) {
+        return ctx.isActiveFishing();
     }
 }

@@ -15,7 +15,7 @@ public abstract class HolderTrigger extends TriggerAPI {
 
     @Override
     public String getNameWithID() {
-        return getName()+"-"+getParameterAsString("identifier");
+        return getName()+"-"+getIdentifier();
     }
 
     @Override

@@ -4,6 +4,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterFloat;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
 
 import java.util.Map;
 
@@ -20,8 +21,8 @@ public class TriggerHome extends SimpleTrigger {
     }
 
     @Override
-    public boolean isActive() {
-        return false;
+    public boolean isActive(TriggerContextAPI ctx) {
+        return ctx.isActiveHome(getParameterAsInt("detection_range"),getParameterAsFloat("detection_y_ratio"));
     }
 
     @Override

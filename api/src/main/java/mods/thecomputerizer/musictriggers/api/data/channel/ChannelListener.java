@@ -5,8 +5,7 @@ import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
-import mods.thecomputerizer.musictriggers.api.MTRef;
-import mods.thecomputerizer.musictriggers.api.data.audio.AudioOutput;
+import mods.thecomputerizer.musictriggers.api.client.audio.AudioOutput;
 
 import java.util.Objects;
 
@@ -33,7 +32,7 @@ public class ChannelListener extends AudioEventAdapter {
 
     @Override
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException ex) {
-        MTRef.logError("Track exception caught! Restarting audio output for channel {}",this.channel.getName());
+        this.channel.logError("Track exception caught! Restarting audio output...");
         this.audioOutputThread.pauseAudioLoop();
         this.channel.onTrackStop(AudioTrackEndReason.LOAD_FAILED);
     }

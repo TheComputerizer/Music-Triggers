@@ -1,9 +1,7 @@
-package mods.thecomputerizer.musictriggers.api.data;
+package mods.thecomputerizer.musictriggers.api.data.channel;
 
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
-import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
-import mods.thecomputerizer.theimpossiblelibrary.api.io.LogHelper;
 import org.apache.logging.log4j.Level;
 
 /**
@@ -29,37 +27,37 @@ public abstract class ChannelData {
     /**
      * Logs a channel qualified message both the normal log and MT log
      */
-    protected void log(Level level, String msg, Object ... args) {
+    public void log(Level level, String msg, Object ... args) {
         msg = "Channel["+getChannelName()+"]: "+msg;
         MTRef.log(level,msg,args);
         ChannelAPI.LOGGER.log(level,msg,args);
     }
 
-    protected void logAll(String msg, Object ... args) {
+    public void logAll(String msg, Object ... args) {
         log(Level.ALL,msg,args);
     }
 
-    protected void logDebug(String msg, Object ... args) {
+    public void logDebug(String msg, Object ... args) {
         log(Level.DEBUG,msg,args);
     }
 
-    protected void logError(String msg, Object ... args) {
+    public void logError(String msg, Object ... args) {
         log(Level.ERROR,msg,args);
     }
 
-    protected void logFatal(String msg, Object ... args) {
+    public void logFatal(String msg, Object ... args) {
         log(Level.FATAL,msg,args);
     }
 
-    protected void logInfo(String msg, Object ... args) {
+    public void logInfo(String msg, Object ... args) {
         log(Level.INFO,msg,args);
     }
 
-    protected void logTrace(String msg, Object ... args) {
+    public void logTrace(String msg, Object ... args) {
         log(Level.TRACE,msg,args);
     }
 
-    protected void logWarn(String msg, Object ... args) {
+    public void logWarn(String msg, Object ... args) {
         log(Level.WARN,msg,args);
     }
 }

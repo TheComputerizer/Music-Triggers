@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.channel;
 
 import lombok.Getter;
-import mods.thecomputerizer.musictriggers.api.data.ChannelData;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 @Getter
