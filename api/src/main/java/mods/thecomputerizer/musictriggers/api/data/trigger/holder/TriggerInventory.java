@@ -30,7 +30,7 @@ public class TriggerInventory extends HolderTrigger {
     }
 
     @Override
-    protected boolean verifyRequiredParameters() {
+    public boolean verifyRequiredParameters() {
         String[] parameters = new String[]{"identifier","items"};
         if(hasAllNonDefaultParameter(parameters)) return true;
         logMissingParameters(parameters);

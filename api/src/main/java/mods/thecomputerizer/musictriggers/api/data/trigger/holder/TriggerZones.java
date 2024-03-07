@@ -32,7 +32,7 @@ public class TriggerZones extends HolderTrigger {
     }
 
     @Override
-    protected boolean verifyRequiredParameters() {
+    public boolean verifyRequiredParameters() {
         if(hasValidIdentifier()) {
             String[] parameters = new String[]{"zone_min_x","zone_max_x","zone_min_y","zone_max_y","zone_min_z","zone_max_z"};
             if(hasAnyNonDefaultParameter(parameters)) return true;

@@ -30,7 +30,7 @@ public class TriggerVictory extends HolderTrigger {
     }
 
     @Override
-    protected boolean verifyRequiredParameters() {
+    public boolean verifyRequiredParameters() {
         String[] parameters = new String[]{"identifier","persistence"};
         if(hasAllNonDefaultParameter(parameters)) return true;
         logMissingParameters(parameters);

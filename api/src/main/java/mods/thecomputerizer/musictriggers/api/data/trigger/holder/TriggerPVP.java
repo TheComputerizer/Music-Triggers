@@ -20,7 +20,7 @@ public class TriggerPVP extends HolderTrigger {
     }
 
     @Override
-    protected boolean verifyRequiredParameters() {
+    public boolean verifyRequiredParameters() {
         return hasValidIdentifier();
     }
 }

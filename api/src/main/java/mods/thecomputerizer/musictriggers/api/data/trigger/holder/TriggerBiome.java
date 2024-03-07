@@ -43,7 +43,7 @@ public class TriggerBiome extends HolderTrigger {
     }
 
     @Override
-    protected boolean verifyRequiredParameters() {
+    public boolean verifyRequiredParameters() {
         if(hasValidIdentifier()) {
             String[] parameters = new String[]{"biome_rainfall","biome_tag","biome_temperature","display_name",
                     "rain_type","resource_name"};

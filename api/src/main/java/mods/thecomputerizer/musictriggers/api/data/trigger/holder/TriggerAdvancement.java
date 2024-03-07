@@ -30,7 +30,7 @@ public class TriggerAdvancement extends HolderTrigger {
     }
 
     @Override
-    protected boolean verifyRequiredParameters() {
+    public boolean verifyRequiredParameters() {
         String[] parameters = new String[]{"identifier","persistence"};
         if(hasAllNonDefaultParameter(parameters)) {
             parameters = new String[]{"display_name","resource_name"};

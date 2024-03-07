@@ -32,11 +32,6 @@ public class TriggerCombination extends TriggerAPI {
     }
 
     @Override
-    public String getNameWithID() {
-        return getName();
-    }
-
-    @Override
     protected void initExtraParameters(Map<String, Parameter<?>> map) {
         map.clear();
     }
@@ -44,13 +39,13 @@ public class TriggerCombination extends TriggerAPI {
     @Override
     public boolean isActive(TriggerContextAPI ctx) {
         for(List<TriggerAPI> child : this.children)
-            if(!isChildActive(child)) return false;
+            if(!isChildActive(ctx,child)) return false;
         return true;
     }
 
-    protected boolean isChildActive(List<TriggerAPI> triggers) {
+    protected boolean isChildActive(TriggerContextAPI ctx, List<TriggerAPI> triggers) {
         for(TriggerAPI trigger : triggers)
-            if(trigger.isActive()) return true;
+            if(trigger.isActive(ctx)) return true;
         return false;
     }
 
@@ -78,7 +73,7 @@ public class TriggerCombination extends TriggerAPI {
     }
 
     @Override
-    protected boolean verifyRequiredParameters() {
+    public boolean verifyRequiredParameters() {
         for(List<TriggerAPI> child : this.children) {
             for(TriggerAPI trigger : child) {
                 if(!trigger.verifyRequiredParameters()) {

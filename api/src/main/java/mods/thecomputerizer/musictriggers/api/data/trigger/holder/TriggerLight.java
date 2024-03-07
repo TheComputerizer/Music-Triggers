@@ -27,7 +27,7 @@ public class TriggerLight extends HolderTrigger {
     }
 
     @Override
-    protected boolean verifyRequiredParameters() {
+    public boolean verifyRequiredParameters() {
         String[] parameters = new String[]{"identifier","level"};
         if(hasAllNonDefaultParameter(parameters)) return true;
         logMissingParameters(parameters);

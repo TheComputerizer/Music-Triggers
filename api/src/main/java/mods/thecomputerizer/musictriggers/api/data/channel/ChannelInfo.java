@@ -4,26 +4,21 @@ import lombok.Getter;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 @Getter
-public class ChannelInfo extends ChannelData {
+public class ChannelInfo extends ChannelElement {
 
-    private String category;
-    private String commandsPath;
-    private boolean excplicitlyOverrides;
-    private String jukeboxPath;
-    private String localFolder;
-    private String mainPath;
-    private boolean overridesMusic;
-    private boolean pausesOverrides;
-    private String redirectPath;
-    private String rendersPath;
-    private String togglesPath;
+    private final String category;
+    private final String commandsPath;
+    private final boolean excplicitlyOverrides;
+    private final String jukeboxPath;
+    private final String localFolder;
+    private final String mainPath;
+    private final boolean overridesMusic;
+    private final boolean pausesOverrides;
+    private final String redirectPath;
+    private final String rendersPath;
 
     public ChannelInfo(ChannelAPI channel, Table table) {
         super(channel);
-        read(table);
-    }
-
-    public void read(Table table) {
         String name = getChannelName();
         this.category = table.getValOrDefault("sound_category","music");
         this.commandsPath = table.getValOrDefault("commands",name+"/commands");
@@ -35,6 +30,5 @@ public class ChannelInfo extends ChannelData {
         this.pausesOverrides = table.getValOrDefault("pauses_overrides",false);
         this.redirectPath = table.getValOrDefault("redirect",name+"/redirect");
         this.rendersPath = table.getValOrDefault("renders",name+"/renders");
-        this.togglesPath = table.getValOrDefault("toggles",name+"/toggles");
     }
 }

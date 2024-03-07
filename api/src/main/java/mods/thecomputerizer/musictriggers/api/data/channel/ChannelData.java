@@ -1,63 +1,91 @@
 package mods.thecomputerizer.musictriggers.api.data.channel;
 
 import lombok.Getter;
-import mods.thecomputerizer.musictriggers.api.MTRef;
-import org.apache.logging.log4j.Level;
+import mods.thecomputerizer.musictriggers.api.data.audio.AudioHelper;
+import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
+import mods.thecomputerizer.musictriggers.api.data.command.CommandElement;
+import mods.thecomputerizer.musictriggers.api.data.jukebox.RecordElement;
+import mods.thecomputerizer.musictriggers.api.data.redirect.RedirectElement;
+import mods.thecomputerizer.musictriggers.api.data.render.CardAPI;
+import mods.thecomputerizer.musictriggers.api.data.render.CardHelper;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
-/**
- * Used for any piece of channel data for more consistently available shared info
- */
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
 @Getter
-public abstract class ChannelData {
+public class ChannelData extends ChannelElement {
 
-    protected final ChannelAPI channel;
+    private final List<AudioRef> audio;
+    private final List<CardAPI> cards;
+    private final List<CommandElement> commands;
+    private final List<RecordElement> records;
+    private final List<RedirectElement> redirects;
+    private final List<TriggerAPI> triggers;
 
-    protected ChannelData(ChannelAPI channel) {
-        this.channel = channel;
+    public ChannelData(ChannelAPI channel) {
+        super(channel);
+        this.audio = new ArrayList<>();
+        this.cards = new ArrayList<>();
+        this.commands = new ArrayList<>();
+        this.records = new ArrayList<>();
+        this.redirects = new ArrayList<>();
+        this.triggers = new ArrayList<>();
     }
 
-    public String getChannelName() {
-        return getChannel().getName();
+    public void clear() {
+        this.audio.clear();
+        this.cards.clear();
+        this.commands.clear();
+        this.records.clear();
+        this.redirects.clear();
+        this.triggers.clear();
     }
 
-    public boolean isEnabled() {
-        return this.channel.isEnabled();
+    public void readCommands(@Nullable Holder commands) {
+        if(Objects.isNull(commands)) return;
+        for(Table table : commands.getTables().values()) {
+            CommandElement command = new CommandElement(getChannel(),table);
+            if(command.isValid()) this.commands.add(command);
+        }
     }
 
-    /**
-     * Logs a channel qualified message both the normal log and MT log
-     */
-    public void log(Level level, String msg, Object ... args) {
-        msg = "Channel["+getChannelName()+"]: "+msg;
-        MTRef.log(level,msg,args);
-        ChannelAPI.LOGGER.log(level,msg,args);
+    public void readJukebox(List<String> lines) {
+        for(String line : lines) {
+            RecordElement record = new RecordElement(getChannel(),line);
+            if(record.isValid()) this.records.add(record);
+        }
     }
 
-    public void logAll(String msg, Object ... args) {
-        log(Level.ALL,msg,args);
+    public void readMain(@Nullable Holder main) {
+        if(Objects.isNull(main)) return;
+        TriggerHelper.parseTriggers(getChannel(),this.triggers,main.getTableByName("triggers"));
+        AudioHelper.parseAudio(getChannel(),this.audio,main.getTableByName("songs"));
     }
 
-    public void logDebug(String msg, Object ... args) {
-        log(Level.DEBUG,msg,args);
+    public void readRedirect(List<String> lines) {
+        for(String line : lines) {
+            RedirectElement redirect = new RedirectElement(getChannel(),line);
+            if(redirect.isValid()) this.redirects.add(redirect);
+        }
     }
 
-    public void logError(String msg, Object ... args) {
-        log(Level.ERROR,msg,args);
+    public void readRenders(@Nullable Holder renders) {
+        if(Objects.isNull(renders)) return;
+        CardHelper.parseImageCards(getChannel(),this.cards,renders.getTablesByName("image"));
+        CardHelper.parseTitleCards(getChannel(),this.cards,renders.getTablesByName("title"));
     }
 
-    public void logFatal(String msg, Object ... args) {
-        log(Level.FATAL,msg,args);
-    }
-
-    public void logInfo(String msg, Object ... args) {
-        log(Level.INFO,msg,args);
-    }
-
-    public void logTrace(String msg, Object ... args) {
-        log(Level.TRACE,msg,args);
-    }
-
-    public void logWarn(String msg, Object ... args) {
-        log(Level.WARN,msg,args);
+    public void parse() {
+        readRedirect(ChannelHelper.openTxt(getChannel().getInfo().getRedirectPath(),getChannel()));
+        readMain(ChannelHelper.openToml(getChannel().getInfo().getMainPath(),getChannel()));
+        readRenders(ChannelHelper.openToml(getChannel().getInfo().getRendersPath(),getChannel()));
+        readCommands(ChannelHelper.openToml(getChannel().getInfo().getCommandsPath(),getChannel()));
+        readJukebox(ChannelHelper.openTxt(getChannel().getInfo().getJukeboxPath(),getChannel()));
     }
 }

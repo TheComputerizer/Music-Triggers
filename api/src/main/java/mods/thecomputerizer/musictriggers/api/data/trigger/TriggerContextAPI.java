@@ -1,14 +1,14 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger;
 
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
-import mods.thecomputerizer.musictriggers.api.data.channel.ChannelData;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerBiome;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerMob;
 import mods.thecomputerizer.shadow.org.joml.Vector3i;
 
 import java.util.List;
 
-public abstract class TriggerContextAPI extends ChannelData {
+public abstract class TriggerContextAPI extends ChannelElement {
 
     public static boolean LOADED = false;
 

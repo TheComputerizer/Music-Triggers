@@ -34,7 +34,7 @@ public class TriggerTime extends HolderTrigger {
     }
 
     @Override
-    protected boolean verifyRequiredParameters() {
+    public boolean verifyRequiredParameters() {
         if(hasValidIdentifier()) {
             String[] parameters = new String[]{"time_bundle","start_hour"};
             if(hasAnyNonDefaultParameter(parameters)) return true;

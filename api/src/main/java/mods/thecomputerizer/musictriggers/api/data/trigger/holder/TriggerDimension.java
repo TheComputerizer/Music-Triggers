@@ -30,7 +30,7 @@ public class TriggerDimension extends HolderTrigger {
     }
 
     @Override
-    protected boolean verifyRequiredParameters() {
+    public boolean verifyRequiredParameters() {
         if(hasValidIdentifier()) {
             String[] parameters = new String[]{"display_name","resource_name"};
             if(hasAnyNonDefaultParameter(parameters)) return true;

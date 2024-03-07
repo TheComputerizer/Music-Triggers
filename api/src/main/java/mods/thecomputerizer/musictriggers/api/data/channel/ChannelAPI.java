@@ -20,17 +20,17 @@ public abstract class ChannelAPI {
     public static ModLogger LOGGER = LogHelper.create(MTRef.MODID);
 
     private final ChannelInfo info;
+    private final ChannelData data;
     private final String name;
     @Setter private boolean enabled;
 
     protected ChannelAPI(Table table) {
         this.name = table.getName();
         this.info = new ChannelInfo(this,table);
+        this.data = new ChannelData(this);
     }
 
-    public abstract List<AudioRef> getAudio();
     public abstract AudioPlayer getPlayer();
-    public abstract List<TriggerAPI> getTriggers();
 
     public void log(Level level, String msg, Object ... args) {
         this.info.log(level,msg,args);
@@ -65,6 +65,11 @@ public abstract class ChannelAPI {
     }
 
     public abstract void onTrackStop(AudioTrackEndReason endReason);
+
+    public void parseData() {
+        this.data.parse();
+    }
+
     public abstract void tickFast();
     public abstract void tickSlow();
 }
