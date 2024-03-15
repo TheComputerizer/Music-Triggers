@@ -88,7 +88,7 @@ public class MTRef {
      * Uses a fallback in case someone decides to add something that is not a number to a number parameter
      */
     public static int randomInt(ChannelAPI channel, String parameter, String toConvert, int fallback) {
-        String[] broken = stringBreaker(toConvert,":");
+        String[] broken = toConvert.split(":");
         if(broken.length==1) return parse(channel,parameter, broken[0], fallback);
         int min = parse(channel,parameter,broken[0],fallback);
         int max = parse(channel,parameter,broken[1],fallback);
@@ -106,10 +106,6 @@ public class MTRef {
         if(Objects.nonNull(INSTANCE)) return INSTANCE.getResource(path);
         logError("Cannot get a ResourceLocation until the reference API has been initialized!");
         return null;
-    }
-
-    public static String[] stringBreaker(String s, String regex) {
-        return s.split(regex);
     }
 
     private static final class MTRefInstance extends Reference {

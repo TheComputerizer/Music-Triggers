@@ -1,13 +1,15 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger;
 
 import lombok.Setter;
-import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
+import mods.thecomputerizer.musictriggers.api.data.nbt.NBTHelper;
+import mods.thecomputerizer.musictriggers.api.data.nbt.mode.NBTMode;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerBiome;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerMob;
 import mods.thecomputerizer.shadow.org.joml.Vector3i;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
@@ -32,20 +34,14 @@ public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
         super(channel);
     }
 
-    protected boolean checkNBT(@Nullable CompoundTagAPI tag, String unparsed) { //TODO Fix this mess
-        if(Objects.isNull(tag)) return true;
-        if(unparsed.toUpperCase().matches("ANY")) return true;
-        String[] splitTags = MTRef.stringBreaker(unparsed,";");
-        if(splitTags.length==0) return true;
-        TriggerNBTMode[] modes = TriggerNBTMode.getQualified(splitTags).toArray(new TriggerNBTMode[0]);
-        if(modes.length==0) return false;
+    protected boolean checkNBT(@Nullable CompoundTagAPI tag, String tagStr) { //TODO Fix this mess
+        if(Objects.isNull(tag) || StringUtils.isBlank(tagStr) || tagStr.toUpperCase().matches("ANY")) return true;
+        NBTMode mode = NBTHelper.getAndInitMode(tagStr.split(";"));
         try {
-            TriggerNBTMode[] extras = modes.length>1 ? Arrays.copyOfRange(modes,1,modes.length) : null;
-            splitTags = Arrays.copyOfRange(splitTags,modes.length,splitTags.length);
         } catch(NumberFormatException ex) {
-            logError("Tried to check numerical value of NBT data against a non numerical value in `{}`",unparsed,ex);
+            logError("Tried to check numerical value of NBT data against a non numerical value in `{}`",tagStr,ex);
         } catch(Exception ex) {
-            logError("Caught an unknown error when attempting to check NBT data for `{}`",unparsed,ex);
+            logError("Caught an unknown error when attempting to check NBT data for `{}`",tagStr,ex);
         }
         return false;
     }
