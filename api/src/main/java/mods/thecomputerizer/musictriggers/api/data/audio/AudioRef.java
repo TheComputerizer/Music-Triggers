@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.audio;
 
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
@@ -7,19 +8,31 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterFloat;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
-import java.util.HashMap;
-import java.util.Map;
+import javax.annotation.Nullable;
+import java.util.*;
 
 @Getter
-public abstract class AudioRef extends ParameterWrapper {
+public class AudioRef extends ParameterWrapper {
 
     private final String name;
+    private final List<TriggerAPI> triggers;
 
-    protected AudioRef(ChannelAPI channel, String name) {
+    public AudioRef(ChannelAPI channel, String name) {
         super(channel);
         this.name = name;
+        this.triggers = new ArrayList<>();
+    }
+
+    public @Nullable AudioTrack getTrack() {
+        return null;
+    }
+
+    public float getVolume() {
+        return 0f;
     }
 
     @Override
@@ -47,12 +60,34 @@ public abstract class AudioRef extends ParameterWrapper {
 
     }
 
+    public boolean matchingTriggers(Collection<TriggerAPI> triggers) {
+        return TriggerHelper.matchesAll(this.triggers,triggers);
+    }
+
     public boolean parse(Table table) {
+        List<String> triggerRefs = table.getValOrDefault("triggers",new ArrayList<>());
+        if(!TriggerHelper.findTriggers(getChannel(),this.triggers,triggerRefs)) {
+            logError("Failed to parse {}!",getTypeName());
+            return false;
+        }
         return parseParameters(table);
+    }
+
+    /**
+     * fade<0 = fade in
+     * fade>0 = fade out
+     */
+    public void setFade(int fade) {}
+
+    public void setTrack(AudioTrack track) {}
+
+    @Override
+    public String toString() {
+        return getTypeName();
     }
 
     @Override
     public boolean verifyRequiredParameters() {
-        return false;
+        return true;
     }
 }

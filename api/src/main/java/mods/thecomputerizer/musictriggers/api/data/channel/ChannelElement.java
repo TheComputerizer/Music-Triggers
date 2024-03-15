@@ -8,13 +8,16 @@ import org.apache.logging.log4j.Level;
  * Used for any piece of channel data for more consistently available shared info
  */
 @Getter
-public abstract class ChannelElement {
+public abstract class ChannelElement implements ChannelEventHandler {
 
     protected final ChannelAPI channel;
 
     protected ChannelElement(ChannelAPI channel) {
         this.channel = channel;
     }
+
+    @Override
+    public void activate() {}
 
     public String getChannelName() {
         return getChannel().getName();
@@ -60,4 +63,19 @@ public abstract class ChannelElement {
     public void logWarn(String msg, Object ... args) {
         log(Level.WARN,msg,args);
     }
+
+    @Override
+    public void play() {}
+
+    @Override
+    public void playing() {}
+
+    @Override
+    public void queue() {}
+
+    @Override
+    public void stop() {}
+
+    @Override
+    public void stopped() {}
 }

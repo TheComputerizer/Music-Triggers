@@ -15,7 +15,7 @@ import org.apache.logging.log4j.Level;
 import java.util.List;
 
 @Getter
-public abstract class ChannelAPI {
+public abstract class ChannelAPI implements ChannelEventHandler {
 
     public static ModLogger LOGGER = LogHelper.create(MTRef.MODID);
 
@@ -23,6 +23,7 @@ public abstract class ChannelAPI {
     private final ChannelData data;
     private final String name;
     @Setter private boolean enabled;
+    protected TriggerAPI activeTrigger;
 
     protected ChannelAPI(Table table) {
         this.name = table.getName();
@@ -30,7 +31,11 @@ public abstract class ChannelAPI {
         this.data = new ChannelData(this);
     }
 
+    @Override
+    public void activate() {}
+
     public abstract AudioPlayer getPlayer();
+    public abstract boolean isClientChannel();
 
     public void log(Level level, String msg, Object ... args) {
         this.info.log(level,msg,args);
@@ -69,6 +74,21 @@ public abstract class ChannelAPI {
     public void parseData() {
         this.data.parse();
     }
+
+    @Override
+    public void play() {}
+
+    @Override
+    public void playing() {}
+
+    @Override
+    public void queue() {}
+
+    @Override
+    public void stop() {}
+
+    @Override
+    public void stopped() {}
 
     public abstract void tickFast();
     public abstract void tickSlow();

@@ -20,7 +20,7 @@ public class TriggerDifficulty extends HolderTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI ctx) {
+    public boolean isActive(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveDifficulty(getParameterAsInt("level"));
     }
 

@@ -10,7 +10,7 @@ public class TriggerMenu extends BasicTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI ctx) {
+    public boolean isActive(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveMenu();
     }
 }

@@ -31,7 +31,7 @@ public class TriggerMoon extends HolderTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI ctx) {
+    public boolean isActive(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveMoon(getResourceCtx());
     }
 

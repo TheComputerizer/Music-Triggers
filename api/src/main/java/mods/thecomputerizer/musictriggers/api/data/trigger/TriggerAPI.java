@@ -64,11 +64,21 @@ public abstract class TriggerAPI extends ParameterWrapper {
         return map;
     }
 
-    public abstract boolean isActive(TriggerContextAPI context);
+    public abstract boolean isActive(TriggerContextAPI<?,?> context);
+
+    public boolean isContained(Collection<TriggerAPI> triggers) {
+        return TriggerHelper.matchesAny(triggers,this);
+    }
 
     public boolean isServer() {
         return false;
     }
+
+    public boolean matches(Collection<TriggerAPI> triggers) {
+        return triggers.size()==1 && isContained(triggers);
+    }
+
+    public abstract boolean matches(TriggerAPI trigger);
 
     public void onConnect() {
 

@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.api;
 
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.Reference;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 import org.apache.logging.log4j.Level;
@@ -8,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
+import java.util.Random;
 import java.util.function.Supplier;
 
 public class MTRef {
@@ -15,6 +17,7 @@ public class MTRef {
     public static final Logger LOGGER = LogManager.getLogger("Music Triggers");
     public static final String MODID = "musictriggers";
     public static final String NAME = "Music Triggers";
+    public static final Random RANDOM = new Random();
     public static final String VERSION = "7.0.0";
     private static Reference INSTANCE;
 
@@ -67,10 +70,46 @@ public class MTRef {
         logNullable(Level.WARN,msg,args);
     }
 
+    private static int parse(ChannelAPI channel, String parameter, String element, int fallback) {
+        try {
+            return Integer.parseInt(element);
+        } catch (NumberFormatException ignored) {
+            channel.logWarn("Invalid element {} for parameter {}! Using fallback {}",element,parameter,
+                    fallback);
+            return fallback;
+        }
+    }
+
+    public static int randomInt(ChannelAPI channel, int max) {
+        return RANDOM.nextInt(max);
+    }
+
+    /**
+     * Uses a fallback in case someone decides to add something that is not a number to a number parameter
+     */
+    public static int randomInt(ChannelAPI channel, String parameter, String toConvert, int fallback) {
+        String[] broken = stringBreaker(toConvert,":");
+        if(broken.length==1) return parse(channel,parameter, broken[0], fallback);
+        int min = parse(channel,parameter,broken[0],fallback);
+        int max = parse(channel,parameter,broken[1],fallback);
+        if(min==max) return min;
+        else if(min>max) {
+            int temp = max;
+            max = min;
+            min = temp;
+        }
+        if(max-min<=0) return min;
+        return min+RANDOM.nextInt(max-min);
+    }
+
     public static @Nullable ResourceLocationAPI<?> res(String path) {
         if(Objects.nonNull(INSTANCE)) return INSTANCE.getResource(path);
         logError("Cannot get a ResourceLocation until the reference API has been initialized!");
         return null;
+    }
+
+    public static String[] stringBreaker(String s, String regex) {
+        return s.split(regex);
     }
 
     private static final class MTRefInstance extends Reference {

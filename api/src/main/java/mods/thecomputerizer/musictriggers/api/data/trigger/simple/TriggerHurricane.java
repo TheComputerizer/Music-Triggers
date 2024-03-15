@@ -27,7 +27,7 @@ public class TriggerHurricane extends SimpleTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI ctx) {
+    public boolean isActive(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveHurricane(getParameterAsInt("detection_range"));
     }
 }

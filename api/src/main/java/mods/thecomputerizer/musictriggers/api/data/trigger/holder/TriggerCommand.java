@@ -10,7 +10,7 @@ public class TriggerCommand extends HolderTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI ctx) {
+    public boolean isActive(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveCommand();
     }
 

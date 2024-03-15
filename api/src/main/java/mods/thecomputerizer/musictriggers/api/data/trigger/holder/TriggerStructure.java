@@ -25,7 +25,7 @@ public class TriggerStructure extends HolderTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI ctx) {
+    public boolean isActive(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveStructure(getResourceCtx());
     }
 

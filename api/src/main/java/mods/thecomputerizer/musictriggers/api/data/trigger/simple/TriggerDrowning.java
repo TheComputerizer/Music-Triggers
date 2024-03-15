@@ -19,7 +19,7 @@ public class TriggerDrowning extends SimpleTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI ctx) {
+    public boolean isActive(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveDrowning(getParameterAsInt("level"));
     }
 }

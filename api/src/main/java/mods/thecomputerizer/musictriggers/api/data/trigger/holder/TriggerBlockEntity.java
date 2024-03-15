@@ -29,7 +29,7 @@ public class TriggerBlockEntity extends HolderTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI ctx) {
+    public boolean isActive(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveBlockEntity(getResourceCtx(),getParameterAsInt("detection_range"),
                 getParameterAsFloat("detection_y_ratio"));
     }

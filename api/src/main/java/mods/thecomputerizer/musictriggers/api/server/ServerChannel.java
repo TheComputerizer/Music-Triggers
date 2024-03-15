@@ -16,18 +16,13 @@ public class ServerChannel extends ChannelAPI {
     }
 
     @Override
-    public List<AudioRef> getAudio() {
-        return null;
-    }
-
-    @Override
     public AudioPlayer getPlayer() {
         return null;
     }
 
     @Override
-    public List<TriggerAPI> getTriggers() {
-        return null;
+    public boolean isClientChannel() {
+        return false;
     }
 
     @Override

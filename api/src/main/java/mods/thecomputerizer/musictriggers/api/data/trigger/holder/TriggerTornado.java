@@ -28,7 +28,7 @@ public class TriggerTornado extends HolderTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI ctx) {
+    public boolean isActive(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveTornado(getParameterAsInt("detection_range"),getParameterAsInt("level"));
     }
 

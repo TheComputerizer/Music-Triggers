@@ -37,16 +37,49 @@ public class TriggerCombination extends TriggerAPI {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI ctx) {
+    public boolean isActive(TriggerContextAPI<?,?> ctx) {
         for(List<TriggerAPI> child : this.children)
             if(!isChildActive(ctx,child)) return false;
         return true;
     }
 
-    protected boolean isChildActive(TriggerContextAPI ctx, List<TriggerAPI> triggers) {
+    protected boolean isChildActive(TriggerContextAPI<?,?> ctx, List<TriggerAPI> triggers) {
         for(TriggerAPI trigger : triggers)
             if(trigger.isActive(ctx)) return true;
         return false;
+    }
+
+    @Override
+    public boolean matches(Collection<TriggerAPI> triggers) {
+        if(this.children.size()==triggers.size()) {
+            for(List<TriggerAPI> child : this.children)
+                for(TriggerAPI other : triggers)
+                    if(!TriggerHelper.matchesAny(child,other)) return false;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean matches(TriggerAPI trigger) {
+        if(trigger instanceof TriggerCombination) {
+            TriggerCombination combo = (TriggerCombination)trigger;
+            if(this.children.size()==combo.children.size()) {
+                for(List<TriggerAPI> child : this.children) {
+                    if(matchesChild(child,combo)) continue;
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    protected boolean matchesChild(List<TriggerAPI> child, TriggerCombination combo) {
+        for(List<TriggerAPI> otherChild : combo.children)
+            if(child.size()==otherChild.size())
+                if(!TriggerHelper.matchesAll(child,otherChild)) return false;
+        return true;
     }
 
     @Override

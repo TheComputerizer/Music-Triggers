@@ -10,7 +10,7 @@ public class TriggerDead extends SimpleTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI ctx) {
+    public boolean isActive(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveDead();
     }
 }

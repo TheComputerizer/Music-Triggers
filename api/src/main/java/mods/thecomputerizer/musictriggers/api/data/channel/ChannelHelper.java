@@ -1,5 +1,16 @@
 package mods.thecomputerizer.musictriggers.api.data.channel;
 
+import com.sedmelluq.discord.lavaplayer.container.MediaContainerRegistry;
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.source.AudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.bandcamp.BandcampAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.beam.BeamAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.getyarn.GetyarnAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.http.HttpAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
+import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.toggle.ToggleAPI;
@@ -17,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class ChannelHelper {
@@ -24,6 +36,8 @@ public class ChannelHelper {
     @Getter private static final List<ChannelAPI> channels = new ArrayList<>();
     @Getter private static final List<ToggleAPI> toggles = new ArrayList<>();
     private static Holder togglesHolder;
+    private static String youtubeEmail = null;
+    private static String youtubePassword = null;
 
     public static void initChannels(String channelsFile) {
         Holder channels = openToml(channelsFile,null);
@@ -71,5 +85,25 @@ public class ChannelHelper {
 
     private static void readToggles() {
 
+    }
+
+    public static void registerRemoteSources(ChannelAPI channel, AudioPlayerManager manager) {
+        registerRemoteSource(channel,manager,"YouTube",() -> new YoutubeAudioSourceManager(true,youtubeEmail,youtubePassword));
+        registerRemoteSource(channel,manager,"SoundCloud",SoundCloudAudioSourceManager::createDefault);
+        registerRemoteSource(channel,manager,"BandCamp",BandcampAudioSourceManager::new);
+        registerRemoteSource(channel,manager,"Vimeo",VimeoAudioSourceManager::new);
+        registerRemoteSource(channel,manager,"Twitch",TwitchStreamAudioSourceManager::new);
+        registerRemoteSource(channel,manager,"Beam",BeamAudioSourceManager::new);
+        registerRemoteSource(channel,manager,"Getyarn",GetyarnAudioSourceManager::new);
+        registerRemoteSource(channel,manager,"HTTPAudio",() -> new HttpAudioSourceManager(MediaContainerRegistry.DEFAULT_REGISTRY));
+    }
+
+    private static void registerRemoteSource(
+            ChannelAPI channel, AudioPlayerManager manager, String sourceName, Supplier<AudioSourceManager> supplier) {
+        try {
+            manager.registerSourceManager(supplier.get());
+        } catch(Exception ex) {
+            channel.logError("Failed to register remote source for `{}`!",sourceName,ex);
+        }
     }
 }

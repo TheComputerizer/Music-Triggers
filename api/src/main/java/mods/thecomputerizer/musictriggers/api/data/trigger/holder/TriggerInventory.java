@@ -24,7 +24,7 @@ public class TriggerInventory extends HolderTrigger {
 
     @SuppressWarnings("unchecked")
     @Override
-    public boolean isActive(TriggerContextAPI ctx) {
+    public boolean isActive(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveInventory((List<String>)getParameterAsList("items"),
                 (List<String>)getParameterAsList("slots"));
     }

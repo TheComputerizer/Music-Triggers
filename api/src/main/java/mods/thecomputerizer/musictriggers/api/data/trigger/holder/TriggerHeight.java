@@ -23,7 +23,7 @@ public class TriggerHeight extends HolderTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI ctx) {
+    public boolean isActive(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveHeight(getParameterAsInt("level"),getParameterAsBoolean("check_for_sky"),
                 getParameterAsBoolean("check_above_level"));
     }

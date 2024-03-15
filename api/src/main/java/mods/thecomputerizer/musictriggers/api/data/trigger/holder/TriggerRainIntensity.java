@@ -27,7 +27,7 @@ public class TriggerRainIntensity extends HolderTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI ctx) {
+    public boolean isActive(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveRainIntensity(getParameterAsFloat("level"));
     }
 

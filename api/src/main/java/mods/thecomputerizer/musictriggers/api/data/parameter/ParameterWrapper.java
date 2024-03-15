@@ -171,6 +171,17 @@ public abstract class ParameterWrapper extends ChannelElement {
         logError("{} is missing a required `{}` parameter! (Only 1 of these is required)",getTypeName(),names);
     }
 
+    public boolean matchesAll(ParameterWrapper wrapper) {
+        for(Map.Entry<String,Parameter<?>> entry : this.parameters.entrySet()) {
+            String name = entry.getKey();
+            Parameter<?> parameter = entry.getValue();
+            if(wrapper.hasParameter(name) && parameter.getValue().toString().equals(wrapper.getParameter(name).getValue().toString()))
+                continue;
+            return false;
+        }
+        return true;
+    }
+
     protected boolean parseParameters(Table table) {
         for(Map.Entry<String,Parameter<?>> entry : this.parameters.entrySet()) {
             String name = entry.getKey();

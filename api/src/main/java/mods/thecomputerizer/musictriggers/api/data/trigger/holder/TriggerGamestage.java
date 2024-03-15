@@ -33,7 +33,7 @@ public class TriggerGamestage extends HolderTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI ctx) {
+    public boolean isActive(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveGamestage(getResourceCtx(),getParameterAsBoolean("is_whitelist"));
     }
 

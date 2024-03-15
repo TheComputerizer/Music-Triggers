@@ -18,7 +18,7 @@ public class TriggerBluemoon extends SimpleTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI ctx) {
+    public boolean isActive(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveBlueMoon();
     }
 }

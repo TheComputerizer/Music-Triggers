@@ -27,7 +27,7 @@ public class TriggerTime extends HolderTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI ctx) {
+    public boolean isActive(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveTime(getParameterAsString("time_bundle"),getParameterAsFloat("start_hour"),
                 getParameterAsFloat("end_hour"),getParameterAsInt("lowest_day_number"),
                 getParameterAsInt("highest_day_number"),getParameterAsInt("moon_phase"));

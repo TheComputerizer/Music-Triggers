@@ -1,31 +1,92 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger;
 
+import lombok.Setter;
+import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerBiome;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerMob;
 import mods.thecomputerizer.shadow.org.joml.Vector3i;
+import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 
+import javax.annotation.Nullable;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
-public abstract class TriggerContextAPI extends ChannelElement {
+@Setter
+public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
+
+    public static final List<String> NBT_MODES = Arrays.asList("KEY_PRESENT","VAL_PRESENT","GREATER","LESSER","EQUAL","INVERT");
+    protected static final float DAY = 24f;
+    protected static final float NIGHT = 13f;
+    protected static final float SUNRISE = 23f;
+    protected static final float SUNSET = 12f;
 
     public static boolean LOADED = false;
+
+    protected PLAYER player;
+    protected WORLD world;
 
     protected TriggerContextAPI(ChannelAPI channel) {
         super(channel);
     }
 
+    protected boolean checkNBT(@Nullable CompoundTagAPI tag, String unparsed) { //TODO Fix this mess
+        if(Objects.isNull(tag)) return true;
+        if(unparsed.toUpperCase().matches("ANY")) return true;
+        String[] splitTags = MTRef.stringBreaker(unparsed,";");
+        if(splitTags.length==0) return true;
+        TriggerNBTMode[] modes = TriggerNBTMode.getQualified(splitTags).toArray(new TriggerNBTMode[0]);
+        if(modes.length==0) return false;
+        try {
+            TriggerNBTMode[] extras = modes.length>1 ? Arrays.copyOfRange(modes,1,modes.length) : null;
+            splitTags = Arrays.copyOfRange(splitTags,modes.length,splitTags.length);
+        } catch(NumberFormatException ex) {
+            logError("Tried to check numerical value of NBT data against a non numerical value in `{}`",unparsed,ex);
+        } catch(Exception ex) {
+            logError("Caught an unknown error when attempting to check NBT data for `{}`",unparsed,ex);
+        }
+        return false;
+    }
+
     protected abstract int getAir();
+
+    protected <E> List<E> getEntitiesAround(Class<E> clazz, int range) {
+        return getEntitiesAround(clazz,range,1f);
+    }
+
+    protected <E> List<E> getEntitiesAround(Class<E> clazz, int range, float yRatio) {
+        return getEntitiesAround(clazz,range,(double)range*yRatio);
+    }
+
+    protected <E> List<E> getEntitiesAround(Class<E> clazz, double hRange, double vRange) {
+        Vector3i pos = getRoundedPos();
+        double x = pos.x;
+        double y = pos.y;
+        double z = pos.z;
+        return getEntitiesAround(clazz,x-hRange,y-vRange,z-hRange,x+hRange,y+vRange,z+hRange);
+    }
+
+    protected abstract <E> List<E> getEntitiesAround(Class<E> clazz, double minX, double minY, double minZ, double maxX,
+                                                     double maxY, double maxZ);
     protected abstract int getGamemode();
     protected abstract float getHealth();
     protected abstract float getMaxHealth();
     protected abstract Vector3i getRoundedPos();
+
+    protected boolean hasPlayer() {
+        return Objects.nonNull(this.player);
+    }
+
     protected abstract boolean hasVisibleSky(Vector3i pos);
-    protected abstract boolean hasWorld();
+
+    protected boolean hasWorld() {
+        return Objects.nonNull(this.world);
+    }
 
     public boolean isActiveAdventure() {
-        return getGamemode()==3;
+        return getGamemode()==2;
     }
 
     public boolean isActiveCreative() {
@@ -58,7 +119,7 @@ public abstract class TriggerContextAPI extends ChannelElement {
     }
 
     public boolean isActiveSpectator() {
-        return getGamemode()==2;
+        return getGamemode()==3;
     }
 
     public boolean isActiveZones(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {

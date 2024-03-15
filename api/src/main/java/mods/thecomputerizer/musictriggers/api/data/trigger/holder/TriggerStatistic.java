@@ -27,7 +27,7 @@ public class TriggerStatistic extends HolderTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI ctx) {
+    public boolean isActive(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveStatistic(getResourceCtx(),getParameterAsInt("level"));
     }
 

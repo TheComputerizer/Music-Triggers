@@ -20,7 +20,7 @@ public class TriggerRaid extends HolderTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI ctx) {
+    public boolean isActive(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveRaid(getParameterAsInt("wave"));
     }
 

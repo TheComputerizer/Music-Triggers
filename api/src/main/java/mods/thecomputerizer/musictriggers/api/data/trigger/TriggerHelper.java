@@ -5,7 +5,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 import javax.annotation.Nullable;
-import java.util.List;
+import java.util.Collection;
 import java.util.Objects;
 
 public class TriggerHelper {
@@ -44,7 +44,7 @@ public class TriggerHelper {
         return null;
     }
 
-    public static boolean findTriggers(ChannelAPI channel, List<TriggerAPI> triggers, List<String> names) {
+    public static boolean findTriggers(ChannelAPI channel, Collection<TriggerAPI> triggers, Collection<String> names) {
         if(Objects.isNull(triggers) || Objects.isNull(names) || names.isEmpty()) return false;
         for(String name : names) {
             TriggerAPI trigger = findTrigger(channel,name);
@@ -57,7 +57,34 @@ public class TriggerHelper {
         return true;
     }
 
-    public static void parseTriggers(ChannelAPI channel, List<TriggerAPI> triggers, @Nullable Table table) {
+    public static TriggerCombination getCombination(ChannelAPI channel, Collection<TriggerAPI> triggers) {
+       TriggerCombination combo = new TriggerCombination(channel);
+       for(TriggerAPI child : triggers) combo.addChild(child);
+       return combo;
+    }
+
+    public static boolean matchesAll(Collection<TriggerAPI> triggers, Collection<TriggerAPI> others) {
+        if(triggers.size()!=others.size()) return false;
+        for(TriggerAPI trigger : triggers) {
+            boolean good = false;
+            for(TriggerAPI other : others) {
+                if(trigger.matches(other)) {
+                    good = true;
+                    break;
+                }
+            }
+            if(!good) return false;
+        }
+        return true;
+    }
+
+    public static boolean matchesAny(Collection<TriggerAPI> triggers, TriggerAPI other) {
+        for(TriggerAPI trigger : triggers)
+            if(trigger.matches(other)) return true;
+        return false;
+    }
+
+    public static void parseTriggers(ChannelAPI channel, Collection<TriggerAPI> triggers, @Nullable Table table) {
         if(Objects.isNull(table)) return;
         for(Table triggerTable : table.getChildren().values()) {
             TriggerAPI trigger = TriggerRegistry.getTriggerInstance(channel,triggerTable.getName());
