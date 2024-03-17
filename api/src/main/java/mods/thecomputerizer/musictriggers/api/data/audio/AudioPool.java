@@ -47,6 +47,10 @@ public class AudioPool extends AudioRef {
         this.audio.clear();
     }
 
+    public boolean hasAudio() {
+        return !this.audio.isEmpty();
+    }
+
     @Override
     public boolean matchingTriggers(Collection<TriggerAPI> triggers) {
         return !triggers.isEmpty() && this.trigger.matches(triggers);

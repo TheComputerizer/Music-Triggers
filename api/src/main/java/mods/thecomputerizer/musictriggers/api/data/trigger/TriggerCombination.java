@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.api.data.trigger;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 public class TriggerCombination extends TriggerAPI {
@@ -13,14 +14,23 @@ public class TriggerCombination extends TriggerAPI {
      */
     private final List<List<TriggerAPI>> children;
 
+    private final List<TriggerAPI> priorityChildren;
+    private TriggerAPI priorityTrigger;
+
     protected TriggerCombination(ChannelAPI channel) {
         super(channel,"combination");
         this.children = new ArrayList<>();
+        this.priorityChildren = new ArrayList<>();
     }
 
     public void addChild(TriggerAPI ... triggers) {
         this.children.add(Arrays.asList(triggers));
         setParentStatus(false,triggers);
+    }
+
+    @Override
+    public @Nullable Parameter<?> getParameter(String name) {
+        return Objects.nonNull(this.priorityTrigger) ? this.priorityTrigger.getParameter(name) : super.getParameter(name);
     }
 
     @Override
@@ -38,14 +48,19 @@ public class TriggerCombination extends TriggerAPI {
 
     @Override
     public boolean isActive(TriggerContextAPI<?,?> ctx) {
+        this.priorityChildren.clear();
         for(List<TriggerAPI> child : this.children)
             if(!isChildActive(ctx,child)) return false;
+        updatePriorityTrigger();
         return true;
     }
 
     protected boolean isChildActive(TriggerContextAPI<?,?> ctx, List<TriggerAPI> triggers) {
         for(TriggerAPI trigger : triggers)
-            if(trigger.isActive(ctx)) return true;
+            if(trigger.isActive(ctx)) {
+                this.priorityChildren.add(trigger);
+                return true;
+            }
         return false;
     }
 
@@ -83,10 +98,10 @@ public class TriggerCombination extends TriggerAPI {
     }
 
     @Override
-    public void setEnabled(boolean enabled) {
+    public void setState(State state) {
         for(List<TriggerAPI> child : this.children)
             for(TriggerAPI trigger : child)
-                trigger.setEnabled(enabled);
+                trigger.setState(state);
     }
 
     protected void setParentStatus(boolean removal) {
@@ -103,6 +118,14 @@ public class TriggerCombination extends TriggerAPI {
 
     protected void setParentStatus(boolean removal, TriggerAPI ... triggers) {
         for(TriggerAPI trigger : triggers) setParentStatus(trigger,removal);
+    }
+
+    private void updatePriorityTrigger() {
+        this.priorityTrigger = null;
+        for(TriggerAPI trigger : this.priorityChildren)
+            if(Objects.isNull(this.priorityTrigger) ||
+                    trigger.getParameterAsInt("priority")>this.priorityTrigger.getParameterAsInt("priority"))
+                this.priorityTrigger = trigger;
     }
 
     @Override

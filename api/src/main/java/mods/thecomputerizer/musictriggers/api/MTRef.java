@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 
 public class MTRef {
 
+    public static final String CONFIG_PATH = "config/MusicTriggers/";
     public static final Logger LOGGER = LogManager.getLogger("Music Triggers");
     public static final String MODID = "musictriggers";
     public static final String NAME = "Music Triggers";

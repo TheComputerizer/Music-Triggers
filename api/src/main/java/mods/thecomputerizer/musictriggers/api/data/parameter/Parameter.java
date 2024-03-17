@@ -4,6 +4,8 @@ import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import lombok.Setter;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Variable;
 
 @Getter
 public abstract class Parameter<T> {
@@ -19,6 +21,10 @@ public abstract class Parameter<T> {
     protected Parameter(ByteBuf buf) {
         this.defaultValue = read(buf);
         this.value = read(buf);
+    }
+
+    public Variable asTomlVar(Table table, String name) {
+        return new Variable(table.getMaxIndex(false,true),table,name,getValue());
     }
 
     public boolean isDefault() {
@@ -38,5 +44,6 @@ public abstract class Parameter<T> {
         write(buf,this.defaultValue);
         write(buf,this.value);
     }
+
     protected abstract void write(ByteBuf buf, T val);
 }

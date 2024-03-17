@@ -1,40 +1,45 @@
-package mods.thecomputerizer.musictriggers.api.data.parameter;
+package mods.thecomputerizer.musictriggers.api.data.global;
 
+import mods.thecomputerizer.musictriggers.api.data.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
-import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
+import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
+import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterList;
+import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterNumber;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Variable;
+import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nullable;
 import java.util.*;
 
-public abstract class ParameterWrapper extends ChannelElement {
+public abstract class GlobalElement implements LoggableAPI {
 
     private final Map<String,Parameter<?>> parameters;
 
-    protected ParameterWrapper(ChannelAPI channel) {
-        super(channel);
-        this.parameters = Collections.unmodifiableMap(initParameterMap());
+    protected GlobalElement() {
+        this.parameters = initParameters();
     }
 
-    protected void addParameter(Map<String,Parameter<?>> map, String name, @Nullable Parameter<?> parameter) {
-        parameter = initParameter(name,parameter);
-        if(Objects.nonNull(parameter)) map.put(name,parameter);
+    /**
+     * Used for top level parameters that are not stored in a table by default
+     */
+    protected Table constructTable(Holder holder) {
+        Table table = new Table(1,null,1,getTypeName());
+        for(Map.Entry<String,Parameter<?>> entry : this.parameters.entrySet()) {
+            String name = entry.getKey();
+            Parameter<?> parameter = entry.getValue();
+            Optional<Variable> var = holder.getVar(name);
+            var.ifPresent(v -> parameter.parseValue(v.get().toString()));
+            table.addItem(parameter.asTomlVar(table,name));
+        }
+        return table;
     }
 
     public @Nullable Parameter<?> getParameter(String name) {
-        Parameter<?> parameter = this.parameters.get(name.equals("id") ? "identifier" : name);
-        if(Objects.nonNull(parameter)) {
-            if(parameter.isDefault() && !(this instanceof UniversalParameters)) {
-                UniversalParameters universals = this.channel.getData().getUniversals(getTypeClass());
-                if(Objects.nonNull(universals)) {
-                    Parameter<?> universal = universals.getParameter(name);
-                    if(Objects.nonNull(universal)) return universal;
-                }
-            }
-        }
-        return parameter;
+        return this.parameters.get(name.equals("id") ? "identifier" : name);
     }
 
     public boolean getParameterAsBoolean(String name) {
@@ -126,73 +131,53 @@ public abstract class ParameterWrapper extends ChannelElement {
         return parameter.getValue().toString();
     }
 
-    protected abstract Class<? extends ChannelElement> getTypeClass();
+    public abstract String getTypeName();
 
-    protected abstract String getTypeName();
-
-    public boolean hasAllNonDefaultParameter(String ... names) {
-        for(String name : names)
-            if(!hasNonDefaultParameter(name)) return false;
-        return true;
+    private Map<String,Parameter<?>> initParameters() {
+        Map<String,Parameter<?>> map = new HashMap<>();
+        supplyParameters(map);
+        return map;
     }
 
-    public boolean hasAllParameters(String ... names) {
-        for(String name : names)
-            if(!hasParameter(name)) return false;
-        return true;
+    protected abstract void supplyParameters(Map<String,Parameter<?>> map);
+
+    @Override
+    public void logAll(String msg, Object ... args) {
+        ChannelAPI.log("Global",getTypeName(),Level.ALL,msg,args);
     }
 
-    public boolean hasAnyNonDefaultParameter(String ... names) {
-        for(String name : names)
-            if(hasNonDefaultParameter(name)) return true;
-        return false;
+    @Override
+    public void logDebug(String msg, Object ... args) {
+        ChannelAPI.log("Global",getTypeName(),Level.DEBUG,msg,args);
     }
 
-    public boolean hasAnyParameter(String ... names) {
-        for(String name : names)
-            if(hasParameter(name)) return true;
-        return false;
+    @Override
+    public void logError(String msg, Object ... args) {
+        ChannelAPI.log("Global",getTypeName(),Level.ERROR,msg,args);
     }
 
-    public boolean hasNonDefaultParameter(String name) {
-        Parameter<?> parameter = getParameter(name);
-        return Objects.nonNull(parameter) && !parameter.isDefault();
+    @Override
+    public void logFatal(String msg, Object ... args) {
+        ChannelAPI.log("Global",getTypeName(),Level.FATAL,msg,args);
     }
 
-    public boolean hasParameter(String name) {
-        return Objects.nonNull(getParameter(name));
+    @Override
+    public void logInfo(String msg, Object ... args) {
+        ChannelAPI.log("Global",getTypeName(),Level.INFO,msg,args);
     }
 
-    protected abstract Map<String,Parameter<?>> initParameterMap();
-
-    protected @Nullable Parameter<?> initParameter(String parameter, Parameter<?> defaultParameter) {
-        return defaultParameter;
+    @Override
+    public void logTrace(String msg, Object ... args) {
+        ChannelAPI.log("Global",getTypeName(),Level.TRACE,msg,args);
     }
 
-    protected abstract void initExtraParameters(Map<String,Parameter<?>> map);
-
-    protected void logMissingParameter(String name) {
-        logError("{} is missing a required `{}` parameter!",getTypeName(),name);
+    @Override
+    public void logWarn(String msg, Object ... args) {
+        ChannelAPI.log("Global",getTypeName(),Level.WARN,msg,args);
     }
 
-    protected void logMissingParameters(String ... names) {
-        logError("{} is missing a required `{}` parameter! (All of these are required)",getTypeName(),names);
-    }
-
-    protected void logMissingPotentialParameter(String ... names) {
-        logError("{} is missing a required `{}` parameter! (Only 1 of these is required)",getTypeName(),names);
-    }
-
-    public boolean matchesAll(ParameterWrapper wrapper) {
-        for(Map.Entry<String,Parameter<?>> entry : this.parameters.entrySet()) {
-            String name = entry.getKey();
-            Parameter<?> parameter = entry.getValue();
-            if(wrapper.hasParameter(name) && parameter.getValue().toString().equals(wrapper.getParameter(name).getValue().toString()))
-                continue;
-            return false;
-        }
-        return true;
-    }
+    public abstract boolean parse(Table table);
+    public abstract boolean parse(Holder holder);
 
     protected boolean parseParameters(Table table) {
         for(Map.Entry<String,Parameter<?>> entry : this.parameters.entrySet()) {

@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.api.data.audio;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
@@ -33,6 +34,11 @@ public class AudioRef extends ParameterWrapper {
 
     public float getVolume() {
         return 0f;
+    }
+
+    @Override
+    public Class<? extends ChannelElement> getTypeClass() {
+        return AudioRef.class;
     }
 
     @Override

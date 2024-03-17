@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.client;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioConfiguration;
+import com.sedmelluq.discord.lavaplayer.player.AudioConfiguration.ResamplingQuality;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -9,7 +10,11 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelListener;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerSelectorAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
+import org.apache.commons.lang3.EnumUtils;
+
+import java.util.Objects;
 
 import static com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats.DISCORD_PCM_S16_BE;
 import static com.sedmelluq.discord.lavaplayer.player.AudioConfiguration.ResamplingQuality.HIGH;
@@ -30,8 +35,10 @@ public class ClientChannel extends ChannelAPI {
     }
 
     protected void configure(AudioConfiguration config) {
-        config.setResamplingQuality(HIGH);
-        config.setOpusEncodingQuality(10);
+        ResamplingQuality quality = EnumUtils.getEnum(ResamplingQuality.class,
+                ChannelHelper.getDebugString("RESAMPLING_QUALITY"));
+        config.setResamplingQuality(Objects.nonNull(quality) ? quality : HIGH);
+        config.setOpusEncodingQuality(ChannelHelper.getDebugNumber("ENCODING_QUALITY").intValue());
         config.setOutputFormat(DISCORD_PCM_S16_BE);
     }
 
@@ -56,6 +63,11 @@ public class ClientChannel extends ChannelAPI {
 
     @Override
     public AudioPlayer getPlayer() {
+        return this.player;
+    }
+
+    @Override
+    protected TriggerSelectorAPI<?, ?> getSelector() {
         return null;
     }
 
@@ -75,5 +87,10 @@ public class ClientChannel extends ChannelAPI {
 
     @Override
     public void tickSlow() {
+    }
+
+    @Override
+    public void playable() {
+
     }
 }

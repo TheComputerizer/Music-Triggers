@@ -2,12 +2,9 @@ package mods.thecomputerizer.musictriggers.api.server;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
-import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
-import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerSelectorAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
-
-import java.util.List;
 
 public class ServerChannel extends ChannelAPI {
 
@@ -17,6 +14,11 @@ public class ServerChannel extends ChannelAPI {
 
     @Override
     public AudioPlayer getPlayer() {
+        return null;
+    }
+
+    @Override
+    protected TriggerSelectorAPI<?,?> getSelector() {
         return null;
     }
 
@@ -35,6 +37,11 @@ public class ServerChannel extends ChannelAPI {
 
     @Override
     public void tickSlow() {
+
+    }
+
+    @Override
+    public void playable() {
 
     }
 }

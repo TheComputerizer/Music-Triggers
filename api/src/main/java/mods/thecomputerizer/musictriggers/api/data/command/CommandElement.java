@@ -29,8 +29,7 @@ public class CommandElement extends ChannelElement {
 
     private boolean parse(Table table) {
         this.literal = table.getValOrDefault("literal","literally");
-        List<String> triggerRefs = table.getValOrDefault("triggers",new ArrayList<>());
-        if(!TriggerHelper.findTriggers(getChannel(),this.triggers,triggerRefs)) {
+        if(!TriggerHelper.findTriggers(getChannel(),this.triggers,table)) {
             logError("Failed to parse command with literal `{}`",this.literal);
             return false;
         }

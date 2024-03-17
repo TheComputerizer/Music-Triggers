@@ -1,7 +1,9 @@
 package mods.thecomputerizer.musictriggers.api.data.render;
 
 import lombok.Getter;
+import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
@@ -25,6 +27,11 @@ public abstract class CardAPI extends ParameterWrapper {
     protected CardAPI(ChannelAPI channel) {
         super(channel);
         this.triggers = new ArrayList<>();
+    }
+
+    @Override
+    public Class<? extends ChannelElement> getTypeClass() {
+        return CardAPI.class;
     }
 
     protected Map<String,Parameter<?>> initParameterMap() {

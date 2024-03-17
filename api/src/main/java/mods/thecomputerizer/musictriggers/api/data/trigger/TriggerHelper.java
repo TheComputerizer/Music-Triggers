@@ -1,10 +1,12 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger;
 
+import mods.thecomputerizer.musictriggers.api.data.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
 
@@ -37,15 +39,23 @@ public class TriggerHelper {
      * The first match will be returned or no matches if none are found.
      */
     public static @Nullable TriggerAPI findTrigger(String name) {
-        for(ChannelAPI channel : ChannelHelper.getChannels()) {
+        for(ChannelAPI channel : ChannelHelper.getChannels().values()) {
             TriggerAPI trigger = findTrigger(channel,name);
             if(Objects.nonNull(trigger)) return trigger;
         }
         return null;
     }
 
-    public static boolean findTriggers(ChannelAPI channel, Collection<TriggerAPI> triggers, Collection<String> names) {
-        if(Objects.isNull(triggers) || Objects.isNull(names) || names.isEmpty()) return false;
+    public static boolean findTriggers(LoggableAPI logger, String channelName, Collection<TriggerAPI> triggers, Table table) {
+        return findTriggers(ChannelHelper.findChannel(logger,channelName),triggers,table);
+    }
+
+    public static boolean findTriggers(@Nullable ChannelAPI channel, Collection<TriggerAPI> triggers, Table table) {
+        return findTriggers(channel,triggers,table.getValOrDefault("triggers",new ArrayList<>()));
+    }
+
+    public static boolean findTriggers(@Nullable ChannelAPI channel, Collection<TriggerAPI> triggers, Collection<String> names) {
+        if(Objects.isNull(channel) || Objects.isNull(triggers) || Objects.isNull(names) || names.isEmpty()) return false;
         for(String name : names) {
             TriggerAPI trigger = findTrigger(channel,name);
             if(Objects.isNull(trigger)) {

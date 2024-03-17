@@ -1,14 +1,14 @@
 package mods.thecomputerizer.musictriggers.api.data.channel;
 
 import lombok.Getter;
-import mods.thecomputerizer.musictriggers.api.MTRef;
+import mods.thecomputerizer.musictriggers.api.data.LoggableAPI;
 import org.apache.logging.log4j.Level;
 
 /**
  * Used for any piece of channel data for more consistently available shared info
  */
 @Getter
-public abstract class ChannelElement implements ChannelEventHandler {
+public abstract class ChannelElement implements ChannelEventHandler, LoggableAPI {
 
     protected final ChannelAPI channel;
 
@@ -27,45 +27,46 @@ public abstract class ChannelElement implements ChannelEventHandler {
         return this.channel.isEnabled();
     }
 
-    /**
-     * Logs a channel qualified message both the normal log and MT log
-     */
-    public void log(Level level, String msg, Object ... args) {
-        msg = "Channel["+getChannelName()+"]: "+msg;
-        MTRef.log(level,msg,args);
-        ChannelAPI.LOGGER.log(level,msg,args);
-    }
-
+    @Override
     public void logAll(String msg, Object ... args) {
-        log(Level.ALL,msg,args);
+        ChannelAPI.log("Channel",getChannelName(),Level.ALL,msg,args);
     }
 
+    @Override
     public void logDebug(String msg, Object ... args) {
-        log(Level.DEBUG,msg,args);
+        ChannelAPI.log("Channel",getChannelName(),Level.DEBUG,msg,args);
     }
 
+    @Override
     public void logError(String msg, Object ... args) {
-        log(Level.ERROR,msg,args);
+        ChannelAPI.log("Channel",getChannelName(),Level.ERROR,msg,args);
     }
 
+    @Override
     public void logFatal(String msg, Object ... args) {
-        log(Level.FATAL,msg,args);
+        ChannelAPI.log("Channel",getChannelName(),Level.FATAL,msg,args);
     }
 
+    @Override
     public void logInfo(String msg, Object ... args) {
-        log(Level.INFO,msg,args);
+        ChannelAPI.log("Channel",getChannelName(),Level.INFO,msg,args);
     }
 
+    @Override
     public void logTrace(String msg, Object ... args) {
-        log(Level.TRACE,msg,args);
+        ChannelAPI.log("Channel",getChannelName(),Level.TRACE,msg,args);
     }
 
+    @Override
     public void logWarn(String msg, Object ... args) {
-        log(Level.WARN,msg,args);
+        ChannelAPI.log("Channel",getChannelName(),Level.WARN,msg,args);
     }
 
     @Override
     public void play() {}
+
+    @Override
+    public void playable() {}
 
     @Override
     public void playing() {}

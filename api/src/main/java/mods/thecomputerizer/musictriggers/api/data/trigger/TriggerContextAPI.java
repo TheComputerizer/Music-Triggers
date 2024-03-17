@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger;
 
+import lombok.Getter;
 import lombok.Setter;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
@@ -16,7 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-@Setter
+@Setter @Getter
 public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
 
     public static final List<String> NBT_MODES = Arrays.asList("KEY_PRESENT","VAL_PRESENT","GREATER","LESSER","EQUAL","INVERT");
@@ -34,10 +35,11 @@ public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
         super(channel);
     }
 
-    protected boolean checkNBT(@Nullable CompoundTagAPI tag, String tagStr) { //TODO Fix this mess
+    protected boolean checkNBT(@Nullable CompoundTagAPI tag, String tagStr) {
         if(Objects.isNull(tag) || StringUtils.isBlank(tagStr) || tagStr.toUpperCase().matches("ANY")) return true;
         NBTMode mode = NBTHelper.getAndInitMode(tagStr.split(";"));
         try {
+            if(Objects.nonNull(mode)) mode.checkMatch(this.channel,tag);
         } catch(NumberFormatException ex) {
             logError("Tried to check numerical value of NBT data against a non numerical value in `{}`",tagStr,ex);
         } catch(Exception ex) {

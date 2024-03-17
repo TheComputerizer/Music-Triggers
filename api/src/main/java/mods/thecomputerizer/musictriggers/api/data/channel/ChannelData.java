@@ -6,11 +6,16 @@ import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.command.CommandElement;
 import mods.thecomputerizer.musictriggers.api.data.jukebox.RecordElement;
+import mods.thecomputerizer.musictriggers.api.data.parameter.UniversalParameters;
+import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
+import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterFloat;
+import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
 import mods.thecomputerizer.musictriggers.api.data.redirect.RedirectElement;
 import mods.thecomputerizer.musictriggers.api.data.render.CardAPI;
 import mods.thecomputerizer.musictriggers.api.data.render.CardHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
+import mods.thecomputerizer.musictriggers.api.data.trigger.basic.BasicTrigger;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
@@ -28,6 +33,10 @@ public class ChannelData extends ChannelElement {
     private final Set<RedirectElement> redirects;
     private final Set<TriggerAPI> triggers;
     private final Map<TriggerAPI,List<ChannelEventHandler>> triggerEventMap;
+    private final Map<Class<? extends ChannelElement>,UniversalParameters> universalMap;
+    private BasicTrigger genericTrigger;
+    private BasicTrigger loadingTrigger;
+    private BasicTrigger menuTrigger;
 
     public ChannelData(ChannelAPI channel) {
         super(channel);
@@ -39,11 +48,17 @@ public class ChannelData extends ChannelElement {
         this.redirects = new HashSet<>();
         this.triggers = new HashSet<>();
         this.triggerEventMap = new HashMap<>();
+        this.universalMap = initUniversals();
     }
 
     @Override
     public void activate() {
         for(ChannelEventHandler handler : getActiveEventHandlers()) handler.activate();
+    }
+
+    protected void addUniversals(Map<Class<? extends ChannelElement>,UniversalParameters> map) {
+        map.put(AudioRef.class,universalAudio());
+        map.put(TriggerAPI.class,universalTriggers());
     }
 
     public void clear() {
@@ -55,9 +70,10 @@ public class ChannelData extends ChannelElement {
         this.redirects.clear();
         this.triggers.clear();
         this.triggerEventMap.clear();
+        this.universalMap.clear();
     }
 
-    protected void extractTriggerCombinations() {
+    protected void extractTriggerCombinations() { //TODO Implement this
 
     }
 
@@ -71,14 +87,30 @@ public class ChannelData extends ChannelElement {
         return Collections.emptyList();
     }
 
+    public @Nullable AudioPool getActivePool() {
+        for(ChannelEventHandler handler : getActiveEventHandlers())
+            if(handler instanceof AudioPool) return (AudioPool)handler;
+        return null;
+    }
+
     public @Nullable AudioPool getPool(Collection<TriggerAPI> triggers) {
         for(AudioPool pool : this.audioPools)
             if(pool.matchingTriggers(triggers)) return pool;
         return null;
     }
 
+    public @Nullable UniversalParameters getUniversals(Class<? extends ChannelElement> clazz) {
+        return this.universalMap.get(clazz);
+    }
+
     public boolean hasPool(Collection<TriggerAPI> triggers) {
         return Objects.nonNull(getPool(triggers));
+    }
+
+    private Map<Class<? extends ChannelElement>,UniversalParameters> initUniversals() {
+        Map<Class<? extends ChannelElement>,UniversalParameters> map = new HashMap<>();
+        addUniversals(map);
+        return map;
     }
 
     public void organize() {
@@ -164,5 +196,26 @@ public class ChannelData extends ChannelElement {
     @Override
     public void stopped() {
         for(ChannelEventHandler handler : getActiveEventHandlers()) handler.stopped();
+    }
+
+    protected UniversalParameters universalTriggers() {
+        return UniversalParameters.get(this.channel,"Triggers",map -> {
+            map.put("fade_in",new ParameterInt(0));
+            map.put("fade_out",new ParameterInt(0));
+            map.put("persistence",new ParameterInt(0));
+            map.put("song_delay",new ParameterInt(0));
+            map.put("start_delay",new ParameterInt(0));
+            map.put("stop_delay",new ParameterInt(0));
+            map.put("trigger_delay",new ParameterInt(0));
+        });
+    }
+
+    protected UniversalParameters universalAudio() {
+        return UniversalParameters.get(this.channel,"Audio",map -> {
+            map.put("must_finish",new ParameterBoolean(false));
+            map.put("pitch",new ParameterFloat(1f));
+            map.put("play_once",new ParameterInt(0));
+            map.put("volume",new ParameterFloat(1f));
+        });
     }
 }

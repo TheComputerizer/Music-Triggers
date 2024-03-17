@@ -13,7 +13,11 @@ import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
-import mods.thecomputerizer.musictriggers.api.data.toggle.ToggleAPI;
+import mods.thecomputerizer.musictriggers.api.data.LoggableAPI;
+import mods.thecomputerizer.musictriggers.api.data.global.Debug;
+import mods.thecomputerizer.musictriggers.api.data.global.GlobalData;
+import mods.thecomputerizer.musictriggers.api.data.global.Registration;
+import mods.thecomputerizer.musictriggers.api.data.global.Toggle;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
@@ -24,39 +28,80 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class ChannelHelper {
 
-    @Getter private static final List<ChannelAPI> channels = new ArrayList<>();
-    @Getter private static final List<ToggleAPI> toggles = new ArrayList<>();
-    private static Holder togglesHolder;
+    @Getter private static final Map<String,ChannelAPI> channels = new HashMap<>();
+    @Getter private static final GlobalData globalData = new GlobalData();
     private static String youtubeEmail = null;
     private static String youtubePassword = null;
 
+    public static @Nullable ChannelAPI findChannel(LoggableAPI logger, String channelName) {
+        ChannelAPI channel = channels.get(channelName);
+        if(Objects.isNull(channel)) logger.logError("Unable to find channel with name `{}`!",channelName);
+        return channel;
+    }
+
+    public static @Nullable Debug getDebug() {
+        return globalData.getDebug();
+    }
+
+    public static boolean getDebugBool(String name) {
+        Debug debug = getDebug();
+        return Objects.nonNull(debug) && debug.getParameterAsBoolean(name);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static List<String> getDebugList(String name) {
+        Debug debug = getDebug();
+        return Objects.nonNull(debug) ? (List<String>)debug.getParameterAsList(name) : Collections.emptyList();
+    }
+
+    public static Number getDebugNumber(String name) {
+        Debug debug = getDebug();
+        return Objects.nonNull(debug) ? debug.getParameterAsNumber(name) : 0;
+    }
+
+    public static String getDebugString(String name) {
+        Debug debug = getDebug();
+        if(Objects.isNull(debug)) return "";
+        String ret = debug.getParameterAsString(name);
+        return Objects.nonNull(ret) ? ret : "";
+    }
+
+    public static boolean getRegistrationBool(String name) {
+        Registration registration = getRegistration();
+        return Objects.nonNull(registration) && registration.getParameterAsBoolean(name);
+    }
+
+    public static @Nullable Registration getRegistration() {
+        return globalData.getRegistration();
+    }
+
+    public static Set<Toggle> getToggles() {
+        return globalData.getToggles();
+    }
+
     public static void initChannels(String channelsFile) {
-        Holder channels = openToml(channelsFile,null);
+        Holder channels = openToml(channelsFile,globalData);
         if(Objects.isNull(channels)) return;
         for(Table info : channels.getUniqueTables()) {
         }
-        togglesHolder = openToml(channels.getValOrDefault("toggles","config/MusicTriggers/toggles"),null);
     }
 
     /**
      * Assumes the file extension is not present
      */
-    public static @Nullable Holder openToml(String path, @Nullable ChannelAPI channel) {
+    public static @Nullable Holder openToml(String path, LoggableAPI logger) {
         path+=".toml";
         try {
             return TomlHelper.readFully(path);
         } catch(IOException ex) {
             String msg = "Unable to read toml file at `{}`!";
-            if(Objects.nonNull(channel)) channel.logError(msg,ex);
+            if(Objects.nonNull(logger)) logger.logError(msg,ex);
             else MTRef.logError(msg,ex);
             return null;
         }
@@ -79,7 +124,7 @@ public class ChannelHelper {
     }
 
     public static void parseChannelData() {
-        for(ChannelAPI channel : channels) channel.parseData();
+        for(ChannelAPI channel : channels.values()) channel.parseData();
         readToggles();
     }
 
