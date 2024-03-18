@@ -5,9 +5,23 @@ import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 public class AudioPool extends AudioRef {
+
+    public static @Nullable AudioPool unsafeMerge(AudioPool ... pools) {
+        return unsafeMerge(Arrays.asList(pools));
+    }
+
+    public static @Nullable AudioPool unsafeMerge(Collection<AudioPool> pools) {
+        AudioPool merged = null;
+        for(AudioPool pool : pools) {
+            if(Objects.isNull(merged)) merged = new AudioPool(pool);
+            else merged.addAudio(pool);
+        }
+        return merged;
+    }
 
     private final Set<AudioRef> audio;
     private final Set<AudioRef> playableAudio;
@@ -28,6 +42,18 @@ public class AudioPool extends AudioRef {
             logWarn("Unable to create audio pool {} from reference audio {}! The triggers were not recognized.",name,ref);
             this.valid = false;
         }
+    }
+
+    /**
+     * Used for merges only
+     */
+    private AudioPool(AudioRef ref) {
+        super(ref.getChannel(),ref.getName()+"_merge");
+        this.audio = new HashSet<>();
+        this.playableAudio = new HashSet<>();
+        this.trigger = parseTrigger(ref.getTriggers());
+        this.audio.add(ref);
+        this.valid = true;
     }
 
     @Override
@@ -54,6 +80,16 @@ public class AudioPool extends AudioRef {
     @Override
     public boolean matchingTriggers(Collection<TriggerAPI> triggers) {
         return !triggers.isEmpty() && this.trigger.matches(triggers);
+    }
+
+    public AudioPool merge(AudioPool ... pools) {
+        return merge(Arrays.asList(pools));
+    }
+
+    public AudioPool merge(Collection<AudioPool> pools) {
+        AudioPool merged = new AudioPool(this);
+        for(AudioPool pool : pools) merged.addAudio(pool);
+        return merged;
     }
 
     private TriggerAPI parseTrigger(List<TriggerAPI> triggers) {
@@ -87,6 +123,7 @@ public class AudioPool extends AudioRef {
             rand-=(audio==this.queuedAudio ? 0 : audio.getParameterAsInt("chance"));
             if(rand<=0) nextQueue = audio;
         }
+        if(nextQueue instanceof AudioPool) nextQueue.queue();
         this.queuedAudio = nextQueue;
     }
 

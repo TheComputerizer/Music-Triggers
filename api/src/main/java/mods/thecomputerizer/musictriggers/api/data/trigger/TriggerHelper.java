@@ -6,11 +6,11 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Objects;
+import java.util.*;
 
 public class TriggerHelper {
+
+    public static Comparator<TriggerAPI> PRIORITY_COMPARATOR = Comparator.comparingInt(trigger -> trigger.getParameterAsInt("priority"));
 
     /**
      * TODO Verify that the trigger can be loaded on the current version with the current mods.
@@ -73,18 +73,16 @@ public class TriggerHelper {
        return combo;
     }
 
+    public static @Nullable TriggerAPI getPriorityTrigger(@Nullable Collection<TriggerAPI> triggers) {
+        if(Objects.isNull(triggers) || triggers.isEmpty()) return null;
+        return ChannelHelper.getDebugBool("REVERSE_PRIORITY") ?
+                Collections.min(triggers,PRIORITY_COMPARATOR) : Collections.max(triggers,PRIORITY_COMPARATOR);
+    }
+
     public static boolean matchesAll(Collection<TriggerAPI> triggers, Collection<TriggerAPI> others) {
         if(triggers.size()!=others.size()) return false;
-        for(TriggerAPI trigger : triggers) {
-            boolean good = false;
-            for(TriggerAPI other : others) {
-                if(trigger.matches(other)) {
-                    good = true;
-                    break;
-                }
-            }
-            if(!good) return false;
-        }
+        for(TriggerAPI trigger : triggers)
+            if(!matchesAny(others,trigger)) return false;
         return true;
     }
 

@@ -8,19 +8,25 @@ import java.util.*;
 
 public class TriggerCombination extends TriggerAPI {
 
+    public static TriggerCombination make(ChannelAPI channel, Collection<TriggerAPI> triggers) {
+        TriggerCombination combo = new TriggerCombination(channel);
+        for(TriggerAPI trigger : triggers) combo.addChild(trigger);
+        return combo;
+    }
+
     /**
      * Each child list is an either/or list of triggers.
      * All child lists must have at least 1 trigger active for the parent combination to be active
      */
-    private final List<List<TriggerAPI>> children;
+    private final Collection<Collection<TriggerAPI>> children;
 
-    private final List<TriggerAPI> priorityChildren;
+    private final Collection<TriggerAPI> priorityChildren;
     private TriggerAPI priorityTrigger;
 
     protected TriggerCombination(ChannelAPI channel) {
         super(channel,"combination");
-        this.children = new ArrayList<>();
-        this.priorityChildren = new ArrayList<>();
+        this.children = new HashSet<>();
+        this.priorityChildren = new HashSet<>();
     }
 
     public void addChild(TriggerAPI ... triggers) {
@@ -33,29 +39,35 @@ public class TriggerCombination extends TriggerAPI {
         return Objects.nonNull(this.priorityTrigger) ? this.priorityTrigger.getParameter(name) : super.getParameter(name);
     }
 
+    public boolean isContained(TriggerAPI trigger) {
+        for(Collection<TriggerAPI> child : this.children)
+            if(TriggerHelper.matchesAny(child,trigger)) return true;
+        return false;
+    }
+
     @Override
     public boolean isEnabled() {
-        for(List<TriggerAPI> child : this.children)
+        for(Collection<TriggerAPI> child : this.children)
             for(TriggerAPI trigger : child)
                 if(!trigger.isEnabled()) return false;
         return true;
     }
 
     @Override
-    protected void initExtraParameters(Map<String, Parameter<?>> map) {
+    protected void initExtraParameters(Map<String,Parameter<?>> map) {
         map.clear();
     }
 
     @Override
     public boolean isActive(TriggerContextAPI<?,?> ctx) {
         this.priorityChildren.clear();
-        for(List<TriggerAPI> child : this.children)
+        for(Collection<TriggerAPI> child : this.children)
             if(!isChildActive(ctx,child)) return false;
         updatePriorityTrigger();
         return true;
     }
 
-    protected boolean isChildActive(TriggerContextAPI<?,?> ctx, List<TriggerAPI> triggers) {
+    protected boolean isChildActive(TriggerContextAPI<?,?> ctx, Collection<TriggerAPI> triggers) {
         for(TriggerAPI trigger : triggers)
             if(trigger.isActive(ctx)) {
                 this.priorityChildren.add(trigger);
@@ -67,7 +79,7 @@ public class TriggerCombination extends TriggerAPI {
     @Override
     public boolean matches(Collection<TriggerAPI> triggers) {
         if(this.children.size()==triggers.size()) {
-            for(List<TriggerAPI> child : this.children)
+            for(Collection<TriggerAPI> child : this.children)
                 for(TriggerAPI other : triggers)
                     if(!TriggerHelper.matchesAny(child,other)) return false;
             return true;
@@ -80,7 +92,7 @@ public class TriggerCombination extends TriggerAPI {
         if(trigger instanceof TriggerCombination) {
             TriggerCombination combo = (TriggerCombination)trigger;
             if(this.children.size()==combo.children.size()) {
-                for(List<TriggerAPI> child : this.children) {
+                for(Collection<TriggerAPI> child : this.children) {
                     if(matchesChild(child,combo)) continue;
                     return false;
                 }
@@ -90,8 +102,8 @@ public class TriggerCombination extends TriggerAPI {
         return false;
     }
 
-    protected boolean matchesChild(List<TriggerAPI> child, TriggerCombination combo) {
-        for(List<TriggerAPI> otherChild : combo.children)
+    protected boolean matchesChild(Collection<TriggerAPI> child, TriggerCombination combo) {
+        for(Collection<TriggerAPI> otherChild : combo.children)
             if(child.size()==otherChild.size())
                 if(!TriggerHelper.matchesAll(child,otherChild)) return false;
         return true;
@@ -99,13 +111,13 @@ public class TriggerCombination extends TriggerAPI {
 
     @Override
     public void setState(State state) {
-        for(List<TriggerAPI> child : this.children)
+        for(Collection<TriggerAPI> child : this.children)
             for(TriggerAPI trigger : child)
                 trigger.setState(state);
     }
 
     protected void setParentStatus(boolean removal) {
-        for(List<TriggerAPI> child : this.children)
+        for(Collection<TriggerAPI> child : this.children)
             for(TriggerAPI trigger : child)
                 setParentStatus(trigger,removal);
     }
@@ -121,16 +133,12 @@ public class TriggerCombination extends TriggerAPI {
     }
 
     private void updatePriorityTrigger() {
-        this.priorityTrigger = null;
-        for(TriggerAPI trigger : this.priorityChildren)
-            if(Objects.isNull(this.priorityTrigger) ||
-                    trigger.getParameterAsInt("priority")>this.priorityTrigger.getParameterAsInt("priority"))
-                this.priorityTrigger = trigger;
+        this.priorityTrigger = TriggerHelper.getPriorityTrigger(this.priorityChildren);
     }
 
     @Override
     public boolean verifyRequiredParameters() {
-        for(List<TriggerAPI> child : this.children) {
+        for(Collection<TriggerAPI> child : this.children) {
             for(TriggerAPI trigger : child) {
                 if(!trigger.verifyRequiredParameters()) {
                     logError("Unable to construct trigger combination due to 1 or more triggers failing verification!");

@@ -4,6 +4,7 @@ import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.basic.BasicTrigger;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -61,6 +62,8 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
             }
             else trigger.setState(IDLE);
         }
+        setPlayables(playable);
+        playable.removeIf(trigger -> !trigger.hasNonEmptyAudioPool());
         return playable;
     }
 
@@ -72,14 +75,42 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
         return Objects.nonNull(this.context) ? this.context.getWorld() : null;
     }
 
-    public @Nullable TriggerAPI getPriorityTrigger(Collection<TriggerAPI> triggers) {
-        if(triggers.isEmpty()) return null;
-        TriggerAPI priority = null;
-        for(TriggerAPI trigger : triggers)
-            if(Objects.isNull(priority) ||
-                    trigger.getParameterAsInt("priority")>priority.getParameterAsInt("priority"))
-                priority = trigger;
+    /**
+     * Only used when COMBINE_EQUAL_PRIORITY is enabled
+     */
+    public Collection<TriggerAPI> getPriorityTriggers(Collection<TriggerAPI> triggers) {
+        Set<TriggerAPI> priority = new HashSet<>();
+        int priorityVal = 0;
+        for(TriggerAPI trigger : triggers) {
+            int tPriority = trigger.getParameterAsInt("priority");
+            if(priority.isEmpty()) {
+                priority.add(trigger);
+                priorityVal = tPriority;
+            }
+            else if(tPriority==priorityVal) priority.add(trigger);
+            else {
+                if(ChannelHelper.getDebugBool("REVERSE_PRIORITY")) {
+                    if(tPriority<priorityVal) {
+                        priority.clear();
+                        priority.add(trigger);
+                        priorityVal = tPriority;
+                    }
+                } else if(tPriority>priorityVal) {
+                    priority.clear();
+                    priority.add(trigger);
+                    priorityVal = tPriority;
+                }
+            }
+        }
         return priority;
+    }
+
+    protected @Nullable AudioPool getAudioPool(Collection<TriggerAPI> registeredTriggers) {
+        Collection<TriggerAPI> triggers = collectPlayableTriggers(registeredTriggers);
+        TriggerAPI trigger = ChannelHelper.getDebugBool("COMBINE_EQUAL_PRIORITY") ?
+                new TriggerMerged(this.channel,getPriorityTriggers(triggers)) :
+                TriggerHelper.getPriorityTrigger(triggers);
+        return setActiveTrigger(trigger);
     }
 
     public abstract boolean isClient();
@@ -101,32 +132,47 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
         setContextPlayer(player);
         setContextWorld(world);
         setCrashHelper("trigger selection");
+        AudioPool pool = this.activePool;
         if(Objects.isNull(player)) {
             setCrashHelper("early triggers");
             if(isClient()) {
                 setCrashHelper("loading trigger");
                 BasicTrigger loading = this.channel.getData().getLoadingTrigger();
-                if(Objects.nonNull(loading) && loading.isActive(this.context)) setBasicTrigger(loading);
+                if(Objects.nonNull(loading) && loading.isActive(this.context)) pool = setBasicTrigger(loading);
                 else {
                     setCrashHelper("menu trigger");
                     BasicTrigger menu = this.channel.getData().getMenuTrigger();
-                    if(Objects.nonNull(menu) && menu.isActive(this.context)) setBasicTrigger(menu);
+                    if(Objects.nonNull(menu) && menu.isActive(this.context)) pool = setBasicTrigger(menu);
                 }
             }
         } else {
             setCrashHelper("normal triggers");
+            pool = getAudioPool(this.channel.getData().getTriggerEventMap().keySet());
             if(this.playables.isEmpty()) {
                 setCrashHelper("generic trigger");
                 BasicTrigger generic = this.channel.getData().getGenericTrigger();
-                if(Objects.nonNull(generic) && generic.isActive(this.context)) setBasicTrigger(generic);
+                if(Objects.nonNull(generic) && generic.isActive(this.context)) pool = setBasicTrigger(generic);
             }
         }
+        setActivePool(pool);
     }
 
-    protected void setActiveTrigger(TriggerAPI trigger) {
+    protected @Nullable AudioPool setActiveTrigger(TriggerAPI trigger) {
         this.previousTrigger = this.activeTrigger;
         this.activeTrigger = trigger;
         if(this.activeTrigger!=this.previousTrigger) activate();
+        return Objects.nonNull(this.activeTrigger) ? this.activeTrigger.getAudioPool() : null;
+    }
+
+    protected void setActivePool(AudioPool pool) {
+        this.previousPool = this.activePool;
+        this.activePool = pool;
+        if(this.activePool!=this.previousPool) activate();
+    }
+
+    protected @Nullable AudioPool setBasicTrigger(TriggerAPI trigger) {
+        setPlayables(trigger);
+        return setActiveTrigger(trigger);
     }
 
     public void setContextPlayer(PLAYER player) {
@@ -158,11 +204,6 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
             if(!this.previousPlayables.contains(trigger)) trigger.playable();
         for(TriggerAPI trigger : this.previousPlayables)
             if(!this.playables.contains(trigger)) trigger.setState(IDLE);
-    }
-
-    protected void setBasicTrigger(TriggerAPI trigger) {
-        setPlayables(trigger);
-        setActiveTrigger(trigger);
     }
 
     public void tick() {

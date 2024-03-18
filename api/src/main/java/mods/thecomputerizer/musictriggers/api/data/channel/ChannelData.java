@@ -14,25 +14,27 @@ import mods.thecomputerizer.musictriggers.api.data.redirect.RedirectElement;
 import mods.thecomputerizer.musictriggers.api.data.render.CardAPI;
 import mods.thecomputerizer.musictriggers.api.data.render.CardHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerCombination;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerMerged;
 import mods.thecomputerizer.musictriggers.api.data.trigger.basic.BasicTrigger;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Function;
 
 @Getter
 public class ChannelData extends ChannelElement {
 
     private final Set<AudioRef> audio;
-    private final Set<AudioPool> audioPools;
     private final Set<CardAPI> cards;
     private final Set<CommandElement> commands;
     private final Set<RecordElement> records;
     private final Set<RedirectElement> redirects;
     private final Set<TriggerAPI> triggers;
-    private final Map<TriggerAPI,List<ChannelEventHandler>> triggerEventMap;
+    private final Map<TriggerAPI,Collection<ChannelEventHandler>> triggerEventMap;
     private final Map<Class<? extends ChannelElement>,UniversalParameters> universalMap;
     private BasicTrigger genericTrigger;
     private BasicTrigger loadingTrigger;
@@ -41,7 +43,6 @@ public class ChannelData extends ChannelElement {
     public ChannelData(ChannelAPI channel) {
         super(channel);
         this.audio = new HashSet<>();
-        this.audioPools = new HashSet<>();
         this.cards = new HashSet<>();
         this.commands = new HashSet<>();
         this.records = new HashSet<>();
@@ -56,6 +57,71 @@ public class ChannelData extends ChannelElement {
         for(ChannelEventHandler handler : getActiveEventHandlers()) handler.activate();
     }
 
+    protected <E extends ChannelEventHandler> void addActiveTriggers(
+            Collection<E> elements, Function<E,Collection<TriggerAPI>> triggers, boolean isEvent) {
+        for(E element : elements) addActiveTriggers(element,triggers.apply(element),isEvent);
+    }
+
+    protected <E extends ChannelEventHandler> void addActiveTriggers(
+            E element, Collection<TriggerAPI> triggers, boolean isEvent) {
+        TriggerAPI active = null;
+        for(TriggerAPI trigger : this.triggerEventMap.keySet()) {
+            if(trigger.matches(triggers)) {
+                active = trigger;
+                break;
+            }
+        }
+        if(Objects.isNull(active)) {
+            if(triggers.size()==1) {
+                for(TriggerAPI trigger : triggers) {
+                    if(Objects.nonNull(trigger)) {
+                        active = trigger;
+                        break;
+                    }
+                }
+            } else active = TriggerCombination.make(this.channel,triggers);
+            if(Objects.nonNull(active)) this.triggerEventMap.put(active,new HashSet<>());
+        }
+        if(Objects.nonNull(active) && isEvent) this.triggerEventMap.get(active).add(element);
+    }
+
+    protected boolean addBasicTrigger(BasicTrigger trigger) {
+        switch(trigger.getName()) {
+            case "generic": {
+                this.genericTrigger = trigger;
+                return true;
+            }
+            case "loading": {
+                this.loadingTrigger = trigger;
+                return true;
+            }
+            case "menu": {
+                this.menuTrigger = trigger;
+                return true;
+            }
+            default: return false;
+        }
+    }
+
+    protected void addEmptyTriggers() {
+        for(TriggerAPI trigger : this.triggers) {
+            if(trigger instanceof BasicTrigger && addBasicTrigger((BasicTrigger)trigger)) continue;
+            boolean needsAdding = true;
+            for(TriggerAPI active : this.triggerEventMap.keySet()) {
+                if(active instanceof TriggerCombination) {
+                    if(((TriggerCombination)active).isContained(trigger)) {
+                        needsAdding = false;
+                        break;
+                    }
+                } else if(active.matches(trigger)) {
+                    needsAdding = false;
+                    break;
+                }
+            }
+            if(needsAdding) this.triggerEventMap.put(trigger,Collections.emptySet());
+        }
+    }
+
     protected void addUniversals(Map<Class<? extends ChannelElement>,UniversalParameters> map) {
         map.put(AudioRef.class,universalAudio());
         map.put(TriggerAPI.class,universalTriggers());
@@ -63,7 +129,6 @@ public class ChannelData extends ChannelElement {
 
     public void clear() {
         this.audio.clear();
-        this.audioPools.clear();
         this.cards.clear();
         this.commands.clear();
         this.records.clear();
@@ -73,29 +138,36 @@ public class ChannelData extends ChannelElement {
         this.universalMap.clear();
     }
 
-    protected void extractTriggerCombinations() { //TODO Implement this
-
+    protected void extractActiveTriggers() {
+        addActiveTriggers(this.audio,AudioRef::getTriggers,false);
+        addActiveTriggers(this.cards,CardAPI::getTriggers,true);
+        addActiveTriggers(this.commands,CommandElement::getTriggers,true);
     }
 
-    public List<ChannelEventHandler> getActiveEventHandlers() {
-        TriggerAPI activeTrigger = this.channel.getActiveTrigger();
-        if(Objects.nonNull(activeTrigger)) {
-            List<ChannelEventHandler> handlers = this.triggerEventMap.get(activeTrigger);
-            if(Objects.nonNull(handlers)) return handlers;
-            logWarn("There are no registered event handlers for the active trigger `{}`!");
-        }
-        return Collections.emptyList();
+    public Collection<ChannelEventHandler> getActiveEventHandlers() {
+        return getEventHandlers(this.channel.getActiveTrigger());
     }
 
     public @Nullable AudioPool getActivePool() {
-        for(ChannelEventHandler handler : getActiveEventHandlers())
-            if(handler instanceof AudioPool) return (AudioPool)handler;
-        return null;
+        return this.channel.getSelector().getActivePool();
+    }
+
+    public Collection<ChannelEventHandler> getEventHandlers(@Nullable TriggerAPI trigger) {
+        if(trigger instanceof TriggerMerged) {
+            Set<ChannelEventHandler> handlers = new HashSet<>();
+            for(TriggerAPI t : ((TriggerMerged)trigger).getTriggers()) handlers.addAll(getEventHandlers(t));
+            return Collections.unmodifiableSet(new HashSet<>(handlers));
+        } else if(Objects.nonNull(trigger)) {
+            Collection<ChannelEventHandler> c = this.triggerEventMap.get(trigger);
+            return Objects.nonNull(c) ? Collections.unmodifiableCollection(c) : Collections.emptySet();
+        }
+        else logWarn("There are no registered event handlers for the active trigger `{}`!");
+        return Collections.emptySet();
     }
 
     public @Nullable AudioPool getPool(Collection<TriggerAPI> triggers) {
-        for(AudioPool pool : this.audioPools)
-            if(pool.matchingTriggers(triggers)) return pool;
+        for(TriggerAPI trigger : this.triggerEventMap.keySet())
+            if(trigger.matches(triggers)) return trigger.getAudioPool();
         return null;
     }
 
@@ -114,8 +186,9 @@ public class ChannelData extends ChannelElement {
     }
 
     public void organize() {
+        extractActiveTriggers();
         setAudioPools();
-        extractTriggerCombinations();
+        addEmptyTriggers();
     }
 
     public void parse() {
@@ -177,14 +250,35 @@ public class ChannelData extends ChannelElement {
     }
 
     protected void setAudioPools() {
-        this.audioPools.clear();
+        Set<AudioRef> added = new HashSet<>();
         for(AudioRef ref : this.audio) {
-            AudioPool pool = getPool(ref.getTriggers());
-            if(Objects.nonNull(pool)) pool.addAudio(ref);
-            else {
-                pool = new AudioPool("pool_"+ref.getName(),ref);
-                if(pool.isValid()) this.audioPools.add(pool);
+            TriggerAPI trigger = null;
+            for(TriggerAPI active : this.triggerEventMap.keySet()) {
+                if(active.matches(ref.getTriggers())) {
+                    trigger = active;
+                    break;
+                }
             }
+            if(Objects.isNull(trigger)) continue;
+            Set<AudioRef> pooled = new HashSet<>();
+            pooled.add(ref);
+            for(AudioRef other : this.audio)
+                if(other!=ref && !added.contains(other) && trigger.matches(other.getTriggers()))
+                    pooled.add(other);
+            if(pooled.size()==1) {
+                added.add(ref);
+                this.triggerEventMap.get(trigger).add(ref);
+                continue;
+            }
+            AudioPool pool = null;
+            for(AudioRef a : pooled) {
+                if(Objects.nonNull(a)) {
+                    if(Objects.isNull(pool)) pool = new AudioPool(a.getName()+"_pool",a);
+                    else pool.addAudio(a);
+                    added.add(a);
+                }
+            }
+            if(Objects.nonNull(pool) && pool.isValid()) this.triggerEventMap.get(trigger).add(pool);
         }
     }
 

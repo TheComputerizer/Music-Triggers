@@ -14,6 +14,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 import org.apache.commons.lang3.mutable.MutableInt;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 @Getter
@@ -56,6 +57,14 @@ public abstract class TriggerAPI extends ParameterWrapper {
         return map.entrySet().removeIf(entry -> entry.getKey().equals(name) && entry.getValue().getValue()<=0);
     }
 
+    public @Nullable AudioPool getAudioPool() {
+        Collection<ChannelEventHandler> handlers = this.channel.getData().getTriggerEventMap().get(this);
+        if(Objects.isNull(handlers)) return null;
+        for(ChannelEventHandler handler : handlers)
+            if(handler instanceof AudioPool) return (AudioPool)handler;
+        return null;
+    }
+
     public String getIdentifier() {
         String id = getParameterAsString("identifier");
         return Objects.nonNull(id) ? id : "not_set";
@@ -84,11 +93,8 @@ public abstract class TriggerAPI extends ParameterWrapper {
     }
 
     public boolean hasNonEmptyAudioPool() {
-        List<ChannelEventHandler> handlers = this.channel.getData().getTriggerEventMap().get(this);
-        if(Objects.isNull(handlers)) return false;
-        for(ChannelEventHandler handler : handlers)
-            if(handler instanceof AudioPool && ((AudioPool)handler).hasAudio()) return true;
-        return false;
+        AudioPool pool = getAudioPool();
+        return Objects.nonNull(pool) && pool.hasAudio();
     }
 
     public boolean hasMaxedTracks() {
@@ -170,7 +176,7 @@ public abstract class TriggerAPI extends ParameterWrapper {
      * Queries the active state of the trigger & wraps isActive with additional checks
      */
     public boolean query(TriggerContextAPI<?,?> context) {
-        return hasNonEmptyAudioPool() && (hasActiveTime("persistence") || isActive(context));
+        return hasActiveTime("persistence") || isActive(context);
     }
 
     @SuppressWarnings("unchecked")
