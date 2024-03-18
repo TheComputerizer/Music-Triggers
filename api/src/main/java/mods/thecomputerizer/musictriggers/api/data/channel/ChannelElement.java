@@ -19,6 +19,9 @@ public abstract class ChannelElement implements ChannelEventHandler, LoggableAPI
     @Override
     public void activate() {}
 
+    @Override
+    public void deactivate() {}
+
     public String getChannelName() {
         return getChannel().getName();
     }
@@ -26,6 +29,8 @@ public abstract class ChannelElement implements ChannelEventHandler, LoggableAPI
     public boolean isEnabled() {
         return this.channel.isEnabled();
     }
+
+    public abstract boolean isResource();
 
     @Override
     public void logAll(String msg, Object ... args) {
@@ -79,4 +84,13 @@ public abstract class ChannelElement implements ChannelEventHandler, LoggableAPI
 
     @Override
     public void stopped() {}
+
+    @Override
+    public void tickActive() {}
+
+    @Override
+    public void tickPlayable() {}
+
+    @Override
+    public void unplayable() {}
 }

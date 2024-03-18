@@ -37,6 +37,11 @@ public class ChannelListener extends AudioEventAdapter {
         this.channel.onTrackStop(AudioTrackEndReason.LOAD_FAILED);
     }
 
+    @Override
+    public void onTrackStart(AudioPlayer player, AudioTrack track) {
+        this.channel.onTrackStart(track);
+    }
+
     public void setPitch(float pitch) {
         this.audioOutputThread.setPitch(pitch);
     }

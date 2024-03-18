@@ -32,4 +32,9 @@ public class ChannelInfo extends ChannelElement {
         this.redirectPath = table.getValOrDefault("redirect",name+"/redirect");
         this.rendersPath = table.getValOrDefault("renders",name+"/renders");
     }
+
+    @Override
+    public boolean isResource() {
+        return false;
+    }
 }

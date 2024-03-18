@@ -28,6 +28,11 @@ public class RecordElement extends ChannelElement {
         this.valid = parse(line);
     }
 
+    @Override
+    public boolean isResource() {
+        return true;
+    }
+
     private boolean parse(String line) {
         if(line.startsWith("#") || !line.contains("=") || line.contains("==")) return false;
         this.name = line.substring(0,line.indexOf('=')-1);

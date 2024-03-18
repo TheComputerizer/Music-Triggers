@@ -3,6 +3,9 @@ package mods.thecomputerizer.musictriggers.api.data.command;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventRunner;
+import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
+import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
@@ -10,9 +13,10 @@ import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @Getter
-public class CommandElement extends ChannelElement {
+public class CommandElement extends ChannelEventRunner {
 
     @Getter private static final List<String> headerLines = Arrays.asList("# What are you looking at!?","# ...","# ...?");
 
@@ -20,11 +24,15 @@ public class CommandElement extends ChannelElement {
     private String literal;
     private final List<TriggerAPI> triggers;
 
-
     public CommandElement(ChannelAPI channel, Table table) {
         super(channel);
         this.triggers = new ArrayList<>();
         this.valid = parse(table);
+    }
+
+    @Override
+    public boolean isResource() {
+        return false;
     }
 
     private boolean parse(Table table) {
@@ -34,5 +42,30 @@ public class CommandElement extends ChannelElement {
             return false;
         }
         return true;
+    }
+
+    @Override
+    protected Class<? extends ChannelElement> getTypeClass() {
+        return CommandElement.class;
+    }
+
+    @Override
+    protected String getTypeName() {
+        return "Command";
+    }
+
+    @Override
+    protected void initExtraParameters(Map<String,Parameter<?>> map) {
+        addParameter(map,"literal",new ParameterString(""));
+    }
+
+    @Override
+    public boolean verifyRequiredParameters() {
+        return hasParameter("literal");
+    }
+
+    @Override
+    protected void run() {
+
     }
 }

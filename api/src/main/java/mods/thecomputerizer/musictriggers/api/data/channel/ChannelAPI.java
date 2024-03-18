@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.data.channel;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import lombok.Getter;
 import lombok.Setter;
@@ -42,7 +43,14 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     }
 
     @Override
-    public void activate() {}
+    public void activate() {
+        for(ChannelEventHandler handler : this.data.getActiveEventHandlers()) handler.activate();
+    }
+
+    @Override
+    public void deactivate() {
+        for(ChannelEventHandler handler : this.data.getActiveEventHandlers()) handler.activate();
+    }
 
     public TriggerAPI getActiveTrigger() {
         return this.selector.getActiveTrigger();
@@ -87,6 +95,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
         log("Channel",getName(),Level.WARN,msg,args);
     }
 
+    public abstract void onTrackStart(AudioTrack track);
     public abstract void onTrackStop(AudioTrackEndReason endReason);
 
     public void parseData() {
@@ -94,20 +103,48 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     }
 
     @Override
-    public void play() {}
+    public void play() {
+        for(ChannelEventHandler handler : this.data.getActiveEventHandlers()) handler.play();
+    }
 
     @Override
-    public void playing() {}
+    public void playing() {
+        for(ChannelEventHandler handler : this.data.getActiveEventHandlers()) handler.playing();
+    }
 
     @Override
-    public void queue() {}
+    public void playable() {}
 
     @Override
-    public void stop() {}
+    public void queue() {
+        for(ChannelEventHandler handler : this.data.getActiveEventHandlers()) handler.queue();
+    }
+
+    public abstract void setCategoryVolume(float volume);
+    public abstract void setTrackVolume(float volume);
 
     @Override
-    public void stopped() {}
+    public void stop() {
+        for(ChannelEventHandler handler : this.data.getActiveEventHandlers()) handler.stop();
+    }
+
+    @Override
+    public void stopped() {
+        for(ChannelEventHandler handler : this.data.getActiveEventHandlers()) handler.stopped();
+    }
+
+    @Override
+    public void tickActive() {
+        for(ChannelEventHandler handler : this.data.getActiveEventHandlers()) handler.stopped();
+    }
 
     public abstract void tickFast();
+
+    @Override
+    public void tickPlayable() {}
+
     public abstract void tickSlow();
+
+    @Override
+    public void unplayable() {}
 }

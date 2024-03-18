@@ -2,7 +2,6 @@ package mods.thecomputerizer.musictriggers.api.data.parameter;
 
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
-import mods.thecomputerizer.musictriggers.api.data.render.CardAPI;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,6 +41,11 @@ public class UniversalParameters extends ParameterWrapper {
 
     @Override
     protected void initExtraParameters(Map<String,Parameter<?>> map) {}
+
+    @Override
+    public boolean isResource() {
+        return false;
+    }
 
     @Override
     public boolean verifyRequiredParameters() {

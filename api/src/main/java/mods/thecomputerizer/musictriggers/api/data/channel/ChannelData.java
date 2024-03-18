@@ -52,11 +52,6 @@ public class ChannelData extends ChannelElement {
         this.universalMap = initUniversals();
     }
 
-    @Override
-    public void activate() {
-        for(ChannelEventHandler handler : getActiveEventHandlers()) handler.activate();
-    }
-
     protected <E extends ChannelEventHandler> void addActiveTriggers(
             Collection<E> elements, Function<E,Collection<TriggerAPI>> triggers, boolean isEvent) {
         for(E element : elements) addActiveTriggers(element,triggers.apply(element),isEvent);
@@ -185,10 +180,17 @@ public class ChannelData extends ChannelElement {
         return map;
     }
 
+    @Override
+    public boolean isResource() {
+        return false;
+    }
+
     public void organize() {
         extractActiveTriggers();
         setAudioPools();
         addEmptyTriggers();
+        for(Map.Entry<TriggerAPI,Collection<ChannelEventHandler>> entry : this.triggerEventMap.entrySet())
+            entry.getValue().add(entry.getKey());
     }
 
     public void parse() {
@@ -198,21 +200,6 @@ public class ChannelData extends ChannelElement {
         readCommands(ChannelHelper.openToml(getChannel().getInfo().getCommandsPath(),getChannel()));
         readJukebox(ChannelHelper.openTxt(getChannel().getInfo().getJukeboxPath(),getChannel()));
         organize();
-    }
-
-    @Override
-    public void play() {
-        for(ChannelEventHandler handler : getActiveEventHandlers()) handler.play();
-    }
-
-    @Override
-    public void playing() {
-        for(ChannelEventHandler handler : getActiveEventHandlers()) handler.playing();
-    }
-
-    @Override
-    public void queue() {
-        for(ChannelEventHandler handler : getActiveEventHandlers()) handler.queue();
     }
 
     public void readCommands(@Nullable Holder commands) {
@@ -280,16 +267,6 @@ public class ChannelData extends ChannelElement {
             }
             if(Objects.nonNull(pool) && pool.isValid()) this.triggerEventMap.get(trigger).add(pool);
         }
-    }
-
-    @Override
-    public void stop() {
-        for(ChannelEventHandler handler : getActiveEventHandlers()) handler.stop();
-    }
-
-    @Override
-    public void stopped() {
-        for(ChannelEventHandler handler : getActiveEventHandlers()) handler.stopped();
     }
 
     protected UniversalParameters universalTriggers() {

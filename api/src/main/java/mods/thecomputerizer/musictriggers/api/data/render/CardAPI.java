@@ -1,12 +1,11 @@
 package mods.thecomputerizer.musictriggers.api.data.render;
 
 import lombok.Getter;
-import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventRunner;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
-import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterFloat;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
@@ -15,12 +14,11 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Getter
-public abstract class CardAPI extends ParameterWrapper {
+public abstract class CardAPI extends ChannelEventRunner {
 
     private final List<TriggerAPI> triggers;
 
@@ -34,8 +32,8 @@ public abstract class CardAPI extends ParameterWrapper {
         return CardAPI.class;
     }
 
-    protected Map<String,Parameter<?>> initParameterMap() {
-        Map<String,Parameter<?>> map = new HashMap<>();
+    @Override
+    protected void initExtraParameters(Map<String,Parameter<?>> map) {
         addParameter(map,"fade_in",new ParameterInt(20));
         addParameter(map,"fade_out",new ParameterInt(20));
         addParameter(map,"horizontal_alignment",new ParameterString("center"));
@@ -48,8 +46,11 @@ public abstract class CardAPI extends ParameterWrapper {
         addParameter(map,"vertical_alignment",new ParameterString("center"));
         addParameter(map,"x",new ParameterInt(-1));
         addParameter(map,"y",new ParameterInt(-1));
-        initExtraParameters(map);
-        return map;
+    }
+
+    @Override
+    public boolean isResource() {
+        return true;
     }
 
     public boolean parse(Table table) {

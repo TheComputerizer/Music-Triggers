@@ -35,7 +35,7 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
 
     @Override
     public void activate() {
-        this.activeTrigger.activate();
+        this.channel.activate();
         if(Objects.nonNull(this.previousTrigger)) {
             this.previousTrigger.setState(isPlayable(this.previousTrigger) ? PLAYABLE : IDLE);
             setCooldown(this.previousTrigger);
@@ -138,11 +138,11 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
             if(isClient()) {
                 setCrashHelper("loading trigger");
                 BasicTrigger loading = this.channel.getData().getLoadingTrigger();
-                if(Objects.nonNull(loading) && loading.isActive(this.context)) pool = setBasicTrigger(loading);
+                if(Objects.nonNull(loading) && loading.query(this.context)) pool = setBasicTrigger(loading);
                 else {
                     setCrashHelper("menu trigger");
                     BasicTrigger menu = this.channel.getData().getMenuTrigger();
-                    if(Objects.nonNull(menu) && menu.isActive(this.context)) pool = setBasicTrigger(menu);
+                    if(Objects.nonNull(menu) && menu.query(this.context)) pool = setBasicTrigger(menu);
                 }
             }
         } else {
@@ -151,13 +151,14 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
             if(this.playables.isEmpty()) {
                 setCrashHelper("generic trigger");
                 BasicTrigger generic = this.channel.getData().getGenericTrigger();
-                if(Objects.nonNull(generic) && generic.isActive(this.context)) pool = setBasicTrigger(generic);
+                if(Objects.nonNull(generic) && generic.query(this.context)) pool = setBasicTrigger(generic);
             }
         }
         setActivePool(pool);
     }
 
     protected @Nullable AudioPool setActiveTrigger(TriggerAPI trigger) {
+        if(trigger!=this.activeTrigger) this.channel.deactivate();
         this.previousTrigger = this.activeTrigger;
         this.activeTrigger = trigger;
         if(this.activeTrigger!=this.previousTrigger) activate();
@@ -167,7 +168,6 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
     protected void setActivePool(AudioPool pool) {
         this.previousPool = this.activePool;
         this.activePool = pool;
-        if(this.activePool!=this.previousPool) activate();
     }
 
     protected @Nullable AudioPool setBasicTrigger(TriggerAPI trigger) {
@@ -203,7 +203,7 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
         for(TriggerAPI trigger : this.playables)
             if(!this.previousPlayables.contains(trigger)) trigger.playable();
         for(TriggerAPI trigger : this.previousPlayables)
-            if(!this.playables.contains(trigger)) trigger.setState(IDLE);
+            if(!this.playables.contains(trigger)) trigger.unplayable();
     }
 
     public void tick() {

@@ -1,6 +1,5 @@
 package mods.thecomputerizer.musictriggers.api.data.audio;
 
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
@@ -13,7 +12,6 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 @Getter
@@ -26,10 +24,6 @@ public class AudioRef extends ParameterWrapper {
         super(channel);
         this.name = name;
         this.triggers = new ArrayList<>();
-    }
-
-    public @Nullable AudioTrack getTrack() {
-        return null;
     }
 
     public float getVolume() {
@@ -66,6 +60,11 @@ public class AudioRef extends ParameterWrapper {
 
     }
 
+    @Override
+    public boolean isResource() {
+        return false;
+    }
+
     public boolean matchingTriggers(Collection<TriggerAPI> triggers) {
         return TriggerHelper.matchesAll(this.triggers,triggers);
     }
@@ -84,8 +83,6 @@ public class AudioRef extends ParameterWrapper {
      * fade>0 = fade out
      */
     public void setFade(int fade) {}
-
-    public void setTrack(AudioTrack track) {}
 
     @Override
     public String toString() {

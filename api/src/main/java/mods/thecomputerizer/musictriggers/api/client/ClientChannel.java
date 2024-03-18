@@ -6,7 +6,9 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
+import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelListener;
@@ -24,6 +26,9 @@ public class ClientChannel extends ChannelAPI {
     private final AudioPlayerManager manager;
     private final AudioPlayer player;
     private final ChannelListener listener;
+    @Getter private AudioTrack track;
+    private float categoryVolume;
+    private float trackVolume;
 
     public ClientChannel(Table table) {
         super(table);
@@ -32,6 +37,12 @@ public class ClientChannel extends ChannelAPI {
         configure(finalizeManager());
         this.listener = new ChannelListener(this);
         logInfo("Successfully registered client channel `{}`!",getName());
+    }
+
+    @Override
+    public void activate() {
+        super.activate();
+        queue();
     }
 
     protected void configure(AudioConfiguration config) {
@@ -67,7 +78,7 @@ public class ClientChannel extends ChannelAPI {
     }
 
     @Override
-    protected TriggerSelectorAPI<?, ?> getSelector() {
+    protected TriggerSelectorAPI<?,?> getSelector() {
         return null;
     }
 
@@ -77,20 +88,43 @@ public class ClientChannel extends ChannelAPI {
     }
 
     @Override
-    public void onTrackStop(AudioTrackEndReason endReason) {
+    public void onTrackStart(AudioTrack track) {
+        this.track = track;
+        play();
+    }
 
+    @Override
+    public void onTrackStop(AudioTrackEndReason endReason) {
+        this.track = null;
+        stopped();
+    }
+
+    @Override
+    public void setCategoryVolume(float volume) {
+        this.categoryVolume = volume;
+        updateVolume();
+    }
+
+    @Override
+    public void setTrackVolume(float volume) {
+        this.trackVolume = volume;
+        updateVolume();
     }
 
     @Override
     public void tickFast() {
+        TriggerSelectorAPI<?,?> selector = getSelector();
+        if(Objects.nonNull(selector)) selector.tick();
+        if(Objects.nonNull(this.track)) playing();
     }
 
     @Override
     public void tickSlow() {
+        TriggerSelectorAPI<?,?> selector = getSelector();
+        if(Objects.nonNull(selector)) selector.select(null,null);
     }
 
-    @Override
-    public void playable() {
-
+    private void updateVolume() {
+        this.player.setVolume((int)(100f*this.categoryVolume*this.trackVolume));
     }
 }

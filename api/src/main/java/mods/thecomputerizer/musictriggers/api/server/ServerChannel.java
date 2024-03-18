@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.server;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerSelectorAPI;
@@ -28,7 +29,22 @@ public class ServerChannel extends ChannelAPI {
     }
 
     @Override
+    public void onTrackStart(AudioTrack track) {
+
+    }
+
+    @Override
     public void onTrackStop(AudioTrackEndReason endReason) {}
+
+    @Override
+    public void setCategoryVolume(float volume) {
+
+    }
+
+    @Override
+    public void setTrackVolume(float volume) {
+
+    }
 
     @Override
     public void tickFast() {
@@ -37,11 +53,6 @@ public class ServerChannel extends ChannelAPI {
 
     @Override
     public void tickSlow() {
-
-    }
-
-    @Override
-    public void playable() {
 
     }
 }

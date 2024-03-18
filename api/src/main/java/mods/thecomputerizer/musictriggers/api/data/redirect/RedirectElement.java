@@ -29,6 +29,11 @@ public class RedirectElement extends ChannelElement {
         this.valid = parse(line);
     }
 
+    @Override
+    public boolean isResource() {
+        return !this.remote;
+    }
+
     private boolean parse(String line) {
         if(line.startsWith("#") || !line.contains("=")) return false;
         this.name = line.substring(0,line.indexOf('=')-1);

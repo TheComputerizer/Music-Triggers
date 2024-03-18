@@ -23,6 +23,13 @@ public abstract class ParameterWrapper extends ChannelElement {
         if(Objects.nonNull(parameter)) map.put(name,parameter);
     }
 
+    protected Map<String,Object> asValueMap() {
+        Map<String,Object> map = new HashMap<>();
+        for(Map.Entry<String,Parameter<?>> entry : this.parameters.entrySet())
+            map.put(entry.getKey(),entry.getValue().getValue());
+        return map;
+    }
+
     public @Nullable Parameter<?> getParameter(String name) {
         Parameter<?> parameter = this.parameters.get(name.equals("id") ? "identifier" : name);
         if(Objects.nonNull(parameter)) {

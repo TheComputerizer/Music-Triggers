@@ -57,6 +57,11 @@ public abstract class TriggerAPI extends ParameterWrapper {
         return map.entrySet().removeIf(entry -> entry.getKey().equals(name) && entry.getValue().getValue()<=0);
     }
 
+    @Override
+    public void deactivate() {
+        this.activeTimers.clear();
+    }
+
     public @Nullable AudioPool getAudioPool() {
         Collection<ChannelEventHandler> handlers = this.channel.getData().getTriggerEventMap().get(this);
         if(Objects.isNull(handlers)) return null;
@@ -141,6 +146,11 @@ public abstract class TriggerAPI extends ParameterWrapper {
         return this.state==State.DISABLED;
     }
 
+    @Override
+    public boolean isResource() {
+        return false;
+    }
+
     public boolean isServer() {
         return false;
     }
@@ -203,12 +213,20 @@ public abstract class TriggerAPI extends ParameterWrapper {
         if(time>0) Misc.consumeNullable(map.putIfAbsent(name,new MutableInt(time)),timer -> timer.setValue(time));
     }
 
+    @Override
     public void tickActive() {
         this.activeTimers.forEach((key,timer) -> timer.decrement());
     }
 
+    @Override
     public void tickPlayable() {
         this.playableTimers.forEach((key,timer) -> timer.decrement());
+    }
+
+    @Override
+    public void unplayable() {
+        this.playableTimers.clear();
+        if(this.state!=State.DISABLED) this.state = State.IDLE;
     }
 
     @Getter
