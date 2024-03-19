@@ -17,6 +17,9 @@ import org.apache.commons.lang3.mutable.MutableInt;
 import javax.annotation.Nullable;
 import java.util.*;
 
+import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.IDLE;
+import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.PLAYABLE;
+
 @Getter
 public abstract class TriggerAPI extends ParameterWrapper {
 
@@ -60,6 +63,7 @@ public abstract class TriggerAPI extends ParameterWrapper {
     @Override
     public void deactivate() {
         this.activeTimers.clear();
+        setState(this.channel.getSelector().isPlayable(this) ? PLAYABLE : IDLE);
     }
 
     public @Nullable AudioPool getAudioPool() {

@@ -4,6 +4,7 @@ import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventHandler;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.basic.BasicTrigger;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
@@ -35,7 +36,6 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
 
     @Override
     public void activate() {
-        this.channel.activate();
         if(Objects.nonNull(this.previousTrigger)) {
             this.previousTrigger.setState(isPlayable(this.previousTrigger) ? PLAYABLE : IDLE);
             setCooldown(this.previousTrigger);
@@ -124,7 +124,14 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
         return this.playables.contains(trigger);
     }
 
-    public void select(@Nullable PLAYER player, @Nullable WORLD world) {
+    @Override
+    public boolean isResource() {
+        return false;
+    }
+
+    public abstract void select();
+
+    protected void select(@Nullable PLAYER player, @Nullable WORLD world) {
         if(Objects.isNull(this.context)) {
             clear();
             return;
@@ -161,7 +168,7 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
         if(trigger!=this.activeTrigger) this.channel.deactivate();
         this.previousTrigger = this.activeTrigger;
         this.activeTrigger = trigger;
-        if(this.activeTrigger!=this.previousTrigger) activate();
+        if(this.activeTrigger!=this.previousTrigger) this.channel.activate();
         return Objects.nonNull(this.activeTrigger) ? this.activeTrigger.getAudioPool() : null;
     }
 
@@ -201,14 +208,16 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
         this.previousPlayables = this.playables;
         this.playables = Collections.unmodifiableCollection(triggers);
         for(TriggerAPI trigger : this.playables)
-            if(!this.previousPlayables.contains(trigger)) trigger.playable();
+            if(!this.previousPlayables.contains(trigger))
+                for(ChannelEventHandler handler : this.channel.getData().getEventHandlers(trigger))
+                    handler.playable();
         for(TriggerAPI trigger : this.previousPlayables)
-            if(!this.playables.contains(trigger)) trigger.unplayable();
+            if(!this.playables.contains(trigger))
+                for(ChannelEventHandler handler : this.channel.getData().getEventHandlers(trigger))
+                    handler.unplayable();
     }
 
     public void tick() {
-        for(TriggerAPI trigger : this.playables) trigger.tickPlayable();
-        if(Objects.nonNull(this.activeTrigger)) this.activeTrigger.tickActive();
         this.cooldownMap.entrySet().removeIf(entry -> entry.getValue().decrementAndGet()<=0);
     }
 

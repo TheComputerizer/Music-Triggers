@@ -1,5 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.data.audio;
 
+import com.sedmelluq.discord.lavaplayer.track.AudioItem;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
@@ -65,6 +67,8 @@ public class AudioRef extends ParameterWrapper {
         return false;
     }
 
+    public void load(String location) {}
+
     public boolean matchingTriggers(Collection<TriggerAPI> triggers) {
         return TriggerHelper.matchesAll(this.triggers,triggers);
     }
@@ -83,6 +87,8 @@ public class AudioRef extends ParameterWrapper {
      * fade>0 = fade out
      */
     public void setFade(int fade) {}
+
+    public void setItem(AudioItem item) {}
 
     @Override
     public String toString() {

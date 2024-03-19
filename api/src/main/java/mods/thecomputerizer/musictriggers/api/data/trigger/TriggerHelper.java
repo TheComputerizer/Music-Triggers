@@ -1,5 +1,8 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger;
 
+import mods.thecomputerizer.musictriggers.api.MTAPI;
+import mods.thecomputerizer.musictriggers.api.MTRef;
+import mods.thecomputerizer.musictriggers.api.client.TriggerContextClient;
 import mods.thecomputerizer.musictriggers.api.data.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
@@ -73,6 +76,11 @@ public class TriggerHelper {
        return combo;
     }
 
+    public static @Nullable TriggerContextAPI<?,?> getContext(ChannelAPI channel) {
+        MTAPI api = MTRef.getAPI();
+        return Objects.nonNull(api) ? api.getTriggerContext(channel) : null;
+    }
+
     public static @Nullable TriggerAPI getPriorityTrigger(@Nullable Collection<TriggerAPI> triggers) {
         if(Objects.isNull(triggers) || triggers.isEmpty()) return null;
         return ChannelHelper.getDebugBool("REVERSE_PRIORITY") ?
@@ -84,6 +92,12 @@ public class TriggerHelper {
         for(TriggerAPI trigger : triggers)
             if(!matchesAny(others,trigger)) return false;
         return true;
+    }
+
+    public static boolean matchesAny(Collection<TriggerAPI> triggers, Collection<TriggerAPI> others) {
+        for(TriggerAPI other : others)
+            if(matchesAny(triggers,other)) return true;
+        return false;
     }
 
     public static boolean matchesAny(Collection<TriggerAPI> triggers, TriggerAPI other) {

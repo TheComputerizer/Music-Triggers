@@ -45,6 +45,8 @@ public class Debug extends GlobalElement {
         map.put("RESAMPLING_QUALITY",new ParameterString("HIGH"));
         map.put("REVERSE_PRIORITY",new ParameterBoolean(false));
         map.put("SHOW_DEBUG",new ParameterBoolean(false));
+        map.put("SLOW_TICK_FACTOR",new ParameterInt(5));
+        map.put("TICK_RATE",new ParameterInt(20));
     }
 
     @Override

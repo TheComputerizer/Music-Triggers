@@ -12,7 +12,9 @@ import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceMan
 import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import lombok.Getter;
+import mods.thecomputerizer.musictriggers.api.MTAPI;
 import mods.thecomputerizer.musictriggers.api.MTRef;
+import mods.thecomputerizer.musictriggers.api.client.ChannelClient;
 import mods.thecomputerizer.musictriggers.api.data.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.global.Debug;
 import mods.thecomputerizer.musictriggers.api.data.global.GlobalData;
@@ -22,6 +24,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlHelper;
+import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nullable;
 import java.io.BufferedReader;
@@ -85,11 +88,23 @@ public class ChannelHelper {
         return globalData.getToggles();
     }
 
-    public static void initChannels(String channelsFile) {
-        Holder channels = openToml(channelsFile,globalData);
-        if(Objects.isNull(channels)) return;
-        for(Table info : channels.getUniqueTables()) {
+    public static void initChannels(String channelsFile) { //TODO Sided stuff & server channels
+        MTAPI api = MTRef.getAPI();
+        Holder channelsHolder = openToml(channelsFile,globalData);
+        if(Objects.isNull(channelsHolder) || Objects.isNull(api)) return;
+        for(Table info : channelsHolder.getUniqueTables()) {
+            ChannelAPI channel = new ChannelClient(info,api.getTrackLoader());
+            if(channel.isValid()) {
+                String name = channel.getName();
+                if(!channels.containsKey(name)) channels.put(name,channel);
+                else log(Level.ERROR,"Channel with name `{}` already exists!");
+            } else log(Level.ERROR,"Channel with name `{}` is invalid!");
         }
+        parseChannelData();
+    }
+
+    private static void log(Level level, String msg, Object ... args) {
+        ChannelAPI.log("Loader","Channel Helper",level,msg,args);
     }
 
     /**
@@ -124,7 +139,10 @@ public class ChannelHelper {
     }
 
     public static void parseChannelData() {
-        for(ChannelAPI channel : channels.values()) channel.parseData();
+        for(ChannelAPI channel : channels.values()) {
+            channel.parseData();
+            channel.loadTracks();
+        }
         readToggles();
     }
 

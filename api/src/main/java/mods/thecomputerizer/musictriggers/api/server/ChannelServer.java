@@ -3,13 +3,15 @@ package mods.thecomputerizer.musictriggers.api.server;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
+import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerSelectorAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
-public class ServerChannel extends ChannelAPI {
+public class ChannelServer extends ChannelAPI { //TODO implement this
 
-    public ServerChannel(Table table) {
+    public ChannelServer(Table table) {
         super(table);
     }
 
@@ -19,13 +21,18 @@ public class ServerChannel extends ChannelAPI {
     }
 
     @Override
-    protected TriggerSelectorAPI<?,?> getSelector() {
-        return null;
+    public boolean isClientChannel() {
+        return false;
     }
 
     @Override
-    public boolean isClientChannel() {
-        return false;
+    public boolean isValid() {
+        return true;
+    }
+
+    @Override
+    public void loadTrack(AudioRef ref, String location) {
+
     }
 
     @Override
@@ -43,11 +50,6 @@ public class ServerChannel extends ChannelAPI {
 
     @Override
     public void setTrackVolume(float volume) {
-
-    }
-
-    @Override
-    public void tickFast() {
 
     }
 

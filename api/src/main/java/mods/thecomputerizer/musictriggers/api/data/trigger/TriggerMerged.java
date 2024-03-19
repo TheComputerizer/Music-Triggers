@@ -22,6 +22,16 @@ public class TriggerMerged extends TriggerAPI {
     }
 
     @Override
+    public void activate() {
+        for(TriggerAPI trigger : this.triggers) trigger.activate();
+    }
+
+    @Override
+    public void deactivate() {
+        for(TriggerAPI trigger : this.triggers) trigger.deactivate();
+    }
+
+    @Override
     public @Nullable AudioPool getAudioPool() {
         Set<AudioPool> pools = new HashSet<>();
         for(TriggerAPI trigger : this.triggers) {
@@ -32,14 +42,7 @@ public class TriggerMerged extends TriggerAPI {
     }
 
     @Override
-    protected void initExtraParameters(Map<String,Parameter<?>> map) {
-
-    }
-
-    @Override
-    public boolean verifyRequiredParameters() {
-        return false;
-    }
+    protected void initExtraParameters(Map<String,Parameter<?>> map) {}
 
     @Override
     public boolean isActive(TriggerContextAPI<?,?> context) {
@@ -49,9 +52,66 @@ public class TriggerMerged extends TriggerAPI {
     }
 
     @Override
+    public boolean isContained(Collection<TriggerAPI> triggers) {
+        for(TriggerAPI trigger : this.triggers)
+            if(trigger.isContained(triggers)) return true;
+        return false;
+    }
+
+    @Override
     public boolean matches(TriggerAPI other) {
         for(TriggerAPI trigger : this.triggers)
             if(trigger.matches(other)) return true;
         return false;
+    }
+
+    @Override
+    public void play() {
+        for(TriggerAPI trigger : this.triggers) trigger.play();
+    }
+
+    @Override
+    public void playable() {
+        for(TriggerAPI trigger : this.triggers) trigger.playable();
+    }
+
+    @Override
+    public void playing() {
+        for(TriggerAPI trigger : this.triggers) trigger.playing();
+    }
+
+    @Override
+    public void queue() {
+        for(TriggerAPI trigger : this.triggers) trigger.queue();
+    }
+
+    @Override
+    public void stop() {
+        for(TriggerAPI trigger : this.triggers) trigger.stop();
+    }
+
+    @Override
+    public void stopped() {
+        for(TriggerAPI trigger : this.triggers) trigger.stopped();
+    }
+
+    @Override
+    public void tickActive() {
+        for(TriggerAPI trigger : this.triggers) trigger.tickActive();
+    }
+
+    @Override
+    public void tickPlayable() {
+        for(TriggerAPI trigger : this.triggers) trigger.tickPlayable();
+    }
+
+    @Override
+    public void unplayable() {
+        for(TriggerAPI trigger : this.triggers) trigger.unplayable();
+    }
+
+    @Override
+    public boolean verifyRequiredParameters() {
+        return true;
     }
 }

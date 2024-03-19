@@ -1,15 +1,24 @@
 package mods.thecomputerizer.musictriggers.api.client.audio;
 
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
+import com.sedmelluq.discord.lavaplayer.track.AudioItem;
+import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import mods.thecomputerizer.musictriggers.api.client.ChannelClient;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 
+import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Objects;
 
 public class AudioContainer extends AudioRef {
 
     private int fade;
     private float fadeFactor;
+    private AudioItem item;
+    private int playlistIndex;
 
     public AudioContainer(ChannelAPI channel, String name) {
         super(channel,name);
@@ -19,16 +28,41 @@ public class AudioContainer extends AudioRef {
         return (float)this.fade*this.fadeFactor;
     }
 
+    protected @Nullable AudioTrack getTrack() {
+        if(this.item instanceof AudioTrack) return (AudioTrack)this.item;
+        if(this.item instanceof AudioPlaylist) {
+            AudioPlaylist playlist = (AudioPlaylist)this.item;
+            if(Objects.nonNull(playlist.getSelectedTrack())) return playlist.getSelectedTrack();
+            List<AudioTrack> tracks = playlist.getTracks();
+            if(Objects.nonNull(tracks) && !tracks.isEmpty()) {
+                AudioTrack track = tracks.get(this.playlistIndex);
+                this.playlistIndex++;
+                if(this.playlistIndex>=tracks.size()) this.playlistIndex = 0;
+                return track;
+            }
+        }
+        return null;
+    }
+
     @Override
     public float getVolume() {
         return this.fade<=0 ? 1f : (this.fadeFactor<=0 ? 1f+getFade() : getFade());
     }
 
     @Override
+    public void load(String location) {
+        this.channel.loadTrack(this,location);
+    }
+
+    @Override
     public void play() {
+        AudioPlayer player = this.channel.getPlayer();
+        AudioTrack track = getTrack();
+        if(Objects.isNull(player) || Objects.isNull(track)) return;
         TriggerAPI trigger = this.channel.getActiveTrigger();
         if(Objects.nonNull(trigger)) setFade(-trigger.getParameterAsInt("fade_in"));
         this.channel.setTrackVolume(getVolume());
+        player.playTrack(track);
     }
 
     @Override
@@ -37,7 +71,10 @@ public class AudioContainer extends AudioRef {
             if(this.fadeFactor==0f) this.fade = 0;
             else this.fade--;
             if(this.fade==0) {
-                if(this.fadeFactor>0f) this.channel.getPlayer().stopTrack();
+                if(this.fadeFactor>0f) {
+                    AudioPlayer player = this.channel.getPlayer();
+                    if(Objects.nonNull(player)) player.stopTrack();
+                }
                 this.fadeFactor = 0f;
             }
             this.channel.setTrackVolume(getVolume());
@@ -57,6 +94,11 @@ public class AudioContainer extends AudioRef {
             this.fade = Math.abs(fade);
             if(this.fade==0) this.fadeFactor = 0f;
         }
+    }
+
+    @Override
+    public void setItem(AudioItem item) {
+        this.item = item;
     }
 
     @Override

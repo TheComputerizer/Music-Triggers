@@ -113,7 +113,7 @@ public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
     }
 
     public boolean isActiveMenu() {
-        return LOADED && hasWorld();
+        return LOADED && !hasWorld();
     }
 
     public boolean isActiveSpectator() {
@@ -167,4 +167,11 @@ public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
     public abstract boolean isActiveTornado(int range, int level);
     public abstract boolean isActiveUnderwater();
     public abstract boolean isActiveVictory(int timeout);
+
+    public abstract boolean isClient();
+
+    @Override
+    public boolean isResource() {
+        return false;
+    }
 }

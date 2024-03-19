@@ -22,11 +22,16 @@ public class MTRef {
     public static final String VERSION = "7.0.0";
     private static Reference INSTANCE;
 
+    public static @Nullable MTAPI getAPI() {
+        return Objects.nonNull(INSTANCE) ? ((MTRefInstance)INSTANCE).api : null;
+    }
+
     /**
      * Initializes the base reference API
      */
-    public static Reference instance(Supplier<Boolean> client, String dependencies) {
+    public static Reference instance(MTAPI api, Supplier<Boolean> client, String dependencies) {
         if(Objects.isNull(INSTANCE)) INSTANCE = new MTRefInstance(client.get(),dependencies,LOGGER,MODID,NAME,VERSION);
+        ((MTRefInstance)INSTANCE).api = api;
         return INSTANCE;
     }
 
@@ -110,6 +115,8 @@ public class MTRef {
     }
 
     private static final class MTRefInstance extends Reference {
+
+        private MTAPI api;
 
         private MTRefInstance(boolean client, @Nullable String dependencies, @Nullable Logger logger,
                               @Nullable String modid, @Nullable String name, @Nullable String version) {

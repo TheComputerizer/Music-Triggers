@@ -151,13 +151,21 @@ public class ChannelData extends ChannelElement {
         if(trigger instanceof TriggerMerged) {
             Set<ChannelEventHandler> handlers = new HashSet<>();
             for(TriggerAPI t : ((TriggerMerged)trigger).getTriggers()) handlers.addAll(getEventHandlers(t));
-            return Collections.unmodifiableSet(new HashSet<>(handlers));
+            return Collections.unmodifiableSet(handlers);
         } else if(Objects.nonNull(trigger)) {
             Collection<ChannelEventHandler> c = this.triggerEventMap.get(trigger);
             return Objects.nonNull(c) ? Collections.unmodifiableCollection(c) : Collections.emptySet();
         }
         else logWarn("There are no registered event handlers for the active trigger `{}`!");
         return Collections.emptySet();
+    }
+
+    public Collection<ChannelEventHandler> getPlayableEventHandlers() {
+        Set<ChannelEventHandler> handlers = new HashSet<>();
+        Collection<TriggerAPI> playables = this.channel.getPlayableTriggers();
+        for(TriggerAPI active : this.triggerEventMap.keySet())
+            if(active.isContained(playables)) handlers.addAll(getEventHandlers(active));
+        return Collections.unmodifiableSet(handlers);
     }
 
     public @Nullable AudioPool getPool(Collection<TriggerAPI> triggers) {
@@ -183,6 +191,16 @@ public class ChannelData extends ChannelElement {
     @Override
     public boolean isResource() {
         return false;
+    }
+
+    public void loadTracks() { //TODO finish this
+        for(AudioRef ref : this.audio) {
+            String name = ref.getName();
+            for(RedirectElement redirect : this.redirects) {
+                if(name.equals(redirect.getName())) {
+                }
+            }
+        }
     }
 
     public void organize() {

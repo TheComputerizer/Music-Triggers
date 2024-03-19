@@ -77,6 +77,13 @@ public class TriggerCombination extends TriggerAPI {
     }
 
     @Override
+    public boolean isContained(Collection<TriggerAPI> triggers) {
+        for(Collection<TriggerAPI> child : this.children)
+            if(!TriggerHelper.matchesAny(child,triggers)) return false;
+        return true;
+    }
+
+    @Override
     public boolean matches(Collection<TriggerAPI> triggers) {
         if(this.children.size()==triggers.size()) {
             for(Collection<TriggerAPI> child : this.children)

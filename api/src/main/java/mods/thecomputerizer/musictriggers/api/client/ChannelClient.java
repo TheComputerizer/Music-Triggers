@@ -9,33 +9,40 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import lombok.Getter;
+import mods.thecomputerizer.musictriggers.api.MTAPI;
+import mods.thecomputerizer.musictriggers.api.MTRef;
+import mods.thecomputerizer.musictriggers.api.client.audio.TrackLoaderAPI;
+import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelListener;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerSelectorAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 import org.apache.commons.lang3.EnumUtils;
 
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 import static com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats.DISCORD_PCM_S16_BE;
 import static com.sedmelluq.discord.lavaplayer.player.AudioConfiguration.ResamplingQuality.HIGH;
 
-public class ClientChannel extends ChannelAPI {
+public class ChannelClient extends ChannelAPI {
 
     private final AudioPlayerManager manager;
     private final AudioPlayer player;
     private final ChannelListener listener;
-    @Getter private AudioTrack track;
+    private final TrackLoaderAPI trackLoader;
     private float categoryVolume;
     private float trackVolume;
 
-    public ClientChannel(Table table) {
+    public ChannelClient(Table table, TrackLoaderAPI trackLoader) {
         super(table);
         this.manager = createManager();
         this.player = createPlayer();
         configure(finalizeManager());
         this.listener = new ChannelListener(this);
+        this.trackLoader = trackLoader;
         logInfo("Successfully registered client channel `{}`!",getName());
     }
 
@@ -78,24 +85,26 @@ public class ClientChannel extends ChannelAPI {
     }
 
     @Override
-    protected TriggerSelectorAPI<?,?> getSelector() {
-        return null;
-    }
-
-    @Override
     public boolean isClientChannel() {
         return true;
     }
 
     @Override
+    public boolean isValid() {
+        return Objects.nonNull(this.trackLoader);
+    }
+    @Override
+    public void loadTrack(AudioRef ref, String location) {
+        this.trackLoader.load(this.manager,ref,location);
+    }
+
+    @Override
     public void onTrackStart(AudioTrack track) {
-        this.track = track;
         play();
     }
 
     @Override
     public void onTrackStop(AudioTrackEndReason endReason) {
-        this.track = null;
         stopped();
     }
 
@@ -112,16 +121,9 @@ public class ClientChannel extends ChannelAPI {
     }
 
     @Override
-    public void tickFast() {
-        TriggerSelectorAPI<?,?> selector = getSelector();
-        if(Objects.nonNull(selector)) selector.tick();
-        if(Objects.nonNull(this.track)) playing();
-    }
-
-    @Override
-    public void tickSlow() {
-        TriggerSelectorAPI<?,?> selector = getSelector();
-        if(Objects.nonNull(selector)) selector.select(null,null);
+    public void tick() {
+        super.tick();
+        if(Objects.nonNull(this.player.getPlayingTrack())) playing();
     }
 
     private void updateVolume() {

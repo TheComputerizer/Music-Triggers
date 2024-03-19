@@ -1,8 +1,8 @@
-package mods.thecomputerizer.musictriggers.legacy.data.trigger;
+package mods.thecomputerizer.musictriggers.legacy.client;
 
+import mods.thecomputerizer.musictriggers.api.client.TriggerContextClient;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.ResourceContext;
-import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerBiome;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerMob;
 import mods.thecomputerizer.shadow.org.joml.Vector3i;
@@ -26,9 +26,9 @@ import java.util.Objects;
 import static net.minecraft.world.EnumSkyBlock.BLOCK;
 import static net.minecraft.world.EnumSkyBlock.SKY;
 
-public class TriggerContextLegacy extends TriggerContextAPI<EntityPlayerSP,WorldClient> {
+public class TriggerContextClientLegacy extends TriggerContextClient<EntityPlayerSP,WorldClient> {
 
-    public TriggerContextLegacy(ChannelAPI channel) {
+    public TriggerContextClientLegacy(ChannelAPI channel) {
         super(channel);
     }
 
