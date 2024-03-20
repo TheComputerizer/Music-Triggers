@@ -67,7 +67,9 @@ public class AudioRef extends ParameterWrapper {
         return false;
     }
 
-    public void load(String location) {}
+    public void loadLocal(String location) {}
+
+    public void loadRemote(String location) {}
 
     public boolean matchingTriggers(Collection<TriggerAPI> triggers) {
         return TriggerHelper.matchesAll(this.triggers,triggers);

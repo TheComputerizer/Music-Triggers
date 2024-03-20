@@ -3,6 +3,7 @@ java.toolchain.getLanguageVersion().set(JavaLanguageVersion.of(8))
 dependencies {
     compileOnly("com.google.code.findbugs:jsr305:${project.jsr_version}")
     compileOnly("io.netty:netty-all:${project.netty_version}")
+    compileOnly("commons-io:commons-io:${project.io_version}")
     compileOnly("org.apache.commons:commons-lang3:${project.lang3_version}")
     compileOnly("org.apache.logging.log4j:log4j-core:${project.log4j_version}")
 

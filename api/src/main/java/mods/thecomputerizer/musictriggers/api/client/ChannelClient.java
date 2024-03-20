@@ -8,16 +8,12 @@ import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
-import lombok.Getter;
-import mods.thecomputerizer.musictriggers.api.MTAPI;
-import mods.thecomputerizer.musictriggers.api.MTRef;
-import mods.thecomputerizer.musictriggers.api.client.audio.TrackLoaderAPI;
+import mods.thecomputerizer.musictriggers.api.client.audio.TrackLoader;
+import mods.thecomputerizer.musictriggers.api.client.audio.resource.ResourceAudioSourceManager;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelListener;
-import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
-import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerSelectorAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 import org.apache.commons.lang3.EnumUtils;
 
@@ -32,17 +28,18 @@ public class ChannelClient extends ChannelAPI {
     private final AudioPlayerManager manager;
     private final AudioPlayer player;
     private final ChannelListener listener;
-    private final TrackLoaderAPI trackLoader;
+    private final TrackLoader trackLoader;
+    private boolean registeredResourceAudio;
     private float categoryVolume;
     private float trackVolume;
 
-    public ChannelClient(Table table, TrackLoaderAPI trackLoader) {
+    public ChannelClient(Table table) {
         super(table);
         this.manager = createManager();
         this.player = createPlayer();
         configure(finalizeManager());
         this.listener = new ChannelListener(this);
-        this.trackLoader = trackLoader;
+        this.trackLoader = new TrackLoader();
         logInfo("Successfully registered client channel `{}`!",getName());
     }
 
@@ -79,6 +76,11 @@ public class ChannelClient extends ChannelAPI {
         return this.manager.getConfiguration();
     }
 
+    private @Nullable String findMatchingFile(String path) {
+        String[] matches = getInfo().getLocalFolder().list((dir,name) -> name.equals(path) || name.startsWith(path+"."));
+        return Objects.nonNull(matches) && matches.length>0 ? matches[0] : null;
+    }
+
     @Override
     public AudioPlayer getPlayer() {
         return this.player;
@@ -93,9 +95,26 @@ public class ChannelClient extends ChannelAPI {
     public boolean isValid() {
         return Objects.nonNull(this.trackLoader);
     }
+
     @Override
-    public void loadTrack(AudioRef ref, String location) {
-        this.trackLoader.load(this.manager,ref,location);
+    public void loadLocalTrack(AudioRef ref, String location) {
+        if(getInfo().canReadFiles()) this.trackLoader.loadLocal(this.manager,ref,findMatchingFile(location));
+        else logWarn("Unable to load track from file at `{}` for audio `{}` since the local folder does not exist!",
+                location,ref.getName());
+    }
+
+    @Override
+    public void loadRemoteTrack(AudioRef ref, String location) {
+        this.trackLoader.loadRemote(this.manager,ref,location);
+    }
+
+    @Override
+    public void onResourcesLoaded() {
+        if(!this.registeredResourceAudio) {
+            this.manager.registerSourceManager(new ResourceAudioSourceManager(this));
+            this.registeredResourceAudio = true;
+            logInfo("Successfully registered resource audio manager");
+        }
     }
 
     @Override

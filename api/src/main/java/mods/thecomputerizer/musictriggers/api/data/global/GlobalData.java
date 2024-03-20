@@ -26,9 +26,9 @@ public class GlobalData implements LoggableAPI {
     }
 
     public void parse() {
-        readDebug(ChannelHelper.openToml(MTRef.CONFIG_PATH+"debug",this));
-        readRegistration(ChannelHelper.openToml(MTRef.CONFIG_PATH+"registration",this));
-        readToggles(ChannelHelper.openToml(MTRef.CONFIG_PATH+"toggles",this));
+        readDebug(ChannelHelper.openToml(MTRef.CONFIG_PATH+"/debug",this));
+        readRegistration(ChannelHelper.openToml(MTRef.CONFIG_PATH+"/registration",this));
+        readToggles(ChannelHelper.openToml(MTRef.CONFIG_PATH+"/toggles",this));
     }
 
     public void readDebug(@Nullable Holder debugHolder) {

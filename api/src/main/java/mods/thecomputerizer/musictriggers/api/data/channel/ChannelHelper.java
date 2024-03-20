@@ -39,6 +39,7 @@ public class ChannelHelper {
 
     @Getter private static final Map<String,ChannelAPI> channels = new HashMap<>();
     @Getter private static final GlobalData globalData = new GlobalData();
+    private static boolean resourcesLoaded;
     private static String youtubeEmail = null;
     private static String youtubePassword = null;
 
@@ -89,22 +90,27 @@ public class ChannelHelper {
     }
 
     public static void initChannels(String channelsFile) { //TODO Sided stuff & server channels
-        MTAPI api = MTRef.getAPI();
         Holder channelsHolder = openToml(channelsFile,globalData);
-        if(Objects.isNull(channelsHolder) || Objects.isNull(api)) return;
+        if(Objects.isNull(channelsHolder)) return;
         for(Table info : channelsHolder.getUniqueTables()) {
-            ChannelAPI channel = new ChannelClient(info,api.getTrackLoader());
+            ChannelAPI channel = new ChannelClient(info);
             if(channel.isValid()) {
                 String name = channel.getName();
                 if(!channels.containsKey(name)) channels.put(name,channel);
                 else log(Level.ERROR,"Channel with name `{}` already exists!");
             } else log(Level.ERROR,"Channel with name `{}` is invalid!");
         }
-        parseChannelData();
+        parseChannelData(resourcesLoaded);
     }
 
     private static void log(Level level, String msg, Object ... args) {
         ChannelAPI.log("Loader","Channel Helper",level,msg,args);
+    }
+
+    public static void onResourcesLoaded() {
+        resourcesLoaded = true;
+        for(ChannelAPI channel : channels.values())
+            if(channel.isClientChannel()) channel.onResourcesLoaded();
     }
 
     /**
@@ -138,10 +144,10 @@ public class ChannelHelper {
         }
     }
 
-    public static void parseChannelData() {
+    public static void parseChannelData(boolean loadResources) {
         for(ChannelAPI channel : channels.values()) {
             channel.parseData();
-            channel.loadTracks();
+            channel.loadTracks(loadResources);
         }
         readToggles();
     }

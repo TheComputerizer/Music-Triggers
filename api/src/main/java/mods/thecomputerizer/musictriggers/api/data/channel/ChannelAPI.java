@@ -80,11 +80,12 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
 
     public abstract boolean isValid();
 
-    public void loadTracks() {
-        this.data.loadTracks();
+    public void loadTracks(boolean loadResources) {
+        this.data.loadTracks(loadResources);
     }
 
-    public abstract void loadTrack(AudioRef ref, String location);
+    public abstract void loadLocalTrack(AudioRef ref, String location);
+    public abstract void loadRemoteTrack(AudioRef ref, String location);
 
     @Override
     public void logAll(String msg, Object ... args) {
@@ -120,6 +121,8 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     public void logWarn(String msg, Object ... args) {
         log("Channel",getName(),Level.WARN,msg,args);
     }
+
+    public abstract void onResourcesLoaded();
 
     public abstract void onTrackStart(AudioTrack track);
     public abstract void onTrackStop(AudioTrackEndReason endReason);

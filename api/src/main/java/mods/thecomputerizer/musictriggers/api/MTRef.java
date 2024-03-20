@@ -8,13 +8,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.Objects;
 import java.util.Random;
 import java.util.function.Supplier;
 
 public class MTRef {
 
-    public static final String CONFIG_PATH = "config/MusicTriggers/";
+    public static final String CONFIG_PATH = "config/MusicTriggers";
     public static final Logger LOGGER = LogManager.getLogger("Music Triggers");
     public static final String MODID = "musictriggers";
     public static final String NAME = "Music Triggers";
@@ -29,9 +30,12 @@ public class MTRef {
     /**
      * Initializes the base reference API
      */
-    public static Reference instance(MTAPI api, Supplier<Boolean> client, String dependencies) {
-        if(Objects.isNull(INSTANCE)) INSTANCE = new MTRefInstance(client.get(),dependencies,LOGGER,MODID,NAME,VERSION);
-        ((MTRefInstance)INSTANCE).api = api;
+    public static Reference instance(MTAPI api, Supplier<Boolean> client, String dependencies) throws IOException {
+        if(Objects.isNull(INSTANCE)) {
+            INSTANCE = new MTRefInstance(client.get(),dependencies,LOGGER,MODID,NAME,VERSION);
+            ((MTRefInstance)INSTANCE).api = api;
+            api.init();
+        }
         return INSTANCE;
     }
 

@@ -4,7 +4,6 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioItem;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import mods.thecomputerizer.musictriggers.api.client.ChannelClient;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
@@ -50,8 +49,13 @@ public class AudioContainer extends AudioRef {
     }
 
     @Override
-    public void load(String location) {
-        this.channel.loadTrack(this,location);
+    public void loadLocal(String location) {
+        this.channel.loadLocalTrack(this,location);
+    }
+
+    @Override
+    public void loadRemote(String location) {
+        this.channel.loadRemoteTrack(this,location);
     }
 
     @Override

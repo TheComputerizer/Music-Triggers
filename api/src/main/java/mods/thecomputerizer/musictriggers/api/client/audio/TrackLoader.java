@@ -5,33 +5,26 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.FunctionalResultHandler;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioItem;
-import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioReference;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import mods.thecomputerizer.musictriggers.api.data.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
-import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
-import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceHelper;
-import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 
 import javax.annotation.Nullable;
 import java.io.File;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public abstract class TrackLoaderAPI {
+public class TrackLoader {
 
     private final AtomicInteger queue;
 
-    protected TrackLoaderAPI() {
+    public TrackLoader() {
         this.queue = new AtomicInteger();
     }
 
     protected void decrementQueue() {
         this.queue.set(this.queue.get()-1);
     }
-
-    protected abstract @Nullable AudioReference getResourceReference(ResourceLocationAPI<?> res, LoggableAPI logger);
 
     protected AudioLoadResultHandler getResultHandler(AudioRef ref, String location) {
         return new FunctionalResultHandler(track -> itemLoaded(ref,track,"track",location),
@@ -45,10 +38,6 @@ public abstract class TrackLoaderAPI {
 
     public boolean isQueued() {
         return this.queue.get()>0;
-    }
-
-    public void load(AudioPlayerManager manager, AudioRef audio, String location) {
-
     }
 
     public void load(AudioPlayerManager manager, @Nullable AudioReference ref,
@@ -65,21 +54,19 @@ public abstract class TrackLoaderAPI {
         load(manager,new AudioReference(id,title),resultHandler,logger);
     }
 
-    public void loadFile(AudioPlayerManager manager, AudioRef audio, String path) {
-        File file = new File(path);
-        if(file.exists()) load(manager,file.getPath(),file.getName(),getResultHandler(audio,path),audio);
-        else audio.logError("Tried to load nonexistant file `{}` for audio `{}`!",path,audio.getName());
+    public void loadLocal(AudioPlayerManager manager, AudioRef audio, @Nullable String path) {
+        File file = Objects.nonNull(path) ? new File(path) : null;
+        if(Objects.nonNull(path) && file.exists() && file.canRead())
+            load(manager,file.getPath(),file.getName(),getResultHandler(audio,path),audio);
+        else audio.logError("Tried to load nonexistant or unreadable file `{}` for audio `{}`!",path,audio.getName());
     }
 
-    public void loadRemote(AudioPlayerManager manager, AudioRef audio, @Nullable String url) {
-        if(Objects.nonNull(url)) load(manager,url,null,getResultHandler(audio,url),audio);
-        else audio.logError("Tried to null URL for audio `{}`!",audio.getName());
-    }
-
-    public void loadResource(AudioPlayerManager manager, AudioRef audio, String location) {
-        ResourceLocationAPI<?> res = ResourceHelper.getResource(location);
-        if(Objects.nonNull(res)) load(manager,getResourceReference(res,audio),getResultHandler(audio,location),audio);
-        else audio.logError("Tried to null resource for audio `{}`!",audio.getName());
+    /**
+     * Also works for resources
+     */
+    public void loadRemote(AudioPlayerManager manager, AudioRef audio, @Nullable String location) {
+        if(Objects.nonNull(location)) load(manager,location,null,getResultHandler(audio,location),audio);
+        else audio.logError("Tried to null remote location for audio `{}`!",audio.getName());
     }
 
     protected void loadFailed(FriendlyException ex, AudioRef audio, String location) {

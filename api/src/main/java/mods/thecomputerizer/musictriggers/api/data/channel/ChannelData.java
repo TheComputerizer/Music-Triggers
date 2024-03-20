@@ -193,13 +193,18 @@ public class ChannelData extends ChannelElement {
         return false;
     }
 
-    public void loadTracks() { //TODO finish this
+    public void loadTracks(boolean loadResources) {
         for(AudioRef ref : this.audio) {
             String name = ref.getName();
+            boolean found = false;
             for(RedirectElement redirect : this.redirects) {
                 if(name.equals(redirect.getName())) {
+                    found = true;
+                    if(redirect.isRemote() || loadResources) ref.loadRemote(redirect.getValue());
+                    break;
                 }
             }
+            if(!found) ref.loadLocal(ref.getParameterAsString("file_name"));
         }
     }
 

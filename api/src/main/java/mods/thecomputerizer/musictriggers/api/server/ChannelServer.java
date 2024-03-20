@@ -5,8 +5,6 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
-import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
-import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerSelectorAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 public class ChannelServer extends ChannelAPI { //TODO implement this
@@ -31,9 +29,13 @@ public class ChannelServer extends ChannelAPI { //TODO implement this
     }
 
     @Override
-    public void loadTrack(AudioRef ref, String location) {
+    public void loadLocalTrack(AudioRef ref, String location) {}
 
-    }
+    @Override
+    public void loadRemoteTrack(AudioRef ref, String location) {}
+
+    @Override
+    public void onResourcesLoaded() {}
 
     @Override
     public void onTrackStart(AudioTrack track) {
