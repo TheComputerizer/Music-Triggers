@@ -20,7 +20,7 @@ public class TriggerVictory extends HolderTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI<?,?> ctx) {
+    public boolean isPlayableContext(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveVictory(getParameterAsInt("victory_timeout"));
     }
 

@@ -10,7 +10,7 @@ public class TriggerLoading extends BasicTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI<?,?> ctx) {
+    public boolean isPlayableContext(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveLoading();
     }
 }

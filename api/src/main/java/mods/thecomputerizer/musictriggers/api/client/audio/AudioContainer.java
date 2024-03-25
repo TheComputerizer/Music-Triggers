@@ -59,17 +59,6 @@ public class AudioContainer extends AudioRef {
     }
 
     @Override
-    public void play() {
-        AudioPlayer player = this.channel.getPlayer();
-        AudioTrack track = getTrack();
-        if(Objects.isNull(player) || Objects.isNull(track)) return;
-        TriggerAPI trigger = this.channel.getActiveTrigger();
-        if(Objects.nonNull(trigger)) setFade(-trigger.getParameterAsInt("fade_in"));
-        this.channel.setTrackVolume(getVolume());
-        player.playTrack(track);
-    }
-
-    @Override
     public void playing() {
         if(this.fade>0) {
             if(this.fadeFactor==0f) this.fade = 0;
@@ -106,8 +95,18 @@ public class AudioContainer extends AudioRef {
     }
 
     @Override
+    public void start(TriggerAPI trigger) {
+        AudioPlayer player = this.channel.getPlayer();
+        AudioTrack track = getTrack();
+        if(Objects.isNull(player) || Objects.isNull(track)) return;
+        if(Objects.nonNull(trigger)) setFade(-trigger.getParameterAsInt("fade_in"));
+        this.channel.setTrackVolume(getVolume());
+        player.playTrack(track);
+    }
+
+    @Override
     public void stop() {
         TriggerAPI trigger = this.channel.getActiveTrigger();
-        if(Objects.nonNull(trigger)) setFade(trigger.getParameterAsInt("fade_out"));
+        if(Objects.nonNull(trigger) && isInterrputedBy(trigger)) setFade(trigger.getParameterAsInt("fade_out"));
     }
 }

@@ -22,7 +22,7 @@ public class TriggerLight extends HolderTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI<?,?> ctx) {
+    public boolean isPlayableContext(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveLight(getParameterAsInt("level"),getParameterAsString("light_type").toLowerCase());
     }
 

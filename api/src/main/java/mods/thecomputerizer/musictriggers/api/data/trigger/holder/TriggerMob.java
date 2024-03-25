@@ -40,7 +40,7 @@ public class TriggerMob extends HolderTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI<?,?> ctx) {
+    public boolean isPlayableContext(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveMob(this);
     }
 

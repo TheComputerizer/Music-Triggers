@@ -29,9 +29,19 @@ public class TriggerCombination extends TriggerAPI {
         this.priorityChildren = new HashSet<>();
     }
 
+    @Override
+    public void activate() {
+        for(TriggerAPI trigger : this.priorityChildren) trigger.activate();
+    }
+
     public void addChild(TriggerAPI ... triggers) {
         this.children.add(Arrays.asList(triggers));
         setParentStatus(false,triggers);
+    }
+
+    @Override
+    public void deactivate() {
+        for(TriggerAPI trigger : this.priorityChildren) trigger.deactivate();
     }
 
     @Override
@@ -59,7 +69,7 @@ public class TriggerCombination extends TriggerAPI {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI<?,?> ctx) {
+    public boolean isPlayableContext(TriggerContextAPI<?,?> ctx) {
         this.priorityChildren.clear();
         for(Collection<TriggerAPI> child : this.children)
             if(!isChildActive(ctx,child)) return false;
@@ -69,7 +79,7 @@ public class TriggerCombination extends TriggerAPI {
 
     protected boolean isChildActive(TriggerContextAPI<?,?> ctx, Collection<TriggerAPI> triggers) {
         for(TriggerAPI trigger : triggers)
-            if(trigger.isActive(ctx)) {
+            if(trigger.isPlayableContext(ctx)) {
                 this.priorityChildren.add(trigger);
                 return true;
             }
@@ -114,6 +124,11 @@ public class TriggerCombination extends TriggerAPI {
             if(child.size()==otherChild.size())
                 if(!TriggerHelper.matchesAll(child,otherChild)) return false;
         return true;
+    }
+
+    @Override
+    public void playable() {
+        for(TriggerAPI trigger : this.priorityChildren) trigger.playable();
     }
 
     @Override

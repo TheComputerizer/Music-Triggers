@@ -10,7 +10,7 @@ public class TriggerStorming extends SimpleTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI<?,?> ctx) {
+    public boolean isPlayableContext(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveStorming();
     }
 }

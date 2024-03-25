@@ -26,7 +26,7 @@ public class TriggerSandstorm extends SimpleTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI<?,?> ctx) {
+    public boolean isPlayableContext(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveSandstorm(getParameterAsInt("detection_range"));
     }
 }

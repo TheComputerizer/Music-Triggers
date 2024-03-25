@@ -25,7 +25,7 @@ public class TriggerGUI extends HolderTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI<?,?> ctx) {
+    public boolean isPlayableContext(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveGUI(getResourceCtx());
     }
 

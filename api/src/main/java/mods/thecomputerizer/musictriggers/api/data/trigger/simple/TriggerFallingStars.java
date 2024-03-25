@@ -18,7 +18,7 @@ public class TriggerFallingStars extends SimpleTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI<?,?> ctx) {
+    public boolean isPlayableContext(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveFallingStars();
     }
 }

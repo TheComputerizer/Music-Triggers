@@ -11,20 +11,18 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
-import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 import org.apache.commons.lang3.mutable.MutableInt;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Consumer;
 
-import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.IDLE;
-import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.PLAYABLE;
+import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.*;
 
 @Getter
 public abstract class TriggerAPI extends ParameterWrapper {
 
-    private final Map<String,MutableInt> activeTimers;
-    private final Map<String,MutableInt> playableTimers;
+    private final Map<String,Timer> timers;
     private final Set<TriggerCombination> parents;
     private final String name;
     private ResourceContext resourceCtx;
@@ -33,8 +31,7 @@ public abstract class TriggerAPI extends ParameterWrapper {
 
     protected TriggerAPI(ChannelAPI channel, String name) {
         super(channel);
-        this.activeTimers = new HashMap<>();
-        this.playableTimers = new HashMap<>();
+        this.timers = new HashMap<>();
         this.parents = new HashSet<>();
         this.name = name;
     }
@@ -42,28 +39,46 @@ public abstract class TriggerAPI extends ParameterWrapper {
     @Override
     public void activate() {
         this.state = State.ACTIVE;
+        setTimer("ticks_before_audio",ACTIVE);
+    }
+
+    protected void addTimedParameter(Map<String,Parameter<?>> map, String name, State state, Parameter<?> parameter) {
+        if(Objects.nonNull(parameter)) {
+            addParameter(map,name,parameter);
+            this.timers.put(name,new Timer(this,name,state));
+        }
     }
 
     public boolean canActivate() {
-        return this.state.activatable && checkPlayableTimedParameter("ticks_before_active");
+        return this.state.activatable && !hasTime("active_cooldown") && !hasTime("ticks_before_active") &&
+                hasNonEmptyAudioPool();
     }
 
-    public boolean checkActiveTimedParameter(String name) {
-        return checkTimedParameter(name,this.activeTimers);
+    protected boolean canPersist() {
+        return hasTime("persistence") &&
+                (this.state==ACTIVE || (this.state==PLAYABLE && getParameterAsBoolean("passive_persistence")));
     }
 
-    public boolean checkPlayableTimedParameter(String name) {
-        return checkTimedParameter(name,this.playableTimers);
+    public boolean canPlayAudio() {
+        if(this.tracksPlayed==0) return hasTime("ticks_before_audio");
+        int maxTracks = getParameterAsInt("max_tracks");
+        return maxTracks>0 && this.tracksPlayed<maxTracks && !hasTime("ticks_between_audio");
     }
 
-    public boolean checkTimedParameter(String name, Map<String,MutableInt> map) {
-        return map.entrySet().removeIf(entry -> entry.getKey().equals(name) && entry.getValue().getValue()<=0);
+    protected void clearTimers(State state) {
+        consumeTimers(timer -> timer.clear(state));
+    }
+
+    protected void consumeTimers(Consumer<Timer> consumer) {
+        this.timers.values().forEach(consumer);
     }
 
     @Override
     public void deactivate() {
-        this.activeTimers.clear();
         setState(this.channel.getSelector().isPlayable(this) ? PLAYABLE : IDLE);
+        clearTimers(ACTIVE);
+        setTimer("active_cooldown",PLAYABLE);
+        this.tracksPlayed = 0;
     }
 
     public @Nullable AudioPool getAudioPool() {
@@ -97,50 +112,36 @@ public abstract class TriggerAPI extends ParameterWrapper {
         return "Trigger `"+getName()+"`";
     }
 
-    public boolean hasActiveTime(String name) {
-        return hasTime(name,this.activeTimers);
-    }
-
     public boolean hasNonEmptyAudioPool() {
         AudioPool pool = getAudioPool();
         return Objects.nonNull(pool) && pool.hasAudio();
     }
 
-    public boolean hasMaxedTracks() {
-        int maxTracks = getParameterAsInt("max_tracks");
-        return maxTracks>0 && this.tracksPlayed>=maxTracks;
-    }
-
-    public boolean hasPlayableTime(String name) {
-        return hasTime(name,this.playableTimers);
-    }
-
-    public boolean hasTime(String name, Map<String,MutableInt> map) {
-        return map.containsKey(name) && map.get(name).getValue()>0;
+    public boolean hasTime(String name) {
+        Timer timer = this.timers.get(name);
+        return Objects.nonNull(timer) && timer.hasTime();
     }
 
     @Override
     protected Map<String,Parameter<?>> initParameterMap() {
         Map<String,Parameter<?>> map = new HashMap<>();
-        addParameter(map,"active_cooldown",new ParameterInt(0));
         addParameter(map,"fade_in",new ParameterInt(0));
         addParameter(map,"fade_out",new ParameterInt(0));
         addParameter(map,"max_tracks",new ParameterInt(0));
         addParameter(map,"not",new ParameterBoolean(false));
         addParameter(map,"passive_persistence",new ParameterBoolean(false));
-        addParameter(map,"persistence",new ParameterInt(0));
         addParameter(map,"priority",new ParameterInt(0));
-        addParameter(map,"start_toggled",new ParameterBoolean(true));
-        addParameter(map,"ticks_before_active",new ParameterInt(0));
-        addParameter(map,"ticks_before_audio",new ParameterInt(0));
-        addParameter(map,"ticks_between_audio",new ParameterInt(0));
+        addParameter(map,"start_as_disabled",new ParameterBoolean(false));
         addParameter(map,"toggle_inactive_playable",new ParameterBoolean(false));
         addParameter(map,"toggle_save_status",new ParameterInt(0));
+        addTimedParameter(map,"persistence",ACTIVE,new ParameterInt(0));
+        addTimedParameter(map,"ticks_before_audio",ACTIVE,new ParameterInt(0));
+        addTimedParameter(map,"ticks_between_audio",ACTIVE,new ParameterInt(0));
+        addTimedParameter(map,"active_cooldown",PLAYABLE,new ParameterInt(0));
+        addTimedParameter(map,"ticks_before_active",PLAYABLE,new ParameterInt(0));
         initExtraParameters(map);
         return map;
     }
-
-    public abstract boolean isActive(TriggerContextAPI<?,?> context);
 
     public boolean isContained(Collection<TriggerAPI> triggers) {
         return TriggerHelper.matchesAny(triggers,this);
@@ -149,6 +150,8 @@ public abstract class TriggerAPI extends ParameterWrapper {
     public boolean isDisabled() {
         return this.state==State.DISABLED;
     }
+
+    public abstract boolean isPlayableContext(TriggerContextAPI<?,?> context);
 
     @Override
     public boolean isResource() {
@@ -175,26 +178,53 @@ public abstract class TriggerAPI extends ParameterWrapper {
 
     public boolean parse(Table table) {
         if(parseParameters(table)) {
-            setResourceContext();
+            successfullyParsed();
             return true;
         }
         return false;
     }
 
     @Override
+    public void play() {
+        this.tracksPlayed++;
+    }
+
+    @Override
     public void playable() {
-        setPlayableTimedParameter("ticks_before_active");
+        setState(PLAYABLE);
+        setTimer("ticks_before_active",PLAYABLE);
     }
 
     /**
      * Queries the active state of the trigger & wraps isActive with additional checks
      */
     public boolean query(TriggerContextAPI<?,?> context) {
-        return hasActiveTime("persistence") || isActive(context);
+        if(isPlayableContext(context) || getParameterAsBoolean("not")) {
+            setTimer("persistence",ACTIVE);
+            return true;
+        }
+        return canPersist();
     }
 
+    protected void setTimer(String name, State state) {
+        Timer timer = this.timers.get(name);
+        if(Objects.nonNull(timer)) timer.set(state);
+    }
+
+    protected void setTimers(State state) {
+        consumeTimers(timer -> timer.set(state));
+    }
+
+    @Override
+    public void stopped() {
+        setTimer("ticks_between_audio",ACTIVE);
+    }
+
+    /**
+     * Runs after this trigger has been successfully parsed
+     */
     @SuppressWarnings("unchecked")
-    protected void setResourceContext() {
+    protected void successfullyParsed() {
         if(hasParameter("resource_name")) {
             List<String> resourceName = (List<String>)getParameterAsList("resource_name");
             List<String> displayeName = (List<String>)getParameterAsList("display_name");
@@ -202,35 +232,27 @@ public abstract class TriggerAPI extends ParameterWrapper {
             String displayMatcher = getParameterAsString("display_matcher");
             this.resourceCtx = new ResourceContext(resourceName,displayeName,resourceMatcher,displayMatcher);
         } else this.resourceCtx = null;
-    }
-
-    public void setActiveTimedParameter(String name) {
-        setTimedParameter(name,this.activeTimers);
-    }
-
-    public void setPlayableTimedParameter(String name) {
-        setTimedParameter(name,this.playableTimers);
-    }
-
-    private void setTimedParameter(String name, Map<String,MutableInt> map) {
-        int time = getParameterAsInt(name);
-        if(time>0) Misc.consumeNullable(map.putIfAbsent(name,new MutableInt(time)),timer -> timer.setValue(time));
+        setState(getParameterAsBoolean("start_as_disabled") ? DISABLED : IDLE);
     }
 
     @Override
     public void tickActive() {
-        this.activeTimers.forEach((key,timer) -> timer.decrement());
+        tickTimers(ACTIVE);
     }
 
     @Override
     public void tickPlayable() {
-        this.playableTimers.forEach((key,timer) -> timer.decrement());
+        tickTimers(PLAYABLE);
+    }
+
+    protected void tickTimers(State state) {
+        consumeTimers(timer -> timer.tick(state));
     }
 
     @Override
     public void unplayable() {
-        this.playableTimers.clear();
-        if(this.state!=State.DISABLED) this.state = State.IDLE;
+        if(!isDisabled()) setState(State.IDLE);
+        clearTimers(PLAYABLE);
     }
 
     @Getter
@@ -245,6 +267,37 @@ public abstract class TriggerAPI extends ParameterWrapper {
 
         State(boolean activatable) {
             this.activatable = activatable;
+        }
+    }
+
+    protected static class Timer {
+
+        private final TriggerAPI parent;
+        private final String name;
+        private final State state;
+        private final MutableInt counter;
+
+        protected Timer(TriggerAPI parent, String name, State state) {
+            this.parent = parent;
+            this.name = name;
+            this.state = state;
+            this.counter = new MutableInt();
+        }
+
+        protected void clear(State state) {
+            if(this.state==state) this.counter.setValue(0);
+        }
+
+        protected boolean hasTime() {
+            return this.counter.getValue()>0;
+        }
+
+        protected void set(State state) {
+            if(this.state==state) this.counter.setValue(this.parent.getParameterAsInt(this.name));
+        }
+
+        protected void tick(State state) {
+            if(this.state==state && this.counter.getValue()>0) this.counter.decrement();
         }
     }
 }

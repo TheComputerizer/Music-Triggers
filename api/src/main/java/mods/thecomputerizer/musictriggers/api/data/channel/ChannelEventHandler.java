@@ -4,7 +4,7 @@ public interface ChannelEventHandler {
 
     void activate(); //trigger becomes active
     void deactivate(); //trigger is no longer active
-    void play(); //start playing audio
+    void play(); //audio has started playing
     void playable(); //trigger parameters are met
     void playing(); //while audio is playing
     void queue(); //queue audio to play

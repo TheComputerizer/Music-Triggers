@@ -20,6 +20,7 @@ import org.apache.logging.log4j.Level;
 
 import java.util.Collection;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 @Getter
 public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
@@ -40,7 +41,6 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     private final TriggerSelectorAPI<?,?> selector;
     private final String name;
     @Setter private boolean enabled;
-    protected TriggerAPI activeTrigger;
     private int ticks;
 
     protected ChannelAPI(Table table) {
@@ -53,12 +53,12 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     @Override
     public void activate() {
         this.selector.activate();
-        for(ChannelEventHandler handler : this.data.getActiveEventHandlers()) handler.activate();
+        handleActiveEvent(ChannelEventHandler::activate);
     }
 
     @Override
     public void deactivate() {
-        for(ChannelEventHandler handler : this.data.getActiveEventHandlers()) handler.activate();
+        handleActiveEvent(ChannelEventHandler::deactivate);
     }
 
     public TriggerAPI getActiveTrigger() {
@@ -70,6 +70,14 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     }
 
     public abstract AudioPlayer getPlayer();
+
+    protected void handleActiveEvent(Consumer<ChannelEventHandler> event) {
+        this.data.getActiveEventHandlers().forEach(event);
+    }
+
+    protected void handlePlayableEvent(Consumer<ChannelEventHandler> event) {
+        this.data.getPlayableEventHandlers().forEach(event);
+    }
 
     protected <P,W> TriggerSelectorAPI<P,W> initSelector(TriggerContextAPI<P,W> context) {
         MTAPI api = MTRef.getAPI();
@@ -133,20 +141,20 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
 
     @Override
     public void play() {
-        for(ChannelEventHandler handler : this.data.getActiveEventHandlers()) handler.play();
-    }
-
-    @Override
-    public void playing() {
-        for(ChannelEventHandler handler : this.data.getActiveEventHandlers()) handler.playing();
+        handleActiveEvent(ChannelEventHandler::play);
     }
 
     @Override
     public void playable() {}
 
     @Override
+    public void playing() {
+        handleActiveEvent(ChannelEventHandler::playing);
+    }
+
+    @Override
     public void queue() {
-        for(ChannelEventHandler handler : this.data.getActiveEventHandlers()) handler.queue();
+        handleActiveEvent(ChannelEventHandler::queue);
     }
 
     public abstract void setCategoryVolume(float volume);
@@ -154,30 +162,28 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
 
     @Override
     public void stop() {
-        for(ChannelEventHandler handler : this.data.getActiveEventHandlers()) handler.stop();
+        handleActiveEvent(ChannelEventHandler::stop);
     }
 
     @Override
     public void stopped() {
-        for(ChannelEventHandler handler : this.data.getActiveEventHandlers()) handler.stopped();
+        handleActiveEvent(ChannelEventHandler::stopped);
     }
 
     public void tick() {
-        this.ticks++;
-        if(this.ticks%ChannelHelper.getDebugNumber("SLOW_TICK_FACTOR").intValue()==0) tickSlow();
         tickActive();
         tickPlayable();
-        this.selector.tick();
+        if((this.ticks++)%ChannelHelper.getDebugNumber("SLOW_TICK_FACTOR").intValue()==0) tickSlow();
     }
 
     @Override
     public void tickActive() {
-        for(ChannelEventHandler handler : this.data.getActiveEventHandlers()) handler.tickActive();
+        handleActiveEvent(ChannelEventHandler::tickActive);
     }
 
     @Override
     public void tickPlayable() {
-        for(ChannelEventHandler handler : this.data.getPlayableEventHandlers()) handler.tickPlayable();
+        handlePlayableEvent(ChannelEventHandler::tickPlayable);
     }
 
     public void tickSlow() {

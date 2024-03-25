@@ -45,9 +45,9 @@ public class TriggerMerged extends TriggerAPI {
     protected void initExtraParameters(Map<String,Parameter<?>> map) {}
 
     @Override
-    public boolean isActive(TriggerContextAPI<?,?> context) {
+    public boolean isPlayableContext(TriggerContextAPI<?,?> context) {
         for(TriggerAPI trigger : this.triggers)
-            if(trigger.isActive(context)) return true;
+            if(trigger.isPlayableContext(context)) return true;
         return false;
     }
 

@@ -25,7 +25,7 @@ public class TriggerZones extends HolderTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI<?,?> ctx) {
+    public boolean isPlayableContext(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveZones(getParameterAsInt("zone_min_x"),getParameterAsInt("zone_min_y"),
                 getParameterAsInt("zone_min_z"),getParameterAsInt("zone_max_x"),
                 getParameterAsInt("zone_max_y"),getParameterAsInt("zone_max_z"));

@@ -128,6 +128,11 @@ public class AudioPool extends AudioRef {
     }
 
     @Override
+    public void start(TriggerAPI trigger) {
+        if(Objects.nonNull(this.queuedAudio)) this.queuedAudio.start(trigger);
+    }
+
+    @Override
     public void stop() {
         if(Objects.nonNull(this.queuedAudio)) this.queuedAudio.stop();
     }
@@ -136,5 +141,6 @@ public class AudioPool extends AudioRef {
     public void stopped() {
         if(Objects.nonNull(this.queuedAudio) && this.queuedAudio.getParameterAsInt("play_once")>0)
             this.playableAudio.remove(this.queuedAudio);
+        this.channel.queue();
     }
 }

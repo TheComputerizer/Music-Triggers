@@ -7,19 +7,17 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventHandler;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.basic.BasicTrigger;
-import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
-import org.apache.commons.lang3.mutable.MutableInt;
 
 import javax.annotation.Nullable;
 import java.util.*;
 
-import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.*;
+import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.IDLE;
+import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.PLAYABLE;
 
 @Getter
 public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
 
     protected final TriggerContextAPI<PLAYER,WORLD> context;
-    protected Map<TriggerAPI,MutableInt> cooldownMap;
     protected Collection<TriggerAPI> playables;
     protected Collection<TriggerAPI> previousPlayables;
     protected TriggerAPI activeTrigger;
@@ -36,10 +34,8 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
 
     @Override
     public void activate() {
-        if(Objects.nonNull(this.previousTrigger)) {
+        if(Objects.nonNull(this.previousTrigger))
             this.previousTrigger.setState(isPlayable(this.previousTrigger) ? PLAYABLE : IDLE);
-            setCooldown(this.previousTrigger);
-        }
     }
 
     public void clear() {
@@ -56,14 +52,13 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
         for(TriggerAPI trigger : triggers) {
             setCrashHelper("playable ("+trigger.getNameWithID()+")");
             if(trigger.isDisabled()) continue;
-            if(!isCoolingDown(trigger) && trigger.query(this.context)) {
+            if(trigger.query(this.context)) {
                 playable.add(trigger);
                 trigger.setState(PLAYABLE);
             }
-            else trigger.setState(IDLE);
         }
         setPlayables(playable);
-        playable.removeIf(trigger -> !trigger.hasNonEmptyAudioPool());
+        playable.removeIf(trigger -> !trigger.canActivate());
         return playable;
     }
 
@@ -114,11 +109,6 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
     }
 
     public abstract boolean isClient();
-
-    public boolean isCoolingDown(TriggerAPI trigger) {
-        return Objects.nonNull(this.cooldownMap) && this.cooldownMap.containsKey(trigger) &&
-                this.cooldownMap.get(trigger).getValue()>0;
-    }
 
     public boolean isPlayable(TriggerAPI trigger) {
         return this.playables.contains(trigger);
@@ -190,12 +180,6 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
         this.context.setWorld(world);
     }
 
-    protected void setCooldown(TriggerAPI trigger) {
-        if(Objects.isNull(this.cooldownMap)) this.cooldownMap = new HashMap<>();
-        int time = trigger.getParameterAsInt("active_cooldown");
-        if(time>0) Misc.consumeNullable(this.cooldownMap.putIfAbsent(trigger,new MutableInt(time)),timer -> timer.setValue(time));
-    }
-
     protected void setCrashHelper(@Nullable String status) {
         this.crashHelper = Objects.nonNull(status) ? status : "";
     }
@@ -215,10 +199,6 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
             if(!this.playables.contains(trigger))
                 for(ChannelEventHandler handler : this.channel.getData().getEventHandlers(trigger))
                     handler.unplayable();
-    }
-
-    public void tick() {
-        this.cooldownMap.entrySet().removeIf(entry -> entry.getValue().decrementAndGet()<=0);
     }
 
     @Override

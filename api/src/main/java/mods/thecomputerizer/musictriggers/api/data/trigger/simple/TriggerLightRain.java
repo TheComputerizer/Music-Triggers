@@ -18,7 +18,7 @@ public class TriggerLightRain extends SimpleTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI<?,?> ctx) {
+    public boolean isPlayableContext(TriggerContextAPI<?,?> ctx) {
         return ctx.isActiveLightRain();
     }
 }

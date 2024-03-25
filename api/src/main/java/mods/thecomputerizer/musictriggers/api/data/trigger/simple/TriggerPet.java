@@ -21,7 +21,7 @@ public class TriggerPet extends SimpleTrigger {
     }
 
     @Override
-    public boolean isActive(TriggerContextAPI<?,?> ctx) {
+    public boolean isPlayableContext(TriggerContextAPI<?,?> ctx) {
         return ctx.isActivePet(getParameterAsInt("detection_range"),getParameterAsFloat("detection_y_ratio"));
     }
 }

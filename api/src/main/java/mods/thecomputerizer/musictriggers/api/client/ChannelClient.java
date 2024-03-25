@@ -10,10 +10,12 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import mods.thecomputerizer.musictriggers.api.client.audio.TrackLoader;
 import mods.thecomputerizer.musictriggers.api.client.audio.resource.ResourceAudioSourceManager;
+import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelListener;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 import org.apache.commons.lang3.EnumUtils;
 
@@ -32,6 +34,8 @@ public class ChannelClient extends ChannelAPI {
     private boolean registeredResourceAudio;
     private float categoryVolume;
     private float trackVolume;
+    private boolean isQueued;
+    private boolean isPlaying;
 
     public ChannelClient(Table table) {
         super(table);
@@ -41,12 +45,6 @@ public class ChannelClient extends ChannelAPI {
         this.listener = new ChannelListener(this);
         this.trackLoader = new TrackLoader();
         logInfo("Successfully registered client channel `{}`!",getName());
-    }
-
-    @Override
-    public void activate() {
-        super.activate();
-        queue();
     }
 
     protected void configure(AudioConfiguration config) {
@@ -128,6 +126,19 @@ public class ChannelClient extends ChannelAPI {
     }
 
     @Override
+    public void play() {
+        super.play();
+        this.isQueued = false;
+        this.isPlaying = true;
+    }
+
+    @Override
+    public void queue() {
+        super.queue();
+        this.isQueued = true;
+    }
+
+    @Override
     public void setCategoryVolume(float volume) {
         this.categoryVolume = volume;
         updateVolume();
@@ -140,9 +151,34 @@ public class ChannelClient extends ChannelAPI {
     }
 
     @Override
+    public void stopped() {
+        super.stopped();
+        this.isPlaying = false;
+    }
+
+    @Override
     public void tick() {
         super.tick();
         if(Objects.nonNull(this.player.getPlayingTrack())) playing();
+    }
+
+    @Override
+    public void tickActive() {
+        super.tickActive();
+        TriggerAPI trigger = getActiveTrigger();
+        if(Objects.nonNull(trigger)) {
+            AudioPool activePool = getData().getActivePool();
+            if(Objects.nonNull(activePool)) {
+                if(this.isPlaying) playing();
+                else if(!this.isQueued) queue();
+                else if(trigger.canPlayAudio()) activePool.start(trigger);
+            }
+        }
+    }
+
+    @Override
+    public void tickSlow() {
+        if(!this.trackLoader.isQueued()) super.tickSlow();
     }
 
     private void updateVolume() {
