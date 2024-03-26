@@ -15,7 +15,6 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerSelectorAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
-import org.apache.logging.log4j.Level;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -24,23 +23,26 @@ import java.util.function.Consumer;
 @Getter
 public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
 
+    private final ChannelHelper helper;
     private final ChannelInfo info;
     private final ChannelData data;
+    private final ChannelSync sync;
     private final TriggerSelectorAPI<?,?> selector;
     private final String name;
     @Setter private boolean enabled;
     private int ticks;
 
-    protected ChannelAPI(Table table) {
+    protected ChannelAPI(ChannelHelper helper, Table table) {
+        this.helper = helper;
         this.name = table.getName();
         this.info = new ChannelInfo(this,table);
         this.data = new ChannelData(this);
+        this.sync = new ChannelSync(this);
         this.selector = initSelector(TriggerHelper.getContext(this));
     }
 
     @Override
     public void activate() {
-        this.selector.activate();
         handleActiveEvent(ChannelEventHandler::activate);
     }
 
@@ -161,7 +163,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     public void tick() {
         tickActive();
         tickPlayable();
-        if((this.ticks++)%ChannelHelper.getDebugNumber("SLOW_TICK_FACTOR").intValue()==0) tickSlow();
+        if((this.ticks++)%getHelper().getDebugNumber("SLOW_TICK_FACTOR").intValue()==0) tickSlow();
     }
 
     @Override

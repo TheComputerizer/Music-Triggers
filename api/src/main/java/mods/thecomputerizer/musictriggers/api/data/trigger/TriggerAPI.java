@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger;
 
+import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import lombok.Setter;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
@@ -10,6 +11,7 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
+import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 import org.apache.commons.lang3.mutable.MutableInt;
 
@@ -65,6 +67,11 @@ public abstract class TriggerAPI extends ParameterWrapper {
         return maxTracks>0 && this.tracksPlayed<maxTracks && !hasTime("ticks_between_audio");
     }
 
+    protected boolean checkSidedContext(TriggerContextAPI<?,?> context) {
+        return (isServer() && !context.isClient()) || (!isServer() && context.isClient()) ?
+                isPlayableContext(context) : context.getSyncedContext(this);
+    }
+
     protected void clearTimers(State state) {
         consumeTimers(timer -> timer.clear(state));
     }
@@ -79,6 +86,11 @@ public abstract class TriggerAPI extends ParameterWrapper {
         clearTimers(ACTIVE);
         setTimer("active_cooldown",PLAYABLE);
         this.tracksPlayed = 0;
+    }
+
+    public void encode(ByteBuf buf) {
+        NetworkHelper.writeString(buf,this.name);
+        NetworkHelper.writeString(buf,this.state.name);
     }
 
     public @Nullable AudioPool getAudioPool() {
@@ -199,7 +211,8 @@ public abstract class TriggerAPI extends ParameterWrapper {
      * Queries the active state of the trigger & wraps isActive with additional checks
      */
     public boolean query(TriggerContextAPI<?,?> context) {
-        if(isPlayableContext(context) || getParameterAsBoolean("not")) {
+        if(isDisabled()) return false;
+        if(checkSidedContext(context) || getParameterAsBoolean("not")) {
             setTimer("persistence",ACTIVE);
             return true;
         }
@@ -258,15 +271,23 @@ public abstract class TriggerAPI extends ParameterWrapper {
     @Getter
     public enum State {
 
-        ACTIVE(false),
-        DISABLED(false),
-        IDLE(true),
-        PLAYABLE(true);
+        ACTIVE("ACTIVE",false),
+        DISABLED("DISABLED",false),
+        IDLE("IDLE",true),
+        PLAYABLE("PLAYABLE",true);
 
+        private static final Map<String,State> BY_NAME = new HashMap<>();
+
+        private final String name;
         private final boolean activatable;
 
-        State(boolean activatable) {
+        State(String name, boolean activatable) {
+            this.name = name;
             this.activatable = activatable;
+        }
+
+        static {
+            for(State state : values()) BY_NAME.put(state.name,state);
         }
     }
 

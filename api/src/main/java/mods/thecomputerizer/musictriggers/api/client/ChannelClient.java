@@ -17,7 +17,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelListener;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
-import org.apache.commons.lang3.EnumUtils;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.EnumHelper;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -37,8 +37,8 @@ public class ChannelClient extends ChannelAPI {
     private boolean isQueued;
     private boolean isPlaying;
 
-    public ChannelClient(Table table) {
-        super(table);
+    public ChannelClient(ChannelHelper helper, Table table) {
+        super(helper,table);
         this.manager = createManager();
         this.player = createPlayer();
         configure(finalizeManager());
@@ -48,10 +48,8 @@ public class ChannelClient extends ChannelAPI {
     }
 
     protected void configure(AudioConfiguration config) {
-        ResamplingQuality quality = EnumUtils.getEnum(ResamplingQuality.class,
-                ChannelHelper.getDebugString("RESAMPLING_QUALITY"));
-        config.setResamplingQuality(Objects.nonNull(quality) ? quality : HIGH);
-        config.setOpusEncodingQuality(ChannelHelper.getDebugNumber("ENCODING_QUALITY").intValue());
+        config.setResamplingQuality(EnumHelper.getEnumOrDefault("RESAMPLING_QUALITY",ResamplingQuality.class,HIGH));
+        config.setOpusEncodingQuality(getHelper().getDebugNumber("ENCODING_QUALITY").intValue());
         config.setOutputFormat(DISCORD_PCM_S16_BE);
     }
 

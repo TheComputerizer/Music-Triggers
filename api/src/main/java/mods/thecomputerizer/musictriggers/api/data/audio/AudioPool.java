@@ -1,9 +1,11 @@
 package mods.thecomputerizer.musictriggers.api.data.audio;
 
+import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -71,6 +73,13 @@ public class AudioPool extends AudioRef {
 
     public void clear() {
         this.audio.clear();
+    }
+
+    @Override
+    public void encode(ByteBuf buf) {
+        NetworkHelper.writeString(buf,"pool");
+        buf.writeInt(this.audio.size());
+        for(AudioRef ref : this.audio) ref.encode(buf);
     }
 
     public boolean hasAudio() {

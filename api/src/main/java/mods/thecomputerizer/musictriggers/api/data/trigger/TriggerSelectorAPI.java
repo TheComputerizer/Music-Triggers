@@ -5,14 +5,10 @@ import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventHandler;
-import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.basic.BasicTrigger;
 
 import javax.annotation.Nullable;
 import java.util.*;
-
-import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.IDLE;
-import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.PLAYABLE;
 
 @Getter
 public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
@@ -32,12 +28,6 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
         this.playables = Collections.emptySet();
     }
 
-    @Override
-    public void activate() {
-        if(Objects.nonNull(this.previousTrigger))
-            this.previousTrigger.setState(isPlayable(this.previousTrigger) ? PLAYABLE : IDLE);
-    }
-
     public void clear() {
         this.playables = Collections.emptyList();
         this.previousPlayables = Collections.emptyList();
@@ -51,23 +41,11 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
         Set<TriggerAPI> playable = new HashSet<>();
         for(TriggerAPI trigger : triggers) {
             setCrashHelper("playable ("+trigger.getNameWithID()+")");
-            if(trigger.isDisabled()) continue;
-            if(trigger.query(this.context)) {
-                playable.add(trigger);
-                trigger.setState(PLAYABLE);
-            }
+            if(trigger.query(this.context)) playable.add(trigger);
         }
         setPlayables(playable);
         playable.removeIf(trigger -> !trigger.canActivate());
         return playable;
-    }
-
-    public @Nullable PLAYER getContextPlayer() {
-        return Objects.nonNull(this.context) ? this.context.getPlayer() : null;
-    }
-
-    public @Nullable WORLD getContextWorld() {
-        return Objects.nonNull(this.context) ? this.context.getWorld() : null;
     }
 
     /**
@@ -84,7 +62,7 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
             }
             else if(tPriority==priorityVal) priority.add(trigger);
             else {
-                if(ChannelHelper.getDebugBool("REVERSE_PRIORITY")) {
+                if(this.channel.getHelper().getDebugBool("REVERSE_PRIORITY")) {
                     if(tPriority<priorityVal) {
                         priority.clear();
                         priority.add(trigger);
@@ -102,9 +80,9 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
 
     protected @Nullable AudioPool getAudioPool(Collection<TriggerAPI> registeredTriggers) {
         Collection<TriggerAPI> triggers = collectPlayableTriggers(registeredTriggers);
-        TriggerAPI trigger = ChannelHelper.getDebugBool("COMBINE_EQUAL_PRIORITY") ?
+        TriggerAPI trigger = this.channel.getHelper().getDebugBool("COMBINE_EQUAL_PRIORITY") ?
                 new TriggerMerged(this.channel,getPriorityTriggers(triggers)) :
-                TriggerHelper.getPriorityTrigger(triggers);
+                TriggerHelper.getPriorityTrigger(this.channel.getHelper(),triggers);
         return setActiveTrigger(trigger);
     }
 

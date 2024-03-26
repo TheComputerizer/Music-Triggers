@@ -175,10 +175,7 @@ public abstract class GlobalElement implements LoggableAPI {
         MTLogger.logWarn("Global",getTypeName(),msg,args);
     }
 
-    public abstract boolean parse(Table table);
-    public abstract boolean parse(Holder holder);
-
-    protected boolean parseParameters(Table table) {
+    public boolean parse(Table table) {
         for(Map.Entry<String,Parameter<?>> entry : this.parameters.entrySet()) {
             String name = entry.getKey();
             if(table.hasVar(name)) {

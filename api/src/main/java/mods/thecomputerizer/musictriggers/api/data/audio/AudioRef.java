@@ -1,10 +1,10 @@
 package mods.thecomputerizer.musictriggers.api.data.audio;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioItem;
+import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
-import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
@@ -13,6 +13,7 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.Parameter
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 import javax.annotation.Nullable;
@@ -29,6 +30,11 @@ public class AudioRef extends ParameterWrapper {
         super(channel);
         this.name = name;
         this.triggers = new ArrayList<>();
+    }
+
+    public void encode(ByteBuf buf) {
+        NetworkHelper.writeString(buf,this.name);
+        NetworkHelper.writeList(buf,this.triggers,trigger -> trigger.encode(buf));
     }
 
     public float getVolume() {
@@ -121,14 +127,14 @@ public class AudioRef extends ParameterWrapper {
         public InterruptHandler(AudioRef parent, Table table) {
             super(parent.getChannel());
             this.priority = table.getValOrDefault("priority",
-                    ChannelHelper.getDebugBool("REVERSE_PRIORITY") ? Integer.MAX_VALUE : Integer.MIN_VALUE);
+                    getChannel().getHelper().getDebugBool("REVERSE_PRIORITY") ? Integer.MAX_VALUE : Integer.MIN_VALUE);
             this.triggers = parseTriggers(parent,table.getValOrDefault("trigger_whitelist",new ArrayList<>()));
         }
 
         public boolean isInterrputedBy(@Nullable TriggerAPI trigger) {
             if(Objects.isNull(trigger)) return false;
             int priority = trigger.getParameterAsInt("priority");
-            return this.triggers.isEmpty() || (ChannelHelper.getDebugBool("REVERSE_PRIORITY") ?
+            return this.triggers.isEmpty() || (getChannel().getHelper().getDebugBool("REVERSE_PRIORITY") ?
                     priority<=this.priority : priority>=this.priority) || trigger.isContained(this.triggers);
         }
 

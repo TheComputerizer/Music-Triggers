@@ -3,8 +3,6 @@ package mods.thecomputerizer.musictriggers.legacy.client;
 import mods.thecomputerizer.musictriggers.api.client.TriggerContextClient;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.ResourceContext;
-import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerBiome;
-import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerMob;
 import mods.thecomputerizer.shadow.org.joml.Vector3i;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
@@ -96,11 +94,6 @@ public class TriggerContextClientLegacy extends TriggerContextClient<EntityPlaye
     }
 
     @Override
-    public boolean isActiveBiome(TriggerBiome trigger) {
-        return false;
-    }
-
-    @Override
     public boolean isActiveBlizzard() {
         return false;
     }
@@ -186,11 +179,6 @@ public class TriggerContextClientLegacy extends TriggerContextClient<EntityPlaye
     }
 
     @Override
-    public boolean isActiveHome(int range, float yRatio) {
-        return false;
-    }
-
-    @Override
     public boolean isActiveHurricane(int range) {
         return false;
     }
@@ -214,11 +202,6 @@ public class TriggerContextClientLegacy extends TriggerContextClient<EntityPlaye
     }
 
     @Override
-    public boolean isActiveMob(TriggerMob trigger) {
-        return false;
-    }
-
-    @Override
     public boolean isActiveMoon(ResourceContext ctx) {
         return false;
     }
@@ -228,16 +211,6 @@ public class TriggerContextClientLegacy extends TriggerContextClient<EntityPlaye
         if(!hasPlayer()) return false;
         for(EntityTameable entity : getEntitiesAround(EntityTameable.class,range,yRatio))
             if(entity.isTamed() && entity.isOwner(this.player)) return true;
-        return false;
-    }
-
-    @Override
-    public boolean isActivePVP() {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveRaid(int wave) {
         return false;
     }
 
@@ -267,11 +240,6 @@ public class TriggerContextClientLegacy extends TriggerContextClient<EntityPlaye
     }
 
     @Override
-    public boolean isActiveSnowing() {
-        return false;
-    }
-
-    @Override
     public boolean isActiveStatistic(ResourceContext ctx, int level) {
         return false;
     }
@@ -279,11 +247,6 @@ public class TriggerContextClientLegacy extends TriggerContextClient<EntityPlaye
     @Override
     public boolean isActiveStorming() {
         return isActiveRaining() && this.world.isThundering();
-    }
-
-    @Override
-    public boolean isActiveStructure(ResourceContext ctx) {
-        return false;
     }
 
     @Override
@@ -333,8 +296,4 @@ public class TriggerContextClientLegacy extends TriggerContextClient<EntityPlaye
                 this.world.getBlockState(pos.up()).getMaterial() == Material.WATER;
     }
 
-    @Override
-    public boolean isActiveVictory(int timeout) {
-        return false;
-    }
 }

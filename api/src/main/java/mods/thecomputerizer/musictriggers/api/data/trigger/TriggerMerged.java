@@ -1,9 +1,11 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger;
 
+import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
+import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -29,6 +31,12 @@ public class TriggerMerged extends TriggerAPI {
     @Override
     public void deactivate() {
         for(TriggerAPI trigger : this.triggers) trigger.deactivate();
+    }
+
+    @Override
+    public void encode(ByteBuf buf) {
+        super.encode(buf);
+        NetworkHelper.writeCollection(buf,this.triggers,trigger -> trigger.encode(buf));
     }
 
     @Override

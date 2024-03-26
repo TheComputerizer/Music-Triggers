@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.api.data.trigger;
 
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.basic.TriggerGeneric;
 import mods.thecomputerizer.musictriggers.api.data.trigger.basic.TriggerLoading;
@@ -11,12 +12,11 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.simple.*;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Constructor;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class TriggerRegistry {
 
+    private static final List<String> BLACKLISTED_NAMES = Arrays.asList("combination","merged","synced");
     private static final Map<String,Class<? extends TriggerAPI>> DEFAULT_TRIGGERS = loadDefaultTriggers();
     private static final Map<String,Class<? extends TriggerAPI>> REGISTERED_TRIGGERS = new HashMap<>(DEFAULT_TRIGGERS);
 
@@ -97,7 +97,9 @@ public class TriggerRegistry {
     }
 
     public static void registerTrigger(String name, Class<? extends TriggerAPI> clazz, boolean overrideDefault) {
-        if(REGISTERED_TRIGGERS.containsKey(name)) {
+        if(BLACKLISTED_NAMES.contains(name))
+            ChannelHelper.getGlobalData().logError("Tried to register trigger with blacklisted name `{}`!",name);
+        else if(REGISTERED_TRIGGERS.containsKey(name)) {
             if(overrideDefault) REGISTERED_TRIGGERS.put(name,clazz);
             else MTRef.logWarn("There is already a trigger with the name `{}` registered to class `{}`! "+
                     "If you know what you are doing and want to override it anyways make sure to call" +

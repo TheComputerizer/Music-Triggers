@@ -1,7 +1,9 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger;
 
+import io.netty.buffer.ByteBuf;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
+import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -42,6 +44,13 @@ public class TriggerCombination extends TriggerAPI {
     @Override
     public void deactivate() {
         for(TriggerAPI trigger : this.priorityChildren) trigger.deactivate();
+    }
+
+    @Override
+    public void encode(ByteBuf buf) {
+        super.encode(buf);
+        NetworkHelper.writeCollection(buf,this.children,child -> NetworkHelper.writeCollection(
+                buf,child,trigger -> trigger.encode(buf)));
     }
 
     @Override
@@ -155,7 +164,7 @@ public class TriggerCombination extends TriggerAPI {
     }
 
     private void updatePriorityTrigger() {
-        this.priorityTrigger = TriggerHelper.getPriorityTrigger(this.priorityChildren);
+        this.priorityTrigger = TriggerHelper.getPriorityTrigger(this.channel.getHelper(),this.priorityChildren);
     }
 
     @Override

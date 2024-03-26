@@ -6,27 +6,53 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerBiome;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerMob;
 import mods.thecomputerizer.musictriggers.api.server.TriggerContextServer;
 import mods.thecomputerizer.shadow.org.joml.Vector3i;
-import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.passive.EntityTameable;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.DimensionType;
-import net.minecraft.world.EnumSkyBlock;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.biome.Biome;
+import net.minecraftforge.common.BiomeDictionary;
+import net.minecraftforge.common.BiomeDictionary.Type;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import static net.minecraft.world.EnumSkyBlock.BLOCK;
-import static net.minecraft.world.EnumSkyBlock.SKY;
-
 public class TriggerContextServerLegacy extends TriggerContextServer<EntityPlayerMP,WorldServer> {
 
     public TriggerContextServerLegacy(ChannelAPI channel) {
         super(channel);
+    }
+
+    private boolean checkBiomeNameAndType(TriggerBiome trigger, Biome biome) {
+        ResourceLocation regName = biome.getRegistryName();
+        if(Objects.isNull(regName)) return false;
+        ResourceContext ctx = trigger.getResourceCtx();
+        if(ctx.checkMatch(regName.toString(),null)) return true; //TODO Sync biome names or check biomes on the client
+        ctx = trigger.getTagCtx();
+        for(Type type : BiomeDictionary.getTypes(biome))
+            if(ctx.checkMatch(type.getName(),null)) return true;
+        return false;
+    }
+
+    private boolean checkBiomeRain(TriggerBiome trigger, Biome biome) {
+        String rainType = trigger.getParameterAsString("rain_type").toUpperCase();
+        if(!biome.canRain()) return rainType.equals("ANY") || rainType.equals("NONE");
+        if(biome.isSnowyBiome() && !rainType.equals("SNOW") && !rainType.equals("ANY")) return false;
+        float rainfall = trigger.getParameterAsFloat("biome_rainfall");
+        return trigger.getParameterAsBoolean("rainfall_greater_than") ?
+                biome.getRainfall()>=rainfall : biome.getRainfall()<=rainfall;
+    }
+
+    private boolean checkBiomeExtras(TriggerBiome trigger, Biome biome, BlockPos pos) {
+        if(checkBiomeRain(trigger,biome)) {
+            float temperature = trigger.getParameterAsFloat("biome_temperature");
+            return trigger.getParameterAsBoolean("temperature_greater_than") ?
+                    biome.getTemperature(pos)>=temperature : biome.getTemperature(pos)<=temperature;
+        }
+        return false;
     }
 
     @Override
@@ -78,153 +104,31 @@ public class TriggerContextServerLegacy extends TriggerContextServer<EntityPlaye
     }
 
     @Override
-    public boolean isActiveAcidRain() {
-        return false;
+    public boolean isActiveBiome(TriggerBiome trigger) { //TODO Cache stuff
+        if(!hasPlayer() || !hasWorld()) return false;
+        BlockPos pos = getRoundedBlockPos();
+        Biome biome = this.world.getBiome(pos);
+        return checkBiomeNameAndType(trigger,biome) && checkBiomeExtras(trigger,biome,pos);
     }
 
-    @Override
-    public boolean isActiveAdvancement(ResourceContext ctx) {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveBiome(TriggerBiome trigger) {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveBlizzard() {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveBlockEntity(ResourceContext ctx, int range, float yRatio) {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveBloodMoon() {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveBlueMoon() {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveCloudy() {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveCommand() {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveDead() {
-        return hasPlayer() && (this.player.isDead || getHealth()<=0f);
-    }
-
-    @Override
-    public boolean isActiveDifficulty(int level) {
-        int difficulty = hasWorld() ? this.world.getDifficulty().getId() : -1;
-        if(difficulty==3 && this.world.getWorldInfo().isHardcoreModeEnabled()) difficulty++;
-        return level==difficulty;
-    }
-
-    @Override
-    public boolean isActiveDimension(ResourceContext ctx) {
-        if(!hasWorld()) return false;
-        int dimension = this.world.provider.getDimension();
-        DimensionType type = this.world.provider.getDimensionType();
-        return ctx.checkMatch(String.valueOf(dimension),type.getName());
-    }
-
-    @Override
-    public boolean isActiveEffect(ResourceContext ctx) {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveElytra() {
-        return hasPlayer() && this.player.isElytraFlying();
-    }
-
-    @Override
-    public boolean isActiveFallingStars() {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveFishing() {
-        return hasPlayer() && Objects.nonNull(this.player.fishEntity) && this.player.fishEntity.isOverWater();
-    }
-
-    @Override
-    public boolean isActiveGamestage(ResourceContext ctx, boolean whitelist) {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveGUI(ResourceContext ctx) {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveHarvestMoon() {
-        return false;
-    }
-
+    @SuppressWarnings("ConstantValue")
     @Override
     public boolean isActiveHome(int range, float yRatio) {
-        return false;
+        if(!hasPlayer() || !hasWorld()) return false;
+        BlockPos bed = this.player.getBedLocation(this.player.dimension);
+        Vector3i pos = getRoundedPos();
+        return Objects.nonNull(bed) && isCloseEnough(bed.getX(),bed.getY(),bed.getZ(),range,yRatio,pos.x,pos.y,pos.z);
     }
 
     @Override
-    public boolean isActiveHurricane(int range) {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveInventory(List<String> items, List<String> slots) {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveLight(int level, String type) {
-        if(!hasWorld()) return false;
-        BlockPos pos = getRoundedBlockPos();
-        EnumSkyBlock enumType = type.matches("block") ? BLOCK : (type.matches("sky") ? SKY : null);
-        return Objects.nonNull(enumType) ? this.world.checkLightFor(enumType,pos) : this.world.checkLight(pos);
-    }
-
-    @Override
-    public boolean isActiveLightRain() {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveMob(TriggerMob trigger) {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveMoon(ResourceContext ctx) {
-        return false;
-    }
-
-    @Override
-    public boolean isActivePet(int range, float yRatio) {
-        if(!hasPlayer()) return false;
-        for(EntityTameable entity : getEntitiesAround(EntityTameable.class,range,yRatio))
-            if(entity.isTamed() && entity.isOwner(this.player)) return true;
+    public boolean isActiveMob(TriggerMob trigger) { //TODO Cache stuff
+        if(!hasPlayer() || !hasWorld()) return false;
         return false;
     }
 
     @Override
     public boolean isActivePVP() {
+        if(!hasPlayer() || !hasWorld()) return false;
         return false;
     }
 
@@ -234,99 +138,19 @@ public class TriggerContextServerLegacy extends TriggerContextServer<EntityPlaye
     }
 
     @Override
-    public boolean isActiveRaining() {
-        return hasWorld() && this.world.isRainingAt(getBlockPos(getRoundedPos()));
-    }
-
-    @Override
-    public boolean isActiveRainIntensity(float level) {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveRiding(ResourceContext ctx) {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveSandstorm(int range) {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveSeason(int level) {
-        return false;
-    }
-
-    @Override
     public boolean isActiveSnowing() {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveStatistic(ResourceContext ctx, int level) {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveStorming() {
-        return isActiveRaining() && this.world.isThundering();
+        return hasWorld() && this.world.canSnowAtBody(getRoundedBlockPos(),false);
     }
 
     @Override
     public boolean isActiveStructure(ResourceContext ctx) {
+        if(!hasPlayer() || !hasWorld()) return false;
         return false;
-    }
-
-    @Override
-    public boolean isActiveTime(String bundle, float startHour, float endHour, int startDay, int endDay, int moonPhase) {
-        if(!hasWorld()) return false;
-        double time = (double)this.world.getWorldTime()/1000d;
-        int day = (int)(time/24d);
-        float hour = (float)(time%24d);
-        switch(bundle) {
-            case "day": {
-                startHour = DAY;
-                endHour = NIGHT;
-                break;
-            }
-            case "night": {
-                startHour = NIGHT;
-                endHour = DAY;
-                break;
-            }
-            case "sunrise": {
-                startHour = SUNRISE;
-                endHour = DAY;
-                break;
-            }
-            case "sunset": {
-                startHour = SUNSET;
-                endHour = NIGHT;
-                break;
-            }
-        }
-        startHour = startHour%24f;
-        endHour = endHour%24f;
-        return hasWorld() && (endHour==startHour || (endHour>startHour ? hour>=startHour && hour<=endHour :
-                hour>=startHour || hour<=endHour)) && (day>=startDay && day<=endDay) &&
-                moonPhase==this.world.getMoonPhase()+1;
-    }
-
-    @Override
-    public boolean isActiveTornado(int range, int level) {
-        return false;
-    }
-
-    @Override
-    public boolean isActiveUnderwater() {
-        BlockPos pos = getRoundedBlockPos();
-        return hasWorld() && this.world.getBlockState(pos).getMaterial() == Material.WATER &&
-                this.world.getBlockState(pos.up()).getMaterial() == Material.WATER;
     }
 
     @Override
     public boolean isActiveVictory(int timeout) {
+        if(!hasPlayer() || !hasWorld()) return false;
         return false;
     }
 }

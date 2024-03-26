@@ -13,9 +13,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Setter @Getter
 public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
@@ -28,11 +26,13 @@ public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
 
     public static boolean LOADED = false;
 
+    protected final Set<TriggerSynced> syncedTriggers;
     protected PLAYER player;
     protected WORLD world;
 
     protected TriggerContextAPI(ChannelAPI channel) {
         super(channel);
+        this.syncedTriggers = new HashSet<>();
     }
 
     protected boolean checkNBT(@Nullable CompoundTagAPI tag, String tagStr) {
@@ -66,12 +66,20 @@ public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
         return getEntitiesAround(clazz,x-hRange,y-vRange,z-hRange,x+hRange,y+vRange,z+hRange);
     }
 
-    protected abstract <E> List<E> getEntitiesAround(Class<E> clazz, double minX, double minY, double minZ, double maxX,
-                                                     double maxY, double maxZ);
+    protected abstract <E> List<E> getEntitiesAround(
+            Class<E> clazz, double minX, double minY, double minZ, double maxX, double maxY, double maxZ);
     protected abstract int getGamemode();
     protected abstract float getHealth();
     protected abstract float getMaxHealth();
     protected abstract Vector3i getRoundedPos();
+
+    protected boolean getSyncedContext(TriggerAPI trigger) {
+        for(TriggerSynced synced : this.syncedTriggers)
+            if(synced.matches(trigger))
+                return synced.isPlayableContext(this);
+        return false;
+    }
+
 
     protected boolean hasPlayer() {
         return Objects.nonNull(this.player);
@@ -169,6 +177,11 @@ public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
     public abstract boolean isActiveVictory(int timeout);
 
     public abstract boolean isClient();
+
+    protected boolean isCloseEnough(int x1, int y1, int z1, double range, double yFactor, int x2, int y2, int z2) {
+        return x2>=(x1-range) && x2<=(x1+range) && z2>=(z1-range) && z2<=z1+range &&
+                y2>=(y1-(range*yFactor)) && y2<=(y1+(range*yFactor));
+    }
 
     @Override
     public boolean isResource() {

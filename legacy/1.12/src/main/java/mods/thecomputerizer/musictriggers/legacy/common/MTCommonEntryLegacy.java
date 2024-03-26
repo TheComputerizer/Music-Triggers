@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.legacy.common;
 
 import mods.thecomputerizer.musictriggers.api.MTRef;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.legacy.MTLegacy;
 import mods.thecomputerizer.musictriggers.legacy.client.MTClientEntryLegacy;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.CommonEntryPoint;
@@ -19,6 +20,7 @@ public class MTCommonEntryLegacy extends CommonEntryPoint {
 
     public MTCommonEntryLegacy() {
         TILLegacy.init();
+        ChannelHelper.init();
         this.clientEntry = MTLegacy.LEGACY_REF.isClient() ? new MTClientEntryLegacy() : null;
     }
 

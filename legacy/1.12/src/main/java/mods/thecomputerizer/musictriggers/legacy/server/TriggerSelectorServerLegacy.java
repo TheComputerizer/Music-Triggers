@@ -8,7 +8,7 @@ import net.minecraft.world.WorldServer;
 
 public class TriggerSelectorServerLegacy extends TriggerSelectorServer<EntityPlayerMP,WorldServer> {
 
-    protected TriggerSelectorServerLegacy(ChannelAPI channel, TriggerContextServer<EntityPlayerMP,WorldServer> context) {
+    public TriggerSelectorServerLegacy(ChannelAPI channel, TriggerContextServer<EntityPlayerMP,WorldServer> context) {
         super(channel,context);
     }
 

@@ -27,29 +27,31 @@ public class TriggerHelper {
      * If the input channel is null all channels will be iterated through and the first match will be returned.
      * Returns null if no matches are found
      */
-    public static @Nullable TriggerAPI findTrigger(@Nullable ChannelAPI channel, String name) {
+    public static @Nullable TriggerAPI findTrigger(ChannelHelper helper, @Nullable ChannelAPI channel, String name) {
         if(Objects.nonNull(channel)) {
             for(TriggerAPI trigger : channel.getData().getTriggers())
                 if(trigger.getNameWithID().equals(name)) return trigger;
             return null;
         }
-        return findTrigger(name);
+        return findTrigger(helper,name);
     }
 
     /**
      * Iterates through all channels to find the first trigger with a matching name-identifier
      * The first match will be returned or no matches if none are found.
      */
-    public static @Nullable TriggerAPI findTrigger(String name) {
-        for(ChannelAPI channel : ChannelHelper.getChannels().values()) {
-            TriggerAPI trigger = findTrigger(channel,name);
+    public static @Nullable TriggerAPI findTrigger(ChannelHelper helper, String name) {
+        for(ChannelAPI channel : helper.getChannels().values()) {
+            TriggerAPI trigger = findTrigger(helper,channel,name);
             if(Objects.nonNull(trigger)) return trigger;
         }
         return null;
     }
 
-    public static boolean findTriggers(LoggableAPI logger, String channelName, Collection<TriggerAPI> triggers, Table table) {
-        return findTriggers(ChannelHelper.findChannel(logger,channelName),triggers,table);
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    public static boolean findTriggers(
+            ChannelHelper helper, LoggableAPI logger, String channelName, Collection<TriggerAPI> triggers, Table table) {
+        return findTriggers(helper.findChannel(logger,channelName),triggers,table);
     }
 
     public static boolean findTriggers(@Nullable ChannelAPI channel, Collection<TriggerAPI> triggers, Table table) {
@@ -59,7 +61,7 @@ public class TriggerHelper {
     public static boolean findTriggers(@Nullable ChannelAPI channel, Collection<TriggerAPI> triggers, Collection<String> names) {
         if(Objects.isNull(channel) || Objects.isNull(triggers) || Objects.isNull(names) || names.isEmpty()) return false;
         for(String name : names) {
-            TriggerAPI trigger = findTrigger(channel,name);
+            TriggerAPI trigger = findTrigger(channel.getHelper(),channel,name);
             if(Objects.isNull(trigger)) {
                 channel.logWarn("Unknown trigger `{}` in triggers array!");
                 return false;
@@ -80,10 +82,11 @@ public class TriggerHelper {
         return Objects.nonNull(api) ? api.getTriggerContext(channel) : null;
     }
 
-    public static @Nullable TriggerAPI getPriorityTrigger(@Nullable Collection<TriggerAPI> triggers) {
+    public static @Nullable TriggerAPI getPriorityTrigger(
+            ChannelHelper helper, @Nullable Collection<TriggerAPI> triggers) {
         if(Objects.isNull(triggers) || triggers.isEmpty()) return null;
-        return ChannelHelper.getDebugBool("REVERSE_PRIORITY") ?
-                Collections.min(triggers,PRIORITY_COMPARATOR) : Collections.max(triggers,PRIORITY_COMPARATOR);
+        return helper.getDebugBool("REVERSE_PRIORITY") ? Collections.min(triggers,PRIORITY_COMPARATOR) :
+                Collections.max(triggers,PRIORITY_COMPARATOR);
     }
 
     public static boolean matchesAll(Collection<TriggerAPI> triggers, Collection<TriggerAPI> others) {

@@ -5,8 +5,6 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterList;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 import java.util.Collections;
 import java.util.Map;
@@ -16,17 +14,6 @@ public class Debug extends GlobalElement {
     @Override
     public String getTypeName() {
         return "Debug";
-    }
-
-    @Override
-    public boolean parse(Table table) {
-        return false;
-    }
-
-    @Override
-    public boolean parse(Holder holder) {
-        Table table = new Table(1,null,1,"debug");
-        return parseParameters(table);
     }
 
     @Override

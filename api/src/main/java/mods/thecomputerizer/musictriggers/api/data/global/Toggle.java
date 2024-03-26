@@ -6,19 +6,22 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 import java.util.*;
 
 public class Toggle extends GlobalElement {
 
+    private final ChannelHelper helper;
+    private final Table table;
     private final From from;
     private final To to;
 
-    public Toggle() {
-        this.from = new From();
-        this.to = new To();
+    public Toggle(ChannelHelper helper, Table table) {
+        this.helper = helper;
+        this.table = table;
+        this.from = new From(this);
+        this.to = new To(this);
     }
 
     @Override
@@ -26,19 +29,13 @@ public class Toggle extends GlobalElement {
         return "Toggle";
     }
 
+    public boolean parse() {
+        return Objects.nonNull(this.table) && parse(this.table);
+    }
+
     @Override
     protected void supplyParameters(Map<String, Parameter<?>> map) {
         map.put("play_once",new ParameterBoolean(false));
-    }
-
-    @Override
-    public boolean parse(Table table) {
-        return parseParameters(table);
-    }
-
-    @Override
-    public boolean parse(Holder holder) {
-        return false;
     }
 
     @Override
@@ -50,9 +47,11 @@ public class Toggle extends GlobalElement {
 
         private static final List<String> VALID_CONDITIONS = Arrays.asList("ACTIVE","PLAYABLE","TOGGLED");
 
+        private final Toggle parent;
         private final Set<TriggerAPI> triggers;
 
-        public From() {
+        public From(Toggle parent) {
+            this.parent = parent;
             this.triggers = new HashSet<>();
         }
 
@@ -63,17 +62,12 @@ public class Toggle extends GlobalElement {
 
         @Override
         public boolean parse(Table table) {
-            if(!parseParameters(table)) return false;
-            if(!TriggerHelper.findTriggers(this,getParameterAsString("channel"),this.triggers,table)) {
+            if(!super.parse(table)) return false;
+            if(!TriggerHelper.findTriggers(this.parent.helper,this,getParameterAsString("channel"),this.triggers,table)) {
                 logError("Failed to parse 1 or more triggers in `from` table");
                 return false;
             }
             return true;
-        }
-
-        @Override
-        public boolean parse(Holder holder) {
-            return false;
         }
 
         @Override
@@ -84,7 +78,7 @@ public class Toggle extends GlobalElement {
 
         @Override
         public boolean verifyRequiredParameters() {
-            if(Objects.isNull(ChannelHelper.findChannel(this,getParameterAsString("channel"))))
+            if(Objects.isNull(this.parent.helper.findChannel(this,getParameterAsString("channel"))))
                 return false;
             String condition = getParameterAsString("condition");
             if(!VALID_CONDITIONS.contains(condition)) {
@@ -99,9 +93,11 @@ public class Toggle extends GlobalElement {
 
         private static final List<String> VALID_CONDITIONS = Arrays.asList("TRUE","FALSE","SWITCH");
 
+        private final Toggle parent;
         private final Set<TriggerAPI> triggers;
 
-        public To() {
+        public To(Toggle parent) {
+            this.parent = parent;
             this.triggers = new HashSet<>();
         }
 
@@ -112,17 +108,12 @@ public class Toggle extends GlobalElement {
 
         @Override
         public boolean parse(Table table) {
-            if(!parseParameters(table)) return false;
-            if(!TriggerHelper.findTriggers(this,getParameterAsString("channel"),this.triggers,table)) {
+            if(!parse(table)) return false;
+            if(!TriggerHelper.findTriggers(this.parent.helper,this,getParameterAsString("channel"),this.triggers,table)) {
                 logError("Failed to parse 1 or more triggers in `to` table");
                 return false;
             }
             return true;
-        }
-
-        @Override
-        public boolean parse(Holder holder) {
-            return false;
         }
 
         @Override
@@ -133,7 +124,7 @@ public class Toggle extends GlobalElement {
 
         @Override
         public boolean verifyRequiredParameters() {
-            if(Objects.isNull(ChannelHelper.findChannel(this,getParameterAsString("channel"))))
+            if(Objects.isNull(this.parent.helper.findChannel(this,getParameterAsString("channel"))))
                 return false;
             String condition = getParameterAsString("condition");
             if(!VALID_CONDITIONS.contains(condition)) {

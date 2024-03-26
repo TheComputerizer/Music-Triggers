@@ -5,12 +5,13 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 public class ChannelServer extends ChannelAPI { //TODO implement this
 
-    public ChannelServer(Table table) {
-        super(table);
+    public ChannelServer(ChannelHelper helper, Table table) {
+        super(helper,table);
     }
 
     @Override
@@ -38,22 +39,16 @@ public class ChannelServer extends ChannelAPI { //TODO implement this
     public void onResourcesLoaded() {}
 
     @Override
-    public void onTrackStart(AudioTrack track) {
-
-    }
+    public void onTrackStart(AudioTrack track) {}
 
     @Override
     public void onTrackStop(AudioTrackEndReason endReason) {}
 
     @Override
-    public void setCategoryVolume(float volume) {
-
-    }
+    public void setCategoryVolume(float volume) {}
 
     @Override
-    public void setTrackVolume(float volume) {
-
-    }
+    public void setTrackVolume(float volume) {}
 
     @Override
     public void tickSlow() {

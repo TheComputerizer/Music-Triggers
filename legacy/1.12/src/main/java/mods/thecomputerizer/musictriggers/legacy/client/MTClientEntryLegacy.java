@@ -7,7 +7,9 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
 public class MTClientEntryLegacy extends ClientEntryPoint {
 
-    public MTClientEntryLegacy() {}
+    public MTClientEntryLegacy() {
+        ChannelHelper.initClient();
+    }
 
     public void preInit(FMLPreInitializationEvent event) {}
 
