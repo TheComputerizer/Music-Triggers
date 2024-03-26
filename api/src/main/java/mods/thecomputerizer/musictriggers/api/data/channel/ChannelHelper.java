@@ -12,14 +12,14 @@ import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceMan
 import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import lombok.Getter;
-import mods.thecomputerizer.musictriggers.api.MTAPI;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.ChannelClient;
-import mods.thecomputerizer.musictriggers.api.data.LoggableAPI;
+import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.global.Debug;
 import mods.thecomputerizer.musictriggers.api.data.global.GlobalData;
 import mods.thecomputerizer.musictriggers.api.data.global.Registration;
 import mods.thecomputerizer.musictriggers.api.data.global.Toggle;
+import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
@@ -104,7 +104,7 @@ public class ChannelHelper {
     }
 
     private static void log(Level level, String msg, Object ... args) {
-        ChannelAPI.log("Loader","Channel Helper",level,msg,args);
+        MTLogger.log("Loader","Channel Helper",level,msg,args);
     }
 
     public static void onResourcesLoaded() {

@@ -7,14 +7,13 @@ import lombok.Getter;
 import lombok.Setter;
 import mods.thecomputerizer.musictriggers.api.MTAPI;
 import mods.thecomputerizer.musictriggers.api.MTRef;
-import mods.thecomputerizer.musictriggers.api.data.LoggableAPI;
+import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
+import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerSelectorAPI;
-import mods.thecomputerizer.theimpossiblelibrary.api.io.LogHelper;
-import mods.thecomputerizer.theimpossiblelibrary.api.io.LogHelper.ModLogger;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 import org.apache.logging.log4j.Level;
 
@@ -24,17 +23,6 @@ import java.util.function.Consumer;
 
 @Getter
 public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
-
-    public static ModLogger LOGGER = LogHelper.create(MTRef.MODID);
-
-    /**
-     * Logs a channel qualified message both the normal log and MT log
-     */
-    public static void log(String type, String typeName, Level level, String msg, Object ... args) {
-        msg = type+"["+typeName+"]: "+msg;
-        MTRef.log(level,msg,args);
-        ChannelAPI.LOGGER.log(level,msg,args);
-    }
 
     private final ChannelInfo info;
     private final ChannelData data;
@@ -97,37 +85,37 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
 
     @Override
     public void logAll(String msg, Object ... args) {
-        log("Channel",getName(),Level.ALL,msg,args);
+        MTLogger.logAll("Channel",getName(),msg,args);
     }
 
     @Override
     public void logDebug(String msg, Object ... args) {
-        log("Channel",getName(),Level.DEBUG,msg,args);
+        MTLogger.logDebug("Channel",getName(),msg,args);
     }
 
     @Override
     public void logError(String msg, Object ... args) {
-        log("Channel",getName(),Level.ERROR,msg,args);
+        MTLogger.logError("Channel",getName(),msg,args);
     }
 
     @Override
     public void logFatal(String msg, Object ... args) {
-        log("Channel",getName(),Level.FATAL,msg,args);
+        MTLogger.logFatal("Channel",getName(),msg,args);
     }
 
     @Override
     public void logInfo(String msg, Object ... args) {
-        log("Channel",getName(),Level.INFO,msg,args);
+        MTLogger.logInfo("Channel",getName(),msg,args);
     }
 
     @Override
     public void logTrace(String msg, Object ... args) {
-        log("Channel",getName(),Level.TRACE,msg,args);
+        MTLogger.logTrace("Channel",getName(),msg,args);
     }
 
     @Override
     public void logWarn(String msg, Object ... args) {
-        log("Channel",getName(),Level.WARN,msg,args);
+        MTLogger.logWarn("Channel",getName(),msg,args);
     }
 
     public abstract void onResourcesLoaded();

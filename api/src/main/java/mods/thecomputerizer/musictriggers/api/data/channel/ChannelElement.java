@@ -1,8 +1,8 @@
 package mods.thecomputerizer.musictriggers.api.data.channel;
 
 import lombok.Getter;
-import mods.thecomputerizer.musictriggers.api.data.LoggableAPI;
-import org.apache.logging.log4j.Level;
+import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
+import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
 
 /**
  * Used for any piece of channel data for more consistently available shared info
@@ -34,37 +34,37 @@ public abstract class ChannelElement implements ChannelEventHandler, LoggableAPI
 
     @Override
     public void logAll(String msg, Object ... args) {
-        ChannelAPI.log("Channel",getChannelName(),Level.ALL,msg,args);
+        MTLogger.logAll("Channel",getChannelName(),msg,args);
     }
 
     @Override
     public void logDebug(String msg, Object ... args) {
-        ChannelAPI.log("Channel",getChannelName(),Level.DEBUG,msg,args);
+        MTLogger.logDebug("Channel",getChannelName(),msg,args);
     }
 
     @Override
     public void logError(String msg, Object ... args) {
-        ChannelAPI.log("Channel",getChannelName(),Level.ERROR,msg,args);
+        MTLogger.logError("Channel",getChannelName(),msg,args);
     }
 
     @Override
     public void logFatal(String msg, Object ... args) {
-        ChannelAPI.log("Channel",getChannelName(),Level.FATAL,msg,args);
+        MTLogger.logFatal("Channel",getChannelName(),msg,args);
     }
 
     @Override
     public void logInfo(String msg, Object ... args) {
-        ChannelAPI.log("Channel",getChannelName(),Level.INFO,msg,args);
+        MTLogger.logInfo("Channel",getChannelName(),msg,args);
     }
 
     @Override
     public void logTrace(String msg, Object ... args) {
-        ChannelAPI.log("Channel",getChannelName(),Level.TRACE,msg,args);
+        MTLogger.logTrace("Channel",getChannelName(),msg,args);
     }
 
     @Override
     public void logWarn(String msg, Object ... args) {
-        ChannelAPI.log("Channel",getChannelName(),Level.WARN,msg,args);
+        MTLogger.logWarn("Channel",getChannelName(),msg,args);
     }
 
     @Override

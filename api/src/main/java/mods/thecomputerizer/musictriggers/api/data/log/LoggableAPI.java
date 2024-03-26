@@ -1,4 +1,4 @@
-package mods.thecomputerizer.musictriggers.api.data;
+package mods.thecomputerizer.musictriggers.api.data.log;
 
 public interface LoggableAPI {
 

@@ -2,8 +2,7 @@ package mods.thecomputerizer.musictriggers.api.data.trigger;
 
 import mods.thecomputerizer.musictriggers.api.MTAPI;
 import mods.thecomputerizer.musictriggers.api.MTRef;
-import mods.thecomputerizer.musictriggers.api.client.TriggerContextClient;
-import mods.thecomputerizer.musictriggers.api.data.LoggableAPI;
+import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;

@@ -2,9 +2,9 @@ package mods.thecomputerizer.musictriggers.api.data.global;
 
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
-import mods.thecomputerizer.musictriggers.api.data.LoggableAPI;
-import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
+import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
+import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 import org.apache.logging.log4j.Level;
@@ -53,36 +53,36 @@ public class GlobalData implements LoggableAPI {
 
     @Override
     public void logAll(String msg, Object ... args) {
-        ChannelAPI.log("Global","Data",Level.ALL,msg,args);
+        MTLogger.log("Global","Data",Level.ALL,msg,args);
     }
 
     @Override
     public void logDebug(String msg, Object ... args) {
-        ChannelAPI.log("Global","Data",Level.DEBUG,msg,args);
+        MTLogger.log("Global","Data",Level.DEBUG,msg,args);
     }
 
     @Override
     public void logError(String msg, Object ... args) {
-        ChannelAPI.log("Global","Data",Level.ERROR,msg,args);
+        MTLogger.log("Global","Data",Level.ERROR,msg,args);
     }
 
     @Override
     public void logFatal(String msg, Object ... args) {
-        ChannelAPI.log("Global","Data",Level.FATAL,msg,args);
+        MTLogger.log("Global","Data",Level.FATAL,msg,args);
     }
 
     @Override
     public void logInfo(String msg, Object ... args) {
-        ChannelAPI.log("Global","Data",Level.INFO,msg,args);
+        MTLogger.log("Global","Data",Level.INFO,msg,args);
     }
 
     @Override
     public void logTrace(String msg, Object ... args) {
-        ChannelAPI.log("Global","Data",Level.TRACE,msg,args);
+        MTLogger.log("Global","Data",Level.TRACE,msg,args);
     }
 
     @Override
     public void logWarn(String msg, Object ... args) {
-        ChannelAPI.log("Global","Data",Level.WARN,msg,args);
+        MTLogger.log("Global","Data",Level.WARN,msg,args);
     }
 }

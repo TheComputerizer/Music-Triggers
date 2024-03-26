@@ -3,7 +3,7 @@ package mods.thecomputerizer.musictriggers.api.client.audio.resource;
 import com.sedmelluq.discord.lavaplayer.tools.io.ExtendedBufferedInputStream;
 import com.sedmelluq.discord.lavaplayer.tools.io.SeekableInputStream;
 import com.sedmelluq.discord.lavaplayer.track.info.AudioTrackInfoProvider;
-import mods.thecomputerizer.musictriggers.api.data.LoggableAPI;
+import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 import org.apache.commons.io.IOUtils;

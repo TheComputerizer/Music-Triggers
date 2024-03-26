@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.data.global;
 
-import mods.thecomputerizer.musictriggers.api.data.LoggableAPI;
-import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
+import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
+import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterList;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
@@ -10,7 +10,6 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.Parameter
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Variable;
-import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -143,37 +142,37 @@ public abstract class GlobalElement implements LoggableAPI {
 
     @Override
     public void logAll(String msg, Object ... args) {
-        ChannelAPI.log("Global",getTypeName(),Level.ALL,msg,args);
+        MTLogger.logAll("Global",getTypeName(),msg,args);
     }
 
     @Override
     public void logDebug(String msg, Object ... args) {
-        ChannelAPI.log("Global",getTypeName(),Level.DEBUG,msg,args);
+        MTLogger.logDebug("Global",getTypeName(),msg,args);
     }
 
     @Override
     public void logError(String msg, Object ... args) {
-        ChannelAPI.log("Global",getTypeName(),Level.ERROR,msg,args);
+        MTLogger.logError("Global",getTypeName(),msg,args);
     }
 
     @Override
     public void logFatal(String msg, Object ... args) {
-        ChannelAPI.log("Global",getTypeName(),Level.FATAL,msg,args);
+        MTLogger.logFatal("Global",getTypeName(),msg,args);
     }
 
     @Override
     public void logInfo(String msg, Object ... args) {
-        ChannelAPI.log("Global",getTypeName(),Level.INFO,msg,args);
+        MTLogger.logInfo("Global",getTypeName(),msg,args);
     }
 
     @Override
     public void logTrace(String msg, Object ... args) {
-        ChannelAPI.log("Global",getTypeName(),Level.TRACE,msg,args);
+        MTLogger.logTrace("Global",getTypeName(),msg,args);
     }
 
     @Override
     public void logWarn(String msg, Object ... args) {
-        ChannelAPI.log("Global",getTypeName(),Level.WARN,msg,args);
+        MTLogger.logWarn("Global",getTypeName(),msg,args);
     }
 
     public abstract boolean parse(Table table);
