@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 
+import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterList;
@@ -9,13 +10,21 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.Parameter
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
 
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
-public class TriggerMob extends HolderTrigger {
+@Getter
+public class TriggerMob<E> extends HolderTrigger {
+
+    private final Set<E> validEntities;
 
     public TriggerMob(ChannelAPI channel) {
         super(channel,"mob");
+        this.validEntities = new HashSet<>();
+    }
+
+    public boolean hasCorrectSize(int min, int max) {
+        int size = this.validEntities.size();
+        return size>=min && size<=max;
     }
 
     @Override
@@ -30,7 +39,8 @@ public class TriggerMob extends HolderTrigger {
         addParameter(map,"horde_health_percentage",new ParameterFloat(50f));
         addParameter(map,"horde_targeting_percentage",new ParameterFloat(50f));
         addParameter(map,"infernal",new ParameterList<>(String.class,Collections.singletonList("ANY")));
-        addParameter(map,"level",new ParameterInt(1));
+        addParameter(map,"max_entities",new ParameterInt(Integer.MAX_VALUE));
+        addParameter(map,"min_entities",new ParameterInt(1));
         addParameter(map,"mob_nbt",new ParameterList<>(String.class,Collections.singletonList("ANY")));
         addParameter(map,"mob_targeting",new ParameterBoolean(true));
         addParameter(map,"resource_matcher",new ParameterString("PARTIAL"));
@@ -47,6 +57,16 @@ public class TriggerMob extends HolderTrigger {
     @Override
     public boolean isServer() {
         return true;
+    }
+
+    public void markEntityValid(E entity) {
+        this.validEntities.add(entity);
+    }
+
+    public Set<E> removeDuplicates(Collection<E> entitiesAround) {
+        Set<E> set = new HashSet<>(entitiesAround);
+        set.removeAll(this.validEntities);
+        return set;
     }
 
     @Override

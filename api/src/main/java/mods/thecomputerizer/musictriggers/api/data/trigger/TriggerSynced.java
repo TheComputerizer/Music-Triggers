@@ -28,13 +28,13 @@ public class TriggerSynced extends TriggerAPI {
     protected void initExtraParameters(Map<String,Parameter<?>> map) {}
 
     @Override
-    public boolean verifyRequiredParameters() {
-        return true;
+    public boolean isPlayableContext(TriggerContextAPI<?,?> context) {
+        return this.syncedState==PLAYABLE || this.syncedState==ACTIVE;
     }
 
     @Override
-    public boolean isPlayableContext(TriggerContextAPI<?,?> context) {
-        return this.syncedState==PLAYABLE || this.syncedState==ACTIVE;
+    public boolean isSynced() {
+        return true;
     }
 
     @Override
@@ -44,5 +44,10 @@ public class TriggerSynced extends TriggerAPI {
 
     public void sync(State state) {
         this.syncedState = state;
+    }
+
+    @Override
+    public boolean verifyRequiredParameters() {
+        return true;
     }
 }

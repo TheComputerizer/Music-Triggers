@@ -160,6 +160,10 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
         handleActiveEvent(ChannelEventHandler::stopped);
     }
 
+    public void sync() {
+        this.sync.send();
+    }
+
     public void tick() {
         tickActive();
         tickPlayable();
@@ -178,6 +182,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
 
     public void tickSlow() {
         this.selector.select();
+        sync();
         this.ticks = 0;
     }
 

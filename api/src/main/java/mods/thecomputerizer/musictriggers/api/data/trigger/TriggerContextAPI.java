@@ -6,6 +6,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.nbt.NBTHelper;
 import mods.thecomputerizer.musictriggers.api.data.nbt.mode.NBTMode;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerBiome;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerMob;
 import mods.thecomputerizer.shadow.org.joml.Vector3i;
@@ -14,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.Map.Entry;
 
 @Setter @Getter
 public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
@@ -34,6 +36,8 @@ public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
         super(channel);
         this.syncedTriggers = new HashSet<>();
     }
+
+    public abstract void cache();
 
     protected boolean checkNBT(@Nullable CompoundTagAPI tag, String tagStr) {
         if(Objects.isNull(tag) || StringUtils.isBlank(tagStr) || tagStr.toUpperCase().matches("ANY")) return true;
@@ -80,15 +84,23 @@ public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
         return false;
     }
 
+    protected boolean hasBoth() {
+        return hasPlayer() && hasWorld();
+    }
 
     protected boolean hasPlayer() {
         return Objects.nonNull(this.player);
     }
 
-    protected abstract boolean hasVisibleSky(Vector3i pos);
+    protected abstract boolean hasVisibleSky();
 
     protected boolean hasWorld() {
         return Objects.nonNull(this.world);
+    }
+
+    public void initSync() {
+        for(TriggerAPI trigger : this.channel.getData().getTriggers())
+            if(trigger.isSynced()) this.syncedTriggers.add(new TriggerSynced(this.channel,trigger));
     }
 
     public boolean isActiveAdventure() {
@@ -109,7 +121,7 @@ public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
 
     public boolean isActiveHeight(int level, boolean checkSky, boolean checkAbove) {
         Vector3i pos = getRoundedPos();
-        return checkAbove ? pos.y>level : pos.y<level && (!checkSky || hasVisibleSky(pos));
+        return checkAbove ? pos.y>level : pos.y<level && (!checkSky || hasVisibleSky());
     }
 
     public boolean isActiveLoading() {
@@ -157,7 +169,7 @@ public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
     public abstract boolean isActiveInventory(List<String> items, List<String> slots);
     public abstract boolean isActiveLight(int level, String type);
     public abstract boolean isActiveLightRain();
-    public abstract boolean isActiveMob(TriggerMob trigger);
+    public abstract boolean isActiveMob(TriggerMob<?> trigger);
     public abstract boolean isActiveMoon(ResourceContext ctx);
     public abstract boolean isActivePet(int range, float yRatio);
     public abstract boolean isActivePVP();
@@ -186,5 +198,16 @@ public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
     @Override
     public boolean isResource() {
         return false;
+    }
+
+    public void updateSyncedStates(Map<TriggerAPI,State> stateMap) {
+        for(Entry<TriggerAPI,State> entry : stateMap.entrySet()) {
+            for(TriggerSynced synced : this.syncedTriggers) {
+                if(synced.matches(entry.getKey())) {
+                    synced.sync(entry.getValue());
+                    break;
+                }
+            }
+        }
     }
 }

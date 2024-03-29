@@ -2,9 +2,9 @@ package mods.thecomputerizer.musictriggers.api.data.trigger;
 
 import mods.thecomputerizer.musictriggers.api.MTAPI;
 import mods.thecomputerizer.musictriggers.api.MTRef;
-import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
+import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 import javax.annotation.Nullable;
@@ -20,6 +20,16 @@ public class TriggerHelper {
      */
     private static boolean checkVersion(@Nullable TriggerAPI trigger) {
         return Objects.nonNull(trigger);
+    }
+
+    public static TriggerAPI decodeTrigger(@Nullable ChannelAPI channel, String name, String id) {
+        if(Objects.nonNull(channel)) {
+            String nameWithID = name+(id.equals("not_set") ? "" : "-"+id);
+            for(TriggerAPI trigger : channel.getData().getTriggers())
+                if(trigger.getNameWithID().equals(nameWithID))
+                    return trigger;
+        }
+        return null;
     }
 
     /**

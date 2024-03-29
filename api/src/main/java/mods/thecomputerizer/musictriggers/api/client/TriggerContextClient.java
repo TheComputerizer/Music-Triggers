@@ -23,7 +23,7 @@ public abstract class TriggerContextClient<PLAYER,WORLD> extends TriggerContextA
     }
 
     @Override
-    public boolean isActiveMob(TriggerMob trigger) {
+    public boolean isActiveMob(TriggerMob<?> trigger) {
         return false;
     }
 

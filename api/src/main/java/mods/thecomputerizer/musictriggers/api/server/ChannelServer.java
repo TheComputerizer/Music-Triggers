@@ -49,9 +49,4 @@ public class ChannelServer extends ChannelAPI { //TODO implement this
 
     @Override
     public void setTrackVolume(float volume) {}
-
-    @Override
-    public void tickSlow() {
-
-    }
 }

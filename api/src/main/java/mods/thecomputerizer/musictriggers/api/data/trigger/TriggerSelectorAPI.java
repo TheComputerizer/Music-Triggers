@@ -21,8 +21,9 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
     protected AudioPool activePool;
     protected AudioPool previousPool;
     protected String crashHelper = "";
+    private boolean cleared;
 
-    protected TriggerSelectorAPI(ChannelAPI channel, TriggerContextAPI<PLAYER,WORLD> context) {
+    protected TriggerSelectorAPI(ChannelAPI channel, TriggerContextAPI<PLAYER,WORLD> context) { //TODO Add AABB hooks to the API
         super(channel);
         this.context = context;
         this.playables = Collections.emptySet();
@@ -100,12 +101,7 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
     public abstract void select();
 
     protected void select(@Nullable PLAYER player, @Nullable WORLD world) {
-        if(Objects.isNull(this.context)) {
-            clear();
-            return;
-        }
-        setContextPlayer(player);
-        setContextWorld(world);
+        if(!setContext(player,world)) return;
         setCrashHelper("trigger selection");
         AudioPool pool = this.activePool;
         if(Objects.isNull(player)) {
@@ -150,12 +146,19 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
         return setActiveTrigger(trigger);
     }
 
-    public void setContextPlayer(PLAYER player) {
+    private boolean setContext(@Nullable PLAYER player, @Nullable WORLD world) {
+        if(Objects.isNull(this.context)) {
+            if(!this.cleared) {
+                clear();
+                this.cleared = true;
+            }
+            return false;
+        }
+        this.cleared = false;
         this.context.setPlayer(player);
-    }
-
-    public void setContextWorld(WORLD world) {
         this.context.setWorld(world);
+        this.context.cache();
+        return true;
     }
 
     protected void setCrashHelper(@Nullable String status) {

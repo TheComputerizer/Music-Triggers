@@ -15,44 +15,72 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.BiomeDictionary.Type;
+import net.minecraftforge.fml.common.registry.EntityEntry;
+import net.minecraftforge.fml.common.registry.EntityRegistry;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
+import org.apache.commons.lang3.StringUtils;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class TriggerContextServerLegacy extends TriggerContextServer<EntityPlayerMP,WorldServer> {
+
+    private BlockPos pos;
+    private Biome biome;
+    private StructureRef structure;
 
     public TriggerContextServerLegacy(ChannelAPI channel) {
         super(channel);
     }
 
-    private boolean checkBiomeNameAndType(TriggerBiome trigger, Biome biome) {
-        ResourceLocation regName = biome.getRegistryName();
+    @Override
+    public void cache() {
+        boolean both = hasBoth();
+        this.pos = both ? getRoundedBlockPos() : null;
+        this.biome = both ? this.world.getBiome(this.pos) : null;
+        this.structure = both ? StructureRef.getStructureAt(this.world,this.pos) : null;
+    }
+
+    private boolean checkBiomeNameAndType(TriggerBiome trigger) {
+        ResourceLocation regName = this.biome.getRegistryName();
         if(Objects.isNull(regName)) return false;
         ResourceContext ctx = trigger.getResourceCtx();
         if(ctx.checkMatch(regName.toString(),null)) return true; //TODO Sync biome names or check biomes on the client
         ctx = trigger.getTagCtx();
-        for(Type type : BiomeDictionary.getTypes(biome))
+        for(Type type : BiomeDictionary.getTypes(this.biome))
             if(ctx.checkMatch(type.getName(),null)) return true;
         return false;
     }
 
-    private boolean checkBiomeRain(TriggerBiome trigger, Biome biome) {
+    private boolean checkBiomeRain(TriggerBiome trigger) {
         String rainType = trigger.getParameterAsString("rain_type").toUpperCase();
-        if(!biome.canRain()) return rainType.equals("ANY") || rainType.equals("NONE");
-        if(biome.isSnowyBiome() && !rainType.equals("SNOW") && !rainType.equals("ANY")) return false;
+        if(!this.biome.canRain()) return rainType.equals("ANY") || rainType.equals("NONE");
+        if(this.biome.isSnowyBiome() && !rainType.equals("SNOW") && !rainType.equals("ANY")) return false;
         float rainfall = trigger.getParameterAsFloat("biome_rainfall");
         return trigger.getParameterAsBoolean("rainfall_greater_than") ?
-                biome.getRainfall()>=rainfall : biome.getRainfall()<=rainfall;
+                this.biome.getRainfall()>=rainfall : this.biome.getRainfall()<=rainfall;
     }
 
-    private boolean checkBiomeExtras(TriggerBiome trigger, Biome biome, BlockPos pos) {
-        if(checkBiomeRain(trigger,biome)) {
+    private boolean checkBiomeExtras(TriggerBiome trigger) {
+        if(checkBiomeRain(trigger)) {
             float temperature = trigger.getParameterAsFloat("biome_temperature");
             return trigger.getParameterAsBoolean("temperature_greater_than") ?
-                    biome.getTemperature(pos)>=temperature : biome.getTemperature(pos)<=temperature;
+                    this.biome.getTemperature(this.pos)>=temperature : this.biome.getTemperature(this.pos)<=temperature;
         }
         return false;
+    }
+
+    private boolean checkEntity(TriggerMob<Entity> trigger, Entity entity) {
+        ResourceContext ctx = trigger.getResourceCtx();
+        return Objects.nonNull(ctx) && checkEntityName(ctx,entity);
+    }
+
+    private boolean checkEntityName(ResourceContext ctx, Entity entity) {
+        EntityEntry entry = EntityRegistry.getEntry(entity.getClass());
+        ResourceLocation id = Objects.nonNull(entry) && ForgeRegistries.ENTITIES.containsValue(entry) ?
+                ForgeRegistries.ENTITIES.getKey(entry) : null;
+        if(Objects.isNull(id)) return false;
+        String name = entity.getName();
+        return ctx.checkMatch(id.toString(),StringUtils.isNotBlank(name) ? name : null);
     }
 
     @Override
@@ -66,6 +94,12 @@ public class TriggerContextServerLegacy extends TriggerContextServer<EntityPlaye
             Class<E> clazz, double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
         return hasWorld() ? (List<E>)this.world.getEntitiesWithinAABB((Class<? extends Entity>)clazz,
                 new AxisAlignedBB(minX,minY,minZ,maxX,maxY,maxZ)) : Collections.emptyList();
+    }
+
+    private Set<Entity> getEntitiesAround(TriggerMob<Entity> trigger) {
+        int range = trigger.getParameterAsInt("detection_range");
+        float rangeRatioY = trigger.getParameterAsFloat("detection_y_ratio");
+        return trigger.removeDuplicates(getEntitiesAround(Entity.class,range,rangeRatioY));
     }
 
     private BlockPos getBlockPos(Vector3i vector) {
@@ -99,36 +133,38 @@ public class TriggerContextServerLegacy extends TriggerContextServer<EntityPlaye
     }
 
     @Override
-    protected boolean hasVisibleSky(Vector3i pos) {
-        return hasWorld() && this.world.canSeeSky(getBlockPos(pos));
+    protected boolean hasVisibleSky() {
+        return Objects.nonNull(this.pos) && this.world.canSeeSky(this.pos);
     }
 
     @Override
-    public boolean isActiveBiome(TriggerBiome trigger) { //TODO Cache stuff
-        if(!hasPlayer() || !hasWorld()) return false;
-        BlockPos pos = getRoundedBlockPos();
-        Biome biome = this.world.getBiome(pos);
-        return checkBiomeNameAndType(trigger,biome) && checkBiomeExtras(trigger,biome,pos);
+    public boolean isActiveBiome(TriggerBiome trigger) { //TODO Better caching
+        return Objects.nonNull(this.biome) && checkBiomeNameAndType(trigger) && checkBiomeExtras(trigger);
     }
 
     @SuppressWarnings("ConstantValue")
     @Override
     public boolean isActiveHome(int range, float yRatio) {
-        if(!hasPlayer() || !hasWorld()) return false;
+        if(Objects.isNull(this.pos)) return false;
         BlockPos bed = this.player.getBedLocation(this.player.dimension);
-        Vector3i pos = getRoundedPos();
-        return Objects.nonNull(bed) && isCloseEnough(bed.getX(),bed.getY(),bed.getZ(),range,yRatio,pos.x,pos.y,pos.z);
+        return Objects.nonNull(bed) && isCloseEnough(bed.getX(),bed.getY(),bed.getZ(),range,yRatio,
+                this.pos.getX(),this.pos.getY(),this.pos.getZ());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public boolean isActiveMob(TriggerMob<?> baseTrigger) { //TODO Cache stuff & implement the rest of this
+        if(Objects.isNull(this.pos)) return false;
+        TriggerMob<Entity> trigger = (TriggerMob<Entity>)baseTrigger;
+        validateEntities(trigger,getEntitiesAround(trigger));
+        int min = trigger.getParameterAsInt("min_entities");
+        int max = trigger.getParameterAsInt("max_entities");
+        return trigger.hasCorrectSize(min,max);
     }
 
     @Override
-    public boolean isActiveMob(TriggerMob trigger) { //TODO Cache stuff
-        if(!hasPlayer() || !hasWorld()) return false;
-        return false;
-    }
-
-    @Override
-    public boolean isActivePVP() {
-        if(!hasPlayer() || !hasWorld()) return false;
+    public boolean isActivePVP() { //TODO implement this
+        if(!hasBoth()) return false;
         return false;
     }
 
@@ -139,18 +175,23 @@ public class TriggerContextServerLegacy extends TriggerContextServer<EntityPlaye
 
     @Override
     public boolean isActiveSnowing() {
-        return hasWorld() && this.world.canSnowAtBody(getRoundedBlockPos(),false);
+        return Objects.nonNull(this.pos) && this.world.canSnowAtBody(this.pos,false);
     }
 
     @Override
-    public boolean isActiveStructure(ResourceContext ctx) {
-        if(!hasPlayer() || !hasWorld()) return false;
-        return false;
+    public boolean isActiveStructure(ResourceContext ctx) { //TODO Expand upon this
+        return Objects.nonNull(this.structure) && ctx.checkMatch(this.structure.getId().toString(),this.structure.getName());
     }
 
     @Override
-    public boolean isActiveVictory(int timeout) {
-        if(!hasPlayer() || !hasWorld()) return false;
+    public boolean isActiveVictory(int timeout) { //TODO implement this
+        if(!hasBoth()) return false;
         return false;
+    }
+
+    private void validateEntities(TriggerMob<Entity> trigger, Collection<Entity> entitiesAround) {
+        Set<Entity> entities = trigger.getValidEntities();
+        entities.addAll(entitiesAround);
+        trigger.getValidEntities().removeIf(entity -> !checkEntity(trigger,entity));
     }
 }

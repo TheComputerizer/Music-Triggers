@@ -4,11 +4,10 @@ import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.GenericUtils;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class ParameterList<E> extends Parameter<List<Parameter<E>>> {
 
@@ -21,17 +20,12 @@ public class ParameterList<E> extends Parameter<List<Parameter<E>>> {
         this.values = defaults;
     }
 
+    @SuppressWarnings("unchecked")
     public ParameterList(ByteBuf buf) {
         super(buf);
-        this.type = findClass(NetworkHelper.readString(buf));
+        this.type = (Class<E>)Misc.findClass(NetworkHelper.readString(buf));
         this.values = new ArrayList<>();
         for(Parameter<E> parameter : getValue()) this.values.add(parameter.value);
-    }
-
-    @SuppressWarnings("unchecked")
-    protected @Nullable Class<E> findClass(String name) {
-        Class<?> clazz = ParameterHelper.findClass(name);
-        return Objects.nonNull(clazz) ? (Class<E>)clazz : null;
     }
 
     @SuppressWarnings("unchecked")
@@ -63,6 +57,6 @@ public class ParameterList<E> extends Parameter<List<Parameter<E>>> {
     @Override
     protected void write(ByteBuf buf, List<Parameter<E>> val) {
         NetworkHelper.writeString(buf,this.type.getName());
-        NetworkHelper.writeGenericList(buf,val,(buf1,p) -> p.write(buf1));
+        NetworkHelper.writeList(buf,val,p -> p.write(buf));
     }
 }

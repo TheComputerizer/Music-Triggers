@@ -8,6 +8,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.EntityTameable;
@@ -26,8 +27,18 @@ import static net.minecraft.world.EnumSkyBlock.SKY;
 
 public class TriggerContextClientLegacy extends TriggerContextClient<EntityPlayerSP,WorldClient> {
 
+    private NetworkPlayerInfo network;
+    private BlockPos pos;
+
     public TriggerContextClientLegacy(ChannelAPI channel) {
         super(channel);
+    }
+
+    @Override
+    public void cache() {
+        boolean both = hasBoth();
+        this.network = getNetworkInfo(both);
+        this.pos = both ? getRoundedBlockPos() : null;
     }
 
     @Override
@@ -49,8 +60,7 @@ public class TriggerContextClientLegacy extends TriggerContextClient<EntityPlaye
 
     @Override
     protected int getGamemode() {
-        NetworkPlayerInfo info = getNetworkInfo();
-        return Objects.nonNull(info) ? info.getGameType().getID() : 0;
+        return Objects.nonNull(this.network) ? this.network.getGameType().getID() : 0;
     }
 
     @Override
@@ -63,8 +73,9 @@ public class TriggerContextClientLegacy extends TriggerContextClient<EntityPlaye
         return hasPlayer() ? this.player.getMaxHealth() : 20f;
     }
 
-    private @Nullable NetworkPlayerInfo getNetworkInfo() {
-        return hasPlayer() ? Minecraft.getMinecraft().getConnection().getPlayerInfo(this.player.getGameProfile().getId()) : null;
+    private @Nullable NetworkPlayerInfo getNetworkInfo(boolean both) {
+        NetHandlerPlayClient connection = both ? Minecraft.getMinecraft().getConnection() : null;
+        return Objects.nonNull(connection) ? connection.getPlayerInfo(this.player.getGameProfile().getId()) : null;
     }
 
     private BlockPos getRoundedBlockPos() {
@@ -79,8 +90,8 @@ public class TriggerContextClientLegacy extends TriggerContextClient<EntityPlaye
     }
 
     @Override
-    protected boolean hasVisibleSky(Vector3i pos) {
-        return hasWorld() && this.world.canSeeSky(getBlockPos(pos));
+    protected boolean hasVisibleSky() {
+        return Objects.nonNull(this.pos) && this.world.canSeeSky(this.pos);
     }
 
     @Override
@@ -189,11 +200,10 @@ public class TriggerContextClientLegacy extends TriggerContextClient<EntityPlaye
     }
 
     @Override
-    public boolean isActiveLight(int level, String type) {
+    public boolean isActiveLight(int level, String typeStr) {
         if(!hasWorld()) return false;
-        BlockPos pos = getRoundedBlockPos();
-        EnumSkyBlock enumType = type.matches("block") ? BLOCK : (type.matches("sky") ? SKY : null);
-        return Objects.nonNull(enumType) ? this.world.checkLightFor(enumType,pos) : this.world.checkLight(pos);
+        EnumSkyBlock type = typeStr.matches("block") ? BLOCK : (typeStr.matches("sky") ? SKY : null);
+        return Objects.nonNull(type) ? this.world.checkLightFor(type,this.pos) : this.world.checkLight(this.pos);
     }
 
     @Override
@@ -216,7 +226,7 @@ public class TriggerContextClientLegacy extends TriggerContextClient<EntityPlaye
 
     @Override
     public boolean isActiveRaining() {
-        return hasWorld() && this.world.isRainingAt(getBlockPos(getRoundedPos()));
+        return Objects.nonNull(this.pos) && this.world.isRainingAt(this.pos);
     }
 
     @Override
@@ -291,9 +301,8 @@ public class TriggerContextClientLegacy extends TriggerContextClient<EntityPlaye
 
     @Override
     public boolean isActiveUnderwater() {
-        BlockPos pos = getRoundedBlockPos();
-        return hasWorld() && this.world.getBlockState(pos).getMaterial() == Material.WATER &&
-                this.world.getBlockState(pos.up()).getMaterial() == Material.WATER;
+        return Objects.nonNull(this.pos) && this.world.getBlockState(this.pos).getMaterial()==Material.WATER &&
+                this.world.getBlockState(this.pos.up()).getMaterial()==Material.WATER;
     }
 
 }

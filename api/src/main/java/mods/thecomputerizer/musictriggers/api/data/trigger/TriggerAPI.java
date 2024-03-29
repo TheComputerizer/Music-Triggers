@@ -2,7 +2,6 @@ package mods.thecomputerizer.musictriggers.api.data.trigger;
 
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
-import lombok.Setter;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
@@ -28,7 +27,7 @@ public abstract class TriggerAPI extends ParameterWrapper {
     private final Set<TriggerCombination> parents;
     private final String name;
     private ResourceContext resourceCtx;
-    @Setter private State state;
+    private State state;
     private int tracksPlayed;
 
     protected TriggerAPI(ChannelAPI channel, String name) {
@@ -68,8 +67,7 @@ public abstract class TriggerAPI extends ParameterWrapper {
     }
 
     protected boolean checkSidedContext(TriggerContextAPI<?,?> context) {
-        return (isServer() && !context.isClient()) || (!isServer() && context.isClient()) ?
-                isPlayableContext(context) : context.getSyncedContext(this);
+        return isSynced() ? context.getSyncedContext(this) : isPlayableContext(context);
     }
 
     protected void clearTimers(State state) {
@@ -89,8 +87,9 @@ public abstract class TriggerAPI extends ParameterWrapper {
     }
 
     public void encode(ByteBuf buf) {
-        NetworkHelper.writeString(buf,this.name);
-        NetworkHelper.writeString(buf,this.state.name);
+        NetworkHelper.writeString(buf,getName());
+        NetworkHelper.writeString(buf,getIdentifier());
+        NetworkHelper.writeString(buf,this.state.name());
     }
 
     public @Nullable AudioPool getAudioPool() {
@@ -170,8 +169,12 @@ public abstract class TriggerAPI extends ParameterWrapper {
         return false;
     }
 
-    public boolean isServer() {
+    protected boolean isServer() {
         return false;
+    }
+
+    public boolean isSynced() {
+        return (isServer() && this.channel.isClientChannel()) || (!isServer() && !this.channel.isClientChannel());
     }
 
     public boolean matches(Collection<TriggerAPI> triggers) {
@@ -217,6 +220,15 @@ public abstract class TriggerAPI extends ParameterWrapper {
             return true;
         }
         return canPersist();
+    }
+
+    public void setState(State state) {
+        if(!isSynced()) {
+            if(this.state!=state) {
+                this.state = state;
+                this.channel.getSync().queueTriggerSync(this);
+            }
+        }
     }
 
     protected void setTimer(String name, State state) {
@@ -271,23 +283,24 @@ public abstract class TriggerAPI extends ParameterWrapper {
     @Getter
     public enum State {
 
-        ACTIVE("ACTIVE",false),
-        DISABLED("DISABLED",false),
-        IDLE("IDLE",true),
-        PLAYABLE("PLAYABLE",true);
+        ACTIVE(false),
+        DISABLED(false),
+        IDLE(true),
+        PLAYABLE(true);
 
         private static final Map<String,State> BY_NAME = new HashMap<>();
+        public static State get(String name) {
+            return BY_NAME.getOrDefault(name,IDLE);
+        }
 
-        private final String name;
         private final boolean activatable;
 
-        State(String name, boolean activatable) {
-            this.name = name;
+        State(boolean activatable) {
             this.activatable = activatable;
         }
 
         static {
-            for(State state : values()) BY_NAME.put(state.name,state);
+            for(State state : values()) BY_NAME.put(state.name(),state);
         }
     }
 

@@ -19,6 +19,7 @@ import mods.thecomputerizer.musictriggers.api.data.global.GlobalData;
 import mods.thecomputerizer.musictriggers.api.data.global.Registration;
 import mods.thecomputerizer.musictriggers.api.data.global.Toggle;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
+import mods.thecomputerizer.musictriggers.api.server.ChannelServer;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
@@ -43,6 +44,11 @@ public class ChannelHelper {
         PLAYER_MAP.put(playerID,globalData.initHelper(playerID,isClient));
     }
 
+    public static @Nullable ChannelAPI findChannel(String playerID, String channelName) {
+        ChannelHelper helper = PLAYER_MAP.get(playerID);
+        return Objects.nonNull(helper) ? helper.findChannel(globalData,channelName) : null;
+    }
+
     public static void init() {
         globalData.parse(openToml(MTRef.GLOBAL_CONFIG,globalData));
     }
@@ -57,6 +63,10 @@ public class ChannelHelper {
             if(helper.client)
                 for(ChannelAPI channel : helper.channels.values())
                     channel.onResourcesLoaded();
+    }
+
+    public static void tick() {
+        for(ChannelHelper helper : PLAYER_MAP.values()) helper.tickChannels();
     }
 
     /**
@@ -170,6 +180,10 @@ public class ChannelHelper {
         return globalData.getRegistration();
     }
 
+    public String getSyncID() { //TODO Implement server version
+        return "CLIENT";
+    }
+
     public void init(@Nullable Holder globalHolder) { //TODO Sided stuff & server channels
         if(Objects.isNull(globalHolder)) {
             globalData.logFatal("Cannot initialize channel or toggle data from missing global config!");
@@ -180,14 +194,21 @@ public class ChannelHelper {
         parseData(resourcesLoaded);
     }
 
+    private void initChannel(String name, Table info) {
+        if(this.channels.containsKey(name)) globalData.logError("Channel with name `{}` already exists!");
+        else {
+            ChannelAPI channel = this.client ? new ChannelClient(this,info) : new ChannelServer(this,info);
+            if(channel.isValid()) this.channels.put(name,channel);
+            else globalData.logError("Channel with name `{}` is invalid!");
+        }
+    }
+
     private void initChannels(@Nullable Table table) {
         if(Objects.isNull(table)) return;
         for(String name : table.getTableNames()) {
-            ChannelAPI channel = new ChannelClient(this,table.getTableByName(name));
-            if(channel.isValid()) {
-                if(!this.channels.containsKey(name)) this.channels.put(name,channel);
-                else globalData.logError("Channel with name `{}` already exists!");
-            } else globalData.logError("Channel with name `{}` is invalid!");
+            Table info = table.getTableByName(name);
+            if(Objects.nonNull(info)) initChannel(name,info);
+            else globalData.logError("Channel `{}` does not have an info table! This should not be possible.",name);
         }
     }
 
@@ -202,5 +223,13 @@ public class ChannelHelper {
             channel.loadTracks(loadResources);
         }
         this.toggles.removeIf(toggle -> !toggle.parse());
+    }
+
+    public void syncChannels() {
+        for(ChannelAPI channel : this.channels.values()) channel.sync();
+    }
+
+    public void tickChannels() {
+        for(ChannelAPI channel : this.channels.values()) channel.tick();
     }
 }
