@@ -29,6 +29,12 @@ public class TriggerMerged extends TriggerAPI {
     }
 
     @Override
+    public void close() {
+        super.close();
+        this.triggers.clear();
+    }
+
+    @Override
     public void deactivate() {
         for(TriggerAPI trigger : this.triggers) trigger.deactivate();
     }
@@ -53,7 +59,7 @@ public class TriggerMerged extends TriggerAPI {
     protected void initExtraParameters(Map<String,Parameter<?>> map) {}
 
     @Override
-    public boolean isPlayableContext(TriggerContextAPI<?,?> context) {
+    public boolean isPlayableContext(TriggerContext context) {
         for(TriggerAPI trigger : this.triggers)
             if(trigger.isPlayableContext(context)) return true;
         return false;

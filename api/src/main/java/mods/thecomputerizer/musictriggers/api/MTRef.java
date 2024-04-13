@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.api;
 
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
-import mods.thecomputerizer.theimpossiblelibrary.api.Reference;
+import mods.thecomputerizer.theimpossiblelibrary.api.core.Reference;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;

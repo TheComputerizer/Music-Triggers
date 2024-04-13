@@ -28,6 +28,12 @@ public abstract class CardAPI extends ChannelEventRunner {
     }
 
     @Override
+    public void close() {
+        super.close();
+        this.triggers.clear();
+    }
+
+    @Override
     public Class<? extends ChannelElement> getTypeClass() {
         return CardAPI.class;
     }

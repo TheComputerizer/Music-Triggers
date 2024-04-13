@@ -35,4 +35,9 @@ public class ChannelSync extends ChannelElement {
         NetworkHelper.wrapMessage(getSyncDirection(false),new MessageTriggerStates<>(this.channel,this.triggersToSync));
         this.triggersToSync.clear();
     }
+
+    @Override
+    public void close() {
+        this.triggersToSync.clear();
+    }
 }

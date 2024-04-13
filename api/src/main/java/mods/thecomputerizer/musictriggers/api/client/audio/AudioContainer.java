@@ -23,6 +23,15 @@ public class AudioContainer extends AudioRef {
         super(channel,name);
     }
 
+    @Override
+    public void close() {
+        super.close();
+        this.fade = 0;
+        this.fadeFactor = 0f;
+        this.item = null;
+        this.playlistIndex = 0;
+    }
+
     protected float getFade() {
         return (float)this.fade*this.fadeFactor;
     }

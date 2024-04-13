@@ -23,6 +23,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.function.Function;
 
 @Getter
@@ -122,15 +123,29 @@ public class ChannelData extends ChannelElement {
         map.put(TriggerAPI.class,universalTriggers());
     }
 
-    public void clear() {
-        this.audio.clear();
-        this.cards.clear();
-        this.commands.clear();
-        this.records.clear();
-        this.redirects.clear();
-        this.triggers.clear();
+    @Override
+    public void close() {
+        closeHandlers(this.audio);
+        closeHandlers(this.cards);
+        closeHandlers(this.commands);
+        closeHandlers(this.records);
+        closeHandlers(this.redirects);
+        closeHandlers(this.triggers);
+        for(Entry<TriggerAPI,Collection<ChannelEventHandler>> entry : this.triggerEventMap.entrySet()) {
+            entry.getKey().close();
+            closeHandlers(entry.getValue());
+        }
         this.triggerEventMap.clear();
+        for(UniversalParameters universal : this.universalMap.values()) universal.close();
         this.universalMap.clear();
+        this.genericTrigger = null;
+        this.loadingTrigger = null;
+        this.menuTrigger = null;
+    }
+
+    private void closeHandlers(Collection<? extends ChannelEventHandler> handlers) {
+        for(ChannelEventHandler handler : handlers) handler.close();
+        handlers.clear();
     }
 
     protected void extractActiveTriggers() {
@@ -168,18 +183,8 @@ public class ChannelData extends ChannelElement {
         return Collections.unmodifiableSet(handlers);
     }
 
-    public @Nullable AudioPool getPool(Collection<TriggerAPI> triggers) {
-        for(TriggerAPI trigger : this.triggerEventMap.keySet())
-            if(trigger.matches(triggers)) return trigger.getAudioPool();
-        return null;
-    }
-
     public @Nullable UniversalParameters getUniversals(Class<? extends ChannelElement> clazz) {
         return this.universalMap.get(clazz);
-    }
-
-    public boolean hasPool(Collection<TriggerAPI> triggers) {
-        return Objects.nonNull(getPool(triggers));
     }
 
     private Map<Class<? extends ChannelElement>,UniversalParameters> initUniversals() {

@@ -87,11 +87,6 @@ public class TriggerHelper {
        return combo;
     }
 
-    public static @Nullable TriggerContextAPI<?,?> getContext(ChannelAPI channel) {
-        MTAPI api = MTRef.getAPI();
-        return Objects.nonNull(api) ? api.getTriggerContext(channel) : null;
-    }
-
     public static @Nullable TriggerAPI getPriorityTrigger(
             ChannelHelper helper, @Nullable Collection<TriggerAPI> triggers) {
         if(Objects.isNull(triggers) || triggers.isEmpty()) return null;

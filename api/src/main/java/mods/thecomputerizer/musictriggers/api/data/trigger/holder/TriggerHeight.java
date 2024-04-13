@@ -4,7 +4,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
-import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
 
 import java.util.Map;
 
@@ -23,7 +23,7 @@ public class TriggerHeight extends HolderTrigger {
     }
 
     @Override
-    public boolean isPlayableContext(TriggerContextAPI<?,?> ctx) {
+    public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveHeight(getParameterAsInt("level"),getParameterAsBoolean("check_for_sky"),
                 getParameterAsBoolean("check_above_level"));
     }

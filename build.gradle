@@ -58,7 +58,7 @@ allprojects {
             url = uri('https://m2.dv8tion.net/releases')
         }
         flatDir {
-            dirs 'build/libs'
+            dirs "$rootProject.projectDir/libs"
         }
     }
 

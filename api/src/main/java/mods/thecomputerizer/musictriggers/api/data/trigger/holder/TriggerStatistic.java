@@ -5,7 +5,7 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterList;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
-import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
 
 import java.util.Collections;
 import java.util.Map;
@@ -27,7 +27,7 @@ public class TriggerStatistic extends HolderTrigger {
     }
 
     @Override
-    public boolean isPlayableContext(TriggerContextAPI<?,?> ctx) {
+    public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveStatistic(getResourceCtx(),getParameterAsInt("level"));
     }
 

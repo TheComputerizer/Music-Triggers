@@ -3,7 +3,7 @@ package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
-import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
 
 import java.util.Map;
 
@@ -25,7 +25,7 @@ public class TriggerZones extends HolderTrigger {
     }
 
     @Override
-    public boolean isPlayableContext(TriggerContextAPI<?,?> ctx) {
+    public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveZones(getParameterAsInt("zone_min_x"),getParameterAsInt("zone_min_y"),
                 getParameterAsInt("zone_min_z"),getParameterAsInt("zone_max_x"),
                 getParameterAsInt("zone_max_y"),getParameterAsInt("zone_max_z"));

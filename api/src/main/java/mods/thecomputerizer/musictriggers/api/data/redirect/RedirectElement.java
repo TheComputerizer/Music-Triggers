@@ -30,6 +30,12 @@ public class RedirectElement extends ChannelElement {
     }
 
     @Override
+    public void close() {
+        this.name = null;
+        this.value = null;
+    }
+
+    @Override
     public boolean isResource() {
         return !this.remote;
     }

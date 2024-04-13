@@ -15,6 +15,7 @@ public class ChannelListener extends AudioEventAdapter {
 
     private final AudioOutput audioOutputThread;
     private final ChannelAPI channel;
+    private boolean closing;
 
     public ChannelListener(ChannelAPI channel) {
         if(Objects.isNull(channel))
@@ -25,24 +26,31 @@ public class ChannelListener extends AudioEventAdapter {
         this.audioOutputThread.start();
     }
 
+    public void close() {
+        this.audioOutputThread.close();
+        this.closing = true;
+    }
+
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
-        this.channel.onTrackStop(endReason);
+        if(!this.closing) this.channel.onTrackStop(endReason);
     }
 
     @Override
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException ex) {
-        this.channel.logError("Track exception caught! Restarting audio output...");
-        this.audioOutputThread.pauseAudioLoop();
-        this.channel.onTrackStop(AudioTrackEndReason.LOAD_FAILED);
+        if(!this.closing) {
+            this.channel.logError("Track exception caught! Restarting audio output...");
+            this.audioOutputThread.pauseAudioLoop();
+            this.channel.onTrackStop(AudioTrackEndReason.LOAD_FAILED);
+        }
     }
 
     @Override
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
-        this.channel.onTrackStart(track);
+        if(!this.closing) this.channel.onTrackStart(track);
     }
 
     public void setPitch(float pitch) {
-        this.audioOutputThread.setPitch(pitch);
+        if(!this.closing) this.audioOutputThread.setPitch(pitch);
     }
 }

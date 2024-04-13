@@ -23,6 +23,7 @@ public class Debug extends GlobalElement {
         map.put("BLOCKED_MOD_CATEGORIES",new ParameterList<>(String.class, Collections.singletonList("minecraft;music")));
         map.put("COMBINE_EQUAL_PRIORITY",new ParameterBoolean(false));
         map.put("CURRENT_SONG_ONLY",new ParameterBoolean(false));
+        map.put("ENABLE_DEBUG_INFO",new ParameterBoolean(false));
         map.put("ENCODING_QUALITY",new ParameterInt(10));
         map.put("INTERRUPTED_AUDIO_CATEGORIES",new ParameterList<>(String.class, Collections.singletonList("music")));
         map.put("LOG_LEVEL",new ParameterString("INFO"));
@@ -31,7 +32,6 @@ public class Debug extends GlobalElement {
         map.put("PLAY_NORMAL_MUSIC",new ParameterBoolean(false));
         map.put("RESAMPLING_QUALITY",new ParameterString("HIGH"));
         map.put("REVERSE_PRIORITY",new ParameterBoolean(false));
-        map.put("SHOW_DEBUG",new ParameterBoolean(false));
         map.put("SLOW_TICK_FACTOR",new ParameterInt(5));
         map.put("TICK_RATE",new ParameterInt(20));
     }

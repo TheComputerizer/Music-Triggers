@@ -22,6 +22,10 @@ public class TrackLoader {
         this.queue = new AtomicInteger();
     }
 
+    public void close() {
+        this.queue.set(0);
+    }
+
     protected void decrementQueue() {
         this.queue.set(this.queue.get()-1);
     }

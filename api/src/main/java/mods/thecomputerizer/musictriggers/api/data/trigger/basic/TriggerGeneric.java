@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.basic;
 
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
-import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
 
 public class TriggerGeneric extends BasicTrigger {
 
@@ -10,7 +10,7 @@ public class TriggerGeneric extends BasicTrigger {
     }
 
     @Override
-    public boolean isPlayableContext(TriggerContextAPI<?,?> ctx) {
+    public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveGeneric();
     }
 }

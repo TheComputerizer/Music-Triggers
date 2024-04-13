@@ -11,9 +11,9 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 @Getter
-public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
+public class TriggerSelector extends ChannelElement {
 
-    protected final TriggerContextAPI<PLAYER,WORLD> context;
+    protected final TriggerContext context;
     protected Collection<TriggerAPI> playables;
     protected Collection<TriggerAPI> previousPlayables;
     protected TriggerAPI activeTrigger;
@@ -23,7 +23,7 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
     protected String crashHelper = "";
     private boolean cleared;
 
-    protected TriggerSelectorAPI(ChannelAPI channel, TriggerContextAPI<PLAYER,WORLD> context) { //TODO Add AABB hooks to the API
+    public TriggerSelector(ChannelAPI channel, TriggerContext context) {
         super(channel);
         this.context = context;
         this.playables = Collections.emptySet();
@@ -34,7 +34,14 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
         this.previousPlayables = Collections.emptyList();
         this.activeTrigger = null;
         this.previousTrigger = null;
+        this.activePool = null;
+        this.previousPool = null;
         this.crashHelper = "cleared";
+    }
+
+    @Override
+    public void close() {
+        clear();
     }
 
     protected Collection<TriggerAPI> collectPlayableTriggers(Collection<TriggerAPI> triggers) {
@@ -87,7 +94,9 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
         return setActiveTrigger(trigger);
     }
 
-    public abstract boolean isClient();
+    public boolean isClient() {
+        return this.channel.isClientChannel();
+    }
 
     public boolean isPlayable(TriggerAPI trigger) {
         return this.playables.contains(trigger);
@@ -98,13 +107,11 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
         return false;
     }
 
-    public abstract void select();
-
-    protected void select(@Nullable PLAYER player, @Nullable WORLD world) {
-        if(!setContext(player,world)) return;
+    public void select() {
+        if(!setContext()) return;
         setCrashHelper("trigger selection");
         AudioPool pool = this.activePool;
-        if(Objects.isNull(player)) {
+        if(!this.context.hasPlayer()) {
             setCrashHelper("early triggers");
             if(isClient()) {
                 setCrashHelper("loading trigger");
@@ -146,7 +153,7 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
         return setActiveTrigger(trigger);
     }
 
-    private boolean setContext(@Nullable PLAYER player, @Nullable WORLD world) {
+    private boolean setContext() {
         if(Objects.isNull(this.context)) {
             if(!this.cleared) {
                 clear();
@@ -155,8 +162,6 @@ public abstract class TriggerSelectorAPI<PLAYER,WORLD> extends ChannelElement {
             return false;
         }
         this.cleared = false;
-        this.context.setPlayer(player);
-        this.context.setWorld(world);
         this.context.cache();
         return true;
     }

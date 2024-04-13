@@ -1,7 +1,5 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger;
 
-import lombok.Getter;
-import lombok.Setter;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.nbt.NBTHelper;
@@ -10,29 +8,26 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerBiome;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerMob;
 import mods.thecomputerizer.shadow.org.joml.Vector3i;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.EntityAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.Box;
+import mods.thecomputerizer.theimpossiblelibrary.api.world.WorldAPI;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.Map.Entry;
 
-@Setter @Getter
-public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
+public abstract class TriggerContext extends ChannelElement {
 
-    public static final List<String> NBT_MODES = Arrays.asList("KEY_PRESENT","VAL_PRESENT","GREATER","LESSER","EQUAL","INVERT");
-    protected static final float DAY = 24f;
-    protected static final float NIGHT = 13f;
-    protected static final float SUNRISE = 23f;
-    protected static final float SUNSET = 12f;
-
-    public static boolean LOADED = false;
+    protected static final List<String> NBT_MODES = Arrays.asList("KEY_PRESENT","VAL_PRESENT","GREATER","LESSER","EQUAL","INVERT");
 
     protected final Set<TriggerSynced> syncedTriggers;
-    protected PLAYER player;
-    protected WORLD world;
+    protected PlayerAPI<?,?> player;
+    protected WorldAPI<?> world;
 
-    protected TriggerContextAPI(ChannelAPI channel) {
+    protected TriggerContext(ChannelAPI channel) {
         super(channel);
         this.syncedTriggers = new HashSet<>();
     }
@@ -52,30 +47,33 @@ public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
         return false;
     }
 
-    protected abstract int getAir();
-
-    protected <E> List<E> getEntitiesAround(Class<E> clazz, int range) {
-        return getEntitiesAround(clazz,range,1f);
+    @Override
+    public void close() {
+        this.player = null;
+        this.world = null;
     }
 
-    protected <E> List<E> getEntitiesAround(Class<E> clazz, int range, float yRatio) {
-        return getEntitiesAround(clazz,range,(double)range*yRatio);
+    protected List<EntityAPI<?,?>> getEntitiesAround(int range) {
+        return getEntitiesAround(range,1f);
     }
 
-    protected <E> List<E> getEntitiesAround(Class<E> clazz, double hRange, double vRange) {
-        Vector3i pos = getRoundedPos();
+    protected List<EntityAPI<?,?>> getEntitiesAround(int range, float yRatio) {
+        return getEntitiesAround(range,(double)range*yRatio);
+    }
+
+    protected List<EntityAPI<?,?>> getEntitiesAround(double hRange, double vRange) {
+        if(!hasBoth()) return Collections.emptyList();
+        Vector3i pos = this.player.getPosRounded().getPosVec();
         double x = pos.x;
         double y = pos.y;
         double z = pos.z;
-        return getEntitiesAround(clazz,x-hRange,y-vRange,z-hRange,x+hRange,y+vRange,z+hRange);
+        return getEntitiesAround(x-hRange,y-vRange,z-hRange,x+hRange,y+vRange,z+hRange);
     }
 
-    protected abstract <E> List<E> getEntitiesAround(
-            Class<E> clazz, double minX, double minY, double minZ, double maxX, double maxY, double maxZ);
-    protected abstract int getGamemode();
-    protected abstract float getHealth();
-    protected abstract float getMaxHealth();
-    protected abstract Vector3i getRoundedPos();
+    protected List<EntityAPI<?,?>> getEntitiesAround(
+            double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+        return hasBoth() ? this.world.getEntitiesInBox(new Box(minX,minY,minZ,maxX,maxY,maxZ)) : Collections.emptyList();
+    }
 
     protected boolean getSyncedContext(TriggerAPI trigger) {
         for(TriggerSynced synced : this.syncedTriggers)
@@ -92,8 +90,6 @@ public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
         return Objects.nonNull(this.player);
     }
 
-    protected abstract boolean hasVisibleSky();
-
     protected boolean hasWorld() {
         return Objects.nonNull(this.world);
     }
@@ -103,50 +99,9 @@ public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
             if(trigger.isSynced()) this.syncedTriggers.add(new TriggerSynced(this.channel,trigger));
     }
 
-    public boolean isActiveAdventure() {
-        return getGamemode()==2;
-    }
-
-    public boolean isActiveCreative() {
-        return getGamemode()==1;
-    }
-
-    public boolean isActiveDrowning(int level) {
-        return getAir()<level;
-    }
-
-    public boolean isActiveGeneric() {
-        return true;
-    }
-
-    public boolean isActiveHeight(int level, boolean checkSky, boolean checkAbove) {
-        Vector3i pos = getRoundedPos();
-        return checkAbove ? pos.y>level : pos.y<level && (!checkSky || hasVisibleSky());
-    }
-
-    public boolean isActiveLoading() {
-        return !LOADED;
-    }
-
-    public boolean isActiveLowHP(float percent) {
-        return (percent/100f)<getHealth()/getMaxHealth();
-    }
-
-    public boolean isActiveMenu() {
-        return LOADED && !hasWorld();
-    }
-
-    public boolean isActiveSpectator() {
-        return getGamemode()==3;
-    }
-
-    public boolean isActiveZones(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
-        Vector3i pos = getRoundedPos();
-        return pos.x>minX && pos.x<maxX && pos.y>minY && pos.y<maxY && pos.z>minZ && pos.z<maxZ;
-    }
-
     public abstract boolean isActiveAcidRain();
     public abstract boolean isActiveAdvancement(ResourceContext ctx);
+    public abstract boolean isActiveAdventure();
     public abstract boolean isActiveBiome(TriggerBiome trigger);
     public abstract boolean isActiveBlizzard();
     public abstract boolean isActiveBlockEntity(ResourceContext ctx, int range, float yRatio);
@@ -154,22 +109,29 @@ public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
     public abstract boolean isActiveBlueMoon();
     public abstract boolean isActiveCloudy();
     public abstract boolean isActiveCommand();
+    public abstract boolean isActiveCreative();
     public abstract boolean isActiveDead();
     public abstract boolean isActiveDifficulty(int level);
     public abstract boolean isActiveDimension(ResourceContext ctx);
+    public abstract boolean isActiveDrowning(int level);
     public abstract boolean isActiveEffect(ResourceContext ctx);
     public abstract boolean isActiveElytra();
     public abstract boolean isActiveFallingStars();
     public abstract boolean isActiveFishing();
     public abstract boolean isActiveGamestage(ResourceContext ctx, boolean whitelist);
+    public abstract boolean isActiveGeneric();
     public abstract boolean isActiveGUI(ResourceContext ctx);
     public abstract boolean isActiveHarvestMoon();
+    public abstract boolean isActiveHeight(int level, boolean checkSky, boolean checkAbove);
     public abstract boolean isActiveHome(int range, float yRatio);
     public abstract boolean isActiveHurricane(int range);
     public abstract boolean isActiveInventory(List<String> items, List<String> slots);
     public abstract boolean isActiveLight(int level, String type);
     public abstract boolean isActiveLightRain();
-    public abstract boolean isActiveMob(TriggerMob<?> trigger);
+    public abstract boolean isActiveLoading();
+    public abstract boolean isActiveLowHP(float percent);
+    public abstract boolean isActiveMenu();
+    public abstract boolean isActiveMob(TriggerMob trigger);
     public abstract boolean isActiveMoon(ResourceContext ctx);
     public abstract boolean isActivePet(int range, float yRatio);
     public abstract boolean isActivePVP();
@@ -180,6 +142,7 @@ public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
     public abstract boolean isActiveSandstorm(int range);
     public abstract boolean isActiveSeason(int level);
     public abstract boolean isActiveSnowing();
+    public abstract boolean isActiveSpectator();
     public abstract boolean isActiveStatistic(ResourceContext ctx, int level);
     public abstract boolean isActiveStorming();
     public abstract boolean isActiveStructure(ResourceContext ctx);
@@ -187,6 +150,7 @@ public abstract class TriggerContextAPI<PLAYER,WORLD> extends ChannelElement {
     public abstract boolean isActiveTornado(int range, int level);
     public abstract boolean isActiveUnderwater();
     public abstract boolean isActiveVictory(int timeout);
+    public abstract boolean isActiveZones(int minX, int minY, int minZ, int maxX, int maxY, int maxZ);
 
     public abstract boolean isClient();
 

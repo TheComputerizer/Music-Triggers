@@ -32,6 +32,12 @@ public class AudioRef extends ParameterWrapper {
         this.triggers = new ArrayList<>();
     }
 
+    @Override
+    public void close() {
+        super.close();
+        this.triggers.clear();
+    }
+
     public void encode(ByteBuf buf) {
         NetworkHelper.writeString(buf,this.name);
         NetworkHelper.writeList(buf,this.triggers,trigger -> trigger.encode(buf));
@@ -150,6 +156,11 @@ public class AudioRef extends ParameterWrapper {
                 return Collections.emptyList();
             }
             return triggers;
+        }
+
+        @Override
+        public void close() {
+            this.triggers.clear();
         }
     }
 }

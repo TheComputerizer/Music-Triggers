@@ -5,19 +5,16 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import lombok.Getter;
 import lombok.Setter;
-import mods.thecomputerizer.musictriggers.api.MTAPI;
-import mods.thecomputerizer.musictriggers.api.MTRef;
-import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
+import mods.thecomputerizer.musictriggers.api.client.TriggerContextClient;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
+import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
-import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
-import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
-import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerSelectorAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerSelector;
+import mods.thecomputerizer.musictriggers.api.server.TriggerContextServer;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 import java.util.Collection;
-import java.util.Objects;
 import java.util.function.Consumer;
 
 @Getter
@@ -27,7 +24,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     private final ChannelInfo info;
     private final ChannelData data;
     private final ChannelSync sync;
-    private final TriggerSelectorAPI<?,?> selector;
+    private final TriggerSelector selector;
     private final String name;
     @Setter private boolean enabled;
     private int ticks;
@@ -38,12 +35,23 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
         this.info = new ChannelInfo(this,table);
         this.data = new ChannelData(this);
         this.sync = new ChannelSync(this);
-        this.selector = initSelector(TriggerHelper.getContext(this));
+        this.selector = new TriggerSelector(this,helper.isClient() ?
+                new TriggerContextClient(this) : new TriggerContextServer(this));
     }
 
     @Override
     public void activate() {
         handleActiveEvent(ChannelEventHandler::activate);
+    }
+
+    /**
+     * Stops any audio that is playing & clears all data
+     */
+    public void close() {
+        this.data.close();
+        this.sync.close();
+        this.selector.close();
+        this.ticks = 0;
     }
 
     @Override
@@ -67,11 +75,6 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
 
     protected void handlePlayableEvent(Consumer<ChannelEventHandler> event) {
         this.data.getPlayableEventHandlers().forEach(event);
-    }
-
-    protected <P,W> TriggerSelectorAPI<P,W> initSelector(TriggerContextAPI<P,W> context) {
-        MTAPI api = MTRef.getAPI();
-        return Objects.nonNull(api) ? api.getTriggerSelector(this,context) : null;
     }
 
     public abstract boolean isClientChannel();
@@ -121,7 +124,6 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     }
 
     public abstract void onResourcesLoaded();
-
     public abstract void onTrackStart(AudioTrack track);
     public abstract void onTrackStop(AudioTrackEndReason endReason);
 

@@ -8,14 +8,15 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterFloat;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
-import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContextAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.EntityAPI;
 
 import java.util.*;
 
 @Getter
-public class TriggerMob<E> extends HolderTrigger {
+public class TriggerMob extends HolderTrigger {
 
-    private final Set<E> validEntities;
+    private final Set<EntityAPI<?,?>> validEntities;
 
     public TriggerMob(ChannelAPI channel) {
         super(channel,"mob");
@@ -50,7 +51,7 @@ public class TriggerMob<E> extends HolderTrigger {
     }
 
     @Override
-    public boolean isPlayableContext(TriggerContextAPI<?,?> ctx) {
+    public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveMob(this);
     }
 
@@ -59,12 +60,12 @@ public class TriggerMob<E> extends HolderTrigger {
         return true;
     }
 
-    public void markEntityValid(E entity) {
+    public void markEntityValid(EntityAPI<?,?> entity) {
         this.validEntities.add(entity);
     }
 
-    public Set<E> removeDuplicates(Collection<E> entitiesAround) {
-        Set<E> set = new HashSet<>(entitiesAround);
+    public Set<EntityAPI<?,?>> removeDuplicates(Collection<EntityAPI<?,?>> entitiesAround) {
+        Set<EntityAPI<?,?>> set = new HashSet<>(entitiesAround);
         set.removeAll(this.validEntities);
         return set;
     }

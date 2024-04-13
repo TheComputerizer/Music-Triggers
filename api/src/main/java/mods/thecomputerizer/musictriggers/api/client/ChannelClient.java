@@ -8,6 +8,7 @@ import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
+import mods.thecomputerizer.musictriggers.api.client.MTDebugInfo.Element;
 import mods.thecomputerizer.musictriggers.api.client.audio.TrackLoader;
 import mods.thecomputerizer.musictriggers.api.client.audio.resource.ResourceAudioSourceManager;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
@@ -20,10 +21,12 @@ import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.EnumHelper;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.Objects;
 
 import static com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats.DISCORD_PCM_S16_BE;
 import static com.sedmelluq.discord.lavaplayer.player.AudioConfiguration.ResamplingQuality.HIGH;
+import static mods.thecomputerizer.musictriggers.api.client.MTDebugInfo.ElementType.CHANNEL;
 
 public class ChannelClient extends ChannelAPI {
 
@@ -34,8 +37,8 @@ public class ChannelClient extends ChannelAPI {
     private boolean registeredResourceAudio;
     private float categoryVolume;
     private float trackVolume;
-    private boolean isQueued;
-    private boolean isPlaying;
+    private boolean queued;
+    private boolean playing;
 
     public ChannelClient(ChannelHelper helper, Table table) {
         super(helper,table);
@@ -45,6 +48,22 @@ public class ChannelClient extends ChannelAPI {
         this.listener = new ChannelListener(this);
         this.trackLoader = new TrackLoader();
         logInfo("Successfully registered client channel `{}`!",getName());
+    }
+
+    public void addDebugElements(MTDebugInfo info, Collection<Element> elements) {
+        //if(this.playing) elements.add(new Element(CHANNEL,info.getTranslated("channel","song")));
+    }
+
+    @Override
+    public void close() {
+        super.close();
+        this.listener.close();
+        this.player.destroy();
+        this.manager.shutdown();
+        this.categoryVolume = 0f;
+        this.trackVolume = 0f;
+        this.queued = false;
+        this.playing = false;
     }
 
     protected void configure(AudioConfiguration config) {
@@ -126,14 +145,14 @@ public class ChannelClient extends ChannelAPI {
     @Override
     public void play() {
         super.play();
-        this.isQueued = false;
-        this.isPlaying = true;
+        this.queued = false;
+        this.playing = true;
     }
 
     @Override
     public void queue() {
         super.queue();
-        this.isQueued = true;
+        this.queued = true;
     }
 
     @Override
@@ -151,7 +170,7 @@ public class ChannelClient extends ChannelAPI {
     @Override
     public void stopped() {
         super.stopped();
-        this.isPlaying = false;
+        this.playing = false;
     }
 
     @Override
@@ -167,8 +186,8 @@ public class ChannelClient extends ChannelAPI {
         if(Objects.nonNull(trigger)) {
             AudioPool activePool = getData().getActivePool();
             if(Objects.nonNull(activePool)) {
-                if(this.isPlaying) playing();
-                else if(!this.isQueued) queue();
+                if(this.playing) playing();
+                else if(!this.queued) queue();
                 else if(trigger.canPlayAudio()) activePool.start(trigger);
             }
         }

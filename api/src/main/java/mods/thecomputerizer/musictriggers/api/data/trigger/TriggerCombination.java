@@ -42,6 +42,15 @@ public class TriggerCombination extends TriggerAPI {
     }
 
     @Override
+    public void close() {
+        super.close();
+        for(Collection<TriggerAPI> child : this.children) child.clear();
+        this.children.clear();
+        this.priorityChildren.clear();
+        this.priorityTrigger = null;
+    }
+
+    @Override
     public void deactivate() {
         for(TriggerAPI trigger : this.priorityChildren) trigger.deactivate();
     }
@@ -78,7 +87,7 @@ public class TriggerCombination extends TriggerAPI {
     }
 
     @Override
-    public boolean isPlayableContext(TriggerContextAPI<?,?> ctx) {
+    public boolean isPlayableContext(TriggerContext ctx) {
         this.priorityChildren.clear();
         for(Collection<TriggerAPI> child : this.children)
             if(!isChildActive(ctx,child)) return false;
@@ -86,7 +95,7 @@ public class TriggerCombination extends TriggerAPI {
         return true;
     }
 
-    protected boolean isChildActive(TriggerContextAPI<?,?> ctx, Collection<TriggerAPI> triggers) {
+    protected boolean isChildActive(TriggerContext ctx, Collection<TriggerAPI> triggers) {
         for(TriggerAPI trigger : triggers)
             if(trigger.isPlayableContext(ctx)) {
                 this.priorityChildren.add(trigger);

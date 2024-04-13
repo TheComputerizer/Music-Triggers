@@ -28,7 +28,7 @@ public class TriggerSynced extends TriggerAPI {
     protected void initExtraParameters(Map<String,Parameter<?>> map) {}
 
     @Override
-    public boolean isPlayableContext(TriggerContextAPI<?,?> context) {
+    public boolean isPlayableContext(TriggerContext context) {
         return this.syncedState==PLAYABLE || this.syncedState==ACTIVE;
     }
 

@@ -66,12 +66,22 @@ public abstract class TriggerAPI extends ParameterWrapper {
         return maxTracks>0 && this.tracksPlayed<maxTracks && !hasTime("ticks_between_audio");
     }
 
-    protected boolean checkSidedContext(TriggerContextAPI<?,?> context) {
+    protected boolean checkSidedContext(TriggerContext context) {
         return isSynced() ? context.getSyncedContext(this) : isPlayableContext(context);
     }
 
     protected void clearTimers(State state) {
         consumeTimers(timer -> timer.clear(state));
+    }
+
+    @Override
+    public void close() {
+        super.close();
+        this.timers.clear();
+        this.parents.clear();
+        this.resourceCtx = null;
+        this.state = DISABLED;
+        this.tracksPlayed = 0;
     }
 
     protected void consumeTimers(Consumer<Timer> consumer) {
@@ -162,7 +172,7 @@ public abstract class TriggerAPI extends ParameterWrapper {
         return this.state==State.DISABLED;
     }
 
-    public abstract boolean isPlayableContext(TriggerContextAPI<?,?> context);
+    public abstract boolean isPlayableContext(TriggerContext context);
 
     @Override
     public boolean isResource() {
@@ -213,7 +223,7 @@ public abstract class TriggerAPI extends ParameterWrapper {
     /**
      * Queries the active state of the trigger & wraps isActive with additional checks
      */
-    public boolean query(TriggerContextAPI<?,?> context) {
+    public boolean query(TriggerContext context) {
         if(isDisabled()) return false;
         if(checkSidedContext(context) || getParameterAsBoolean("not")) {
             setTimer("persistence",ACTIVE);

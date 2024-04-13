@@ -29,7 +29,7 @@ public class GlobalData implements LoggableAPI {
 
     public ChannelHelper initHelper(String playerID, boolean isClient) {
         ChannelHelper helper = new ChannelHelper(playerID,isClient,this.email,this.password);
-        helper.init(this.holder);
+        helper.load(this.holder);
         return helper;
     }
 

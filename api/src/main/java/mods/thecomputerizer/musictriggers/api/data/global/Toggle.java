@@ -24,6 +24,11 @@ public class Toggle extends GlobalElement {
         this.to = new To(this);
     }
 
+    public void close() {
+        this.from.close();
+        this.to.close();
+    }
+
     @Override
     public String getTypeName() {
         return "Toggle";
@@ -53,6 +58,10 @@ public class Toggle extends GlobalElement {
         public From(Toggle parent) {
             this.parent = parent;
             this.triggers = new HashSet<>();
+        }
+
+        private void close() {
+            this.triggers.clear();
         }
 
         @Override
@@ -101,6 +110,10 @@ public class Toggle extends GlobalElement {
             this.triggers = new HashSet<>();
         }
 
+        private void close() {
+            this.triggers.clear();
+        }
+
         @Override
         public String getTypeName() {
             return "Toggle_To";
@@ -108,7 +121,7 @@ public class Toggle extends GlobalElement {
 
         @Override
         public boolean parse(Table table) {
-            if(!parse(table)) return false;
+            if(!super.parse(table)) return false;
             if(!TriggerHelper.findTriggers(this.parent.helper,this,getParameterAsString("channel"),this.triggers,table)) {
                 logError("Failed to parse 1 or more triggers in `to` table");
                 return false;

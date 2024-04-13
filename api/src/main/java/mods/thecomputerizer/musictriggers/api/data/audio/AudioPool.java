@@ -71,8 +71,12 @@ public class AudioPool extends AudioRef {
         return ref.getParameterAsInt("play_once")<2;
     }
 
-    public void clear() {
+    @Override
+    public void close() {
+        super.close();
         this.audio.clear();
+        this.playableAudio.clear();
+        this.queuedAudio = null;
     }
 
     @Override

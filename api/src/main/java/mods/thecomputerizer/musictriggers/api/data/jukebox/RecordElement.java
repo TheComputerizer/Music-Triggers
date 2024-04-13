@@ -29,6 +29,12 @@ public class RecordElement extends ChannelElement {
     }
 
     @Override
+    public void close() {
+        this.name = null;
+        this.key = null;
+    }
+
+    @Override
     public boolean isResource() {
         return true;
     }

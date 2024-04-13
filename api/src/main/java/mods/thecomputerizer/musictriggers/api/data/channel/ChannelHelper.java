@@ -14,6 +14,8 @@ import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.ChannelClient;
+import mods.thecomputerizer.musictriggers.api.client.MTDebugInfo;
+import mods.thecomputerizer.musictriggers.api.client.MTDebugInfo.Element;
 import mods.thecomputerizer.musictriggers.api.data.global.Debug;
 import mods.thecomputerizer.musictriggers.api.data.global.GlobalData;
 import mods.thecomputerizer.musictriggers.api.data.global.Registration;
@@ -24,6 +26,8 @@ import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.CustomTick;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.io.BufferedReader;
@@ -31,14 +35,18 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class ChannelHelper {
 
     private static final Map<String,ChannelHelper> PLAYER_MAP = new HashMap<>();
+    private static final Set<String> RELOADING_PLAYERS = new HashSet<>();
     @Getter private static final GlobalData globalData = new GlobalData();
+    @Getter private static boolean loading = true;
     private static boolean resourcesLoaded;
+    private static boolean reloadingClient;
 
     public static void addPlayer(String playerID, boolean isClient) { //TODO Get id for actual server player reference
         PLAYER_MAP.put(playerID,globalData.initHelper(playerID,isClient));
@@ -49,12 +57,57 @@ public class ChannelHelper {
         return Objects.nonNull(helper) ? helper.findChannel(globalData,channelName) : null;
     }
 
-    public static void init() {
-        globalData.parse(openToml(MTRef.GLOBAL_CONFIG,globalData));
+    public static @Nullable ChannelHelper findChannelHelper(String playerID) {
+        return PLAYER_MAP.get(playerID);
+    }
+
+    public static int getTickRate() {
+        Debug debug = getGlobalData().getDebug();
+        return Objects.nonNull(debug) ? debug.getParameterAsInt("TICK_RATE") : 20;
     }
 
     public static void initClient() {
+        load();
+        loadClient();
+    }
+
+    public static void initServer() {
+        load();
+        loadServer(Collections.emptyList());
+    }
+
+    private static void load() {
+        globalData.parse(openToml(MTRef.GLOBAL_CONFIG,globalData));
+    }
+
+    private static void loadClient() {
         addPlayer("CLIENT",true);
+    }
+
+    private static void loadServer(Collection<String> playerIDs) {
+        for(String playerID : playerIDs) addPlayer(playerID,false);
+    }
+
+    public static void onClientConnected() {
+
+    }
+
+    public static void onClientDisconnected() {
+
+    }
+
+    public static void onReloadQueued() {
+        loading = true;
+        for(Entry<String,ChannelHelper> entry : PLAYER_MAP.entrySet()) {
+            String playerID = entry.getKey();
+            ChannelHelper helper = entry.getValue();
+            if(StringUtils.isNotBlank(playerID) && Objects.nonNull(helper)) {
+                RELOADING_PLAYERS.add(playerID);
+                reloadingClient = helper.client;
+                helper.close();
+            }
+        }
+        PLAYER_MAP.clear();
     }
 
     public static void onResourcesLoaded() {
@@ -65,8 +118,16 @@ public class ChannelHelper {
                     channel.onResourcesLoaded();
     }
 
-    public static void tick() {
-        for(ChannelHelper helper : PLAYER_MAP.values()) helper.tickChannels();
+    public static void reload() {
+        load();
+        if(reloadingClient) loadClient();
+        else loadServer(RELOADING_PLAYERS);
+        loading = false;
+    }
+
+    public static void tick(@Nullable CustomTick ticker) {
+        if(!loading && Objects.nonNull(ticker) && ticker.isEquivalentTPS(getTickRate()))
+            for(ChannelHelper helper : PLAYER_MAP.values()) helper.tickChannels();
     }
 
     /**
@@ -138,6 +199,19 @@ public class ChannelHelper {
         this.youtubePassword = password;
     }
 
+    public void addDebugElements(MTDebugInfo info, Collection<Element> elements) {
+        for(ChannelAPI channel : this.channels.values())
+            if(channel instanceof ChannelClient)
+                ((ChannelClient)channel).addDebugElements(info,elements);
+    }
+
+    public void close() {
+        for(ChannelAPI channel : this.channels.values()) channel.close();
+        this.channels.clear();
+        for(Toggle toggle : this.toggles) toggle.close();
+        this.toggles.clear();
+    }
+
     public @Nullable ChannelAPI findChannel(LoggableAPI logger, String channelName) {
         ChannelAPI channel = channels.get(channelName);
         if(Objects.isNull(channel)) logger.logError("Unable to find channel with name `{}`!",channelName);
@@ -184,7 +258,7 @@ public class ChannelHelper {
         return "CLIENT";
     }
 
-    public void init(@Nullable Holder globalHolder) { //TODO Sided stuff & server channels
+    public void load(@Nullable Holder globalHolder) { //TODO Sided stuff & server channels
         if(Objects.isNull(globalHolder)) {
             globalData.logFatal("Cannot initialize channel or toggle data from missing global config!");
             return;
