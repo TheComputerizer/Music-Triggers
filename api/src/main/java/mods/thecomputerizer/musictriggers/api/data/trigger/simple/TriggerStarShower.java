@@ -6,10 +6,10 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
 import java.util.Collections;
 import java.util.List;
 
-public class TriggerFallingStars extends SimpleTrigger {
+public class TriggerStarShower extends SimpleTrigger {
 
-    public TriggerFallingStars(ChannelAPI channel) {
-        super(channel,"fallingstars");
+    public TriggerStarShower(ChannelAPI channel) {
+        super(channel,"starshower");
     }
 
     @Override
@@ -19,6 +19,6 @@ public class TriggerFallingStars extends SimpleTrigger {
 
     @Override
     public boolean isPlayableContext(TriggerContext ctx) {
-        return ctx.isActiveFallingStars();
+        return ctx.isActiveStarShower();
     }
 }

@@ -9,12 +9,18 @@ import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.EntityAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
+import mods.thecomputerizer.theimpossiblelibrary.api.integration.BloodmoonAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.integration.ModAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.integration.ModHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.integration.Weather2API.WeatherData;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.Box;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.DimensionAPI;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class TriggerContextClient extends TriggerContext {
 
@@ -33,6 +39,11 @@ public class TriggerContextClient extends TriggerContext {
         this.pos = hasPlayer() ? this.player.getPosRounded() : null;
     }
 
+    private <M extends ModAPI> boolean checkMod(Supplier<M> modSupplier, Function<M,Boolean> checker) {
+        M mod = modSupplier.get();
+        return Objects.nonNull(mod) && checker.apply(mod);
+    }
+
     @Override
     public void close() {
         super.close();
@@ -40,8 +51,8 @@ public class TriggerContextClient extends TriggerContext {
     }
 
     @Override
-    public boolean isActiveAcidRain() { //TODO
-        return false;
+    public boolean isActiveAcidRain() {
+        return hasWorld() && checkMod(ModHelper::betterWeather,mod -> mod.isAcidRaining(this.world));
     }
 
     @Override
@@ -60,8 +71,8 @@ public class TriggerContextClient extends TriggerContext {
     }
 
     @Override
-    public boolean isActiveBlizzard() { //TODO
-        return false;
+    public boolean isActiveBlizzard() {
+        return hasWorld() && checkMod(ModHelper::betterWeather,mod -> mod.isBlizzard(this.world));
     }
 
     @Override
@@ -70,18 +81,20 @@ public class TriggerContextClient extends TriggerContext {
     }
 
     @Override
-    public boolean isActiveBloodMoon() { //TODO
-        return false;
+    public boolean isActiveBloodMoon() {
+        return hasWorld() && (checkMod(ModHelper::bloodmoon,BloodmoonAPI::isBloodMoon) ||
+                checkMod(ModHelper::nyx,mod -> mod.isBloodMoon(this.world)) ||
+                checkMod(ModHelper::enhancedCelestials,mod -> mod.isBloodMoon(this.world)));
     }
 
     @Override
-    public boolean isActiveBlueMoon() { //TODO
-        return false;
+    public boolean isActiveBlueMoon() {
+        return hasWorld() && checkMod(ModHelper::enhancedCelestials,mod -> mod.isBlueMoon(this.world));
     }
 
     @Override
-    public boolean isActiveCloudy() { //TODO
-        return false;
+    public boolean isActiveCloudy() {
+        return hasWorld() && checkMod(ModHelper::betterWeather,mod -> mod.isCloudy(this.world));
     }
 
     @Override
@@ -127,8 +140,8 @@ public class TriggerContextClient extends TriggerContext {
     }
 
     @Override
-    public boolean isActiveFallingStars() { //TODO
-        return false;
+    public boolean isActiveStarShower() {
+        return hasWorld() && checkMod(ModHelper::nyx,mod -> mod.isStarShower(this.world));
     }
 
     @Override
@@ -137,8 +150,12 @@ public class TriggerContextClient extends TriggerContext {
     }
 
     @Override
-    public boolean isActiveGamestage(ResourceContext ctx, boolean whitelist) { //TODO
-        return false;
+    public boolean isActiveGamestage(ResourceContext ctx, boolean whitelist) {
+        return hasPlayer() && checkMod(ModHelper::gameStages,mod -> {
+            for(String stage : mod.getStages(this.player))
+                if(ctx.checkMatch(stage,null)) return true;
+            return false;
+        });
     }
 
     @Override
@@ -152,8 +169,9 @@ public class TriggerContextClient extends TriggerContext {
     }
 
     @Override
-    public boolean isActiveHarvestMoon() { //TODO
-        return false;
+    public boolean isActiveHarvestMoon() {
+        return hasWorld() && (checkMod(ModHelper::nyx,mod -> mod.isHarvestMoon(this.world)) ||
+                checkMod(ModHelper::enhancedCelestials,mod -> mod.isHarvestMoon(this.world)));
     }
 
     @Override
@@ -169,8 +187,9 @@ public class TriggerContextClient extends TriggerContext {
     }
 
     @Override
-    public boolean isActiveHurricane(int range) { //TODO
-        return false;
+    public boolean isActiveHurricane(int range) {
+        return Objects.nonNull(this.pos) && checkMod(ModHelper::weather2,mod ->
+                Objects.nonNull(mod.getClosestHurricane(this.world,this.pos,range)));
     }
 
     @Override
@@ -189,8 +208,8 @@ public class TriggerContextClient extends TriggerContext {
     }
 
     @Override
-    public boolean isActiveLightRain() { //TODO
-        return false;
+    public boolean isActiveLightRain() {
+        return hasWorld() && checkMod(ModHelper::betterWeather,mod -> mod.isRaining(this.world));
     }
 
     @Override
@@ -214,8 +233,8 @@ public class TriggerContextClient extends TriggerContext {
     }
 
     @Override
-    public boolean isActiveMoon(ResourceContext ctx) { //TODO
-        return false;
+    public boolean isActiveMoon(ResourceContext ctx) {
+        return hasWorld() && checkMod(ModHelper::enhancedCelestials,mod -> mod.isMoon(this.world));
     }
 
     @Override
@@ -241,8 +260,8 @@ public class TriggerContextClient extends TriggerContext {
     }
 
     @Override
-    public boolean isActiveRainIntensity(float level) { //TODO
-        return false;
+    public boolean isActiveRainIntensity(float level) {
+        return hasWorld() && checkMod(ModHelper::dynamicSurroundings,mod -> mod.getRainStrength(this.world)>level);
     }
 
     @Override
@@ -251,13 +270,22 @@ public class TriggerContextClient extends TriggerContext {
     }
 
     @Override
-    public boolean isActiveSandstorm(int range) { //TODO
-        return false;
+    public boolean isActiveSandstorm(int range) {
+        return Objects.nonNull(this.pos) && checkMod(ModHelper::weather2,mod ->
+                Objects.nonNull(mod.getClosestSandStorm(this.world,this.pos,range)));
     }
 
     @Override
-    public boolean isActiveSeason(int level) { //TODO
-        return false;
+    public boolean isActiveSeason(int level) {
+        return hasWorld() && checkMod(ModHelper::sereneSeasons,mod -> {
+            switch(level) {
+                case 0: return mod.isSpring(this.world);
+                case 1: return mod.isSummer(this.world);
+                case 2: return mod.isAutumn(this.world);
+                case 3: return mod.isWinter(this.world);
+                default: return false;
+            }
+        });
     }
 
     @Override
@@ -307,8 +335,11 @@ public class TriggerContextClient extends TriggerContext {
     }
 
     @Override
-    public boolean isActiveTornado(int range, int level) { //TODO
-        return false;
+    public boolean isActiveTornado(int range, int level) {
+        return Objects.nonNull(this.pos) && checkMod(ModHelper::weather2,mod -> {
+            WeatherData data = mod.getClosestTornado(this.world,this.pos,range);
+            return Objects.nonNull(data) && data.getLevel()>=level;
+        });
     }
 
     @Override

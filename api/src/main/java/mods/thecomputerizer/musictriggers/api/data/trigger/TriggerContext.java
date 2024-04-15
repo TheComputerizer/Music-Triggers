@@ -116,7 +116,7 @@ public abstract class TriggerContext extends ChannelElement {
     public abstract boolean isActiveDrowning(int level);
     public abstract boolean isActiveEffect(ResourceContext ctx);
     public abstract boolean isActiveElytra();
-    public abstract boolean isActiveFallingStars();
+    public abstract boolean isActiveStarShower();
     public abstract boolean isActiveFishing();
     public abstract boolean isActiveGamestage(ResourceContext ctx, boolean whitelist);
     public abstract boolean isActiveGeneric();

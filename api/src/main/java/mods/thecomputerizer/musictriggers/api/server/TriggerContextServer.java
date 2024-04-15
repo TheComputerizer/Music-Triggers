@@ -168,7 +168,7 @@ public class TriggerContextServer extends TriggerContext {
     }
 
     @Override
-    public boolean isActiveFallingStars() {
+    public boolean isActiveStarShower() {
         return false;
     }
 

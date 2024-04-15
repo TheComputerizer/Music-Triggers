@@ -54,7 +54,7 @@ public class TriggerRegistry {
         map.put("drowning",TriggerDrowning.class);
         map.put("effect",TriggerEffect.class);
         map.put("elytra",TriggerElytra.class);
-        map.put("fallingstars",TriggerFallingStars.class);
+        map.put("fallingstars", TriggerStarShower.class);
         map.put("fishing",TriggerFishing.class);
         map.put("gamestage",TriggerGamestage.class);
         map.put("generic",TriggerGeneric.class);
