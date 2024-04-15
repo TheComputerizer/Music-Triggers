@@ -125,6 +125,10 @@ public class ChannelHelper {
         loading = false;
     }
 
+    public static boolean resourcesLoaded() {
+        return resourcesLoaded;
+    }
+
     public static void tick(@Nullable CustomTick ticker) {
         if(!loading && Objects.nonNull(ticker) && ticker.isEquivalentTPS(getTickRate()))
             for(ChannelHelper helper : PLAYER_MAP.values()) helper.tickChannels();

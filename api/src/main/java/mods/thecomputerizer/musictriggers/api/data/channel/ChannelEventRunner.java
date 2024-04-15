@@ -22,7 +22,7 @@ public abstract class ChannelEventRunner extends ParameterWrapper {
     }
 
     public boolean canRun(String event) {
-        return event.equals(getParameterAsString("event").toUpperCase());
+        return checkResource() && event.equals(getParameterAsString("event").toUpperCase());
     }
 
     @Override

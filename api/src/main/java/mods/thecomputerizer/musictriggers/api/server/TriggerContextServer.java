@@ -8,6 +8,11 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerMob;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.biome.BiomeAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.EntityAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.structure.StructureAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.integration.ChampionsAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.integration.ChampionsAPI.ChampionData;
+import mods.thecomputerizer.theimpossiblelibrary.api.integration.InfernalMobsAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.integration.InfernalMobsAPI.InfernalData;
+import mods.thecomputerizer.theimpossiblelibrary.api.integration.ModHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
 import org.apache.commons.lang3.StringUtils;
@@ -66,7 +71,43 @@ public class TriggerContextServer extends TriggerContext {
 
     private boolean checkEntity(TriggerMob trigger, EntityAPI<?,?> entity) {
         ResourceContext ctx = trigger.getResourceCtx();
-        return Objects.nonNull(ctx) && checkEntityName(ctx,entity);
+        return Objects.nonNull(ctx) && checkEntityName(ctx,entity) && checkEntityMods(trigger,entity) ;
+    }
+
+    @SuppressWarnings("unchecked")
+    private boolean checkEntityChampion(TriggerMob trigger, EntityAPI<?,?> entity) {
+        ChampionsAPI champions = ModHelper.champions();
+        if(Objects.nonNull(champions)) {
+            List<String> championNames = (List<String>)trigger.getParameterAsList("champion");
+            if(championNames.isEmpty() || (championNames.size()==1 && championNames.get(0).equals("ANY"))) return true;
+            ChampionData data = champions.getChampionData(entity);
+            if(Objects.nonNull(data))
+                for(String name : championNames)
+                    for(String affix : data.getAffixes())
+                        if(affix.contains(name)) return true;
+            return false;
+        }
+        return true;
+    }
+
+    @SuppressWarnings("unchecked")
+    private boolean checkEntityInfernal(TriggerMob trigger, EntityAPI<?,?> entity) {
+        InfernalMobsAPI infernalMobs = ModHelper.infernalMobs();
+        if(Objects.nonNull(infernalMobs)) {
+            List<String> infernalNames = (List<String>)trigger.getParameterAsList("infernal");
+            if(infernalNames.isEmpty() || (infernalNames.size()==1 && infernalNames.get(0).equals("ANY"))) return true;
+            InfernalData<?> data = infernalMobs.getInfernalData(entity);
+            if(Objects.nonNull(data))
+                for(String name : infernalNames)
+                    for(String display : data.getDisplayNames())
+                        if(display.contains(name)) return true;
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkEntityMods(TriggerMob trigger, EntityAPI<?,?> entity) {
+        return checkEntityChampion(trigger,entity) && checkEntityInfernal(trigger,entity);
     }
 
     private boolean checkEntityName(ResourceContext ctx, EntityAPI<?,?> entity) {
@@ -79,7 +120,7 @@ public class TriggerContextServer extends TriggerContext {
     private Set<EntityAPI<?,?>> getEntitiesAround(TriggerMob trigger) {
         int range = trigger.getParameterAsInt("detection_range");
         float rangeRatioY = trigger.getParameterAsFloat("detection_y_ratio");
-        return trigger.removeDuplicates(getEntitiesAround(range,rangeRatioY));
+        return trigger.removeDuplicates(getEntitiesAround(getBox(range,rangeRatioY)));
     }
 
     @Override
@@ -322,7 +363,7 @@ public class TriggerContextServer extends TriggerContext {
     @Override
     public boolean isActiveStructure(ResourceContext ctx) {
         return Objects.nonNull(this.structure) && ctx.checkMatch(
-                this.structure.getRegistryName().toString(), this.structure.getName());
+                this.structure.getRegistryName().get().toString(),this.structure.getName());
     }
 
     @Override

@@ -8,6 +8,7 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerBiome;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerMob;
 import mods.thecomputerizer.shadow.org.joml.Vector3i;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.blockentity.BlockEntityAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.EntityAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
@@ -53,26 +54,32 @@ public abstract class TriggerContext extends ChannelElement {
         this.world = null;
     }
 
-    protected List<EntityAPI<?,?>> getEntitiesAround(int range) {
-        return getEntitiesAround(range,1f);
+    protected Box getBox(int range) {
+        return getBox(range,1f);
     }
 
-    protected List<EntityAPI<?,?>> getEntitiesAround(int range, float yRatio) {
-        return getEntitiesAround(range,(double)range*yRatio);
+    protected Box getBox(int range, float yRatio) {
+        return getBox(range,(double)range*yRatio);
     }
 
-    protected List<EntityAPI<?,?>> getEntitiesAround(double hRange, double vRange) {
-        if(!hasBoth()) return Collections.emptyList();
+    protected Box getBox(double hRange, double vRange) {
         Vector3i pos = this.player.getPosRounded().getPosVec();
         double x = pos.x;
         double y = pos.y;
         double z = pos.z;
-        return getEntitiesAround(x-hRange,y-vRange,z-hRange,x+hRange,y+vRange,z+hRange);
+        return getBox(x-hRange,y-vRange,z-hRange,x+hRange,y+vRange,z+hRange);
     }
 
-    protected List<EntityAPI<?,?>> getEntitiesAround(
-            double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-        return hasBoth() ? this.world.getEntitiesInBox(new Box(minX,minY,minZ,maxX,maxY,maxZ)) : Collections.emptyList();
+    protected Box getBox(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
+        return new Box(minX,minY,minZ,maxX,maxY,maxZ);
+    }
+
+    protected Collection<BlockEntityAPI<?,?>> getBlockEntitiesAround(Box box) {
+        return hasBoth() ? this.world.getBlockEntitiesInBox(box) : Collections.emptyList();
+    }
+
+    protected List<EntityAPI<?,?>> getEntitiesAround(Box box) {
+        return hasBoth() ? this.world.getEntitiesInBox(box) : Collections.emptyList();
     }
 
     protected boolean getSyncedContext(TriggerAPI trigger) {

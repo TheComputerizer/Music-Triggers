@@ -19,6 +19,10 @@ public abstract class ChannelElement implements ChannelEventHandler, LoggableAPI
     @Override
     public void activate() {}
 
+    public boolean checkResource() {
+        return !isResource() || (this.channel.isClientChannel() && ChannelHelper.resourcesLoaded());
+    }
+
     @Override
     public void deactivate() {}
 

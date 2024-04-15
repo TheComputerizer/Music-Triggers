@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.nbt;
 
 import mods.thecomputerizer.musictriggers.api.MTRef;
-import mods.thecomputerizer.musictriggers.api.data.global.nbt.mode.*;
 import mods.thecomputerizer.musictriggers.api.data.nbt.mode.*;
 
 import javax.annotation.Nullable;
@@ -12,7 +11,7 @@ import java.util.Objects;
 
 public class NBTHelper {
 
-    private static final Map<String, NBTMode> REGISTERED_MODES = getDefaultModes();
+    private static final Map<String,NBTMode> REGISTERED_MODES = getDefaultModes();
 
     private static Map<String,NBTMode> getDefaultModes() {
         Map<String,NBTMode> map = new HashMap<>();

@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.client;
 
+import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.ResourceContext;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
@@ -7,18 +8,21 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerBiome;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerMob;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.blockentity.BlockEntityAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.container.PlayerInventoryAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.EntityAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.item.ItemStackAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
 import mods.thecomputerizer.theimpossiblelibrary.api.integration.BloodmoonAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.integration.ModAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.integration.ModHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.integration.Weather2API.WeatherData;
+import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.Box;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.DimensionAPI;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -50,6 +54,28 @@ public class TriggerContextClient extends TriggerContext {
         this.minecraft = null;
     }
 
+    private Collection<ItemStackAPI<?>> getStacksFromSlotMatcher(String slotMatcher) {
+        PlayerInventoryAPI<?> inventory = this.player.getInventory();
+        switch(slotMatcher.toUpperCase()) {
+            case "MAINHAND": return Collections.singleton(this.player.getMainHandStack());
+            case "OFFHAND": return Collections.singleton(this.player.getOffHandStack());
+            case "HOTBAR": return inventory.getHotbarStacks();
+            case "ARMOR": return inventory.getArmorStacks();
+            case "ANY": {
+                List<ItemStackAPI<?>> stacks = new ArrayList<>();
+                for(int i=0;i<inventory.getSlots();i++) {
+                    ItemStackAPI<?> stack = inventory.getStack(i);
+                    if(stack.isNotEmpty()) stacks.add(stack);
+                }
+                return stacks;
+            }
+            default: {
+                int slot = MTRef.randomInt(this.channel,"inventory_slot_number",slotMatcher,-1);
+                return slot>=0 ? Collections.singleton(inventory.getStack(slot)) : Collections.emptyList();
+            }
+        }
+    }
+
     @Override
     public boolean isActiveAcidRain() {
         return hasWorld() && checkMod(ModHelper::betterWeather,mod -> mod.isAcidRaining(this.world));
@@ -76,7 +102,12 @@ public class TriggerContextClient extends TriggerContext {
     }
 
     @Override
-    public boolean isActiveBlockEntity(ResourceContext ctx, int range, float yRatio) { //TODO
+    public boolean isActiveBlockEntity(ResourceContext ctx, int range, float yRatio) {
+        for(BlockEntityAPI<?,?> block : getBlockEntitiesAround(getBox(range,yRatio))) {
+            ResourceLocationAPI<?> registryName = block.getRegistryName();
+            if(Objects.nonNull(registryName) && ctx.checkMatch(registryName.get().toString(),null))
+                return true;
+        }
         return false;
     }
 
@@ -193,7 +224,25 @@ public class TriggerContextClient extends TriggerContext {
     }
 
     @Override
-    public boolean isActiveInventory(List<String> items, List<String> slots) { //TODO
+    public boolean isActiveInventory(List<String> items, List<String> slots) {
+        if(items.isEmpty() || slots.isEmpty() || !hasPlayer()) return false;
+        for(String slot : slots)
+            for(ItemStackAPI<?> stack : getStacksFromSlotMatcher(slot))
+                for(String item : items)
+                    if(isActiveItem(stack,item)) return true;
+        return false;
+    }
+
+    private boolean isActiveItem(ItemStackAPI<?> stack, String itemString) {
+        String[] parts = itemString.split(":");
+        if(parts.length==0) return false;
+        if(parts.length==1) return parts[0].equals("EMPTY") && stack.isEmpty();
+        ResourceLocationAPI<?> itemName = stack.getItem().getRegistryName();
+        if(parts[0].equals(itemName.getNamespace()) && parts[1].equals(itemName.getPath())) {
+            if(parts.length==2) return true;
+            if(stack.getCount()==MTRef.randomInt(this.channel,"parsed_item_count",parts[2],-1))
+                return parts.length==3 || checkNBT(stack.getTag(),itemString);
+        }
         return false;
     }
 
@@ -239,7 +288,7 @@ public class TriggerContextClient extends TriggerContext {
 
     @Override
     public boolean isActivePet(int range, float yRatio) {
-        for(EntityAPI<?,?> entity : getEntitiesAround(range,yRatio))
+        for(EntityAPI<?,?> entity : getEntitiesAround(getBox(range,yRatio)))
             if(entity.isOwnedBy(this.player)) return true;
         return false;
     }
@@ -265,8 +314,10 @@ public class TriggerContextClient extends TriggerContext {
     }
 
     @Override
-    public boolean isActiveRiding(ResourceContext ctx) { //TODO
-        return false;
+    public boolean isActiveRiding(ResourceContext ctx) {
+        if(!hasPlayer()) return false;
+        EntityAPI<?,?> entity = this.player.getVehicle();
+        return Objects.nonNull(entity) && ctx.checkMatch(entity.getRegistryName().get().toString(),entity.getName());
     }
 
     @Override

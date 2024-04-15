@@ -1,6 +1,6 @@
 package mods.thecomputerizer.musictriggers.api;
 
-import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
+import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.Reference;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 import org.apache.logging.log4j.Level;
@@ -81,28 +81,28 @@ public class MTRef {
         logNullable(Level.WARN,msg,args);
     }
 
-    private static int parse(ChannelAPI channel, String parameter, String element, int fallback) {
+    private static int parse(LoggableAPI logger, String parameter, String element, int fallback) {
         try {
             return Integer.parseInt(element);
         } catch (NumberFormatException ignored) {
-            channel.logWarn("Invalid element {} for parameter {}! Using fallback {}",element,parameter,
+            logger.logWarn("Invalid element {} for parameter {}! Using fallback {}",element,parameter,
                     fallback);
             return fallback;
         }
     }
 
-    public static int randomInt(ChannelAPI channel, int max) {
+    public static int randomInt(int max) {
         return RANDOM.nextInt(max);
     }
 
     /**
      * Uses a fallback in case someone decides to add something that is not a number to a number parameter
      */
-    public static int randomInt(ChannelAPI channel, String parameter, String toConvert, int fallback) {
+    public static int randomInt(LoggableAPI logger, String parameter, String toConvert, int fallback) {
         String[] broken = toConvert.split(":");
-        if(broken.length==1) return parse(channel,parameter, broken[0], fallback);
-        int min = parse(channel,parameter,broken[0],fallback);
-        int max = parse(channel,parameter,broken[1],fallback);
+        if(broken.length==1) return parse(logger,parameter, broken[0], fallback);
+        int min = parse(logger,parameter,broken[0],fallback);
+        int max = parse(logger,parameter,broken[1],fallback);
         if(min==max) return min;
         else if(min>max) {
             int temp = max;

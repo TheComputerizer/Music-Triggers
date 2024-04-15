@@ -5,9 +5,9 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
-import mods.thecomputerizer.theimpossiblelibrary.api.TILRef;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.render.RenderHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.CommonAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceAPI;
 
 import java.util.Map;
@@ -20,7 +20,7 @@ public class ImageElement extends CardAPI {
 
     @Override
     protected void run() {
-        ResourceAPI api = TILRef.getCommonSubAPI("ResourceAPI",CommonAPI::getResourceAPI);
+        ResourceAPI api = TILRef.getCommonSubAPI("ResourceAPI",CommonAPI::getResource);
         RenderHelper.addRenderable(RenderHelper.initPNG(api.getLocation(getParameterAsString("name")),asValueMap()));
     }
 

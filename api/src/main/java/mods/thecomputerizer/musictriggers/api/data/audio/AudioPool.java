@@ -131,7 +131,7 @@ public class AudioPool extends AudioRef {
         int sum = 0;
         for(AudioRef audio : this.playableAudio)
             if(audio!=this.queuedAudio) sum+=audio.getParameterAsInt("chance");
-        int rand = MTRef.randomInt(this.channel,sum);
+        int rand = MTRef.randomInt(sum);
         for(AudioRef audio : this.playableAudio) {
             rand-=(audio==this.queuedAudio ? 0 : audio.getParameterAsInt("chance"));
             if(rand<=0) nextQueue = audio;

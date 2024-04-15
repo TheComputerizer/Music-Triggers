@@ -8,6 +8,7 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.server.ServerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 import java.util.ArrayList;
@@ -28,6 +29,11 @@ public class CommandElement extends ChannelEventRunner {
         super(channel);
         this.triggers = new ArrayList<>();
         this.valid = parse(table);
+    }
+
+    @Override
+    public boolean canRun(String event) {
+        return !this.channel.isClientChannel() && super.canRun(event);
     }
 
     @Override
@@ -73,6 +79,6 @@ public class CommandElement extends ChannelEventRunner {
 
     @Override
     protected void run() {
-
+        ServerHelper.executeCommandLiteral(this.literal);
     }
 }
