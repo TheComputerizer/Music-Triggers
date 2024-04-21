@@ -24,7 +24,10 @@ dependencies {
     shadow("${lava_repo}:lavaplayer-ext-youtube-rotator:${lava_version}") { transitive = false }
     shadow("${lava_repo}:lavaplayer-stream-merger:${lava_version}") { transitive = false }
     shadow("${lava_repo}:lavaplayer-test-samples:${lava_version}") { transitive = false }
+    shadow("org.apache.httpcomponents:httpclient:${http_version}") { transitive = false }
+    shadow("org.mozilla:rhino:${rhino_version}") { transitive = false }
     shadow("org.mozilla:rhino-engine:${rhino_version}") { transitive = false }
+    shadow("org.slf4j:slf4j-api:${slf4j_version}") { transitive = false }
 
     //other
     shadow("io.github.kostaskougios:cloning:${cloning_version}") { transitive = false }
@@ -39,6 +42,15 @@ shadowJar {
     configurations = [project.configurations.shadow]
     setArchiveClassifier('')
     exclude '**/*.java'
+}
+
+jar {
+    manifest {
+        attributes([
+                "Implementation-Title": project.name,
+                'TILMultiversionMods': mod_entrypoint
+        ])
+    }
 }
 
 tasks.assemble.dependsOn('shadowJar')

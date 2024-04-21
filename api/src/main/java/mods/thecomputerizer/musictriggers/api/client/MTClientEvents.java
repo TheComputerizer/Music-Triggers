@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.client;
 
+import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.event.events.*;
@@ -9,6 +10,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.common.event.events.CustomT
 import mods.thecomputerizer.theimpossiblelibrary.api.common.event.events.PlayerAdvancementEventWrapper;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextStyleAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.CustomTick;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -27,6 +29,7 @@ public class MTClientEvents {
     private static int ticksUntilReload = -1;
 
     public static void init(MTDebugInfo debug) {
+        MTRef.logInfo("Initializing client event invokers");
         debugInfo = debug;
         EventHelper.addListener(PLAYER_ADVANCEMENT,MTClientEvents::onAdvancement);
         EventHelper.addListener(CLIENT_CONNECTED,MTClientEvents::onClientConnected);
@@ -37,6 +40,7 @@ public class MTClientEvents {
         EventHelper.addListener(SOUND_PLAY,MTClientEvents::onPlaySound);
         EventHelper.addListener(RENDER_OVERLAY_PRE,MTClientEvents::onRenderOverlayPre);
         EventHelper.addListener(RENDER_OVERLAY_TEXT,MTClientEvents::onRenderOverlayText);
+        CustomTick.addCustomTickTPS(ChannelHelper.getTickRate());
     }
 
     private static boolean isMTScreenActive(MinecraftAPI mc) { //TODO Implement this

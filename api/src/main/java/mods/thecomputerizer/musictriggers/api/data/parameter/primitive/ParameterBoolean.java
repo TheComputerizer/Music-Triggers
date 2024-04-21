@@ -2,6 +2,8 @@ package mods.thecomputerizer.musictriggers.api.data.parameter.primitive;
 
 import io.netty.buffer.ByteBuf;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 public class ParameterBoolean extends Parameter<Boolean> {
 
@@ -11,6 +13,11 @@ public class ParameterBoolean extends Parameter<Boolean> {
 
     public ParameterBoolean(ByteBuf buf) {
         super(buf);
+    }
+
+    @Override
+    public void appendToTable(Holder holder, Table table, String name) {
+        holder.addVariable(table,name,getValue());
     }
 
     @Override

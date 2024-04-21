@@ -8,14 +8,21 @@ import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Consumer;
 
 public abstract class ParameterWrapper extends ChannelElement {
 
     private final Map<String,Parameter<?>> parameters;
 
     protected ParameterWrapper(ChannelAPI channel) {
+        this(channel,null);
+    }
+
+    protected ParameterWrapper(ChannelAPI channel, @Nullable Consumer<Map<String,Parameter<?>>> parameterSettings) {
         super(channel);
-        this.parameters = Collections.unmodifiableMap(initParameterMap());
+        Map<String,Parameter<?>> map = initParameterMap();
+        if(Objects.nonNull(parameterSettings)) parameterSettings.accept(map);
+        this.parameters = Collections.unmodifiableMap(map);
     }
 
     protected void addParameter(Map<String,Parameter<?>> map, String name, @Nullable Parameter<?> parameter) {

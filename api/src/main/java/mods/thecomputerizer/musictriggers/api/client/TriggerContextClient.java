@@ -37,7 +37,7 @@ public class TriggerContextClient extends TriggerContext {
 
     @Override
     public void cache() {
-        this.minecraft = TILRef.getClientSubAPI("MinecraftAPI",ClientAPI::getMinecraft);
+        this.minecraft = TILRef.getClientSubAPI(ClientAPI::getMinecraft);
         this.player = Objects.nonNull(this.minecraft) ? this.minecraft.getPlayer() : null;
         this.world = Objects.nonNull(this.minecraft) ? this.minecraft.getWorld() : null;
         this.pos = hasPlayer() ? this.player.getPosRounded() : null;

@@ -1,4 +1,5 @@
 //file:noinspection GroovyAssignabilityCheck
+//file:noinspection VulnerableLibrariesLocal
 plugins {
     id 'com.github.johnrengelman.shadow' version '8.1.+'
     id 'net.minecraftforge.gradle' version '6.+'
@@ -21,7 +22,8 @@ minecraft {
     accessTransformer = file("src/main/resources/META-INF/${mod_accesstransformer}")
     runs {
         def args = [
-                '-DtilDev=true'
+                '-DtilDev=true',
+                '-DtilClassPathMods=mods.thecomputerizer.theimpossiblelibrary.api.common.TILCommonEntryPoint;'+mod_entrypoint
         ]
         client {
             workingDirectory file('run_client')
@@ -97,8 +99,9 @@ processResources {
 jar {
     manifest {
         attributes([
+                'FMLAT': mod_accesstransformer,
                 "Implementation-Title": project.name,
-                'FMLAT': mod_accesstransformer
+                'TILMultiversionMods': mod_entrypoint
         ])
     }
 }

@@ -6,6 +6,7 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 import java.util.*;
@@ -47,6 +48,9 @@ public class Toggle extends GlobalElement {
     public boolean verifyRequiredParameters() {
         return this.from.verifyRequiredParameters() && this.to.verifyRequiredParameters();
     }
+
+    @Override
+    protected void writeDefault(Holder holder) {}
 
     public static class From extends GlobalElement {
 
@@ -96,6 +100,9 @@ public class Toggle extends GlobalElement {
             }
             return true;
         }
+
+        @Override
+        protected void writeDefault(Holder holder) {}
     }
 
     public static class To extends GlobalElement {
@@ -146,5 +153,8 @@ public class Toggle extends GlobalElement {
             }
             return true;
         }
+
+        @Override
+        protected void writeDefault(Holder holder) {}
     }
 }

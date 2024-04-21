@@ -20,7 +20,7 @@ public class ImageElement extends CardAPI {
 
     @Override
     protected void run() {
-        ResourceAPI api = TILRef.getCommonSubAPI("ResourceAPI",CommonAPI::getResource);
+        ResourceAPI api = TILRef.getCommonSubAPI(CommonAPI::getResource);
         RenderHelper.addRenderable(RenderHelper.initPNG(api.getLocation(getParameterAsString("name")),asValueMap()));
     }
 

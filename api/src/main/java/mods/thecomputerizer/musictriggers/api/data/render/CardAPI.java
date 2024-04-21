@@ -62,7 +62,7 @@ public abstract class CardAPI extends ChannelEventRunner {
     public boolean parse(Table table) {
         List<String> triggerRefs = table.getValOrDefault("triggers",new ArrayList<>());
         if(!TriggerHelper.findTriggers(getChannel(),this.triggers,triggerRefs)) {
-            logError("Failed to parse {}!",getTypeName());
+            logError("Failed to parse triggers for {}!",getTypeName());
             return false;
         }
         return parseParameters(table);

@@ -13,6 +13,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.toml.Variable;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.Map.Entry;
 
 public abstract class GlobalElement implements LoggableAPI {
 
@@ -20,6 +21,11 @@ public abstract class GlobalElement implements LoggableAPI {
 
     protected GlobalElement() {
         this.parameters = initParameters();
+    }
+
+    protected void appendToTable(Holder holder, Table table) {
+        for(Entry<String,Parameter<?>> entry : this.parameters.entrySet())
+            entry.getValue().appendToTable(holder,table,entry.getKey());
     }
 
     /**
@@ -193,4 +199,6 @@ public abstract class GlobalElement implements LoggableAPI {
     }
 
     public abstract boolean verifyRequiredParameters();
+
+    protected abstract void writeDefault(Holder holder);
 }

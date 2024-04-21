@@ -2,6 +2,8 @@ package mods.thecomputerizer.musictriggers.api.data.parameter;
 
 import io.netty.buffer.ByteBuf;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 public class ParameterString extends Parameter<String> {
 
@@ -11,6 +13,11 @@ public class ParameterString extends Parameter<String> {
 
     public ParameterString(ByteBuf buf) {
         super(buf);
+    }
+
+    @Override
+    public void appendToTable(Holder holder, Table table, String name) {
+        holder.addVariable(table,name,getValue());
     }
 
     @Override

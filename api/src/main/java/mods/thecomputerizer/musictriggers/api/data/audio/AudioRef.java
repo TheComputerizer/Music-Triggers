@@ -97,7 +97,7 @@ public class AudioRef extends ParameterWrapper {
     public boolean parse(Table table) {
         List<String> triggerRefs = table.getValOrDefault("triggers",new ArrayList<>());
         if(!TriggerHelper.findTriggers(getChannel(),this.triggers,triggerRefs)) {
-            logError("Failed to parse {}!",getTypeName());
+            logError("Failed to parse triggers `{}` for {}!",triggerRefs,getTypeName());
             return false;
         }
         if(table.hasTable("must_finish"))

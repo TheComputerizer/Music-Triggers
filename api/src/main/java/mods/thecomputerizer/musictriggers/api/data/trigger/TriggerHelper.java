@@ -1,7 +1,5 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger;
 
-import mods.thecomputerizer.musictriggers.api.MTAPI;
-import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
@@ -116,6 +114,7 @@ public class TriggerHelper {
     public static void parseTriggers(ChannelAPI channel, Collection<TriggerAPI> triggers, @Nullable Table table) {
         if(Objects.isNull(table)) return;
         for(Table triggerTable : table.getChildren().values()) {
+            if(triggerTable.getName().equals("universal")) continue;
             TriggerAPI trigger = TriggerRegistry.getTriggerInstance(channel,triggerTable.getName());
             if(checkVersion(trigger) && trigger.parse(triggerTable)) triggers.add(trigger);
         }

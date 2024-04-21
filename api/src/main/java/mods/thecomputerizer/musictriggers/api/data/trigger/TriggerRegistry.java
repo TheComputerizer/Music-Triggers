@@ -8,7 +8,7 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.basic.TriggerLoading;
 import mods.thecomputerizer.musictriggers.api.data.trigger.basic.TriggerMenu;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.*;
 import mods.thecomputerizer.musictriggers.api.data.trigger.simple.*;
-import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
+import mods.thecomputerizer.theimpossiblelibrary.api.core.ReflectionHelper;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Constructor;
@@ -23,12 +23,12 @@ public class TriggerRegistry {
     public static @Nullable TriggerAPI getTriggerInstance(ChannelAPI channel, String name) {
         Class<? extends TriggerAPI> clazz = REGISTERED_TRIGGERS.get(name);
         if(Objects.nonNull(clazz)) {
-            Constructor<?> constructor = Misc.findConstructor(clazz,ChannelAPI.class);
+            Constructor<?> constructor = ReflectionHelper.findConstructor(clazz,ChannelAPI.class);
             if(Objects.nonNull(constructor)) {
                 try {
                     return (TriggerAPI)constructor.newInstance(channel);
                 } catch(ReflectiveOperationException ex) {
-                    channel.logError("Unable to create new instance of trigger class `{}`!",clazz);
+                    channel.logError("Unable to create new instance of trigger class `{}`!",clazz,ex);
                 }
             }
         } else channel.logError("Unable to locate trigger class of type `{}`!",name);

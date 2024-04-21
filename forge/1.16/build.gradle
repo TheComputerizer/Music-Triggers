@@ -1,3 +1,4 @@
+//file:noinspection VulnerableLibrariesLocal
 plugins {
     id 'com.github.johnrengelman.shadow' version '8.1.+'
     id 'net.minecraftforge.gradle' version '6.+'
@@ -47,14 +48,6 @@ dependencies {
     implementation project(':api')
     shade("com.moandjiezana.toml:toml4j:${project.toml4j_version}") { transitive = false }
     shade("org.joml:joml:${project.joml_version}")
-}
-
-shadowJar {
-    //relocate shaded dependencies to the shadow package to prevent library conflicts
-    relocate 'com.moandjiezana.toml', "${shadow_package}.com.moandjiezana.toml"
-    relocate 'org.joml', "${shadow_package}.org.joml"
-    configurations = [project.configurations.shadow]
-    setArchiveClassifier('')
 }
 
 reobf {

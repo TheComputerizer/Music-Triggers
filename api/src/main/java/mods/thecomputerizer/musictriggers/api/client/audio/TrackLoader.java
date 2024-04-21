@@ -58,9 +58,9 @@ public class TrackLoader {
         load(manager,new AudioReference(id,title),resultHandler,logger);
     }
 
-    public void loadLocal(AudioPlayerManager manager, AudioRef audio, @Nullable String path) {
-        File file = Objects.nonNull(path) ? new File(path) : null;
-        if(Objects.nonNull(path) && file.exists() && file.canRead())
+    public void loadLocal(AudioPlayerManager manager, AudioRef audio, File dir, @Nullable String path) {
+        File file = Objects.nonNull(path) ? new File(dir,path) : null;
+        if(Objects.nonNull(file) && file.exists())
             load(manager,file.getPath(),file.getName(),getResultHandler(audio,path),audio);
         else audio.logError("Tried to load nonexistant or unreadable file `{}` for audio `{}`!",path,audio.getName());
     }

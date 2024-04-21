@@ -5,6 +5,9 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterList;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.IndexFinder;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 import java.util.Collections;
 import java.util.Map;
@@ -39,5 +42,12 @@ public class Debug extends GlobalElement {
     @Override
     public boolean verifyRequiredParameters() {
         return true;
+    }
+
+    @Override
+    public void writeDefault(Holder holder) {
+        Table table = holder.addTable(null,"debug");
+        appendToTable(holder,table);
+        holder.andBlank(1,new IndexFinder(table,1));
     }
 }

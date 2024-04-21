@@ -23,7 +23,8 @@ import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.Sta
 @Getter
 public abstract class TriggerAPI extends ParameterWrapper {
 
-    private final Map<String,Timer> timers;
+    private static final Map<TriggerAPI,Map<String,Timer>> TIMER_MAP = new HashMap<>(); // This needs to be static due to super init stuff
+
     private final Set<TriggerCombination> parents;
     private final String name;
     private ResourceContext resourceCtx;
@@ -32,9 +33,8 @@ public abstract class TriggerAPI extends ParameterWrapper {
 
     protected TriggerAPI(ChannelAPI channel, String name) {
         super(channel);
-        this.timers = new HashMap<>();
-        this.parents = new HashSet<>();
         this.name = name;
+        this.parents = new HashSet<>();
     }
 
     @Override
@@ -46,7 +46,8 @@ public abstract class TriggerAPI extends ParameterWrapper {
     protected void addTimedParameter(Map<String,Parameter<?>> map, String name, State state, Parameter<?> parameter) {
         if(Objects.nonNull(parameter)) {
             addParameter(map,name,parameter);
-            this.timers.put(name,new Timer(this,name,state));
+            TIMER_MAP.putIfAbsent(this,new HashMap<>());
+            TIMER_MAP.get(this).put(name,new Timer(this,name,state));
         }
     }
 
@@ -77,7 +78,10 @@ public abstract class TriggerAPI extends ParameterWrapper {
     @Override
     public void close() {
         super.close();
-        this.timers.clear();
+        if(TIMER_MAP.containsKey(this)) {
+            TIMER_MAP.get(this).clear();
+            TIMER_MAP.remove(this);
+        }
         this.parents.clear();
         this.resourceCtx = null;
         this.state = DISABLED;
@@ -85,7 +89,7 @@ public abstract class TriggerAPI extends ParameterWrapper {
     }
 
     protected void consumeTimers(Consumer<Timer> consumer) {
-        this.timers.values().forEach(consumer);
+        if(TIMER_MAP.containsKey(this)) TIMER_MAP.get(this).values().forEach(consumer);
     }
 
     @Override
@@ -139,7 +143,7 @@ public abstract class TriggerAPI extends ParameterWrapper {
     }
 
     public boolean hasTime(String name) {
-        Timer timer = this.timers.get(name);
+        Timer timer = TIMER_MAP.containsKey(this) ? TIMER_MAP.get(this).get(name) : null;
         return Objects.nonNull(timer) && timer.hasTime();
     }
 
@@ -204,6 +208,7 @@ public abstract class TriggerAPI extends ParameterWrapper {
     public boolean parse(Table table) {
         if(parseParameters(table)) {
             successfullyParsed();
+            logInfo("Successfully parsed trigger `{}`",getNameWithID());
             return true;
         }
         return false;
@@ -242,7 +247,7 @@ public abstract class TriggerAPI extends ParameterWrapper {
     }
 
     protected void setTimer(String name, State state) {
-        Timer timer = this.timers.get(name);
+        Timer timer = TIMER_MAP.containsKey(this) ? TIMER_MAP.get(this).get(name) : null;
         if(Objects.nonNull(timer)) timer.set(state);
     }
 

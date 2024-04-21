@@ -2,16 +2,14 @@ package mods.thecomputerizer.musictriggers.api;
 
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.Reference;
+import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
-import java.util.Objects;
 import java.util.Random;
-import java.util.function.Supplier;
 
 public class MTRef {
 
@@ -22,63 +20,41 @@ public class MTRef {
     public static final String NAME = "Music Triggers";
     public static final Random RANDOM = new Random();
     public static final String VERSION = "7.0.0";
-    private static Reference INSTANCE;
-
-    public static @Nullable MTAPI getAPI() {
-        return Objects.nonNull(INSTANCE) ? ((MTRefInstance)INSTANCE).api : null;
-    }
-
-    /**
-     * Initializes the base reference API
-     */
-    public static Reference instance(MTAPI api, Supplier<Boolean> client, String dependencies) throws IOException {
-        if(Objects.isNull(INSTANCE)) {
-            INSTANCE = new MTRefInstance(client.get(),dependencies,LOGGER,MODID,NAME,VERSION);
-            ((MTRefInstance)INSTANCE).api = api;
-            api.init();
-        }
-        return INSTANCE;
-    }
 
     public static void log(Level level, String msg, Object ... args) {
-        logNullable(level,msg,args);
+        LOGGER.log(level,msg,args);
     }
 
     public static void logAll(String msg, Object ... args) {
-        logNullable(Level.ALL,msg,args);
+        log(Level.ALL,msg,args);
     }
 
     public static void logDebug(String msg, Object ... args) {
-        logNullable(Level.DEBUG,msg,args);
+        log(Level.DEBUG,msg,args);
     }
 
     public static void logError(String msg, Object ... args) {
-        logNullable(Level.ERROR,msg,args);
+        log(Level.ERROR,msg,args);
     }
 
     public static void logFatal(String msg, Object ... args) {
-        logNullable(Level.FATAL,msg,args);
+        log(Level.FATAL,msg,args);
     }
 
     public static void logInfo(String msg, Object ... args) {
-        logNullable(Level.INFO,msg,args);
-    }
-
-    private static void logNullable(Level level, String msg, Object ... args) {
-        if(Objects.nonNull(INSTANCE)) INSTANCE.log(level,msg,args);
-        else LOGGER.log(level,msg,args);
+        log(Level.INFO,msg,args);
     }
 
     public static void logOff(String msg, Object ... args) {
-        logNullable(Level.OFF,msg,args);
+        log(Level.OFF,msg,args);
     }
 
     public static void logTrace(String msg, Object ... args) {
-        logNullable(Level.TRACE,msg,args);
+        log(Level.TRACE,msg,args);
     }
 
     public static void logWarn(String msg, Object ... args) {
-        logNullable(Level.WARN,msg,args);
+        log(Level.WARN,msg,args);
     }
 
     private static int parse(LoggableAPI logger, String parameter, String element, int fallback) {
@@ -114,14 +90,10 @@ public class MTRef {
     }
 
     public static @Nullable ResourceLocationAPI<?> res(String path) {
-        if(Objects.nonNull(INSTANCE)) return INSTANCE.getResource(path);
-        logError("Cannot get a ResourceLocation until the reference API has been initialized!");
-        return null;
+        return ResourceHelper.getResource(MODID,path);
     }
 
     private static final class MTRefInstance extends Reference {
-
-        private MTAPI api;
 
         private MTRefInstance(boolean client, @Nullable String dependencies, @Nullable Logger logger,
                               @Nullable String modid, @Nullable String name, @Nullable String version) {

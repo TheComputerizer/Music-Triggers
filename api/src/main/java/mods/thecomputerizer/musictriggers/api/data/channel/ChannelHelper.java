@@ -67,13 +67,17 @@ public class ChannelHelper {
     }
 
     public static void initClient() {
+        MTRef.logInfo("Initializing client channel data");
         load();
         loadClient();
+        globalData.write();
     }
 
     public static void initServer() {
+        MTRef.logInfo("Initializing server channel data");
         load();
         loadServer(Collections.emptyList());
+        globalData.write();
     }
 
     private static void load() {
@@ -140,11 +144,11 @@ public class ChannelHelper {
     public static @Nullable Holder openToml(String path, LoggableAPI logger) {
         path+=".toml";
         try {
-            return TomlHelper.readFully(path);
+            return TomlHelper.readFully(FileHelper.get(path,false));
         } catch(IOException ex) {
             String msg = "Unable to read toml file at `{}`!";
-            if(Objects.nonNull(logger)) logger.logError(msg,ex);
-            else MTRef.logError(msg,ex);
+            if(Objects.nonNull(logger)) logger.logError(msg,path,ex);
+            else MTRef.logError(msg,path,ex);
             return null;
         }
     }
@@ -158,7 +162,7 @@ public class ChannelHelper {
         try(BufferedReader reader = new BufferedReader(new FileReader(file))) {
             return reader.lines().collect(Collectors.toList());
         } catch(IOException ex) {
-            String msg = "Unable to read toml file at `{}`!";
+            String msg = "Unable to read txt file at `{}`!";
             if(Objects.nonNull(channel)) channel.logError(msg,ex);
             else MTRef.logError(msg,ex);
             return Collections.emptyList();
@@ -267,7 +271,7 @@ public class ChannelHelper {
             globalData.logFatal("Cannot initialize channel or toggle data from missing global config!");
             return;
         }
-        initChannels(globalHolder.getTableByName("channels"));
+        initChannels(globalHolder);
         initToggles();
         parseData(resourcesLoaded);
     }
@@ -281,8 +285,9 @@ public class ChannelHelper {
         }
     }
 
-    private void initChannels(@Nullable Table table) {
-        if(Objects.isNull(table)) return;
+    private void initChannels(Holder holder) {
+        if(!holder.hasTable("channels")) writeExampleChannel(holder);
+        Table table = holder.getTableByName("channels");
         for(String name : table.getTableNames()) {
             Table info = table.getTableByName(name);
             if(Objects.nonNull(info)) initChannel(name,info);
@@ -291,16 +296,20 @@ public class ChannelHelper {
     }
 
     private void initToggles() {
-        Holder toggles = globalData.openToggles(MTRef.CONFIG_PATH+"/");
-        for(Table table : toggles.getTablesByName("toggle")) this.toggles.add(new Toggle(this,table));
+        Holder toggles = globalData.openToggles(MTRef.CONFIG_PATH);
+        if(Objects.nonNull(toggles))
+            for(Table table : toggles.getTablesByName("toggle"))
+                this.toggles.add(new Toggle(this,table));
     }
 
     public void parseData(boolean loadResources) {
-        for(ChannelAPI channel : channels.values()) {
+        for(ChannelAPI channel : this.channels.values()) {
             channel.parseData();
             channel.loadTracks(loadResources);
         }
         this.toggles.removeIf(toggle -> !toggle.parse());
+        globalData.logInfo("Finished parsing data for all channels. Enabling audio playback");
+        loading = false;
     }
 
     public void syncChannels() {
@@ -309,5 +318,11 @@ public class ChannelHelper {
 
     public void tickChannels() {
         for(ChannelAPI channel : this.channels.values()) channel.tick();
+    }
+
+    private void writeExampleChannel(Holder holder) {
+        Table table = holder.addTable(null,"channels");
+        ChannelInfo.writeExampleData(holder,holder.addTable(table,"example"));
+        globalData.markWritable();
     }
 }

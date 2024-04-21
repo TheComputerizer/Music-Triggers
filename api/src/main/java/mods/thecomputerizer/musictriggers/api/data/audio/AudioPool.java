@@ -113,7 +113,10 @@ public class AudioPool extends AudioRef {
 
     @Override
     public void play() {
-        if(Objects.nonNull(this.queuedAudio)) this.queuedAudio.play();
+        if(Objects.nonNull(this.queuedAudio)) {
+            logInfo("Attempting to play queued audio");
+            this.queuedAudio.play();
+        }
     }
 
     @Override
@@ -138,6 +141,7 @@ public class AudioPool extends AudioRef {
         }
         if(nextQueue instanceof AudioPool) nextQueue.queue();
         this.queuedAudio = nextQueue;
+        logInfo("Queued audio track `{}`",this.queuedAudio);
     }
 
     @Override

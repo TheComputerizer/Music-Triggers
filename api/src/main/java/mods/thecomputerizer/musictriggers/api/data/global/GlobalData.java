@@ -1,11 +1,14 @@
 package mods.thecomputerizer.musictriggers.api.data.global;
 
 import lombok.Getter;
+import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
+import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.IndexFinder;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Variable;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Level;
 
@@ -18,6 +21,7 @@ public class GlobalData implements LoggableAPI {
     @Getter private Debug debug;
     @Getter private Registration registration;
     @Getter private String toggles = "";
+    private boolean writable;
     //TODO These should probably be encoded or something
     private String email = null;
     private String password = null;
@@ -69,29 +73,50 @@ public class GlobalData implements LoggableAPI {
     }
 
     public @Nullable Holder openToggles(String path) {
-        return StringUtils.isNotBlank(this.toggles) ? ChannelHelper.openToml(path+this.toggles,this) : null;
+        return StringUtils.isNotBlank(this.toggles) ? ChannelHelper.openToml(path+"/"+this.toggles,this) : null;
     }
 
     public void parse(@Nullable Holder holder) { //TODO Fix bad plaintext email & password
         if(Objects.nonNull(holder)) {
-            readDebug(holder.getTableByName("debug"));
-            readRegistration(holder.getTableByName("registration"));
-            this.toggles = holder.getValOrDefault("toggles_path","");
+            readDebug(holder);
+            readRegistration(holder);
+            Variable var;
+            if(!holder.hasVar("toggles_path")) {
+                var = holder.addVariable(null,"toggles_path","toggles",new IndexFinder(null));
+                holder.andBlank(1,new IndexFinder(null,var,1));
+                markWritable();
+            } else var = holder.getOrCreateVar(null,"toggles_path","toggles");
+            this.toggles = var.get().toString();
             this.email = getStringOrNull(holder,"youtube_email");
             this.password = getStringOrNull(holder,"youtube_password");
         }
         this.holder = holder;
     }
 
-    public void readDebug(@Nullable Table table) {
-        if(Objects.isNull(table)) return;
+    public void readDebug(Holder holder) {
         Debug debug = new Debug();
-        if(debug.parse(table)) this.debug = debug;
+        if(!holder.hasTable("debug")) {
+            debug.writeDefault(holder);
+            markWritable();
+        }
+        if(debug.parse(holder.getTableByName("debug"))) this.debug = debug;
     }
 
-    public void readRegistration(@Nullable Table table) {
-        if(Objects.isNull(table)) return;
+    public void readRegistration(Holder holder) {
         Registration registration = new Registration();
-        if(registration.parse(table)) this.registration = registration;
+        if(!holder.hasTable("registration")) {
+            registration.writeDefault(holder);
+            markWritable();
+        }
+        if(registration.parse(holder.getTableByName("registration"))) this.registration = registration;
+    }
+
+    public void markWritable() {
+        this.writable = true;
+    }
+
+    public void write() {
+        if(this.writable && Objects.nonNull(this.holder))
+            FileHelper.writeLines(MTRef.GLOBAL_CONFIG+".toml",this.holder.toLines(),false);
     }
 }

@@ -14,12 +14,10 @@ public class UniversalParameters extends ParameterWrapper {
     }
 
     private final String type;
-    private final Consumer<Map<String,Parameter<?>>> parameterSettings;
 
     public UniversalParameters(ChannelAPI channel, String type, Consumer<Map<String,Parameter<?>>> parameterSettings) {
-        super(channel);
+        super(channel,parameterSettings);
         this.type = type;
-        this.parameterSettings = parameterSettings;
     }
 
     @Override
@@ -34,9 +32,7 @@ public class UniversalParameters extends ParameterWrapper {
 
     @Override
     protected Map<String,Parameter<?>> initParameterMap() {
-        Map<String,Parameter<?>> map = new HashMap<>();
-        this.parameterSettings.accept(map);
-        return map;
+       return new HashMap<>();
     }
 
     @Override

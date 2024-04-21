@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.data.channel;
 
 import lombok.Getter;
+import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioHelper;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
@@ -20,6 +21,7 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerMerged;
 import mods.thecomputerizer.musictriggers.api.data.trigger.basic.BasicTrigger;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -114,7 +116,7 @@ public class ChannelData extends ChannelElement {
                     break;
                 }
             }
-            if(needsAdding) this.triggerEventMap.put(trigger,Collections.emptySet());
+            if(needsAdding) this.triggerEventMap.put(trigger,new HashSet<>());
         }
     }
 
@@ -171,7 +173,7 @@ public class ChannelData extends ChannelElement {
             Collection<ChannelEventHandler> c = this.triggerEventMap.get(trigger);
             return Objects.nonNull(c) ? Collections.unmodifiableCollection(c) : Collections.emptySet();
         }
-        else logDebug("There are no registered event handlers for the active trigger `{}`!");
+        else logDebug("There are no registered event handlers for the active trigger!");
         return Collections.emptySet();
     }
 
@@ -199,6 +201,7 @@ public class ChannelData extends ChannelElement {
     }
 
     public void loadTracks(boolean loadResources) {
+        logInfo("Loading {} audio tracks",this.audio.size());
         for(AudioRef ref : this.audio) {
             String name = ref.getName();
             boolean found = false;
@@ -209,7 +212,10 @@ public class ChannelData extends ChannelElement {
                     break;
                 }
             }
-            if(!found) ref.loadLocal(ref.getParameterAsString("file_name"));
+            if(!found) {
+                String file = ref.getParameterAsString("file_name");
+                ref.loadLocal(StringUtils.isNotBlank(file) ? file : ref.getName());
+            }
         }
     }
 
@@ -222,12 +228,14 @@ public class ChannelData extends ChannelElement {
     }
 
     public void parse() {
-        readRedirect(ChannelHelper.openTxt(getChannel().getInfo().getRedirectPath(),getChannel()));
-        readMain(ChannelHelper.openToml(getChannel().getInfo().getMainPath(),getChannel()));
-        readRenders(ChannelHelper.openToml(getChannel().getInfo().getRendersPath(),getChannel()));
-        readCommands(ChannelHelper.openToml(getChannel().getInfo().getCommandsPath(),getChannel()));
-        readJukebox(ChannelHelper.openTxt(getChannel().getInfo().getJukeboxPath(),getChannel()));
+        logInfo("Parsing channel data");
+        readRedirect(ChannelHelper.openTxt(MTRef.CONFIG_PATH+"/"+getChannel().getInfo().getRedirectPath(),getChannel()));
+        readMain(ChannelHelper.openToml(MTRef.CONFIG_PATH+"/"+getChannel().getInfo().getMainPath(),getChannel()));
+        readRenders(ChannelHelper.openToml(MTRef.CONFIG_PATH+"/"+getChannel().getInfo().getRendersPath(),getChannel()));
+        readCommands(ChannelHelper.openToml(MTRef.CONFIG_PATH+"/"+getChannel().getInfo().getCommandsPath(),getChannel()));
+        readJukebox(ChannelHelper.openTxt(MTRef.CONFIG_PATH+"/"+getChannel().getInfo().getJukeboxPath(),getChannel()));
         organize();
+        logInfo("Finished parsing channel data");
     }
 
     public void readCommands(@Nullable Holder commands) {

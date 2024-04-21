@@ -14,8 +14,9 @@ public class AudioHelper {
         if(Objects.isNull(table)) return;
         for(Table songsTable : table.getChildren().values()) {
             String name = songsTable.getName();
+            if(name.equals("universal")) continue;
             AudioRef ref = channel.isClientChannel() ? new AudioContainer(channel,name) : new AudioRef(channel,name);
-            if(ref.parse(table)) audio.add(ref);
+            if(ref.parse(songsTable)) audio.add(ref);
         }
     }
 }

@@ -26,7 +26,6 @@ import java.util.Objects;
 
 import static com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats.DISCORD_PCM_S16_BE;
 import static com.sedmelluq.discord.lavaplayer.player.AudioConfiguration.ResamplingQuality.HIGH;
-import static mods.thecomputerizer.musictriggers.api.client.MTDebugInfo.ElementType.CHANNEL;
 
 public class ChannelClient extends ChannelAPI {
 
@@ -113,7 +112,7 @@ public class ChannelClient extends ChannelAPI {
 
     @Override
     public void loadLocalTrack(AudioRef ref, String location) {
-        if(getInfo().canReadFiles()) this.trackLoader.loadLocal(this.manager,ref,findMatchingFile(location));
+        if(getInfo().canReadFiles()) this.trackLoader.loadLocal(this.manager,ref,getInfo().getLocalFolder(),findMatchingFile(location));
         else logWarn("Unable to load track from file at `{}` for audio `{}` since the local folder does not exist!",
                 location,ref.getName());
     }
@@ -146,7 +145,11 @@ public class ChannelClient extends ChannelAPI {
     public void play() {
         super.play();
         this.queued = false;
-        this.playing = true;
+        TriggerAPI trigger = getActiveTrigger();
+        if(trigger.canPlayAudio()) {
+            getData().getActivePool().start(trigger);
+            this.playing = true;
+        }
     }
 
     @Override
@@ -187,8 +190,8 @@ public class ChannelClient extends ChannelAPI {
             AudioPool activePool = getData().getActivePool();
             if(Objects.nonNull(activePool)) {
                 if(this.playing) playing();
-                else if(!this.queued) queue();
-                else if(trigger.canPlayAudio()) activePool.start(trigger);
+                else if(this.queued) play();
+                else queue();
             }
         }
     }
