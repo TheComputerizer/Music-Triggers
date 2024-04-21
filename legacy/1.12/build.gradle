@@ -102,7 +102,7 @@ jar {
     manifest {
         attributes([
                 'FMLAT': mod_accesstransformer,
-                "Implementation-Title": project.name,
+                'Implementation-Title': project.name,
                 'TILMultiversionMods': mod_entrypoint
         ])
     }

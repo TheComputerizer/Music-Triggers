@@ -5,18 +5,15 @@ plugins {
     id 'java-library'
 }
 
-java.toolchain.getLanguageVersion().set(JavaLanguageVersion.of(21))
+java.toolchain.getLanguageVersion().set(JavaLanguageVersion.of(22))
+
+//only pull dependencies that are guaranteed to exist in all modules and should be included in the build
+def excluded = [ til_repo, 'com.google.code.gson', 'com.google.guava', 'com.moandjiezana.toml', 'curse.maven',
+                 'net.darkhax.bookshelf', 'net.darkhax.gamestages', 'net.minecraftforge', 'org.joml', 'org.ow2.asm' ]
 
 dependencies {
-    //only pull dependencies that are guaranteed to exist in all modules and should be included in the build
-    def excluded = [ 'com.google.code.gson', 'com.google.guava', 'curse.maven', 'net.darkhax.bookshelf',
-                     'net.darkhax.gamestages', 'net.minecraftforge', 'org.ow2.asm' ]
-    shadow(project(':legacy:legacy.1_12')) {
-        excluded.forEach { grp -> { exclude group: grp } }
-    }
-    shadow(project(':forge:forge.1_16')) {
-        excluded.forEach { grp -> { exclude group: grp } }
-    }
+    shadow(project(':legacy:legacy.1_12')) { excluded.forEach { grp -> { exclude group: grp } } }
+    shadow(project(':forge:forge.1_16')) { excluded.forEach { grp -> { exclude group: grp } } }
 }
 
 shadowJar {
@@ -29,13 +26,12 @@ shadowJar {
       'org.mozilla.javascript', 'org.slf4j' ].forEach { pkg -> { relocate pkg, "${shadow_package}.${pkg}" } }
     configurations = [project.configurations.shadow]
     setArchiveClassifier('')
-    exclude '*.java', 'module-info.*'
+    exclude 'module-info.*'
 }
 
 jar {
     manifest {
-        attributes([
-                "Implementation-Title": project.name,
+        attributes([ //TODO Figure out how to automatically combine this with the submodules
                 'TILMultiversionMods': mod_entrypoint
         ])
     }
@@ -44,10 +40,12 @@ jar {
 tasks.assemble.dependsOn('shadowJar')
 
 allprojects {
+    plugins.apply('java')
+
     group = base_package
     version = mod_version
 
-    repositories {
+    repositories { //TODO Add content filters?
         mavenCentral()
         maven {
             name = 'JitPack'
@@ -66,9 +64,7 @@ allprojects {
         archivesBaseName = mod_id
     }
 
-    tasks.withType(JavaCompile).configureEach {
-        options.encoding = 'UTF-8'
-    }
+    tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 }
 
 subprojects {
@@ -77,7 +73,7 @@ subprojects {
     plugins.apply('java-library')
 
     dependencies {
-
+        //lombok
         annotationProcessor("org.projectlombok:lombok:${lombok_version}")
         compileOnly("org.projectlombok:lombok:${lombok_version}")
 
