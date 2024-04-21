@@ -1,6 +1,4 @@
-//file:noinspection VulnerableLibrariesLocal
 plugins {
-    id 'com.github.johnrengelman.shadow' version '8.1.+'
     id 'net.minecraftforge.gradle' version '6.+'
     id 'org.spongepowered.mixin' version '0.7.+'
     id 'org.parchmentmc.librarian.forgegradle' version '1.+'
@@ -29,32 +27,13 @@ minecraft {
         }
     }
 }
-
-configurations {
-    shade
-    implementation.extendsFrom(shade)
-    shadow.extendsFrom(shade)
-}
-
 dependencies {
+    //noinspection VulnerableLibrariesLocal
     minecraft("net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}")
-
-    annotationProcessor("org.projectlombok:lombok:${project.lombok_version}")
-    annotationProcessor("org.spongepowered:mixin:${project.mixin_version}:processor")
 
     compileOnly("org.projectlombok:lombok:${project.lombok_version}")
 
-    //noinspection DependencyNotationArgument
-    implementation project(':api')
-    shade("com.moandjiezana.toml:toml4j:${project.toml4j_version}") { transitive = false }
-    shade("org.joml:joml:${project.joml_version}")
-}
-
-reobf {
-    shadowJar {
-        dependsOn createMcpToSrg
-        mappings = createMcpToSrg.output
-    }
+    implementation(project(':api'))
 }
 
 mixin {
@@ -114,7 +93,3 @@ tasks.withType(Jar).configureEach {
 tasks.withType(ProcessResources).configureEach {
     from(project(":api").sourceSets.main.resources)
 }
-
-tasks.assemble.dependsOn('shadowJar')
-tasks.shadowJar.dependsOn('reobfJar')
-tasks.jar.finalizedBy('reobfJar')

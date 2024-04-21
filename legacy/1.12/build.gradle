@@ -1,7 +1,4 @@
-//file:noinspection GroovyAssignabilityCheck
-//file:noinspection VulnerableLibrariesLocal
 plugins {
-    id 'com.github.johnrengelman.shadow' version '8.1.+'
     id 'net.minecraftforge.gradle' version '6.+'
     id 'wtf.gofancy.fancygradle' version '1.1.+'
 }
@@ -40,41 +37,46 @@ minecraft {
     }
 }
 
-configurations {
-    shade
-    implementation.extendsFrom(shade)
-    shadow.extendsFrom(shade)
+repositories {
+    maven {
+        name = 'CurseMaven'
+        url = uri('https://www.cursemaven.com')
+        content {
+            includeGroup 'curse.maven'
+        }
+    }
+    maven {
+        name = 'BlameJared'
+        url = uri('https://maven.blamejared.com')
+        content {
+            includeGroup 'net.darkhax.bookshelf'
+            includeGroup 'net.darkhax.gamestages'
+        }
+    }
 }
 
 dependencies {
+    //noinspection VulnerableLibrariesLocal
     minecraft("net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}")
 
     annotationProcessor("com.google.code.gson:gson:${project.gson_annotation}")
     annotationProcessor("com.google.guava:guava:${project.guava_annotation}")
     annotationProcessor("org.ow2.asm:asm-debug-all:${project.asm_debug_annotation}")
-    annotationProcessor("org.projectlombok:lombok:${project.lombok_version}")
 
-    compileOnly("org.projectlombok:lombok:${project.lombok_version}")
+    implementation(project(':legacy'))
 
-    //noinspection DependencyNotationArgument
-    implementation project(':legacy')
-    shade("com.moandjiezana.toml:toml4j:${project.toml4j_version}") { transitive = false }
-    shade("org.joml:joml:${project.joml_version}")
-}
-
-shadowJar {
-    //relocate shaded dependencies to the shadow package to prevent library conflicts
-    relocate 'com.moandjiezana.toml', "${shadow_package}.com.moandjiezana.toml"
-    relocate 'org.joml', "${shadow_package}.org.joml"
-    configurations = [project.configurations.shadow]
-    setArchiveClassifier('')
-}
-
-reobf {
-    shadowJar {
-        dependsOn createMcpToSrg
-        mappings = createMcpToSrg.output
-    }
+    //mod support & utility
+    runtimeOnly(fg.deobf("net.darkhax.bookshelf:Bookshelf-${minecraft_version}:${bookshelf_version}"))
+    runtimeOnly(fg.deobf("curse.maven:champions-307152:${champions_version}"))
+    runtimeOnly(fg.deobf("curse.maven:coroutil-237749:${coroutil_version}"))
+    runtimeOnly(fg.deobf("net.darkhax.gamestages:GameStages-${minecraft_version}:${gamestages_version}"))
+    runtimeOnly(fg.deobf("curse.maven:hei-557549:${hei_version}"))
+    runtimeOnly(fg.deobf("curse.maven:infernalmobs-227875:${infernal_version}"))
+    runtimeOnly(fg.deobf("curse.maven:nyx-349214:${nyx_version}"))
+    runtimeOnly(fg.deobf("curse.maven:resourcereloader-303876:${reloader_version}"))
+    runtimeOnly(fg.deobf("curse.maven:sereneseasons-291874:${seasons_version}"))
+    runtimeOnly(fg.deobf("curse.maven:top-245211:${top_version}"))
+    runtimeOnly(fg.deobf("curse.maven:weather2-695602:${weather_version}"))
 }
 
 processResources {
@@ -126,7 +128,3 @@ tasks.withType(Jar).configureEach {
 tasks.withType(ProcessResources).configureEach {
     from(project(":api").sourceSets.main.resources)
 }
-
-tasks.assemble.dependsOn('shadowJar')
-tasks.shadowJar.dependsOn('reobfJar')
-tasks.jar.finalizedBy('reobfJar')

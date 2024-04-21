@@ -1,5 +1,3 @@
-//file:noinspection DependencyNotationArgument
-//file:noinspection GroovyAssignabilityCheck
 plugins {
     id 'com.github.johnrengelman.shadow' version '8.1.+'
     id 'idea'
@@ -7,41 +5,31 @@ plugins {
     id 'java-library'
 }
 
-java.toolchain.getLanguageVersion().set(JavaLanguageVersion.of(17))
+java.toolchain.getLanguageVersion().set(JavaLanguageVersion.of(21))
+
 dependencies {
-    shadow(project(':legacy:legacy.1_12'))
-    shadow(project(':forge:forge.1_16'))
-
-    //lavaplayer base
-    shadow("com.github.walkyst:lavaplayer-fork:${lava_version}") { transitive = false }
-
-    //lavaplayer dependencies
-    shadow("${walkyst_repo}.JAADec-fork:jaadec-ext-aac:${jaadec_version}") { transitive = false }
-    shadow("${walkyst_repo}:lavaplayer-natives-fork:${lava_natives_version}") { transitive = false }
-    shadow("${lava_repo}:lava-common:${lava_version}") { transitive = false }
-    shadow("${lava_repo}:lavaplayer:${lava_version}") { transitive = false }
-    shadow("${lava_repo}:lavaplayer-ext-format-xm:${lava_version}") { transitive = false }
-    shadow("${lava_repo}:lavaplayer-ext-youtube-rotator:${lava_version}") { transitive = false }
-    shadow("${lava_repo}:lavaplayer-stream-merger:${lava_version}") { transitive = false }
-    shadow("${lava_repo}:lavaplayer-test-samples:${lava_version}") { transitive = false }
-    shadow("org.apache.httpcomponents:httpclient:${http_version}") { transitive = false }
-    shadow("org.mozilla:rhino:${rhino_version}") { transitive = false }
-    shadow("org.mozilla:rhino-engine:${rhino_version}") { transitive = false }
-    shadow("org.slf4j:slf4j-api:${slf4j_version}") { transitive = false }
-
-    //other
-    shadow("io.github.kostaskougios:cloning:${cloning_version}") { transitive = false }
+    //only pull dependencies that are guaranteed to exist in all modules and should be included in the build
+    def excluded = [ 'com.google.code.gson', 'com.google.guava', 'curse.maven', 'net.darkhax.bookshelf',
+                     'net.darkhax.gamestages', 'net.minecraftforge', 'org.ow2.asm' ]
+    shadow(project(':legacy:legacy.1_12')) {
+        excluded.forEach { grp -> { exclude group: grp } }
+    }
+    shadow(project(':forge:forge.1_16')) {
+        excluded.forEach { grp -> { exclude group: grp } }
+    }
 }
 
 shadowJar {
     //relocate shaded dependencies to the shadow package to prevent library conflicts
-    relocate 'com.rits', "${shadow_package}.com.rits"
-    relocate 'com.sedmelluq', "${shadow_package}.com.sedmelluq"
-    relocate 'net.sourceforge.jaad', "${shadow_package}.net.sourceforge.jaad"
-    relocate 'org.mozilla', "${shadow_package}.org.mozilla"
+    [ 'certificates', 'com.sedmelluq.discord.lavaplayer', 'com.sedmelluq.lava.common', 'com.sedmelluq.lava.extensions',
+      'com.sedmelluq.lava.player', 'com.sedmelluq.lavaplayer.extensions', 'com.rits.cloning', 'com.rits.perspectives',
+      'mozilla', 'net.sourceforge.jaad.aac', 'org.apache.http.auth', 'org.apache.http.client', 'org.apache.http.conn',
+      'org.apache.http.cookie', 'org.apache.http.impl.auth', 'org.apache.http.impl.client', 'org.apache.http.impl.conn',
+      'org.apache.http.impl.cookie', 'org.apache.http.impl.execchain', 'org.mozilla.classfile',
+      'org.mozilla.javascript', 'org.slf4j' ].forEach { pkg -> { relocate pkg, "${shadow_package}.${pkg}" } }
     configurations = [project.configurations.shadow]
     setArchiveClassifier('')
-    exclude '**/*.java'
+    exclude '*.java', 'module-info.*'
 }
 
 jar {
@@ -89,7 +77,31 @@ subprojects {
     plugins.apply('java-library')
 
     dependencies {
+
         annotationProcessor("org.projectlombok:lombok:${lombok_version}")
         compileOnly("org.projectlombok:lombok:${lombok_version}")
+
+        //lavaplayer base
+        implementation("com.github.walkyst:lavaplayer-fork:${lava_version}") { transitive = false }
+
+        //lavaplayer dependencies
+        implementation("${walkyst_repo}.JAADec-fork:jaadec-ext-aac:${jaadec_version}") { transitive = false }
+        implementation("${walkyst_repo}:lavaplayer-natives-fork:${lava_natives_version}") { transitive = false }
+        implementation("${lava_repo}:lava-common:${lava_version}") { transitive = false }
+        implementation("${lava_repo}:lavaplayer:${lava_version}") { transitive = false }
+        implementation("${lava_repo}:lavaplayer-ext-format-xm:${lava_version}") { transitive = false }
+        implementation("${lava_repo}:lavaplayer-ext-youtube-rotator:${lava_version}") { transitive = false }
+        implementation("${lava_repo}:lavaplayer-stream-merger:${lava_version}") { transitive = false }
+        implementation("${lava_repo}:lavaplayer-test-samples:${lava_version}") { transitive = false }
+        implementation("org.apache.httpcomponents:httpclient:${http_version}") { transitive = false }
+        implementation("org.mozilla:rhino:${rhino_version}") { transitive = false }
+        implementation("org.mozilla:rhino-engine:${rhino_version}") { transitive = false }
+        implementation("org.slf4j:slf4j-api:${slf4j_version}") { transitive = false }
+
+        //other shaded
+        implementation("io.github.kostaskougios:cloning:${cloning_version}") { transitive = false }
+
+        //required
+        implementation("${til_repo}:theimpossiblelibrary:${til_version}") //uses a repo var for local testing
     }
 }
