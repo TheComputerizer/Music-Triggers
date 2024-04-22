@@ -1,6 +1,12 @@
+import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
+import java.util.zip.ZipOutputStream
+import org.gradle.api.artifacts.transform.TransformParameters.None;
+
 plugins {
     id 'net.minecraftforge.gradle' version '6.+'
     id 'wtf.gofancy.fancygradle' version '1.1.+'
+    id 'groovy'
 }
 
 fancyGradle {
@@ -37,6 +43,18 @@ minecraft {
     }
 }
 
+def artifactType = Attribute.of('artifactType', String)
+def java8ified = Attribute.of('java8ified', Boolean)
+def jarExclusions = ['**/module-info.class']
+
+configurations.runtimeClasspath {
+    afterEvaluate {
+        if(canBeResolved) {
+            attributes.attribute(java8ified,true)
+        }
+    }
+}
+
 repositories {
     maven {
         name = 'CurseMaven'
@@ -56,6 +74,17 @@ repositories {
 }
 
 dependencies {
+    attributesSchema {
+        attribute(java8ified)
+    }
+    artifactTypes.getByName("jar") {
+        attributes.attribute(java8ified,false)
+    }
+    registerTransform(ModuleInfoScrubber) {
+        from.attribute(java8ified,false).attribute(artifactType,"jar")
+        to.attribute(java8ified,true).attribute(artifactType,"jar")
+    }
+
     //noinspection VulnerableLibrariesLocal
     minecraft("net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}")
 
@@ -108,6 +137,11 @@ jar {
     }
 }
 
+tasks.register("scrubModuleInfo", Copy) {
+    from(configurations.runtimeClasspath)
+    into(layout.buildDirectory.dir("runtimeClasspath"))
+}
+
 tasks.named("compileJava",JavaCompile) {
     source(project(":api").sourceSets.main.allSource)
 }
@@ -127,4 +161,50 @@ tasks.withType(Jar).configureEach {
 
 tasks.withType(ProcessResources).configureEach {
     from(project(":api").sourceSets.main.resources)
+}
+
+abstract class ModuleInfoScrubber implements TransformAction<None> {
+
+    @InputArtifact
+    abstract Provider<FileSystemLocation> getInputArtifact();
+
+    @Override
+    void transform(TransformOutputs outputs) {
+        File input = getInputArtifact().get().getAsFile()
+        println "Attempting to remove module-info files from artifact file `${input}`"
+        if(input.name.endsWith(".jar")) {
+            println "Recognized artifact file as jar! Opening..."
+            outputs.file(runFileFilter(input));
+        }
+    }
+
+    static File runFileFilter(File file) {
+        def filteredEntries = []
+        // Read the entries of the JAR file and filter out the ones to be excluded
+        println "Attempting to open zip stream"
+        file.withInputStream { inputStream ->
+            def zipInputStream = new ZipInputStream(inputStream)
+            println "Zip input stream successfully opened! Reading entries..."
+            ZipEntry entry = zipInputStream.nextEntry
+            while(entry) {
+                if(!entry.getName().contains("module-info")) {
+                    filteredEntries.add(entry)
+                    println "Entry `${entry.getName()}` has been kept in the file"
+                } else println "Entry `${entry.getName()}` has been removed from the file"
+                entry = zipInputStream.nextEntry
+            }
+        }
+        // Write the filtered entries back to the JAR file
+        println "Attempting to rewrite the filtered entries back to `${file}`"
+        file.withOutputStream { outputStream ->
+            def zipOutputStream = new ZipOutputStream(outputStream)
+            println "Zip output stream successfully opened! Writing entries..."
+            filteredEntries.each { entry ->
+                println "Writing entry `${entry.getName()}`"
+                zipOutputStream.putNextEntry(entry)
+                file.withInputStream { inputStream -> zipOutputStream<<inputStream }
+                zipOutputStream.closeEntry()
+            }
+        }
+    }
 }

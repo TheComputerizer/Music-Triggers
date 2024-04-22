@@ -6,7 +6,6 @@ plugins {
 }
 
 java.toolchain.getLanguageVersion().set(JavaLanguageVersion.of(22))
-
 //only pull dependencies that are guaranteed to exist in all modules and should be included in the build
 def excluded = [ til_repo, 'com.google.code.gson', 'com.google.guava', 'com.moandjiezana.toml', 'curse.maven',
                  'net.darkhax.bookshelf', 'net.darkhax.gamestages', 'net.minecraftforge', 'org.joml', 'org.ow2.asm' ]
@@ -40,7 +39,9 @@ jar {
 tasks.assemble.dependsOn('shadowJar')
 
 allprojects {
+    plugins.apply('groovy')
     plugins.apply('java')
+    plugins.apply('java-base')
 
     group = base_package
     version = mod_version
@@ -73,6 +74,7 @@ subprojects {
     plugins.apply('java-library')
 
     dependencies {
+
         //lombok
         annotationProcessor("org.projectlombok:lombok:${lombok_version}")
         compileOnly("org.projectlombok:lombok:${lombok_version}")
