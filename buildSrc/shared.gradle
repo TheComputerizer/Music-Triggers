@@ -1,0 +1,5 @@
+plugins.apply('groovy')
+plugins.apply('idea')
+plugins.apply('java')
+plugins.apply('java-base')
+plugins.apply('java-library')

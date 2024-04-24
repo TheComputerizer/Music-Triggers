@@ -1,8 +1,6 @@
 plugins {
     id 'com.github.johnrengelman.shadow' version '8.1.+'
-    id 'idea'
     id 'java'
-    id 'java-library'
 }
 
 java.toolchain.getLanguageVersion().set(JavaLanguageVersion.of(22))
@@ -11,6 +9,7 @@ def excluded = [ til_repo, 'com.google.code.gson', 'com.google.guava', 'com.moan
                  'net.darkhax.bookshelf', 'net.darkhax.gamestages', 'net.minecraftforge', 'org.joml', 'org.ow2.asm' ]
 
 dependencies {
+    println "Hello from the root project"
     shadow(project(':legacy:legacy.1_12')) { excluded.forEach { grp -> { exclude group: grp } } }
     shadow(project(':forge:forge.1_16')) { excluded.forEach { grp -> { exclude group: grp } } }
 }
@@ -39,13 +38,6 @@ jar {
 tasks.assemble.dependsOn('shadowJar')
 
 allprojects {
-    plugins.apply('groovy')
-    plugins.apply('java')
-    plugins.apply('java-base')
-
-    group = base_package
-    version = mod_version
-
     repositories { //TODO Add content filters?
         mavenCentral()
         maven {
@@ -60,21 +52,12 @@ allprojects {
             dirs "$rootProject.projectDir/libs"
         }
     }
-
-    java {
-        archivesBaseName = mod_id
-    }
-
-    tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 }
 
 subprojects {
-    plugins.apply('idea')
     plugins.apply('java')
-    plugins.apply('java-library')
 
     dependencies {
-
         //lombok
         annotationProcessor("org.projectlombok:lombok:${lombok_version}")
         compileOnly("org.projectlombok:lombok:${lombok_version}")
@@ -102,4 +85,5 @@ subprojects {
         //required
         implementation("${til_repo}:theimpossiblelibrary:${til_version}") //uses a repo var for local testing
     }
+
 }

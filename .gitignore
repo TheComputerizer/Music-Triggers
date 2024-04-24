@@ -19,6 +19,7 @@ build
 
 # other
 eclipse
+lib
 libs
 mcp
 run
