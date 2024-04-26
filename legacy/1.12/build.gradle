@@ -12,8 +12,6 @@ fancyGradle {
     }
 }
 
-java.toolchain.getLanguageVersion().set(JavaLanguageVersion.of(8))
-
 minecraft {
     mappings channel: 'stable', version: mappings_version
     accessTransformer = file("src/main/resources/META-INF/${mod_accesstransformer}")
@@ -55,14 +53,16 @@ repositories {
     }
 }
 
+//configurations.minecraft.extendsFrom(asm)
+
 dependencies {
-    println "Hello from 1.12.2"
+    println 'Hello from 1.12.2'
     //noinspection VulnerableLibrariesLocal
     minecraft("net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}")
 
-    annotationProcessor("com.google.code.gson:gson:${project.gson_annotation}")
-    annotationProcessor("com.google.guava:guava:${project.guava_annotation}")
-    annotationProcessor("org.ow2.asm:asm-debug-all:${project.asm_debug_annotation}")
+    annotationProcessor("com.google.code.gson:gson:${project.gson_annotation}") { transitive = false }
+    annotationProcessor("com.google.guava:guava:${project.guava_annotation}") { transitive = false }
+    annotationProcessor("org.ow2.asm:asm:${project.asm_version}")
 
     implementation(project(':legacy'))
 
@@ -100,6 +100,9 @@ processResources {
 }
 
 jar {
+    mustRunAfter(":legacy:jar")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from(configurations.embed)
     manifest {
         attributes([
                 'FMLAT': mod_accesstransformer,
@@ -122,7 +125,6 @@ tasks.withType(Javadoc).configureEach {
 }
 
 tasks.withType(Jar).configureEach {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from(project(":api").sourceSets.main.allSource)
 }
 

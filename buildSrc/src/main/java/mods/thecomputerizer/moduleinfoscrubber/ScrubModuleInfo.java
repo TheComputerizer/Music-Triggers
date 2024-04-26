@@ -1,3 +1,5 @@
+package mods.thecomputerizer.moduleinfoscrubber;
+
 import org.gradle.api.tasks.AbstractCopyTask;
 import org.gradle.api.tasks.Copy;
 

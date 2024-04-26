@@ -4,8 +4,6 @@ plugins {
     id 'org.parchmentmc.librarian.forgegradle' version '1.+'
 }
 
-java.toolchain.getLanguageVersion().set(JavaLanguageVersion.of(8))
-
 minecraft {
     mappings channel: 'parchment', version: "${parchment_version}-${minecraft_version}"
     accessTransformer = file("src/main/resources/META-INF/${mod_accesstransformer}")
@@ -27,11 +25,12 @@ minecraft {
         }
     }
 }
+
 dependencies {
     //noinspection VulnerableLibrariesLocal
     minecraft("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
 
-    implementation(project(':api'))
+    implementation(project(':forge'))
 }
 
 mixin {
@@ -60,6 +59,9 @@ processResources {
 }
 
 jar {
+    mustRunAfter(":forge:jar")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from(configurations.embed)
     manifest {
         attributes([
                 'FMLAT': mod_accesstransformer,

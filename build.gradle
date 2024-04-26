@@ -55,12 +55,11 @@ allprojects {
 }
 
 subprojects {
-    plugins.apply('java')
+    apply from: rootProject.file('buildSrc\\shared.gradle')
+    //plugins.apply('mods.thecomputerizer.moduleinfoscrubber')
 
     dependencies {
-        //lombok
-        annotationProcessor("org.projectlombok:lombok:${lombok_version}")
-        compileOnly("org.projectlombok:lombok:${lombok_version}")
+        implementation("${til_repo}:theimpossiblelibrary:${til_version}") //uses a repo var for local testing
 
         //lavaplayer base
         implementation("com.github.walkyst:lavaplayer-fork:${lava_version}") { transitive = false }
@@ -81,9 +80,5 @@ subprojects {
 
         //other shaded
         implementation("io.github.kostaskougios:cloning:${cloning_version}") { transitive = false }
-
-        //required
-        implementation("${til_repo}:theimpossiblelibrary:${til_version}") //uses a repo var for local testing
     }
-
 }

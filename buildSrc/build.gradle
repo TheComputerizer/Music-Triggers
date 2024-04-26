@@ -1,14 +1,20 @@
-apply from: rootProject.file('shared.gradle')
-
-idea {
-    module {
-        downloadJavadoc = true
-        downloadSources = true
-    }
+plugins {
+    id 'com.gradle.plugin-publish' version '1.+'
 }
 
-repositories {
-    mavenCentral()
+apply from: rootProject.file('shared.gradle')
+plugins.apply('java-gradle-plugin')
+
+java.toolchain.getLanguageVersion().set(JavaLanguageVersion.of(8))
+
+gradlePlugin {
+    plugins {
+        scrubberPlugin {
+            displayName = 'Module-Info Scrubber'
+            id = 'mods.thecomputerizer.moduleinfoscrubber'
+            implementationClass = 'mods.thecomputerizer.moduleinfoscrubber.ScrubberPlugin'
+        }
+    }
 }
 
 dependencies {
@@ -16,3 +22,26 @@ dependencies {
     implementation(localGroovy())
     implementation('commons-io:commons-io:2.+')
 }
+
+/*
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = plugin_group
+            artifactId = plugin_name
+            version = plugin_version
+            from components.java
+            pom {
+                name = plugin_desc
+                description = plugin_desc
+                developers {
+                    developer {
+                        id = 'the_computerizer'
+                        name = 'The_Computerizer'
+                    }
+                }
+            }
+        }
+    }
+}
+ */

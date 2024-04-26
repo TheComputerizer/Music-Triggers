@@ -1,5 +1,9 @@
-java.toolchain.getLanguageVersion().set(JavaLanguageVersion.of(8))
-
 dependencies {
     implementation(project(':api'))
+}
+
+jar {
+    mustRunAfter(':api:jar')
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from(configurations.embed.collect { it.isDirectory() ? it : zipTree(it) })
 }
