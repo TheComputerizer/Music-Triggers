@@ -133,7 +133,7 @@ public class ChannelClient extends ChannelAPI {
 
     @Override
     public void onTrackStart(AudioTrack track) {
-        play();
+
     }
 
     @Override
@@ -146,8 +146,10 @@ public class ChannelClient extends ChannelAPI {
         super.play();
         this.queued = false;
         TriggerAPI trigger = getActiveTrigger();
+        logInfo("Current active trigger is once again {}",trigger);
         if(trigger.canPlayAudio()) {
-            getData().getActivePool().start(trigger);
+            logInfo("Looks like the trigger has audio so now the audio will start");
+            trigger.getAudioPool().start(trigger);
             this.playing = true;
         }
     }

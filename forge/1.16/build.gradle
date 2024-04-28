@@ -1,8 +1,25 @@
+buildscript {
+    configurations.configureEach {
+        resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+            if(details.requested.group=='org.ow2.asm') {
+                if(details.requested.version!=asm_version) {
+                    def moduleName = details.requested.module.name
+                    details.useTarget([group: 'org.ow2.asm', name: moduleName, version: asm_version])
+                    println "Replaced requested ASM[${details.requested.version}] dependency " +
+                            "${details.requested} with ASM[${asm_version}] target ${details.target}"
+                }
+            }
+        }
+    }
+}
+
 plugins {
     id 'net.minecraftforge.gradle' version '6.+'
     id 'org.spongepowered.mixin' version '0.7.+'
     id 'org.parchmentmc.librarian.forgegradle' version '1.+'
 }
+
+apply from: rootProject.file('shared-dependencies.gradle')
 
 minecraft {
     mappings channel: 'parchment', version: "${parchment_version}-${minecraft_version}"

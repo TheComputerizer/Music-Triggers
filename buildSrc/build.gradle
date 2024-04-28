@@ -3,6 +3,7 @@ plugins {
 }
 
 apply from: rootProject.file('shared.gradle')
+
 plugins.apply('java-gradle-plugin')
 
 java.toolchain.getLanguageVersion().set(JavaLanguageVersion.of(8))
@@ -20,7 +21,8 @@ gradlePlugin {
 dependencies {
     println "Hello from buildSrc"
     implementation(localGroovy())
-    implementation('commons-io:commons-io:2.+')
+    implementation(gradleApi())
+    implementation(gradleTestKit())
 }
 
 /*

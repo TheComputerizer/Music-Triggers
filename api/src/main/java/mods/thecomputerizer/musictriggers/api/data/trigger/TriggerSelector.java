@@ -149,6 +149,7 @@ public class TriggerSelector extends ChannelElement {
     }
 
     protected @Nullable AudioPool setBasicTrigger(TriggerAPI trigger) {
+        logInfo("Setting basic trigger {}",trigger);
         setPlayables(trigger);
         return setActiveTrigger(trigger);
     }

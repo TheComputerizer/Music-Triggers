@@ -1,3 +1,5 @@
+apply from: rootProject.file('shared-dependencies.gradle')
+
 dependencies {
     compileOnly("com.google.code.findbugs:jsr305:${jsr_version}")
     compileOnly("io.netty:netty-all:${netty_version}")
@@ -8,7 +10,6 @@ dependencies {
 
 jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    configurations.embed.collect()
     from(configurations.embed.collect { it.isDirectory() ? it : zipTree(it) }) {
         exclude 'LICENSE.txt', 'META-INF/MANIFSET.MF', 'META-INF/maven/**', 'META-INF/*.RSA', 'META-INF/*.SF',
                 'META-INF/services/*.Processor', '**/module-info.class', 'META-INF/versions/9/**'

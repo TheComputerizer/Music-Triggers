@@ -1,0 +1,34 @@
+apply from: rootProject.file('shared-repositories.gradle')
+
+configurations {
+    embed.extendsFrom(shared)
+}
+
+dependencies {
+    //lombok
+    annotationProcessor('org.projectlombok:lombok:1.+')
+    compileOnly('org.projectlombok:lombok:1.+')
+
+    //uses a repo var for local testing
+    implementation("${til_repo}:theimpossiblelibrary:${til_version}")
+
+    //lavaplayer base
+    shared("com.github.walkyst:lavaplayer-fork:${lava_version}") { transitive = false }
+
+    //lavaplayer dependencies
+    shared("${walkyst_repo}.JAADec-fork:jaadec-ext-aac:${jaadec_version}") { transitive = false }
+    shared("${walkyst_repo}:lavaplayer-natives-fork:${lava_natives_version}") { transitive = false }
+    shared("${lava_repo}:lava-common:${lava_version}") { transitive = false }
+    shared("${lava_repo}:lavaplayer:${lava_version}") { transitive = false }
+    shared("${lava_repo}:lavaplayer-ext-format-xm:${lava_version}") { transitive = false }
+    shared("${lava_repo}:lavaplayer-ext-youtube-rotator:${lava_version}") { transitive = false }
+    shared("${lava_repo}:lavaplayer-stream-merger:${lava_version}") { transitive = false }
+    shared("${lava_repo}:lavaplayer-test-samples:${lava_version}") { transitive = false }
+    shared("org.apache.httpcomponents:httpclient:${http_version}") { transitive = false }
+    shared("org.mozilla:rhino:${rhino_version}") { transitive = false }
+    shared("org.mozilla:rhino-engine:${rhino_version}") { transitive = false }
+    shared("org.slf4j:slf4j-api:${slf4j_version}") { transitive = false }
+
+    //other shaded
+    shared("io.github.kostaskougios:cloning:${cloning_version}") { transitive = false }
+}

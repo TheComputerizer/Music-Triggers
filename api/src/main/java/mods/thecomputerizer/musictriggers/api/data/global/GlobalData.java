@@ -116,7 +116,7 @@ public class GlobalData implements LoggableAPI {
     }
 
     public void write() {
-        if(this.writable && Objects.nonNull(this.holder))
-            FileHelper.writeLines(MTRef.GLOBAL_CONFIG+".toml",this.holder.toLines(),false);
+        //if(this.writable && Objects.nonNull(this.holder))
+            //FileHelper.writeLines(MTRef.GLOBAL_CONFIG+".toml",this.holder.toLines(),false);
     }
 }

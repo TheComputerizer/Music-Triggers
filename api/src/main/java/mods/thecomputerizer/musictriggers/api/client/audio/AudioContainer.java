@@ -105,11 +105,15 @@ public class AudioContainer extends AudioRef {
 
     @Override
     public void start(TriggerAPI trigger) {
+        logInfo("Starting audio");
         AudioPlayer player = this.channel.getPlayer();
         AudioTrack track = getTrack();
         if(Objects.isNull(player) || Objects.isNull(track)) return;
+        logInfo("Starting fade");
         if(Objects.nonNull(trigger)) setFade(-trigger.getParameterAsInt("fade_in"));
+        logInfo("Setting volume");
         this.channel.setTrackVolume(getVolume());
+        logInfo("Playing track");
         player.playTrack(track);
     }
 

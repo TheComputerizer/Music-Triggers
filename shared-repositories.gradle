@@ -1,0 +1,15 @@
+apply from: rootProject.file('buildSrc\\shared.gradle')
+
+repositories { //TODO Add content filters?
+    maven {
+        name = 'JitPack'
+        url = uri('https://jitpack.io')
+    }
+    maven {
+        name = 'M2'
+        url = uri('https://m2.dv8tion.net/releases')
+    }
+    flatDir {
+        dirs "$rootProject.projectDir/libs"
+    }
+}

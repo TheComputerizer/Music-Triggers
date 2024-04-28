@@ -223,8 +223,10 @@ public class ChannelData extends ChannelElement {
         extractActiveTriggers();
         setAudioPools();
         addEmptyTriggers();
-        for(Map.Entry<TriggerAPI,Collection<ChannelEventHandler>> entry : this.triggerEventMap.entrySet())
+        for(Map.Entry<TriggerAPI,Collection<ChannelEventHandler>> entry : this.triggerEventMap.entrySet()) {
             entry.getValue().add(entry.getKey());
+            logInfo("Trigger `{}` is mapped to event handlers `{}`",entry.getKey(),entry.getValue());
+        }
     }
 
     public void parse() {
@@ -288,11 +290,6 @@ public class ChannelData extends ChannelElement {
             for(AudioRef other : this.audio)
                 if(other!=ref && !added.contains(other) && trigger.matches(other.getTriggers()))
                     pooled.add(other);
-            if(pooled.size()==1) {
-                added.add(ref);
-                this.triggerEventMap.get(trigger).add(ref);
-                continue;
-            }
             AudioPool pool = null;
             for(AudioRef a : pooled) {
                 if(Objects.nonNull(a)) {

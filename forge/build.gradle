@@ -1,5 +1,7 @@
+apply from: rootProject.file('buildSrc\\shared.gradle')
+
 dependencies {
-    implementation(project(':api'))
+    implementation(project(':api')) { transitive = false }
 }
 
 jar {

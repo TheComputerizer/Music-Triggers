@@ -7,16 +7,16 @@ pluginManagement {
             url = uri('https://maven.minecraftforge.net/')
         }
         maven {
+            name = 'Garden of Fancy'
+            url = uri('https://maven.gofancy.wtf/releases')
+        }
+        maven {
             name = 'NeoForged'
             url = uri('https://maven.neoforged.net/releases')
         }
         maven {
             name = 'ParchmentMC'
             url = uri('https://maven.parchmentmc.org')
-        }
-        maven {
-            name = 'Garden of Fancy'
-            url = uri('https://maven.gofancy.wtf/releases')
         }
     }
 }
@@ -25,12 +25,12 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '0.+'
 }
 
+
 rootProject.name = 'Music Triggers'
 include 'api'
 include 'forge'
 include 'legacy'
 include 'legacy:1.12'
 include 'forge:1.16'
-include 'asm-replace'
 findProject(':forge:1.16')?.name = 'forge.1_16'
 findProject(':legacy:1.12')?.name = 'legacy.1_12'

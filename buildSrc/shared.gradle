@@ -6,25 +6,7 @@ plugins.apply('java-library')
 java.getToolchain().getLanguageVersion().set(JavaLanguageVersion.of(8))
 
 configurations {
-    embed
     implementation.extendsFrom(embed)
-}
-
-configurations.configureEach {
-    resolutionStrategy.setForcedModules('org.ow2.asm:asm:9.+', 'org.ow2.asm:asm-analysis:9.+',
-            'org.ow2.asm:asm-commons:9.+', 'org.ow2.asm:asm-tree:9.+', 'org.ow2.asm:asm-util:9.+')
-    resolutionStrategy {
-        dependencySubstitution {
-            (substitute module('org.ow2.asm:asm-debug-all:5.2')).using(module('org.ow2.asm:asm:9.+'))
-        }
-        dependencySubstitution {
-            (substitute module('org.ow2.asm:asm-parent:5.2')).using(module('org.ow2.asm:asm:9.+'))
-        }
-    }
-}
-
-repositories {
-    mavenCentral()
 }
 
 idea {
@@ -34,17 +16,6 @@ idea {
     }
 }
 
-tasks.withType(JavaCompile) {
-    println "compiling!!!!! from ${it}"
-    //source(sourceSets.asm.allSource)
-}
-
-dependencies {
-    implementation('org.ow2.asm:asm:9.+')
-    implementation('org.ow2.asm:asm-analysis:9.+')
-    implementation('org.ow2.asm:asm-commons:9.+')
-    implementation('org.ow2.asm:asm-tree:9.+')
-    implementation('org.ow2.asm:asm-util:9.+')
-    annotationProcessor('org.projectlombok:lombok:1.+')
-    compileOnly('org.projectlombok:lombok:1.+')
+repositories {
+    mavenCentral()
 }

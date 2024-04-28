@@ -134,7 +134,7 @@ public class AudioPool extends AudioRef {
         int sum = 0;
         for(AudioRef audio : this.playableAudio)
             if(audio!=this.queuedAudio) sum+=audio.getParameterAsInt("chance");
-        int rand = MTRef.randomInt(sum);
+        int rand = sum>0 ? MTRef.randomInt(sum) : 0;
         for(AudioRef audio : this.playableAudio) {
             rand-=(audio==this.queuedAudio ? 0 : audio.getParameterAsInt("chance"));
             if(rand<=0) nextQueue = audio;
@@ -146,7 +146,9 @@ public class AudioPool extends AudioRef {
 
     @Override
     public void start(TriggerAPI trigger) {
+        logInfo("Starting queued audio track");
         if(Objects.nonNull(this.queuedAudio)) this.queuedAudio.start(trigger);
+        else logInfo("Why was the queued track null");
     }
 
     @Override
