@@ -1,24 +1,6 @@
-buildscript {
-    configurations.configureEach {
-        resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-            if(details.requested.group=='org.ow2.asm') {
-                if(details.requested.version!=asm_version) {
-                    def moduleName = details.requested.module.name
-                    if(moduleName=='asm-debug-all') moduleName = 'asm-commons'
-                    if(moduleName=='asm-parent') moduleName = 'asm-util'
-                    details.useTarget([group: 'org.ow2.asm', name: moduleName, version: asm_version])
-                    println "Replaced requested ASM[${details.requested.version}] dependency " +
-                            "${details.requested} with ASM[${asm_version}] target ${details.target}"
-                }
-            }
-        }
-    }
-}
-
 plugins {
     id 'net.minecraftforge.gradle' version '6.+'
     id 'wtf.gofancy.fancygradle' version '1.1.+'
-    id 'com.github.johnrengelman.shadow' version '8.+'
 }
 
 apply from: rootProject.file('shared-dependencies.gradle')
@@ -34,7 +16,7 @@ fancyGradle {
 
 minecraft {
     mappings channel: 'stable', version: mappings_version
-    accessTransformer = file("src/main/resources/META-INF/${mod_accesstransformer}")
+    accessTransformer = file("src\\main\\resources\\META-INF\\${mod_accesstransformer}")
     runs {
         def args = [
                 '-DtilDev=true',
@@ -96,7 +78,7 @@ dependencies {
 }
 
 processResources {
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     var replacements = [
             'minecraft_version': minecraft_version,
             'mod_author': mod_authors,
@@ -115,9 +97,6 @@ processResources {
 }
 
 jar {
-    mustRunAfter(":legacy:jar")
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from(configurations.embed)
     manifest {
         attributes([
                 'FMLAT': mod_accesstransformer,

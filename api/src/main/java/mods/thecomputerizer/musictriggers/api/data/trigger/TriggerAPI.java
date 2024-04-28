@@ -62,10 +62,8 @@ public abstract class TriggerAPI extends ParameterWrapper {
     }
 
     public boolean canPlayAudio() {
-        logInfo("can play audio 1 (played={})",this.tracksPlayed);
         if(this.tracksPlayed==0) return hasTime("ticks_before_audio");
         int maxTracks = getParameterAsInt("max_tracks");
-        logInfo("can play audio 2 (max={},played={})",maxTracks,this.tracksPlayed);
         return (maxTracks<=0 || this.tracksPlayed<maxTracks) && !hasTime("ticks_between_audio");
     }
 

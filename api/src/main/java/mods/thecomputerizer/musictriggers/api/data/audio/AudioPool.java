@@ -91,6 +91,11 @@ public class AudioPool extends AudioRef {
     }
 
     @Override
+    public boolean isInterrputedBy(@Nullable TriggerAPI trigger) {
+        return Objects.isNull(this.queuedAudio) || this.queuedAudio.isInterrputedBy(trigger);
+    }
+
+    @Override
     public boolean matchingTriggers(Collection<TriggerAPI> triggers) {
         return !triggers.isEmpty() && this.trigger.matches(triggers);
     }
@@ -113,10 +118,7 @@ public class AudioPool extends AudioRef {
 
     @Override
     public void play() {
-        if(Objects.nonNull(this.queuedAudio)) {
-            logInfo("Attempting to play queued audio");
-            this.queuedAudio.play();
-        }
+        if(Objects.nonNull(this.queuedAudio)) this.queuedAudio.play();
     }
 
     @Override
@@ -146,9 +148,9 @@ public class AudioPool extends AudioRef {
 
     @Override
     public void start(TriggerAPI trigger) {
-        logInfo("Starting queued audio track");
+        logDebug("Starting queued audio track");
         if(Objects.nonNull(this.queuedAudio)) this.queuedAudio.start(trigger);
-        else logInfo("Why was the queued track null");
+        else logDebug("Why was the queued track null");
     }
 
     @Override
@@ -160,6 +162,7 @@ public class AudioPool extends AudioRef {
     public void stopped() {
         if(Objects.nonNull(this.queuedAudio) && this.queuedAudio.getParameterAsInt("play_once")>0)
             this.playableAudio.remove(this.queuedAudio);
+        this.queuedAudio = null;
         this.channel.queue();
     }
 }

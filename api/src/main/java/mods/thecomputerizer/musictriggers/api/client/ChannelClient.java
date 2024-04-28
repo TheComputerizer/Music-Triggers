@@ -34,10 +34,10 @@ public class ChannelClient extends ChannelAPI {
     private final ChannelListener listener;
     private final TrackLoader trackLoader;
     private boolean registeredResourceAudio;
-    private float categoryVolume;
+    private float categoryVolume = 1f;
     private float trackVolume;
     private boolean queued;
-    private boolean playing;
+    private AudioPool playingPool;
 
     public ChannelClient(ChannelHelper helper, Table table) {
         super(helper,table);
@@ -47,6 +47,12 @@ public class ChannelClient extends ChannelAPI {
         this.listener = new ChannelListener(this);
         this.trackLoader = new TrackLoader();
         logInfo("Successfully registered client channel `{}`!",getName());
+    }
+
+    @Override
+    public void activate() {
+        super.activate();
+        handleInterruption(getActiveTrigger());
     }
 
     public void addDebugElements(MTDebugInfo info, Collection<Element> elements) {
@@ -62,7 +68,7 @@ public class ChannelClient extends ChannelAPI {
         this.categoryVolume = 0f;
         this.trackVolume = 0f;
         this.queued = false;
-        this.playing = false;
+        this.playingPool = null;
     }
 
     protected void configure(AudioConfiguration config) {
@@ -98,6 +104,10 @@ public class ChannelClient extends ChannelAPI {
     @Override
     public AudioPlayer getPlayer() {
         return this.player;
+    }
+
+    protected void handleInterruption(@Nullable TriggerAPI trigger) {
+        if(Objects.isNull(this.playingPool) || this.playingPool.isInterrputedBy(trigger)) stop();
     }
 
     @Override
@@ -141,17 +151,22 @@ public class ChannelClient extends ChannelAPI {
         stopped();
     }
 
+    @SuppressWarnings("DataFlowIssue")
     @Override
     public void play() {
         super.play();
         this.queued = false;
         TriggerAPI trigger = getActiveTrigger();
-        logInfo("Current active trigger is once again {}",trigger);
         if(trigger.canPlayAudio()) {
-            logInfo("Looks like the trigger has audio so now the audio will start");
-            trigger.getAudioPool().start(trigger);
-            this.playing = true;
+            AudioPool pool = trigger.getAudioPool();
+            pool.start(trigger);
+            this.playingPool = pool;
         }
+    }
+
+    @Override
+    public void playing() {
+        super.playing();
     }
 
     @Override
@@ -175,7 +190,7 @@ public class ChannelClient extends ChannelAPI {
     @Override
     public void stopped() {
         super.stopped();
-        this.playing = false;
+        this.playingPool = null;
     }
 
     @Override
@@ -191,7 +206,7 @@ public class ChannelClient extends ChannelAPI {
         if(Objects.nonNull(trigger)) {
             AudioPool activePool = getData().getActivePool();
             if(Objects.nonNull(activePool)) {
-                if(this.playing) playing();
+                if(Objects.nonNull(this.playingPool)) playing();
                 else if(this.queued) play();
                 else queue();
             }

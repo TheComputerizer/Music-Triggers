@@ -172,6 +172,11 @@ public class TriggerCombination extends TriggerAPI {
         for(TriggerAPI trigger : triggers) setParentStatus(trigger,removal);
     }
 
+    @Override
+    public String toString() {
+        return "combination"+this.priorityChildren;
+    }
+
     private void updatePriorityTrigger() {
         this.priorityTrigger = TriggerHelper.getPriorityTrigger(this.channel.getHelper(),this.priorityChildren);
     }

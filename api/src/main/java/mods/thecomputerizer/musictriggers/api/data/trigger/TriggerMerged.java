@@ -120,6 +120,11 @@ public class TriggerMerged extends TriggerAPI {
     }
 
     @Override
+    public String toString() {
+        return "merged"+this.triggers;
+    }
+
+    @Override
     public void unplayable() {
         for(TriggerAPI trigger : this.triggers) trigger.unplayable();
     }

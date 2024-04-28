@@ -173,7 +173,7 @@ public class ChannelData extends ChannelElement {
             Collection<ChannelEventHandler> c = this.triggerEventMap.get(trigger);
             return Objects.nonNull(c) ? Collections.unmodifiableCollection(c) : Collections.emptySet();
         }
-        else logDebug("There are no registered event handlers for the active trigger!");
+        else logTrace("Skipping handlers for empty trigger");
         return Collections.emptySet();
     }
 

@@ -15,6 +15,7 @@ import mods.thecomputerizer.musictriggers.api.server.TriggerContextServer;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 @Getter
@@ -41,6 +42,8 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
 
     @Override
     public void activate() {
+        TriggerAPI activeTrigger = getActiveTrigger();
+        if(Objects.nonNull(activeTrigger)) logInfo("Activated trigger {}",activeTrigger);
         handleActiveEvent(ChannelEventHandler::activate);
     }
 
@@ -56,6 +59,8 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
 
     @Override
     public void deactivate() {
+        TriggerAPI activeTrigger = getActiveTrigger();
+        if(Objects.nonNull(activeTrigger)) logInfo("Deactivated trigger {}",activeTrigger);
         handleActiveEvent(ChannelEventHandler::deactivate);
     }
 

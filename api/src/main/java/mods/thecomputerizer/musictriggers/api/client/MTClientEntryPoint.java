@@ -9,7 +9,9 @@ import javax.annotation.Nullable;
 public class MTClientEntryPoint extends ClientEntryPoint {
 
     @Override
-    public void onClientSetup() {}
+    public void onClientSetup() {
+
+    }
 
     @Override
     public @Nullable ClientEntryPoint delegatedClientEntry() {

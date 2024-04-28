@@ -3,9 +3,3 @@ apply from: rootProject.file('buildSrc\\shared.gradle')
 dependencies {
     implementation(project(':api')) { transitive = false }
 }
-
-jar {
-    mustRunAfter(':api:jar')
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from(configurations.embed.collect { it.isDirectory() ? it : zipTree(it) })
-}

@@ -3,7 +3,10 @@ plugins.apply('java')
 plugins.apply('java-base')
 plugins.apply('java-library')
 
-java.getToolchain().getLanguageVersion().set(JavaLanguageVersion.of(8))
+group = base_package
+version = mod_version
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 
 configurations {
     implementation.extendsFrom(embed)
@@ -18,4 +21,13 @@ idea {
 
 repositories {
     mavenCentral()
+}
+
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    setArchiveBaseName(mod_id)
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
 }

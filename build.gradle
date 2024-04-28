@@ -1,23 +1,8 @@
-buildscript {
-    configurations.configureEach {
-        resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-            if(details.requested.group=='org.ow2.asm') {
-                if(details.requested.version!=asm_version) {
-                    def moduleName = details.requested.module.name
-                    details.useTarget([group: 'org.ow2.asm', name: moduleName, version: asm_version])
-                    println "Replaced requested ASM[${details.requested.version}] dependency " +
-                            "${details.requested} with ASM[${asm_version}] target ${details.target}"
-                }
-            }
-        }
-    }
-}
-
 plugins {
     id 'com.github.johnrengelman.shadow' version '8.+'
 }
 
-apply from: rootProject.file('shared-repositories.gradle')
+apply from: rootProject.file('shared-dependencies.gradle')
 
 java.toolchain.getLanguageVersion().set(JavaLanguageVersion.of(22))
 //only pull dependencies that are guaranteed to exist in all modules and should be included in the build
@@ -26,24 +11,27 @@ def excluded = [ til_repo, 'com.google.code.gson', 'com.google.guava', 'com.moan
 
 dependencies {
     println "Hello from the root project"
-    shadow(project(':legacy:legacy.1_12')) { excluded.forEach { grp -> { exclude group: grp } } }
-    shadow(project(':forge:forge.1_16')) { excluded.forEach { grp -> { exclude group: grp } } }
+    shadow(project(':api')){ excluded.forEach { grp -> { exclude group: grp } } }
+    shadow(project(':legacy:legacy.1_12')) { transitive = false }
+    shadow(project(':forge:forge.1_16')) { transitive = false }
 }
 
 shadowJar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     //relocate shaded dependencies to the shadow package to prevent library conflicts
     [ 'certificates', 'com.sedmelluq.discord.lavaplayer', 'com.sedmelluq.lava.common', 'com.sedmelluq.lava.extensions',
       'com.sedmelluq.lava.player', 'com.sedmelluq.lavaplayer.extensions', 'com.rits.cloning', 'com.rits.perspectives',
-      'mozilla', 'net.sourceforge.jaad.aac', 'org.apache.http.auth', 'org.apache.http.client', 'org.apache.http.conn',
-      'org.apache.http.cookie', 'org.apache.http.impl.auth', 'org.apache.http.impl.client', 'org.apache.http.impl.conn',
-      'org.apache.http.impl.cookie', 'org.apache.http.impl.execchain', 'org.mozilla.classfile',
-      'org.mozilla.javascript', 'org.slf4j' ].forEach { pkg -> { relocate pkg, "${shadow_package}.${pkg}" } }
+      'mozilla', 'net.sourceforge.jaad.aac', 'org.apache.http', 'org.mozilla.classfile', 'org.mozilla.javascript',
+      'org.slf4j' ].forEach { pkg -> { relocate pkg, "${shadow_package}.${pkg}" } }
     configurations = [project.configurations.shadow]
     setArchiveClassifier('')
+    setArchiveBaseName(mod_id)
     exclude 'module-info.*'
 }
 
 jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveBaseName = mod_id
     manifest {
         attributes([ //TODO Figure out how to automatically combine this with the submodules
                 'TILMultiversionMods': mod_entrypoint
@@ -52,3 +40,6 @@ jar {
 }
 
 tasks.assemble.dependsOn('shadowJar')
+tasks.shadowJar.dependsOn(':legacy:legacy.1_12:reobfJar')
+tasks.shadowJar.dependsOn(':forge:forge.1_16:reobfJar')
+tasks.jar.finalizedBy(':legacy:legacy.1_12:reobfJar')
