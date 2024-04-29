@@ -1,10 +1,48 @@
-plugins {
-    id 'net.minecraftforge.gradle' version '6.+'
-    id 'org.spongepowered.mixin' version '0.7.+'
-    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
+buildscript {
+    repositories {
+        gradlePluginPortal() {
+            content {
+                [ 'com.github.johnrengelman', 'com.google.code.findbugs', 'com.google.code.gson',
+                  'com.google.errorprone', 'com.google.guava', 'com.google.j2objc',
+                  'com.machinezoo.noexception', 'commons-codec', 'commons-io',
+                  'commons-logging', 'de.siegmar', 'it.unimi.dsi',
+                  'net.sf.jopt-simple', 'org.apache.ant', 'org.apache.logging.log4j',
+                  'org.apache.commons', 'org.apache.httpcomponents', 'org.apache.maven',
+                  'org.checkerframework', 'org.codehaus.plexus', 'org.jdom',
+                  'org.ow2.asm', 'org.slf4j', 'org.tukaani',
+                  'org.vafer' ].forEach { includeGroup it }
+            }
+        }
+        maven {
+            name = 'Forge'
+            url = uri('https://maven.minecraftforge.net/')
+            content {
+                [ 'net.minecraftforge', 'net.minecraftforge.gradle', 'org.spongepowered' ].forEach{ includeGroup it }
+            }
+        }
+        maven {
+            name = 'ParchmentMC'
+            url = uri('https://maven.parchmentmc.org')
+            content {
+                [ 'org.parchmentmc', 'org.parchmentmc.feather',
+                  'org.parchmentmc.librarian.forgegradle' ].forEach { includeGroup it }
+            }
+        }
+    }
+    dependencies {
+        classpath('com.github.johnrengelman:shadow:8.+')
+        classpath('net.minecraftforge.gradle:net.minecraftforge.gradle.gradle.plugin:6.+')
+        classpath('org.spongepowered:mixingradle:0.+')
+        classpath('org.parchmentmc.librarian.forgegradle:org.parchmentmc.librarian.forgegradle.gradle.plugin:1.+')
+    }
 }
 
-apply from: rootProject.file('shared-dependencies.gradle')
+apply from: rootProject.file('gradle\\java8-module.gradle')
+apply from: rootProject.file('gradle\\shadow-relocate.gradle')
+
+plugins.apply('net.minecraftforge.gradle')
+plugins.apply('org.spongepowered.mixin')
+plugins.apply('org.parchmentmc.librarian.forgegradle')
 
 minecraft {
     mappings channel: 'parchment', version: "${parchment_version}-${minecraft_version}"
@@ -32,32 +70,26 @@ dependencies {
     //noinspection VulnerableLibrariesLocal
     minecraft("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
 
-    implementation(project(':forge'))
+    runtimeOnly(project(':api'))
 }
 
 mixin {
     add sourceSets.main, mod_refmap
 }
 
-processResources {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    var replacements = [
-            'loader_range': forge_version_range,
-            'minecraft_range': minecraft_range,
-            'mod_author': mod_authors,
-            'mod_description': mod_description,
-            'mod_license': mod_license,
-            'mod_id': mod_id,
-            'mod_name': mod_name,
-            'mod_version': version,
-            'til_range': til_range
-    ]
-    inputs.properties replacements
-    from(sourceSets.main.resources.srcDirs) {
-        include 'META-INF/mods.toml'
-        expand replacements
+reobf {
+    shadowJar {
+        dependsOn createMcpToSrg
+        mappings = createMcpToSrg.output
     }
-    //exclude '**/theimpossiblelibrary/test/**'
+}
+
+processResources {
+    from(project(':forge').processResources.outputs)
+}
+
+processTestResources {
+    from(project(':forge').processTestResources.outputs)
 }
 
 jar {
@@ -72,23 +104,11 @@ jar {
     }
 }
 
-tasks.named("compileJava", JavaCompile) {
-    source(project(":api").sourceSets.main.allSource)
+shadowJar {
+    from(project(':forge').jar.archiveFile.collect { zipTree(it) })
 }
 
-tasks.named("compileTestJava", JavaCompile) {
-    source(project(":api").sourceSets.test.allJava)
-}
-
-tasks.withType(Javadoc).configureEach {
-    source(project(":api").sourceSets.main.allJava)
-}
-
-tasks.withType(Jar).configureEach {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from(project(":api").sourceSets.main.allSource)
-}
-
-tasks.withType(ProcessResources).configureEach {
-    from(project(":api").sourceSets.main.resources)
-}
+tasks.assemble.dependsOn(shadowJar)
+tasks.shadowJar.dependsOn('reobfJar')
+tasks.jar.finalizedBy('reobfJar')
+tasks.jar.dependsOn(':forge:build')

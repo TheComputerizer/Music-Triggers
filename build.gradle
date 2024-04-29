@@ -1,45 +1,17 @@
-plugins {
-    id 'com.github.johnrengelman.shadow' version '8.+'
-}
+/**
+ * Build workflow guidelines
+ * api -> (fabric, forge, legacy, neoforge) -> (1.12, 1.16, 1.18, 1.19, 1.20, 1.21) -> (minor versions) -> main
+ * Shading and relocation must happen within each module to properly respect reobfuscation.
+ * Any necessary reobfuscations must happen in the version the deobfuscations happened in.
+ */
 
-apply from: rootProject.file('shared-dependencies.gradle')
-
-java.toolchain.getLanguageVersion().set(JavaLanguageVersion.of(22))
-//only pull dependencies that are guaranteed to exist in all modules and should be included in the build
-def excluded = [ til_repo, 'com.google.code.gson', 'com.google.guava', 'com.moandjiezana.toml', 'curse.maven',
-                 'net.darkhax.bookshelf', 'net.darkhax.gamestages', 'net.minecraftforge', 'org.joml', 'org.ow2.asm' ]
-
-dependencies {
-    println "Hello from the root project"
-    shadow(project(':api')){ excluded.forEach { grp -> { exclude group: grp } } }
-    shadow(project(':legacy:legacy.1_12')) { transitive = false }
-    shadow(project(':forge:forge.1_16')) { transitive = false }
-}
-
-shadowJar {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    //relocate shaded dependencies to the shadow package to prevent library conflicts
-    [ 'certificates', 'com.sedmelluq.discord.lavaplayer', 'com.sedmelluq.lava.common', 'com.sedmelluq.lava.extensions',
-      'com.sedmelluq.lava.player', 'com.sedmelluq.lavaplayer.extensions', 'com.rits.cloning', 'com.rits.perspectives',
-      'mozilla', 'net.sourceforge.jaad.aac', 'org.apache.http', 'org.mozilla.classfile', 'org.mozilla.javascript',
-      'org.slf4j' ].forEach { pkg -> { relocate pkg, "${shadow_package}.${pkg}" } }
-    configurations = [project.configurations.shadow]
-    setArchiveClassifier('')
-    setArchiveBaseName(mod_id)
-    exclude 'module-info.*'
-}
+apply from: rootProject.file('buildSrc\\shared.gradle')
+java.toolchain.languageVersion = JavaLanguageVersion.of(22)
 
 jar {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    archiveBaseName = mod_id
-    manifest {
-        attributes([ //TODO Figure out how to automatically combine this with the submodules
-                'TILMultiversionMods': mod_entrypoint
-        ])
-    }
+    project(':legacy:legacy.1_12').afterEvaluate { from(it.jar.archiveFile.collect { zipTree(it) }) }
+    project(':forge:forge.1_16').afterEvaluate { from(it.jar.archiveFile.collect { zipTree(it) }) }
 }
 
-tasks.assemble.dependsOn('shadowJar')
-tasks.shadowJar.dependsOn(':legacy:legacy.1_12:reobfJar')
-tasks.shadowJar.dependsOn(':forge:forge.1_16:reobfJar')
-tasks.jar.finalizedBy(':legacy:legacy.1_12:reobfJar')
+tasks.jar.dependsOn(':legacy:legacy.1_12:build')
+tasks.jar.dependsOn(':forge:forge.1_16:build')

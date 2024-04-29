@@ -1,9 +1,22 @@
-apply from: rootProject.file('shared-dependencies.gradle')
+apply from: rootProject.file('gradle\\java8-module.gradle')
+
+repositories {
+    mavenCentral() {
+        content {
+            [ 'com.google.code.findbugs', 'commons-io', 'io.netty', 'org.apache.commons',
+              'org.apache.logging.log4j'].forEach { includeGroup it }
+        }
+    }
+}
 
 dependencies {
     compileOnly("com.google.code.findbugs:jsr305:${jsr_version}")
-    compileOnly("io.netty:netty-all:${netty_version}")
     compileOnly("commons-io:commons-io:${io_version}")
+    compileOnly("io.netty:netty-all:${netty_version}")
     compileOnly("org.apache.commons:commons-lang3:${lang3_version}")
     compileOnly("org.apache.logging.log4j:log4j-core:${log4j_version}")
+}
+
+processResources {
+    from(sourceSets.main.resources.srcDirs)
 }

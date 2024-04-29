@@ -1,0 +1,1 @@
+apply from: rootProject.file('gradle\\local.gradle') //TODO Add another script & flag to switch between local/external builds

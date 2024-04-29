@@ -1,0 +1,16 @@
+plugins.apply('com.github.johnrengelman.shadow')
+
+configurations {
+    shadow.extendsFrom(shaded)
+}
+
+shadowJar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    configurations = [project.configurations.shadow]
+    setArchiveBaseName(mod_id)
+    setArchiveClassifier('')
+    mergeServiceFiles()
+    exclude 'LICENSE', 'LICENSE.txt', 'META-INF/MANIFSET.MF',
+            'META-INF/maven/**', 'META-INF/*.RSA', 'META-INF/*.SF',
+            'META-INF/services/*.Processor', 'META-INF/**/*.class', 'module-info.*'
+}

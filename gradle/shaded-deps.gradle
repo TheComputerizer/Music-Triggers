@@ -1,0 +1,16 @@
+configurations {
+    implementation.extendsFrom(shaded)
+}
+
+repositories {
+    mavenCentral() {
+        content {
+            includeGroup 'io.github.kostaskougios'
+        }
+    }
+}
+
+dependencies {
+    //other shaded
+    shaded("io.github.kostaskougios:cloning:${cloning_version}") { transitive = false }
+}

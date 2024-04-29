@@ -1,0 +1,21 @@
+apply from: rootProject.file('gradle\\shadow.gradle')
+
+shadowJar {
+    //relocate shaded dependencies to the shadow package to prevent library conflicts
+    [ 'certificates',
+      'com.github.natanbc.lavadsp',
+      'com.sedmelluq.discord.lavaplayer',
+      'com.sedmelluq.lava.common',
+      'com.sedmelluq.lava.extensions',
+      'com.sedmelluq.lava.player',
+      'com.sedmelluq.lavaplayer.extensions',
+      'com.rits.cloning',
+      'com.rits.perspectives',
+      'ibxm',
+      'mozilla',
+      'net.sourceforge.jaad.aac',
+      'org.apache.http',
+      'org.mozilla.classfile',
+      'org.mozilla.javascript',
+      'org.slf4j' ].forEach { pkg -> { relocate pkg, "${shadow_package}.${pkg}" } }
+}

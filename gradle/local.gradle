@@ -1,0 +1,9 @@
+repositories {
+    flatDir {
+        dirs "$rootProject.projectDir/libs"
+    }
+}
+
+dependencies {
+    implementation("mods.thecomputerizer.theimpossiblelibrary:theimpossiblelibrary:${til_version}")
+}

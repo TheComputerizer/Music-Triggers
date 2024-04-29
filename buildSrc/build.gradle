@@ -1,22 +1,4 @@
-plugins {
-    id 'com.gradle.plugin-publish' version '1.+'
-}
-
 apply from: rootProject.file('shared.gradle')
-
-plugins.apply('java-gradle-plugin')
-
-java.toolchain.getLanguageVersion().set(JavaLanguageVersion.of(8))
-
-gradlePlugin {
-    plugins {
-        scrubberPlugin {
-            displayName = 'Module-Info Scrubber'
-            id = 'mods.thecomputerizer.moduleinfoscrubber'
-            implementationClass = 'mods.thecomputerizer.moduleinfoscrubber.ScrubberPlugin'
-        }
-    }
-}
 
 dependencies {
     println "Hello from buildSrc"
@@ -24,26 +6,3 @@ dependencies {
     implementation(gradleApi())
     implementation(gradleTestKit())
 }
-
-/*
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            groupId = plugin_group
-            artifactId = plugin_name
-            version = plugin_version
-            from components.java
-            pom {
-                name = plugin_desc
-                description = plugin_desc
-                developers {
-                    developer {
-                        id = 'the_computerizer'
-                        name = 'The_Computerizer'
-                    }
-                }
-            }
-        }
-    }
-}
- */

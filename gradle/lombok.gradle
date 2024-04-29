@@ -1,0 +1,13 @@
+repositories {
+    mavenCentral() {
+        content {
+            includeGroup 'org.projectlombok'
+        }
+    }
+}
+
+dependencies {
+    //lombok
+    annotationProcessor('org.projectlombok:lombok:1.+')
+    compileOnly('org.projectlombok:lombok:1.+')
+}

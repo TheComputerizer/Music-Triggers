@@ -1,5 +1,28 @@
 apply from: rootProject.file('buildSrc\\shared.gradle')
 
-dependencies {
-    implementation(project(':api')) { transitive = false }
+jar {
+    from(project(':api').jar.archiveFile.collect {
+        include 'mods/**'
+        zipTree(it)
+    })
 }
+
+processResources {
+    def replacements = [ 'loader_range': forge_version_range, 'minecraft_range': minecraft_range,
+                         'mod_author': mod_authors,  'mod_description': mod_description, 'mod_license': mod_license,
+                         'mod_id': mod_id, 'mod_name': mod_name, 'mod_version': version,
+                         'til_range': til_range ]
+    inputs.properties replacements
+    def parentResources = project(':api').processResources.outputs
+    from(parentResources) { exclude 'mcmod.info', 'META-INF/mods.toml' }
+    from(parentResources) {
+        include 'META-INF/mods.toml'
+        expand replacements
+    }
+}
+
+processTestResources {
+    from(project(':api').processTestResources.outputs)
+}
+
+tasks.jar.dependsOn(':api:build')

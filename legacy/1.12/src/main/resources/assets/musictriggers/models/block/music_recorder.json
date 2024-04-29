@@ -1,8 +1,0 @@
-{
-    "parent": "block/cube_top",
-    "textures": {
-        "particle": "musictriggers:block/recorder_side",
-        "top": "musictriggers:block/recorder_top",
-        "side": "musictriggers:block/recorder_side"
-    }
-}

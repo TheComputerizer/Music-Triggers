@@ -1,22 +1,10 @@
 pluginManagement {
     repositories {
-        mavenCentral()
-        gradlePluginPortal()
-        maven {
-            name = 'Forge'
-            url = uri('https://maven.minecraftforge.net/')
-        }
-        maven {
-            name = 'Garden of Fancy'
-            url = uri('https://maven.gofancy.wtf/releases')
-        }
-        maven {
-            name = 'NeoForged'
-            url = uri('https://maven.neoforged.net/releases')
-        }
-        maven {
-            name = 'ParchmentMC'
-            url = uri('https://maven.parchmentmc.org')
+        gradlePluginPortal() {
+            content {
+                [ 'com.google.code.gson', 'org.gradle.toolchains',
+                  'org.gradle.toolchains.foojay-resolver-convention' ].forEach { includeGroup it }
+            }
         }
     }
 }
@@ -24,7 +12,6 @@ pluginManagement {
 plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '0.+'
 }
-
 
 rootProject.name = 'Music Triggers'
 include 'api'
