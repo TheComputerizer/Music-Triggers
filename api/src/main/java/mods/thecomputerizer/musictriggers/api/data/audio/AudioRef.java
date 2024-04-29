@@ -67,7 +67,7 @@ public class AudioRef extends ParameterWrapper {
         addParameter(map,"play_once",new ParameterInt(0));
         addParameter(map,"play_x",new ParameterInt(1));
         addParameter(map,"resume_on_play",new ParameterBoolean(false));
-        addParameter(map,"rotate",new ParameterDouble(1d));
+        addParameter(map,"rotate",new ParameterDouble(0d));
         addParameter(map,"speed",new ParameterDouble(1d));
         addParameter(map,"start_at",new ParameterInt(0));
         addParameter(map,"volume",new ParameterFloat(1f));
@@ -96,10 +96,6 @@ public class AudioRef extends ParameterWrapper {
     public void loadLocal(String location) {}
 
     public void loadRemote(String location) {}
-
-    public boolean matchingTriggers(Collection<TriggerAPI> triggers) {
-        return TriggerHelper.matchesAll(this.triggers,triggers);
-    }
 
     public boolean parse(Table table) {
         List<String> triggerRefs = table.getValOrDefault("triggers",new ArrayList<>());

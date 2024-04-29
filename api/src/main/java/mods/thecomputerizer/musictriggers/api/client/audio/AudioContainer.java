@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.client.audio;
 
+import com.github.natanbc.lavadsp.rotation.RotationPcmAudioFilter;
 import com.github.natanbc.lavadsp.timescale.TimescalePcmAudioFilter;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioItem;
@@ -10,7 +11,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 
 import javax.annotation.Nullable;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -127,11 +128,16 @@ public class AudioContainer extends AudioRef {
         logInfo("Pitch is set to {}",pitch);
         double speed = getParameterAsDouble("speed");
         logInfo("Speed is set to {}",speed);
+        double rotate = getParameterAsDouble("rotate");
+        logInfo("Rotation is set to {}",rotate);
         player.setFilterFactory((track1,format,output) -> {
             TimescalePcmAudioFilter time = new TimescalePcmAudioFilter(output,format.channelCount,format.sampleRate);
             time.setPitch(pitch);
             time.setSpeed(speed);
-            return Collections.singletonList(time);
+            //if(rotate==0d) return Collections.singletonList(time);
+            RotationPcmAudioFilter rotation = new RotationPcmAudioFilter(time,format.sampleRate);
+            rotation.setRotationSpeed(rotate);
+            return Arrays.asList(rotation,time);
         });
         player.playTrack(track);
         logInfo("Successfuly started track `{}`",getName());
