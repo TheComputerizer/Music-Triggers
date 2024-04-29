@@ -150,12 +150,11 @@ public class AudioPool extends AudioRef {
         }
         if(nextQueue instanceof AudioPool) nextQueue.queue();
         this.queuedAudio = nextQueue;
-        logInfo(audioMsg("Queued audio reference {}"),this.queuedAudio);
+        logInfo(audioMsg("Queued reference {}"),this.queuedAudio);
     }
 
     @Override
     public void start(TriggerAPI trigger) {
-        logDebug(audioMsg("Starting queued audio reference"));
         if(Objects.nonNull(this.queuedAudio)) this.queuedAudio.start(trigger);
         else logDebug(audioMsg("Why was the queued reference null"));
     }

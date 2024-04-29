@@ -200,11 +200,10 @@ public class AudioContainer extends AudioRef {
     }
 
     private void setPosition(AudioTrack track) {
-        logTrace(audioMsg("Setting position"));
         long position = getParameterAsLong("start_at");
         if(position>0L)  {
             track.setPosition(position);
-            logTrace(audioMsg("Set track position to {}"),position);
+            logDebug(audioMsg("Set track position to {}"),position);
         }
     }
 
@@ -215,14 +214,13 @@ public class AudioContainer extends AudioRef {
             logFatal(audioMsg("Cannot play track on missing audio player!"));
             return;
         }
-        logDebug(audioMsg("Setting up audio track"));
         AudioTrack track = checkState(getTrack());
         if(Objects.isNull(track)) return;
         checkFade(Objects.nonNull(trigger) ? trigger.getParameterAsInt("fade_in") : 0);
         setPosition(track);
         player.setFilterFactory(this::setFilters);
         player.playTrack(track);
-        logInfo(audioMsg("Succesfully played track"));
+        logInfo(audioMsg("Playing track"));
     }
 
     @Override

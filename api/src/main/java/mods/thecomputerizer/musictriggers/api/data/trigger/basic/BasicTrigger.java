@@ -22,11 +22,6 @@ public abstract class BasicTrigger extends TriggerAPI {
     protected void initExtraParameters(Map<String, Parameter<?>> map) {}
 
     @Override
-    public boolean matches(TriggerAPI trigger) {
-        return getName().matches(trigger.getName());
-    }
-
-    @Override
     public boolean verifyRequiredParameters() {
         return true;
     }

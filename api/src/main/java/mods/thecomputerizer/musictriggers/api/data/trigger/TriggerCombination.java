@@ -200,7 +200,7 @@ public class TriggerCombination extends TriggerAPI {
 
     @Override
     public String toString() {
-        return "combination"+this.priorityChildren;
+        return "Combination"+this.priorityChildren;
     }
 
     @Override

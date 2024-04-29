@@ -10,6 +10,8 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.basic.BasicTrigger;
 import javax.annotation.Nullable;
 import java.util.*;
 
+import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.ACTIVE;
+
 @Getter
 public class TriggerSelector extends ChannelElement {
 
@@ -51,7 +53,7 @@ public class TriggerSelector extends ChannelElement {
             if(trigger instanceof BasicTrigger) continue;
             setCrashHelper("playable ("+trigger.getNameWithID()+")");
             if(trigger.query(this.context)) {
-                logTrace("Potential playable trigger: {}",trigger);
+                //logTrace("Potential playable trigger: {}",trigger);
                 playable.add(trigger);
             }
         }

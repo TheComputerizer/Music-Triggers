@@ -139,7 +139,7 @@ public abstract class TriggerAPI extends ParameterWrapper {
 
     @Override
     protected String getTypeName() {
-        return "Trigger `"+getName()+"`";
+        return "Trigger["+getName()+"]";
     }
 
     public boolean hasNonEmptyAudioPool() {
@@ -200,7 +200,9 @@ public abstract class TriggerAPI extends ParameterWrapper {
         return triggers.size()==1 && isContained(triggers);
     }
 
-    public abstract boolean matches(TriggerAPI trigger);
+    public boolean matches(TriggerAPI trigger) {
+        return this==trigger;
+    }
 
     public void onConnect() {
 
@@ -296,7 +298,7 @@ public abstract class TriggerAPI extends ParameterWrapper {
 
     @Override
     public String toString() {
-        return "["+getNameWithID()+"]";
+        return getTypeName();
     }
 
     @Override
@@ -308,7 +310,7 @@ public abstract class TriggerAPI extends ParameterWrapper {
     @Getter
     public enum State {
 
-        ACTIVE(false),
+        ACTIVE(true),
         DISABLED(false),
         IDLE(true),
         PLAYABLE(true);

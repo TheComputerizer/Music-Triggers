@@ -121,7 +121,7 @@ public class TriggerMerged extends TriggerAPI {
 
     @Override
     public String toString() {
-        return "merged"+this.triggers;
+        return "Merged"+this.triggers;
     }
 
     @Override

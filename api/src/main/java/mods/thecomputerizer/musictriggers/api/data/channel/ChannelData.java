@@ -241,7 +241,7 @@ public class ChannelData extends ChannelElement {
         addEmptyTriggers();
         for(Map.Entry<TriggerAPI,Collection<ChannelEventHandler>> entry : this.triggerEventMap.entrySet()) {
             entry.getValue().add(entry.getKey());
-            logInfo("Trigger `{}` is mapped to event handlers `{}`",entry.getKey(),entry.getValue());
+            logInfo("{} is mapped to event handlers {}",entry.getKey(),entry.getValue());
         }
     }
 

@@ -28,9 +28,4 @@ public abstract class HolderTrigger extends TriggerAPI {
         logMissingParameter("identifier");
         return false;
     }
-
-    @Override
-    public boolean matches(TriggerAPI trigger) {
-        return getName().matches(trigger.getName()) && matchesAll(trigger);
-    }
 }
