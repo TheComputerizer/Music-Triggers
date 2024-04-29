@@ -106,6 +106,11 @@ public abstract class TriggerAPI extends ParameterWrapper {
         NetworkHelper.writeString(buf,this.state.name());
     }
 
+    @Override
+    public boolean equals(Object other) {
+        return other instanceof TriggerAPI && ((TriggerAPI)other).getNameWithID().equals(getNameWithID());
+    }
+
     public @Nullable AudioPool getAudioPool() {
         Collection<ChannelEventHandler> handlers = this.channel.getData().getTriggerEventMap().get(this);
         if(Objects.isNull(handlers)) return null;

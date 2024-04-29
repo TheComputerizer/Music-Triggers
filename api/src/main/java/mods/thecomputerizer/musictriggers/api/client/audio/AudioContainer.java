@@ -2,6 +2,9 @@ package mods.thecomputerizer.musictriggers.api.client.audio;
 
 import com.github.natanbc.lavadsp.rotation.RotationPcmAudioFilter;
 import com.github.natanbc.lavadsp.timescale.TimescalePcmAudioFilter;
+import com.sedmelluq.discord.lavaplayer.filter.AudioFilter;
+import com.sedmelluq.discord.lavaplayer.filter.FloatPcmAudioFilter;
+import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioItem;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
@@ -11,9 +14,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class AudioContainer extends AudioRef {
 
@@ -25,6 +26,44 @@ public class AudioContainer extends AudioRef {
 
     public AudioContainer(ChannelAPI channel, String name) {
         super(channel,name);
+    }
+
+    private void checkFade(int fade) {
+        if(fade>0) {
+            logDebug(audioMsg("Fading in for {} tick{}"),fade,fade>1 ? "s" : "");
+            setFade(-fade);
+        }
+        this.channel.setTrackVolume(getVolume());
+    }
+
+    private AudioTrack checkState(@Nullable AudioTrack track) {
+        if(Objects.isNull(track)) {
+            logWarn(audioMsg("Unable to get audio track!"));
+            return null;
+        }
+        switch(track.getState()) {
+            case LOADING: {
+                logWarn(audioMsg("Tried to play track that was still loading!"));
+                return null;
+            }
+            case FINISHED: {
+                logDebug(audioMsg("Cloning finished track"));
+                return track.makeClone();
+            }
+            case PLAYING: {
+                logInfo(audioMsg("Tried to play track that was already playing!"));
+                return null;
+            }
+            case SEEKING: {
+                logInfo(audioMsg("Trying to play track from seeking state"));
+                return track;
+            }
+            case STOPPING: {
+                logInfo(audioMsg("Trying to play track while it is stopping?"));
+                return track;
+            }
+            default: return track;
+        }
     }
 
     @Override
@@ -84,14 +123,18 @@ public class AudioContainer extends AudioRef {
             if(this.fadeFactor==0f) this.fade = 0;
             else this.fade--;
             if(this.fade==0) {
-                if(this.fadeFactor>0f) {
-                    AudioPlayer player = this.channel.getPlayer();
-                    if(Objects.nonNull(player)) player.stopTrack();
-                }
+                if(this.fadeFactor>0f) stopTrackImmediately();
                 this.fadeFactor = 0f;
             }
             this.channel.setTrackVolume(getVolume());
         }
+    }
+
+    @Override
+    public void queryInterrupt(@Nullable TriggerAPI next, AudioPlayer player) {
+        if(this.fadeFactor>0f) return;
+        InterruptHandler handler = getInterruptHandler();
+        if(Objects.isNull(handler) || handler.isInterrputedBy(next)) this.channel.stop();
     }
 
     /**
@@ -99,7 +142,7 @@ public class AudioContainer extends AudioRef {
      */
     @Override
     public void setFade(int fade) {
-        if(fade<0 && this.fadeFactor!=0f)
+        if(fade!=0 && this.fadeFactor!=0f)
             fade = (int)((float)fade*((float)this.fade/(this.fadeFactor<0f ? -1f/this.fadeFactor : 1f/this.fadeFactor)));
         this.fadeFactor = 1f/(float)fade;
         if(this.fadeFactor==0f) this.fade = 0;
@@ -109,55 +152,92 @@ public class AudioContainer extends AudioRef {
         }
     }
 
+    @SuppressWarnings("UnusedAssignment")
+    private List<AudioFilter> setFilters(AudioTrack track, AudioDataFormat format, FloatPcmAudioFilter output) {
+        List<AudioFilter> filters = new ArrayList<>();
+        output = setTimescale(filters,output,format);
+        output = setRotation(filters,output,format);
+        Collections.reverse(filters);
+        int size = filters.size();
+        logDebug(audioMsg("Initialized {} audio filter{}"),size,size==1 ? "" : "s");
+        return filters;
+    }
+
     @Override
     public void setItem(AudioItem item) {
         this.item = item;
     }
 
+    private FloatPcmAudioFilter setRotation(
+            List<AudioFilter> filters, FloatPcmAudioFilter output, AudioDataFormat format) {
+        double rotationSpeed = getParameterAsDouble("rotation_speed");
+        if(rotationSpeed!=0d) {
+            logDebug(audioMsg("Setting rotation speed to {}"),rotationSpeed);
+            output = new RotationPcmAudioFilter(output,format.sampleRate).setRotationSpeed(rotationSpeed);
+            filters.add(output);
+        }
+        return output;
+    }
+
+    private FloatPcmAudioFilter setTimescale(
+            List<AudioFilter> filters, FloatPcmAudioFilter output, AudioDataFormat format) {
+        boolean needsTimeScale = false;
+        double pitch = getParameterAsDouble("pitch");
+        double speed = getParameterAsDouble("speed");
+        if(pitch!=1d && pitch>0d) {
+            logDebug(audioMsg("Setting pitch of {} to {}"),pitch);
+            needsTimeScale = true;
+        }
+        if(speed!=1d && speed>0d) {
+            logDebug(audioMsg("Setting speed of {} to {}"),speed);
+            needsTimeScale = true;
+        }
+        if(needsTimeScale) {
+            output = new TimescalePcmAudioFilter(output,format.channelCount,format.sampleRate).setPitch(pitch).setSpeed(speed);
+            filters.add(output);
+        }
+        return output;
+    }
+
+    private void setPosition(AudioTrack track) {
+        logTrace(audioMsg("Setting position"));
+        long position = getParameterAsLong("start_at");
+        if(position>0L)  {
+            track.setPosition(position);
+            logTrace(audioMsg("Set track position to {}"),position);
+        }
+    }
+
     @Override
     public void start(TriggerAPI trigger) {
         AudioPlayer player = this.channel.getPlayer();
-        AudioTrack track = getTrack();
-        if(Objects.isNull(player) || Objects.isNull(track)) return;
-        track = track.makeClone();
-        if(Objects.nonNull(trigger)) setFade(-trigger.getParameterAsInt("fade_in"));
-        this.channel.setTrackVolume(getVolume());
-        long position = getParameterAsLong("start_at");
-        track.setPosition(position);
-        double pitch = getParameterAsDouble("pitch");
-        logInfo("Pitch is set to {}",pitch);
-        double speed = getParameterAsDouble("speed");
-        logInfo("Speed is set to {}",speed);
-        double rotate = getParameterAsDouble("rotate");
-        logInfo("Rotation is set to {}",rotate);
-        player.setFilterFactory((track1,format,output) -> {
-            TimescalePcmAudioFilter time = new TimescalePcmAudioFilter(output,format.channelCount,format.sampleRate);
-            time.setPitch(pitch);
-            time.setSpeed(speed);
-            //if(rotate==0d) return Collections.singletonList(time);
-            RotationPcmAudioFilter rotation = new RotationPcmAudioFilter(time,format.sampleRate);
-            rotation.setRotationSpeed(rotate);
-            return Arrays.asList(rotation,time);
-        });
+        if(Objects.isNull(player)) {
+            logFatal(audioMsg("Cannot play track on missing audio player!"));
+            return;
+        }
+        logDebug(audioMsg("Setting up audio track"));
+        AudioTrack track = checkState(getTrack());
+        if(Objects.isNull(track)) return;
+        checkFade(Objects.nonNull(trigger) ? trigger.getParameterAsInt("fade_in") : 0);
+        setPosition(track);
+        player.setFilterFactory(this::setFilters);
         player.playTrack(track);
-        logInfo("Successfuly started track `{}`",getName());
+        logInfo(audioMsg("Succesfully played track"));
     }
 
     @Override
     public void stop() {
-        logInfo("Stopping container");
+        logInfo(audioMsg("Stopping track"));
         TriggerAPI trigger = this.channel.getActiveTrigger();
         if(Objects.nonNull(trigger)) {
-            int fadeOut = trigger.getParameterAsInt("fade_out");
-            if(fadeOut>0) setFade(fadeOut);
+            int fade = trigger.getParameterAsInt("fade_out");
+            if(fade>0) setFade(fade);
             else stopTrackImmediately();
         }
         else stopTrackImmediately();
     }
 
     private void stopTrackImmediately() {
-        AudioTrack track = this.channel.getPlayer().getPlayingTrack();
-        if(Objects.nonNull(track)) track.stop();
-        this.channel.stopped();
+        this.channel.getPlayer().stopTrack();
     }
 }

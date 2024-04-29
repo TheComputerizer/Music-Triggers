@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.api.data.trigger;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
+import mods.thecomputerizer.musictriggers.api.data.parameter.UniversalParameters;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 import javax.annotation.Nullable;
@@ -114,9 +115,16 @@ public class TriggerHelper {
     public static void parseTriggers(ChannelAPI channel, Collection<TriggerAPI> triggers, @Nullable Table table) {
         if(Objects.isNull(table)) return;
         for(Table triggerTable : table.getChildren().values()) {
-            if(triggerTable.getName().equals("universal")) continue;
-            TriggerAPI trigger = TriggerRegistry.getTriggerInstance(channel,triggerTable.getName());
-            if(checkVersion(trigger) && trigger.parse(triggerTable)) triggers.add(trigger);
+            if(triggerTable.getName().equals("universal")) {
+                UniversalParameters universal = channel.getData().getUniversals(TriggerAPI.class);
+                if(Objects.isNull(universal) || !universal.parseParameters(triggerTable))
+                    channel.logError("Failed to parse universal triggers");
+                else channel.logInfo("Intialized universal trigger data");
+            }
+            else {
+                TriggerAPI trigger = TriggerRegistry.getTriggerInstance(channel, triggerTable.getName());
+                if (checkVersion(trigger) && trigger.parse(triggerTable)) triggers.add(trigger);
+            }
         }
     }
 }

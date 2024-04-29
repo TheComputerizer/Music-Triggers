@@ -80,6 +80,11 @@ public class TriggerMerged extends TriggerAPI {
     }
 
     @Override
+    public void queue() {
+        for(TriggerAPI trigger : this.triggers) trigger.queue();
+    }
+
+    @Override
     public void play() {
         for(TriggerAPI trigger : this.triggers) trigger.play();
     }
@@ -92,11 +97,6 @@ public class TriggerMerged extends TriggerAPI {
     @Override
     public void playing() {
         for(TriggerAPI trigger : this.triggers) trigger.playing();
-    }
-
-    @Override
-    public void queue() {
-        for(TriggerAPI trigger : this.triggers) trigger.queue();
     }
 
     @Override

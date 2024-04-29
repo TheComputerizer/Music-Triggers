@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.audio;
 
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
@@ -41,7 +42,7 @@ public class AudioPool extends AudioRef {
             this.valid = true;
         }
         else {
-            logWarn("Unable to create audio pool {} from reference audio {}! The triggers were not recognized.",name,ref);
+            logWarn(ref.audioMsg("Unable to create audio pool {} from reference! The triggers were not recognized."),name);
             this.valid = false;
         }
     }
@@ -86,18 +87,24 @@ public class AudioPool extends AudioRef {
         for(AudioRef ref : this.audio) ref.encode(buf);
     }
 
+    @Override
+    public @Nullable InterruptHandler getInterruptHandler() {
+        return Objects.nonNull(this.queuedAudio) ? this.queuedAudio.getInterruptHandler() : null;
+    }
+
+    @Override
+    public float getVolume() {
+        return Objects.nonNull(this.queuedAudio) ? this.queuedAudio.getVolume() : 0f;
+    }
+
     public boolean hasAudio() {
         return !this.audio.isEmpty();
     }
 
     @Override
-    public boolean isInterrputedBy(@Nullable TriggerAPI trigger) {
-        return Objects.isNull(this.queuedAudio) || this.queuedAudio.isInterrputedBy(trigger);
-    }
-
-    @Override
-    public boolean matchingTriggers(Collection<TriggerAPI> triggers) {
-        return !triggers.isEmpty() && this.trigger.matches(triggers);
+    public void queryInterrupt(@Nullable TriggerAPI next, AudioPlayer player) {
+        if(Objects.isNull(this.queuedAudio)) this.channel.getPlayer().stopTrack();
+        else this.queuedAudio.queryInterrupt(trigger,player);
     }
 
     public AudioPool merge(AudioPool ... pools) {
@@ -143,14 +150,14 @@ public class AudioPool extends AudioRef {
         }
         if(nextQueue instanceof AudioPool) nextQueue.queue();
         this.queuedAudio = nextQueue;
-        logInfo("Queued audio track `{}`",this.queuedAudio);
+        logInfo(audioMsg("Queued audio reference {}"),this.queuedAudio);
     }
 
     @Override
     public void start(TriggerAPI trigger) {
-        logDebug("Starting queued audio track");
+        logDebug(audioMsg("Starting queued audio reference"));
         if(Objects.nonNull(this.queuedAudio)) this.queuedAudio.start(trigger);
-        else logDebug("Why was the queued track null");
+        else logDebug(audioMsg("Why was the queued reference null"));
     }
 
     @Override
@@ -163,6 +170,5 @@ public class AudioPool extends AudioRef {
         if(Objects.nonNull(this.queuedAudio) && this.queuedAudio.getParameterAsInt("play_once")>0)
             this.playableAudio.remove(this.queuedAudio);
         this.queuedAudio = null;
-        this.channel.queue();
     }
 }

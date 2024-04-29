@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.data.log;
 
 import mods.thecomputerizer.musictriggers.api.MTRef;
+import mods.thecomputerizer.theimpossiblelibrary.api.core.TILDev;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.LogHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.LogHelper.ModLogger;
 import org.apache.logging.log4j.Level;
@@ -41,7 +42,7 @@ public class MTLogger {
     }
 
     public static void logTrace(String type, String typeName, String msg, Object ... args) {
-        log(type,typeName,Level.TRACE,msg,args);
+        if(TILDev.DEV) log(type,typeName,Level.TRACE,msg,args);
     }
 
     public static void logWarn(String type, String typeName, String msg, Object ... args) {

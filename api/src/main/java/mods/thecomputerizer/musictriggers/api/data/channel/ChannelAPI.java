@@ -47,6 +47,8 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
         handleActiveEvent(ChannelEventHandler::activate);
     }
 
+    public abstract boolean checkDeactivate(TriggerAPI current, TriggerAPI next);
+
     /**
      * Stops any audio that is playing & clears all data
      */
@@ -91,7 +93,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     }
 
     public abstract boolean isClientChannel();
-
+    public abstract boolean isDeactivating();
     public abstract boolean isValid();
 
     public void loadTracks(boolean loadResources) {

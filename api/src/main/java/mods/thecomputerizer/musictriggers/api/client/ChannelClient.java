@@ -38,6 +38,7 @@ public class ChannelClient extends ChannelAPI {
     private float trackVolume;
     private boolean queued;
     private AudioPool playingPool;
+    private boolean deactivating;
 
     public ChannelClient(ChannelHelper helper, Table table) {
         super(helper,table);
@@ -49,14 +50,23 @@ public class ChannelClient extends ChannelAPI {
         logInfo("Successfully registered client channel `{}`!",getName());
     }
 
-    @Override
-    public void activate() { //TODO Remove hardcoded testing stuff
-        super.activate();
-        handleInterruption(getActiveTrigger());
-    }
-
     public void addDebugElements(MTDebugInfo info, Collection<Element> elements) {
         //if(this.playing) elements.add(new Element(CHANNEL,info.getTranslated("channel","song")));
+    }
+
+    @Override
+    public boolean checkDeactivate(TriggerAPI current, TriggerAPI next) {
+        if(Objects.nonNull(current)) {
+            if(current==next) {
+                this.deactivating = false;
+                return false;
+            }
+            if(Objects.isNull(this.playingPool) || Objects.isNull(this.player.getPlayingTrack())) return true;
+            this.deactivating = true;
+            this.playingPool.queryInterrupt(next,this.player);
+            return false;
+        }
+        return true;
     }
 
     @Override
@@ -90,6 +100,12 @@ public class ChannelClient extends ChannelAPI {
         return player;
     }
 
+    @Override
+    public void deactivate() {
+        super.deactivate();
+        this.deactivating = false;
+    }
+
     protected AudioConfiguration finalizeManager() {
         this.manager.setFrameBufferDuration(1000);
         this.manager.setPlayerCleanupThreshold(Long.MAX_VALUE);
@@ -106,14 +122,14 @@ public class ChannelClient extends ChannelAPI {
         return this.player;
     }
 
-    protected void handleInterruption(@Nullable TriggerAPI trigger) {
-        logDebug("Handling interruption");
-        if(Objects.isNull(this.playingPool) || this.playingPool.isInterrputedBy(trigger)) stop();
-    }
-
     @Override
     public boolean isClientChannel() {
         return true;
+    }
+
+    @Override
+    public boolean isDeactivating() {
+        return this.deactivating;
     }
 
     @Override
@@ -146,7 +162,6 @@ public class ChannelClient extends ChannelAPI {
 
     @Override
     public void onTrackStart(AudioTrack track) {
-
     }
 
     @Override
@@ -180,32 +195,27 @@ public class ChannelClient extends ChannelAPI {
 
     @Override
     public void setCategoryVolume(float volume) {
-        this.categoryVolume = volume;
-        updateVolume();
+        if(volume!=this.categoryVolume) {
+            logDebug("Setting category volume to {}%",volume*100f);
+            this.categoryVolume = volume;
+            updateVolume();
+        }
     }
 
     @Override
     public void setTrackVolume(float volume) {
-        this.trackVolume = volume;
-        updateVolume();
-    }
-
-    @Override
-    public void stop() {
-        super.stop();
-        if(Objects.nonNull(this.playingPool)) this.playingPool.stop();
+        if(volume!=this.trackVolume) {
+            logDebug("Setting track volume to {}%",volume*100f);
+            this.trackVolume = volume;
+            updateVolume();
+        }
     }
 
     @Override
     public void stopped() {
+        this.player.stopTrack();
         super.stopped();
         this.playingPool = null;
-    }
-
-    @Override
-    public void tick() {
-        super.tick();
-        if(Objects.nonNull(this.player.getPlayingTrack())) playing();
     }
 
     @Override
@@ -216,8 +226,10 @@ public class ChannelClient extends ChannelAPI {
             AudioPool activePool = getData().getActivePool();
             if(Objects.nonNull(activePool)) {
                 if(Objects.nonNull(this.playingPool)) playing();
-                else if(this.queued) play();
-                else queue();
+                else if(!this.deactivating) {
+                    if(this.queued) play();
+                    else queue();
+                }
             }
         }
     }

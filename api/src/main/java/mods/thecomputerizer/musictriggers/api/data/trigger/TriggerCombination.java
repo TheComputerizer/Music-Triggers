@@ -145,9 +145,25 @@ public class TriggerCombination extends TriggerAPI {
     }
 
     @Override
+    public void play() {
+        for(TriggerAPI trigger : this.priorityChildren) trigger.play();
+    }
+
+    @Override
     public void playable() {
         for(TriggerAPI trigger : this.priorityChildren) trigger.playable();
     }
+
+    @Override
+    public void playing() {
+        for(TriggerAPI trigger : this.priorityChildren) trigger.playing();
+    }
+
+    @Override
+    public void queue() {
+        for(TriggerAPI trigger : this.priorityChildren) trigger.queue();
+    }
+
 
     @Override
     public void setState(State state) {
@@ -173,8 +189,33 @@ public class TriggerCombination extends TriggerAPI {
     }
 
     @Override
+    public void stop() {
+        for(TriggerAPI trigger : this.priorityChildren) trigger.stop();
+    }
+
+    @Override
+    public void stopped() {
+        for(TriggerAPI trigger : this.priorityChildren) trigger.stopped();
+    }
+
+    @Override
     public String toString() {
         return "combination"+this.priorityChildren;
+    }
+
+    @Override
+    public void tickActive() {
+        for(TriggerAPI trigger : this.priorityChildren) trigger.tickActive();
+    }
+
+    @Override
+    public void tickPlayable() {
+        for(TriggerAPI trigger : this.priorityChildren) trigger.tickPlayable();
+    }
+
+    @Override
+    public void unplayable() {
+        for(TriggerAPI trigger : this.priorityChildren) trigger.unplayable();
     }
 
     private void updatePriorityTrigger() {

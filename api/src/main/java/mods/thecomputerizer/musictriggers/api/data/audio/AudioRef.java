@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.audio;
 
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioItem;
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
@@ -33,6 +34,10 @@ public class AudioRef extends ParameterWrapper {
         this.triggers = new ArrayList<>();
     }
 
+    public String audioMsg(String msg) {
+        return getTypeName()+": "+msg;
+    }
+
     @Override
     public void close() {
         super.close();
@@ -55,11 +60,11 @@ public class AudioRef extends ParameterWrapper {
 
     @Override
     protected String getTypeName() {
-        return "Audio `"+getName()+"`";
+        return "Audio["+getName()+"]";
     }
 
     @Override
-    protected Map<String,Parameter<?>> initParameterMap() {
+    protected Map<String,Parameter<?>> initParameterMap() { //TODO Move filters into 1 or more subtables
         Map<String,Parameter<?>> map = new HashMap<>();
         addParameter(map,"chance",new ParameterInt(100));
         addParameter(map,"file_name",new ParameterString(""));
@@ -67,7 +72,7 @@ public class AudioRef extends ParameterWrapper {
         addParameter(map,"play_once",new ParameterInt(0));
         addParameter(map,"play_x",new ParameterInt(1));
         addParameter(map,"resume_on_play",new ParameterBoolean(false));
-        addParameter(map,"rotate",new ParameterDouble(0d));
+        addParameter(map,"rotation_speed",new ParameterDouble(0d));
         addParameter(map,"speed",new ParameterDouble(1d));
         addParameter(map,"start_at",new ParameterInt(0));
         addParameter(map,"volume",new ParameterFloat(1f));
@@ -76,13 +81,9 @@ public class AudioRef extends ParameterWrapper {
     }
 
     @Override
-    protected void initExtraParameters(Map<String,Parameter<?>> map) {
+    protected void initExtraParameters(Map<String,Parameter<?>> map) {}
 
-    }
-
-    public boolean isInterrputedBy(@Nullable TriggerAPI trigger) {
-        return Objects.isNull(this.interruptHandler) || this.interruptHandler.isInterrputedBy(trigger);
-    }
+    public void queryInterrupt(@Nullable TriggerAPI next, AudioPlayer player) {}
 
     public boolean isLoaded() {
         return false;
@@ -100,7 +101,7 @@ public class AudioRef extends ParameterWrapper {
     public boolean parse(Table table) {
         List<String> triggerRefs = table.getValOrDefault("triggers",new ArrayList<>());
         if(!TriggerHelper.findTriggers(getChannel(),this.triggers,triggerRefs)) {
-            logError("Failed to parse triggers `{}` for {}!",triggerRefs,getTypeName());
+            logError(audioMsg("Failed to parse triggers {}!"),triggerRefs,getTypeName());
             return false;
         }
         if(table.hasTable("must_finish"))
@@ -156,7 +157,7 @@ public class AudioRef extends ParameterWrapper {
         private List<TriggerAPI> parseTriggers(AudioRef ref, List<String> triggerRefs) {
             List<TriggerAPI> triggers = new ArrayList<>();
             if(!TriggerHelper.findTriggers(getChannel(),triggers,triggerRefs)) {
-                logError("Failed to parse 1 or more triggers in must_finish table for `{}`!",ref.getTypeName());
+                logError(ref.audioMsg("Failed to parse 1 or more triggers in must_finish table!"));
                 return Collections.emptyList();
             }
             return triggers;

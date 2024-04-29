@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.api.data.parameter;
 
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -41,6 +42,11 @@ public class UniversalParameters extends ParameterWrapper {
     @Override
     public boolean isResource() {
         return false;
+    }
+
+    @Override
+    public boolean parseParameters(Table table) {
+        return super.parseParameters(table);
     }
 
     @Override

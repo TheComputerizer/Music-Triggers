@@ -48,8 +48,12 @@ public class TriggerSelector extends ChannelElement {
         setCrashHelper("playable (trigger collection)");
         Set<TriggerAPI> playable = new HashSet<>();
         for(TriggerAPI trigger : triggers) {
+            if(trigger instanceof BasicTrigger) continue;
             setCrashHelper("playable ("+trigger.getNameWithID()+")");
-            if(trigger.query(this.context)) playable.add(trigger);
+            if(trigger.query(this.context)) {
+                logTrace("Potential playable trigger: {}",trigger);
+                playable.add(trigger);
+            }
         }
         setPlayables(playable);
         playable.removeIf(trigger -> !trigger.canActivate());
@@ -63,7 +67,6 @@ public class TriggerSelector extends ChannelElement {
         Set<TriggerAPI> priority = new HashSet<>();
         int priorityVal = 0;
         for(TriggerAPI trigger : triggers) {
-            if(trigger instanceof BasicTrigger) continue;
             int tPriority = trigger.getParameterAsInt("priority");
             if(priority.isEmpty()) {
                 priority.add(trigger);
@@ -87,12 +90,11 @@ public class TriggerSelector extends ChannelElement {
         return priority;
     }
 
-    protected @Nullable AudioPool getAudioPool(Collection<TriggerAPI> registeredTriggers) {
+    protected @Nullable TriggerAPI getPriorityTrigger(Collection<TriggerAPI> registeredTriggers) {
         Collection<TriggerAPI> triggers = collectPlayableTriggers(registeredTriggers);
-        TriggerAPI trigger = this.channel.getHelper().getDebugBool("COMBINE_EQUAL_PRIORITY") ?
+        return this.channel.getHelper().getDebugBool("COMBINE_EQUAL_PRIORITY") ?
                 new TriggerMerged(this.channel,getPriorityTriggers(triggers)) :
                 TriggerHelper.getPriorityTrigger(this.channel.getHelper(),triggers);
-        return setActiveTrigger(trigger);
     }
 
     public boolean isClient() {
@@ -111,36 +113,39 @@ public class TriggerSelector extends ChannelElement {
     public void select() {
         if(!setContext()) return;
         setCrashHelper("trigger selection");
-        AudioPool pool = this.activePool;
+        TriggerAPI priorityTrigger = this.activeTrigger;
         if(!this.context.hasPlayer()) {
             setCrashHelper("early triggers");
             if(isClient()) {
                 setCrashHelper("loading trigger");
                 BasicTrigger loading = this.channel.getData().getLoadingTrigger();
-                if(Objects.nonNull(loading) && loading.query(this.context)) pool = setBasicTrigger(loading);
+                if(Objects.nonNull(loading) && loading.query(this.context)) priorityTrigger = loading;
                 else {
                     setCrashHelper("menu trigger");
                     BasicTrigger menu = this.channel.getData().getMenuTrigger();
-                    if(Objects.nonNull(menu) && menu.query(this.context)) pool = setBasicTrigger(menu);
+                    if(Objects.nonNull(menu) && menu.query(this.context)) priorityTrigger = menu;
                 }
             }
         } else {
             setCrashHelper("normal triggers");
-            pool = getAudioPool(this.channel.getData().getTriggerEventMap().keySet());
-            if(this.playables.isEmpty()) {
-                setCrashHelper("generic trigger");
-                BasicTrigger generic = this.channel.getData().getGenericTrigger();
-                if(Objects.nonNull(generic) && generic.query(this.context)) pool = setBasicTrigger(generic);
-            }
+            priorityTrigger = getPriorityTrigger(this.channel.getData().getTriggerEventMap().keySet());
         }
-        setActivePool(pool);
+        if(Objects.isNull(priorityTrigger)) {
+            setCrashHelper("generic trigger");
+            BasicTrigger generic = this.channel.getData().getGenericTrigger();
+            if(Objects.nonNull(generic) && generic.query(this.context)) priorityTrigger = generic;
+        }
+        setActivePool(Objects.nonNull(priorityTrigger) ? (priorityTrigger instanceof BasicTrigger ?
+                setBasicTrigger(priorityTrigger) : setActiveTrigger(priorityTrigger)) : null);
     }
 
     protected @Nullable AudioPool setActiveTrigger(TriggerAPI trigger) {
-        if(trigger!=this.activeTrigger) this.channel.deactivate();
-        this.previousTrigger = this.activeTrigger;
-        this.activeTrigger = trigger;
-        if(this.activeTrigger!=this.previousTrigger) this.channel.activate();
+        if(this.channel.checkDeactivate(this.activeTrigger,trigger)) {
+            if(Objects.nonNull(this.activeTrigger)) this.channel.deactivate();
+            this.previousTrigger = this.activeTrigger;
+            this.activeTrigger = trigger;
+            if(Objects.nonNull(this.activeTrigger)) this.channel.activate();
+        }
         return Objects.nonNull(this.activeTrigger) ? this.activeTrigger.getAudioPool() : null;
     }
 
