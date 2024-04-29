@@ -3,9 +3,17 @@ apply from: rootProject.file('gradle\\shadow.gradle')
 shadowJar {
     //relocate shaded dependencies to the shadow package to prevent library conflicts
     [ 'certificates',
+      'com.fasterxml.jackson',
       'com.github.natanbc.lavadsp',
-      'com.sedmelluq.discord.lavaplayer',
-      'com.sedmelluq.lava.common',
+      'com.sedmelluq.discord.lavaplayer.container', //As far as I know the natives can't be relocated
+      'com.sedmelluq.discord.lavaplayer.filter',
+      'com.sedmelluq.discord.lavaplayer.format',
+      'com.sedmelluq.discord.lavaplayer.player',
+      'com.sedmelluq.discord.lavaplayer.remote',
+      'com.sedmelluq.discord.lavaplayer.source',
+      'com.sedmelluq.discord.lavaplayer.tools',
+      'com.sedmelluq.discord.lavaplayer.track',
+      'com.sedmelluq.lava.common.tools',
       'com.sedmelluq.lava.extensions',
       'com.sedmelluq.lava.player',
       'com.sedmelluq.lavaplayer.extensions',
@@ -13,8 +21,11 @@ shadowJar {
       'com.rits.perspectives',
       'ibxm',
       'mozilla',
+      'net.iharder',
       'net.sourceforge.jaad.aac',
       'org.apache.http',
+      'org.json',
+      'org.jsoup',
       'org.mozilla.classfile',
       'org.mozilla.javascript',
       'org.slf4j' ].forEach { pkg -> { relocate pkg, "${shadow_package}.${pkg}" } }

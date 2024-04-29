@@ -5,7 +5,7 @@ repositories {
         name = 'JitPack'
         url = uri('https://jitpack.io')
         content {
-            [ 'com.github.walkyst', 'com.github.walkyst.JAADec-fork',
+            [ 'com.github.devoxin', 'com.github.walkyst', 'com.github.walkyst.JAADec-fork',
               'com.github.walkyst.lavaplayer-fork' ].forEach { includeGroup it }
         }
     }
@@ -16,12 +16,6 @@ repositories {
             includeGroup 'dev.arbjerg'
         }
     }
-    /*
-    maven {
-        name = 'M2'
-        url = uri('https://m2.dv8tion.net/releases')
-    }
-     */
 }
 
 dependencies {
@@ -30,7 +24,7 @@ dependencies {
 
     //lavaplayer dependencies
     shaded("com.github.walkyst:ibxm-fork:${ibxm_version}") { transitive = false }
-    shaded("com.github.walkyst:lavaplayer-natives-fork:${lava_natives_version}") { transitive = false }
+    shaded("com.github.devoxin:lavaplayer-natives-fork:${lava_natives_version}") { transitive = false }
     shaded("com.github.walkyst.JAADec-fork:jaadec-ext-aac:${jaadec_version}") { transitive = false }
     shaded("com.github.walkyst.lavaplayer-fork:lava-common:${lava_version}") { transitive = false }
     shaded("com.github.walkyst.lavaplayer-fork:lavaplayer:${lava_version}") { transitive = false }

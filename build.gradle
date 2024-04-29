@@ -11,6 +11,14 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(22)
 jar {
     project(':legacy:legacy.1_12').afterEvaluate { from(it.jar.archiveFile.collect { zipTree(it) }) }
     project(':forge:forge.1_16').afterEvaluate { from(it.jar.archiveFile.collect { zipTree(it) }) }
+    manifest {
+        attributes([
+                'Implementation-Title': project.name,
+                'MixinConfigs': mod_mixin,
+                'TILMultiversionMods': mod_entrypoint,
+                'TweakOrder': 0
+        ])
+    }
 }
 
 tasks.jar.dependsOn(':legacy:legacy.1_12:build')

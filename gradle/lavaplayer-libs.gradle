@@ -3,14 +3,18 @@ apply from: rootProject.file('gradle\\shaded-deps.gradle')
 repositories {
     mavenCentral() {
         content {
-            [ 'org.apache.httpcomponents', 'org.mozilla', 'org.slf4j' ].forEach{ includeGroup it }
+            [ 'net.iharder', 'org.apache.httpcomponents', 'org.json', 'org.jsoup', 'org.mozilla',
+              'org.slf4j' ].forEach{ includeGroup it }
         }
     }
 }
 
 dependencies {
+    shaded("net.iharder:base64:${harder_version}") { transitive = false }
     shaded("org.apache.httpcomponents:httpclient:${httpclient_version}") { transitive = false }
     shaded("org.apache.httpcomponents:httpcore:${httpcore_version}") { transitive = false }
+    shaded("org.json:json:${json_version}") { transitive = false }
+    shaded("org.jsoup:jsoup:${jsoup_version}") { transitive = false }
     shaded("org.mozilla:rhino:${rhino_version}") { transitive = false }
     shaded("org.mozilla:rhino-engine:${rhino_version}") { transitive = false }
     shaded("org.slf4j:slf4j-api:${slf4j_version}") { transitive = false }
