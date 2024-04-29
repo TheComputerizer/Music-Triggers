@@ -107,6 +107,7 @@ public class ChannelClient extends ChannelAPI {
     }
 
     protected void handleInterruption(@Nullable TriggerAPI trigger) {
+        logDebug("Handling interruption");
         if(Objects.isNull(this.playingPool) || this.playingPool.isInterrputedBy(trigger)) stop();
     }
 
@@ -185,6 +186,12 @@ public class ChannelClient extends ChannelAPI {
     public void setTrackVolume(float volume) {
         this.trackVolume = volume;
         updateVolume();
+    }
+
+    @Override
+    public void stop() {
+        super.stop();
+        if(Objects.nonNull(this.playingPool)) this.playingPool.stop();
     }
 
     @Override

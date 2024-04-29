@@ -74,12 +74,20 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
 
     public abstract AudioPlayer getPlayer();
 
+    public TriggerAPI getPreviousTrigger() {
+        return this.selector.getPreviousTrigger();
+    }
+
     protected void handleActiveEvent(Consumer<ChannelEventHandler> event) {
         this.data.getActiveEventHandlers().forEach(event);
     }
 
     protected void handlePlayableEvent(Consumer<ChannelEventHandler> event) {
         this.data.getPlayableEventHandlers().forEach(event);
+    }
+
+    protected void handlePreviousEvent(Consumer<ChannelEventHandler> event) {
+        this.data.getPreviousEventHandlers().forEach(event);
     }
 
     public abstract boolean isClientChannel();
@@ -159,11 +167,13 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
 
     @Override
     public void stop() {
+        logInfo("Stopping track");
         handleActiveEvent(ChannelEventHandler::stop);
     }
 
     @Override
     public void stopped() {
+        logInfo("Stopped track");
         handleActiveEvent(ChannelEventHandler::stopped);
     }
 

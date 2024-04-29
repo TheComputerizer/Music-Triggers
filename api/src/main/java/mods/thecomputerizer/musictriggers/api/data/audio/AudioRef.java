@@ -139,6 +139,7 @@ public class AudioRef extends ParameterWrapper {
 
         public boolean isInterrputedBy(@Nullable TriggerAPI trigger) {
             if(Objects.isNull(trigger)) return false;
+            if(this.triggers.isEmpty()) return true;
             int priority = trigger.getParameterAsInt("priority");
             return this.triggers.isEmpty() || (getChannel().getHelper().getDebugBool("REVERSE_PRIORITY") ?
                     priority<=this.priority : priority>=this.priority) || trigger.isContained(this.triggers);

@@ -185,6 +185,10 @@ public class ChannelData extends ChannelElement {
         return Collections.unmodifiableSet(handlers);
     }
 
+    public Collection<ChannelEventHandler> getPreviousEventHandlers() {
+        return getEventHandlers(this.channel.getPreviousTrigger());
+    }
+
     public @Nullable UniversalParameters getUniversals(Class<? extends ChannelElement> clazz) {
         return this.universalMap.get(clazz);
     }

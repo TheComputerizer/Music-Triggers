@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioItem;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrackState;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
@@ -11,6 +12,8 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
+
+import static com.sedmelluq.discord.lavaplayer.track.AudioTrackState.FINISHED;
 
 public class AudioContainer extends AudioRef {
 
@@ -108,15 +111,30 @@ public class AudioContainer extends AudioRef {
         AudioPlayer player = this.channel.getPlayer();
         AudioTrack track = getTrack();
         if(Objects.isNull(player) || Objects.isNull(track)) return;
+        track = track.getState()==FINISHED ? track.makeClone() : track;
         if(Objects.nonNull(trigger)) setFade(-trigger.getParameterAsInt("fade_in"));
         this.channel.setTrackVolume(getVolume());
+        long position = getParameterAsLong("start_at");
+        track.setPosition(position);
         player.playTrack(track);
         logInfo("Successfuly started track `{}`",getName());
     }
 
     @Override
     public void stop() {
+        logInfo("Stopping container");
         TriggerAPI trigger = this.channel.getActiveTrigger();
-        if(Objects.nonNull(trigger) && isInterrputedBy(trigger)) setFade(trigger.getParameterAsInt("fade_out"));
+        if(Objects.nonNull(trigger)) {
+            int fadeOut = trigger.getParameterAsInt("fade_out");
+            if(fadeOut>0) setFade(fadeOut);
+            else stopTrackImmediately();
+        }
+        else stopTrackImmediately();
+    }
+
+    private void stopTrackImmediately() {
+        AudioTrack track = this.channel.getPlayer().getPlayingTrack();
+        if(Objects.nonNull(track)) track.stop();
+        this.channel.stopped();
     }
 }
