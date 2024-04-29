@@ -9,6 +9,7 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
+import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterDouble;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterFloat;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
@@ -62,10 +63,12 @@ public class AudioRef extends ParameterWrapper {
         Map<String,Parameter<?>> map = new HashMap<>();
         addParameter(map,"chance",new ParameterInt(100));
         addParameter(map,"file_name",new ParameterString(""));
-        addParameter(map,"pitch",new ParameterFloat(1f));
+        addParameter(map,"pitch",new ParameterDouble(1d));
         addParameter(map,"play_once",new ParameterInt(0));
         addParameter(map,"play_x",new ParameterInt(1));
         addParameter(map,"resume_on_play",new ParameterBoolean(false));
+        addParameter(map,"rotate",new ParameterDouble(1d));
+        addParameter(map,"speed",new ParameterDouble(1d));
         addParameter(map,"start_at",new ParameterInt(0));
         addParameter(map,"volume",new ParameterFloat(1f));
         initExtraParameters(map);
@@ -79,6 +82,10 @@ public class AudioRef extends ParameterWrapper {
 
     public boolean isInterrputedBy(@Nullable TriggerAPI trigger) {
         return Objects.isNull(this.interruptHandler) || this.interruptHandler.isInterrputedBy(trigger);
+    }
+
+    public boolean isLoaded() {
+        return false;
     }
 
     @Override

@@ -81,7 +81,7 @@ public class ResourceSeekableInputStream extends SeekableInputStream {
     }
 
     @Override
-    protected void seekHard(long position) throws IOException {
+    protected void seekHard(long position) {
         this.position = Math.min(position,this.bytes.length);
         this.stream.discardBuffer();
     }

@@ -69,9 +69,6 @@ public class AudioOutput extends Thread { //TODO Replace this
         this.onRun = null;
     }
 
-    public void setPitch(float pitch) {
-
-    }
 
     public void pauseAudioLoop() {
         this.runAudioLoop = false;

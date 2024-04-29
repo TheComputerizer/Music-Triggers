@@ -3,13 +3,24 @@ apply from: rootProject.file('gradle\\shaded-deps.gradle')
 repositories {
     mavenCentral() {
         content {
-            [ 'net.iharder', 'org.apache.httpcomponents', 'org.json', 'org.jsoup', 'org.mozilla',
-              'org.slf4j' ].forEach{ includeGroup it }
+            [ 'com.fasterxml.jackson.core', 'com.grack', 'net.iharder', 'org.apache.httpcomponents', 'org.json',
+              'org.jsoup', 'org.mozilla', 'org.slf4j' ].forEach{ includeGroup it }
+        }
+    }
+    maven {
+        name = 'LavaLink'
+        url uri('https://maven.arbjerg.dev/releases')
+        content {
+            includeGroup 'dev.arbjerg'
         }
     }
 }
 
 dependencies {
+    shaded("com.fasterxml.jackson.core:jackson-annotations:${jackson_version}") { transitive = false }
+    shaded("com.fasterxml.jackson.core:jackson-core:${jackson_version}") { transitive = false }
+    shaded("com.fasterxml.jackson.core:jackson-databind:${jackson_version}") { transitive = false }
+    shaded("com.grack:nanojson:${nanojson_version}") { transitive = false }
     shaded("net.iharder:base64:${harder_version}") { transitive = false }
     shaded("org.apache.httpcomponents:httpclient:${httpclient_version}") { transitive = false }
     shaded("org.apache.httpcomponents:httpcore:${httpcore_version}") { transitive = false }

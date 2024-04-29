@@ -173,7 +173,6 @@ public class ChannelData extends ChannelElement {
             Collection<ChannelEventHandler> c = this.triggerEventMap.get(trigger);
             return Objects.nonNull(c) ? Collections.unmodifiableCollection(c) : Collections.emptySet();
         }
-        else logTrace("Skipping handlers for empty trigger");
         return Collections.emptySet();
     }
 
@@ -219,6 +218,19 @@ public class ChannelData extends ChannelElement {
             if(!found) {
                 String file = ref.getParameterAsString("file_name");
                 ref.loadLocal(StringUtils.isNotBlank(file) ? file : ref.getName());
+            }
+        }
+    }
+
+    public void loadResourceTracks() {
+        for(AudioRef ref : this.audio) {
+            if(ref.isLoaded()) continue;
+            String name = ref.getName();
+            for(RedirectElement redirect : this.redirects) {
+                if(name.equals(redirect.getName())) {
+                    if(redirect.isResource()) ref.loadRemote(redirect.getValue());
+                    break;
+                }
             }
         }
     }

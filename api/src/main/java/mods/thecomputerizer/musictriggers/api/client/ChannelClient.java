@@ -50,7 +50,7 @@ public class ChannelClient extends ChannelAPI {
     }
 
     @Override
-    public void activate() {
+    public void activate() { //TODO Remove hardcoded testing stuff
         super.activate();
         handleInterruption(getActiveTrigger());
     }
@@ -139,6 +139,8 @@ public class ChannelClient extends ChannelAPI {
             this.manager.registerSourceManager(new ResourceAudioSourceManager(this));
             this.registeredResourceAudio = true;
             logInfo("Successfully registered resource audio manager");
+            logInfo("Finding resource tracks that need loading");
+            getData().loadResourceTracks();
         }
     }
 

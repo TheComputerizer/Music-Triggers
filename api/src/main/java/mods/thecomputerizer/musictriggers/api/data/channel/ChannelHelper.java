@@ -10,7 +10,7 @@ import com.sedmelluq.discord.lavaplayer.source.http.HttpAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
+import dev.lavalink.youtube.YoutubeAudioSourceManager;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.ChannelClient;
@@ -170,8 +170,7 @@ public class ChannelHelper {
     }
 
     public static void registerRemoteSources(ChannelAPI channel, AudioPlayerManager manager) {
-        registerRemoteSource(channel,manager,"YouTube", () -> new YoutubeAudioSourceManager(
-                true,channel.getHelper().youtubeEmail,channel.getHelper().youtubePassword));
+        registerRemoteSource(channel,manager,"YouTube",YoutubeAudioSourceManager::new);
         registerRemoteSource(channel,manager,"SoundCloud",SoundCloudAudioSourceManager::createDefault);
         registerRemoteSource(channel,manager,"BandCamp",BandcampAudioSourceManager::new);
         registerRemoteSource(channel,manager,"Vimeo",VimeoAudioSourceManager::new);

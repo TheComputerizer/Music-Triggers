@@ -63,6 +63,7 @@ public class TriggerSelector extends ChannelElement {
         Set<TriggerAPI> priority = new HashSet<>();
         int priorityVal = 0;
         for(TriggerAPI trigger : triggers) {
+            if(trigger instanceof BasicTrigger) continue;
             int tPriority = trigger.getParameterAsInt("priority");
             if(priority.isEmpty()) {
                 priority.add(trigger);

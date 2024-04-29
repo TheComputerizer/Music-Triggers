@@ -1,19 +1,18 @@
 package mods.thecomputerizer.musictriggers.api.client.audio;
 
+import com.github.natanbc.lavadsp.timescale.TimescalePcmAudioFilter;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioItem;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrackState;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-
-import static com.sedmelluq.discord.lavaplayer.track.AudioTrackState.FINISHED;
 
 public class AudioContainer extends AudioRef {
 
@@ -21,6 +20,7 @@ public class AudioContainer extends AudioRef {
     private float fadeFactor;
     private AudioItem item;
     private int playlistIndex;
+    private boolean loaded;
 
     public AudioContainer(ChannelAPI channel, String name) {
         super(channel,name);
@@ -61,13 +61,20 @@ public class AudioContainer extends AudioRef {
     }
 
     @Override
+    public boolean isLoaded() {
+        return this.loaded;
+    }
+
+    @Override
     public void loadLocal(String location) {
         this.channel.loadLocalTrack(this,location);
+        this.loaded = true;
     }
 
     @Override
     public void loadRemote(String location) {
         this.channel.loadRemoteTrack(this,location);
+        this.loaded = true;
     }
 
     @Override
@@ -111,11 +118,21 @@ public class AudioContainer extends AudioRef {
         AudioPlayer player = this.channel.getPlayer();
         AudioTrack track = getTrack();
         if(Objects.isNull(player) || Objects.isNull(track)) return;
-        track = track.getState()==FINISHED ? track.makeClone() : track;
+        track = track.makeClone();
         if(Objects.nonNull(trigger)) setFade(-trigger.getParameterAsInt("fade_in"));
         this.channel.setTrackVolume(getVolume());
         long position = getParameterAsLong("start_at");
         track.setPosition(position);
+        double pitch = getParameterAsDouble("pitch");
+        logInfo("Pitch is set to {}",pitch);
+        double speed = getParameterAsDouble("speed");
+        logInfo("Speed is set to {}",speed);
+        player.setFilterFactory((track1,format,output) -> {
+            TimescalePcmAudioFilter time = new TimescalePcmAudioFilter(output,format.channelCount,format.sampleRate);
+            time.setPitch(pitch);
+            time.setSpeed(speed);
+            return Collections.singletonList(time);
+        });
         player.playTrack(track);
         logInfo("Successfuly started track `{}`",getName());
     }

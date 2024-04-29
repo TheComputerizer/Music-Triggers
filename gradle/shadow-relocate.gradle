@@ -5,6 +5,8 @@ shadowJar {
     [ 'certificates',
       'com.fasterxml.jackson',
       'com.github.natanbc.lavadsp',
+      'com.github.natanbc.nativeloader',
+      'com.grack.nanojson',
       'com.sedmelluq.discord.lavaplayer.container', //As far as I know the natives can't be relocated
       'com.sedmelluq.discord.lavaplayer.filter',
       'com.sedmelluq.discord.lavaplayer.format',
@@ -19,6 +21,7 @@ shadowJar {
       'com.sedmelluq.lavaplayer.extensions',
       'com.rits.cloning',
       'com.rits.perspectives',
+      'dev.lavalink.youtube',
       'ibxm',
       'mozilla',
       'net.iharder',

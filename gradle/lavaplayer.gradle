@@ -5,15 +5,9 @@ repositories {
         name = 'JitPack'
         url = uri('https://jitpack.io')
         content {
-            [ 'com.github.devoxin', 'com.github.walkyst', 'com.github.walkyst.JAADec-fork',
-              'com.github.walkyst.lavaplayer-fork' ].forEach { includeGroup it }
-        }
-    }
-    maven {
-        name = 'LavaLink'
-        url = uri('https://maven.arbjerg.dev/releases')
-        content {
-            includeGroup 'dev.arbjerg'
+            [ 'com.github.devoxin', 'com.github.JustRed23', 'com.github.lavalink-devs',
+              'com.github.lavalink-devs.youtube-source', 'com.github.natanbc', 'com.github.walkyst',
+              'com.github.walkyst.JAADec-fork', 'com.github.walkyst.lavaplayer-fork' ].forEach { includeGroup it }
         }
     }
 }
@@ -23,8 +17,10 @@ dependencies {
     shaded("com.github.walkyst:lavaplayer-fork:${lava_version}") { transitive = false }
 
     //lavaplayer dependencies
-    shaded("com.github.walkyst:ibxm-fork:${ibxm_version}") { transitive = false }
     shaded("com.github.devoxin:lavaplayer-natives-fork:${lava_natives_version}") { transitive = false }
+    shaded("com.github.lavalink-devs.youtube-source:common:${youtube_source_version}") { transitive = false }
+    shaded("com.github.natanbc:native-loader:${native_loader_version}") { transitive = false }
+    shaded("com.github.walkyst:ibxm-fork:${ibxm_version}") { transitive = false }
     shaded("com.github.walkyst.JAADec-fork:jaadec-ext-aac:${jaadec_version}") { transitive = false }
     shaded("com.github.walkyst.lavaplayer-fork:lava-common:${lava_version}") { transitive = false }
     shaded("com.github.walkyst.lavaplayer-fork:lavaplayer:${lava_version}") { transitive = false }
@@ -32,5 +28,6 @@ dependencies {
     shaded("com.github.walkyst.lavaplayer-fork:lavaplayer-ext-youtube-rotator:${lava_version}") { transitive = false }
     shaded("com.github.walkyst.lavaplayer-fork:lavaplayer-stream-merger:${lava_version}") { transitive = false }
     shaded("com.github.walkyst.lavaplayer-fork:lavaplayer-test-samples:${lava_version}") { transitive = false }
-    shaded("com.github.walkyst:lavadsp:${lava_filters_version}") { transitive = false }
+    shaded("com.github.JustRed23:lavadsp:${lava_filters_version}") { transitive = false }
+    shaded("com.github.JustRed23:lavadsp-natives:${lava_filters_version}") { transitive = false }
 }

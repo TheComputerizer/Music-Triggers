@@ -10,7 +10,7 @@ public class MTClientEntryPoint extends ClientEntryPoint {
 
     @Override
     public void onClientSetup() {
-
+        ChannelHelper.onResourcesLoaded();
     }
 
     @Override
