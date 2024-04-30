@@ -4,6 +4,7 @@ import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.MTClientEntryPoint;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
+import mods.thecomputerizer.musictriggers.api.server.MTServerEvents;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientEntryPoint;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.CommonEntryPoint;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.loader.MultiVersionMod;
@@ -42,6 +43,7 @@ public class MTCommonEntryPoint extends CommonEntryPoint {
 
     @Override
     public void onPreRegistration() {
+        MTServerEvents.init();
         if(Objects.nonNull(this.delegatedClient)) this.delegatedClient.onPreRegistration();
     }
 
