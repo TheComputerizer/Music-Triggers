@@ -32,7 +32,7 @@ public class ChannelSync extends ChannelElement {
     }
 
     public void send() {
-        //NetworkHelper.wrapMessage(getSyncDirection(false),new MessageTriggerStates<>(this.channel,this.triggersToSync)).send();;
+        //NetworkHelper.wrapMessage(getSyncDirection(false),new MessageTriggerStates<>(this.channel,this.triggersToSync)).send();
         this.triggersToSync.clear();
     }
 

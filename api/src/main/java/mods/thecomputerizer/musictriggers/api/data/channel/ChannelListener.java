@@ -30,6 +30,14 @@ public class ChannelListener extends AudioEventAdapter {
         this.audioOutputThread.close();
         this.closing = true;
     }
+    
+    public void disable() {
+        this.audioOutputThread.pauseAudioLoop();
+    }
+    
+    public void enable() {
+        this.audioOutputThread.unpauseAudioLoop();
+    }
 
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
@@ -39,9 +47,8 @@ public class ChannelListener extends AudioEventAdapter {
     @Override
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException ex) {
         if(!this.closing) {
-            this.channel.logError("Track exception caught! Restarting audio output...");
+            this.channel.logError("Track exception caught! Restarting audio output...",ex);
             this.audioOutputThread.pauseAudioLoop();
-            this.channel.onTrackStop(AudioTrackEndReason.LOAD_FAILED);
         }
     }
 

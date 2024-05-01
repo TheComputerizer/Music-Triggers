@@ -4,8 +4,6 @@ shadowJar {
     //relocate shaded dependencies to the shadow package to prevent library conflicts
     [ 'certificates',
       'com.fasterxml.jackson',
-      'com.github.natanbc.lavadsp',
-      'com.github.natanbc.nativeloader',
       'com.grack.nanojson',
       'com.sedmelluq.discord.lavaplayer.container', //As far as I know the natives can't be relocated
       'com.sedmelluq.discord.lavaplayer.filter',

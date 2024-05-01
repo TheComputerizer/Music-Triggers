@@ -41,7 +41,6 @@ plugins.apply('wtf.gofancy.fancygradle')
 
 fancyGradle {
     patches {
-        resources
         coremods
         asm
         mergetool
@@ -140,7 +139,12 @@ shadowJar {
     from(project(':legacy').jar.archiveFile.collect { zipTree(it) })
 }
 
-tasks.assemble.dependsOn('shadowJar')
+tasks.withType(JavaExec).configureEach {
+    dependsOn(shadowJar)
+    classpath(project.configurations.runtimeClasspath,shadowJar.archiveFile.get().asFile)
+}
+
+tasks.assemble.dependsOn(shadowJar)
 tasks.shadowJar.dependsOn('reobfJar')
 tasks.jar.finalizedBy('reobfJar')
 tasks.jar.dependsOn(':legacy:build')

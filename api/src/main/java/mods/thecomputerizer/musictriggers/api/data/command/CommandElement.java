@@ -38,7 +38,6 @@ public class CommandElement extends ChannelEventRunner {
 
     @Override
     public void close() {
-        super.close();
         this.literal = null;
         this.triggers.clear();
     }

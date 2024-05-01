@@ -40,7 +40,6 @@ public class AudioRef extends ParameterWrapper {
 
     @Override
     public void close() {
-        super.close();
         this.triggers.clear();
     }
 

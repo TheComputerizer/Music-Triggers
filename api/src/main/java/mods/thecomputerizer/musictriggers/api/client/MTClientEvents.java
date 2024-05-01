@@ -27,7 +27,15 @@ public class MTClientEvents {
     private static AdvancementAPI<?> recentAdvancement;
     private static boolean renderOverlays = true;
     private static int ticksUntilReload = -1;
-
+    
+    public static void handleError(@Nullable MinecraftAPI mc, String channel) {
+        if(Objects.nonNull(mc)) {
+            mc.sendMessageToPlayer(getReloadMessage(
+                    "error",new Object[]{channel},TextStyleAPI::italics,TextStyleAPI::darkRed));
+            queueReload(mc, 100);
+        }
+    }
+    
     public static void init(MTDebugInfo debug) {
         MTRef.logInfo("Initializing client event invokers");
         debugInfo = debug;
@@ -98,6 +106,7 @@ public class MTClientEvents {
     }
 
     public static void queueReload(@Nullable MinecraftAPI mc, int ticks) { //TODO mark ChannelHelper as reloading & save log position
+        if(ChannelHelper.isReloading()) return;
         if(Objects.nonNull(mc))
             mc.sendMessageToPlayer(getReloadMessage("queue",new Object[]{ticks},
                     TextStyleAPI::italics,TextStyleAPI::red));

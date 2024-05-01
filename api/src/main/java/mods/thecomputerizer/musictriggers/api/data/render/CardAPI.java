@@ -29,7 +29,6 @@ public abstract class CardAPI extends ChannelEventRunner {
 
     @Override
     public void close() {
-        super.close();
         this.triggers.clear();
     }
 

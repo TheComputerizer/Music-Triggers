@@ -20,7 +20,7 @@ public class ResourceSeekableInputStream extends SeekableInputStream {
         try(InputStream stream = ResourceHelper.getResourceStream(location)) {
             if(Objects.nonNull(stream)) bytes = IOUtils.toByteArray(stream);
         } catch(IOException ex) {
-            logger.logError("Failed to get bytes of resource `{}`!",location.get(),ex);
+            logger.logError("Failed to get bytes of resource `{}`!",location,ex);
         }
         return Objects.nonNull(bytes) ? new ResourceSeekableInputStream(logger,bytes) : null;
     }

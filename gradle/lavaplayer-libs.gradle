@@ -28,5 +28,6 @@ dependencies {
     shaded("org.jsoup:jsoup:${jsoup_version}") { transitive = false }
     shaded("org.mozilla:rhino:${rhino_version}") { transitive = false }
     shaded("org.mozilla:rhino-engine:${rhino_version}") { transitive = false }
+    shaded("org.mozilla:rhino-runtime:${rhino_version}") { transitive = false }
     shaded("org.slf4j:slf4j-api:${slf4j_version}") { transitive = false }
 }

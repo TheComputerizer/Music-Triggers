@@ -77,7 +77,6 @@ public abstract class TriggerAPI extends ParameterWrapper {
 
     @Override
     public void close() {
-        super.close();
         if(TIMER_MAP.containsKey(this)) {
             TIMER_MAP.get(this).clear();
             TIMER_MAP.remove(this);

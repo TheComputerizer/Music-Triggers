@@ -37,11 +37,6 @@ public abstract class ParameterWrapper extends ChannelElement {
         return map;
     }
 
-    @Override
-    public void close() {
-        this.parameters.clear();
-    }
-
     public @Nullable Parameter<?> getParameter(String name) {
         Parameter<?> parameter = this.parameters.get(name.equals("id") ? "identifier" : name);
         if(Objects.nonNull(parameter)) {

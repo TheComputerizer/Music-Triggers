@@ -22,9 +22,6 @@ public class GlobalData implements LoggableAPI {
     @Getter private Registration registration;
     @Getter private String toggles = "";
     private boolean writable;
-    //TODO These should probably be encoded or something
-    private String email = null;
-    private String password = null;
 
     private @Nullable String getStringOrNull(Holder holder, String name) {
         String val = holder.getValOrDefault(name,"");
@@ -32,7 +29,7 @@ public class GlobalData implements LoggableAPI {
     }
 
     public ChannelHelper initHelper(String playerID, boolean isClient) {
-        ChannelHelper helper = new ChannelHelper(playerID,isClient,this.email,this.password);
+        ChannelHelper helper = new ChannelHelper(playerID,isClient);
         helper.load(this.holder);
         return helper;
     }
@@ -76,7 +73,7 @@ public class GlobalData implements LoggableAPI {
         return StringUtils.isNotBlank(this.toggles) ? ChannelHelper.openToml(path+"/"+this.toggles,this) : null;
     }
 
-    public void parse(@Nullable Holder holder) { //TODO Fix bad plaintext email & password
+    public void parse(@Nullable Holder holder) {
         if(Objects.nonNull(holder)) {
             readDebug(holder);
             readRegistration(holder);
@@ -87,8 +84,6 @@ public class GlobalData implements LoggableAPI {
                 markWritable();
             } else var = holder.getOrCreateVar(null,"toggles_path","toggles");
             this.toggles = var.get().toString();
-            this.email = getStringOrNull(holder,"youtube_email");
-            this.password = getStringOrNull(holder,"youtube_password");
         }
         this.holder = holder;
     }

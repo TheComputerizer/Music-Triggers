@@ -41,9 +41,9 @@ public class TriggerContextServer extends TriggerContext {
 
     private boolean checkBiomeNameAndType(TriggerBiome trigger) {
         ResourceLocationAPI<?> regName = this.biome.getRegistryName();
-        if(Objects.isNull(regName) || Objects.isNull(regName.get())) return false;
+        if(Objects.isNull(regName)) return false;
         ResourceContext ctx = trigger.getResourceCtx();
-        if(ctx.checkMatch(regName.get().toString(),null)) return true; //TODO Sync biome names or check biomes on the client
+        if(ctx.checkMatch(regName.toString(),null)) return true; //TODO Sync biome names or check biomes on the client
         ctx = trigger.getTagCtx();
         for(String tag : this.biome.getTagNames(this.world))
             if(ctx.checkMatch(tag,null)) return true;
@@ -112,7 +112,7 @@ public class TriggerContextServer extends TriggerContext {
 
     private boolean checkEntityName(ResourceContext ctx, EntityAPI<?,?> entity) {
         ResourceLocationAPI<?> regName = entity.getRegistryName();
-        if(Objects.isNull(regName) || Objects.isNull(regName.get())) return false;
+        if(Objects.isNull(regName)) return false;
         String name = entity.getName();
         return ctx.checkMatch(regName.toString(),StringUtils.isNotBlank(name) ? name : null);
     }
@@ -363,7 +363,7 @@ public class TriggerContextServer extends TriggerContext {
     @Override
     public boolean isActiveStructure(ResourceContext ctx) {
         return Objects.nonNull(this.structure) && ctx.checkMatch(
-                this.structure.getRegistryName().get().toString(),this.structure.getName());
+                this.structure.getRegistryName().toString(),this.structure.getName());
     }
 
     @Override

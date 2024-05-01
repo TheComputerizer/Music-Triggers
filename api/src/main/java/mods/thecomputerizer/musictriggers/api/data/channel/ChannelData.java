@@ -138,7 +138,6 @@ public class ChannelData extends ChannelElement {
             closeHandlers(entry.getValue());
         }
         this.triggerEventMap.clear();
-        for(UniversalParameters universal : this.universalMap.values()) universal.close();
         this.universalMap.clear();
         this.genericTrigger = null;
         this.loadingTrigger = null;

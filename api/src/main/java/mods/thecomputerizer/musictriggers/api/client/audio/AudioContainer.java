@@ -185,11 +185,11 @@ public class AudioContainer extends AudioRef {
         double pitch = getParameterAsDouble("pitch");
         double speed = getParameterAsDouble("speed");
         if(pitch!=1d && pitch>0d) {
-            logDebug(audioMsg("Setting pitch of {} to {}"),pitch);
+            logDebug(audioMsg("Setting pitch to {}"),pitch);
             needsTimeScale = true;
         }
         if(speed!=1d && speed>0d) {
-            logDebug(audioMsg("Setting speed of {} to {}"),speed);
+            logDebug(audioMsg("Setting speed to {}"),speed);
             needsTimeScale = true;
         }
         if(needsTimeScale) {

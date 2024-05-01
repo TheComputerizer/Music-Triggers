@@ -79,6 +79,10 @@ public class ChannelHelper {
         loadServer(Collections.emptyList());
         globalData.write();
     }
+    
+    public static boolean isReloading() {
+        return reloadingClient;
+    }
 
     private static void load() {
         globalData.parse(openToml(MTRef.GLOBAL_CONFIG,globalData));
@@ -194,16 +198,12 @@ public class ChannelHelper {
     @Getter private final Set<Toggle> toggles;
     @Getter private final String playerID;
     @Getter private final boolean client;
-    private final String youtubeEmail;
-    private final String youtubePassword;
 
-    public ChannelHelper(String playerID, boolean client, String email, String password) {
+    public ChannelHelper(String playerID, boolean client) {
         this.channels = new HashMap<>();
         this.toggles = new HashSet<>();
         this.playerID = playerID;
         this.client = client;
-        this.youtubeEmail = email;
-        this.youtubePassword = password;
     }
 
     public void addDebugElements(MTDebugInfo info, Collection<Element> elements) {

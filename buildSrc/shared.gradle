@@ -12,6 +12,7 @@ idea {
     module {
         downloadJavadoc = true
         downloadSources = true
+        inheritOutputDirs = true
     }
 }
 

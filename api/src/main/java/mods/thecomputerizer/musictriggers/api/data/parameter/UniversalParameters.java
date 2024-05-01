@@ -53,4 +53,7 @@ public class UniversalParameters extends ParameterWrapper {
     public boolean verifyRequiredParameters() {
         return true;
     }
+    
+    @Override
+    public void close() {}
 }

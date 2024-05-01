@@ -105,7 +105,7 @@ public class TriggerContextClient extends TriggerContext {
     public boolean isActiveBlockEntity(ResourceContext ctx, int range, float yRatio) {
         for(BlockEntityAPI<?,?> block : getBlockEntitiesAround(getBox(range,yRatio))) {
             ResourceLocationAPI<?> registryName = block.getRegistryName();
-            if(Objects.nonNull(registryName) && ctx.checkMatch(registryName.get().toString(),null))
+            if(Objects.nonNull(registryName) && ctx.checkMatch(registryName.toString(),null))
                 return true;
         }
         return false;
@@ -152,7 +152,7 @@ public class TriggerContextClient extends TriggerContext {
     public boolean isActiveDimension(ResourceContext ctx) {
         if(!hasBoth()) return false;
         DimensionAPI<?> dimension = this.player.getDimension();
-        return ctx.checkMatch(dimension.getRegistryName().get().toString(),dimension.getName());
+        return ctx.checkMatch(dimension.getRegistryName().toString(),dimension.getName());
     }
 
     @Override
@@ -317,7 +317,7 @@ public class TriggerContextClient extends TriggerContext {
     public boolean isActiveRiding(ResourceContext ctx) {
         if(!hasPlayer()) return false;
         EntityAPI<?,?> entity = this.player.getVehicle();
-        return Objects.nonNull(entity) && ctx.checkMatch(entity.getRegistryName().get().toString(),entity.getName());
+        return Objects.nonNull(entity) && ctx.checkMatch(entity.getRegistryName().toString(),entity.getName());
     }
 
     @Override
