@@ -4,13 +4,10 @@ import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.ClassHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.GenericUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ParameterList<E> extends Parameter<List<Parameter<E>>> {
 
@@ -29,11 +26,6 @@ public class ParameterList<E> extends Parameter<List<Parameter<E>>> {
         this.type = (Class<E>)ClassHelper.findClass(NetworkHelper.readString(buf));
         this.values = new ArrayList<>();
         for(Parameter<E> parameter : getValue()) this.values.add(parameter.value);
-    }
-
-    @Override
-    public void appendToTable(Holder holder, Table table, String name) {
-        holder.addVariable(table,name,this.values.stream().map(Object::toString).collect(Collectors.toList()));
     }
 
     @SuppressWarnings("unchecked")

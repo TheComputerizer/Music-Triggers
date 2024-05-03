@@ -19,8 +19,7 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerCombination;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerMerged;
 import mods.thecomputerizer.musictriggers.api.data.trigger.basic.BasicTrigger;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
@@ -255,9 +254,9 @@ public class ChannelData extends ChannelElement {
         logInfo("Finished parsing channel data");
     }
 
-    public void readCommands(@Nullable Holder commands) {
+    public void readCommands(@Nullable Toml commands) {
         if(Objects.isNull(commands)) return;
-        for(Table table : commands.getTables().values()) {
+        for(Toml table : commands.getAllTables()) {
             CommandElement command = new CommandElement(getChannel(),table);
             if(command.isValid()) this.commands.add(command);
         }
@@ -270,10 +269,10 @@ public class ChannelData extends ChannelElement {
         }
     }
 
-    public void readMain(@Nullable Holder main) {
+    public void readMain(@Nullable Toml main) {
         if(Objects.isNull(main)) return;
-        TriggerHelper.parseTriggers(getChannel(),this.triggers,main.getTableByName("triggers"));
-        AudioHelper.parseAudio(getChannel(),this.audio,main.getTableByName("songs"));
+        TriggerHelper.parseTriggers(getChannel(),this.triggers,main.getTable("triggers"));
+        AudioHelper.parseAudio(getChannel(),this.audio,main.getTable("songs"));
     }
 
     public void readRedirect(Collection<String> lines) {
@@ -283,10 +282,10 @@ public class ChannelData extends ChannelElement {
         }
     }
 
-    public void readRenders(@Nullable Holder renders) {
+    public void readRenders(@Nullable Toml renders) {
         if(Objects.isNull(renders)) return;
-        CardHelper.parseImageCards(getChannel(),this.cards,renders.getTablesByName("image"));
-        CardHelper.parseTitleCards(getChannel(),this.cards,renders.getTablesByName("title"));
+        CardHelper.parseImageCards(getChannel(),this.cards,renders.getTableArray("image"));
+        CardHelper.parseTitleCards(getChannel(),this.cards,renders.getTableArray("title"));
     }
 
     protected void setAudioPools() {

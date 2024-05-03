@@ -12,7 +12,7 @@ import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerSelector;
 import mods.thecomputerizer.musictriggers.api.server.TriggerContextServer;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -30,7 +30,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     @Setter private boolean enabled;
     private int ticks;
 
-    protected ChannelAPI(ChannelHelper helper, Table table) {
+    protected ChannelAPI(ChannelHelper helper, Toml table) {
         this.helper = helper;
         this.name = table.getName();
         this.info = new ChannelInfo(this,table);

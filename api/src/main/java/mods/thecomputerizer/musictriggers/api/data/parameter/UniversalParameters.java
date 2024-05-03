@@ -2,7 +2,7 @@ package mods.thecomputerizer.musictriggers.api.data.parameter;
 
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -45,7 +45,7 @@ public class UniversalParameters extends ParameterWrapper {
     }
 
     @Override
-    public boolean parseParameters(Table table) {
+    public boolean parseParameters(Toml table) {
         return super.parseParameters(table);
     }
 

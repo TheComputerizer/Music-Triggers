@@ -9,7 +9,7 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.ServerHelper;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,7 +25,7 @@ public class CommandElement extends ChannelEventRunner {
     private String literal;
     private final List<TriggerAPI> triggers;
 
-    public CommandElement(ChannelAPI channel, Table table) {
+    public CommandElement(ChannelAPI channel, Toml table) {
         super(channel);
         this.triggers = new ArrayList<>();
         this.valid = parse(table);
@@ -47,8 +47,8 @@ public class CommandElement extends ChannelEventRunner {
         return false;
     }
 
-    private boolean parse(Table table) {
-        this.literal = table.getValOrDefault("literal","literally");
+    private boolean parse(Toml table) {
+        this.literal = table.getValueString("literal");
         if(!TriggerHelper.findTriggers(getChannel(),this.triggers,table)) {
             logError("Failed to parse command with literal `{}`",this.literal);
             return false;

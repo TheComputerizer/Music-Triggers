@@ -11,7 +11,7 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.Parameter
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,8 +58,8 @@ public abstract class CardAPI extends ChannelEventRunner {
         return true;
     }
 
-    public boolean parse(Table table) {
-        List<String> triggerRefs = table.getValOrDefault("triggers",new ArrayList<>());
+    public boolean parse(Toml table) {
+        List<?> triggerRefs = table.getValueArray("triggers");
         if(!TriggerHelper.findTriggers(getChannel(),this.triggers,triggerRefs)) {
             logError("Failed to parse triggers for {}!",getTypeName());
             return false;

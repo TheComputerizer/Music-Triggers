@@ -16,7 +16,7 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.Parameter
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -97,14 +97,14 @@ public class AudioRef extends ParameterWrapper {
 
     public void loadRemote(String location) {}
 
-    public boolean parse(Table table) {
-        List<String> triggerRefs = table.getValOrDefault("triggers",new ArrayList<>());
+    public boolean parse(Toml table) {
+        List<?> triggerRefs = table.getValueArray("triggers");
         if(!TriggerHelper.findTriggers(getChannel(),this.triggers,triggerRefs)) {
             logError(audioMsg("Failed to parse triggers {}!"),triggerRefs);
             return false;
         } else logDebug(audioMsg("Successfully parsed triggers {}"),this.triggers);
         if(table.hasTable("must_finish"))
-            this.interruptHandler = new InterruptHandler(this,table.getTableByName("must_finish"));
+            this.interruptHandler = new InterruptHandler(this,table.getTable("must_finish"));
         return parseParameters(table);
     }
 
@@ -133,11 +133,11 @@ public class AudioRef extends ParameterWrapper {
         private final int priority;
         private final List<TriggerAPI> triggers;
 
-        public InterruptHandler(AudioRef parent, Table table) {
+        public InterruptHandler(AudioRef parent, Toml table) {
             super(parent.getChannel());
-            this.priority = table.getValOrDefault("priority",
+            this.priority = table.getValueInt("priority",
                     getChannel().getHelper().getDebugBool("REVERSE_PRIORITY") ? Integer.MAX_VALUE : Integer.MIN_VALUE);
-            this.triggers = parseTriggers(parent,table.getValOrDefault("trigger_whitelist",new ArrayList<>()));
+            this.triggers = parseTriggers(parent,table.getValueArray("trigger_whitelist"));
         }
 
         public boolean isInterrputedBy(@Nullable TriggerAPI trigger) {
@@ -153,7 +153,7 @@ public class AudioRef extends ParameterWrapper {
             return false;
         }
 
-        private List<TriggerAPI> parseTriggers(AudioRef ref, List<String> triggerRefs) {
+        private List<TriggerAPI> parseTriggers(AudioRef ref, List<?> triggerRefs) {
             List<TriggerAPI> triggers = new ArrayList<>();
             if(!TriggerHelper.findTriggers(getChannel(),triggers,triggerRefs)) {
                 logError(ref.audioMsg("Failed to parse 1 or more triggers in must_finish table!"));

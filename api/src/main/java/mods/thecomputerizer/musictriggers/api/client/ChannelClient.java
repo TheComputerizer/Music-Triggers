@@ -17,7 +17,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelListener;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.EnumHelper;
 
 import javax.annotation.Nullable;
@@ -40,7 +40,7 @@ public class ChannelClient extends ChannelAPI {
     private AudioPool playingPool;
     private boolean deactivating;
 
-    public ChannelClient(ChannelHelper helper, Table table) {
+    public ChannelClient(ChannelHelper helper, Toml table) {
         super(helper,table);
         this.manager = createManager();
         this.player = createPlayer();

@@ -4,7 +4,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.UniversalParameters;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -59,18 +59,18 @@ public class TriggerHelper {
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean findTriggers(
-            ChannelHelper helper, LoggableAPI logger, String channelName, Collection<TriggerAPI> triggers, Table table) {
+            ChannelHelper helper, LoggableAPI logger, String channelName, Collection<TriggerAPI> triggers, Toml table) {
         return findTriggers(helper.findChannel(logger,channelName),triggers,table);
     }
 
-    public static boolean findTriggers(@Nullable ChannelAPI channel, Collection<TriggerAPI> triggers, Table table) {
-        return findTriggers(channel,triggers,table.getValOrDefault("triggers",new ArrayList<>()));
+    public static boolean findTriggers(@Nullable ChannelAPI channel, Collection<TriggerAPI> triggers, Toml table) {
+        return findTriggers(channel,triggers,table.getValueArray("triggers"));
     }
 
-    public static boolean findTriggers(@Nullable ChannelAPI channel, Collection<TriggerAPI> triggers, Collection<String> names) {
+    public static boolean findTriggers(@Nullable ChannelAPI channel, Collection<TriggerAPI> triggers, Collection<?> names) {
         if(Objects.isNull(channel) || Objects.isNull(triggers) || Objects.isNull(names) || names.isEmpty()) return false;
-        for(String name : names) {
-            TriggerAPI trigger = findTrigger(channel.getHelper(),channel,name);
+        for(Object name : names) {
+            TriggerAPI trigger = findTrigger(channel.getHelper(),channel,name.toString());
             if(Objects.isNull(trigger)) {
                 channel.logWarn("Unknown trigger `{}` in triggers array!");
                 return false;
@@ -112,9 +112,9 @@ public class TriggerHelper {
         return false;
     }
 
-    public static void parseTriggers(ChannelAPI channel, Collection<TriggerAPI> triggers, @Nullable Table table) {
+    public static void parseTriggers(ChannelAPI channel, Collection<TriggerAPI> triggers, @Nullable Toml table) {
         if(Objects.isNull(table)) return;
-        for(Table triggerTable : table.getChildren().values()) {
+        for(Toml triggerTable : table.getAllTables()) {
             if(triggerTable.getName().equals("universal")) {
                 UniversalParameters universal = channel.getData().getUniversals(TriggerAPI.class);
                 if(Objects.isNull(universal) || !universal.parseParameters(triggerTable))

@@ -7,11 +7,11 @@ import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 public class ChannelServer extends ChannelAPI { //TODO implement this
 
-    public ChannelServer(ChannelHelper helper, Table table) {
+    public ChannelServer(ChannelHelper helper, Toml table) {
         super(helper,table);
     }
 

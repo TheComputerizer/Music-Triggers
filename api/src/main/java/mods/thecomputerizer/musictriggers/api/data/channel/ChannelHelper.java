@@ -12,6 +12,7 @@ import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceMan
 import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.ChannelClient;
 import mods.thecomputerizer.musictriggers.api.client.MTDebugInfo;
@@ -23,9 +24,9 @@ import mods.thecomputerizer.musictriggers.api.data.global.Toggle;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.server.ChannelServer;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlParsingException;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlWritingException;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.CustomTick;
 import org.apache.commons.lang3.StringUtils;
 
@@ -48,7 +49,7 @@ public class ChannelHelper {
     private static boolean resourcesLoaded;
     private static boolean reloadingClient;
 
-    public static void addPlayer(String playerID, boolean isClient) { //TODO Get id for actual server player reference
+    public static void addPlayer(String playerID, boolean isClient) throws TomlWritingException { //TODO Get id for actual server player reference
         PLAYER_MAP.put(playerID,globalData.initHelper(playerID,isClient));
     }
 
@@ -85,14 +86,18 @@ public class ChannelHelper {
     }
 
     private static void load() {
-        globalData.parse(openToml(MTRef.GLOBAL_CONFIG,globalData));
+        try {
+            globalData.parse(openToml(MTRef.GLOBAL_CONFIG, globalData));
+        } catch(Exception ex) {
+            globalData.logFatal("Error parsing global data!",ex);
+        }
     }
 
-    private static void loadClient() {
-        addPlayer("CLIENT",true);
+    @SneakyThrows private static void loadClient() {
+        addPlayer("CLIENT", true);
     }
 
-    private static void loadServer(Collection<String> playerIDs) {
+    @SneakyThrows private static void loadServer(Collection<String> playerIDs) {
         for(String playerID : playerIDs) addPlayer(playerID,false);
     }
 
@@ -145,11 +150,11 @@ public class ChannelHelper {
     /**
      * Assumes the file extension is not present
      */
-    public static @Nullable Holder openToml(String path, LoggableAPI logger) {
+    public static @Nullable Toml openToml(String path, LoggableAPI logger) {
         path+=".toml";
         try {
-            return TomlHelper.readFully(FileHelper.get(path,false));
-        } catch(IOException ex) {
+            return Toml.readFile(FileHelper.get(path,false));
+        } catch(IOException|TomlParsingException ex) {
             String msg = "Unable to read toml file at `{}`!";
             if(Objects.nonNull(logger)) logger.logError(msg,path,ex);
             else MTRef.logError(msg,path,ex);
@@ -265,7 +270,7 @@ public class ChannelHelper {
         return "CLIENT";
     }
 
-    public void load(@Nullable Holder globalHolder) { //TODO Sided stuff & server channels
+    public void load(@Nullable Toml globalHolder) throws TomlWritingException { //TODO Sided stuff & server channels
         if(Objects.isNull(globalHolder)) {
             globalData.logFatal("Cannot initialize channel or toggle data from missing global config!");
             return;
@@ -275,7 +280,7 @@ public class ChannelHelper {
         parseData(resourcesLoaded);
     }
 
-    private void initChannel(String name, Table info) {
+    private void initChannel(String name, Toml info) {
         if(this.channels.containsKey(name)) globalData.logError("Channel with name `{}` already exists!");
         else {
             ChannelAPI channel = this.client ? new ChannelClient(this,info) : new ChannelServer(this,info);
@@ -284,20 +289,19 @@ public class ChannelHelper {
         }
     }
 
-    private void initChannels(Holder holder) {
-        if(!holder.hasTable("channels")) writeExampleChannel(holder);
-        Table table = holder.getTableByName("channels");
-        for(String name : table.getTableNames()) {
-            Table info = table.getTableByName(name);
-            if(Objects.nonNull(info)) initChannel(name,info);
-            else globalData.logError("Channel `{}` does not have an info table! This should not be possible.",name);
+    private void initChannels(Toml toml) throws TomlWritingException {
+        if(!toml.hasTable("channels")) writeExampleChannel(toml);
+        Toml table = toml.getTable("channels");
+        for(Toml info : table.getAllTables()) {
+            if(Objects.nonNull(info)) initChannel(info.getName(),info);
+            else globalData.logError("Channel `{}` does not have an info table! This should not be possible.");
         }
     }
 
     private void initToggles() {
-        Holder toggles = globalData.openToggles(MTRef.CONFIG_PATH);
+        Toml toggles = globalData.openToggles(MTRef.CONFIG_PATH);
         if(Objects.nonNull(toggles))
-            for(Table table : toggles.getTablesByName("toggle"))
+            for(Toml table : toggles.getTableArray("toggle"))
                 this.toggles.add(new Toggle(this,table));
     }
 
@@ -319,9 +323,9 @@ public class ChannelHelper {
         for(ChannelAPI channel : this.channels.values()) channel.tick();
     }
 
-    private void writeExampleChannel(Holder holder) {
-        Table table = holder.addTable(null,"channels");
-        ChannelInfo.writeExampleData(holder,holder.addTable(table,"example"));
+    private void writeExampleChannel(Toml toml) throws TomlWritingException {
+        Toml table = toml.addTable("channels",false);
+        ChannelInfo.writeExampleData(table.addTable("example",false));
         globalData.markWritable();
     }
 }

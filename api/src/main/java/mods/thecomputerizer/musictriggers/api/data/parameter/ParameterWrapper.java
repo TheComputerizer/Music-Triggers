@@ -4,7 +4,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterNumber;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -208,12 +208,12 @@ public abstract class ParameterWrapper extends ChannelElement {
         return true;
     }
 
-    protected boolean parseParameters(Table table) {
+    protected boolean parseParameters(Toml table) {
         for(Map.Entry<String,Parameter<?>> entry : this.parameters.entrySet()) {
             String name = entry.getKey();
-            if(table.hasVar(name)) {
+            if(table.hasEntry(name)) {
                 Parameter<?> parameter = entry.getValue();
-                setParameterValue(name,table.getValOrDefault(name,parameter.getDefaultValue()),parameter);
+                setParameterValue(name,table.getValue(name),parameter);
             }
         }
         return verifyRequiredParameters();

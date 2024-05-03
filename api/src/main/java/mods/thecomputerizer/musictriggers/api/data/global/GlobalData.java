@@ -1,14 +1,12 @@
 package mods.thecomputerizer.musictriggers.api.data.global;
 
 import lombok.Getter;
-import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
-import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.IndexFinder;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Variable;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml.TomlEntry;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlWritingException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Level;
 
@@ -17,20 +15,20 @@ import java.util.Objects;
 
 public class GlobalData implements LoggableAPI {
 
-    @Getter private Holder holder;
+    @Getter private Toml toml;
     @Getter private Debug debug;
     @Getter private Registration registration;
     @Getter private String toggles = "";
     private boolean writable;
 
-    private @Nullable String getStringOrNull(Holder holder, String name) {
-        String val = holder.getValOrDefault(name,"");
+    private @Nullable String getStringOrNull(Toml toml, String name) {
+        String val = toml.getValueString(name);
         return StringUtils.isNotBlank(val) ? val : null;
     }
 
-    public ChannelHelper initHelper(String playerID, boolean isClient) {
+    public ChannelHelper initHelper(String playerID, boolean isClient) throws TomlWritingException {
         ChannelHelper helper = new ChannelHelper(playerID,isClient);
-        helper.load(this.holder);
+        helper.load(this.toml);
         return helper;
     }
 
@@ -69,41 +67,40 @@ public class GlobalData implements LoggableAPI {
         MTLogger.log("Global","Data",Level.WARN,msg,args);
     }
 
-    public @Nullable Holder openToggles(String path) {
+    public @Nullable Toml openToggles(String path) {
         return StringUtils.isNotBlank(this.toggles) ? ChannelHelper.openToml(path+"/"+this.toggles,this) : null;
     }
 
-    public void parse(@Nullable Holder holder) {
+    public void parse(@Nullable Toml holder) throws TomlWritingException {
         if(Objects.nonNull(holder)) {
             readDebug(holder);
             readRegistration(holder);
-            Variable var;
-            if(!holder.hasVar("toggles_path")) {
-                var = holder.addVariable(null,"toggles_path","toggles",new IndexFinder(null));
-                holder.andBlank(1,new IndexFinder(null,var,1));
+            TomlEntry<?> entry;
+            if(!holder.hasEntry("toggles_path")) {
+                entry = holder.addEntry("toggles_path","toggles");
                 markWritable();
-            } else var = holder.getOrCreateVar(null,"toggles_path","toggles");
-            this.toggles = var.get().toString();
+            } else entry = holder.getEntry("toggles_path");
+            this.toggles = entry.getValue().toString();
         }
-        this.holder = holder;
+        this.toml = holder;
     }
 
-    public void readDebug(Holder holder) {
+    public void readDebug(Toml holder) throws TomlWritingException {
         Debug debug = new Debug();
         if(!holder.hasTable("debug")) {
             debug.writeDefault(holder);
             markWritable();
         }
-        if(debug.parse(holder.getTableByName("debug"))) this.debug = debug;
+        if(debug.parse(holder.getTable("debug"))) this.debug = debug;
     }
 
-    public void readRegistration(Holder holder) {
+    public void readRegistration(Toml toml) throws TomlWritingException {
         Registration registration = new Registration();
-        if(!holder.hasTable("registration")) {
-            registration.writeDefault(holder);
+        if(!toml.hasTable("registration")) {
+            registration.writeDefault(this.toml);
             markWritable();
         }
-        if(registration.parse(holder.getTableByName("registration"))) this.registration = registration;
+        if(registration.parse(toml.getTable("registration"))) this.registration = registration;
     }
 
     public void markWritable() {

@@ -7,9 +7,8 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterList;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterNumber;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Variable;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlWritingException;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -23,24 +22,9 @@ public abstract class GlobalElement implements LoggableAPI {
         this.parameters = initParameters();
     }
 
-    protected void appendToTable(Holder holder, Table table) {
+    protected void appendToTable(Toml table) {
         for(Entry<String,Parameter<?>> entry : this.parameters.entrySet())
-            entry.getValue().appendToTable(holder,table,entry.getKey());
-    }
-
-    /**
-     * Used for top level parameters that are not stored in a table by default
-     */
-    protected Table constructTable(Holder holder) {
-        Table table = new Table(1,null,1,getTypeName());
-        for(Map.Entry<String,Parameter<?>> entry : this.parameters.entrySet()) {
-            String name = entry.getKey();
-            Parameter<?> parameter = entry.getValue();
-            Optional<Variable> var = holder.getVar(name);
-            var.ifPresent(v -> parameter.parseValue(v.get().toString()));
-            table.addItem(parameter.asTomlVar(table,name));
-        }
-        return table;
+            table.addEntry(entry.getKey(),entry.getValue().getValue());
     }
 
     public @Nullable Parameter<?> getParameter(String name) {
@@ -181,12 +165,12 @@ public abstract class GlobalElement implements LoggableAPI {
         MTLogger.logWarn("Global",getTypeName(),msg,args);
     }
 
-    public boolean parse(Table table) {
+    public boolean parse(Toml table) {
         for(Map.Entry<String,Parameter<?>> entry : this.parameters.entrySet()) {
             String name = entry.getKey();
-            if(table.hasVar(name)) {
+            if(table.hasEntry(name)) {
                 Parameter<?> parameter = entry.getValue();
-                setParameterValue(name,table.getValOrDefault(name,parameter.getDefaultValue()),parameter);
+                setParameterValue(name,table.getValue(name),parameter);
             }
         }
         return verifyRequiredParameters();
@@ -200,5 +184,5 @@ public abstract class GlobalElement implements LoggableAPI {
 
     public abstract boolean verifyRequiredParameters();
 
-    protected abstract void writeDefault(Holder holder);
+    protected abstract void writeDefault(Toml holder) throws TomlWritingException;
 }

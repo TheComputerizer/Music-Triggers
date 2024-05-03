@@ -11,7 +11,7 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import org.apache.commons.lang3.mutable.MutableInt;
 
 import javax.annotation.Nullable;
@@ -211,7 +211,7 @@ public abstract class TriggerAPI extends ParameterWrapper {
 
     }
 
-    public boolean parse(Table table) {
+    public boolean parse(Toml table) {
         if(parseParameters(table)) {
             successfullyParsed();
             logInfo("Successfully parsed trigger `{}`",getNameWithID());

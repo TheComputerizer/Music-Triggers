@@ -6,19 +6,18 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Holder;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Table;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import java.util.*;
 
 public class Toggle extends GlobalElement {
 
     private final ChannelHelper helper;
-    private final Table table;
+    private final Toml table;
     private final From from;
     private final To to;
 
-    public Toggle(ChannelHelper helper, Table table) {
+    public Toggle(ChannelHelper helper, Toml table) {
         this.helper = helper;
         this.table = table;
         this.from = new From(this);
@@ -50,7 +49,7 @@ public class Toggle extends GlobalElement {
     }
 
     @Override
-    protected void writeDefault(Holder holder) {}
+    protected void writeDefault(Toml toml) {}
 
     public static class From extends GlobalElement {
 
@@ -74,7 +73,7 @@ public class Toggle extends GlobalElement {
         }
 
         @Override
-        public boolean parse(Table table) {
+        public boolean parse(Toml table) {
             if(!super.parse(table)) return false;
             if(!TriggerHelper.findTriggers(this.parent.helper,this,getParameterAsString("channel"),this.triggers,table)) {
                 logError("Failed to parse 1 or more triggers in `from` table");
@@ -102,7 +101,7 @@ public class Toggle extends GlobalElement {
         }
 
         @Override
-        protected void writeDefault(Holder holder) {}
+        protected void writeDefault(Toml toml) {}
     }
 
     public static class To extends GlobalElement {
@@ -127,7 +126,7 @@ public class Toggle extends GlobalElement {
         }
 
         @Override
-        public boolean parse(Table table) {
+        public boolean parse(Toml table) {
             if(!super.parse(table)) return false;
             if(!TriggerHelper.findTriggers(this.parent.helper,this,getParameterAsString("channel"),this.triggers,table)) {
                 logError("Failed to parse 1 or more triggers in `to` table");
@@ -155,6 +154,6 @@ public class Toggle extends GlobalElement {
         }
 
         @Override
-        protected void writeDefault(Holder holder) {}
+        protected void writeDefault(Toml toml) {}
     }
 }
