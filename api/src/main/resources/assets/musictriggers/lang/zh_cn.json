@@ -15,8 +15,9 @@
   "debug.musictriggers.target.entity": "实体：名字 = %1$s | ID = %2$s`",
 
 
-  "message.musictriggers.reload.queue": "重载用时：（刻）%1$s...",
+  "message.musictriggers.reload.error": "在 %1$s 频道发现了未知错误",
   "message.musictriggers.reload.finished": "重载完毕！",
+  "message.musictriggers.reload.queue": "重载用时：（刻）%1$s...",
 
 
 
