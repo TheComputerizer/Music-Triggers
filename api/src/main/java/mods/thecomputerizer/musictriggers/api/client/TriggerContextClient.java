@@ -56,12 +56,12 @@ public class TriggerContextClient extends TriggerContext {
 
     private Collection<ItemStackAPI<?>> getStacksFromSlotMatcher(String slotMatcher) {
         PlayerInventoryAPI<?> inventory = this.player.getInventory();
-        switch(slotMatcher.toUpperCase()) {
-            case "MAINHAND": return Collections.singleton(this.player.getMainHandStack());
-            case "OFFHAND": return Collections.singleton(this.player.getOffHandStack());
-            case "HOTBAR": return inventory.getHotbarStacks();
-            case "ARMOR": return inventory.getArmorStacks();
-            case "ANY": {
+        switch(slotMatcher.toLowerCase()) {
+            case "mainhand": return Collections.singleton(this.player.getMainHandStack());
+            case "offhand": return Collections.singleton(this.player.getOffHandStack());
+            case "hotbar": return inventory.getHotbarStacks();
+            case "armor": return inventory.getArmorStacks();
+            case "any": {
                 List<ItemStackAPI<?>> stacks = new ArrayList<>();
                 for(int i=0;i<inventory.getSlots();i++) {
                     ItemStackAPI<?> stack = inventory.getStack(i);
@@ -236,7 +236,7 @@ public class TriggerContextClient extends TriggerContext {
     private boolean isActiveItem(ItemStackAPI<?> stack, String itemString) {
         String[] parts = itemString.split(":");
         if(parts.length==0) return false;
-        if(parts.length==1) return parts[0].equals("EMPTY") && stack.isEmpty();
+        if(parts.length==1) return parts[0].equals("empty") && stack.isEmpty();
         ResourceLocationAPI<?> itemName = stack.getItem().getRegistryName();
         if(parts[0].equals(itemName.getNamespace()) && parts[1].equals(itemName.getPath())) {
             if(parts.length==2) return true;
@@ -249,9 +249,9 @@ public class TriggerContextClient extends TriggerContext {
     @Override
     public boolean isActiveLight(int level, String type) {
         if(!hasBoth()) return false;
-        switch(type.toUpperCase()) {
-            case "BLOCK": return this.world.getLightBlock(this.pos)<=level;
-            case "SKY": return this.world.getLightSky(this.pos)<=level;
+        switch(type.toLowerCase()) {
+            case "block": return this.world.getLightBlock(this.pos)<=level;
+            case "sky": return this.world.getLightSky(this.pos)<=level;
             default: return this.world.getLightTotal(this.pos)<=level;
         }
     }
@@ -367,11 +367,11 @@ public class TriggerContextClient extends TriggerContext {
     @Override
     public boolean isActiveTime(String bundle, float startHour, float endHour, int startDay, int endDay, int moonPhase) {
         if(!hasWorld() || !isActiveTimeExtras(startDay,endDay,moonPhase)) return false;
-        switch(bundle.toUpperCase()) {
-            case "DAY": return this.world.isDaytime();
-            case "NIGHT": return this.world.isNighttime();
-            case "SUNRISE": return this.world.isSunrise();
-            case "SUNSET": return this.world.isSunset();
+        switch(bundle.toLowerCase()) {
+            case "day": return this.world.isDaytime();
+            case "night": return this.world.isNighttime();
+            case "sunrise": return this.world.isSunrise();
+            case "sunset": return this.world.isSunset();
             default: {
                 if(startHour==endHour) return true;
                 float time = (float)this.world.getTimeDay()/1000f;

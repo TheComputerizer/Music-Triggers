@@ -9,9 +9,11 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterList;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlWritingException;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  Static references to all builtin table names, parameter names, and parameter types parsed from config files.
@@ -34,12 +36,10 @@ public final class MTDataRef {
             new ParameterRef<>("pauses_overrides",false),
             new ParameterRef<>("redirect","redirect"),
             new ParameterRef<>("renders","renders"),
-            new ParameterRef<>("sound_category","music")
-    ));
+            new ParameterRef<>("sound_category","music")));
     public static final TableRef COMMAND = new TableRef("command",Arrays.asList(
             new ParameterRef<>("literal","literally"),
-            new ParameterRef<>("triggers",new ArrayList<>())
-    ));
+            new ParameterRef<>("triggers",new ArrayList<>())));
     public static final TableRef DEBUG = new TableRef("debug",Arrays.asList(
             new ParameterRef<>("allow_timestamps",false),
             new ParameterRef<>("block_sound_effects",false),
@@ -59,34 +59,28 @@ public final class MTDataRef {
             new ParameterRef<>("show_song_info",true),
             new ParameterRef<>("show_trigger_info",true),
             new ParameterRef<>("slow_tick_factor",5f),
-            new ParameterRef<>("tick_rate",20)
-    ));
+            new ParameterRef<>("tick_rate",20)));
     public static final TableRef FROM = new TableRef("from",Arrays.asList(
             new ParameterRef<>("channel","not_set"),
             new ParameterRef<>("condition","active"),
-            new ParameterRef<>("triggers",new ArrayList<>())
-    ));
+            new ParameterRef<>("triggers",new ArrayList<>())));
     public static final TableRef INTERRUPT_HANDLER = new TableRef("interrupt_handler",Arrays.asList(
             new ParameterRef<>("priority",Integer.class),
-            new ParameterRef<>("trigger_whitelist",new ArrayList<>())
-    ));
+            new ParameterRef<>("trigger_whitelist",new ArrayList<>())));
     public static final TableRef LINK = new TableRef("link",Arrays.asList(
             new ParameterRef<>("channel","not_set"),
             new ParameterRef<>("inherit_time",true),
             new ParameterRef<>("linked_triggers",new ArrayList<>()),
             new ParameterRef<>("required_triggers",new ArrayList<>()),
-            new ParameterRef<>("resume_after_link",true)
-    ));
+            new ParameterRef<>("resume_after_link",true)));
     public static final TableRef LOOP = new TableRef("loop",Arrays.asList(
             new ParameterRef<>("from",0),
             new ParameterRef<>("loop_count",0),
-            new ParameterRef<>("to",0)
-    ));
+            new ParameterRef<>("to",0)));
     public static final TableRef TO = new TableRef("to",Arrays.asList(
             new ParameterRef<>("channel","not_set"),
             new ParameterRef<>("condition","switch"),
-            new ParameterRef<>("triggers",new ArrayList<>())
-    ));
+            new ParameterRef<>("triggers",new ArrayList<>())));
     
     /*-----------------------------------------Top-Level-----------------------------------------*/
     
@@ -95,7 +89,7 @@ public final class MTDataRef {
      */
     public static final TableRef AUDIO = new TableRef("audio",Arrays.asList(
             new ParameterRef<>("chance",100),
-            new ParameterRef<>("location",""),
+            new ParameterRef<>("location","_"),
             new ParameterRef<>("pitch",1d),
             new ParameterRef<>("play_once",0),
             new ParameterRef<>("play_x",1),
@@ -276,7 +270,8 @@ public final class MTDataRef {
     /*-------------------------------------------Files-------------------------------------------*/
     
     public static final TableRef COMMANDS = new TableRef("commands",COMMAND);
-    public static final TableRef GLOBAL = new TableRef("global",new TableRef("channels",CHANNEL_INFO),DEBUG);
+    public static final TableRef GLOBAL = new TableRef("global",Collections.singleton(
+            new ParameterRef<>("toggles_path","toggles")),new TableRef("channels",CHANNEL_INFO),DEBUG);
     public static final TableRef MAIN = new TableRef("main",new TableRef("songs",AUDIO),new TableRef("triggers",TRIGGERS));
     public static final TableRef RENDERS = new TableRef("renders",IMAGE_CARD,TITLE_CARD);
     public static final TableRef TOGGLES = new TableRef("toggles",TOGGLE);
@@ -379,24 +374,34 @@ public final class MTDataRef {
          Returns true if any entries or tables were added
          */
         public boolean addMissingDefaults(Toml table, LoggableAPI logger) {
-            boolean added = false;
+            AtomicBoolean added = new AtomicBoolean(false);
             for(ParameterRef<?> parameter : this.parameters) {
                 if(!table.hasEntry(parameter.name)) {
                     table.addEntry(parameter.name, parameter.defaultValue);
-                    added = true;
+                    added.set(true);
                 }
             }
             for(TableRef child : this.children) {
-                if(!table.hasTable(child.name)) {
+                if(Misc.equalsAny(child.name,"audio","channel")) {
+                    table.getAllTables().forEach(t -> {
+                        try {
+                            child.addMissingDefaults(table.addTable(t.getName(),true),logger);
+                            added.set(true);
+                        } catch(TomlWritingException ex) {
+                            logger.logError("Failed to add missing default children",ex);
+                        }
+                    });
+                    break;
+                } else if(!table.hasTable(child.name)) {
                     try {
                         child.addMissingDefaults(table.addTable(child.name,true),logger);
-                        added = true;
+                        added.set(true);
                     } catch(TomlWritingException ex) {
                         logger.logError("Failed to add missing default children",ex);
                     }
                 }
             }
-            return added;
+            return added.get();
         }
         
         public @Nullable TableRef findChild(String name) {

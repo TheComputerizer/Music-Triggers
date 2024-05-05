@@ -186,7 +186,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     public void tick() {
         tickActive();
         tickPlayable();
-        if((this.ticks++)%getHelper().getDebugNumber("SLOW_TICK_FACTOR").intValue()==0) tickSlow();
+        if((this.ticks++)%getHelper().getDebugNumber("slow_tick_factor").intValue()==0) tickSlow();
     }
 
     @Override

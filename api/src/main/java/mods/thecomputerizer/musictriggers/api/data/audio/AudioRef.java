@@ -136,7 +136,7 @@ public class AudioRef extends ParameterWrapper {
         public InterruptHandler(AudioRef parent, Toml table) {
             super(parent.getChannel());
             this.priority = table.getValueInt("priority",
-                    getChannel().getHelper().getDebugBool("REVERSE_PRIORITY") ? Integer.MAX_VALUE : Integer.MIN_VALUE);
+                    getChannel().getHelper().getDebugBool("reverse_priority") ? Integer.MAX_VALUE : Integer.MIN_VALUE);
             this.triggers = parseTriggers(parent,table.getValueArray("trigger_whitelist"));
         }
 
@@ -144,7 +144,7 @@ public class AudioRef extends ParameterWrapper {
             if(Objects.isNull(trigger)) return false;
             if(this.triggers.isEmpty()) return true;
             int priority = trigger.getParameterAsInt("priority");
-            return this.triggers.isEmpty() || (getChannel().getHelper().getDebugBool("REVERSE_PRIORITY") ?
+            return this.triggers.isEmpty() || (getChannel().getHelper().getDebugBool("reverse_priority") ?
                     priority<=this.priority : priority>=this.priority) || trigger.isContained(this.triggers);
         }
 

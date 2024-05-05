@@ -89,7 +89,7 @@ public class TriggerHelper {
     public static @Nullable TriggerAPI getPriorityTrigger(
             ChannelHelper helper, @Nullable Collection<TriggerAPI> triggers) {
         if(Objects.isNull(triggers) || triggers.isEmpty()) return null;
-        return helper.getDebugBool("REVERSE_PRIORITY") ? Collections.min(triggers,PRIORITY_COMPARATOR) :
+        return helper.getDebugBool("reverse_priority") ? Collections.min(triggers,PRIORITY_COMPARATOR) :
                 Collections.max(triggers,PRIORITY_COMPARATOR);
     }
 

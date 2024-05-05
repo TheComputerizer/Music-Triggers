@@ -51,9 +51,9 @@ public class TriggerContextServer extends TriggerContext {
     }
 
     private boolean checkBiomeRain(TriggerBiome trigger) {
-        String rainType = trigger.getParameterAsString("rain_type").toUpperCase();
-        if(!this.biome.canRain()) return rainType.equals("ANY") || rainType.equals("NONE");
-        if(this.biome.canSnow() && !rainType.equals("SNOW") && !rainType.equals("ANY")) return false;
+        String rainType = trigger.getParameterAsString("rain_type").toLowerCase();
+        if(!this.biome.canRain()) return rainType.equals("any") || rainType.equals("none");
+        if(this.biome.canSnow() && !rainType.equals("snow") && !rainType.equals("any")) return false;
         float rainfall = trigger.getParameterAsFloat("biome_rainfall");
         return trigger.getParameterAsBoolean("rainfall_greater_than") ?
                 this.biome.getRainfall()>=rainfall : this.biome.getRainfall()<=rainfall;
@@ -79,7 +79,7 @@ public class TriggerContextServer extends TriggerContext {
         ChampionsAPI champions = ModHelper.champions();
         if(Objects.nonNull(champions)) {
             List<String> championNames = (List<String>)trigger.getParameterAsList("champion");
-            if(championNames.isEmpty() || (championNames.size()==1 && championNames.get(0).equals("ANY"))) return true;
+            if(championNames.isEmpty() || (championNames.size()==1 && championNames.get(0).equals("any"))) return true;
             ChampionData data = champions.getChampionData(entity);
             if(Objects.nonNull(data))
                 for(String name : championNames)
@@ -95,7 +95,7 @@ public class TriggerContextServer extends TriggerContext {
         InfernalMobsAPI infernalMobs = ModHelper.infernalMobs();
         if(Objects.nonNull(infernalMobs)) {
             List<String> infernalNames = (List<String>)trigger.getParameterAsList("infernal");
-            if(infernalNames.isEmpty() || (infernalNames.size()==1 && infernalNames.get(0).equals("ANY"))) return true;
+            if(infernalNames.isEmpty() || (infernalNames.size()==1 && infernalNames.get(0).equals("any"))) return true;
             InfernalData<?> data = infernalMobs.getInfernalData(entity);
             if(Objects.nonNull(data))
                 for(String name : infernalNames)

@@ -76,7 +76,7 @@ public class TriggerSelector extends ChannelElement {
             }
             else if(tPriority==priorityVal) priority.add(trigger);
             else {
-                if(this.channel.getHelper().getDebugBool("REVERSE_PRIORITY")) {
+                if(this.channel.getHelper().getDebugBool("reverse_priority")) {
                     if(tPriority<priorityVal) {
                         priority.clear();
                         priority.add(trigger);
@@ -94,9 +94,9 @@ public class TriggerSelector extends ChannelElement {
 
     protected @Nullable TriggerAPI getPriorityTrigger(Collection<TriggerAPI> registeredTriggers) {
         Collection<TriggerAPI> triggers = collectPlayableTriggers(registeredTriggers);
-        return this.channel.getHelper().getDebugBool("COMBINE_EQUAL_PRIORITY") ?
-                new TriggerMerged(this.channel,getPriorityTriggers(triggers)) :
-                TriggerHelper.getPriorityTrigger(this.channel.getHelper(),triggers);
+        return this.channel.getHelper().getDebugBool("independent_audio_pools") ?
+                TriggerHelper.getPriorityTrigger(this.channel.getHelper(),triggers) :
+                new TriggerMerged(this.channel,getPriorityTriggers(triggers));
     }
 
     public boolean isClient() {

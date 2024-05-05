@@ -62,7 +62,7 @@ public class ConfigVersionManager {
         }
         GlobalData global = ChannelHelper.getGlobalData();
         if(Objects.isNull(found)) {
-            global.logInfo("Unable to find match config mappings to version {}. Searching for a similar "+
+            global.logInfo("Unable to find matching config mappings to version {}. Searching for a similar "+
                            "version...",version);
             for(ConfigVersion config : similarVersions) {
                 int closest = Objects.nonNull(found) ?
@@ -86,7 +86,7 @@ public class ConfigVersionManager {
         int major = numbers.length>1 ? Integer.parseInt(numbers[1]) : 0;
         int minor = numbers.length>2 ? Integer.parseInt(numbers[2]) : 0;
         if(Objects.isNull(qualifierStr)) return new Version(release,major,minor);
-        index = qualifierStr.indexOf('.');
+        index = qualifierStr.indexOf('-');
         return new Version(release,major,minor,new Qualifier(
                 index>-1 ? qualifierStr.substring(0,index) : qualifierStr,
                 index>-1 ? Integer.parseInt(qualifierStr.substring(index+1)) : 1));

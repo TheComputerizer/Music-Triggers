@@ -193,6 +193,7 @@ public class MTConfigV6 extends ConfigVersion {
             case "ALLOW_TIMESTAMPS": return new TomlEntry<>("allow_timestamps",entry.getValue());
             case "BLOCK_STREAMING_ONLY": return new TomlEntry<>("block_sound_effects",entry.getValue());
             case "BLOCKED_MOD_CATEGORIES": return new TomlEntry<>("blocked_sound_categories",entry.getValue());
+            case "CLIENT_SIDE_ONLY": return new TomlEntry<>("client_only",entry.getValue());
             case "COMBINE_EQUAL_PRIORITY": return new TomlEntry<>("independent_audio_pools",entry.getValue());
             case "CURRENT_SONG_ONLY": return new TomlEntry<>("show_song_info",entry.getValue());
             case "ENCODING_QUALITY": return new TomlEntry<>("encoding_quality",entry.getValue());
@@ -201,6 +202,7 @@ public class MTConfigV6 extends ConfigVersion {
             case "MAX_HOVER_ELEMENTS": return null;
             case "PAUSE_WHEN_TABBED": return new TomlEntry<>("pause_unless_focused",entry.getValue());
             case "PLAY_NORMAL_MUSIC": return new TomlEntry<>("play_normal_music",entry.getValue());
+            case "REGISTER_DISCS": return new TomlEntry<>("enable_discs",entry.getValue());
             case "RESAMPLING_QUALITY": return new TomlEntry<>("resampling_quality",entry.getValue());
             case "REVERSE_PRIORITY": return new TomlEntry<>("reverse_priority",entry.getValue());
             case "SHOW_DEBUG": return new TomlEntry<>("enable_debug_info",entry.getValue());

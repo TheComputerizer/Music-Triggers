@@ -82,8 +82,8 @@ public class ChannelClient extends ChannelAPI {
     }
 
     protected void configure(AudioConfiguration config) {
-        config.setResamplingQuality(EnumHelper.getEnumOrDefault("RESAMPLING_QUALITY",ResamplingQuality.class,HIGH));
-        config.setOpusEncodingQuality(getHelper().getDebugNumber("ENCODING_QUALITY").intValue());
+        config.setResamplingQuality(EnumHelper.getEnumOrDefault(getHelper().getDebugString("resampling_quality"),ResamplingQuality.class,HIGH));
+        config.setOpusEncodingQuality(getHelper().getDebugNumber("encoding_quality").intValue());
         config.setOutputFormat(DISCORD_PCM_S16_BE);
     }
 

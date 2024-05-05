@@ -52,31 +52,31 @@ public abstract class ConfigVersion implements LoggableAPI {
     }
     
     public void logAll(String msg, Object ...args) {
-        MTLogger.log("ConfigMapper",toString(),Level.ALL,msg,args);
+        MTLogger.log("ConfigMapper",this.version.toString(),Level.ALL,msg,args);
     }
     
     public void logDebug(String msg, Object ...args) {
-        MTLogger.log("ConfigMapper",toString(),Level.DEBUG,msg,args);
+        MTLogger.log("ConfigMapper",this.version.toString(),Level.DEBUG,msg,args);
     }
     
     public void logError(String msg, Object ...args) {
-        MTLogger.log("ConfigMapper",toString(),Level.ERROR,msg,args);
+        MTLogger.log("ConfigMapper",this.version.toString(),Level.ERROR,msg,args);
     }
     
     public void logFatal(String msg, Object ...args) {
-        MTLogger.log("ConfigMapper",toString(),Level.FATAL,msg,args);
+        MTLogger.log("ConfigMapper",this.version.toString(),Level.FATAL,msg,args);
     }
     
     public void logInfo(String msg, Object ...args) {
-        MTLogger.log("ConfigMapper",toString(),Level.INFO,msg,args);
+        MTLogger.log("ConfigMapper",this.version.toString(),Level.INFO,msg,args);
     }
     
     public void logTrace(String msg, Object ...args) {
-        MTLogger.log("ConfigMapper",toString(),Level.TRACE,msg,args);
+        MTLogger.log("ConfigMapper",this.version.toString(),Level.TRACE,msg,args);
     }
     
     public void logWarn(String msg, Object ...args) {
-        MTLogger.log("ConfigMapper",toString(),Level.WARN,msg,args);
+        MTLogger.log("ConfigMapper",this.version.toString(),Level.WARN,msg,args);
     }
     
     public void remap() {
@@ -98,7 +98,7 @@ public abstract class ConfigVersion implements LoggableAPI {
                     String mainPath = getPathMain(channel);
                     Toml main = ChannelHelper.openToml(mainPath,this);
                     if(Objects.nonNull(main)) {
-                        logInfo("Remapping main config for ",channel.getName());
+                        logInfo("Remapping main config for {}",channel.getName());
                         writeIfRemapped(main,MTDataRef.FILE_MAP.get("main"),mainPath);
                     }
                 }
@@ -125,7 +125,10 @@ public abstract class ConfigVersion implements LoggableAPI {
         TomlRemapper remapper = getRemapper(ref);
         if(Objects.nonNull(remapper) && remapper.remap(toml)) write = true;
         write = ref.addMissingDefaults(toml,this) || write;
-        if(write) MTDataRef.writeToFile(toml,path);
+        if(write) {
+            logInfo("Writing to {}",path);
+            MTDataRef.writeToFile(toml,path);
+        }
     }
     
     @Getter
