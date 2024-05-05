@@ -214,7 +214,7 @@ public class ChannelData extends ChannelElement {
                 }
             }
             if(!found) {
-                String file = ref.getParameterAsString("file_name");
+                String file = ref.getParameterAsString("location");
                 ref.loadLocal(StringUtils.isNotBlank(file) ? file : ref.getName());
             }
         }

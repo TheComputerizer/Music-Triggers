@@ -1,13 +1,10 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
-import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
-import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 public class TriggerSeason extends HolderTrigger {
 
@@ -20,21 +17,14 @@ public class TriggerSeason extends HolderTrigger {
         return Collections.singletonList("sereneseasons");
     }
 
-
-    @Override
-    protected void initExtraParameters(Map<String,Parameter<?>> map) {
-        super.initExtraParameters(map);
-        addParameter(map,"level",new ParameterInt(0));
-    }
-
     @Override
     public boolean isPlayableContext(TriggerContext ctx) {
-        return ctx.isActiveSeason(getParameterAsInt("level"));
+        return ctx.isActiveSeason(getParameterAsInt("season"));
     }
 
     @Override
     public boolean verifyRequiredParameters() {
-        String[] parameters = new String[]{"identifier","level"};
+        String[] parameters = new String[]{"identifier","season"};
         if(hasAllNonDefaultParameter(parameters)) return true;
         logMissingParameters(parameters);
         return false;

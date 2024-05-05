@@ -17,9 +17,8 @@ public class GlobalData implements LoggableAPI {
 
     @Getter private Toml toml;
     @Getter private Debug debug;
-    @Getter private Registration registration;
     @Getter private String toggles = "";
-    private boolean writable;
+    private boolean writable; //TODO Replaced by config remapping
 
     private @Nullable String getStringOrNull(Toml toml, String name) {
         String val = toml.getValueString(name);
@@ -74,7 +73,6 @@ public class GlobalData implements LoggableAPI {
     public void parse(@Nullable Toml holder) throws TomlWritingException {
         if(Objects.nonNull(holder)) {
             readDebug(holder);
-            readRegistration(holder);
             TomlEntry<?> entry;
             if(!holder.hasEntry("toggles_path")) {
                 entry = holder.addEntry("toggles_path","toggles");
@@ -92,15 +90,6 @@ public class GlobalData implements LoggableAPI {
             markWritable();
         }
         if(debug.parse(holder.getTable("debug"))) this.debug = debug;
-    }
-
-    public void readRegistration(Toml toml) throws TomlWritingException {
-        Registration registration = new Registration();
-        if(!toml.hasTable("registration")) {
-            registration.writeDefault(this.toml);
-            markWritable();
-        }
-        if(registration.parse(toml.getTable("registration"))) this.registration = registration;
     }
 
     public void markWritable() {

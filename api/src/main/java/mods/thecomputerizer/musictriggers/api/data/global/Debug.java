@@ -4,6 +4,7 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterList;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
+import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterFloat;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlWritingException;
@@ -11,7 +12,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlWritingException;
 import java.util.Collections;
 import java.util.Map;
 
-public class Debug extends GlobalElement {
+public class Debug extends GlobalElement { //TODO Implement log_level and max_hover_elements in the gui
 
     @Override
     public String getTypeName() {
@@ -20,22 +21,25 @@ public class Debug extends GlobalElement {
 
     @Override
     protected void supplyParameters(Map<String,Parameter<?>> map) {
-        map.put("ALLOW_TIMESTAMPS",new ParameterBoolean(false));
-        map.put("BLOCK_STREAMING_ONLY",new ParameterBoolean(true));
-        map.put("BLOCKED_MOD_CATEGORIES",new ParameterList<>(String.class, Collections.singletonList("minecraft;music")));
-        map.put("COMBINE_EQUAL_PRIORITY",new ParameterBoolean(false));
-        map.put("ENABLE_DEBUG_INFO",new ParameterBoolean(false));
-        map.put("ENCODING_QUALITY",new ParameterInt(10));
-        map.put("INTERRUPTED_AUDIO_CATEGORIES",new ParameterList<>(String.class,Collections.singletonList("music")));
-        map.put("LOG_LEVEL",new ParameterString("INFO"));
-        map.put("MAX_HOVER_ELEMENTS",new ParameterInt(15));
-        map.put("PAUSE_WHEN_TABBED",new ParameterBoolean(true));
-        map.put("PLAY_NORMAL_MUSIC",new ParameterBoolean(false));
-        map.put("RESAMPLING_QUALITY",new ParameterString("HIGH"));
-        map.put("REVERSE_PRIORITY",new ParameterBoolean(false));
-        map.put("SHOW_SONG_INFO",new ParameterBoolean(false));
-        map.put("SLOW_TICK_FACTOR",new ParameterInt(5));
-        map.put("TICK_RATE",new ParameterInt(20));
+        map.put("allow_timestamps",new ParameterBoolean(false));
+        map.put("block_sound_effects",new ParameterBoolean(false));
+        map.put("blocked_sound_categories",new ParameterList<>(String.class,Collections.singletonList("minecraft;music"))); //TODO Allow the modid to be omitted
+        map.put("client_only",new ParameterBoolean(false));
+        map.put("enable_debug_info",new ParameterBoolean(false));
+        map.put("enable_discs",new ParameterBoolean(true));
+        map.put("encoding_quality",new ParameterInt(10));
+        map.put("independent_audio_pools",new ParameterBoolean(false));
+        map.put("interrupted_sound_categories",new ParameterList<>(String.class,Collections.singletonList("music")));
+        map.put("pause_unless_focused",new ParameterBoolean(true));
+        map.put("play_normal_music",new ParameterBoolean(false));
+        map.put("resampling_quality",new ParameterString("HIGH"));
+        map.put("reverse_priority",new ParameterBoolean(false));
+        map.put("show_channel_info",new ParameterBoolean(false));
+        map.put("show_position_info",new ParameterBoolean(false));
+        map.put("show_song_info",new ParameterBoolean(false));
+        map.put("show_trigger_info",new ParameterBoolean(false));
+        map.put("slow_tick_factor",new ParameterFloat(5f));
+        map.put("tick_rate",new ParameterInt(20));
     }
 
     @Override

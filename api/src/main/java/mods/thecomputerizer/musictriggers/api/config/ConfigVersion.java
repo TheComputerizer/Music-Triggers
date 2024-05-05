@@ -1,14 +1,21 @@
 package mods.thecomputerizer.musictriggers.api.config;
 
 import lombok.Getter;
+import mods.thecomputerizer.musictriggers.api.MTRef;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml.TomlEntry;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlRemapper;
 import org.apache.logging.log4j.Level;
 
-import java.util.Map;
+import javax.annotation.Nullable;
 import java.util.Objects;
 
-@Getter
+@SuppressWarnings("UnusedReturnValue") @Getter
 public abstract class ConfigVersion implements LoggableAPI {
     
     protected final Version version;
@@ -29,7 +36,12 @@ public abstract class ConfigVersion implements LoggableAPI {
         this.version = version;
     }
     
-    public abstract ConfigVersion getTarget();
+    public abstract Toml getGlobal();
+    public abstract String getPathMain(Toml channel);
+    public abstract TomlRemapper getRemapper(TableRef ref);
+    public abstract Toml getRenders(Toml channel);
+    public abstract Toml getToggles(Toml global);
+    public abstract ConfigVersion getVersionTarget();
     
     public boolean hasCloserQualiferThan(ConfigVersion version, int closest) {
         return hasCloserQualiferThan(version.version,closest);
@@ -67,10 +79,53 @@ public abstract class ConfigVersion implements LoggableAPI {
         MTLogger.log("ConfigMapper",toString(),Level.WARN,msg,args);
     }
     
-    public abstract MTConfigGlobal initGlobalMappers();
+    public void remap() {
+        ConfigVersion target = getVersionTarget();
+        if(Objects.isNull(target) || this==target) {
+            logInfo("Config version is up to date {}",this.version);
+            return;
+        }
+        logInfo("Remapping from {} to target {}",this.version,getVersionTarget().version);
+        Toml global = getGlobal();
+        if(Objects.nonNull(global)) {
+            getToggles(global); //Delete extra toggles files if needed
+            Toml channels = global.getTable("channels");
+            if(Objects.nonNull(channels)) {
+                logInfo("Remapping channels");
+                for(Toml channel : channels.getAllTables()) {
+                    getRenders(channel); //Rename renders files if needed
+                    logInfo("Remapping channel "+channel.getName());
+                    String mainPath = getPathMain(channel);
+                    Toml main = ChannelHelper.openToml(mainPath,this);
+                    if(Objects.nonNull(main)) {
+                        logInfo("Remapping main config for ",channel.getName());
+                        writeIfRemapped(main,MTDataRef.FILE_MAP.get("main"),mainPath);
+                    }
+                }
+            }
+            logInfo("Remapping global configs");
+            writeIfRemapped(global,MTDataRef.FILE_MAP.get("global"),MTRef.GLOBAL_CONFIG);
+        }
+        logInfo("Finished remapping config files");
+    }
+    
+    public abstract TomlEntry<?> remapAudioEntry(TomlEntry<?> entry);
+    public abstract TomlEntry<?> remapChannelInfoEntry(TomlEntry<?> entry);
+    public abstract TomlEntry<?> remapDebugEntry(TomlEntry<?> entry);
+    public abstract TomlEntry<?> remapTriggerEntry(String name, TomlEntry<?> entry);
+    public abstract String remapTriggerName(String name);
+    public abstract @Nullable Toml upgradeToTable(TomlEntry<?> entry);
     
     public boolean similar(Version version) {
         return this.version.similar(version);
+    }
+    
+    protected void writeIfRemapped(Toml toml, TableRef ref, String path) {
+        boolean write = false;
+        TomlRemapper remapper = getRemapper(ref);
+        if(Objects.nonNull(remapper) && remapper.remap(toml)) write = true;
+        write = ref.addMissingDefaults(toml,this) || write;
+        if(write) MTDataRef.writeToFile(toml,path);
     }
     
     @Getter

@@ -19,7 +19,7 @@ public abstract class BasicTrigger extends TriggerAPI {
     }
 
     @Override
-    protected void initExtraParameters(Map<String, Parameter<?>> map) {}
+    protected final void initExtraParameters(Map<String, Parameter<?>> map) {}
 
     @Override
     public boolean verifyRequiredParameters() {

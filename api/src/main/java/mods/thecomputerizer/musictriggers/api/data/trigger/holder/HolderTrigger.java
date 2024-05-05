@@ -2,7 +2,6 @@ package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
-import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 
 import java.util.Map;
@@ -19,9 +18,7 @@ public abstract class HolderTrigger extends TriggerAPI {
     }
 
     @Override
-    protected void initExtraParameters(Map<String,Parameter<?>> map) {
-        addParameter(map,"identifier",new ParameterString("not_set"));
-    }
+    protected void initExtraParameters(Map<String, Parameter<?>> map) {}
 
     protected boolean hasValidIdentifier() {
         if(hasNonDefaultParameter("identifier")) return true;

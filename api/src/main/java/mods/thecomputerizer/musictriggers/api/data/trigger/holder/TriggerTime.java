@@ -23,7 +23,7 @@ public class TriggerTime extends HolderTrigger {
         addParameter(map,"lowest_day_number",new ParameterInt(0));
         addParameter(map,"moon_phase",new ParameterInt(0));
         addParameter(map,"start_hour",new ParameterFloat(0f));
-        addParameter(map,"time_bundle",new ParameterString("ANY"));
+        addParameter(map,"time_bundle",new ParameterString("any"));
     }
 
     @Override

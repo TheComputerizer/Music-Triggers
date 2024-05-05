@@ -17,9 +17,9 @@ import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.ChannelClient;
 import mods.thecomputerizer.musictriggers.api.client.MTDebugInfo;
 import mods.thecomputerizer.musictriggers.api.client.MTDebugInfo.Element;
+import mods.thecomputerizer.musictriggers.api.config.ConfigVersionManager;
 import mods.thecomputerizer.musictriggers.api.data.global.Debug;
 import mods.thecomputerizer.musictriggers.api.data.global.GlobalData;
-import mods.thecomputerizer.musictriggers.api.data.global.Registration;
 import mods.thecomputerizer.musictriggers.api.data.global.Toggle;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.server.ChannelServer;
@@ -87,6 +87,7 @@ public class ChannelHelper {
 
     private static void load() {
         try {
+            ConfigVersionManager.queryRemap();
             globalData.parse(openToml(MTRef.GLOBAL_CONFIG, globalData));
         } catch(Exception ex) {
             globalData.logFatal("Error parsing global data!",ex);
@@ -165,14 +166,14 @@ public class ChannelHelper {
     /**
      * Assumes the file extension is not present
      */
-    public static List<String> openTxt(String path, @Nullable ChannelAPI channel) {
+    public static List<String> openTxt(String path, @Nullable LoggableAPI logger) {
         path+=".txt";
         File file = FileHelper.get(path,false);
         try(BufferedReader reader = new BufferedReader(new FileReader(file))) {
             return reader.lines().collect(Collectors.toList());
         } catch(IOException ex) {
             String msg = "Unable to read txt file at `{}`!";
-            if(Objects.nonNull(channel)) channel.logError(msg,ex);
+            if(Objects.nonNull(logger)) logger.logError(msg,ex);
             else MTRef.logError(msg,ex);
             return Collections.emptyList();
         }
@@ -255,15 +256,6 @@ public class ChannelHelper {
         if(Objects.isNull(debug)) return "";
         String ret = debug.getParameterAsString(name);
         return Objects.nonNull(ret) ? ret : "";
-    }
-
-    public boolean getRegistrationBool(String name) {
-        Registration registration = getRegistration();
-        return Objects.nonNull(registration) && registration.getParameterAsBoolean(name);
-    }
-
-    public @Nullable Registration getRegistration() {
-        return globalData.getRegistration();
     }
 
     public String getSyncID() { //TODO Implement server version

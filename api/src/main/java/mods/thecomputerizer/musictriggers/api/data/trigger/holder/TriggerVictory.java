@@ -1,24 +1,14 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
-import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
-import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
-
-import java.util.Map;
 
 public class TriggerVictory extends HolderTrigger {
 
     public TriggerVictory(ChannelAPI channel) {
         super(channel,"victory");
     }
-
-    @Override
-    protected void initExtraParameters(Map<String,Parameter<?>> map) {
-        super.initExtraParameters(map);
-        addParameter(map,"victory_timeout",new ParameterInt(20));
-    }
-
+    
     @Override
     public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveVictory(getParameterAsInt("victory_timeout"));

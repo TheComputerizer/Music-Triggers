@@ -85,7 +85,7 @@ public class Toggle extends GlobalElement {
         @Override
         protected void supplyParameters(Map<String,Parameter<?>> map) {
             map.put("channel",new ParameterString("not_set"));
-            map.put("condition",new ParameterString("ACTIVE"));
+            map.put("condition",new ParameterString("active"));
         }
 
         @Override
@@ -138,7 +138,7 @@ public class Toggle extends GlobalElement {
         @Override
         protected void supplyParameters(Map<String,Parameter<?>> map) {
             map.put("channel",new ParameterString("not_set"));
-            map.put("condition",new ParameterString("SWITCH"));
+            map.put("condition",new ParameterString("switch"));
         }
 
         @Override

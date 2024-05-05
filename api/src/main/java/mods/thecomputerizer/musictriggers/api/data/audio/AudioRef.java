@@ -66,7 +66,7 @@ public class AudioRef extends ParameterWrapper {
     protected Map<String,Parameter<?>> initParameterMap() { //TODO Move filters into 1 or more subtables
         Map<String,Parameter<?>> map = new HashMap<>();
         addParameter(map,"chance",new ParameterInt(100));
-        addParameter(map,"file_name",new ParameterString(""));
+        addParameter(map,"location",new ParameterString(""));
         addParameter(map,"pitch",new ParameterDouble(1d));
         addParameter(map,"play_once",new ParameterInt(0));
         addParameter(map,"play_x",new ParameterInt(1));
@@ -103,8 +103,8 @@ public class AudioRef extends ParameterWrapper {
             logError(audioMsg("Failed to parse triggers {}!"),triggerRefs);
             return false;
         } else logDebug(audioMsg("Successfully parsed triggers {}"),this.triggers);
-        if(table.hasTable("must_finish"))
-            this.interruptHandler = new InterruptHandler(this,table.getTable("must_finish"));
+        if(table.hasTable("interrupt_handler"))
+            this.interruptHandler = new InterruptHandler(this,table.getTable("interrupt_handler"));
         return parseParameters(table);
     }
 

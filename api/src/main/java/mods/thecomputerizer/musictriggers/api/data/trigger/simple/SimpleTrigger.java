@@ -13,7 +13,7 @@ public abstract class SimpleTrigger extends TriggerAPI {
     }
 
     @Override
-    protected void initExtraParameters(Map<String, Parameter<?>> map) {}
+    protected void initExtraParameters(Map<String,Parameter<?>> map) {}
 
     @Override
     public boolean verifyRequiredParameters() {

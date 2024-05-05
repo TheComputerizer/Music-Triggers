@@ -5,12 +5,13 @@ import mods.thecomputerizer.musictriggers.api.config.ConfigVersion.Qualifier;
 import mods.thecomputerizer.musictriggers.api.config.ConfigVersion.Version;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.global.GlobalData;
-import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
+import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 
-import java.util.HashMap;
+import java.io.File;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -20,8 +21,7 @@ public class ConfigVersionManager {
     public static final ConfigVersion CURRENT = findCurrent();
     
     private static Set<ConfigVersion> collectVersions() {
-        Set<ConfigVersion> versions = new HashSet<>();
-        return versions;
+        return Collections.unmodifiableSet(new HashSet<>(Arrays.asList(MTConfigV6.V6_3_1,MTConfigV7.V7_0_0_BETA_1)));
     }
     
     private static ConfigVersion findCurrent() {
@@ -92,14 +92,17 @@ public class ConfigVersionManager {
                 index>-1 ? Integer.parseInt(qualifierStr.substring(index+1)) : 1));
     }
     
-    public static void remapValues(Map<String,Object> map, Map<String,String> keyMap) {
-        Map<String,Object> copy = new HashMap<>();
-        for(Entry<String,Object> entry : map.entrySet()) {
-            String original = entry.getKey();
-            String mapped = keyMap.getOrDefault(original,original);
-            copy.put(mapped,entry.getValue());
-        }
-        map.clear();
-        map.putAll(copy);
+    public static void queryRemap() {
+        String versionPath = MTRef.CONFIG_PATH+"/version";
+        File version = FileHelper.get(versionPath+".txt",false); //Ensures the file exists before trying to read it
+        List<String> versionLines = ChannelHelper.openTxt(versionPath,CURRENT);
+        ConfigVersion fileVersion;
+        if(versionLines.isEmpty()) {
+            CURRENT.logWarn("No version info present! Attempting to remap from 6.3.1");
+            fileVersion = MTConfigV6.V6_3_1;
+        } else fileVersion = findVersion(versionLines.get(0).trim());
+        if(Objects.isNull(fileVersion)) CURRENT.logFatal("Unable to remap missing config version!");
+        else fileVersion.remap();
+        FileHelper.writeLine(version,CURRENT.version.toString(),false);
     }
 }

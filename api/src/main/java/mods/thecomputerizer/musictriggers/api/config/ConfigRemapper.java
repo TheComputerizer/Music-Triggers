@@ -1,23 +1,33 @@
 package mods.thecomputerizer.musictriggers.api.config;
 
-import java.util.HashSet;
-import java.util.Set;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml.TomlEntry;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlRemapper;
 
-public abstract class ConfigRemapper {
+import javax.annotation.Nullable;
+import java.util.Objects;
+
+public abstract class ConfigRemapper extends TomlRemapper {
     
-    private final ConfigVersion target;
-    private final Set<FileRemapper> remappers;
+    final TableRef ref;
     
-    protected ConfigRemapper(ConfigVersion target) {
-        this.remappers = addRemappers(new HashSet<>());
-        this.target = target;
+    public ConfigRemapper(TableRef ref) {
+        this.ref = ref;
     }
     
-    protected abstract Set<FileRemapper> addRemappers(Set<FileRemapper> set);
+    public abstract TomlRemapper getNextRemapper(TableRef next);
     
-    public void apply(ConfigVersion from) {
-    
+    @Nullable @Override public TomlRemapper getNextRemapper(String table) {
+        TableRef next = this.ref.findChild(table);
+        return Objects.nonNull(next) ? getNextRemapper(next) : null;
     }
     
-    protected abstract void write();
+    @Override public String remapTable(String name) {
+        return name;
+    }
+    
+    @Override public TomlEntry<?> remapEntry(Toml parent, TomlEntry<?> entry) {
+        return entry;
+    }
 }

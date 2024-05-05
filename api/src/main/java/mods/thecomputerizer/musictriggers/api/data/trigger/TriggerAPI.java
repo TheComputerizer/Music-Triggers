@@ -2,16 +2,17 @@ package mods.thecomputerizer.musictriggers.api.data.trigger;
 
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef.ParameterRef;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventHandler;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
-import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
-import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 import org.apache.commons.lang3.mutable.MutableInt;
 
 import javax.annotation.Nullable;
@@ -126,6 +127,11 @@ public abstract class TriggerAPI extends ParameterWrapper {
     public String getNameWithID() {
         return getName();
     }
+    
+    protected State getParameterTimeState(String name) {
+        return Misc.equalsAny(name,"persistence","ticks_before_audio","ticks_between_audio") ?
+                ACTIVE : (Misc.equalsAny(name,"active_cooldown","ticks_before_active") ? PLAYABLE : DISABLED);
+    }
 
     public List<String> getRequiredMods() {
         return Collections.emptyList();
@@ -154,20 +160,13 @@ public abstract class TriggerAPI extends ParameterWrapper {
     @Override
     protected Map<String,Parameter<?>> initParameterMap() {
         Map<String,Parameter<?>> map = new HashMap<>();
-        addParameter(map,"fade_in",new ParameterInt(0));
-        addParameter(map,"fade_out",new ParameterInt(0));
-        addParameter(map,"max_tracks",new ParameterInt(0));
-        addParameter(map,"not",new ParameterBoolean(false));
-        addParameter(map,"passive_persistence",new ParameterBoolean(false));
-        addParameter(map,"priority",new ParameterInt(0));
-        addParameter(map,"start_as_disabled",new ParameterBoolean(false));
-        addParameter(map,"toggle_inactive_playable",new ParameterBoolean(false));
-        addParameter(map,"toggle_save_status",new ParameterInt(0));
-        addTimedParameter(map,"persistence",ACTIVE,new ParameterInt(0));
-        addTimedParameter(map,"ticks_before_audio",ACTIVE,new ParameterInt(0));
-        addTimedParameter(map,"ticks_between_audio",ACTIVE,new ParameterInt(0));
-        addTimedParameter(map,"active_cooldown",PLAYABLE,new ParameterInt(0));
-        addTimedParameter(map,"ticks_before_active",PLAYABLE,new ParameterInt(0));
+        for(ParameterRef<?> ref : MTDataRef.getParameterRefs(getName())) {
+            String name = ref.getName();
+            Parameter<?> parameter = ref.toParameter();
+            State timeState = getParameterTimeState(name);
+            if(timeState!=DISABLED) addTimedParameter(map,name,timeState,parameter);
+            else addParameter(map,name,parameter);
+        }
         initExtraParameters(map);
         return map;
     }
