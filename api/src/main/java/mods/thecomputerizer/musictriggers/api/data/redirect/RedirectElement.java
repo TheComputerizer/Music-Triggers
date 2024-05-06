@@ -25,7 +25,7 @@ public class RedirectElement extends ChannelElement {
     private boolean remote;
 
     public RedirectElement(ChannelAPI channel, String line) {
-        super(channel);
+        super(channel,"redirect_element");
         this.valid = parse(line);
     }
 

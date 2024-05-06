@@ -24,7 +24,7 @@ public class RecordElement extends ChannelElement {
     private String key;
 
     public RecordElement(ChannelAPI channel, String line) {
-        super(channel);
+        super(channel,"jukebox_element");
         this.valid = parse(line);
     }
 

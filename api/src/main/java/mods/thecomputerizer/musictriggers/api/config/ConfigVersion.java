@@ -13,6 +13,9 @@ import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlRemapper;
 import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 @SuppressWarnings("UnusedReturnValue") @Getter
@@ -34,6 +37,19 @@ public abstract class ConfigVersion implements LoggableAPI {
     
     protected ConfigVersion(Version version) {
         this.version = version;
+    }
+    
+    public List<String> getHeaderLines(String name) {
+        switch(name) {
+            case "commands": return Arrays.asList(" Commands header!"," Line 2");
+            case "global": return Arrays.asList(" Global header!"," Line 2");
+            case "jukebox": return Arrays.asList(" Jukebox header!"," Line 2");
+            case "main": return Arrays.asList(" Main header!"," Line 2");
+            case "redirect": return Arrays.asList(" Redirect header!"," Line 2");
+            case "renders": return Arrays.asList(" Renders header!"," Line 2");
+            case "toggles": return Arrays.asList(" Toggles header!"," Line 2");
+            default: return Collections.emptyList();
+        }
     }
     
     public abstract Toml getGlobal();
@@ -82,7 +98,7 @@ public abstract class ConfigVersion implements LoggableAPI {
     public void remap() {
         ConfigVersion target = getVersionTarget();
         if(Objects.isNull(target) || this==target) {
-            logInfo("Config version is up to date {}",this.version);
+            logInfo("Config version is up to date");
             return;
         }
         logInfo("Remapping from {} to target {}",this.version,getVersionTarget().version);
@@ -94,39 +110,39 @@ public abstract class ConfigVersion implements LoggableAPI {
                 logInfo("Remapping channels");
                 for(Toml channel : channels.getAllTables()) {
                     getRenders(channel); //Rename renders files if needed
+                    verifyJukebox(channel);
+                    verifyRedirct(channel);
                     logInfo("Remapping channel "+channel.getName());
                     String mainPath = getPathMain(channel);
-                    Toml main = ChannelHelper.openToml(mainPath,this);
-                    if(Objects.nonNull(main)) {
-                        logInfo("Remapping main config for {}",channel.getName());
-                        writeIfRemapped(main,MTDataRef.FILE_MAP.get("main"),mainPath);
-                    }
+                    Toml main = ChannelHelper.openToml(mainPath,false,this);
+                    if(Objects.nonNull(main)) writeIfRemapped(main,MTDataRef.FILE_MAP.get("main"),mainPath);
                 }
             }
             logInfo("Remapping global configs");
             writeIfRemapped(global,MTDataRef.FILE_MAP.get("global"),MTRef.GLOBAL_CONFIG);
         }
-        logInfo("Finished remapping config files");
+        logInfo("Successfully remapped config files!");
     }
     
     public abstract TomlEntry<?> remapAudioEntry(TomlEntry<?> entry);
-    public abstract TomlEntry<?> remapChannelInfoEntry(TomlEntry<?> entry);
+    public abstract TomlEntry<?> remapChannelInfoEntry(String channel, TomlEntry<?> entry);
     public abstract TomlEntry<?> remapDebugEntry(TomlEntry<?> entry);
     public abstract TomlEntry<?> remapTriggerEntry(String name, TomlEntry<?> entry);
     public abstract String remapTriggerName(String name);
     public abstract @Nullable Toml upgradeToTable(TomlEntry<?> entry);
+    public abstract void verifyJukebox(Toml channel);
+    public abstract void verifyRedirct(Toml channel);
     
     public boolean similar(Version version) {
         return this.version.similar(version);
     }
     
     protected void writeIfRemapped(Toml toml, TableRef ref, String path) {
-        boolean write = false;
         TomlRemapper remapper = getRemapper(ref);
-        if(Objects.nonNull(remapper) && remapper.remap(toml)) write = true;
-        write = ref.addMissingDefaults(toml,this) || write;
-        if(write) {
+        if(Objects.nonNull(remapper) && remapper.remap(toml)) {
             logInfo("Writing to {}",path);
+            toml.clearComments();
+            toml.addComments(getHeaderLines(ref.getName()));
             MTDataRef.writeToFile(toml,path);
         }
     }

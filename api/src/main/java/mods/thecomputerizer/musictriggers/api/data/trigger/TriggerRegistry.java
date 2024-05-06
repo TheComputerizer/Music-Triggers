@@ -34,6 +34,10 @@ public class TriggerRegistry {
         } else channel.logError("Unable to locate trigger class of type `{}`!",name);
         return null;
     }
+    
+    public static boolean isRegistred(String name) {
+        return REGISTERED_TRIGGERS.containsKey(name);
+    }
 
     private static Map<String,Class<? extends TriggerAPI>> loadDefaultTriggers() {
         Map<String,Class<? extends TriggerAPI>> map = new HashMap<>();
@@ -54,7 +58,6 @@ public class TriggerRegistry {
         map.put("drowning",TriggerDrowning.class);
         map.put("effect",TriggerEffect.class);
         map.put("elytra",TriggerElytra.class);
-        map.put("fallingstars", TriggerStarShower.class);
         map.put("fishing",TriggerFishing.class);
         map.put("gamestage",TriggerGamestage.class);
         map.put("generic",TriggerGeneric.class);
@@ -81,6 +84,7 @@ public class TriggerRegistry {
         map.put("season",TriggerSeason.class);
         map.put("snowing",TriggerSnowing.class);
         map.put("spectator",TriggerSpectator.class);
+        map.put("starshower",TriggerStarShower.class);
         map.put("statistic",TriggerStatistic.class);
         map.put("storming",TriggerStorming.class);
         map.put("structure",TriggerStructure.class);

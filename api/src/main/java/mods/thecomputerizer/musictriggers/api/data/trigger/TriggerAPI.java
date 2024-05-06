@@ -27,14 +27,12 @@ public abstract class TriggerAPI extends ParameterWrapper {
     private static final Map<TriggerAPI,Map<String,Timer>> TIMER_MAP = new HashMap<>(); // This needs to be static due to super init stuff
 
     private final Set<TriggerCombination> parents;
-    private final String name;
     private ResourceContext resourceCtx;
     private State state;
     private int tracksPlayed;
 
     protected TriggerAPI(ChannelAPI channel, String name) {
-        super(channel);
-        this.name = name;
+        super(channel,name);
         this.parents = new HashSet<>();
     }
 
@@ -199,7 +197,7 @@ public abstract class TriggerAPI extends ParameterWrapper {
     }
 
     public boolean matches(TriggerAPI trigger) {
-        return this==trigger;
+        return this.equals(trigger);
     }
 
     public void onConnect() {
@@ -296,7 +294,7 @@ public abstract class TriggerAPI extends ParameterWrapper {
 
     @Override
     public String toString() {
-        return getTypeName();
+        return "Trigger["+getNameWithID()+"]";
     }
 
     @Override

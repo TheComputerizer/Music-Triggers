@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 
+import java.util.List;
+
 @Getter
 public abstract class Parameter<T> {
 
@@ -32,6 +34,8 @@ public abstract class Parameter<T> {
     }
 
     protected abstract void parseValueInner(String unparsed);
+    
+    public void setListValue(List<?> list) {}
 
     public void write(ByteBuf buf) {
         NetworkHelper.writeString(buf,getClass().getName());

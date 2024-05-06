@@ -57,7 +57,7 @@ public class ChannelClient extends ChannelAPI {
     @Override
     public boolean checkDeactivate(TriggerAPI current, TriggerAPI next) {
         if(Objects.nonNull(current)) {
-            if(current==next) {
+            if(current.matches(next)) {
                 this.deactivating = false;
                 return false;
             }

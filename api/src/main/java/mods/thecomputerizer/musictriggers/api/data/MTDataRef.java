@@ -2,6 +2,8 @@ package mods.thecomputerizer.musictriggers.api.data;
 
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
+import mods.thecomputerizer.musictriggers.api.data.global.Debug;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterHelper;
@@ -9,16 +11,19 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterList;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlWritingException;
-import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.Sorting;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static mods.thecomputerizer.theimpossiblelibrary.api.util.Sorting.ALPHABETICAL;
+
 /**
  Static references to all builtin table names, parameter names, and parameter types parsed from config files.
- Mainly used for remapping in the config versioning system.
+ Used for remapping in the config versioning system and populating default parameter values.
  */
+@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 public final class MTDataRef {
     
     /*-------------------------------------------Inner-------------------------------------------*/
@@ -29,7 +34,7 @@ public final class MTDataRef {
     public static final TableRef CHANNEL_INFO = new TableRef("channel",Arrays.asList(
             new ParameterRef<>("commands","commands"),
             new ParameterRef<>("explicitly_overrides",false),
-            new ParameterRef<>("jukebox",""),
+            new ParameterRef<>("jukebox","jukebox"),
             new ParameterRef<>("local_folder",MTRef.CONFIG_PATH+"/songs"),
             new ParameterRef<>("main","main"),
             new ParameterRef<>("overrides_music",true),
@@ -59,13 +64,16 @@ public final class MTDataRef {
             new ParameterRef<>("show_song_info",true),
             new ParameterRef<>("show_trigger_info",true),
             new ParameterRef<>("slow_tick_factor",5f),
-            new ParameterRef<>("tick_rate",20)));
+            new ParameterRef<>("tick_rate",20),
+            new ParameterRef<>("write_default_values",Arrays.asList(
+                    "channel","from","image","interrupt_handler","main","songs","title","toggle","triggers",
+                    "universal_audio","universal_triggers"))));
     public static final TableRef FROM = new TableRef("from",Arrays.asList(
             new ParameterRef<>("channel","not_set"),
             new ParameterRef<>("condition","active"),
             new ParameterRef<>("triggers",new ArrayList<>())));
     public static final TableRef INTERRUPT_HANDLER = new TableRef("interrupt_handler",Arrays.asList(
-            new ParameterRef<>("priority",Integer.class),
+            new ParameterRef<>("priority",Integer.MAX_VALUE),
             new ParameterRef<>("trigger_whitelist",new ArrayList<>())));
     public static final TableRef LINK = new TableRef("link",Arrays.asList(
             new ParameterRef<>("channel","not_set"),
@@ -81,6 +89,20 @@ public final class MTDataRef {
             new ParameterRef<>("channel","not_set"),
             new ParameterRef<>("condition","switch"),
             new ParameterRef<>("triggers",new ArrayList<>())));
+    public static final TableRef UNIVERSAL_AUDIO = new TableRef("universal_audio",Arrays.asList(
+            new ParameterRef<>("pitch",1d),
+            new ParameterRef<>("play_once",0),
+            new ParameterRef<>("speed",1d),
+            new ParameterRef<>("volume",1f)
+    ),INTERRUPT_HANDLER);
+    public static final TableRef UNIVERSAL_TRIGGERS = new TableRef("universal_triggers",Arrays.asList(
+            new ParameterRef<>("active_cooldown","0"),
+            new ParameterRef<>("fade_in","0"),
+            new ParameterRef<>("fade_out","0"),
+            new ParameterRef<>("persistence","0"),
+            new ParameterRef<>("ticks_before_active","0"),
+            new ParameterRef<>("ticks_before_audio","0"),
+            new ParameterRef<>("ticks_between_audio","0")));
     
     /*-----------------------------------------Top-Level-----------------------------------------*/
     
@@ -102,7 +124,7 @@ public final class MTDataRef {
     public static final TableRef IMAGE_CARD = buildRenderCard("image",
             new ParameterRef<>("animated",false),
             new ParameterRef<>("fps",20),
-            new ParameterRef<>("name",""));
+            new ParameterRef<>("name","_"));
     public static final TableRef TITLE_CARD = buildRenderCard("title",
             new ParameterRef<>("subtitle_color","white"),
             new ParameterRef<>("subtitle_scale",0.75f),
@@ -166,6 +188,7 @@ public final class MTDataRef {
                          new ParameterRef<>("is_whitelist",true),
                          new ParameterRef<>("resource_matcher","partial"),
                          new ParameterRef<>("resource_name",Collections.singletonList("any"))),
+            buildTrigger("generic",false),
             buildTrigger("gui",true,
                          new ParameterRef<>("display_matcher","exact"),
                          new ParameterRef<>("display_name",Collections.singletonList("any")),
@@ -188,8 +211,10 @@ public final class MTDataRef {
                          new ParameterRef<>("level",7),
                          new ParameterRef<>("light_type","any")),
             buildTrigger("lightrain",false),
+            buildTrigger("loading",false),
             buildTrigger("lowhp",false,
                          new ParameterRef<>("health_percentage",30)),
+            buildTrigger("menu",false),
             buildTrigger("mob",true,
                          new ParameterRef<>("champion",Collections.singletonList("any")),
                          new ParameterRef<>("detection_range",16),
@@ -265,14 +290,17 @@ public final class MTDataRef {
                          new ParameterRef<>("zone_min_z",Integer.MIN_VALUE),
                          new ParameterRef<>("zone_max_x",Integer.MAX_VALUE),
                          new ParameterRef<>("zone_max_y",Integer.MAX_VALUE),
-                         new ParameterRef<>("zone_max_z",Integer.MAX_VALUE)));
+                         new ParameterRef<>("zone_max_z",Integer.MAX_VALUE)),
+            UNIVERSAL_TRIGGERS);
     
     /*-------------------------------------------Files-------------------------------------------*/
     
     public static final TableRef COMMANDS = new TableRef("commands",COMMAND);
     public static final TableRef GLOBAL = new TableRef("global",Collections.singleton(
-            new ParameterRef<>("toggles_path","toggles")),new TableRef("channels",CHANNEL_INFO),DEBUG);
-    public static final TableRef MAIN = new TableRef("main",new TableRef("songs",AUDIO),new TableRef("triggers",TRIGGERS));
+            new ParameterRef<>("toggles_path","toggles")),
+                                                       new TableRef("channels",CHANNEL_INFO),DEBUG);
+    public static final TableRef MAIN = new TableRef("main",
+            new TableRef("songs",AUDIO,UNIVERSAL_AUDIO), new TableRef("triggers",TRIGGERS));
     public static final TableRef RENDERS = new TableRef("renders",IMAGE_CARD,TITLE_CARD);
     public static final TableRef TOGGLES = new TableRef("toggles",TOGGLE);
     public static final Map<String,TableRef> FILE_MAP = buildFileMap();
@@ -332,11 +360,20 @@ public final class MTDataRef {
         return new TableRef(name,parameters,LINK);
     }
     
-    public static Set<ParameterRef<?>> getParameterRefs(String trigger) {
+    private static boolean canWriteDefaults(String type) {
+        Debug debug = ChannelHelper.getGlobalData().getDebug();
+        return Objects.isNull(debug) || debug.getParameterAsList("write_default_values").contains(type);
+    }
+    
+    public static @Nullable TableRef findTriggerRef(String trigger) {
         for(TableRef ref : TRIGGERS)
-            if(ref.name.equals(trigger))
-                return ref.getParameters();
-        return Collections.emptySet();
+            if(ref.name.equals(trigger)) return ref;
+        return null;
+    }
+    
+    public static Set<ParameterRef<?>> getParameterRefs(String trigger) {
+        TableRef ref = findTriggerRef(trigger);
+        return Objects.nonNull(ref) ? ref.parameters : Collections.emptySet();
     }
     
     public static void writeToFile(Toml toml, String path) {
@@ -351,6 +388,7 @@ public final class MTDataRef {
         private final String name;
         private final Set<ParameterRef<?>> parameters;
         private final Set<TableRef> children;
+        private final Sorting[] sorters;
         
         private TableRef(String name, TableRef ... children) {
             this(name,new HashSet<>(Arrays.asList(children)));
@@ -368,12 +406,15 @@ public final class MTDataRef {
             this.name = name;
             this.parameters = Collections.unmodifiableSet(new HashSet<>(parameters));
             this.children = Collections.unmodifiableSet(children);
+            this.sorters = new Sorting[]{ALPHABETICAL}; //TODO Per table?
         }
         
         /**
          Returns true if any entries or tables were added
          */
         public boolean addMissingDefaults(Toml table, LoggableAPI logger) {
+            if(!canWriteDefaults(this.name)) return false;
+            table.setSorters(this.sorters);
             AtomicBoolean added = new AtomicBoolean(false);
             for(ParameterRef<?> parameter : this.parameters) {
                 if(!table.hasEntry(parameter.name)) {
@@ -381,24 +422,44 @@ public final class MTDataRef {
                     added.set(true);
                 }
             }
-            for(TableRef child : this.children) {
-                if(Misc.equalsAny(child.name,"audio","channel")) {
-                    table.getAllTables().forEach(t -> {
+            switch(this.name) {
+                case "channels": {
+                    List<Toml> tables = table.getAllTables();
+                    if(tables.isEmpty()) {
                         try {
-                            child.addMissingDefaults(table.addTable(t.getName(),true),logger);
+                            if(CHANNEL_INFO.addMissingDefaults(table.addTable("example",false),logger))
+                                added.set(true);
+                        } catch(TomlWritingException ex) {
+                            logger.logError("Unable to generate example channel!",ex);
+                        }
+                    } else tables.forEach(t -> {
+                        if(CHANNEL_INFO.addMissingDefaults(t,logger)) added.set(true);
+                    });
+                    break;
+                }
+                case "songs": {
+                    table.getAllTables().forEach(t -> {
+                        if((t.getName().equals("universal") ? UNIVERSAL_AUDIO : AUDIO).addMissingDefaults(t,logger))
                             added.set(true);
+                    });
+                    break;
+                }
+                default: {
+                    for(TableRef child : this.children) {
+                        if(!canWriteDefaults(child.name)) continue;
+                        try {
+                            Toml childTable;
+                            String name = child.name.equals("universal_triggers") ? "universal" : child.name;
+                            if(!table.hasTable(name)) {
+                                childTable = table.addTable(name,true);
+                                added.set(true);
+                            } else childTable = table.getTable(name);
+                            if(child.addMissingDefaults(childTable,logger)) added.set(true);
                         } catch(TomlWritingException ex) {
                             logger.logError("Failed to add missing default children",ex);
                         }
-                    });
-                    break;
-                } else if(!table.hasTable(child.name)) {
-                    try {
-                        child.addMissingDefaults(table.addTable(child.name,true),logger);
-                        added.set(true);
-                    } catch(TomlWritingException ex) {
-                        logger.logError("Failed to add missing default children",ex);
                     }
+                    break;
                 }
             }
             return added.get();
@@ -438,7 +499,7 @@ public final class MTDataRef {
         @SuppressWarnings("unchecked")
         public Parameter<?> toParameter() {
             if(this.defaultValue instanceof List<?>)
-                return new ParameterList<>(String.class,(List<String>)this.defaultValue); //TODO Should this really be restricted to lists of strings?
+                return new ParameterList<>(String.class,new ArrayList<>((List<String>)this.defaultValue)); //TODO Should this really be restricted to lists of strings?
             return ParameterHelper.parameterize((Class<? super T>)this.defaultValue.getClass(),this.defaultValue);
         }
     }

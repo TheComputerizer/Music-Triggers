@@ -12,8 +12,8 @@ public abstract class ChannelEventRunner extends ParameterWrapper {
 
     private int timer;
 
-    protected ChannelEventRunner(ChannelAPI channel) {
-        super(channel);
+    protected ChannelEventRunner(ChannelAPI channel, String name) {
+        super(channel,name);
     }
 
     @Override

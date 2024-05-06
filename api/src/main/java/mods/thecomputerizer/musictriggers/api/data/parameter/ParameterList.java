@@ -30,6 +30,18 @@ public class ParameterList<E> extends Parameter<List<Parameter<E>>> {
 
     @SuppressWarnings("unchecked")
     @Override
+    protected void parseValueInner(String unparsed) {
+        this.value = new ArrayList<>();
+        String[] elements = unparsed.split(",");
+        for(String element : elements) {
+            E e = (E)GenericUtils.parseGenericType(element,this.type);
+            this.value.add(ParameterHelper.parameterize(this.type,e));
+            this.values.add(e);
+        }
+    }
+    
+    @SuppressWarnings({"unchecked","DataFlowIssue"})
+    @Override
     protected List<Parameter<E>> read(ByteBuf buf) {
         List<Parameter<E>> parameters = new ArrayList<>();
         int size = buf.readInt();
@@ -41,17 +53,12 @@ public class ParameterList<E> extends Parameter<List<Parameter<E>>> {
         }
         return parameters;
     }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected void parseValueInner(String unparsed) {
-        this.value = new ArrayList<>();
-        String[] elements = unparsed.split(",");
-        for(String element : elements) {
-            E e = (E)GenericUtils.parseGenericType(element,this.type);
-            this.value.add(ParameterHelper.parameterize(this.type,e));
-            this.values.add(e);
-        }
+    
+    @SuppressWarnings("unchecked") @Override
+    public void setListValue(List<?> list) {
+        this.values.clear();
+        this.values.addAll((List<E>)list);
+        setValue(ParameterHelper.parameterize(this.type,this.values));
     }
 
     @Override

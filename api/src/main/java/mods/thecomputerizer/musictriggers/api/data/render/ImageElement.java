@@ -15,7 +15,7 @@ import java.util.Map;
 public class ImageElement extends CardAPI {
 
     public ImageElement(ChannelAPI channel) {
-        super(channel);
+        super(channel,"Image Card");
     }
 
     @Override

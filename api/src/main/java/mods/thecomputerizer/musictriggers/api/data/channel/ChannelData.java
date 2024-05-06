@@ -9,6 +9,7 @@ import mods.thecomputerizer.musictriggers.api.data.command.CommandElement;
 import mods.thecomputerizer.musictriggers.api.data.jukebox.RecordElement;
 import mods.thecomputerizer.musictriggers.api.data.parameter.UniversalParameters;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
+import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterDouble;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterFloat;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
 import mods.thecomputerizer.musictriggers.api.data.redirect.RedirectElement;
@@ -43,7 +44,7 @@ public class ChannelData extends ChannelElement {
     private BasicTrigger menuTrigger;
 
     public ChannelData(ChannelAPI channel) {
-        super(channel);
+        super(channel,"channel_data");
         this.audio = new HashSet<>();
         this.cards = new HashSet<>();
         this.commands = new HashSet<>();
@@ -120,8 +121,8 @@ public class ChannelData extends ChannelElement {
     }
 
     protected void addUniversals(Map<Class<? extends ChannelElement>,UniversalParameters> map) {
-        map.put(AudioRef.class,universalAudio());
-        map.put(TriggerAPI.class,universalTriggers());
+        map.put(AudioRef.class,UniversalParameters.get(this.channel,"Audio"));
+        map.put(TriggerAPI.class,UniversalParameters.get(this.channel,"Triggers"));
     }
 
     @Override
@@ -173,6 +174,10 @@ public class ChannelData extends ChannelElement {
         }
         return Collections.emptySet();
     }
+    
+    private String getFilePath(String path) {
+        return MTRef.CONFIG_PATH+"/"+getChannelName()+"/"+path;
+    }
 
     public Collection<ChannelEventHandler> getPlayableEventHandlers() {
         Set<ChannelEventHandler> handlers = new HashSet<>();
@@ -215,7 +220,7 @@ public class ChannelData extends ChannelElement {
             }
             if(!found) {
                 String file = ref.getParameterAsString("location");
-                ref.loadLocal(StringUtils.isNotBlank(file) ? file : ref.getName());
+                ref.loadLocal(StringUtils.isNotBlank(file) && !"_".equals(file) ? file : ref.getName());
             }
         }
     }
@@ -245,11 +250,12 @@ public class ChannelData extends ChannelElement {
 
     public void parse() {
         logInfo("Parsing channel data");
-        readRedirect(ChannelHelper.openTxt(MTRef.CONFIG_PATH+"/"+getChannel().getInfo().getRedirectPath(),getChannel()));
-        readMain(ChannelHelper.openToml(MTRef.CONFIG_PATH+"/"+getChannel().getInfo().getMainPath(),getChannel()));
-        readRenders(ChannelHelper.openToml(MTRef.CONFIG_PATH+"/"+getChannel().getInfo().getRendersPath(),getChannel()));
-        readCommands(ChannelHelper.openToml(MTRef.CONFIG_PATH+"/"+getChannel().getInfo().getCommandsPath(),getChannel()));
-        readJukebox(ChannelHelper.openTxt(MTRef.CONFIG_PATH+"/"+getChannel().getInfo().getJukeboxPath(),getChannel()));
+        ChannelInfo info = this.channel.getInfo();
+        readRedirect(ChannelHelper.openTxt(getFilePath(info.getRedirectPath()),this));
+        readMain(ChannelHelper.openToml(getFilePath(info.getMainPath()),true,this));
+        readRenders(ChannelHelper.openToml(getFilePath(info.getRendersPath()),true,this));
+        readCommands(ChannelHelper.openToml(getFilePath(info.getCommandsPath()),true,this));
+        readJukebox(ChannelHelper.openTxt(getFilePath(info.getJukeboxPath()),this));
         organize();
         logInfo("Finished parsing channel data");
     }
@@ -284,8 +290,8 @@ public class ChannelData extends ChannelElement {
 
     public void readRenders(@Nullable Toml renders) {
         if(Objects.isNull(renders)) return;
-        CardHelper.parseImageCards(getChannel(),this.cards,renders.getTableArray("image"));
-        CardHelper.parseTitleCards(getChannel(),this.cards,renders.getTableArray("title"));
+        CardHelper.parseImageCards(this.channel,this.cards,renders.getTableArray("image"));
+        CardHelper.parseTitleCards(this.channel,this.cards,renders.getTableArray("title"));
     }
 
     protected void setAudioPools() {
@@ -314,26 +320,5 @@ public class ChannelData extends ChannelElement {
             }
             if(Objects.nonNull(pool) && pool.isValid()) this.triggerEventMap.get(trigger).add(pool);
         }
-    }
-
-    protected UniversalParameters universalTriggers() {
-        return UniversalParameters.get(this.channel,"Triggers",map -> {
-            map.put("fade_in",new ParameterInt(0));
-            map.put("fade_out",new ParameterInt(0));
-            map.put("persistence",new ParameterInt(0));
-            map.put("song_delay",new ParameterInt(0));
-            map.put("start_delay",new ParameterInt(0));
-            map.put("stop_delay",new ParameterInt(0));
-            map.put("trigger_delay",new ParameterInt(0));
-        });
-    }
-
-    protected UniversalParameters universalAudio() {
-        return UniversalParameters.get(this.channel,"Audio",map -> {
-            map.put("must_finish",new ParameterBoolean(false));
-            map.put("pitch",new ParameterFloat(1f));
-            map.put("play_once",new ParameterInt(0));
-            map.put("volume",new ParameterFloat(1f));
-        });
     }
 }

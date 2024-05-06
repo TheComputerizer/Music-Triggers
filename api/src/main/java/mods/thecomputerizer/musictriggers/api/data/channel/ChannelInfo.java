@@ -41,7 +41,7 @@ public class ChannelInfo extends ChannelElement { //TODO Switch to parameters
     private final String rendersPath;
 
     public ChannelInfo(ChannelAPI channel, Toml table) {
-        super(channel);
+        super(channel,"channel_info");
         TableRef ref = MTDataRef.CHANNEL_INFO;
         this.category = ref.getOrDefault(table,"sound_category");
         this.commandsPath = ref.getOrDefault(table,"commands");

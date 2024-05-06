@@ -1,13 +1,16 @@
 package mods.thecomputerizer.musictriggers.api.config;
 
 import mods.thecomputerizer.musictriggers.api.MTRef;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerRegistry;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml.TomlEntry;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlRemapper;
 
 import javax.annotation.Nullable;
+import java.util.Objects;
 
 public class MTConfigV7 extends ConfigVersion {
     
@@ -22,24 +25,25 @@ public class MTConfigV7 extends ConfigVersion {
     }
     
     @Override public String getPathMain(Toml channel) {
-        return channel.getOrSetValue("main",channel.getName()+"/main"); //6.3.1 Didn't write the default parameters
+        return MTRef.CONFIG_PATH+"/"+channel.getName()+"/"+channel.getOrSetValue("main","main");
     }
     
     @Override public Toml getGlobal() {
-        return ChannelHelper.openToml(MTRef.GLOBAL_CONFIG,this);
+        return ChannelHelper.openToml(MTRef.GLOBAL_CONFIG,false,this);
     }
     
-    @Override public @Nullable TomlRemapper getRemapper(TableRef ref) {
-        switch(ref.getName()) {
-            case "audio": return new TomlRemapper() {
+    @Override public @Nullable TomlRemapper getRemapper(TableRef ref) { //TODO Share common V6 and V7 remappers
+        if(Objects.isNull(ref)) return null;
+        String name = ref.getName();
+        switch(name) {
+            case "audio":
+            case "universal_audio": return new TomlRemapper() {
                 @Nullable @Override public TomlRemapper getNextRemapper(String table) {
                     return null;
                 }
-                
                 @Override public String remapTable(String name) {
                     return name;
                 }
-                
                 @Override public TomlEntry<?> remapEntry(Toml parent, TomlEntry<?> entry) {
                     return entry;
                 }
@@ -48,16 +52,24 @@ public class MTConfigV7 extends ConfigVersion {
                 @Nullable @Override public TomlRemapper getNextRemapper(String table) {
                     return null;
                 }
-                
                 @Override public String remapTable(String name) {
                     return name;
                 }
-                
                 @Override public TomlEntry<?> remapEntry(Toml toml, TomlEntry<?> entry) {
-                    return remapChannelInfoEntry(entry);
+                    return remapChannelInfoEntry(toml.getName(),entry);
                 }
             };
-            case "channels":
+            case "channels": return new TomlRemapper() {
+                @Nullable @Override public TomlRemapper getNextRemapper(String table) {
+                    return getRemapper(MTDataRef.CHANNEL_INFO);
+                }
+                @Override public String remapTable(String name) {
+                    return name;
+                }
+                @Override public TomlEntry<?> remapEntry(Toml parent, TomlEntry<?> entry) {
+                    return entry;
+                }
+            };
             case "global":
             case "main":
                 return new ConfigRemapper(ref) {
@@ -69,51 +81,62 @@ public class MTConfigV7 extends ConfigVersion {
                 @Nullable @Override public TomlRemapper getNextRemapper(String table) {
                     return null;
                 }
-                
                 @Override public String remapTable(String name) {
                     return name;
                 }
-                
                 @Override public TomlEntry<?> remapEntry(Toml parent, TomlEntry<?> entry) {
                     return remapDebugEntry(entry);
                 }
             };
-            case "trigger": return new TomlRemapper() {
+            case "songs": return new TomlRemapper() {
                 @Nullable @Override public TomlRemapper getNextRemapper(String table) {
-                    return null;
+                    return getRemapper("universal".equals(table) ? MTDataRef.UNIVERSAL_AUDIO : MTDataRef.AUDIO);
                 }
-                
                 @Override public String remapTable(String name) {
                     return name;
                 }
-                
-                @Override public TomlEntry<?> remapEntry(Toml parent, TomlEntry<?> entry) {
-                    return remapTriggerEntry(parent.getName(),entry);
+                @Override public TomlEntry<?> remapEntry(Toml toml, TomlEntry<?> entry) {
+                    return entry;
                 }
             };
             case "triggers": return new TomlRemapper() {
                 @Nullable @Override public TomlRemapper getNextRemapper(String table) {
-                    return null;
+                    return getRemapper("universal".equals(table) ? MTDataRef.UNIVERSAL_TRIGGERS : ref.findChild(table));
                 }
-                
                 @Override public String remapTable(String name) {
                     return remapTriggerName(name);
                 }
-                
                 @Override public TomlEntry<?> remapEntry(Toml parent, TomlEntry<?> entry) {
                     return entry;
                 }
             };
-            default: return null;
+            default: {
+                if(name.equals("universal_triggers") || TriggerRegistry.isRegistred(name)) {
+                    return new TomlRemapper() {
+                        @Nullable @Override public TomlRemapper getNextRemapper(String name) {
+                            return getRemapper(ref.findChild(name));
+                        }
+                        @Override public String remapTable(String name) {
+                            return name;
+                        }
+                        @Override public TomlEntry<?> remapEntry(Toml parent, TomlEntry<?> entry) {
+                            return remapTriggerEntry(parent.getName(),entry);
+                        }
+                    };
+                }
+                return null;
+            }
         }
     }
     
     @Override public Toml getRenders(Toml channel) {
-        return ChannelHelper.openToml(channel.getValueString("renders"),this);
+        String path = MTRef.CONFIG_PATH+"/"+channel.getName()+"/"+channel.getValueString("renders");
+        return ChannelHelper.openToml(path,false,this);
     }
     
     @Override public Toml getToggles(Toml global) {
-        return ChannelHelper.openToml(global.getValueString("toggles_path"),this);
+        String path = MTRef.CONFIG_PATH+"/"+global.getValueString("toggles_path");
+        return ChannelHelper.openToml(path,false,this);
     }
     
     @Override public ConfigVersion getVersionTarget() {
@@ -124,7 +147,7 @@ public class MTConfigV7 extends ConfigVersion {
         return entry;
     }
     
-    @Override public TomlEntry<?> remapChannelInfoEntry(TomlEntry<?> entry) {
+    @Override public TomlEntry<?> remapChannelInfoEntry(String channel, TomlEntry<?> entry) {
         return entry;
     }
     
@@ -142,5 +165,13 @@ public class MTConfigV7 extends ConfigVersion {
     
     @Nullable @Override public Toml upgradeToTable(TomlEntry<?> entry) {
         return null;
+    }
+    
+    @Override public void verifyJukebox(Toml channel) {
+    
+    }
+    
+    @Override public void verifyRedirct(Toml channel) {
+    
     }
 }

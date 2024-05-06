@@ -4,25 +4,19 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterNumber;
+import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.function.Consumer;
 
 public abstract class ParameterWrapper extends ChannelElement {
 
     private final Map<String,Parameter<?>> parameters;
 
-    protected ParameterWrapper(ChannelAPI channel) {
-        this(channel,null);
-    }
-
-    protected ParameterWrapper(ChannelAPI channel, @Nullable Consumer<Map<String,Parameter<?>>> parameterSettings) {
-        super(channel);
-        Map<String,Parameter<?>> map = initParameterMap();
-        if(Objects.nonNull(parameterSettings)) parameterSettings.accept(map);
-        this.parameters = Collections.unmodifiableMap(map);
+    protected ParameterWrapper(ChannelAPI channel, String name) {
+        super(channel,name);
+        this.parameters = Collections.unmodifiableMap(initParameterMap());
     }
 
     protected void addParameter(Map<String,Parameter<?>> map, String name, @Nullable Parameter<?> parameter) {
@@ -190,11 +184,11 @@ public abstract class ParameterWrapper extends ChannelElement {
     }
 
     protected void logMissingParameters(String ... names) {
-        logError("{} is missing a required `{}` parameter! (All of these are required)",getTypeName(),names);
+        logError("{} is missing a 1 or more required parameters from {}! (All of these are required)",getTypeName(),TextHelper.arrayToString(", ",(Object[])names));
     }
 
     protected void logMissingPotentialParameter(String ... names) {
-        logError("{} is missing a required `{}` parameter! (Only 1 of these is required)",getTypeName(),names);
+        logError("{} is missing a required parameter from {}! (Only 1 of these is required)",getTypeName(),TextHelper.arrayToString(", ",(Object[])names));
     }
 
     public boolean matchesAll(ParameterWrapper wrapper) {
@@ -221,8 +215,10 @@ public abstract class ParameterWrapper extends ChannelElement {
 
     @SuppressWarnings("unchecked")
     protected <T> void setParameterValue(String name, T value, @Nullable Parameter<?> parameter) {
-        if(Objects.nonNull(parameter)) ((Parameter<T>)parameter).setValue(value);
-        else logWarn("Cannot set value for paramenter `{}` that does not exist in {}!",name,getTypeName());
+        if(Objects.nonNull(parameter)) {
+            if(parameter instanceof ParameterList<?>) parameter.setListValue((List<?>)value);
+            else ((Parameter<T>)parameter).setValue(value);
+        } else logWarn("Cannot set value for paramenter `{}` that does not exist in {}!",name,getTypeName());
     }
 
     public abstract boolean verifyRequiredParameters();

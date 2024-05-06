@@ -3,9 +3,12 @@ package mods.thecomputerizer.musictriggers.api.config;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.config.ConfigVersion.Qualifier;
 import mods.thecomputerizer.musictriggers.api.config.ConfigVersion.Version;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.global.GlobalData;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import java.io.File;
 import java.util.Arrays;
@@ -104,5 +107,15 @@ public class ConfigVersionManager {
         if(Objects.isNull(fileVersion)) CURRENT.logFatal("Unable to remap missing config version!");
         else fileVersion.remap();
         FileHelper.writeLine(version,CURRENT.version.toString(),false);
+    }
+    
+    public static void writeDefaults(Toml toml, String name, String path) {
+        TableRef ref = MTDataRef.FILE_MAP.get(name);
+        if(Objects.nonNull(ref) && ref.addMissingDefaults(toml,CURRENT)) {
+            CURRENT.logInfo("Writing missing default {} values to {}",name,path);
+            toml.clearComments();
+            toml.addComments(CURRENT.getHeaderLines(name));
+            MTDataRef.writeToFile(toml,path);
+        }
     }
 }

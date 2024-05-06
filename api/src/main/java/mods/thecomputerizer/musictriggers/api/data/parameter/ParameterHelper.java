@@ -36,6 +36,7 @@ public class ParameterHelper {
         }
     }
 
+    @SuppressWarnings("DataFlowIssue")
     public static @Nullable Parameter<?> parse(ByteBuf buf) {
         Class<?> clazz = ReflectionHelper.findExtensibleClass(NetworkHelper.readString(buf),Parameter.class);
         Constructor<?> constructor = ReflectionHelper.findConstructor(clazz,ByteBuf.class);

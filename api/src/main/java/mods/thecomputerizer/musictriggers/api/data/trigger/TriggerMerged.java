@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 /**
- * Only used when COMBINE_EQUAL_PRIORITY is enabled
+ * Only used when independent_audio_pools is disabled
  */
 @Getter
 public class TriggerMerged extends TriggerAPI {
@@ -71,9 +71,15 @@ public class TriggerMerged extends TriggerAPI {
             if(trigger.isContained(triggers)) return true;
         return false;
     }
+    
+    public boolean matches(Collection<TriggerAPI> triggers) {
+        return TriggerHelper.matchesAll(this.triggers,triggers);
+    }
 
     @Override
     public boolean matches(TriggerAPI other) {
+        if(other instanceof TriggerMerged) return TriggerHelper.matchesAny(this.triggers,((TriggerMerged)other).triggers);
+        if(other instanceof TriggerCombination) return other.isContained(this.triggers);
         for(TriggerAPI trigger : this.triggers)
             if(trigger.matches(other)) return true;
         return false;

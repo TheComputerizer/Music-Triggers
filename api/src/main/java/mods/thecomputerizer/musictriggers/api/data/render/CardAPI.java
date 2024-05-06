@@ -22,8 +22,8 @@ public abstract class CardAPI extends ChannelEventRunner {
 
     private final List<TriggerAPI> triggers;
 
-    protected CardAPI(ChannelAPI channel) {
-        super(channel);
+    protected CardAPI(ChannelAPI channel, String name) {
+        super(channel,name);
         this.triggers = new ArrayList<>();
     }
 

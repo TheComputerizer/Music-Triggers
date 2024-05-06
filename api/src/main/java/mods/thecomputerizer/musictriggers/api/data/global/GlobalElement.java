@@ -8,11 +8,9 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterNumber;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlWritingException;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.Map.Entry;
 
 public abstract class GlobalElement implements LoggableAPI {
 
@@ -20,11 +18,6 @@ public abstract class GlobalElement implements LoggableAPI {
 
     protected GlobalElement() {
         this.parameters = initParameters();
-    }
-
-    protected void appendToTable(Toml table) {
-        for(Entry<String,Parameter<?>> entry : this.parameters.entrySet())
-            table.addEntry(entry.getKey(),entry.getValue().getValue());
     }
 
     public @Nullable Parameter<?> getParameter(String name) {
@@ -168,21 +161,18 @@ public abstract class GlobalElement implements LoggableAPI {
     public boolean parse(Toml table) {
         for(Map.Entry<String,Parameter<?>> entry : this.parameters.entrySet()) {
             String name = entry.getKey();
-            if(table.hasEntry(name)) {
-                Parameter<?> parameter = entry.getValue();
-                setParameterValue(name,table.getValue(name),parameter);
-            }
+            if(table.hasEntry(name)) setParameterValue(name,table.getValue(name),entry.getValue());
         }
         return verifyRequiredParameters();
     }
 
     @SuppressWarnings("unchecked")
     protected <T> void setParameterValue(String name, T value, @Nullable Parameter<?> parameter) {
-        if(Objects.nonNull(parameter)) ((Parameter<T>)parameter).setValue(value);
-        else logWarn("Cannot set value for paramenter `{}` that does not exist in {}!",name,getTypeName());
+        if(Objects.nonNull(parameter)) {
+            if(parameter instanceof ParameterList<?>) parameter.setListValue((List<?>)value);
+            else ((Parameter<T>)parameter).setValue(value);
+        } else logWarn("Cannot set value for paramenter `{}` that does not exist in {}!",name,getTypeName());
     }
 
     public abstract boolean verifyRequiredParameters();
-
-    protected abstract void writeDefault(Toml holder) throws TomlWritingException;
 }

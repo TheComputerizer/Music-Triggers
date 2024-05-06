@@ -48,9 +48,6 @@ public class Toggle extends GlobalElement {
         return this.from.verifyRequiredParameters() && this.to.verifyRequiredParameters();
     }
 
-    @Override
-    protected void writeDefault(Toml toml) {}
-
     public static class From extends GlobalElement {
 
         private static final List<String> VALID_CONDITIONS = Arrays.asList("ACTIVE","PLAYABLE","TOGGLED");
@@ -99,9 +96,6 @@ public class Toggle extends GlobalElement {
             }
             return true;
         }
-
-        @Override
-        protected void writeDefault(Toml toml) {}
     }
 
     public static class To extends GlobalElement {
@@ -152,8 +146,5 @@ public class Toggle extends GlobalElement {
             }
             return true;
         }
-
-        @Override
-        protected void writeDefault(Toml toml) {}
     }
 }

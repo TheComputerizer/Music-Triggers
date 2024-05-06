@@ -4,15 +4,12 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioItem;
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef.ParameterRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
-import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
-import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
-import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterDouble;
-import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterFloat;
-import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
@@ -24,13 +21,11 @@ import java.util.*;
 @Getter
 public class AudioRef extends ParameterWrapper {
 
-    private final String name;
     private final List<TriggerAPI> triggers;
     private InterruptHandler interruptHandler;
 
     public AudioRef(ChannelAPI channel, String name) {
-        super(channel);
-        this.name = name;
+        super(channel,name);
         this.triggers = new ArrayList<>();
     }
 
@@ -65,16 +60,7 @@ public class AudioRef extends ParameterWrapper {
     @Override
     protected Map<String,Parameter<?>> initParameterMap() { //TODO Move filters into 1 or more subtables
         Map<String,Parameter<?>> map = new HashMap<>();
-        addParameter(map,"chance",new ParameterInt(100));
-        addParameter(map,"location",new ParameterString(""));
-        addParameter(map,"pitch",new ParameterDouble(1d));
-        addParameter(map,"play_once",new ParameterInt(0));
-        addParameter(map,"play_x",new ParameterInt(1));
-        addParameter(map,"resume_on_play",new ParameterBoolean(false));
-        addParameter(map,"rotation_speed",new ParameterDouble(0d));
-        addParameter(map,"speed",new ParameterDouble(1d));
-        addParameter(map,"start_at",new ParameterInt(0));
-        addParameter(map,"volume",new ParameterFloat(1f));
+        for(ParameterRef<?> ref : MTDataRef.AUDIO.getParameters()) addParameter(map,ref.getName(),ref.toParameter());
         initExtraParameters(map);
         return map;
     }
@@ -134,7 +120,7 @@ public class AudioRef extends ParameterWrapper {
         private final List<TriggerAPI> triggers;
 
         public InterruptHandler(AudioRef parent, Toml table) {
-            super(parent.getChannel());
+            super(parent.getChannel(),"interrupt_handler");
             this.priority = table.getValueInt("priority",
                     getChannel().getHelper().getDebugBool("reverse_priority") ? Integer.MAX_VALUE : Integer.MIN_VALUE);
             this.triggers = parseTriggers(parent,table.getValueArray("trigger_whitelist"));
@@ -155,8 +141,8 @@ public class AudioRef extends ParameterWrapper {
 
         private List<TriggerAPI> parseTriggers(AudioRef ref, List<?> triggerRefs) {
             List<TriggerAPI> triggers = new ArrayList<>();
-            if(!TriggerHelper.findTriggers(getChannel(),triggers,triggerRefs)) {
-                logError(ref.audioMsg("Failed to parse 1 or more triggers in must_finish table!"));
+            if(!triggerRefs.isEmpty() && !TriggerHelper.findTriggers(getChannel(),triggers,triggerRefs)) {
+                logError(ref.audioMsg("Failed to parse 1 or more triggers in "+this.name+" table!"));
                 return Collections.emptyList();
             }
             return triggers;

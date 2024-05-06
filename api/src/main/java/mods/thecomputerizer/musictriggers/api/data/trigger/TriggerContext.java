@@ -29,7 +29,7 @@ public abstract class TriggerContext extends ChannelElement {
     protected WorldAPI<?> world;
 
     protected TriggerContext(ChannelAPI channel) {
-        super(channel);
+        super(channel,"trigger_context");
         this.syncedTriggers = new HashSet<>();
     }
 

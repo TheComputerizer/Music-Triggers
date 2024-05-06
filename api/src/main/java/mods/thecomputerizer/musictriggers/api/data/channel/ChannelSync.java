@@ -12,7 +12,7 @@ public class ChannelSync extends ChannelElement {
     private final Collection<TriggerAPI> triggersToSync;
 
     public ChannelSync(ChannelAPI channel) {
-        super(channel);
+        super(channel,"channel_sync");
         this.triggersToSync = new HashSet<>();
     }
 

@@ -64,21 +64,19 @@ public class ChannelHelper {
 
     public static int getTickRate() {
         Debug debug = getGlobalData().getDebug();
-        return Objects.nonNull(debug) ? debug.getParameterAsInt("TICK_RATE") : 20;
+        return Objects.nonNull(debug) ? debug.getParameterAsInt("tick_rate") : 20;
     }
 
     public static void initClient() {
         MTRef.logInfo("Initializing client channel data");
         load();
         loadClient();
-        globalData.write();
     }
 
     public static void initServer() {
         MTRef.logInfo("Initializing server channel data");
         load();
         loadServer(Collections.emptyList());
-        globalData.write();
     }
     
     public static boolean isReloading() {
@@ -88,9 +86,9 @@ public class ChannelHelper {
     private static void load() {
         try {
             ConfigVersionManager.queryRemap();
-            globalData.parse(openToml(MTRef.GLOBAL_CONFIG, globalData));
+            globalData.parse(openToml(MTRef.GLOBAL_CONFIG,true,globalData));
         } catch(Exception ex) {
-            globalData.logFatal("Error parsing global data!",ex);
+            throw new RuntimeException("Error parsing global data!",ex);
         }
     }
 
@@ -151,14 +149,19 @@ public class ChannelHelper {
     /**
      * Assumes the file extension is not present
      */
-    public static @Nullable Toml openToml(String path, LoggableAPI logger) {
-        path+=".toml";
+    public static @Nullable Toml openToml(String path, boolean writeDefaults, LoggableAPI logger) {
+        String tomlPath = path+".toml";
         try {
-            return Toml.readFile(FileHelper.get(path,false));
+            File file = FileHelper.get(tomlPath,false);
+            Toml toml = Toml.readFile(file);
+            String name = file.getName().substring(0,file.getName().length()-5);
+            if(Objects.nonNull(toml) && writeDefaults)
+                ConfigVersionManager.writeDefaults(toml,name,path);
+            return toml;
         } catch(IOException|TomlParsingException ex) {
             String msg = "Unable to read toml file at `{}`!";
-            if(Objects.nonNull(logger)) logger.logError(msg,path,ex);
-            else MTRef.logError(msg,path,ex);
+            if(Objects.nonNull(logger)) logger.logError(msg,tomlPath,ex);
+            else MTRef.logError(msg,tomlPath,ex);
             return null;
         }
     }
@@ -292,7 +295,7 @@ public class ChannelHelper {
 
     private void initToggles() {
         Toml toggles = globalData.openToggles(MTRef.CONFIG_PATH);
-        if(Objects.nonNull(toggles))
+        if(Objects.nonNull(toggles) && toggles.hasTable("toggle"))
             for(Toml table : toggles.getTableArray("toggle"))
                 this.toggles.add(new Toggle(this,table));
     }
@@ -318,6 +321,5 @@ public class ChannelHelper {
     private void writeExampleChannel(Toml toml) throws TomlWritingException {
         Toml table = toml.addTable("channels",false);
         ChannelInfo.writeExampleData(table.addTable("example",false));
-        globalData.markWritable();
     }
 }

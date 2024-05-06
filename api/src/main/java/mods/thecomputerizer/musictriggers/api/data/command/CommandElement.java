@@ -26,7 +26,7 @@ public class CommandElement extends ChannelEventRunner {
     private final List<TriggerAPI> triggers;
 
     public CommandElement(ChannelAPI channel, Toml table) {
-        super(channel);
+        super(channel,"command_element");
         this.triggers = new ArrayList<>();
         this.valid = parse(table);
     }

@@ -1,23 +1,25 @@
 package mods.thecomputerizer.musictriggers.api.data.parameter;
 
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef.ParameterRef;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 
 public class UniversalParameters extends ParameterWrapper {
 
-    public static UniversalParameters get(ChannelAPI channel, String type, Consumer<Map<String,Parameter<?>>> parameterSettings) {
-        return new UniversalParameters(channel,type,parameterSettings);
+    public static UniversalParameters get(ChannelAPI channel, String type) {
+        return new UniversalParameters(channel,type);
     }
 
     private final String type;
 
-    public UniversalParameters(ChannelAPI channel, String type, Consumer<Map<String,Parameter<?>>> parameterSettings) {
-        super(channel,parameterSettings);
+    public UniversalParameters(ChannelAPI channel, String type) {
+        super(channel,"Universal "+type);
         this.type = type;
     }
 
@@ -33,7 +35,10 @@ public class UniversalParameters extends ParameterWrapper {
 
     @Override
     protected Map<String,Parameter<?>> initParameterMap() {
-       return new HashMap<>();
+        Map<String,Parameter<?>> map = new HashMap<>();
+        TableRef table = "Triggers".equals(this.type) ? MTDataRef.UNIVERSAL_TRIGGERS : MTDataRef.UNIVERSAL_AUDIO;
+        for(ParameterRef<?> ref : table.getParameters()) addParameter(map,ref.getName(),ref.toParameter());
+        return map;
     }
 
     @Override

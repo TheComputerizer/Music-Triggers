@@ -28,6 +28,5 @@ shadowJar {
       'org.json',
       'org.jsoup',
       'org.mozilla.classfile',
-      'org.mozilla.javascript',
       'org.slf4j' ].forEach { pkg -> { relocate pkg, "${shadow_package}.${pkg}" } }
 }

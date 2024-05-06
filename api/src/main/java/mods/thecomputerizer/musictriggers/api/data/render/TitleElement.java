@@ -14,7 +14,7 @@ import java.util.Map;
 public class TitleElement extends CardAPI {
 
     public TitleElement(ChannelAPI channel) {
-        super(channel);
+        super(channel,"Title Card");
     }
 
     @Override

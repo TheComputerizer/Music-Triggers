@@ -11,9 +11,11 @@ import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
 public abstract class ChannelElement implements ChannelEventHandler, LoggableAPI {
 
     protected final ChannelAPI channel;
+    protected final String name;
 
-    protected ChannelElement(ChannelAPI channel) {
+    protected ChannelElement(ChannelAPI channel, String name) {
         this.channel = channel;
+        this.name = name;
     }
 
     @Override

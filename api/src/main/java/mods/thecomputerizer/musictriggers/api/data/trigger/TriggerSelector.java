@@ -26,7 +26,7 @@ public class TriggerSelector extends ChannelElement {
     private boolean cleared;
 
     public TriggerSelector(ChannelAPI channel, TriggerContext context) {
-        super(channel);
+        super(channel,"trigger_selector");
         this.context = context;
         this.playables = Collections.emptySet();
     }

@@ -122,7 +122,7 @@ public class TriggerHelper {
                 else channel.logInfo("Intialized universal trigger data");
             }
             else {
-                TriggerAPI trigger = TriggerRegistry.getTriggerInstance(channel, triggerTable.getName());
+                TriggerAPI trigger = TriggerRegistry.getTriggerInstance(channel,triggerTable.getName());
                 if (checkVersion(trigger) && trigger.parse(triggerTable)) triggers.add(trigger);
             }
         }
