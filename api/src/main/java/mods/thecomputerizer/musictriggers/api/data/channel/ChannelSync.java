@@ -1,8 +1,8 @@
 package mods.thecomputerizer.musictriggers.api.data.channel;
 
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
+import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
 import mods.thecomputerizer.musictriggers.api.network.MessageTriggerStates;
-import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -16,12 +16,6 @@ public class ChannelSync extends ChannelElement {
         this.triggersToSync = new HashSet<>();
     }
 
-    private <DIR> DIR getSyncDirection(boolean login) {
-        return login ? (this.channel.isClientChannel() ? NetworkHelper.getDirToServerLogin() :
-                NetworkHelper.getDirToClientLogin()) : (this.channel.isClientChannel() ?
-                NetworkHelper.getDirToServer() : NetworkHelper.getDirToClient());
-    }
-
     @Override
     public boolean isResource() {
         return false;
@@ -32,7 +26,10 @@ public class ChannelSync extends ChannelElement {
     }
 
     public void send() {
-        //NetworkHelper.wrapMessage(getSyncDirection(false),new MessageTriggerStates<>(this.channel,this.triggersToSync)).send();
+        if(this.triggersToSync.isEmpty()) return;
+        MessageTriggerStates<?> msg = new MessageTriggerStates<>(this.channel,this.triggersToSync);
+        if(this.channel.isClientChannel()) MTNetwork.sendToServer(msg,false);
+        else MTNetwork.sendToClient(msg,false,this.channel.getPlayerEntity());
         this.triggersToSync.clear();
     }
 

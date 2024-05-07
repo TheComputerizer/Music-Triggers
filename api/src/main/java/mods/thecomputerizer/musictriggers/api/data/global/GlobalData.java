@@ -24,8 +24,8 @@ public class GlobalData implements LoggableAPI {
         return StringUtils.isNotBlank(val) ? val : null;
     }
 
-    public ChannelHelper initHelper(String playerID, boolean isClient) throws TomlWritingException {
-        ChannelHelper helper = new ChannelHelper(playerID,isClient);
+    public ChannelHelper initHelper(boolean isClient) throws TomlWritingException {
+        ChannelHelper helper = new ChannelHelper(isClient);
         helper.load(this.global);
         return helper;
     }

@@ -22,7 +22,10 @@ import mods.thecomputerizer.musictriggers.api.data.global.Debug;
 import mods.thecomputerizer.musictriggers.api.data.global.GlobalData;
 import mods.thecomputerizer.musictriggers.api.data.global.Toggle;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
+import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
+import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels;
 import mods.thecomputerizer.musictriggers.api.server.ChannelServer;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlParsingException;
@@ -50,16 +53,12 @@ public class ChannelHelper {
     private static boolean reloadingClient;
 
     public static void addPlayer(String playerID, boolean isClient) throws TomlWritingException { //TODO Get id for actual server player reference
-        PLAYER_MAP.put(playerID,globalData.initHelper(playerID,isClient));
+        PLAYER_MAP.put(playerID,globalData.initHelper(isClient));
     }
 
     public static @Nullable ChannelAPI findChannel(String playerID, String channelName) {
         ChannelHelper helper = PLAYER_MAP.get(playerID);
         return Objects.nonNull(helper) ? helper.findChannel(globalData,channelName) : null;
-    }
-
-    public static @Nullable ChannelHelper findChannelHelper(String playerID) {
-        return PLAYER_MAP.get(playerID);
     }
 
     public static int getTickRate() {
@@ -77,6 +76,21 @@ public class ChannelHelper {
         MTRef.logInfo("Initializing server channel data");
         load();
         loadServer(Collections.emptyList());
+    }
+    
+    public static @Nullable ChannelHelper getClientHelper(String uuid) {
+        ChannelHelper helper = PLAYER_MAP.get("CLIENT");
+        for(ChannelAPI channel : helper.getChannels().values()) {
+            PlayerAPI<?,?> player = channel.getPlayerEntity();
+            if(Objects.nonNull(player) && uuid.equals(player.getUUID().toString())) return helper;
+        }
+        return null;
+    }
+    
+    @SneakyThrows
+    public static ChannelHelper getServerHelper(String uuid) {
+        if(!PLAYER_MAP.containsKey(uuid)) PLAYER_MAP.put(uuid,new ChannelHelper(false));
+        return PLAYER_MAP.get(uuid);
     }
     
     public static boolean isReloading() {
@@ -205,13 +219,11 @@ public class ChannelHelper {
 
     @Getter private final Map<String,ChannelAPI> channels;
     @Getter private final Set<Toggle> toggles;
-    @Getter private final String playerID;
     @Getter private final boolean client;
 
-    public ChannelHelper(String playerID, boolean client) {
+    public ChannelHelper(boolean client) {
         this.channels = new HashMap<>();
         this.toggles = new HashSet<>();
-        this.playerID = playerID;
         this.client = client;
     }
 
@@ -219,6 +231,12 @@ public class ChannelHelper {
         for(ChannelAPI channel : this.channels.values())
             if(channel instanceof ChannelClient)
                 ((ChannelClient)channel).addDebugElements(info,elements);
+    }
+    
+    public ChannelAPI addEmptyChannel(String name, Toml info) {
+        ChannelAPI channel = this.isClient() ? new ChannelClient(this,info) : new ChannelServer(this,info);
+        this.channels.put(name,channel);
+        return channel;
     }
 
     public void close() {
@@ -260,9 +278,15 @@ public class ChannelHelper {
         String ret = debug.getParameterAsString(name);
         return Objects.nonNull(ret) ? ret : "";
     }
+    
+    public @Nullable PlayerAPI<?,?> getPlayer() { //TODO Store player reference in this class?
+        for(ChannelAPI channel : this.channels.values()) return channel.getPlayerEntity();
+        return null;
+    }
 
-    public String getSyncID() { //TODO Implement server version
-        return "CLIENT";
+    public String getPlayerID() {
+        PlayerAPI<?,?> player = getPlayer();
+        return Objects.nonNull(player) ? player.getUUID().toString() : null;
     }
 
     public void load(@Nullable Toml globalHolder) throws TomlWritingException { //TODO Sided stuff & server channels
@@ -308,6 +332,13 @@ public class ChannelHelper {
         this.toggles.removeIf(toggle -> !toggle.parse());
         globalData.logInfo("Finished parsing data for all channels. Enabling audio playback");
         loading = false;
+    }
+    
+    public void sendInitMessage(boolean login) {
+        Toml toggles = globalData.openToggles(MTRef.CONFIG_PATH);
+        MessageInitChannels<?> msg = new MessageInitChannels<>(globalData.getGlobal(),toggles,this);
+        if(this.client) MTNetwork.sendToServer(msg,login);
+        else MTNetwork.sendToClient(msg,login,getPlayer());
     }
 
     public void syncChannels() {

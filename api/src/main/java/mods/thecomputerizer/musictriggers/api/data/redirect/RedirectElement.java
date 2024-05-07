@@ -1,8 +1,10 @@
 package mods.thecomputerizer.musictriggers.api.data.redirect;
 
+import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
+import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
@@ -27,6 +29,14 @@ public class RedirectElement extends ChannelElement {
     public RedirectElement(ChannelAPI channel, String line) {
         super(channel,"redirect_element");
         this.valid = parse(line);
+    }
+    
+    public RedirectElement(ChannelAPI channel, ByteBuf buf) {
+        super(channel,"redirect_element");
+        this.valid = buf.readBoolean();
+        this.name = NetworkHelper.readString(buf);
+        this.value = NetworkHelper.readString(buf);
+        this.remote = buf.readBoolean();
     }
 
     @Override
@@ -59,5 +69,12 @@ public class RedirectElement extends ChannelElement {
         logInfo("Successfully stored `{}` from {} in key `{}`",this.value,this.remote ? "remote source" :
                 "resource",this.name);
         return true;
+    }
+    
+    public void write(ByteBuf buf) {
+        buf.writeBoolean(this.valid);
+        NetworkHelper.writeString(buf,this.name);
+        NetworkHelper.writeString(buf,this.value);
+        buf.writeBoolean(this.remote);
     }
 }

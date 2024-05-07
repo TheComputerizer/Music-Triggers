@@ -2,13 +2,13 @@ buildscript {
     repositories {
         gradlePluginPortal() {
             content {
-                [ 'com.github.johnrengelman', 'com.google.code.findbugs', 'com.google.code.gson',
-                  'com.google.errorprone', 'com.google.guava', 'com.google.j2objc', 'com.machinezoo',
-                  'com.machinezoo.noexception', 'commons-codec', 'commons-io', 'commons-logging', 'de.siegmar',
+                [ 'com.fasterxml.woodstox', 'com.google.code.findbugs', 'com.google.code.gson', 'com.google.errorprone',
+                  'com.google.guava', 'com.google.j2objc', 'com.machinezoo', 'com.machinezoo.noexception',
+                  'commons-codec', 'commons-io', 'commons-logging', 'de.siegmar', 'io.github.goooler.shadow',
                   'it.unimi.dsi', 'net.sf.jopt-simple', 'org.apache.ant', 'org.apache.commons',
                   'org.apache.httpcomponents', 'org.apache.logging.log4j', 'org.apache.maven', 'org.checkerframework',
-                  'org.codehaus.plexus', 'org.jdom', 'org.jetbrains', 'org.jetbrains.kotlin', 'org.ow2.asm',
-                  'org.slf4j', 'org.tukaani', 'org.vafer' ].forEach { includeGroup it }
+                  'org.codehaus.plexus', 'org.codehaus.woodstox','org.jdom', 'org.jetbrains', 'org.jetbrains.kotlin',
+                  'org.ow2.asm', 'org.slf4j', 'org.tukaani', 'org.vafer' ].forEach { includeGroup it }
             }
         }
         maven {
@@ -27,7 +27,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath('com.github.johnrengelman:shadow:8.+')
+        classpath('io.github.goooler.shadow:shadow-gradle-plugin:8.+')
         classpath('net.minecraftforge.gradle:net.minecraftforge.gradle.gradle.plugin:6.+')
         classpath('wtf.gofancy.fancygradle:wtf.gofancy.fancygradle.gradle.plugin:1.+')
     }

@@ -1,8 +1,10 @@
 package mods.thecomputerizer.musictriggers.api.data.jukebox;
 
+import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
+import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
@@ -26,6 +28,13 @@ public class RecordElement extends ChannelElement {
     public RecordElement(ChannelAPI channel, String line) {
         super(channel,"jukebox_element");
         this.valid = parse(line);
+    }
+    
+    public RecordElement(ChannelAPI channel, ByteBuf buf) {
+        super(channel,"jukebox_element");
+        this.valid = buf.readBoolean();
+        this.key = NetworkHelper.readString(buf);
+        this.name = NetworkHelper.readString(buf);
     }
 
     @Override
@@ -53,5 +62,11 @@ public class RecordElement extends ChannelElement {
         }
         logInfo("Successfully registed `{}` as a record from key `{}`",this.name,this.key);
         return true;
+    }
+    
+    public void write(ByteBuf buf) {
+        buf.writeBoolean(this.valid);
+        NetworkHelper.writeString(buf,this.key);
+        NetworkHelper.writeString(buf, this.name);
     }
 }

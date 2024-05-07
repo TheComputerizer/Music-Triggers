@@ -1,4 +1,4 @@
-plugins.apply('com.github.johnrengelman.shadow')
+plugins.apply('io.github.goooler.shadow')
 
 configurations {
     shadow.extendsFrom(shaded)
@@ -10,7 +10,6 @@ shadowJar {
     setArchiveBaseName(mod_id)
     setArchiveClassifier('')
     mergeServiceFiles()
-    exclude 'LICENSE', 'LICENSE.txt', 'META-INF/MANIFSET.MF',
-            'META-INF/maven/**', 'META-INF/*.RSA', 'META-INF/*.SF',
-            'META-INF/services/*.Processor', 'META-INF/**/*.class', 'module-info.*'
+    exclude '**/LICENSE', '**/LICENSE.txt', 'META-INF/MANIFSET.MF', 'META-INF/maven/**', 'META-INF/*.RSA',
+            'META-INF/*.SF', 'META-INF/services/*.Processor', 'META-INF/**/*.class', 'module-info.*'
 }

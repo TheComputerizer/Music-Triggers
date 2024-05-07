@@ -12,9 +12,13 @@ import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerSelector;
 import mods.thecomputerizer.musictriggers.api.server.TriggerContextServer;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -75,9 +79,27 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     }
 
     public abstract AudioPlayer getPlayer();
+    
+    @SuppressWarnings("unchecked")
+    public <P> @Nullable PlayerAPI<P,?> getPlayerEntity() {
+        return (PlayerAPI<P,?>)this.selector.getContext().getPlayer();
+    }
 
     public TriggerAPI getPreviousTrigger() {
         return this.selector.getPreviousTrigger();
+    }
+    
+    public void getSource(Map<String,Toml> map, String name, String path) {
+        Toml toml = ChannelHelper.openToml(path,false,this);
+        if(Objects.nonNull(toml)) map.put(name,toml);
+    }
+    
+    public Map<String,Toml> getSourceMap() {
+        Map<String,Toml> map = new HashMap<>();
+        getSource(map,"commands",this.info.getCommandsPath());
+        getSource(map,"main",this.info.getMainPath());
+        getSource(map,"renders",this.info.getRendersPath());
+        return map;
     }
 
     protected void handleActiveEvent(Consumer<ChannelEventHandler> event) {

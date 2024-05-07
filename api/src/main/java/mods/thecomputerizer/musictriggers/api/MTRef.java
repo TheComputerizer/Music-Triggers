@@ -19,7 +19,7 @@ public class MTRef {
     public static final String MODID = "musictriggers";
     public static final String NAME = "Music Triggers";
     public static final Random RANDOM = new Random();
-    public static final String VERSION = "7.0.0+beta-1";
+    public static final String VERSION = "7.0.0+beta-2";
 
     public static void log(Level level, String msg, Object ... args) {
         LOGGER.log(level,msg,args);

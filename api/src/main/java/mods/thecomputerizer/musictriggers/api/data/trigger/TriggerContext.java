@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger;
 
+import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.nbt.NBTHelper;
@@ -25,7 +26,7 @@ public abstract class TriggerContext extends ChannelElement {
     protected static final List<String> NBT_MODES = Arrays.asList("KEY_PRESENT","VAL_PRESENT","GREATER","LESSER","EQUAL","INVERT");
 
     protected final Set<TriggerSynced> syncedTriggers;
-    protected PlayerAPI<?,?> player;
+    @Getter protected PlayerAPI<?,?> player;
     protected WorldAPI<?> world;
 
     protected TriggerContext(ChannelAPI channel) {

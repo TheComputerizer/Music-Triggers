@@ -1,15 +1,18 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
 buildscript {
     repositories {
         gradlePluginPortal() {
             content {
-                [ 'com.github.johnrengelman', 'com.google.code.findbugs', 'com.google.code.gson',
-                  'com.google.errorprone', 'com.google.guava', 'com.google.j2objc',
-                  'com.machinezoo.noexception', 'commons-codec', 'commons-io',
-                  'commons-logging', 'de.siegmar', 'it.unimi.dsi',
-                  'net.sf.jopt-simple', 'org.apache.ant', 'org.apache.logging.log4j',
-                  'org.apache.commons', 'org.apache.httpcomponents', 'org.apache.maven',
-                  'org.checkerframework', 'org.codehaus.plexus', 'org.jdom',
-                  'org.ow2.asm', 'org.slf4j', 'org.tukaani',
+                [ 'com.fasterxml', 'com.fasterxml.jackson', 'com.fasterxml.woodstox', 'com.google.code.findbugs',
+                  'com.google.code.gson', 'com.google.errorprone', 'com.google.guava', 'com.google.j2objc',
+                  'com.machinezoo.noexception', 'commons-codec', 'commons-io', 'commons-logging', 'de.siegmar',
+                  'io.fabric8', 'io.github.goooler.shadow', 'io.netty', 'it.unimi.dsi', 'jakarta.platform',
+                  'net.sf.jopt-simple', 'org.apache', 'org.apache.ant', 'org.apache.commons',
+                  'org.apache.httpcomponents', 'org.apache.logging', 'org.apache.logging.log4j', 'org.apache.maven',
+                  'org.checkerframework', 'org.codehaus.groovy', 'org.codehaus.plexus', 'org.codehaus.woodstox',
+                  'org.eclipse.ee4j', 'org.eclipse.jetty', 'org.jdom', 'org.junit', 'org.mockito', 'org.ow2',
+                  'org.ow2.asm', 'org.slf4j', 'org.sonatype.oss', 'org.springframework', 'org.tukaani',
                   'org.vafer' ].forEach { includeGroup it }
             }
         }
@@ -30,7 +33,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath('com.github.johnrengelman:shadow:8.+')
+        classpath('io.github.goooler.shadow:shadow-gradle-plugin:8.+')
         classpath('net.minecraftforge.gradle:net.minecraftforge.gradle.gradle.plugin:6.+')
         classpath('org.spongepowered:mixingradle:0.+')
         classpath('org.parchmentmc.librarian.forgegradle:org.parchmentmc.librarian.forgegradle.gradle.plugin:1.+')
@@ -103,6 +106,8 @@ jar {
         ])
     }
 }
+
+ReplaceTokens
 
 shadowJar {
     from(project(':forge').jar.archiveFile.collect { zipTree(it) })
