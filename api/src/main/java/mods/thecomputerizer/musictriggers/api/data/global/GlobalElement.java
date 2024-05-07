@@ -165,6 +165,15 @@ public abstract class GlobalElement implements LoggableAPI {
         }
         return verifyRequiredParameters();
     }
+    
+    @SuppressWarnings("unchecked")
+    protected <V> void setExistingParameterValue(String name, V value) {
+        Parameter<?> parameter = getParameter(name);
+        if(Objects.nonNull(parameter)) {
+            if(value instanceof List<?>) parameter.setListValue((List<?>)value);
+            else ((Parameter<V>)parameter).setValue(value);
+        }
+    }
 
     @SuppressWarnings("unchecked")
     protected <T> void setParameterValue(String name, T value, @Nullable Parameter<?> parameter) {

@@ -21,7 +21,8 @@ public class MTServerEvents {
 
     public static void onRegisterCommands(RegisterCommandsEventWrapper<?> wrapper) {
         MTRef.logInfo("Registering commands");
-        wrapper.registerCommand(MTCommands.root());
+        wrapper.registerCommand(MTCommands.root("mtreload"));
+        wrapper.registerCommand(MTCommands.root("mtdebug"));
     }
     
     public static void onPlayerJoin(PlayerLoggedInEventWrapper<?> wrapper) {

@@ -8,6 +8,8 @@ import javax.annotation.Nullable;
 
 public class MTClientEntryPoint extends ClientEntryPoint {
 
+    public static MTDebugInfo debugInfo;
+    
     @Override
     public void onClientSetup() {
         ChannelHelper.onResourcesLoaded();
@@ -30,11 +32,12 @@ public class MTClientEntryPoint extends ClientEntryPoint {
 
     @Override
     public void onConstructed() {
-        ChannelHelper.initClient();
+        debugInfo = new MTDebugInfo(null);
+        ChannelHelper.initClient(debugInfo);
     }
 
     @Override
     public void onPreRegistration() {
-        MTClientEvents.init(null);
+        MTClientEvents.init(debugInfo);
     }
 }

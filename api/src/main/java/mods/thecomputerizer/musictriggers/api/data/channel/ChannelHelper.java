@@ -16,6 +16,7 @@ import lombok.Setter;
 import lombok.SneakyThrows;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.ChannelClient;
+import mods.thecomputerizer.musictriggers.api.client.MTClientEntryPoint;
 import mods.thecomputerizer.musictriggers.api.client.MTDebugInfo;
 import mods.thecomputerizer.musictriggers.api.client.MTDebugInfo.Element;
 import mods.thecomputerizer.musictriggers.api.config.ConfigVersionManager;
@@ -41,6 +42,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -58,27 +60,17 @@ public class ChannelHelper {
     }
 
     public static @Nullable ChannelAPI findChannel(String playerID, boolean isClient, String channelName) {
-        MTRef.logDebug("Finding channel {} for player {} on the {} side",channelName,playerID,isClient ? "client" : "server");
         ChannelHelper helper = isClient ? getClientHelper(playerID) : getServerHelper(playerID);
-        MTRef.logDebug("Found helper? {}",Objects.nonNull(helper));
         return Objects.nonNull(helper) ? helper.findChannel(globalData,channelName) : null;
+    }
+    
+    public static void forEachHelper(Consumer<ChannelHelper> func) {
+        PLAYER_MAP.values().forEach(func);
     }
 
     public static int getTickRate() {
         Debug debug = getGlobalData().getDebug();
         return Objects.nonNull(debug) ? debug.getParameterAsInt("tick_rate") : 20;
-    }
-
-    public static void initClient() {
-        MTRef.logInfo("Initializing client channel data");
-        load();
-        loadClient();
-    }
-
-    public static void initServer() {
-        MTRef.logInfo("Initializing server channel data");
-        load();
-        loadServer(Collections.emptyList());
     }
     
     public static @Nullable ChannelHelper getClientHelper(String uuid) {
@@ -96,6 +88,18 @@ public class ChannelHelper {
         return PLAYER_MAP.get(uuid);
     }
     
+    public static void initClient(MTDebugInfo debug) {
+        MTRef.logInfo("Initializing client channel data");
+        load();
+        loadClient(debug);
+    }
+    
+    public static void initServer() {
+        MTRef.logInfo("Initializing server channel data");
+        load();
+        loadServer(Collections.emptyList());
+    }
+    
     public static boolean isReloading() {
         return reloadingClient;
     }
@@ -109,8 +113,11 @@ public class ChannelHelper {
         }
     }
 
-    @SneakyThrows private static void loadClient() {
-        addPlayer("CLIENT", true);
+    @SneakyThrows private static void loadClient(MTDebugInfo debug) {
+        addPlayer("CLIENT",true);
+        ChannelHelper helper = PLAYER_MAP.get("CLIENT");
+        helper.setDebugInfo(debug);
+        debug.setHelper(helper);
     }
 
     @SneakyThrows private static void loadServer(Collection<String> playerIDs) {
@@ -149,7 +156,7 @@ public class ChannelHelper {
 
     public static void reload() {
         load();
-        if(reloadingClient) loadClient();
+        if(reloadingClient) loadClient(MTClientEntryPoint.debugInfo);
         else loadServer(RELOADING_PLAYERS);
         loading = false;
     }
@@ -224,6 +231,7 @@ public class ChannelHelper {
     @Getter private final Set<Toggle> toggles;
     @Getter private final boolean client;
     @Setter @Getter private boolean syncable;
+    @Setter @Getter private MTDebugInfo debugInfo;
 
     public ChannelHelper(boolean client) {
         this.channels = new HashMap<>();
@@ -254,6 +262,11 @@ public class ChannelHelper {
         ChannelAPI channel = channels.get(channelName);
         if(Objects.isNull(channel)) logger.logError("Unable to find channel with name `{}`!",channelName);
         return channel;
+    }
+    
+    public void flipDebugParameter(String name) {
+        Debug debug = getDebug();
+        if(Objects.nonNull(debug)) debug.flipBooleanParameter(name);
     }
 
     public @Nullable Debug getDebug() {
