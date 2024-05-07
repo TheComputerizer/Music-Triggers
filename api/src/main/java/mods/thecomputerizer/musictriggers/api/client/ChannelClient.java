@@ -217,6 +217,14 @@ public class ChannelClient extends ChannelAPI {
         super.stopped();
         this.playingPool = null;
     }
+    
+    @Override
+    public void tick() {
+        if(MTClient.isUnpaused() && (MTClient.isFocused() || !getHelper().getDebugBool("pause_unless_focused"))) {
+            this.player.setPaused(false);
+            super.tick();
+        } else this.player.setPaused(true);
+    }
 
     @Override
     public void tickActive() {

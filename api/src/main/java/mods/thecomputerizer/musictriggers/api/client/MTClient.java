@@ -1,6 +1,8 @@
 package mods.thecomputerizer.musictriggers.api.client;
 
 import mods.thecomputerizer.musictriggers.api.MTRef;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.CommonAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.*;
@@ -40,5 +42,15 @@ public class MTClient {
 
     public static TextTranslationAPI<?> getTranslated(String category, String extra, Object ... args) {
         return TextHelper.getTranslated(category+"."+MTRef.MODID+"."+extra,args);
+    }
+    
+    public static boolean isFocused() {
+        MinecraftAPI mc = TILRef.getClientSubAPI(ClientAPI::getMinecraft);
+        return Objects.isNull(mc) || mc.isLoading()|| mc.isDisplayFocused();
+    }
+    
+    public static boolean isUnpaused() {
+        MinecraftAPI mc = TILRef.getClientSubAPI(ClientAPI::getMinecraft);
+        return Objects.isNull(mc) || mc.isLoading() || !mc.isPaused();
     }
 }
