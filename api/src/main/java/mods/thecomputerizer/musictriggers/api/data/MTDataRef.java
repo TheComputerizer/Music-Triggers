@@ -348,7 +348,7 @@ public final class MTDataRef {
                 new ParameterRef<>("not",false),
                 new ParameterRef<>("passive_persistence",0),
                 new ParameterRef<>("persistence",0),
-                new ParameterRef<>("priority",0),
+                new ParameterRef<>("priority",defaultPriority(name)),
                 new ParameterRef<>("start_as_disabled",false),
                 new ParameterRef<>("ticks_before_active",0),
                 new ParameterRef<>("ticks_before_audio",0),
@@ -363,6 +363,61 @@ public final class MTDataRef {
     private static boolean canWriteDefaults(String type) {
         Debug debug = ChannelHelper.getGlobalData().getDebug();
         return Objects.isNull(debug) || debug.getParameterAsList("write_default_values").contains(type);
+    }
+    
+    private static int defaultPriority(String trigger) {
+        switch(trigger) {
+            case "dimension": return 100;
+            case "season": return 200;
+            case "statistic": return 300;
+            case "pet": return 400;
+            case "cloudy": return 500;
+            case "biome": return 600;
+            case "fishing": return 700;
+            case "time": return 800;
+            case "light": return 900;
+            case "lightrain": return 1000;
+            case "home": return 1100;
+            case "elytra": return 1200;
+            case "effect": return 1300;
+            case "inventory": return 1400;
+            case "riding": return 1500;
+            case "acidrain": return 1600;
+            case "starshower": return 1700;
+            case "raining": return 1800;
+            case "rainintensity": return 1900;
+            case "snowing": return 2000;
+            case "harvestmoon": return 2100;
+            case "bluemoon": return 2200;
+            case "moon": return 2300;
+            case "storming": return 2400;
+            case "bloodmoon": return 2500;
+            case "blizzard": return 2600;
+            case "hurricane": return 2700;
+            case "sandstorm": return 2800;
+            case "height": return 2900;
+            case "tornado": return 3000;
+            case "underwater": return 3100;
+            case "structure": return 3200;
+            case "zones": return 3300;
+            case "blockentity": return 3400;
+            case "advancement": return 3500;
+            case "command": return 3600;
+            case "gui": return 3700;
+            case "mob": return 3800;
+            case "pvp": return 3900;
+            case "lowhp": return 4000;
+            case "raid": return 4100;
+            case "victory": return 4200;
+            case "drowning": return 4300;
+            case "dead": return 4400;
+            case "adventure":
+            case "creative":
+            case "difficulty":
+            case "gamestage":
+            case "spectator":
+            default: return 0;
+        }
     }
     
     public static @Nullable TableRef findTriggerRef(String trigger) {

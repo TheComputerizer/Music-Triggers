@@ -34,6 +34,7 @@ public abstract class TriggerAPI extends ParameterWrapper {
     protected TriggerAPI(ChannelAPI channel, String name) {
         super(channel,name);
         this.parents = new HashSet<>();
+        this.state = IDLE;
     }
 
     @Override

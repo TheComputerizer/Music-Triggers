@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger;
 
+import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
@@ -22,6 +23,7 @@ public class TriggerHelper {
     }
 
     public static TriggerAPI decodeTrigger(@Nullable ChannelAPI channel, String name, String id) {
+        MTRef.logDebug("Decoding trigger {}-{} with null channel? {}",name,id,Objects.isNull(channel));
         if(Objects.nonNull(channel)) {
             String nameWithID = name+(id.equals("not_set") ? "" : "-"+id);
             for(TriggerAPI trigger : channel.getData().getTriggers())

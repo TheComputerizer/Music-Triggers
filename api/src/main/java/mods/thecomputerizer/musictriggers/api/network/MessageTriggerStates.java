@@ -26,7 +26,8 @@ public class MessageTriggerStates<CTX> extends MessageAPI<CTX> { //TODO Combine 
     public MessageTriggerStates(ByteBuf buf) {
         String playerID = NetworkHelper.readString(buf);
         String channelName = NetworkHelper.readString(buf);
-        this.channel = ChannelHelper.findChannel(playerID,channelName);
+        boolean server = buf.readBoolean(); //The write was client so the read must be the opposite
+        this.channel = ChannelHelper.findChannel(playerID,!server,channelName);
         this.snapshots = NetworkHelper.readCollection(buf,() -> {
             String name = NetworkHelper.readString(buf);
             String id = NetworkHelper.readString(buf);
@@ -39,6 +40,7 @@ public class MessageTriggerStates<CTX> extends MessageAPI<CTX> { //TODO Combine 
     public void encode(ByteBuf buf) {
         NetworkHelper.writeString(buf,this.channel.getHelper().getPlayerID());
         NetworkHelper.writeString(buf,this.channel.getName());
+        buf.writeBoolean(this.channel.isClientChannel());
         NetworkHelper.writeCollection(buf,this.snapshots,snapshot -> snapshot.trigger.encode(buf));
     }
 

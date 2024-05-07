@@ -9,6 +9,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.Map.Entry;
 
 @SuppressWarnings({"DataFlowIssue","unused"})
 public abstract class ParameterWrapper extends ChannelElement {
@@ -132,7 +133,7 @@ public abstract class ParameterWrapper extends ChannelElement {
 
     public String getParameterAsString(String name) {
         Parameter<?> parameter = getParameter(name);
-        return parameter.getValue().toString();
+        return Objects.nonNull(parameter) ? parameter.getValue().toString() : null;
     }
 
     protected abstract Class<? extends ChannelElement> getTypeClass();
@@ -170,6 +171,18 @@ public abstract class ParameterWrapper extends ChannelElement {
 
     public boolean hasParameter(String name) {
         return Objects.nonNull(getParameter(name));
+    }
+    
+    @SuppressWarnings("unchecked")
+    private <T> void inheritParameter(Parameter<T> parameter, Object value) {
+        parameter.setValue((T)value);
+    }
+    
+    protected void inheritParameters(ParameterWrapper wrapper) {
+        for(Entry<String,Parameter<?>> entry : this.parameters.entrySet()) {
+            Parameter<?> other = wrapper.getParameter(entry.getKey());
+            if(Objects.nonNull(other)) inheritParameter(entry.getValue(),other.getValue());
+        }
     }
 
     protected abstract Map<String,Parameter<?>> initParameterMap();

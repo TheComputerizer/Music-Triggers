@@ -12,6 +12,7 @@ import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceMan
 import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.ChannelClient;
@@ -56,8 +57,10 @@ public class ChannelHelper {
         PLAYER_MAP.put(playerID,globalData.initHelper(isClient));
     }
 
-    public static @Nullable ChannelAPI findChannel(String playerID, String channelName) {
-        ChannelHelper helper = PLAYER_MAP.get(playerID);
+    public static @Nullable ChannelAPI findChannel(String playerID, boolean isClient, String channelName) {
+        MTRef.logDebug("Finding channel {} for player {} on the {} side",channelName,playerID,isClient ? "client" : "server");
+        ChannelHelper helper = isClient ? getClientHelper(playerID) : getServerHelper(playerID);
+        MTRef.logDebug("Found helper? {}",Objects.nonNull(helper));
         return Objects.nonNull(helper) ? helper.findChannel(globalData,channelName) : null;
     }
 
@@ -220,6 +223,7 @@ public class ChannelHelper {
     @Getter private final Map<String,ChannelAPI> channels;
     @Getter private final Set<Toggle> toggles;
     @Getter private final boolean client;
+    @Setter @Getter private boolean syncable;
 
     public ChannelHelper(boolean client) {
         this.channels = new HashMap<>();

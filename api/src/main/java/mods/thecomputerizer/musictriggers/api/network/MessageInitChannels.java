@@ -26,18 +26,20 @@ public class MessageInitChannels<CTX> extends MessageAPI<CTX> {
         this.global = global;
         this.toggles = toggles;
         this.channels = getChannelMap(helper);
+        helper.setSyncable(true);
     }
     
     public MessageInitChannels(ByteBuf buf) {
         this.uuid = NetworkHelper.readString(buf);
+        ChannelHelper helper = ChannelHelper.getServerHelper(this.uuid);
         this.global = Toml.readBuf(buf);
         this.toggles = Toml.readBuf(buf);
         this.channels = NetworkHelper.readMapEntries(buf,() -> {
             String key = NetworkHelper.readString(buf);
-            ChannelHelper helper = ChannelHelper.getServerHelper(key);
             ChannelAPI channel = helper.addEmptyChannel(key,this.global.getTable("channels").getTable(key));
             return IterableHelper.getMapEntry(key,new ChannelMessage(channel,buf));
         });
+        helper.setSyncable(true);
     }
     
     Map<String,ChannelMessage> getChannelMap(ChannelHelper helper) {
