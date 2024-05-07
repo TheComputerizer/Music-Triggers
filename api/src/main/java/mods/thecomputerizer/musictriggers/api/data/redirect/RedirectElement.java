@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.api.data.redirect;
 
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
@@ -44,6 +45,11 @@ public class RedirectElement extends ChannelElement {
         this.name = null;
         this.value = null;
     }
+    
+    @Override
+    public String getName() {
+        return this.name+" "+(this.remote ? "=" : "==")+" "+this.value;
+    }
 
     @Override
     public boolean isResource() {
@@ -76,5 +82,18 @@ public class RedirectElement extends ChannelElement {
         NetworkHelper.writeString(buf,this.name);
         NetworkHelper.writeString(buf,this.value);
         buf.writeBoolean(this.remote);
+    }
+    
+    @Override protected TableRef getReferenceData() {
+        return null;
+    }
+    
+    @Override
+    protected Class<? extends ChannelElement> getTypeClass() {
+        return RedirectElement.class;
+    }
+    
+    @Override protected String getSubTypeName() {
+        return "Redirect";
     }
 }

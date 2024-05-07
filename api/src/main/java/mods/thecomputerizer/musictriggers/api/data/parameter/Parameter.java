@@ -2,16 +2,16 @@ package mods.thecomputerizer.musictriggers.api.data.parameter;
 
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
-import lombok.Setter;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.GenericUtils;
 
-import java.util.List;
+import javax.annotation.Nullable;
 
 @Getter
 public abstract class Parameter<T> {
 
     protected final T defaultValue;
-    @Setter protected T value;
+    protected T value;
 
     protected Parameter(T defaultValue) {
         this.defaultValue = defaultValue;
@@ -22,20 +22,18 @@ public abstract class Parameter<T> {
         this.defaultValue = read(buf);
         this.value = read(buf);
     }
+    
+    @Override
+    public boolean equals(Object other) {
+        return other instanceof Parameter<?> && GenericUtils.matches(this.value,((Parameter<?>)other).value);
+    }
 
     public boolean isDefault() {
-        return this.value==this.defaultValue || this.value.toString().equals(this.defaultValue.toString());
+        return GenericUtils.matches(this.value,this.defaultValue);
     }
 
     protected abstract T read(ByteBuf buf);
-
-    public void parseValue(String unparsed) {
-        parseValueInner(unparsed);
-    }
-
-    protected abstract void parseValueInner(String unparsed);
-    
-    public void setListValue(List<?> list) {}
+    public abstract void setValue(@Nullable Object value);
 
     public void write(ByteBuf buf) {
         NetworkHelper.writeString(buf,getClass().getName());

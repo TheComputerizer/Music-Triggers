@@ -5,7 +5,6 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 
 import javax.annotation.Nullable;
-import java.util.Map;
 
 public abstract class BasicTrigger extends TriggerAPI {
 
@@ -16,13 +15,5 @@ public abstract class BasicTrigger extends TriggerAPI {
     @Override
     protected @Nullable Parameter<?> initParameter(String parameter, Parameter<?> defaultParameter) {
         return parameter.equals("priority") ? null : defaultParameter;
-    }
-
-    @Override
-    protected final void initExtraParameters(Map<String, Parameter<?>> map) {}
-
-    @Override
-    public boolean verifyRequiredParameters() {
-        return true;
     }
 }

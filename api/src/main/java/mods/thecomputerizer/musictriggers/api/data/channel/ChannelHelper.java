@@ -64,7 +64,7 @@ public class ChannelHelper {
         return Objects.nonNull(helper) ? helper.findChannel(globalData,channelName) : null;
     }
     
-    public static void forEachHelper(Consumer<ChannelHelper> func) {
+    public static void forEach(Consumer<ChannelHelper> func) {
         PLAYER_MAP.values().forEach(func);
     }
 

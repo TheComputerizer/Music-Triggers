@@ -19,11 +19,6 @@ public class GlobalData implements LoggableAPI {
     private Debug debug;
     private String toggles = "";
 
-    private @Nullable String getStringOrNull(Toml toml, String name) {
-        String val = toml.getValueString(name);
-        return StringUtils.isNotBlank(val) ? val : null;
-    }
-
     public ChannelHelper initHelper(boolean isClient) throws TomlWritingException {
         ChannelHelper helper = new ChannelHelper(isClient);
         helper.load(this.global);

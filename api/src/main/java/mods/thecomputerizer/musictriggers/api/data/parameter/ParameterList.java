@@ -1,69 +1,47 @@
 package mods.thecomputerizer.musictriggers.api.data.parameter;
 
 import io.netty.buffer.ByteBuf;
-import lombok.Getter;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.ClassHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.GenericUtils;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-public class ParameterList<E> extends Parameter<List<Parameter<E>>> {
+public class ParameterList<E> extends Parameter<List<E>> { //TODO Does not currently support nested lists
 
     protected final Class<E> type;
-    @Getter protected final List<E> values;
 
     public ParameterList(Class<E> type, List<E> defaults) {
-        super(ParameterHelper.parameterize(type,defaults));
+        super(defaults);
         this.type = type;
-        this.values = defaults;
     }
 
     @SuppressWarnings("unchecked")
     public ParameterList(ByteBuf buf) {
         super(buf);
         this.type = (Class<E>)ClassHelper.findClass(NetworkHelper.readString(buf));
-        this.values = new ArrayList<>();
-        for(Parameter<E> parameter : getValue()) this.values.add(parameter.value);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected void parseValueInner(String unparsed) {
-        this.value = new ArrayList<>();
-        String[] elements = unparsed.split(",");
-        for(String element : elements) {
-            E e = (E)GenericUtils.parseGenericType(element,this.type);
-            this.value.add(ParameterHelper.parameterize(this.type,e));
-            this.values.add(e);
-        }
-    }
-    
-    @SuppressWarnings({"unchecked","DataFlowIssue"})
-    @Override
-    protected List<Parameter<E>> read(ByteBuf buf) {
-        List<Parameter<E>> parameters = new ArrayList<>();
-        int size = buf.readInt();
-        while(size>0) {
-            Parameter<?> parsed = ParameterHelper.parse(buf);
-            parameters.add((Parameter<E>)parsed);
-            this.values.add((E)parsed.getValue());
-            size--;
-        }
-        return parameters;
     }
     
     @SuppressWarnings("unchecked") @Override
-    public void setListValue(List<?> list) {
-        this.values.clear();
-        this.values.addAll((List<E>)list);
-        setValue(ParameterHelper.parameterize(this.type,this.values));
+    protected List<E> read(ByteBuf buf) {
+        return (List<E>)NetworkHelper.readList(buf,() -> GenericUtils.parseGenericType(NetworkHelper.readString(buf),this.type));
+    }
+    
+    @SuppressWarnings("unchecked") @Override
+    public void setValue(@Nullable Object value) {
+        if(Objects.isNull(value)) return;
+        List<E> list = new ArrayList<>();
+        if(value instanceof List<?>) list.addAll((List<E>)value);
+        else list.add((E)value);
+        this.value = list;
     }
 
     @Override
-    protected void write(ByteBuf buf, List<Parameter<E>> val) {
+    protected void write(ByteBuf buf, List<E> val) {
         NetworkHelper.writeString(buf,this.type.getName());
-        NetworkHelper.writeList(buf,val,p -> p.write(buf));
+        NetworkHelper.writeList(buf,val,e -> NetworkHelper.writeString(buf,e.toString()));
     }
 }

@@ -49,13 +49,19 @@ public class TriggerCombination extends TriggerAPI {
     }
     
     @Override
-    public Parameter<?> getParameter(String name) {
-        return TriggerHelper.getPriorityTrigger(this.channel.getHelper(),this.triggers).getParameter(name);
+    public String getName() {
+        return this.triggers.toString();
     }
     
     @Override
-    protected String getTypeName() {
-        return "Combination"+this.triggers;
+    public Parameter<?> getParameter(String name) {
+        TriggerAPI priority = TriggerHelper.getPriorityTrigger(this.channel.getHelper(),this.triggers);
+        return Objects.nonNull(priority) ? priority.getParameter(name) : super.getParameter(name);
+    }
+    
+    @Override
+    protected String getSubTypeName() {
+        return "Combination";
     }
 
     public boolean isContained(TriggerAPI trigger) {
@@ -67,11 +73,6 @@ public class TriggerCombination extends TriggerAPI {
         for(TriggerAPI trigger : this.triggers)
             if(trigger.isDisabled()) return true;
         return false;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return !isDisabled();
     }
 
     @Override
@@ -110,12 +111,12 @@ public class TriggerCombination extends TriggerAPI {
 
     @Override
     public String toString() {
-        return getTypeName();
+        return getTypeName()+getName();
     }
 
     @Override
     public boolean verifyRequiredParameters() {
-        for(TriggerAPI trigger : triggers) {
+        for(TriggerAPI trigger : this.triggers) {
             if(!trigger.verifyRequiredParameters()) {
                 logError("Unable to construct trigger combination due to 1 or more triggers failing verification!");
                 setParentStatus(trigger,true);

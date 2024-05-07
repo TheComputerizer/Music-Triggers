@@ -1,21 +1,19 @@
 package mods.thecomputerizer.musictriggers.api.data.channel;
 
 import lombok.Getter;
-import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
-import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
+import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 
 /**
  * Used for any piece of channel data for more consistently available shared info
  */
 @Getter
-public abstract class ChannelElement implements ChannelEventHandler, LoggableAPI {
+public abstract class ChannelElement extends ParameterWrapper implements ChannelEventHandler {
 
     protected final ChannelAPI channel;
-    protected final String name;
 
     protected ChannelElement(ChannelAPI channel, String name) {
+        super(name);
         this.channel = channel;
-        this.name = name;
     }
 
     @Override
@@ -31,47 +29,14 @@ public abstract class ChannelElement implements ChannelEventHandler, LoggableAPI
     public String getChannelName() {
         return getChannel().getName();
     }
-
-    public boolean isEnabled() {
-        return this.channel.isEnabled();
+    
+    protected abstract String getSubTypeName();
+    
+    protected final String getTypeName() {
+        return "Channel["+this.channel.getName()+"]: "+getSubTypeName();
     }
 
     public abstract boolean isResource();
-
-    @Override
-    public void logAll(String msg, Object ... args) {
-        MTLogger.logAll("Channel",getChannelName(),msg,args);
-    }
-
-    @Override
-    public void logDebug(String msg, Object ... args) {
-        MTLogger.logDebug("Channel",getChannelName(),msg,args);
-    }
-
-    @Override
-    public void logError(String msg, Object ... args) {
-        MTLogger.logError("Channel",getChannelName(),msg,args);
-    }
-
-    @Override
-    public void logFatal(String msg, Object ... args) {
-        MTLogger.logFatal("Channel",getChannelName(),msg,args);
-    }
-
-    @Override
-    public void logInfo(String msg, Object ... args) {
-        MTLogger.logInfo("Channel",getChannelName(),msg,args);
-    }
-
-    @Override
-    public void logTrace(String msg, Object ... args) {
-        MTLogger.logTrace("Channel",getChannelName(),msg,args);
-    }
-
-    @Override
-    public void logWarn(String msg, Object ... args) {
-        MTLogger.logWarn("Channel",getChannelName(),msg,args);
-    }
 
     @Override
     public void play() {}

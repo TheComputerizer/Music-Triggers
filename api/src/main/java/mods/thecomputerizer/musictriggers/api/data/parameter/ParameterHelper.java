@@ -8,22 +8,18 @@ import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class ParameterHelper {
-
-    public static <E> List<Parameter<E>> parameterize(Class<E> type, List<E> list) {
-        List<Parameter<E>> parameters = new ArrayList<>();
-        for(E element : list) parameters.add(parameterize(type,element));
-        return parameters;
-    }
 
     /**
      * Does not support collections
      */
     @SuppressWarnings("unchecked")
     public static <E> Parameter<E> parameterize(Class<E> type, E element) {
+        if(Collection.class.isAssignableFrom(type))
+            return (Parameter<E>)new ParameterList<>(String.class,(List<String>)element); //TODO Should this really be restricted to lists of strings?
         switch(type.getSimpleName()) {
             case "Boolean": return (Parameter<E>)new ParameterBoolean((Boolean)element);
             case "Byte": return (Parameter<E>)new ParameterByte((Byte)element);

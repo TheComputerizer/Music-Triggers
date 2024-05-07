@@ -1,5 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.data.channel;
 
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
+import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerCombination;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerMerged;
@@ -17,7 +19,11 @@ public class ChannelSync extends ChannelElement {
         super(channel,"channel_sync");
         this.triggersToSync = new HashSet<>();
     }
-
+    
+    @Override protected String getSubTypeName() {
+        return "Sync";
+    }
+    
     @Override
     public boolean isResource() {
         return false;
@@ -39,5 +45,13 @@ public class ChannelSync extends ChannelElement {
     @Override
     public void close() {
         this.triggersToSync.clear();
+    }
+    
+    @Override protected TableRef getReferenceData() {
+        return null;
+    }
+    
+    @Override protected Class<? extends ParameterWrapper> getTypeClass() {
+        return ChannelSync.class;
     }
 }

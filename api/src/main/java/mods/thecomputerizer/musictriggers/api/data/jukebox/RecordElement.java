@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.api.data.jukebox;
 
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
@@ -42,6 +43,11 @@ public class RecordElement extends ChannelElement {
         this.name = null;
         this.key = null;
     }
+    
+    @Override
+    public String getName() {
+        return this.key+" = "+this.name;
+    }
 
     @Override
     public boolean isResource() {
@@ -68,5 +74,17 @@ public class RecordElement extends ChannelElement {
         buf.writeBoolean(this.valid);
         NetworkHelper.writeString(buf,this.key);
         NetworkHelper.writeString(buf, this.name);
+    }
+    
+    @Override protected TableRef getReferenceData() {
+        return null;
+    }
+    
+    @Override protected String getSubTypeName() {
+        return "Jukebox";
+    }
+    
+    @Override protected Class<? extends ChannelElement> getTypeClass() {
+        return RecordElement.class;
     }
 }

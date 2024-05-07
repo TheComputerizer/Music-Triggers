@@ -2,11 +2,13 @@ package mods.thecomputerizer.musictriggers.api.data.channel;
 
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioHelper;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.command.CommandElement;
 import mods.thecomputerizer.musictriggers.api.data.jukebox.RecordElement;
+import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.parameter.UniversalParameters;
 import mods.thecomputerizer.musictriggers.api.data.redirect.RedirectElement;
 import mods.thecomputerizer.musictriggers.api.data.render.CardAPI;
@@ -187,6 +189,14 @@ public class ChannelData extends ChannelElement {
     public Collection<ChannelEventHandler> getPreviousEventHandlers() {
         return getEventHandlers(this.channel.getPreviousTrigger());
     }
+    
+    @Override protected TableRef getReferenceData() {
+        return null;
+    }
+    
+    @Override protected Class<? extends ParameterWrapper> getTypeClass() {
+        return ChannelData.class;
+    }
 
     public @Nullable UniversalParameters getUniversals(Class<? extends ChannelElement> clazz) {
         return this.universalMap.get(clazz);
@@ -207,7 +217,11 @@ public class ChannelData extends ChannelElement {
         addUniversals(map);
         return map;
     }
-
+    
+    @Override protected String getSubTypeName() {
+        return "Data";
+    }
+    
     @Override
     public boolean isResource() {
         return false;

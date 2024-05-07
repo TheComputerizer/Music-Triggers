@@ -3,7 +3,7 @@ package mods.thecomputerizer.musictriggers.api.data.channel;
 public interface ChannelEventHandler {
 
     void activate(); //trigger becomes active
-    void close(); //channel is getting closed and unregistered
+    void close(); //the channel is getting closed and unregistered
     void deactivate(); //trigger is no longer active
     void play(); //audio has started playing
     void playable(); //trigger parameters are met

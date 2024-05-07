@@ -17,7 +17,7 @@ public class AudioHelper {
             String name = songsTable.getName();
             if(name.equals("universal")) {
                 UniversalParameters universal = channel.getData().getUniversals(AudioRef.class);
-                if(Objects.isNull(universal) || !universal.parseParameters(songsTable))
+                if(Objects.isNull(universal) || !universal.parse(songsTable))
                     channel.logError("Failed to parse universal songs");
                 else channel.logInfo("Intialized universal songs data");
             }

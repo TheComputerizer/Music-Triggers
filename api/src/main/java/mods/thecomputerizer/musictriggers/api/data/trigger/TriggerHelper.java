@@ -3,7 +3,6 @@ package mods.thecomputerizer.musictriggers.api.data.trigger;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
-import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.UniversalParameters;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
@@ -57,16 +56,6 @@ public class TriggerHelper {
             if(Objects.nonNull(trigger)) return trigger;
         }
         return null;
-    }
-
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    public static boolean findTriggers(
-            ChannelHelper helper, LoggableAPI logger, String channelName, Collection<TriggerAPI> triggers, Toml table) {
-        return findTriggers(helper.findChannel(logger,channelName),triggers,table);
-    }
-
-    public static boolean findTriggers(@Nullable ChannelAPI channel, Collection<TriggerAPI> triggers, Toml table) {
-        return findTriggers(channel,triggers,table.getValueArray("triggers"));
     }
 
     public static boolean findTriggers(@Nullable ChannelAPI channel, Collection<TriggerAPI> triggers, Collection<?> names) {
@@ -123,7 +112,7 @@ public class TriggerHelper {
         for(Toml triggerTable : table.getAllTables()) {
             if(triggerTable.getName().equals("universal")) {
                 UniversalParameters universal = channel.getData().getUniversals(TriggerAPI.class);
-                if(Objects.isNull(universal) || !universal.parseParameters(triggerTable))
+                if(Objects.isNull(universal) || !universal.parse(triggerTable))
                     channel.logError("Failed to parse universal triggers");
                 else channel.logInfo("Intialized universal trigger data");
             }

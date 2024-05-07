@@ -3,13 +3,12 @@ package mods.thecomputerizer.musictriggers.api.data.trigger;
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
-import mods.thecomputerizer.musictriggers.api.data.MTDataRef.ParameterRef;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventHandler;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
-import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
@@ -17,14 +16,15 @@ import org.apache.commons.lang3.mutable.MutableInt;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.function.Consumer;
 
 import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.*;
 
 @Getter
-public abstract class TriggerAPI extends ParameterWrapper {
+public abstract class TriggerAPI extends ChannelElement {
 
-    private static final Map<TriggerAPI,Map<String,Timer>> TIMER_MAP = new HashMap<>(); // This needs to be static due to super init stuff
+    private static final Map<TriggerAPI,Map<String,Timer>> TIMER_MAP = new HashMap<>(); // This needs to be static due to super stuff
 
     private final Set<TriggerCombination> parents;
     private ResourceContext resourceCtx;
@@ -43,9 +43,8 @@ public abstract class TriggerAPI extends ParameterWrapper {
         setTimer("ticks_before_audio",ACTIVE);
     }
 
-    protected void addTimedParameter(Map<String,Parameter<?>> map, String name, State state, Parameter<?> parameter) {
+    protected void addTimedParameter(String name, State state, Parameter<?> parameter) {
         if(Objects.nonNull(parameter)) {
-            addParameter(map,name,parameter);
             TIMER_MAP.putIfAbsent(this,new HashMap<>());
             TIMER_MAP.get(this).put(name,new Timer(this,name,state));
         }
@@ -131,6 +130,10 @@ public abstract class TriggerAPI extends ParameterWrapper {
         return Misc.equalsAny(name,"persistence","ticks_before_audio","ticks_between_audio") ?
                 ACTIVE : (Misc.equalsAny(name,"active_cooldown","ticks_before_active") ? PLAYABLE : DISABLED);
     }
+    
+    @Override protected TableRef getReferenceData() {
+        return MTDataRef.findTriggerRef(this.name);
+    }
 
     public List<String> getRequiredMods() {
         return Collections.emptyList();
@@ -142,8 +145,8 @@ public abstract class TriggerAPI extends ParameterWrapper {
     }
 
     @Override
-    protected String getTypeName() {
-        return "Trigger["+getName()+"]";
+    protected String getSubTypeName() {
+        return "Trigger";
     }
 
     public boolean hasNonEmptyAudioPool() {
@@ -160,19 +163,13 @@ public abstract class TriggerAPI extends ParameterWrapper {
         setExistingParameterValue("identifier",id);
         return verifyRequiredParameters();
     }
-
+    
     @Override
-    protected Map<String,Parameter<?>> initParameterMap() {
-        Map<String,Parameter<?>> map = new HashMap<>();
-        for(ParameterRef<?> ref : MTDataRef.getParameterRefs(getName())) {
-            String name = ref.getName();
-            Parameter<?> parameter = ref.toParameter();
-            State timeState = getParameterTimeState(name);
-            if(timeState!=DISABLED) addTimedParameter(map,name,timeState,parameter);
-            else addParameter(map,name,parameter);
+    protected void initExtraParameters(Map<String,Parameter<?>> parameters) {
+        for(Entry<String,Parameter<?>> entry : parameters.entrySet()) {
+            State timeState = getParameterTimeState(entry.getKey());
+            if(timeState!=DISABLED) addTimedParameter(entry.getKey(),timeState,entry.getValue());
         }
-        initExtraParameters(map);
-        return map;
     }
 
     public boolean isContained(Collection<TriggerAPI> triggers) {
@@ -214,8 +211,9 @@ public abstract class TriggerAPI extends ParameterWrapper {
 
     }
 
+    @Override
     public boolean parse(Toml table) {
-        if(parseParameters(table)) {
+        if(super.parse(table)) {
             successfullyParsed();
             logInfo("Successfully parsed trigger `{}`",getNameWithID());
             return true;
@@ -246,13 +244,9 @@ public abstract class TriggerAPI extends ParameterWrapper {
         return canPersist();
     }
     
-    @SuppressWarnings("unchecked")
     protected <V> void setExistingParameterValue(String name, V value) {
         Parameter<?> parameter = getParameter(name);
-        if(Objects.nonNull(parameter)) {
-            if(value instanceof List<?>) parameter.setListValue((List<?>)value);
-            else ((Parameter<V>)parameter).setValue(value);
-        }
+        if(Objects.nonNull(parameter)) parameter.setValue(value);
     }
 
     public void setState(State state) {

@@ -4,6 +4,7 @@ import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
+import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import java.io.File;
@@ -42,26 +43,49 @@ public class ChannelInfo extends ChannelElement { //TODO Switch to parameters
 
     public ChannelInfo(ChannelAPI channel, Toml table) {
         super(channel,"channel_info");
-        TableRef ref = MTDataRef.CHANNEL_INFO;
-        this.category = ref.getOrDefault(table,"sound_category");
-        this.commandsPath = ref.getOrDefault(table,"commands");
-        this.excplicitlyOverrides = ref.getOrDefault(table,"explicitly_overrides");
-        this.jukeboxPath = ref.getOrDefault(table,"jukebox");
-        String localPath = ref.getOrDefault(table,"local_folder");
-        this.localFolder = new File(localPath);
-        this.mainPath = ref.getOrDefault(table,"main");
-        this.overridesMusic = ref.getOrDefault(table,"overrides_music");
-        this.pausesOverrides = ref.getOrDefault(table,"pauses_overrides");
-        this.redirectPath = ref.getOrDefault(table,"redirect");
-        this.rendersPath = ref.getOrDefault(table,"renders");
+        if(parse(table)) {
+            this.category = getParameterAsString("sound_category");
+            this.commandsPath = getParameterAsString("commands");
+            this.excplicitlyOverrides = getParameterAsBoolean("explicitly_overrides");
+            this.jukeboxPath = getParameterAsString("jukebox");
+            this.localFolder = new File(getParameterAsString("local_folder"));
+            this.mainPath = getParameterAsString("main");
+            this.overridesMusic = getParameterAsBoolean("overrides_music");
+            this.pausesOverrides = getParameterAsBoolean("pauses_overrides");
+            this.redirectPath = getParameterAsString("redirect");
+            this.rendersPath = getParameterAsString("renders");
+        } else {
+            this.category = "music";
+            this.commandsPath = "commands";
+            this.excplicitlyOverrides = false;
+            this.jukeboxPath = "jukebox";
+            this.localFolder = new File(MTRef.CONFIG_PATH+"/songs");
+            this.mainPath = "main";
+            this.overridesMusic = true;
+            this.pausesOverrides = false;
+            this.redirectPath = "redirect";
+            this.rendersPath = "renders";
+        }
         if(!this.localFolder.exists() && !this.localFolder.mkdirs())
-            logError("Unable to make songs folder at path `{}`! Local files will be unable to load.",localPath);
+            logError("Unable to make songs folder at path `{}`! Local files will be unable to load.",this.localFolder);
     }
 
     public boolean canReadFiles() {
         return Objects.nonNull(this.localFolder) && this.localFolder.exists() && this.localFolder.isDirectory();
     }
-
+    
+    @Override protected TableRef getReferenceData() {
+        return MTDataRef.CHANNEL_INFO;
+    }
+    
+    @Override protected String getSubTypeName() {
+        return "Info";
+    }
+    
+    @Override protected Class<? extends ParameterWrapper> getTypeClass() {
+        return ChannelInfo.class;
+    }
+    
     @Override
     public boolean isResource() {
         return false;

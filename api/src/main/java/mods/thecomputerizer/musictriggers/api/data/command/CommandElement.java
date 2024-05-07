@@ -1,20 +1,18 @@
 package mods.thecomputerizer.musictriggers.api.data.command;
 
 import lombok.Getter;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventRunner;
-import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
-import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
-import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.ServerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 @Getter
 public class CommandElement extends ChannelEventRunner {
@@ -47,28 +45,21 @@ public class CommandElement extends ChannelEventRunner {
         return false;
     }
 
-    private boolean parse(Toml table) {
-        this.literal = table.getValueString("literal");
-        if(!TriggerHelper.findTriggers(getChannel(),this.triggers,table)) {
-            logError("Failed to parse command with literal `{}`",this.literal);
-            return false;
-        }
-        return true;
+    public boolean parse(Toml table) {
+        return super.parse(table) && parseTriggers(this.channel,this.triggers);
     }
-
+    
+    @Override protected TableRef getReferenceData() {
+        return MTDataRef.COMMAND;
+    }
+    
     @Override
     protected Class<? extends ChannelElement> getTypeClass() {
         return CommandElement.class;
     }
-
-    @Override
-    protected String getTypeName() {
+    
+    @Override protected String getSubTypeName() {
         return "Command";
-    }
-
-    @Override
-    protected void initExtraParameters(Map<String,Parameter<?>> map) {
-        addParameter(map,"literal",new ParameterString(""));
     }
 
     @Override

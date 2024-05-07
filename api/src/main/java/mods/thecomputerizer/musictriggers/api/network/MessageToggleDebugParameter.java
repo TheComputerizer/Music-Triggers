@@ -24,7 +24,7 @@ public class MessageToggleDebugParameter<CTX> extends MessageAPI<CTX> {
     
     @Override
     public MessageAPI<CTX> handle(CTX ctx) {
-        ChannelHelper.forEachHelper(helper -> helper.flipDebugParameter(this.name));
+        ChannelHelper.forEach(helper -> helper.flipDebugParameter(this.name));
         return null;
     }
 }

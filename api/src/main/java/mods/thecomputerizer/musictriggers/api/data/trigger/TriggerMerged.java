@@ -134,9 +134,4 @@ public class TriggerMerged extends TriggerAPI {
     public void unplayable() {
         for(TriggerAPI trigger : this.triggers) trigger.unplayable();
     }
-
-    @Override
-    public boolean verifyRequiredParameters() {
-        return true;
-    }
 }

@@ -2,13 +2,12 @@ package mods.thecomputerizer.musictriggers.api.data.channel;
 
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
-import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class ChannelEventRunner extends ParameterWrapper {
+public abstract class ChannelEventRunner extends ChannelElement {
 
     private int timer;
 

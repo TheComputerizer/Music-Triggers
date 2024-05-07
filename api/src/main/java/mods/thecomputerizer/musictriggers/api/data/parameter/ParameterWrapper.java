@@ -1,24 +1,35 @@
 package mods.thecomputerizer.musictriggers.api.data.parameter;
 
+import lombok.Getter;
+import lombok.Setter;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef.ParameterRef;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
-import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
+import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
+import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterNumber;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.GenericUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.Map.Entry;
 
-@SuppressWarnings({"DataFlowIssue","unused"})
-public abstract class ParameterWrapper extends ChannelElement {
+public abstract class ParameterWrapper implements LoggableAPI {
 
+    @Getter protected final String name;
     private final Map<String,Parameter<?>> parameters;
+    @Setter @Getter UniversalParameters universals;
 
-    protected ParameterWrapper(ChannelAPI channel, String name) {
-        super(channel,name);
+    protected ParameterWrapper(String name) {
+        this.name = name;
         this.parameters = Collections.unmodifiableMap(initParameterMap());
+        if(this instanceof UniversalParameters) this.universals = (UniversalParameters)this;
     }
 
     protected void addParameter(Map<String,Parameter<?>> map, String name, @Nullable Parameter<?> parameter) {
@@ -35,16 +46,7 @@ public abstract class ParameterWrapper extends ChannelElement {
 
     public @Nullable Parameter<?> getParameter(String name) {
         Parameter<?> parameter = this.parameters.get(name.equals("id") ? "identifier" : name);
-        if(Objects.nonNull(parameter)) {
-            if(parameter.isDefault() && !(this instanceof UniversalParameters)) {
-                UniversalParameters universals = this.channel.getData().getUniversals(getTypeClass());
-                if(Objects.nonNull(universals)) {
-                    Parameter<?> universal = universals.getParameter(name);
-                    if(Objects.nonNull(universal)) return universal;
-                }
-            }
-        }
-        return parameter;
+        return Objects.isNull(parameter) || !parameter.isDefault() ? parameter : getUniversalParameter(name);
     }
 
     public boolean getParameterAsBoolean(String name) {
@@ -53,7 +55,7 @@ public abstract class ParameterWrapper extends ChannelElement {
         logWarn("Attempting to access non boolean parameter `{}` as a boolean! Things might not get parsed "+
                 "correctly",name);
         if(parameter instanceof ParameterNumber<?>) return ((ParameterNumber<?>)parameter).doubleValue()!=0d;
-        return Boolean.parseBoolean(parameter.getValue().toString());
+        return Objects.nonNull(parameter) && Boolean.parseBoolean(parameter.getValue().toString());
     }
 
     public byte getParameterAsByte(String name) {
@@ -103,13 +105,13 @@ public abstract class ParameterWrapper extends ChannelElement {
                     "substitured, but things may break!",name);
             return Collections.singletonList(parameter.getValue());
         }
-        return ((ParameterList<?>)parameter).getValues();
+        return ((ParameterList<?>)parameter).getValue();
     }
 
     public Number getParameterAsNumber(String name) {
         Parameter<?> parameter = getParameter(name);
-        if(parameter instanceof ParameterNumber<?>) return (Number)parameter.getValue();
-        return getParameterAsNumber(parameter,name);
+        return parameter instanceof ParameterNumber<?> ?
+                (Number)parameter.getValue() : getParameterAsNumber(parameter,name);
     }
 
     /**
@@ -135,10 +137,14 @@ public abstract class ParameterWrapper extends ChannelElement {
         Parameter<?> parameter = getParameter(name);
         return Objects.nonNull(parameter) ? parameter.getValue().toString() : null;
     }
-
-    protected abstract Class<? extends ChannelElement> getTypeClass();
-
+    
+    protected abstract TableRef getReferenceData();
+    protected abstract Class<? extends ParameterWrapper> getTypeClass();
     protected abstract String getTypeName();
+    
+    protected @Nullable Parameter<?> getUniversalParameter(String name) {
+        return Objects.nonNull(this.universals) ? this.universals.getParameter(name) : null;
+    }
 
     public boolean hasAllNonDefaultParameter(String ... names) {
         for(String name : names)
@@ -173,49 +179,52 @@ public abstract class ParameterWrapper extends ChannelElement {
         return Objects.nonNull(getParameter(name));
     }
     
-    @SuppressWarnings("unchecked")
-    private <T> void inheritParameter(Parameter<T> parameter, Object value) {
-        parameter.setValue((T)value);
-    }
-    
     protected void inheritParameters(ParameterWrapper wrapper) {
         for(Entry<String,Parameter<?>> entry : this.parameters.entrySet()) {
             Parameter<?> other = wrapper.getParameter(entry.getKey());
-            if(Objects.nonNull(other)) inheritParameter(entry.getValue(),other.getValue());
+            if(Objects.nonNull(other)) entry.getValue().setValue(other.getValue());
         }
     }
 
-    protected abstract Map<String,Parameter<?>> initParameterMap();
+    protected Map<String,Parameter<?>> initParameterMap() {
+        Map<String,Parameter<?>> map = new HashMap<>();
+        TableRef table = getReferenceData();
+        if(Objects.nonNull(table))
+            for(ParameterRef<?> ref : table.getParameters())
+                map.put(ref.getName(), ref.toParameter());
+        initExtraParameters(map);
+        return map;
+    }
 
     protected @Nullable Parameter<?> initParameter(String parameter, Parameter<?> defaultParameter) {
         return defaultParameter;
     }
-
-    protected abstract void initExtraParameters(Map<String,Parameter<?>> map);
+    
+    protected void initExtraParameters(Map<String,Parameter<?>> map) {}
     
     @Override
     public void logAll(String message, Object ... args) {
-        super.logAll(getTypeName()+": "+message,args);
+        MTLogger.logAll(getTypeName(),getName(),message,args);
     }
     
     @Override
     public void logDebug(String message, Object ... args) {
-        super.logDebug(getTypeName()+": "+message,args);
+        MTLogger.logDebug(getTypeName(),getName(),message,args);
     }
     
     @Override
     public void logError(String message, Object ... args) {
-        super.logError(getTypeName()+": "+message,args);
+        MTLogger.logError(getTypeName(),getName(),message,args);
     }
     
     @Override
     public void logFatal(String message, Object ... args) {
-        super.logFatal(getTypeName()+": "+message,args);
+        MTLogger.logFatal(getTypeName(),getName(),message,args);
     }
     
     @Override
     public void logInfo(String message, Object ... args) {
-        super.logInfo(getTypeName()+": "+message,args);
+        MTLogger.logInfo(getTypeName(),getName(),message,args);
     }
 
     protected void logMissingParameter(String name) {
@@ -232,26 +241,21 @@ public abstract class ParameterWrapper extends ChannelElement {
     
     @Override
     public void logTrace(String message, Object ... args) {
-        super.logTrace(getTypeName()+": "+message,args);
+        MTLogger.logTrace(getTypeName(),getName(),message,args);
     }
     
     @Override
     public void logWarn(String message, Object ... args) {
-        super.logWarn(getTypeName()+": "+message,args);
+        MTLogger.logWarn(getTypeName(),getName(),message,args);
     }
 
     public boolean matchesAll(ParameterWrapper wrapper) {
-        for(Map.Entry<String,Parameter<?>> entry : this.parameters.entrySet()) {
-            String name = entry.getKey();
-            Parameter<?> parameter = entry.getValue();
-            if(wrapper.hasParameter(name) && parameter.getValue().toString().equals(wrapper.getParameter(name).getValue().toString()))
-                continue;
-            return false;
-        }
+        for(Map.Entry<String,Parameter<?>> entry : this.parameters.entrySet())
+            if(!GenericUtils.matches(entry.getValue(),wrapper.getParameter(entry.getKey()))) return false;
         return true;
     }
 
-    protected boolean parseParameters(Toml table) {
+    public boolean parse(Toml table) {
         for(Map.Entry<String,Parameter<?>> entry : this.parameters.entrySet()) {
             String name = entry.getKey();
             if(table.hasEntry(name)) {
@@ -261,14 +265,37 @@ public abstract class ParameterWrapper extends ChannelElement {
         }
         return verifyRequiredParameters();
     }
-
-    @SuppressWarnings("unchecked")
-    protected <T> void setParameterValue(String name, T value, @Nullable Parameter<?> parameter) {
-        if(Objects.nonNull(parameter)) {
-            if(parameter instanceof ParameterList<?>) parameter.setListValue((List<?>)value);
-            else ((Parameter<T>)parameter).setValue(value);
-        } else logWarn("Cannot set value for paramenter `{}` that does not exist in {}!",name,getTypeName());
+    
+    public boolean parseTriggers(ChannelHelper helper, String channel, Collection<TriggerAPI> triggers) {
+        return parseTriggers(helper,channel,triggers,"triggers");
+    }
+    
+    public boolean parseTriggers(ChannelHelper helper, String channel, Collection<TriggerAPI> triggers, String parameterName) {
+        return parseTriggers(helper.findChannel(this,channel),triggers,parameterName);
+    }
+    
+    public boolean parseTriggers(ChannelAPI channel, Collection<TriggerAPI> triggers) {
+        return parseTriggers(channel,triggers,"triggers");
+    }
+    
+    public boolean parseTriggers(ChannelAPI channel, Collection<TriggerAPI> triggers, String parameterName) {
+        return parseTriggers(channel,triggers,getParameterAsList(parameterName));
+    }
+    
+    protected boolean parseTriggers(ChannelAPI channel, Collection<TriggerAPI> triggers, Collection<?> triggerRefs) {
+        if(!TriggerHelper.findTriggers(channel,triggers,triggerRefs)) {
+            logError("Failed to parse 1 or more triggers!");
+            return false;
+        }
+        return true;
     }
 
-    public abstract boolean verifyRequiredParameters();
+    protected <T> void setParameterValue(String name, T value, @Nullable Parameter<?> parameter) {
+        if(Objects.nonNull(parameter)) parameter.setValue(value);
+        else logWarn("Cannot set value for paramenter `{}` that does not exist in {}!",name,getTypeName());
+    }
+    
+    public boolean verifyRequiredParameters() {
+        return true;
+    }
 }

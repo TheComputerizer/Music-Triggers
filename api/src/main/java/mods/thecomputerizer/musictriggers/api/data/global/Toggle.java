@@ -1,11 +1,10 @@
 package mods.thecomputerizer.musictriggers.api.data.global;
 
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
-import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
-import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
-import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
+import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
-import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import java.util.*;
@@ -18,6 +17,7 @@ public class Toggle extends GlobalElement {
     private final To to;
 
     public Toggle(ChannelHelper helper, Toml table) {
+        super("Toggle");
         this.helper = helper;
         this.table = table;
         this.from = new From(this);
@@ -28,19 +28,18 @@ public class Toggle extends GlobalElement {
         this.from.close();
         this.to.close();
     }
-
-    @Override
-    public String getTypeName() {
-        return "Toggle";
+    
+    @Override protected TableRef getReferenceData() {
+        return MTDataRef.TOGGLE;
     }
-
+    
+    @Override
+    protected Class<? extends ParameterWrapper> getTypeClass() {
+        return Toggle.class;
+    }
+    
     public boolean parse() {
         return Objects.nonNull(this.table) && parse(this.table);
-    }
-
-    @Override
-    protected void supplyParameters(Map<String, Parameter<?>> map) {
-        map.put("play_once",new ParameterBoolean(false));
     }
 
     @Override
@@ -56,6 +55,7 @@ public class Toggle extends GlobalElement {
         private final Set<TriggerAPI> triggers;
 
         public From(Toggle parent) {
+            super("Toggle_From");
             this.parent = parent;
             this.triggers = new HashSet<>();
         }
@@ -63,26 +63,14 @@ public class Toggle extends GlobalElement {
         private void close() {
             this.triggers.clear();
         }
-
-        @Override
-        public String getTypeName() {
-            return "Toggle_From";
+        
+        @Override protected TableRef getReferenceData() {
+            return MTDataRef.FROM;
         }
 
         @Override
         public boolean parse(Toml table) {
-            if(!super.parse(table)) return false;
-            if(!TriggerHelper.findTriggers(this.parent.helper,this,getParameterAsString("channel"),this.triggers,table)) {
-                logError("Failed to parse 1 or more triggers in `from` table");
-                return false;
-            }
-            return true;
-        }
-
-        @Override
-        protected void supplyParameters(Map<String,Parameter<?>> map) {
-            map.put("channel",new ParameterString("not_set"));
-            map.put("condition",new ParameterString("active"));
+            return super.parse(table) && parseTriggers(this.parent.helper,getParameterAsString("channel"),this.triggers);
         }
 
         @Override
@@ -106,6 +94,7 @@ public class Toggle extends GlobalElement {
         private final Set<TriggerAPI> triggers;
 
         public To(Toggle parent) {
+            super("Toggle_To");
             this.parent = parent;
             this.triggers = new HashSet<>();
         }
@@ -113,26 +102,14 @@ public class Toggle extends GlobalElement {
         private void close() {
             this.triggers.clear();
         }
-
-        @Override
-        public String getTypeName() {
-            return "Toggle_To";
+        
+        @Override protected TableRef getReferenceData() {
+            return MTDataRef.TO;
         }
 
         @Override
         public boolean parse(Toml table) {
-            if(!super.parse(table)) return false;
-            if(!TriggerHelper.findTriggers(this.parent.helper,this,getParameterAsString("channel"),this.triggers,table)) {
-                logError("Failed to parse 1 or more triggers in `to` table");
-                return false;
-            }
-            return true;
-        }
-
-        @Override
-        protected void supplyParameters(Map<String,Parameter<?>> map) {
-            map.put("channel",new ParameterString("not_set"));
-            map.put("condition",new ParameterString("switch"));
+            return super.parse(table) && parseTriggers(this.parent.helper,getParameterAsString("channel"),this.triggers);
         }
 
         @Override

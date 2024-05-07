@@ -2,6 +2,9 @@ package mods.thecomputerizer.musictriggers.api.data.parameter.primitive;
 
 import io.netty.buffer.ByteBuf;
 
+import javax.annotation.Nullable;
+import java.util.Objects;
+
 public class ParameterInt extends ParameterNumber<Integer> {
 
     public ParameterInt(int defaultValue) {
@@ -16,12 +19,14 @@ public class ParameterInt extends ParameterNumber<Integer> {
     protected Integer read(ByteBuf buf) {
         return buf.readInt();
     }
-
-    @Override
-    protected void parseValueInner(String unparsed) {
-        this.value = Integer.parseInt(unparsed);
+    
+    @Override public void setValue(@Nullable Object value) {
+        if(Objects.isNull(value)) this.value = 0;
+        else if(value instanceof Boolean) this.value = (Boolean)value ? 1 : 0;
+        else if(value instanceof Number) this.value = ((Number)value).intValue();
+        else this.value = Integer.parseInt(value.toString());
     }
-
+    
     @Override
     protected void write(ByteBuf buf, Integer val) {
         buf.writeInt(val);

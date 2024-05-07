@@ -426,11 +426,6 @@ public final class MTDataRef {
         return null;
     }
     
-    public static Set<ParameterRef<?>> getParameterRefs(String trigger) {
-        TableRef ref = findTriggerRef(trigger);
-        return Objects.nonNull(ref) ? ref.parameters : Collections.emptySet();
-    }
-    
     public static void writeToFile(Toml toml, String path) {
         List<String> lines = new ArrayList<>();
         toml.write(lines,0,true);
@@ -525,18 +520,6 @@ public final class MTDataRef {
             for(TableRef ref : this.children)
                 if(name.equals(ref.name)) return ref;
             return null;
-        }
-        
-        public @Nullable ParameterRef<?> findParameter(String name) {
-            if(Objects.isNull(name)) return null;
-            for(ParameterRef<?> ref : this.parameters)
-                if(name.equals(ref.name)) return ref;
-            return null;
-        }
-        
-        @SuppressWarnings({"RedundantCast","DataFlowIssue","unchecked"})
-        public <V> V getOrDefault(Toml table, String name) {
-            return table.getOrSetValue(name,((ParameterRef<V>)findParameter(name)).defaultValue);
         }
     }
     
