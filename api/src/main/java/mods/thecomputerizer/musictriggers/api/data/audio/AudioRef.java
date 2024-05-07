@@ -71,11 +71,12 @@ public class AudioRef extends ChannelElement {
 
     public boolean parse(Toml table) {
         if(super.parse(table) && parseTriggers(this.channel,this.triggers)) {
-            logDebug("Successfully parsed triggers {}",this.triggers);
+            logDebug("Successfully parsed with triggers {}",this.triggers);
             if(table.hasTable("interrupt_handler"))
                 this.interruptHandler = new InterruptHandler(this.channel,table.getTable("interrupt_handler"));
+            return true;
         }
-        logError("Failed to parse audio");
+        logError("Failed to parse");
         return false;
     }
 
@@ -88,11 +89,6 @@ public class AudioRef extends ChannelElement {
     public void setItem(AudioItem item) {}
 
     public void start(TriggerAPI trigger) {}
-
-    @Override
-    public String toString() {
-        return getTypeName();
-    }
 
     public static class InterruptHandler extends ChannelElement {
 

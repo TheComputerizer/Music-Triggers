@@ -34,6 +34,11 @@ public abstract class Parameter<T> {
 
     protected abstract T read(ByteBuf buf);
     public abstract void setValue(@Nullable Object value);
+    
+    @Override
+    public String toString() {
+        return this.value+" (default="+this.defaultValue+")";
+    }
 
     public void write(ByteBuf buf) {
         NetworkHelper.writeString(buf,getClass().getName());

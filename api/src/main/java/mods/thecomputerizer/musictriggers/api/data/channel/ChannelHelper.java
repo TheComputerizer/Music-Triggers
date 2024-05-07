@@ -347,7 +347,7 @@ public class ChannelHelper {
             channel.loadTracks(loadResources);
         }
         this.toggles.removeIf(toggle -> !toggle.parse());
-        globalData.logInfo("Finished parsing data for all channels. Enabling audio playback");
+        globalData.logInfo("Finished parsing channel data! Attempting to load stored audio references");
         loading = false;
     }
     

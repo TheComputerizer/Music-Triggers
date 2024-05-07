@@ -19,7 +19,7 @@ public class MTRef {
     public static final String MODID = "musictriggers";
     public static final String NAME = "Music Triggers";
     public static final Random RANDOM = new Random();
-    public static final String VERSION = "7.0.0+beta-2";
+    public static final String VERSION = "7.0.0+beta-3";
 
     public static void log(Level level, String msg, Object ... args) {
         LOGGER.log(level,msg,args);
@@ -91,13 +91,5 @@ public class MTRef {
 
     public static @Nullable ResourceLocationAPI<?> res(String path) {
         return ResourceHelper.getResource(MODID,path);
-    }
-
-    private static final class MTRefInstance extends Reference {
-
-        private MTRefInstance(boolean client, @Nullable String dependencies, @Nullable Logger logger,
-                              @Nullable String modid, @Nullable String name, @Nullable String version) {
-            super(client,dependencies,logger,modid,name,version);
-        }
     }
 }

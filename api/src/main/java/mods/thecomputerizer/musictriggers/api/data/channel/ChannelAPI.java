@@ -47,7 +47,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     @Override
     public void activate() {
         TriggerAPI activeTrigger = getActiveTrigger();
-        if(Objects.nonNull(activeTrigger)) logInfo("Activated trigger {}",activeTrigger);
+        if(Objects.nonNull(activeTrigger)) logDebug("Activated {}",activeTrigger);
         handleActiveEvent(ChannelEventHandler::activate);
     }
 
@@ -66,7 +66,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     @Override
     public void deactivate() {
         TriggerAPI activeTrigger = getActiveTrigger();
-        if(Objects.nonNull(activeTrigger)) logInfo("Deactivated trigger {}",activeTrigger);
+        if(Objects.nonNull(activeTrigger)) logDebug("Deactivated {}",activeTrigger);
         handleActiveEvent(ChannelEventHandler::deactivate);
     }
 
@@ -198,7 +198,6 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
 
     @Override
     public void stop() {
-        logInfo("Stopping track");
         handleActiveEvent(ChannelEventHandler::stop);
     }
 

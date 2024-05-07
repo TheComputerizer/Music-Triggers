@@ -29,7 +29,7 @@ public abstract class ParameterWrapper implements LoggableAPI {
     protected ParameterWrapper(String name) {
         this.name = name;
         this.parameters = Collections.unmodifiableMap(initParameterMap());
-        if(this instanceof UniversalParameters) this.universals = (UniversalParameters)this;
+        if(this instanceof UniversalParameters) this.universals = null;
     }
 
     protected void addParameter(Map<String,Parameter<?>> map, String name, @Nullable Parameter<?> parameter) {
@@ -46,7 +46,8 @@ public abstract class ParameterWrapper implements LoggableAPI {
 
     public @Nullable Parameter<?> getParameter(String name) {
         Parameter<?> parameter = this.parameters.get(name.equals("id") ? "identifier" : name);
-        return Objects.isNull(parameter) || !parameter.isDefault() ? parameter : getUniversalParameter(name);
+        Parameter<?> universal = getUniversalParameter(name);
+        return Objects.nonNull(parameter) && Objects.nonNull(universal) && !parameter.isDefault() ? universal : parameter;
     }
 
     public boolean getParameterAsBoolean(String name) {
@@ -118,6 +119,7 @@ public abstract class ParameterWrapper implements LoggableAPI {
      * Assumes the parameter has already been verified to not be an instance of ParameterNumber
      */
     protected Number getParameterAsNumber(Parameter<?> parameter, String name) {
+        logInfo("Getting parameter ({},{}) as number",name,parameter);
         if(parameter instanceof ParameterString) {
             logWarn("Attempting to access string parameter `{}` as a number! The type will be assumed to "+
                     "be double",name);
@@ -191,7 +193,7 @@ public abstract class ParameterWrapper implements LoggableAPI {
         TableRef table = getReferenceData();
         if(Objects.nonNull(table))
             for(ParameterRef<?> ref : table.getParameters())
-                map.put(ref.getName(), ref.toParameter());
+                addParameter(map,ref.getName(),ref.toParameter());
         initExtraParameters(map);
         return map;
     }
@@ -250,13 +252,13 @@ public abstract class ParameterWrapper implements LoggableAPI {
     }
 
     public boolean matchesAll(ParameterWrapper wrapper) {
-        for(Map.Entry<String,Parameter<?>> entry : this.parameters.entrySet())
+        for(Entry<String,Parameter<?>> entry : this.parameters.entrySet())
             if(!GenericUtils.matches(entry.getValue(),wrapper.getParameter(entry.getKey()))) return false;
         return true;
     }
 
     public boolean parse(Toml table) {
-        for(Map.Entry<String,Parameter<?>> entry : this.parameters.entrySet()) {
+        for(Entry<String,Parameter<?>> entry : this.parameters.entrySet()) {
             String name = entry.getKey();
             if(table.hasEntry(name)) {
                 Parameter<?> parameter = entry.getValue();
@@ -287,12 +289,18 @@ public abstract class ParameterWrapper implements LoggableAPI {
             logError("Failed to parse 1 or more triggers!");
             return false;
         }
+        if(triggers.isEmpty()) logDebug("No triggers were found! Attempting to load anyways");
         return true;
     }
 
     protected <T> void setParameterValue(String name, T value, @Nullable Parameter<?> parameter) {
         if(Objects.nonNull(parameter)) parameter.setValue(value);
         else logWarn("Cannot set value for paramenter `{}` that does not exist in {}!",name,getTypeName());
+    }
+    
+    @Override
+    public String toString() {
+        return getTypeName()+"["+getName()+"]";
     }
     
     public boolean verifyRequiredParameters() {

@@ -50,7 +50,7 @@ public class TrackLoader {
             incrementQueue();
             manager.loadItem(ref,resultHandler);
         }
-        else logger.logError("Unable to load missing audio reference or load handler!");
+        else logger.logError("Unable to load missing reference or handler!");
     }
 
     public void load(AudioPlayerManager manager, @Nullable String id, @Nullable String title,
@@ -62,7 +62,7 @@ public class TrackLoader {
         File file = Objects.nonNull(path) ? new File(dir,path) : null;
         if(Objects.nonNull(file) && file.exists())
             load(manager,file.getPath(),file.getName(),getResultHandler(audio,path),audio);
-        else audio.logError("Tried to load nonexistant or unreadable file `{}` for audio `{}`!",path,audio.getName());
+        else audio.logError("Tried to load nonexistant or unreadable file {}!",path);
     }
 
     /**
@@ -70,21 +70,21 @@ public class TrackLoader {
      */
     public void loadRemote(AudioPlayerManager manager, AudioRef audio, @Nullable String location) {
         if(Objects.nonNull(location)) load(manager,location,null,getResultHandler(audio,location),audio);
-        else audio.logError("Tried to null remote location for audio `{}`!",audio.getName());
+        else audio.logError("Tried to add null remote location!");
     }
 
     protected void loadFailed(FriendlyException ex, AudioRef audio, String location) {
-        audio.logError("There was an error trying to load `{}` for audio `{}`!",audio.getName(),location,ex);
+        audio.logError("There was an error trying to load {}!",location,ex);
         decrementQueue();
     }
 
     protected void noMatches(AudioRef audio, String location) {
-        audio.logError("No matches from `{}` were found for audio `{}`.",audio.getName(),location);
+        audio.logError("No matches from {} were found",location);
         decrementQueue();
     }
 
     protected void itemLoaded(AudioRef audio, AudioItem item, String type, String location) {
-        audio.logInfo("Successfully loaded {} from `{}` for audio `{}`.",type,location,audio.getName());
+        audio.logInfo("Successfully loaded {} from {}",type,location);
         audio.setItem(item);
         decrementQueue();
     }

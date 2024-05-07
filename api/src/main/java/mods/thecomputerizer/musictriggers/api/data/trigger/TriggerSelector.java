@@ -1,16 +1,16 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger;
 
 import lombok.Getter;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventHandler;
+import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.basic.BasicTrigger;
 
 import javax.annotation.Nullable;
 import java.util.*;
-
-import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.ACTIVE;
 
 @Getter
 public class TriggerSelector extends ChannelElement {
@@ -98,6 +98,18 @@ public class TriggerSelector extends ChannelElement {
                 TriggerHelper.getPriorityTrigger(this.channel.getHelper(),triggers) :
                 new TriggerMerged(this.channel,getPriorityTriggers(triggers));
     }
+    
+    @Override protected TableRef getReferenceData() {
+        return null;
+    }
+    
+    @Override protected String getSubTypeName() {
+        return "Trigger_Selector";
+    }
+    
+    @Override protected Class<? extends ParameterWrapper> getTypeClass() {
+        return TriggerSelector.class;
+    }
 
     public boolean isClient() {
         return this.channel.isClientChannel();
@@ -106,7 +118,7 @@ public class TriggerSelector extends ChannelElement {
     public boolean isPlayable(TriggerAPI trigger) {
         return this.playables.contains(trigger);
     }
-
+    
     @Override
     public boolean isResource() {
         return false;

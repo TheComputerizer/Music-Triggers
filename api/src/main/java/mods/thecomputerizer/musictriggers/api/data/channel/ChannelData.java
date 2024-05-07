@@ -205,7 +205,6 @@ public class ChannelData extends ChannelElement {
     boolean implyTrigger(String name, String id) {
         TriggerAPI trigger = TriggerRegistry.getTriggerInstance(this.channel,name);
         if(Objects.nonNull(trigger) && trigger.imply(id)) {
-            logInfo("Adding implied {}",trigger);
             this.triggers.add(trigger);
             return true;
         }
@@ -233,7 +232,7 @@ public class ChannelData extends ChannelElement {
             String name = ref.getName();
             boolean found = false;
             for(RedirectElement redirect : this.redirects) {
-                if(name.equals(redirect.getName())) {
+                if(name.equals(redirect.getKey())) {
                     found = true;
                     if(redirect.isRemote() || loadResources) ref.loadRemote(redirect.getValue());
                     break;

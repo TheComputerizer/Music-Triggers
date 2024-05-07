@@ -29,7 +29,7 @@ public class TriggerContextServer extends TriggerContext {
     private BiomeAPI<?> biome;
 
     public TriggerContextServer(ChannelAPI channel) {
-        super(channel);
+        super(channel,"server_context");
     }
 
     @Override

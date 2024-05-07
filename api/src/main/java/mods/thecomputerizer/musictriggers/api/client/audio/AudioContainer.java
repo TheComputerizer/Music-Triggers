@@ -225,7 +225,7 @@ public class AudioContainer extends AudioRef {
 
     @Override
     public void stop() {
-        logInfo("Stopping track");
+        logDebug("Stopping track");
         TriggerAPI trigger = this.channel.getActiveTrigger();
         if(Objects.nonNull(trigger)) {
             int fade = trigger.getParameterAsInt("fade_out");

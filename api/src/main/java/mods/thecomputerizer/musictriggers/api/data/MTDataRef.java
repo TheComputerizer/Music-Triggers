@@ -76,11 +76,11 @@ public final class MTDataRef {
             new ParameterRef<>("priority",Integer.MAX_VALUE),
             new ParameterRef<>("trigger_whitelist",new ArrayList<>())));
     public static final TableRef LINK = new TableRef("link",Arrays.asList(
-            new ParameterRef<>("channel","not_set"),
             new ParameterRef<>("inherit_time",true),
             new ParameterRef<>("linked_triggers",new ArrayList<>()),
             new ParameterRef<>("required_triggers",new ArrayList<>()),
-            new ParameterRef<>("resume_after_link",true)));
+            new ParameterRef<>("resume_after_link",true),
+            new ParameterRef<>("target_channel","not_set")));
     public static final TableRef LOOP = new TableRef("loop",Arrays.asList(
             new ParameterRef<>("from",0),
             new ParameterRef<>("loop_count",0),
@@ -119,6 +119,7 @@ public final class MTDataRef {
             new ParameterRef<>("rotation_speed",0d),
             new ParameterRef<>("speed",1d),
             new ParameterRef<>("start_at",0),
+            new ParameterRef<>("triggers",new ArrayList<>()),
             new ParameterRef<>("volume",1f)
     ),INTERRUPT_HANDLER,LOOP);
     public static final TableRef IMAGE_CARD = buildRenderCard("image",
@@ -331,6 +332,7 @@ public final class MTDataRef {
                 new ParameterRef<>("scale_x",1f),
                 new ParameterRef<>("scale_y",1f),
                 new ParameterRef<>("time",100),
+                new ParameterRef<>("triggers",new ArrayList<>()),
                 new ParameterRef<>("vague",false),
                 new ParameterRef<>("vertical_alignment","center"),
                 new ParameterRef<>("x",-1),

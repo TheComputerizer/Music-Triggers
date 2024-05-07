@@ -23,7 +23,7 @@ public class RedirectElement extends ChannelElement {
             "# title == minecraft:sounds/music/menu/menu1.ogg");
 
     private final boolean valid;
-    private String name;
+    private String key;
     private String value;
     private boolean remote;
 
@@ -35,20 +35,33 @@ public class RedirectElement extends ChannelElement {
     public RedirectElement(ChannelAPI channel, ByteBuf buf) {
         super(channel,"redirect_element");
         this.valid = buf.readBoolean();
-        this.name = NetworkHelper.readString(buf);
+        this.key = NetworkHelper.readString(buf);
         this.value = NetworkHelper.readString(buf);
         this.remote = buf.readBoolean();
     }
 
     @Override
     public void close() {
-        this.name = null;
+        this.key = null;
         this.value = null;
     }
     
     @Override
     public String getName() {
-        return this.name+" "+(this.remote ? "=" : "==")+" "+this.value;
+        return this.key+" "+(this.remote ? "=" : "==")+" "+this.value;
+    }
+    
+    @Override protected TableRef getReferenceData() {
+        return null;
+    }
+    
+    @Override protected String getSubTypeName() {
+        return "Redirect";
+    }
+    
+    @Override
+    protected Class<? extends ChannelElement> getTypeClass() {
+        return RedirectElement.class;
     }
 
     @Override
@@ -58,13 +71,13 @@ public class RedirectElement extends ChannelElement {
 
     private boolean parse(String line) {
         if(line.startsWith("#") || !line.contains("=")) return false;
-        this.name = line.substring(0,line.indexOf('=')-1);
+        this.key = line.substring(0,line.indexOf('=')-1);
         if(line.contains("==")) this.value = line.substring(line.indexOf('=')+2).trim();
         else {
             this.remote = true;
             this.value = line.substring(line.indexOf('=')+1).trim();
         }
-        if(StringUtils.isBlank(this.name)) {
+        if(StringUtils.isBlank(this.key)) {
             logWarn("Skipping blank redirect name from line `{}`",line);
             return false;
         }
@@ -72,28 +85,14 @@ public class RedirectElement extends ChannelElement {
             logWarn("Skipping blank redirect value from line `{}`",line);
             return false;
         }
-        logInfo("Successfully stored `{}` from {} in key `{}`",this.value,this.remote ? "remote source" :
-                "resource",this.name);
+        logInfo("Successfully stored {} location",this.remote ? "remote" : "resource");
         return true;
     }
     
     public void write(ByteBuf buf) {
         buf.writeBoolean(this.valid);
-        NetworkHelper.writeString(buf,this.name);
+        NetworkHelper.writeString(buf,this.key);
         NetworkHelper.writeString(buf,this.value);
         buf.writeBoolean(this.remote);
-    }
-    
-    @Override protected TableRef getReferenceData() {
-        return null;
-    }
-    
-    @Override
-    protected Class<? extends ChannelElement> getTypeClass() {
-        return RedirectElement.class;
-    }
-    
-    @Override protected String getSubTypeName() {
-        return "Redirect";
     }
 }

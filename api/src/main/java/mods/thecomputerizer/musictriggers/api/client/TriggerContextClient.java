@@ -32,7 +32,7 @@ public class TriggerContextClient extends TriggerContext {
     private BlockPosAPI<?> pos;
 
     public TriggerContextClient(ChannelAPI channel) {
-        super(channel);
+        super(channel,"client_context");
     }
 
     @Override

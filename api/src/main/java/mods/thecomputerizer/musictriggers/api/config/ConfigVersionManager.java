@@ -18,13 +18,17 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import static mods.thecomputerizer.musictriggers.api.config.MTConfigV6.V6_3_1;
+import static mods.thecomputerizer.musictriggers.api.config.MTConfigV7.V7_0_0_BETA_1;
+import static mods.thecomputerizer.musictriggers.api.config.MTConfigV7.V7_0_0_BETA_3;
+
 public class ConfigVersionManager {
     
     private static final Set<ConfigVersion> VERSIONS = collectVersions();
     public static final ConfigVersion CURRENT = findCurrent();
     
     private static Set<ConfigVersion> collectVersions() {
-        return Collections.unmodifiableSet(new HashSet<>(Arrays.asList(MTConfigV6.V6_3_1,MTConfigV7.V7_0_0_BETA_1)));
+        return Collections.unmodifiableSet(new HashSet<>(Arrays.asList(V6_3_1,V7_0_0_BETA_1,V7_0_0_BETA_3)));
     }
     
     private static ConfigVersion findCurrent() {
@@ -68,8 +72,9 @@ public class ConfigVersionManager {
             global.logInfo("Unable to find matching config mappings to version {}. Searching for a similar "+
                            "version...",version);
             for(ConfigVersion config : similarVersions) {
-                int closest = Objects.nonNull(found) ?
-                        version.getQualifier().getBuild()-found.getVersion().getQualifier().getBuild() : Integer.MAX_VALUE;
+                int build = version.getQualifier().getBuild();
+                int foundBuild = Objects.nonNull(found) ? found.getVersion().getQualifier().getBuild() : 0;
+                int closest = foundBuild>0 && foundBuild<=build ? build-foundBuild : Integer.MAX_VALUE;
                 if(config.hasCloserQualiferThan(config,closest)) found = config;
             }
             if(Objects.isNull(found)) global.logError("Unable to find any config mappings similar to {}",version);
@@ -106,7 +111,7 @@ public class ConfigVersionManager {
         } else fileVersion = findVersion(versionLines.get(0).trim());
         if(Objects.isNull(fileVersion)) CURRENT.logFatal("Unable to remap missing config version!");
         else fileVersion.remap();
-        FileHelper.writeLine(version,CURRENT.version.toString(),false);
+        FileHelper.writeLine(version,MTRef.VERSION,false);
     }
     
     public static void writeDefaults(Toml toml, String name, String path) {

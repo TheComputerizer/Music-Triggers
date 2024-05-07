@@ -1,10 +1,12 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger;
 
 import lombok.Getter;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.nbt.NBTHelper;
 import mods.thecomputerizer.musictriggers.api.data.nbt.mode.NBTMode;
+import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerBiome;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerMob;
@@ -29,8 +31,8 @@ public abstract class TriggerContext extends ChannelElement {
     @Getter protected PlayerAPI<?,?> player;
     protected WorldAPI<?> world;
 
-    protected TriggerContext(ChannelAPI channel) {
-        super(channel,"trigger_context");
+    protected TriggerContext(ChannelAPI channel, String name) {
+        super(channel,name);
         this.syncedTriggers = new HashSet<>();
     }
 
@@ -82,12 +84,24 @@ public abstract class TriggerContext extends ChannelElement {
     protected List<EntityAPI<?,?>> getEntitiesAround(Box box) {
         return hasBoth() ? this.world.getEntitiesInBox(box) : Collections.emptyList();
     }
+    
+    @Override protected TableRef getReferenceData() {
+        return null;
+    }
+    
+    @Override protected String getSubTypeName() {
+        return "Trigger_Context";
+    }
 
     protected boolean getSyncedContext(TriggerAPI trigger) {
         for(TriggerSynced synced : this.syncedTriggers)
             if(synced.matches(trigger))
                 return synced.isPlayableContext(this);
         return false;
+    }
+    
+    @Override protected Class<? extends ParameterWrapper> getTypeClass() {
+        return TriggerContext.class;
     }
 
     protected boolean hasBoth() {

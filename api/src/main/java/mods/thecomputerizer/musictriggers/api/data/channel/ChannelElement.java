@@ -3,6 +3,8 @@ package mods.thecomputerizer.musictriggers.api.data.channel;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 
+import java.util.Objects;
+
 /**
  * Used for any piece of channel data for more consistently available shared info
  */
@@ -27,13 +29,13 @@ public abstract class ChannelElement extends ParameterWrapper implements Channel
     public void deactivate() {}
 
     public String getChannelName() {
-        return getChannel().getName();
+        return Objects.nonNull(this.channel) ? this.channel.getName() : "Unknown";
     }
     
     protected abstract String getSubTypeName();
     
     protected final String getTypeName() {
-        return "Channel["+this.channel.getName()+"]: "+getSubTypeName();
+        return "Channel["+getChannelName()+"]: "+getSubTypeName();
     }
 
     public abstract boolean isResource();
@@ -61,6 +63,11 @@ public abstract class ChannelElement extends ParameterWrapper implements Channel
 
     @Override
     public void tickPlayable() {}
+    
+    @Override
+    public String toString() {
+        return getSubTypeName()+"["+getName()+"]";
+    }
 
     @Override
     public void unplayable() {}

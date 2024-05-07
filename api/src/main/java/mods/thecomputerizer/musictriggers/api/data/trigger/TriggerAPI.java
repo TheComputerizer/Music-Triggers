@@ -9,6 +9,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventHandler;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
+import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
@@ -27,6 +28,7 @@ public abstract class TriggerAPI extends ChannelElement {
     private static final Map<TriggerAPI,Map<String,Timer>> TIMER_MAP = new HashMap<>(); // This needs to be static due to super stuff
 
     private final Set<TriggerCombination> parents;
+    private final Set<Link> links;
     private ResourceContext resourceCtx;
     private State state;
     private int tracksPlayed;
@@ -34,6 +36,7 @@ public abstract class TriggerAPI extends ChannelElement {
     protected TriggerAPI(ChannelAPI channel, String name) {
         super(channel,name);
         this.parents = new HashSet<>();
+        this.links = new HashSet<>();
         this.state = IDLE;
     }
 
@@ -81,6 +84,7 @@ public abstract class TriggerAPI extends ChannelElement {
             TIMER_MAP.remove(this);
         }
         this.parents.clear();
+        this.links.clear();
         this.resourceCtx = null;
         this.state = DISABLED;
         this.tracksPlayed = 0;
@@ -214,8 +218,17 @@ public abstract class TriggerAPI extends ChannelElement {
     @Override
     public boolean parse(Toml table) {
         if(super.parse(table)) {
+            if(table.hasTable("link")) {
+                for(Toml linkTable : table.getTableArray("link")) {
+                    Link link = new Link(this,linkTable);
+                    if(link.valid) {
+                        logDebug("Adding link to triggers Channel[{}]: {}",link.targetChannel.getName(),link.linkedTriggers);
+                        this.links.add(link);
+                    } else logDebug("Skipping invalid link");
+                }
+            }
             successfullyParsed();
-            logInfo("Successfully parsed trigger `{}`",getNameWithID());
+            logInfo("Successfully parsed");
             return true;
         }
         return false;
@@ -303,13 +316,75 @@ public abstract class TriggerAPI extends ChannelElement {
 
     @Override
     public String toString() {
-        return "Trigger["+getNameWithID()+"]";
+        return getSubTypeName()+"["+getNameWithID()+"]";
     }
 
     @Override
     public void unplayable() {
         if(!isDisabled()) setState(State.IDLE);
         clearTimers(PLAYABLE);
+    }
+    
+    @Getter
+    public static class Link extends ChannelElement {
+        
+        private final TriggerAPI parent;
+        private final ChannelAPI targetChannel;
+        private final boolean inheritor;
+        private final boolean resumeAfterLink;
+        private final List<TriggerAPI> linkedTriggers;
+        private final List<TriggerAPI> requiredTriggers;
+        private final boolean valid;
+        
+        protected Link(TriggerAPI parent, Toml table) {
+            super(parent.channel,parent.getNameWithID()+"-link");
+            this.parent = parent;
+            this.linkedTriggers = new ArrayList<>();
+            this.requiredTriggers = new ArrayList<>();
+            if(!parse(table)) {
+                logError("Failed to parse");
+                this.targetChannel = null;
+                this.inheritor = false;
+                this.resumeAfterLink = false;
+                this.valid = false;
+            } else {
+                String channelName = getParameterAsString("target_channel");
+                ChannelAPI channel = this.channel.getHelper().findChannel(this,channelName);
+                if(Objects.isNull(channel)) {
+                    logWarn("Could not find target_channel {}! Falling back to current {}",channelName,this.channel.getName());
+                    this.targetChannel = this.channel;
+                } else this.targetChannel = channel;
+                this.inheritor = getParameterAsBoolean("inherit_time");
+                this.resumeAfterLink = getParameterAsBoolean("resume_after_link");
+                if(!parseTriggers(this.targetChannel,this.linkedTriggers,"linked_triggers")) {
+                    logWarn("Failed to parse linked triggers from channel {}",channelName);
+                    this.valid = false;
+                }
+                else if(!parseTriggers(this.targetChannel,this.requiredTriggers,"required_triggers")) {
+                    logWarn("Failed to parse required triggers");
+                    this.valid = false;
+                }
+                else this.valid = true;
+            }
+        }
+        
+        @Override public void close() {}
+        
+        @Override protected TableRef getReferenceData() {
+            return MTDataRef.LINK;
+        }
+        
+        @Override protected String getSubTypeName() {
+            return "Link";
+        }
+        
+        @Override protected Class<? extends ParameterWrapper> getTypeClass() {
+            return Link.class;
+        }
+        
+        @Override public boolean isResource() {
+            return false;
+        }
     }
 
     @Getter
