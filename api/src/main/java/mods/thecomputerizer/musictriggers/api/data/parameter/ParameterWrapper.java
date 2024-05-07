@@ -10,6 +10,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import javax.annotation.Nullable;
 import java.util.*;
 
+@SuppressWarnings({"DataFlowIssue","unused"})
 public abstract class ParameterWrapper extends ChannelElement {
 
     private final Map<String,Parameter<?>> parameters;
@@ -178,17 +179,52 @@ public abstract class ParameterWrapper extends ChannelElement {
     }
 
     protected abstract void initExtraParameters(Map<String,Parameter<?>> map);
+    
+    @Override
+    public void logAll(String message, Object ... args) {
+        super.logAll(getTypeName()+": "+message,args);
+    }
+    
+    @Override
+    public void logDebug(String message, Object ... args) {
+        super.logDebug(getTypeName()+": "+message,args);
+    }
+    
+    @Override
+    public void logError(String message, Object ... args) {
+        super.logError(getTypeName()+": "+message,args);
+    }
+    
+    @Override
+    public void logFatal(String message, Object ... args) {
+        super.logFatal(getTypeName()+": "+message,args);
+    }
+    
+    @Override
+    public void logInfo(String message, Object ... args) {
+        super.logInfo(getTypeName()+": "+message,args);
+    }
 
     protected void logMissingParameter(String name) {
-        logError("{} is missing a required `{}` parameter!",getTypeName(),name);
+        logError("Missing required `{}` parameter!",name);
     }
 
     protected void logMissingParameters(String ... names) {
-        logError("{} is missing a 1 or more required parameters from {}! (All of these are required)",getTypeName(),TextHelper.arrayToString(", ",(Object[])names));
+        logError("Missing a 1 or more required parameters from {}! (All of these are required)",TextHelper.arrayToString(", ",(Object[])names));
     }
 
     protected void logMissingPotentialParameter(String ... names) {
-        logError("{} is missing a required parameter from {}! (Only 1 of these is required)",getTypeName(),TextHelper.arrayToString(", ",(Object[])names));
+        logError("Missing a required parameter from {}! (Only 1 of these is required)",TextHelper.arrayToString(", ",(Object[])names));
+    }
+    
+    @Override
+    public void logTrace(String message, Object ... args) {
+        super.logTrace(getTypeName()+": "+message,args);
+    }
+    
+    @Override
+    public void logWarn(String message, Object ... args) {
+        super.logWarn(getTypeName()+": "+message,args);
     }
 
     public boolean matchesAll(ParameterWrapper wrapper) {

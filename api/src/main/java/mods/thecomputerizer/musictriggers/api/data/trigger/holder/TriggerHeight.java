@@ -8,6 +8,17 @@ public class TriggerHeight extends HolderTrigger {
     public TriggerHeight(ChannelAPI channel) {
         super(channel,"height");
     }
+    
+    @Override
+    public boolean imply(String id) {
+        try {
+            int level = Integer.parseInt(id);
+            setExistingParameterValue("level",level);
+        } catch(NumberFormatException ex) {
+            logError("Failed to imply level from identifier {} (must be an integer)",id,ex);
+        }
+        return super.imply(id);
+    }
 
     @Override
     public boolean isPlayableContext(TriggerContext ctx) {

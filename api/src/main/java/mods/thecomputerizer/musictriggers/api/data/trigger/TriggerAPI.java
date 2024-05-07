@@ -154,6 +154,11 @@ public abstract class TriggerAPI extends ParameterWrapper {
         Timer timer = TIMER_MAP.containsKey(this) ? TIMER_MAP.get(this).get(name) : null;
         return Objects.nonNull(timer) && timer.hasTime();
     }
+    
+    public boolean imply(String id) {
+        setExistingParameterValue("identifier",id);
+        return verifyRequiredParameters();
+    }
 
     @Override
     protected Map<String,Parameter<?>> initParameterMap() {
@@ -238,6 +243,15 @@ public abstract class TriggerAPI extends ParameterWrapper {
             return true;
         }
         return canPersist();
+    }
+    
+    @SuppressWarnings("unchecked")
+    protected <V> void setExistingParameterValue(String name, V value) {
+        Parameter<?> parameter = getParameter(name);
+        if(Objects.nonNull(parameter)) {
+            if(value instanceof List<?>) parameter.setListValue((List<?>)value);
+            else ((Parameter<V>)parameter).setValue(value);
+        }
     }
 
     public void setState(State state) {

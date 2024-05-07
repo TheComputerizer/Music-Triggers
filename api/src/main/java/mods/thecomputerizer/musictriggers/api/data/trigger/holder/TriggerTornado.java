@@ -11,6 +11,12 @@ public class TriggerTornado extends HolderTrigger {
     public TriggerTornado(ChannelAPI channel) {
         super(channel,"tornado");
     }
+    
+    @Override
+    public boolean imply(String id) {
+        setExistingParameterValue("level",1);
+        return super.imply(id);
+    }
 
     @Override
     public List<String> getRequiredMods() {

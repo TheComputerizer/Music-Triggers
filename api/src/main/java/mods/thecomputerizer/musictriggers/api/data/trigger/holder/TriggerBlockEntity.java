@@ -3,10 +3,18 @@ package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
 
+import java.util.Collections;
+
 public class TriggerBlockEntity extends HolderTrigger {
 
     public TriggerBlockEntity(ChannelAPI channel) {
         super(channel,"blockentity");
+    }
+    
+    @Override
+    public boolean imply(String id) {
+        setExistingParameterValue("resource_name", Collections.singletonList(id));
+        return super.imply(id);
     }
 
     @Override

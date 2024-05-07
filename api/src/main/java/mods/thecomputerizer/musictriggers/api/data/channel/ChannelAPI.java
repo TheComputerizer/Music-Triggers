@@ -113,6 +113,13 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     protected void handlePreviousEvent(Consumer<ChannelEventHandler> event) {
         this.data.getPreviousEventHandlers().forEach(event);
     }
+    
+    public boolean implyTrigger(String name) {
+        int index = name.indexOf('-');
+        String id = index!=-1 ? name.substring(index+1) : "implied";
+        name = index!=-1 ? name.substring(0,index) : name;
+        return this.data.implyTrigger(name,id);
+    }
 
     public abstract boolean isClientChannel();
     public abstract boolean isDeactivating();

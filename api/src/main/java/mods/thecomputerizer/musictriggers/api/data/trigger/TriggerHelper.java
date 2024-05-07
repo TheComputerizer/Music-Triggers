@@ -33,7 +33,7 @@ public class TriggerHelper {
 
     /**
      * Finds a trigger with a matching name-identifier in the specified channel.
-     * If the input channel is null all channels will be iterated through and the first match will be returned.
+     * If the input channel is null, all channels will be iterated through and the first match will be returned.
      * Returns null if no matches are found
      */
     public static @Nullable TriggerAPI findTrigger(ChannelHelper helper, @Nullable ChannelAPI channel, String name) {
@@ -70,10 +70,14 @@ public class TriggerHelper {
     public static boolean findTriggers(@Nullable ChannelAPI channel, Collection<TriggerAPI> triggers, Collection<?> names) {
         if(Objects.isNull(channel) || Objects.isNull(triggers) || Objects.isNull(names) || names.isEmpty()) return false;
         for(Object name : names) {
-            TriggerAPI trigger = findTrigger(channel.getHelper(),channel,name.toString());
+            String nameStr = name.toString();
+            TriggerAPI trigger = findTrigger(channel.getHelper(),channel,nameStr);
             if(Objects.isNull(trigger)) {
-                channel.logWarn("Unknown trigger `{}` in triggers array!");
-                return false;
+                if(channel.implyTrigger(nameStr)) trigger = findTrigger(channel.getHelper(),channel,nameStr);
+                if(Objects.isNull(trigger)) {
+                    channel.logWarn("Unknown trigger `{}` in triggers array!", nameStr);
+                    return false;
+                }
             }
             triggers.add(trigger);
         }

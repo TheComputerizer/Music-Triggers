@@ -11,6 +11,12 @@ public class TriggerMoon extends HolderTrigger {
     public TriggerMoon(ChannelAPI channel) {
         super(channel,"moon");
     }
+    
+    @Override
+    public boolean imply(String id) {
+        setExistingParameterValue("resource_name",Collections.singletonList(id));
+        return super.imply(id);
+    }
 
     @Override
     public List<String> getRequiredMods() {

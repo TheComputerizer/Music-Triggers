@@ -30,7 +30,7 @@ public class AudioContainer extends AudioRef {
 
     private void checkFade(int fade) {
         if(fade>0) {
-            logDebug(audioMsg("Fading in for {} tick{}"),fade,fade>1 ? "s" : "");
+            logDebug("Fading in for {} tick{}",fade,fade>1 ? "s" : "");
             setFade(-fade);
         }
         this.channel.setTrackVolume(getVolume());
@@ -38,28 +38,28 @@ public class AudioContainer extends AudioRef {
 
     private AudioTrack checkState(@Nullable AudioTrack track) {
         if(Objects.isNull(track)) {
-            logWarn(audioMsg("Unable to get audio track!"));
+            logWarn("Unable to get audio track!");
             return null;
         }
         switch(track.getState()) {
             case LOADING: {
-                logWarn(audioMsg("Tried to play track that was still loading!"));
+                logWarn("Tried to play track that was still loading!");
                 return null;
             }
             case FINISHED: {
-                logDebug(audioMsg("Cloning finished track"));
+                logDebug("Cloning finished track");
                 return track.makeClone();
             }
             case PLAYING: {
-                logInfo(audioMsg("Tried to play track that was already playing!"));
+                logInfo("Tried to play track that was already playing!");
                 return null;
             }
             case SEEKING: {
-                logInfo(audioMsg("Trying to play track from seeking state"));
+                logInfo("Trying to play track from seeking state");
                 return track;
             }
             case STOPPING: {
-                logInfo(audioMsg("Trying to play track while it is stopping?"));
+                logInfo("Trying to play track while it is stopping?");
                 return track;
             }
             default: return track;
@@ -159,7 +159,7 @@ public class AudioContainer extends AudioRef {
         output = setRotation(filters,output,format);
         Collections.reverse(filters);
         int size = filters.size();
-        logDebug(audioMsg("Initialized {} audio filter{}"),size,size==1 ? "" : "s");
+        logDebug("Initialized {} audio filter{}",size,size==1 ? "" : "s");
         return filters;
     }
 
@@ -172,7 +172,7 @@ public class AudioContainer extends AudioRef {
             List<AudioFilter> filters, FloatPcmAudioFilter output, AudioDataFormat format) {
         double rotationSpeed = getParameterAsDouble("rotation_speed");
         if(rotationSpeed!=0d) {
-            logDebug(audioMsg("Setting rotation speed to {}"),rotationSpeed);
+            logDebug("Setting rotation speed to {}",rotationSpeed);
             output = new RotationPcmAudioFilter(output,format.sampleRate).setRotationSpeed(rotationSpeed);
             filters.add(output);
         }
@@ -185,11 +185,11 @@ public class AudioContainer extends AudioRef {
         double pitch = getParameterAsDouble("pitch");
         double speed = getParameterAsDouble("speed");
         if(pitch!=1d && pitch>0d) {
-            logDebug(audioMsg("Setting pitch to {}"),pitch);
+            logDebug("Setting pitch to {}",pitch);
             needsTimeScale = true;
         }
         if(speed!=1d && speed>0d) {
-            logDebug(audioMsg("Setting speed to {}"),speed);
+            logDebug("Setting speed to {}",speed);
             needsTimeScale = true;
         }
         if(needsTimeScale) {
@@ -203,7 +203,7 @@ public class AudioContainer extends AudioRef {
         long position = getParameterAsLong("start_at");
         if(position>0L)  {
             track.setPosition(position);
-            logDebug(audioMsg("Set track position to {}"),position);
+            logDebug("Set track position to {}",position);
         }
     }
 
@@ -211,7 +211,7 @@ public class AudioContainer extends AudioRef {
     public void start(TriggerAPI trigger) {
         AudioPlayer player = this.channel.getPlayer();
         if(Objects.isNull(player)) {
-            logFatal(audioMsg("Cannot play track on missing audio player!"));
+            logFatal("Cannot play track on missing audio player!");
             return;
         }
         AudioTrack track = checkState(getTrack());
@@ -220,12 +220,12 @@ public class AudioContainer extends AudioRef {
         setPosition(track);
         player.setFilterFactory(this::setFilters);
         player.playTrack(track);
-        logInfo(audioMsg("Playing track"));
+        logInfo("Playing track");
     }
 
     @Override
     public void stop() {
-        logInfo(audioMsg("Stopping track"));
+        logInfo("Stopping track");
         TriggerAPI trigger = this.channel.getActiveTrigger();
         if(Objects.nonNull(trigger)) {
             int fade = trigger.getParameterAsInt("fade_out");

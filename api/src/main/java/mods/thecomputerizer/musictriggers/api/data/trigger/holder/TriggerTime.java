@@ -6,6 +6,7 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterFloat;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 
 import java.util.Map;
 
@@ -13,6 +14,14 @@ public class TriggerTime extends HolderTrigger {
 
     public TriggerTime(ChannelAPI channel) {
         super(channel,"time");
+    }
+    
+    @Override
+    public boolean imply(String id) {
+        if(Misc.equalsAny(id,"day","night","sunrise","sunset"))
+            setExistingParameterValue("time_bundle",id);
+        else logError("Unable to imply time_bundle from identifier {} (accepts day,night,sunrise,sunset)",id);
+        return super.imply(id);
     }
 
     @Override

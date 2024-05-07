@@ -42,7 +42,7 @@ public class AudioPool extends AudioRef {
             this.valid = true;
         }
         else {
-            logWarn(ref.audioMsg("Unable to create audio pool {} from reference! The triggers were not recognized."),name);
+            ref.logWarn("Unable to create audio pool {} from reference! The triggers were not recognized.",name);
             this.valid = false;
         }
     }
@@ -150,13 +150,13 @@ public class AudioPool extends AudioRef {
         }
         if(nextQueue instanceof AudioPool) nextQueue.queue();
         this.queuedAudio = nextQueue;
-        logInfo(audioMsg("Queued reference {}"),this.queuedAudio);
+        logInfo("Queued reference {}",this.queuedAudio);
     }
 
     @Override
     public void start(TriggerAPI trigger) {
         if(Objects.nonNull(this.queuedAudio)) this.queuedAudio.start(trigger);
-        else logDebug(audioMsg("Why was the queued reference null"));
+        else logDebug("Why was the queued reference null");
     }
 
     @Override

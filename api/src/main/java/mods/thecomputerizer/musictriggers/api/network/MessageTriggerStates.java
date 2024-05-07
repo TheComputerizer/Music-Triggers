@@ -37,7 +37,7 @@ public class MessageTriggerStates<CTX> extends MessageAPI<CTX> { //TODO Combine 
 
     @Override
     public void encode(ByteBuf buf) {
-        NetworkHelper.writeString(buf,this.channel.getHelper().getSyncID());
+        NetworkHelper.writeString(buf,this.channel.getHelper().getPlayerID());
         NetworkHelper.writeString(buf,this.channel.getName());
         NetworkHelper.writeCollection(buf,this.snapshots,snapshot -> snapshot.trigger.encode(buf));
     }

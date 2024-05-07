@@ -29,10 +29,6 @@ public class AudioRef extends ParameterWrapper {
         this.triggers = new ArrayList<>();
     }
 
-    public String audioMsg(String msg) {
-        return getTypeName()+": "+msg;
-    }
-
     @Override
     public void close() {
         this.triggers.clear();
@@ -86,9 +82,9 @@ public class AudioRef extends ParameterWrapper {
     public boolean parse(Toml table) {
         List<?> triggerRefs = table.getValueArray("triggers");
         if(!TriggerHelper.findTriggers(getChannel(),this.triggers,triggerRefs)) {
-            logError(audioMsg("Failed to parse triggers {}!"),triggerRefs);
+            logError("Failed to parse triggers {}!",triggerRefs);
             return false;
-        } else logDebug(audioMsg("Successfully parsed triggers {}"),this.triggers);
+        } else logDebug("Successfully parsed triggers {}",this.triggers);
         if(table.hasTable("interrupt_handler"))
             this.interruptHandler = new InterruptHandler(this,table.getTable("interrupt_handler"));
         return parseParameters(table);
@@ -142,7 +138,7 @@ public class AudioRef extends ParameterWrapper {
         private List<TriggerAPI> parseTriggers(AudioRef ref, List<?> triggerRefs) {
             List<TriggerAPI> triggers = new ArrayList<>();
             if(!triggerRefs.isEmpty() && !TriggerHelper.findTriggers(getChannel(),triggers,triggerRefs)) {
-                logError(ref.audioMsg("Failed to parse 1 or more triggers in "+this.name+" table!"));
+                ref.logError("Failed to parse 1 or more triggers in {} table!",this.name);
                 return Collections.emptyList();
             }
             return triggers;

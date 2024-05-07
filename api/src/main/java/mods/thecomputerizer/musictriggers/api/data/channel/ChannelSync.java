@@ -3,9 +3,13 @@ package mods.thecomputerizer.musictriggers.api.data.channel;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
 import mods.thecomputerizer.musictriggers.api.network.MessageTriggerStates;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 
 public class ChannelSync extends ChannelElement {
 
@@ -28,7 +32,11 @@ public class ChannelSync extends ChannelElement {
     public void send() {
         if(this.triggersToSync.isEmpty()) return;
         MessageTriggerStates<?> msg = new MessageTriggerStates<>(this.channel,this.triggersToSync);
-        if(this.channel.isClientChannel()) MTNetwork.sendToServer(msg,false);
+        if(this.channel.isClientChannel()) {
+            MinecraftAPI mc = TILRef.getClientSubAPI(ClientAPI::getMinecraft);
+            if(Objects.nonNull(mc) && Objects.nonNull(mc.getPlayer()))
+                MTNetwork.sendToServer(msg,false);
+        }
         else MTNetwork.sendToClient(msg,false,this.channel.getPlayerEntity());
         this.triggersToSync.clear();
     }

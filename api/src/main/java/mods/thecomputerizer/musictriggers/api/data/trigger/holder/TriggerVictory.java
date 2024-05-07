@@ -10,6 +10,18 @@ public class TriggerVictory extends HolderTrigger {
     }
     
     @Override
+    public boolean imply(String id) {
+        try {
+            int persistence = Integer.parseInt(id);
+            if(persistence<=0) throw new NumberFormatException("Integer must be positive");
+            setExistingParameterValue("persistence",persistence);
+        } catch(NumberFormatException ex) {
+            logError("Failed to imply persistance from identifier {} (must be a positive integer)",id,ex);
+        }
+        return super.imply(id);
+    }
+    
+    @Override
     public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveVictory(getParameterAsInt("victory_timeout"));
     }

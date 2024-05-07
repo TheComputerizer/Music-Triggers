@@ -8,6 +8,12 @@ public class TriggerZones extends HolderTrigger {
     public TriggerZones(ChannelAPI channel) {
         super(channel,"zones");
     }
+    
+    @Override
+    public boolean imply(String id) {
+        logError("Trigger must be explicitly defined");
+        return false;
+    }
 
     @Override
     public boolean isPlayableContext(TriggerContext ctx) {

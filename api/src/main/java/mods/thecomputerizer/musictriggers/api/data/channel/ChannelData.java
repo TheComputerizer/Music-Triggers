@@ -15,6 +15,7 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerCombination;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerMerged;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerRegistry;
 import mods.thecomputerizer.musictriggers.api.data.trigger.basic.BasicTrigger;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import org.apache.commons.lang3.StringUtils;
@@ -189,6 +190,16 @@ public class ChannelData extends ChannelElement {
 
     public @Nullable UniversalParameters getUniversals(Class<? extends ChannelElement> clazz) {
         return this.universalMap.get(clazz);
+    }
+    
+    boolean implyTrigger(String name, String id) {
+        TriggerAPI trigger = TriggerRegistry.getTriggerInstance(this.channel,name);
+        if(Objects.nonNull(trigger) && trigger.imply(id)) {
+            logInfo("Adding implied {}",trigger);
+            this.triggers.add(trigger);
+            return true;
+        }
+        return false;
     }
 
     private Map<Class<? extends ChannelElement>,UniversalParameters> initUniversals() {

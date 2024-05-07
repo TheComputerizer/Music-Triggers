@@ -16,6 +16,12 @@ public class TriggerMob extends HolderTrigger {
         super(channel,"mob");
         this.validEntities = new HashSet<>();
     }
+    
+    @Override
+    public boolean imply(String id) {
+        setExistingParameterValue("resource_name",Collections.singletonList(id));
+        return super.imply(id);
+    }
 
     public boolean hasCorrectSize(int min, int max) {
         int size = this.validEntities.size();

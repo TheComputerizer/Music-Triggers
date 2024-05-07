@@ -8,6 +8,12 @@ public class TriggerAdvancement extends HolderTrigger {
     public TriggerAdvancement(ChannelAPI channel) {
         super(channel,"advancement");
     }
+    
+    @Override
+    public boolean imply(String id) {
+        logError("Trigger must be explicitly defined");
+        return false;
+    }
 
     @Override
     public boolean isPlayableContext(TriggerContext ctx) {

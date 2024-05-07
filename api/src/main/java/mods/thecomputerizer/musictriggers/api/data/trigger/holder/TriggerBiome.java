@@ -16,6 +16,12 @@ public class TriggerBiome extends HolderTrigger {
     public TriggerBiome(ChannelAPI channel) {
         super(channel,"biome");
     }
+    
+    @Override
+    public boolean imply(String id) {
+        setExistingParameterValue("resource_name", Collections.singletonList(id));
+        return super.imply(id);
+    }
 
     @Override
     public boolean isPlayableContext(TriggerContext ctx) {
