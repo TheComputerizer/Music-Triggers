@@ -47,6 +47,10 @@ fancyGradle {
     }
 }
 
+sourceSets {
+    main.output.resourcesDir = rootProject.file('legacy\\1.12\\run_client\\MTResources')
+}
+
 minecraft {
     mappings channel: 'stable', version: mappings_version
     accessTransformer = file("src\\main\\resources\\META-INF\\${mod_accesstransformer}")
@@ -89,25 +93,23 @@ repositories {
 }
 
 dependencies {
-    println 'Hello from 1.12.2'
-
     //noinspection VulnerableLibrariesLocal
     minecraft("net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}")
 
     runtimeOnly(project(':api'))
 
     //mod support & utility
-    //runtimeOnly(fg.deobf("net.darkhax.bookshelf:Bookshelf-${minecraft_version}:${bookshelf_version}"))
-    //runtimeOnly(fg.deobf("curse.maven:champions-307152:${champions_version}"))
-    //runtimeOnly(fg.deobf("curse.maven:coroutil-237749:${coroutil_version}"))
-    //runtimeOnly(fg.deobf("net.darkhax.gamestages:GameStages-${minecraft_version}:${gamestages_version}"))
-    //runtimeOnly(fg.deobf("curse.maven:hei-557549:${hei_version}"))
-    //runtimeOnly(fg.deobf("curse.maven:infernalmobs-227875:${infernal_version}"))
-    //runtimeOnly(fg.deobf("curse.maven:nyx-349214:${nyx_version}"))
-    //runtimeOnly(fg.deobf("curse.maven:resourcereloader-303876:${reloader_version}"))
-    //runtimeOnly(fg.deobf("curse.maven:sereneseasons-291874:${seasons_version}"))
-    //runtimeOnly(fg.deobf("curse.maven:top-245211:${top_version}"))
-    //runtimeOnly(fg.deobf("curse.maven:weather2-695602:${weather_version}"))
+    runtimeOnly(fg.deobf("net.darkhax.bookshelf:Bookshelf-${minecraft_version}:${bookshelf_version}"))
+    runtimeOnly(fg.deobf("curse.maven:champions-307152:${champions_version}"))
+    runtimeOnly(fg.deobf("curse.maven:coroutil-237749:${coroutil_version}"))
+    runtimeOnly(fg.deobf("net.darkhax.gamestages:GameStages-${minecraft_version}:${gamestages_version}"))
+    runtimeOnly(fg.deobf("curse.maven:hei-557549:${hei_version}"))
+    runtimeOnly(fg.deobf("curse.maven:infernalmobs-227875:${infernal_version}"))
+    runtimeOnly(fg.deobf("curse.maven:nyx-349214:${nyx_version}"))
+    runtimeOnly(fg.deobf("curse.maven:resourcereloader-303876:${reloader_version}"))
+    runtimeOnly(fg.deobf("curse.maven:sereneseasons-291874:${seasons_version}"))
+    runtimeOnly(fg.deobf("curse.maven:top-245211:${top_version}"))
+    runtimeOnly(fg.deobf("curse.maven:weather2-695602:${weather_version}"))
 }
 
 reobf {
@@ -123,6 +125,14 @@ processResources {
 
 processTestResources {
     from(project(':legacy').processTestResources.outputs)
+}
+
+compileJava {
+    source(project(':api').sourceSets.main.allJava)
+}
+
+compileTestJava {
+    source(project(':api').sourceSets.test.allJava)
 }
 
 jar {

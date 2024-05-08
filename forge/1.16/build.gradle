@@ -1,5 +1,3 @@
-import org.apache.tools.ant.filters.ReplaceTokens
-
 buildscript {
     repositories {
         gradlePluginPortal() {
@@ -69,11 +67,57 @@ minecraft {
     }
 }
 
+repositories {
+    maven {
+        name = 'CurseMaven'
+        url = uri('https://www.cursemaven.com')
+        content {
+            includeGroup 'curse.maven'
+        }
+    }
+    maven {
+        name = 'BlameJared'
+        url = uri('https://maven.blamejared.com')
+        content {
+            includeGroup 'net.darkhax.bookshelf'
+            includeGroup 'net.darkhax.gamestages'
+        }
+    }
+    maven {
+        name = 'Modding Legacy'
+        url = uri('https://maven.moddinglegacy.com/maven')
+        content {
+            includeGroup 'com.legacy'
+        }
+    }
+
+    maven {
+        name = 'Progwml6 Maven'
+        url = uri('https://dvs1.progwml6.com/files/maven/')
+        content {
+            includeGroup 'mezz.jei'
+        }
+    }
+}
+
 dependencies {
     //noinspection VulnerableLibrariesLocal
     minecraft("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
 
-    runtimeOnly(project(':api'))
+    implementation(project(':api')) //TODO Figure out why this needs implementation while 1.12.2 can be runtimeOnly
+
+    //mod support dependencies
+    runtimeOnly(fg.deobf("curse.maven:betterweather-400714:${betterweather_version}"))
+    runtimeOnly(fg.deobf("curse.maven:blueskies-312918:${blueskies_version}"))
+    runtimeOnly(fg.deobf("net.darkhax.bookshelf:Bookshelf-${minecraft_version}:${bookshelf_version}"))
+    runtimeOnly(fg.deobf("curse.maven:champions-307152:${champions_version}"))
+    runtimeOnly(fg.deobf("curse.maven:configured-457570:${configured_version}"))
+    runtimeOnly(fg.deobf("curse.maven:dsurround-238891:${dsurround_version}"))
+    runtimeOnly(fg.deobf("curse.maven:enhancedcelestials-438447:${enhancedcelestials_version}"))
+    runtimeOnly(fg.deobf("net.darkhax.gamestages:GameStages-Forge-${minecraft_version}:${gamestages_version}"))
+    runtimeOnly(fg.deobf("mezz.jei:jei-${minecraft_version}:${jei_version}"))
+    runtimeOnly(fg.deobf("curse.maven:sereneseasons-291874:${seasons_version}"))
+    runtimeOnly(fg.deobf("com.legacy:structure-gel:${minecraft_version}-${structuregel_version}"))
 }
 
 mixin {
@@ -95,6 +139,14 @@ processTestResources {
     from(project(':forge').processTestResources.outputs)
 }
 
+compileJava {
+    source(project(':api').sourceSets.main.allJava)
+}
+
+compileTestJava {
+    source(project(':api').sourceSets.test.allJava)
+}
+
 jar {
     manifest {
         attributes([
@@ -106,8 +158,6 @@ jar {
         ])
     }
 }
-
-ReplaceTokens
 
 shadowJar {
     from(project(':forge').jar.archiveFile.collect { zipTree(it) })

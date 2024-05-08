@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.api;
 
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
-import mods.thecomputerizer.theimpossiblelibrary.api.core.Reference;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 import org.apache.logging.log4j.Level;
@@ -11,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import javax.annotation.Nullable;
 import java.util.Random;
 
+@SuppressWarnings("unused")
 public class MTRef {
 
     public static final String CONFIG_PATH = "config/MusicTriggers";
