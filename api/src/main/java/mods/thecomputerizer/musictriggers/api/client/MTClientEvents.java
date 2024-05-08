@@ -106,7 +106,7 @@ public class MTClientEvents {
     }
 
     public static void queueReload(@Nullable MinecraftAPI mc, int ticks) { //TODO mark ChannelHelper as reloading & save log position
-        if(ChannelHelper.isReloading()) return;
+        if(ChannelHelper.getLoader().isLoading()) return;
         if(Objects.nonNull(mc))
             mc.sendMessageToPlayer(getReloadMessage("queue",new Object[]{ticks},
                     TextStyleAPI::italics,TextStyleAPI::red));

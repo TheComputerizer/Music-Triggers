@@ -9,7 +9,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
-public class ChannelServer extends ChannelAPI { //TODO implement this
+public class ChannelServer extends ChannelAPI {
 
     public ChannelServer(ChannelHelper helper, Toml table) {
         super(helper,table);
@@ -73,5 +73,10 @@ public class ChannelServer extends ChannelAPI { //TODO implement this
     @Override
     public void setTrackVolume(float volume) {
         logError("Tried to set track volume on the server!");
+    }
+    
+    @Override public boolean shouldBlockMusicTicker() {
+        logError("Tried query the vanilla music ticker on the server!");
+        return false;
     }
 }

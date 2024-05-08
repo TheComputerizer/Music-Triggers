@@ -5,6 +5,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientEntryPoint;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.TILDev;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.audio.MusicTicker;
 import net.minecraft.client.resources.FolderResourcePack;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
@@ -45,7 +46,7 @@ public class MTClientEntryPoint1_12_2 extends ClientEntryPoint {
     
     @Override public void onConstructed() {
         if(TILDev.DEV) {
-            MTRef.logInfo("Attmpting to manually define dev resources for 1.12.2");
+            MTRef.logInfo("Attmpting to manually define dev resources");
             File resourceDir = new File("MTResources");
             if(resourceDir.exists() && resourceDir.isDirectory()) {
                 FileHelper.writeLines(new File(resourceDir,"pack.mcmeta"),MCMETA_LINES,false);
@@ -56,4 +57,19 @@ public class MTClientEntryPoint1_12_2 extends ClientEntryPoint {
     }
     
     @Override public void onClientSetup() {} //Undelegated
+    
+    @Override public void onLoadComplete() {
+        Minecraft mc = Minecraft.getMinecraft();
+        setMusicTicker(mc,new MTMusicTicker1_12_2(mc));
+    }
+    
+    private void setMusicTicker(Minecraft mc, MusicTicker ticker) {
+        MTRef.logInfo("Fixing vanilla MusicTicker");
+        try {
+            ObfuscationReflectionHelper.setPrivateValue(Minecraft.class,mc,ticker,"musicTicker");
+            MTRef.logInfo("ticker class is now {}",mc.getMusicTicker().getClass());
+        } catch(Exception ex) {
+            MTRef.logError("Failed to replace MusicTicker",ex);
+        }
+    }
 }

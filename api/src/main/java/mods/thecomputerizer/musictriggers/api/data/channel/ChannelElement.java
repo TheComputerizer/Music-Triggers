@@ -22,7 +22,7 @@ public abstract class ChannelElement extends ParameterWrapper implements Channel
     public void activate() {}
 
     public boolean checkResource() {
-        return !isResource() || (this.channel.isClientChannel() && ChannelHelper.resourcesLoaded());
+        return !isResource() || (this.channel.isClientChannel() && ChannelHelper.getLoader().areResourcesLoaded());
     }
 
     @Override

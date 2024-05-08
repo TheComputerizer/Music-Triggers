@@ -8,16 +8,17 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Objects;
 
 @Getter
-public class ChannelInfo extends ChannelElement { //TODO Switch to parameters
+public class ChannelInfo extends ChannelElement {
 
     public static void writeExampleData(Toml table) {
-        //AbstractType type = holder.addComment(table, Arrays.asList("Auto-generated example channel - you should "+
-        //        "probably replace this with your own.","Note that each channel can only play 1 sound at a time and "+
-        //        "trigger context is not shared between channels other than via links and toggles.","It is recommended "+
-        //        "you keep all triggers and songs on a single channel unless you have some specific use case"));
+        table.addComments(Arrays.asList("Auto-generated example channel - you should probably replace this with your "+
+                "own.","Note that each channel can only play 1 sound at a time and trigger context is not shared "+
+                "between channels other than via links and toggles.","It is recommended you keep all triggers and "+
+                "songs on a single channel unless you have some specific use case"));
         table.addEntry("commands","commands");
         table.addEntry("explicitly_overrides",false);
         table.addEntry("jukebox","jukebox");
@@ -50,7 +51,7 @@ public class ChannelInfo extends ChannelElement { //TODO Switch to parameters
             this.jukeboxPath = getParameterAsString("jukebox");
             this.localFolder = new File(getParameterAsString("local_folder"));
             this.mainPath = getParameterAsString("main");
-            this.overridesMusic = getParameterAsBoolean("overrides_music");
+            this.overridesMusic = !getParameterAsBoolean("play_normal_music");
             this.pausesOverrides = getParameterAsBoolean("pauses_overrides");
             this.redirectPath = getParameterAsString("redirect");
             this.rendersPath = getParameterAsString("renders");

@@ -213,6 +213,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
 
     public abstract void setCategoryVolume(float volume);
     public abstract void setTrackVolume(float volume);
+    public abstract boolean shouldBlockMusicTicker();
 
     @Override
     public void stop() {

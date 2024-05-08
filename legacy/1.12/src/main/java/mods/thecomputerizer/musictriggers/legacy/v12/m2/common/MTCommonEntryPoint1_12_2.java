@@ -6,6 +6,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientEntryPoint;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.CommonEntryPoint;
 
 import javax.annotation.Nullable;
+import java.util.Objects;
 
 @SuppressWarnings("unused")
 public class MTCommonEntryPoint1_12_2 extends CommonEntryPoint {
@@ -23,6 +24,13 @@ public class MTCommonEntryPoint1_12_2 extends CommonEntryPoint {
     }
     
     @Override public void onConstructed() {
-        this.delegatedClient.onConstructed();
+        this.onLoadComplete();
+        MTRef.logInfo("Running version specific onConstructed for 1.12.2");
+        if(Objects.nonNull(this.delegatedClient)) this.delegatedClient.onConstructed();
+    }
+    
+    @Override public void onLoadComplete() {
+        MTRef.logInfo("Running version onLoadComplete for 1.12.2");
+        if(Objects.nonNull(this.delegatedClient)) this.delegatedClient.onLoadComplete();
     }
 }

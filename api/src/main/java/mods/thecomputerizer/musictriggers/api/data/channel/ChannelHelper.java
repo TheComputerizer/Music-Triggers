@@ -55,10 +55,7 @@ public class ChannelHelper {
 
     private static final Map<String,ChannelHelper> PLAYER_MAP = new HashMap<>();
     @Getter private static final GlobalData globalData = new GlobalData();
-    @Getter private static boolean loading = true;
-    private static boolean resourcesLoaded;
-    private static boolean reloadingClient;
-    private static boolean reloadingConfig; //TODO Add a dedicated reload tracker
+    @Getter private static final LoadTracker loader = new LoadTracker();
 
     public static @Nullable ChannelAPI findChannel(String playerID, boolean isClient, String channelName) {
         ChannelHelper helper = isClient ? getClientHelper(playerID) : getServerHelper(playerID);
@@ -76,6 +73,10 @@ public class ChannelHelper {
     
     public static ChannelHelper getHelper(String uuid, boolean client) {
         return client ? getClientHelper(uuid) : getServerHelper(uuid);
+    }
+    
+    public static ChannelHelper getClientHelper() {
+        return PLAYER_MAP.get("CLIENT");
     }
     
     private static ChannelHelper getClientHelper(String uuid) {
@@ -109,10 +110,6 @@ public class ChannelHelper {
         PLAYER_MAP.get("CLIENT").setDebugInfo(debug);
     }
     
-    public static boolean isReloading() {
-        return reloadingClient;
-    }
-    
     public static void loadConfig(String playerID, boolean client) throws TomlWritingException {
         try {
             ConfigVersionManager.queryRemap();
@@ -123,12 +120,14 @@ public class ChannelHelper {
         ChannelHelper helper = new ChannelHelper(playerID,client);
         helper.loadFromFile(globalData.getGlobal());
         PLAYER_MAP.put(playerID,helper);
+        loader.finishLoading();
     }
     
     public static void loadMessage(MessageInitChannels<?> init) {
         ChannelHelper helper = globalData.loadFromInit(init);
         PLAYER_MAP.put(init.getUuid(),helper);
         helper.setSyncable(true);
+        loader.finishLoading();
     }
 
     public static void onClientConnected() {
@@ -140,13 +139,11 @@ public class ChannelHelper {
     }
 
     public static void onReloadQueued() {
-        loading = true;
         for(Entry<String,ChannelHelper> entry : PLAYER_MAP.entrySet()) {
             String playerID = entry.getKey();
             ChannelHelper helper = entry.getValue();
             if(StringUtils.isNotBlank(playerID) && Objects.nonNull(helper)) {
-                reloadingClient = helper.client;
-                reloadingConfig = helper.fromConfig;
+                loader.queueReload(helper.client,helper.fromConfig);
                 helper.close();
             }
         }
@@ -154,27 +151,28 @@ public class ChannelHelper {
     }
 
     public static void onResourcesLoaded() {
-        resourcesLoaded = true;
         for(ChannelHelper helper : PLAYER_MAP.values())
-            if(helper.client)
+            if(helper.client) {
+                loader.setResourcesLoaded(true);
                 for(ChannelAPI channel : helper.channels.values())
                     channel.onResourcesLoaded();
+            }
     }
 
     public static void reload() {
-        if(reloadingConfig) {
+        if(loader.isConfig()) {
             try {
-                if(reloadingClient) { {
+                if(loader.isClient()) { {
                     loadConfig("CLIENT",true);
                     MTNetwork.sendToServer(PLAYER_MAP.get("CLIENT").getInitMessage(),false);
                 }
-                } else //TODO
+                } else
                     for(PlayerAPI<?,?> player : getPlayers(false))
                         loadConfig(player.getUUID().toString(),false);
             } catch(TomlWritingException ex) {
                 MTRef.logFatal("Failed to reload config files!",ex);
             }
-        } else requestChannelInformation(!reloadingClient);
+        } else requestChannelInformation(!loader.isClient());
     }
     
     public static void requestChannelInformation(boolean toClient) {
@@ -187,12 +185,8 @@ public class ChannelHelper {
         }
     }
 
-    public static boolean resourcesLoaded() {
-        return resourcesLoaded;
-    }
-
     public static void tick(@Nullable CustomTick ticker) {
-        if(!loading && Objects.nonNull(ticker) && ticker.isEquivalentTPS(getTickRate()))
+        if(!loader.isLoading() && Objects.nonNull(ticker) && ticker.isEquivalentTPS(getTickRate()))
             for(ChannelHelper helper : PLAYER_MAP.values()) helper.tickChannels();
     }
 
@@ -273,6 +267,12 @@ public class ChannelHelper {
             if(channel instanceof ChannelClient)
                 ((ChannelClient)channel).addDebugElements(info,elements);
     }
+    
+    public boolean canVanillaMusicPlay() {
+        for(ChannelAPI channel : this.channels.values())
+            if(channel.shouldBlockMusicTicker()) return false;
+        return true;
+    }
 
     public void close() {
         for(ChannelAPI channel : this.channels.values()) channel.close();
@@ -301,12 +301,6 @@ public class ChannelHelper {
         return Objects.nonNull(debug) && debug.getParameterAsBoolean(name);
     }
 
-    @SuppressWarnings("unchecked")
-    public List<String> getDebugList(String name) {
-        Debug debug = getDebug();
-        return Objects.nonNull(debug) ? (List<String>)debug.getParameterAsList(name) : Collections.emptyList();
-    }
-
     public Number getDebugNumber(String name) {
         Debug debug = getDebug();
         return Objects.nonNull(debug) ? debug.getParameterAsNumber(name) : 0;
@@ -324,7 +318,7 @@ public class ChannelHelper {
         return new MessageInitChannels<>(globalData.getGlobal(),toggles,this);
     }
     
-    public @Nullable PlayerAPI<?,?> getPlayer() { //TODO Store player reference in this class?
+    public @Nullable PlayerAPI<?,?> getPlayer() {
         for(ChannelAPI channel : this.channels.values()) return channel.getPlayerEntity();
         return null;
     }
@@ -360,9 +354,9 @@ public class ChannelHelper {
         this.toggles.removeIf(toggle -> !toggle.parse());
         globalData.logInfo("Finished loading external channel data");
         if(this.client) globalData.logInfo("Attempting to load stored audio references");
-        for(ChannelAPI channel : this.channels.values()) channel.loadTracks(this.client && resourcesLoaded);
+        for(ChannelAPI channel : this.channels.values())
+            channel.loadTracks(this.client && loader.areResourcesLoaded());
         this.fromConfig = false;
-        loading = false;
     }
 
     private void initChannel(String name, Toml info) {
@@ -398,9 +392,9 @@ public class ChannelHelper {
         this.toggles.removeIf(toggle -> !toggle.parse());
         globalData.logInfo("Finished parsing channel data");
         if(this.client) globalData.logInfo("Attempting to load stored audio references");
-        for(ChannelAPI channel : this.channels.values()) channel.loadTracks(this.client && resourcesLoaded);
+        for(ChannelAPI channel : this.channels.values())
+            channel.loadTracks(this.client && loader.areResourcesLoaded());
         this.fromConfig = true;
-        loading = false;
     }
     
     private void parseToggles(Toml toggles) {
@@ -419,10 +413,6 @@ public class ChannelHelper {
             for(ChannelAPI channel : this.channels.values())
                 channel.getSelector().getContext().initSync();
         this.syncable = sync;
-    }
-
-    public void syncChannels() {
-        for(ChannelAPI channel : this.channels.values()) channel.sync();
     }
 
     public void tickChannels() {

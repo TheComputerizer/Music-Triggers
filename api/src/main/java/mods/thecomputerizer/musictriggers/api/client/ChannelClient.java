@@ -209,7 +209,11 @@ public class ChannelClient extends ChannelAPI {
             updateVolume();
         }
     }
-
+    
+    @Override public boolean shouldBlockMusicTicker() {
+        return this.getInfo().isOverridesMusic() && Objects.nonNull(this.playingPool);
+    }
+    
     @Override
     public void stopped() {
         this.player.stopTrack();

@@ -12,6 +12,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.core.loader.MultiVersionMod
 import javax.annotation.Nullable;
 import java.io.File;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
 @MultiVersionMod(modid = MTRef.MODID, modName = MTRef.NAME, modVersion = MTRef.VERSION)
@@ -19,6 +20,7 @@ public class MTCommonEntryPoint extends CommonEntryPoint {
     
     private static final Class<CommonEntryPoint> versionClass = findVersionEntryClass(CoreAPI.INSTANCE);
     
+    @SuppressWarnings("unchecked")
     private static Class<CommonEntryPoint> findVersionEntryClass(CoreAPI instance) {
         String pkg = "mods.thecomputerizer.musictriggers.";
         switch(instance.getModLoader()) {
@@ -74,7 +76,6 @@ public class MTCommonEntryPoint extends CommonEntryPoint {
         }
         String classpath = pkg+".common."+cls;
         try {
-            //noinspection unchecked
             Class<CommonEntryPoint> clazz = (Class<CommonEntryPoint>)Class.forName(classpath);
             MTRef.logInfo("Successfully located versioned entrypoint {}",clazz);
             return clazz;
@@ -103,6 +104,11 @@ public class MTCommonEntryPoint extends CommonEntryPoint {
     public @Nullable ClientEntryPoint delegatedClientEntry() {
         return new MTClientEntryPoint();
     }
+    
+    private void distributeHook(Consumer<CommonEntryPoint> hook) {
+        if(Objects.nonNull(this.versionInstance)) hook.accept(this.versionInstance);
+        if(Objects.nonNull(this.delegatedClient)) hook.accept(this.delegatedClient);
+    }
 
     @Override
     protected String getModID() {
@@ -121,14 +127,17 @@ public class MTCommonEntryPoint extends CommonEntryPoint {
             throw new RuntimeException("Unable to create file directory at "+MTRef.CONFIG_PATH+"! Music Triggers "+
                     "is unable to load any further.");
         MTNetwork.initCommon();
-        if(Objects.nonNull(this.versionInstance)) this.versionInstance.onConstructed();
-        if(Objects.nonNull(this.delegatedClient)) this.delegatedClient.onConstructed();
+        distributeHook(CommonEntryPoint::onConstructed);
     }
 
     @Override
     public void onPreRegistration() {
         MTServerEvents.init();
-        if(Objects.nonNull(this.versionInstance)) this.versionInstance.onPreRegistration();
-        if(Objects.nonNull(this.delegatedClient)) this.delegatedClient.onPreRegistration();
+        distributeHook(CommonEntryPoint::onPreRegistration);
+    }
+    
+    @Override
+    public void onLoadComplete() {
+        distributeHook(CommonEntryPoint::onLoadComplete);
     }
 }
