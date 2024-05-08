@@ -11,13 +11,22 @@ import javax.annotation.Nullable;
 import java.util.Objects;
 
 public class MTNetwork {
-
-    public static void init() {
-        MTRef.logInfo("Initializing network info");
+    
+    public static void initClient() {
+        MTRef.logInfo("Initializing client network");
+        NetworkHandler.registerMsgToServer(MessageInitChannels.class,MessageInitChannels::new);
+        NetworkHandler.registerMsgToServer(MessageReload.class,MessageReload::new);
+        NetworkHandler.registerMsgToServer(MessageRequestChannels.class, MessageRequestChannels::new);
+        NetworkHandler.registerMsgToServer(MessageTriggerStates.class,MessageTriggerStates::new);
+    }
+    
+    public static void initCommon() {
+        MTRef.logInfo("Initializing common network");
+        NetworkHandler.registerMsgToClient(MessageInitChannels.class,MessageInitChannels::new);
+        NetworkHandler.registerMsgToClient(MessageRequestChannels.class, MessageRequestChannels::new);
         NetworkHandler.registerMsgToClient(MessageReload.class,MessageReload::new);
         NetworkHandler.registerMsgToClient(MessageToggleDebugParameter.class,MessageToggleDebugParameter::new);
         NetworkHandler.registerMsgToClient(MessageTriggerStates.class,MessageTriggerStates::new);
-        NetworkHandler.registerMsgToServer(MessageTriggerStates.class,MessageTriggerStates::new);
     }
     
     public static <D> void sendToServer(MessageAPI<?> msg, boolean login) {

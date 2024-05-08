@@ -19,6 +19,7 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerMerged;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerRegistry;
 import mods.thecomputerizer.musictriggers.api.data.trigger.basic.BasicTrigger;
+import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels.ChannelMessage;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import org.apache.commons.lang3.StringUtils;
 
@@ -185,10 +186,6 @@ public class ChannelData extends ChannelElement {
             if(active.isContained(playables)) handlers.addAll(getEventHandlers(active));
         return Collections.unmodifiableSet(handlers);
     }
-
-    public Collection<ChannelEventHandler> getPreviousEventHandlers() {
-        return getEventHandlers(this.channel.getPreviousTrigger());
-    }
     
     @Override protected TableRef getReferenceData() {
         return null;
@@ -205,6 +202,7 @@ public class ChannelData extends ChannelElement {
     boolean implyTrigger(String name, String id) {
         TriggerAPI trigger = TriggerRegistry.getTriggerInstance(this.channel,name);
         if(Objects.nonNull(trigger) && trigger.imply(id)) {
+            trigger.successfullyParsed();
             this.triggers.add(trigger);
             return true;
         }
@@ -224,6 +222,17 @@ public class ChannelData extends ChannelElement {
     @Override
     public boolean isResource() {
         return false;
+    }
+    
+    public void load(ChannelMessage message) {
+        logInfo("Loading external data");
+        readRedirect(message.getRedirects());
+        readMain(message.getTomls().get("main"));
+        readRenders(message.getTomls().get("renders"));
+        readCommands(message.getTomls().get("commands"));
+        readJukebox(message.getRecords());
+        organize();
+        logInfo("Finished loading external data");
     }
 
     public void loadTracks(boolean loadResources) {
@@ -269,7 +278,7 @@ public class ChannelData extends ChannelElement {
     }
 
     public void parse() {
-        logInfo("Parsing channel data");
+        logInfo("Parsing local data");
         ChannelInfo info = this.channel.getInfo();
         readRedirect(ChannelHelper.openTxt(getFilePath(info.getRedirectPath()),this));
         readMain(ChannelHelper.openToml(getFilePath(info.getMainPath()),true,this));
@@ -277,7 +286,7 @@ public class ChannelData extends ChannelElement {
         readCommands(ChannelHelper.openToml(getFilePath(info.getCommandsPath()),true,this));
         readJukebox(ChannelHelper.openTxt(getFilePath(info.getJukeboxPath()),this));
         organize();
-        logInfo("Finished parsing channel data");
+        logInfo("Finished parsing local data");
     }
 
     public void readCommands(@Nullable Toml commands) {

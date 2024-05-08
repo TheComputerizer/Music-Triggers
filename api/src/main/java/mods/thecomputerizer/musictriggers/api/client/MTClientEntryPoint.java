@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.api.client;
 
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
+import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientEntryPoint;
 
 import javax.annotation.Nullable;
@@ -34,6 +35,7 @@ public class MTClientEntryPoint extends ClientEntryPoint {
     public void onConstructed() {
         debugInfo = new MTDebugInfo(null);
         ChannelHelper.initClient(debugInfo);
+        MTNetwork.initClient();
     }
 
     @Override

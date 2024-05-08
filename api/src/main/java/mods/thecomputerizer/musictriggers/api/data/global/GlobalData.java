@@ -4,6 +4,7 @@ import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
+import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlWritingException;
 import org.apache.commons.lang3.StringUtils;
@@ -18,10 +19,11 @@ public class GlobalData implements LoggableAPI {
     private Toml global;
     private Debug debug;
     private String toggles = "";
-
-    public ChannelHelper initHelper(boolean isClient) throws TomlWritingException {
-        ChannelHelper helper = new ChannelHelper(isClient);
-        helper.load(this.global);
+    
+    public ChannelHelper loadFromInit(MessageInitChannels<?> init) {
+        ChannelHelper helper = new ChannelHelper(init.getUuid(),init.isClient());
+        this.global = init.getGlobal();
+        helper.loadFromInit(init);
         return helper;
     }
 

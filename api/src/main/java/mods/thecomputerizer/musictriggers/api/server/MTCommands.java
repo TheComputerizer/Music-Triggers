@@ -23,9 +23,14 @@ public class MTCommands extends CommandAPI {
     @Override
     public void execute(MinecraftServerAPI<?> server, CommandSenderAPI<?> sender, String... strings) {
         ChannelHelper.getGlobalData().logInfo("Executing command on server");
-        if("mtreload".equals(this.name)) MTNetwork.sendToClient(new MessageReload<>(),false,sender.getSender());
-        else if("mtdebug".equals(this.name))
+        if("mtreload".equals(this.name)) {
+            ChannelHelper.getGlobalData().logInfo("Sending reload packet");
+            MTNetwork.sendToClient(new MessageReload<>(),false,sender.getSender());
+        }
+        else if("mtdebug".equals(this.name)) {
+            ChannelHelper.getGlobalData().logInfo("Sending debug packet");
             MTNetwork.sendToClient(new MessageToggleDebugParameter<>("enable_debug_info"),false,sender.getSender());
+        }
     }
 
     @Override

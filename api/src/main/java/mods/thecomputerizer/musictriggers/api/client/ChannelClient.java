@@ -121,15 +121,14 @@ public class ChannelClient extends ChannelAPI {
     public AudioPlayer getPlayer() {
         return this.player;
     }
-
+    
+    @Override protected String getTypeName() {
+        return "ClientChannel";
+    }
+    
     @Override
     public boolean isClientChannel() {
         return true;
-    }
-
-    @Override
-    public boolean isDeactivating() {
-        return this.deactivating;
     }
 
     @Override

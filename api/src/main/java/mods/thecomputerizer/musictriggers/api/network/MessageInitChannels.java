@@ -1,27 +1,32 @@
 package mods.thecomputerizer.musictriggers.api.network;
 
 import io.netty.buffer.ByteBuf;
+import lombok.Getter;
+import lombok.SneakyThrows;
+import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
-import mods.thecomputerizer.musictriggers.api.data.jukebox.RecordElement;
-import mods.thecomputerizer.musictriggers.api.data.redirect.RedirectElement;
 import mods.thecomputerizer.theimpossiblelibrary.api.iterator.IterableHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.message.MessageAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlParsingException;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+@Getter
 public class MessageInitChannels<CTX> extends MessageAPI<CTX> {
     
+    final boolean client;
     final String uuid;
     final Toml global;
     final Toml toggles;
     final Map<String,ChannelMessage> channels;
     
     public MessageInitChannels(Toml global, Toml toggles, ChannelHelper helper) {
+        this.client = helper.isClient();
         this.uuid = helper.getPlayerID();
         this.global = global;
         this.toggles = toggles;
@@ -29,17 +34,16 @@ public class MessageInitChannels<CTX> extends MessageAPI<CTX> {
         helper.setSyncable(true);
     }
     
+    @SneakyThrows
     public MessageInitChannels(ByteBuf buf) {
+        this.client = !buf.readBoolean();
         this.uuid = NetworkHelper.readString(buf);
-        ChannelHelper helper = ChannelHelper.getServerHelper(this.uuid);
         this.global = Toml.readBuf(buf);
         this.toggles = Toml.readBuf(buf);
         this.channels = NetworkHelper.readMapEntries(buf,() -> {
             String key = NetworkHelper.readString(buf);
-            ChannelAPI channel = helper.addEmptyChannel(key,this.global.getTable("channels").getTable(key));
-            return IterableHelper.getMapEntry(key,new ChannelMessage(channel,buf));
+            return IterableHelper.getMapEntry(key, new ChannelMessage(buf));
         });
-        helper.setSyncable(true);
     }
     
     Map<String,ChannelMessage> getChannelMap(ChannelHelper helper) {
@@ -50,39 +54,49 @@ public class MessageInitChannels<CTX> extends MessageAPI<CTX> {
     
     @Override
     public void encode(ByteBuf buf) {
+        buf.writeBoolean(this.client);
+        NetworkHelper.writeString(buf,this.uuid);
         this.global.write(buf);
         this.toggles.write(buf);
-        NetworkHelper.writeMap(buf,this.channels,name -> NetworkHelper.writeString(buf,name),
-                               channel -> channel.write(buf));
+        NetworkHelper.writeMap(buf,this.channels,name -> NetworkHelper.writeString(buf,name),channel -> channel.write(buf));
     }
     
     @Override
     public MessageAPI<CTX> handle(CTX ctx) {
+        ChannelHelper.loadMessage(this);
         return null;
     }
     
-    static class ChannelMessage {
+    @Getter
+    public static class ChannelMessage {
         
         final Map<String,Toml> tomls;
-        final Set<RedirectElement> redirects;
-        final Set<RecordElement> records;
+        final Set<String> redirects;
+        final Set<String> records;
         
         ChannelMessage(ChannelAPI channel) {
             this.tomls = channel.getSourceMap();
-            this.redirects = channel.getData().getRedirects();
-            this.records = channel.getData().getRecords();
+            this.redirects = channel.getRedirectLines();
+            this.records = channel.getRecordLines();
         }
         
-        ChannelMessage(ChannelAPI channel, ByteBuf buf) {
-            this.tomls = NetworkHelper.readMap(buf,() -> NetworkHelper.readString(buf),() -> Toml.readBuf(buf));
-            this.redirects = NetworkHelper.readSet(buf,() -> new RedirectElement(channel,buf));
-            this.records = NetworkHelper.readSet(buf,() -> new RecordElement(channel,buf));
+        ChannelMessage(ByteBuf buf) {
+            this.tomls = NetworkHelper.readMap(buf,() -> NetworkHelper.readString(buf),() -> {
+                try {
+                    return Toml.readBuf(buf);
+                } catch(TomlParsingException ex) {
+                    MTRef.logError("Failed to read TOML from buffer!",ex);
+                    return Toml.getEmpty();
+                }
+            });
+            this.redirects = NetworkHelper.readSet(buf,() -> NetworkHelper.readString(buf));
+            this.records = NetworkHelper.readSet(buf,() -> NetworkHelper.readString(buf));
         }
         
         void write(ByteBuf buf) {
             NetworkHelper.writeMap(buf,this.tomls,key -> NetworkHelper.writeString(buf,key),toml -> toml.write(buf));
-            NetworkHelper.writeSet(buf,this.redirects,redirect -> redirect.write(buf));
-            NetworkHelper.writeSet(buf,this.records,record -> record.write(buf));
+            NetworkHelper.writeSet(buf,this.redirects,redirect -> NetworkHelper.writeString(buf,redirect));
+            NetworkHelper.writeSet(buf,this.records,record -> NetworkHelper.writeString(buf,record));
         }
     }
 }

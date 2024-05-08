@@ -5,19 +5,19 @@ import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
-import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventHandler;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.basic.BasicTrigger;
 
 import javax.annotation.Nullable;
 import java.util.*;
 
+import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.IDLE;
+import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.PLAYABLE;
+
 @Getter
 public class TriggerSelector extends ChannelElement {
 
     protected final TriggerContext context;
-    protected Collection<TriggerAPI> playables;
-    protected Collection<TriggerAPI> previousPlayables;
     protected TriggerAPI activeTrigger;
     protected TriggerAPI previousTrigger;
     protected AudioPool activePool;
@@ -26,14 +26,11 @@ public class TriggerSelector extends ChannelElement {
     private boolean cleared;
 
     public TriggerSelector(ChannelAPI channel, TriggerContext context) {
-        super(channel,"trigger_selector");
+        super(channel,"selector");
         this.context = context;
-        this.playables = Collections.emptySet();
     }
 
     public void clear() {
-        this.playables = Collections.emptyList();
-        this.previousPlayables = Collections.emptyList();
         this.activeTrigger = null;
         this.previousTrigger = null;
         this.activePool = null;
@@ -50,14 +47,14 @@ public class TriggerSelector extends ChannelElement {
         setCrashHelper("playable (trigger collection)");
         Set<TriggerAPI> playable = new HashSet<>();
         for(TriggerAPI trigger : triggers) {
-            if(trigger instanceof BasicTrigger) continue;
             setCrashHelper("playable ("+trigger.getNameWithID()+")");
+            if(trigger.isDisabled() || trigger instanceof BasicTrigger) continue;
             if(trigger.query(this.context)) {
-                //logTrace("Potential playable trigger: {}",trigger);
+                trigger.setState(PLAYABLE);
                 playable.add(trigger);
             }
+            else trigger.setState(IDLE);
         }
-        setPlayables(playable);
         playable.removeIf(trigger -> !trigger.canActivate());
         return playable;
     }
@@ -104,7 +101,7 @@ public class TriggerSelector extends ChannelElement {
     }
     
     @Override protected String getSubTypeName() {
-        return "Trigger_Selector";
+        return "Trigger";
     }
     
     @Override protected Class<? extends ParameterWrapper> getTypeClass() {
@@ -113,10 +110,6 @@ public class TriggerSelector extends ChannelElement {
 
     public boolean isClient() {
         return this.channel.isClientChannel();
-    }
-
-    public boolean isPlayable(TriggerAPI trigger) {
-        return this.playables.contains(trigger);
     }
     
     @Override
@@ -169,7 +162,6 @@ public class TriggerSelector extends ChannelElement {
     }
 
     protected @Nullable AudioPool setBasicTrigger(TriggerAPI trigger) {
-        setPlayables(trigger);
         return setActiveTrigger(trigger);
     }
 
@@ -188,23 +180,6 @@ public class TriggerSelector extends ChannelElement {
 
     protected void setCrashHelper(@Nullable String status) {
         this.crashHelper = Objects.nonNull(status) ? status : "";
-    }
-
-    protected void setPlayables(TriggerAPI ... triggers) {
-        setPlayables(Arrays.asList(triggers));
-    }
-
-    protected void setPlayables(Collection<TriggerAPI> triggers) {
-        this.previousPlayables = this.playables;
-        this.playables = Collections.unmodifiableCollection(triggers);
-        for(TriggerAPI trigger : this.playables)
-            if(!this.previousPlayables.contains(trigger))
-                for(ChannelEventHandler handler : this.channel.getData().getEventHandlers(trigger))
-                    handler.playable();
-        for(TriggerAPI trigger : this.previousPlayables)
-            if(!this.playables.contains(trigger))
-                for(ChannelEventHandler handler : this.channel.getData().getEventHandlers(trigger))
-                    handler.unplayable();
     }
 
     @Override

@@ -37,7 +37,7 @@ public class MTCommonEntryPoint extends CommonEntryPoint {
         if(!configDir.exists() && !configDir.mkdirs())
             throw new RuntimeException("Unable to create file directory at "+MTRef.CONFIG_PATH+"! Music Triggers "+
                     "is unable to load any further.");
-        MTNetwork.init();
+        MTNetwork.initCommon();
         if(Objects.nonNull(this.delegatedClient)) this.delegatedClient.onConstructed();
     }
 
@@ -45,10 +45,5 @@ public class MTCommonEntryPoint extends CommonEntryPoint {
     public void onPreRegistration() {
         MTServerEvents.init();
         if(Objects.nonNull(this.delegatedClient)) this.delegatedClient.onPreRegistration();
-    }
-
-    @Override
-    protected void onDedicatedServerSetup() {
-        ChannelHelper.initServer();
     }
 }

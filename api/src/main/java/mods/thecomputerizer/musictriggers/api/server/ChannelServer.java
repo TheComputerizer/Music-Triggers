@@ -25,14 +25,13 @@ public class ChannelServer extends ChannelAPI { //TODO implement this
         logError("Tried to get AudioPlayer instance on the server!");
         return null;
     }
-
+    
+    @Override protected String getTypeName() {
+        return "ServerChannel";
+    }
+    
     @Override
     public boolean isClientChannel() {
-        return false;
-    }
-
-    @Override
-    public boolean isDeactivating() {
         return false;
     }
 

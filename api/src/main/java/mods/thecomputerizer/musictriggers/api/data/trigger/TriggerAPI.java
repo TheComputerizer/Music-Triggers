@@ -42,7 +42,7 @@ public abstract class TriggerAPI extends ChannelElement {
 
     @Override
     public void activate() {
-        this.state = State.ACTIVE;
+        setState(ACTIVE);
         setTimer("ticks_before_audio",ACTIVE);
     }
 
@@ -54,13 +54,13 @@ public abstract class TriggerAPI extends ChannelElement {
     }
 
     public boolean canActivate() {
-        return this.state.activatable && !hasTime("active_cooldown") && !hasTime("ticks_before_active") &&
+        return getState().activatable && !hasTime("active_cooldown") && !hasTime("ticks_before_active") &&
                 hasNonEmptyAudioPool();
     }
 
     protected boolean canPersist() {
         return hasTime("persistence") &&
-                (this.state==ACTIVE || (this.state==PLAYABLE && getParameterAsBoolean("passive_persistence")));
+                (getState()==ACTIVE || (getState()==PLAYABLE && getParameterAsBoolean("passive_persistence")));
     }
 
     public boolean canPlayAudio() {
@@ -96,7 +96,7 @@ public abstract class TriggerAPI extends ChannelElement {
 
     @Override
     public void deactivate() {
-        setState(this.channel.getSelector().isPlayable(this) ? PLAYABLE : IDLE);
+        logInfo("Deactivating");
         clearTimers(ACTIVE);
         setTimer("active_cooldown",PLAYABLE);
         this.tracksPlayed = 0;
@@ -181,7 +181,7 @@ public abstract class TriggerAPI extends ChannelElement {
     }
 
     public boolean isDisabled() {
-        return this.state==State.DISABLED;
+        return getState()==State.DISABLED;
     }
 
     public abstract boolean isPlayableContext(TriggerContext context);
@@ -241,7 +241,6 @@ public abstract class TriggerAPI extends ChannelElement {
 
     @Override
     public void playable() {
-        setState(PLAYABLE);
         setTimer("ticks_before_active",PLAYABLE);
     }
 
@@ -262,9 +261,26 @@ public abstract class TriggerAPI extends ChannelElement {
         if(Objects.nonNull(parameter)) parameter.setValue(value);
     }
 
-    public void setState(State state) {
+    public void setState(State state) { //TODO Move activate and deactive handlers here too
         if(!isSynced()) {
             if(this.state!=state) {
+                logInfo("Setting state from {} to {}",this.state,state);
+                switch(this.state) {
+                    case ACTIVE:
+                    case PLAYABLE: {
+                        if(state==DISABLED || state==IDLE)
+                            for(ChannelEventHandler handler : this.channel.getData().getEventHandlers(this))
+                                handler.unplayable();
+                        break;
+                    }
+                    case DISABLED:
+                    case IDLE: {
+                        if(state==PLAYABLE || state==ACTIVE)
+                            for(ChannelEventHandler handler : this.channel.getData().getEventHandlers(this))
+                                handler.playable();
+                        break;
+                    }
+                }
                 this.state = state;
                 this.channel.getSync().queueTriggerSync(this);
             }
@@ -289,7 +305,7 @@ public abstract class TriggerAPI extends ChannelElement {
      * Runs after this trigger has been successfully parsed
      */
     @SuppressWarnings("unchecked")
-    protected void successfullyParsed() {
+    public void successfullyParsed() {
         if(hasParameter("resource_name")) {
             List<String> resourceName = (List<String>)getParameterAsList("resource_name");
             List<String> displayeName = (List<String>)getParameterAsList("display_name");
@@ -321,7 +337,6 @@ public abstract class TriggerAPI extends ChannelElement {
 
     @Override
     public void unplayable() {
-        if(!isDisabled()) setState(State.IDLE);
         clearTimers(PLAYABLE);
     }
     
@@ -390,10 +405,10 @@ public abstract class TriggerAPI extends ChannelElement {
     @Getter
     public enum State {
 
-        ACTIVE(true),
-        DISABLED(false),
-        IDLE(true),
-        PLAYABLE(true);
+        ACTIVE(true,true),
+        DISABLED(false,false),
+        IDLE(true,false),
+        PLAYABLE(true,true);
 
         private static final Map<String,State> BY_NAME = new HashMap<>();
         public static State get(String name) {
@@ -401,9 +416,16 @@ public abstract class TriggerAPI extends ChannelElement {
         }
 
         private final boolean activatable;
+        private final boolean playable;
 
-        State(boolean activatable) {
+        State(boolean activatable, boolean playable) {
             this.activatable = activatable;
+            this.playable = playable;
+        }
+        
+        @Override
+        public String toString() {
+            return name();
         }
 
         static {

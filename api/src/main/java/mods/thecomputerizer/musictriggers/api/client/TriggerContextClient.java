@@ -11,6 +11,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.blockentity.BlockEntityAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.container.PlayerInventoryAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.EntityAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.item.ItemStackAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
 import mods.thecomputerizer.theimpossiblelibrary.api.integration.BloodmoonAPI;
@@ -52,6 +53,11 @@ public class TriggerContextClient extends TriggerContext {
     public void close() {
         super.close();
         this.minecraft = null;
+    }
+    
+    @Override
+    public PlayerAPI<?,?> getPlayer() {
+        return Objects.nonNull(this.minecraft) ? this.minecraft.getPlayer() : null;
     }
 
     private Collection<ItemStackAPI<?>> getStacksFromSlotMatcher(String slotMatcher) {

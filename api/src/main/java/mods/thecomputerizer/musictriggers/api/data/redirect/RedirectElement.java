@@ -31,14 +31,6 @@ public class RedirectElement extends ChannelElement {
         super(channel,"redirect_element");
         this.valid = parse(line);
     }
-    
-    public RedirectElement(ChannelAPI channel, ByteBuf buf) {
-        super(channel,"redirect_element");
-        this.valid = buf.readBoolean();
-        this.key = NetworkHelper.readString(buf);
-        this.value = NetworkHelper.readString(buf);
-        this.remote = buf.readBoolean();
-    }
 
     @Override
     public void close() {
@@ -87,12 +79,5 @@ public class RedirectElement extends ChannelElement {
         }
         logInfo("Successfully stored {} location",this.remote ? "remote" : "resource");
         return true;
-    }
-    
-    public void write(ByteBuf buf) {
-        buf.writeBoolean(this.valid);
-        NetworkHelper.writeString(buf,this.key);
-        NetworkHelper.writeString(buf,this.value);
-        buf.writeBoolean(this.remote);
     }
 }

@@ -14,6 +14,8 @@ import mods.thecomputerizer.theimpossiblelibrary.api.integration.InfernalMobsAPI
 import mods.thecomputerizer.theimpossiblelibrary.api.integration.InfernalMobsAPI.InfernalData;
 import mods.thecomputerizer.theimpossiblelibrary.api.integration.ModHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.server.MinecraftServerAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.server.ServerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
 import org.apache.commons.lang3.StringUtils;
 
@@ -24,6 +26,7 @@ import java.util.Set;
 
 public class TriggerContextServer extends TriggerContext {
 
+    private MinecraftServerAPI<?> server;
     private BlockPosAPI<?> pos;
     private StructureAPI<?> structure;
     private BiomeAPI<?> biome;
@@ -34,6 +37,14 @@ public class TriggerContextServer extends TriggerContext {
 
     @Override
     public void cache() {
+        this.server = ServerHelper.getAPI();
+        if(Objects.nonNull(this.server)) {
+            this.player = this.server.getPlayerByUUID(this.channel.getHelper().getPlayerID());
+            this.world = Objects.nonNull(this.player) ? this.player.getWorld() : null;
+        } else {
+            this.player = null;
+            this.world = null;
+        }
         this.pos = hasBoth() ? this.player.getPosRounded() : null;
         this.biome = Objects.nonNull(this.pos) ? this.world.getBiomeAt(this.pos) : null;
         this.structure = Objects.nonNull(this.pos) ? this.world.getStructureAt(this.pos) : null;

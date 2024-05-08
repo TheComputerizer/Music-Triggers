@@ -10,15 +10,14 @@ public class MessageReload<CTX> extends MessageAPI<CTX> {
 
     public MessageReload() {}
 
-    public MessageReload(ByteBuf ignored) {
-        MTClientEvents.queueReload(TILRef.getClientSubAPI(ClientAPI::getMinecraft),5);
-    }
+    public MessageReload(ByteBuf ignored) {}
 
     @Override
     public void encode(ByteBuf buf) {}
 
     @Override
     public MessageAPI<CTX> handle(CTX ctx) {
+        MTClientEvents.queueReload(TILRef.getClientSubAPI(ClientAPI::getMinecraft),5);
         return null;
     }
 }

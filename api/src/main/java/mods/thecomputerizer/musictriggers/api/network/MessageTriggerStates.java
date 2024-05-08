@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.network;
 
 import io.netty.buffer.ByteBuf;
+import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
@@ -15,32 +16,36 @@ import java.util.List;
 
 public class MessageTriggerStates<CTX> extends MessageAPI<CTX> { //TODO Combine this into a single packet for all channels
 
-    private final ChannelAPI channel;
+    private final String channelName;
+    private final String uuid;
+    private final boolean client;
     private final Collection<StateSnapshot> snapshots;
 
     public MessageTriggerStates(ChannelAPI channel, Collection<TriggerAPI> triggers) {
-        this.channel = channel;
+        this.channelName = channel.getName();
+        this.uuid = channel.getHelper().getPlayerID();
+        this.client = channel.isClientChannel();
         this.snapshots = StateSnapshot.of(triggers);
     }
 
     public MessageTriggerStates(ByteBuf buf) {
-        String playerID = NetworkHelper.readString(buf);
-        String channelName = NetworkHelper.readString(buf);
-        boolean server = buf.readBoolean(); //The write was client so the read must be the opposite
-        this.channel = ChannelHelper.findChannel(playerID,!server,channelName);
+        this.channelName = NetworkHelper.readString(buf);
+        this.uuid = NetworkHelper.readString(buf);
+        this.client = !buf.readBoolean();
+        ChannelAPI channel = ChannelHelper.findChannel(this.uuid,this.client,this.channelName);
         this.snapshots = NetworkHelper.readCollection(buf,() -> {
             String name = NetworkHelper.readString(buf);
             String id = NetworkHelper.readString(buf);
             String state = NetworkHelper.readString(buf);
-            return new StateSnapshot(TriggerHelper.decodeTrigger(this.channel,name,id),state);
+            return new StateSnapshot(TriggerHelper.decodeTrigger(channel,name,id),state);
         });
     }
 
     @Override
     public void encode(ByteBuf buf) {
-        NetworkHelper.writeString(buf,this.channel.getHelper().getPlayerID());
-        NetworkHelper.writeString(buf,this.channel.getName());
-        buf.writeBoolean(this.channel.isClientChannel());
+        NetworkHelper.writeString(buf,this.channelName);
+        NetworkHelper.writeString(buf,this.uuid);
+        buf.writeBoolean(this.client);
         NetworkHelper.writeCollection(buf,this.snapshots,snapshot -> snapshot.trigger.encode(buf));
     }
 
@@ -66,7 +71,7 @@ public class MessageTriggerStates<CTX> extends MessageAPI<CTX> { //TODO Combine 
         }
 
         private void apply() {
-            this.trigger.setState(State.get(this.state));
+            this.trigger.getChannel().getSelector().getContext().updateSyncedState(this.trigger, State.get(this.state));
         }
     }
 }

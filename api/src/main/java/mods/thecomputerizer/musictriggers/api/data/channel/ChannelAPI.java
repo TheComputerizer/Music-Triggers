@@ -5,12 +5,16 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import lombok.Getter;
 import lombok.Setter;
+import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.TriggerContextClient;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
+import mods.thecomputerizer.musictriggers.api.data.jukebox.RecordElement;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
+import mods.thecomputerizer.musictriggers.api.data.redirect.RedirectElement;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerSelector;
+import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels.ChannelMessage;
 import mods.thecomputerizer.musictriggers.api.server.TriggerContextServer;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
@@ -18,8 +22,10 @@ import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 
 @Getter
@@ -75,7 +81,10 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     }
 
     public Collection<TriggerAPI> getPlayableTriggers() {
-        return this.selector.getPlayables();
+        Set<TriggerAPI> triggers = new HashSet<>();
+        for(TriggerAPI trigger : this.data.getTriggers())
+            if(trigger.getState().isPlayable()) triggers.add(trigger);
+        return triggers;
     }
 
     public abstract AudioPlayer getPlayer();
@@ -84,13 +93,21 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     public <P> @Nullable PlayerAPI<P,?> getPlayerEntity() {
         return (PlayerAPI<P,?>)this.selector.getContext().getPlayer();
     }
-
-    public TriggerAPI getPreviousTrigger() {
-        return this.selector.getPreviousTrigger();
+    
+    public Set<String> getRecordLines() {
+        Set<String> lines = new HashSet<>();
+        for(RecordElement record : this.data.getRecords()) lines.add(record.toString());
+        return lines;
+    }
+    
+    public Set<String> getRedirectLines() {
+        Set<String> lines = new HashSet<>();
+        for(RedirectElement redirect : this.data.getRedirects()) lines.add(redirect.toString());
+        return lines;
     }
     
     public void getSource(Map<String,Toml> map, String name, String path) {
-        Toml toml = ChannelHelper.openToml(path,false,this);
+        Toml toml = ChannelHelper.openToml(MTRef.CONFIG_PATH+"/"+this.name+"/"+path, false, this);
         if(Objects.nonNull(toml)) map.put(name,toml);
     }
     
@@ -101,6 +118,8 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
         getSource(map,"renders",this.info.getRendersPath());
         return map;
     }
+    
+    protected abstract String getTypeName();
 
     protected void handleActiveEvent(Consumer<ChannelEventHandler> event) {
         this.data.getActiveEventHandlers().forEach(event);
@@ -108,10 +127,6 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
 
     protected void handlePlayableEvent(Consumer<ChannelEventHandler> event) {
         this.data.getPlayableEventHandlers().forEach(event);
-    }
-
-    protected void handlePreviousEvent(Consumer<ChannelEventHandler> event) {
-        this.data.getPreviousEventHandlers().forEach(event);
     }
     
     public boolean implyTrigger(String name) {
@@ -122,39 +137,42 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     }
 
     public abstract boolean isClientChannel();
-    public abstract boolean isDeactivating();
     public abstract boolean isValid();
-
-    public void loadTracks(boolean loadResources) {
-        this.data.loadTracks(loadResources);
+    
+    public void loadData(ChannelMessage message) {
+        this.data.load(message);
     }
 
     public abstract void loadLocalTrack(AudioRef ref, String location);
     public abstract void loadRemoteTrack(AudioRef ref, String location);
+    
+    public void loadTracks(boolean loadResources) {
+        this.data.loadTracks(loadResources);
+    }
 
     @Override
     public void logAll(String msg, Object ... args) {
-        MTLogger.logAll("Channel",getName(),msg,args);
+        MTLogger.logAll(getTypeName(),getName(),msg,args);
     }
 
     @Override
     public void logDebug(String msg, Object ... args) {
-        MTLogger.logDebug("Channel",getName(),msg,args);
+        MTLogger.logDebug(getTypeName(),getName(),msg,args);
     }
 
     @Override
     public void logError(String msg, Object ... args) {
-        MTLogger.logError("Channel",getName(),msg,args);
+        MTLogger.logError(getTypeName(),getName(),msg,args);
     }
 
     @Override
     public void logFatal(String msg, Object ... args) {
-        MTLogger.logFatal("Channel",getName(),msg,args);
+        MTLogger.logFatal(getTypeName(),getName(),msg,args);
     }
 
     @Override
     public void logInfo(String msg, Object ... args) {
-        MTLogger.logInfo("Channel",getName(),msg,args);
+        MTLogger.logInfo(getTypeName(),getName(),msg,args);
     }
 
     @Override
@@ -164,7 +182,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
 
     @Override
     public void logWarn(String msg, Object ... args) {
-        MTLogger.logWarn("Channel",getName(),msg,args);
+        MTLogger.logWarn(getTypeName(),getName(),msg,args);
     }
 
     public abstract void onResourcesLoaded();
@@ -231,6 +249,11 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
         this.selector.select();
         sync();
         this.ticks = 0;
+    }
+    
+    @Override
+    public String toString() {
+        return getTypeName()+"["+this.name+"]";
     }
 
     @Override

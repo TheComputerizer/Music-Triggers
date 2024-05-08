@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger;
 
 import lombok.Getter;
+import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
@@ -21,7 +22,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.Map.Entry;
 
 public abstract class TriggerContext extends ChannelElement {
 
@@ -90,7 +90,7 @@ public abstract class TriggerContext extends ChannelElement {
     }
     
     @Override protected String getSubTypeName() {
-        return "Trigger_Context";
+        return "Trigger";
     }
 
     protected boolean getSyncedContext(TriggerAPI trigger) {
@@ -117,6 +117,7 @@ public abstract class TriggerContext extends ChannelElement {
     }
 
     public void initSync() {
+        logInfo("Initializing syncable {} side data",isClient() ? "client" : "server");
         for(TriggerAPI trigger : this.channel.getData().getTriggers())
             if(trigger.isSynced()) this.syncedTriggers.add(new TriggerSynced(this.channel,trigger));
     }
@@ -186,13 +187,11 @@ public abstract class TriggerContext extends ChannelElement {
         return false;
     }
 
-    public void updateSyncedStates(Map<TriggerAPI,State> stateMap) {
-        for(Entry<TriggerAPI,State> entry : stateMap.entrySet()) {
-            for(TriggerSynced synced : this.syncedTriggers) {
-                if(synced.matches(entry.getKey())) {
-                    synced.sync(entry.getValue());
-                    break;
-                }
+    public void updateSyncedState(TriggerAPI trigger, State state) {
+        for(TriggerSynced synced : this.syncedTriggers) {
+            if(synced.matches(trigger)) {
+                synced.sync(state);
+                break;
             }
         }
     }

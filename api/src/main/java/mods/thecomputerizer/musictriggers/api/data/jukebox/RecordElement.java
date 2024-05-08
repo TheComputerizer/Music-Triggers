@@ -30,13 +30,6 @@ public class RecordElement extends ChannelElement {
         super(channel,"jukebox_element");
         this.valid = parse(line);
     }
-    
-    public RecordElement(ChannelAPI channel, ByteBuf buf) {
-        super(channel,"jukebox_element");
-        this.valid = buf.readBoolean();
-        this.key = NetworkHelper.readString(buf);
-        this.name = NetworkHelper.readString(buf);
-    }
 
     @Override
     public void close() {
@@ -68,12 +61,6 @@ public class RecordElement extends ChannelElement {
         }
         logInfo("Successfully registed `{}` as a record from key `{}`",this.name,this.key);
         return true;
-    }
-    
-    public void write(ByteBuf buf) {
-        buf.writeBoolean(this.valid);
-        NetworkHelper.writeString(buf,this.key);
-        NetworkHelper.writeString(buf, this.name);
     }
     
     @Override protected TableRef getReferenceData() {

@@ -35,7 +35,7 @@ public class TriggerBiome extends HolderTrigger {
 
     @SuppressWarnings("unchecked")
     @Override
-    protected void successfullyParsed() {
+    public void successfullyParsed() {
         super.successfullyParsed();
         List<String> resourceName = (List<String>)getParameterAsList("biome_tag");
         List<String> displayeName = Collections.emptyList();

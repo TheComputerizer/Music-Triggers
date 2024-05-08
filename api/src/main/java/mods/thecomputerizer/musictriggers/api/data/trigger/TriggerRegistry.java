@@ -31,7 +31,7 @@ public class TriggerRegistry {
                     channel.logError("Unable to create new instance of trigger class `{}`!",clazz,ex);
                 }
             }
-        } else channel.logError("Unable to locate trigger class of type `{}`!",name);
+        } else channel.logError("Unable to locate trigger class of type {}!",name);
         return null;
     }
     

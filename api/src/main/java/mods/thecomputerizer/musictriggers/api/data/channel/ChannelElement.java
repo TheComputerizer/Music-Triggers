@@ -32,10 +32,14 @@ public abstract class ChannelElement extends ParameterWrapper implements Channel
         return Objects.nonNull(this.channel) ? this.channel.getName() : "Unknown";
     }
     
+    public String getChannelTypeName() {
+        return Objects.nonNull(this.channel) ? this.channel.getTypeName() : "Channel";
+    }
+    
     protected abstract String getSubTypeName();
     
     protected final String getTypeName() {
-        return "Channel["+getChannelName()+"]: "+getSubTypeName();
+        return getChannelTypeName()+"["+getChannelName()+"]: "+getSubTypeName();
     }
 
     public abstract boolean isResource();
