@@ -10,7 +10,8 @@ public class ParameterDouble extends ParameterNumber<Double> {
     public ParameterDouble(double defaultValue) {
         super(defaultValue);
     }
-
+    
+    @SuppressWarnings("unused") //See ParameterHelper#parse
     public ParameterDouble(ByteBuf buf) {
         super(buf);
     }

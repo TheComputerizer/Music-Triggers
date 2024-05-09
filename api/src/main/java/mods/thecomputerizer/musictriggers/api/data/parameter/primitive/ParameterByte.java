@@ -10,7 +10,8 @@ public class ParameterByte extends ParameterNumber<Byte> {
     public ParameterByte(byte defaultValue) {
         super(defaultValue);
     }
-
+    
+    @SuppressWarnings("unused") //See ParameterHelper#parse
     public ParameterByte(ByteBuf buf) {
         super(buf);
     }

@@ -10,7 +10,8 @@ public class ParameterShort extends ParameterNumber<Short> {
     public ParameterShort(short defaultValue) {
         super(defaultValue);
     }
-
+    
+    @SuppressWarnings("unused") //See ParameterHelper#parse
     public ParameterShort(ByteBuf buf) {
         super(buf);
     }

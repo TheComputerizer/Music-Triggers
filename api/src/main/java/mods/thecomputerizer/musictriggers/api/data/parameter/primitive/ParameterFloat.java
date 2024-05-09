@@ -10,7 +10,8 @@ public class ParameterFloat extends ParameterNumber<Float> {
     public ParameterFloat(float defaultValue) {
         super(defaultValue);
     }
-
+    
+    @SuppressWarnings("unused") //See ParameterHelper#parse
     public ParameterFloat(ByteBuf buf) {
         super(buf);
     }

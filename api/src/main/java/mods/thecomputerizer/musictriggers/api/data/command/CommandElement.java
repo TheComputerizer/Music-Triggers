@@ -72,7 +72,7 @@ public class CommandElement extends ChannelEventRunner {
             this.literal = getParameterAsString("literal");
             return true;
         }
-        logError("Missing required literal parameter");
+        logMissingParameter("literal");
         return false;
     }
 

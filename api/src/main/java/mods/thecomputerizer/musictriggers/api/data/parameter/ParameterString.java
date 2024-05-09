@@ -11,7 +11,8 @@ public class ParameterString extends Parameter<String> {
     public ParameterString(String defaultValue) {
         super(defaultValue);
     }
-
+    
+    @SuppressWarnings("unused") //See ParameterHelper#parse
     public ParameterString(ByteBuf buf) {
         super(buf);
     }

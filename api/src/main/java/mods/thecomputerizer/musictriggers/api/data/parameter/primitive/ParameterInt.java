@@ -10,7 +10,8 @@ public class ParameterInt extends ParameterNumber<Integer> {
     public ParameterInt(int defaultValue) {
         super(defaultValue);
     }
-
+    
+    @SuppressWarnings("unused") //See ParameterHelper#parse
     public ParameterInt(ByteBuf buf) {
         super(buf);
     }

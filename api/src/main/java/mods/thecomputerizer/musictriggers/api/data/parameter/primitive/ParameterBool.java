@@ -6,13 +6,14 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import javax.annotation.Nullable;
 import java.util.Objects;
 
-public class ParameterBoolean extends Parameter<Boolean> {
+public class ParameterBool extends Parameter<Boolean> {
 
-    public ParameterBoolean(boolean defaultValue) {
+    public ParameterBool(boolean defaultValue) {
         super(defaultValue);
     }
 
-    public ParameterBoolean(ByteBuf buf) {
+    @SuppressWarnings("unused") //See ParameterHelper#parse
+    public ParameterBool(ByteBuf buf) {
         super(buf);
     }
 

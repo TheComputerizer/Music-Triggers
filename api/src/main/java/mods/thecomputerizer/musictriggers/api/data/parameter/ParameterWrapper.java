@@ -8,17 +8,21 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
-import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
+import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBool;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterNumber;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.core.ArrayHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.iterator.IterableHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.GenericUtils;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.RandomHelper;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.function.Function;
 
 @SuppressWarnings("unused")
 public abstract class ParameterWrapper implements LoggableAPI {
@@ -57,45 +61,39 @@ public abstract class ParameterWrapper implements LoggableAPI {
 
     public boolean getParameterAsBoolean(String name) {
         Parameter<?> parameter = getParameter(name);
-        if(parameter instanceof ParameterBoolean) return ((ParameterBoolean)parameter).getValue();
+        if(parameter instanceof ParameterBool) return ((ParameterBool)parameter).getValue();
         if(parameter instanceof ParameterNumber<?>) return ((ParameterNumber<?>)parameter).doubleValue()!=0d;
         return Objects.nonNull(parameter) && Boolean.parseBoolean(parameter.getValue().toString());
     }
 
     public byte getParameterAsByte(String name) {
-        Parameter<?> parameter = getParameter(name);
-        if(parameter instanceof ParameterNumber<?>) return ((ParameterNumber<?>)parameter).byteValue();
-        return getParameterAsNumber(parameter,name).byteValue();
+        return getParameterAsNumber(getParameter(name),Number::byteValue,
+                s -> RandomHelper.randomByte(name+"_as_number", s, (byte)0));
     }
 
     public double getParameterAsDouble(String name) {
-        Parameter<?> parameter = getParameter(name);
-        if(parameter instanceof ParameterNumber<?>) return ((ParameterNumber<?>)parameter).doubleValue();
-        return getParameterAsNumber(parameter,name).doubleValue();
+        return getParameterAsNumber(getParameter(name),Number::doubleValue,
+                s -> RandomHelper.randomDouble(name+"_as_number",s,0d));
     }
 
     public float getParameterAsFloat(String name) {
-        Parameter<?> parameter = getParameter(name);
-        if(parameter instanceof ParameterNumber<?>) return ((ParameterNumber<?>)parameter).floatValue();
-        return getParameterAsNumber(parameter,name).floatValue();
+        return getParameterAsNumber(getParameter(name),Number::floatValue,
+                s -> RandomHelper.randomFloat(name+"_as_number",s,0f));
     }
 
     public int getParameterAsInt(String name) {
-        Parameter<?> parameter = getParameter(name);
-        if(parameter instanceof ParameterNumber<?>) return ((ParameterNumber<?>)parameter).intValue();
-        return getParameterAsNumber(parameter,name).intValue();
+        return getParameterAsNumber(getParameter(name),Number::intValue,
+                s -> RandomHelper.randomInt(name+"_as_number",s,0));
     }
 
     public long getParameterAsLong(String name) {
-        Parameter<?> parameter = getParameter(name);
-        if(parameter instanceof ParameterNumber<?>) return ((ParameterNumber<?>)parameter).longValue();
-        return getParameterAsNumber(parameter,name).longValue();
+        return getParameterAsNumber(getParameter(name),Number::longValue,
+                s -> RandomHelper.randomLong(name+"_as_number",s,0L));
     }
 
     public short getParameterAsShort(String name) {
-        Parameter<?> parameter = getParameter(name);
-        if(parameter instanceof ParameterNumber<?>) return ((ParameterNumber<?>)parameter).shortValue();
-        return getParameterAsNumber(parameter,name).shortValue();
+        return getParameterAsNumber(getParameter(name),Number::shortValue,
+                s -> RandomHelper.randomShort(name+"_as_number",s,(short)0));
     }
 
     public List<?> getParameterAsList(String name) {
@@ -113,31 +111,38 @@ public abstract class ParameterWrapper implements LoggableAPI {
     }
 
     public Number getParameterAsNumber(String name) {
-        Parameter<?> parameter = getParameter(name);
-        return parameter instanceof ParameterNumber<?> ?
-                (Number)parameter.getValue() : getParameterAsNumber(parameter,name);
+        return getParameterAsNumber(getParameter(name),n -> n,
+                s -> RandomHelper.randomDouble(name+"_as_number",s,0d));
     }
 
     /**
      * Assumes the parameter has already been verified to not be an instance of ParameterNumber
      */
-    protected Number getParameterAsNumber(Parameter<?> parameter, String name) {
-        if(parameter instanceof ParameterString) {
-            String value = parameter.getValue().toString();
-            try {
-                return Double.parseDouble(value);
-            } catch(NumberFormatException ex) {
-                logError("Failed to parse parameter `{}` with value `{}` as double!",name,value);
-                return 0;
-            }
-        }
-        logError("Unable to get parameter `{}` as a number!",name);
-        return 0;
+    protected <N extends Number> N getParameterAsNumber(
+            Parameter<?> parameter, Function<Number,N> fromNumber, Function<String,N> fromString) {
+        if(Objects.isNull(parameter)) return fromNumber.apply(0);
+        if(parameter instanceof ParameterNumber) return fromNumber.apply(((ParameterNumber<?>)parameter).getValue());
+        if(parameter instanceof ParameterString) return fromString.apply(((ParameterString)parameter).getValue());
+        if(parameter instanceof ParameterBool) return fromNumber.apply(((ParameterBool)parameter).getValue() ? 1 : 0);
+        return getValueAsNumber(parameter.getValue(),fromNumber,fromString);
     }
 
     public String getParameterAsString(String name) {
-        Parameter<?> parameter = getParameter(name);
-        return Objects.nonNull(parameter) ? parameter.getValue().toString() : null;
+        return String.valueOf(getParameter(name));
+    }
+    
+    protected <N extends Number> N getValueAsNumber(Object value, Function<Number,N> fromNumber, Function<String,N> fromString) {
+        if(Objects.isNull(value)) return fromNumber.apply(0);
+        if(value instanceof Number) return fromNumber.apply((Number)value);
+        if(value instanceof String) return fromString.apply((String)value);
+        if(value instanceof Boolean) return fromNumber.apply((Boolean)value ? 1 : 0);
+        if(value instanceof Iterable<?>)
+            return getValueAsNumber(IterableHelper.getElement(0,(Collection<?>)value),fromNumber,fromString);
+        if(value instanceof Object[]) {
+            Object[] array = (Object[])value;
+            return getValueAsNumber(ArrayHelper.isNotEmpty(array) ? array[0] : 0,fromNumber,fromString);
+        }
+        return fromString.apply(String.valueOf(value));
     }
     
     protected abstract TableRef getReferenceData();

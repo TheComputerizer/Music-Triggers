@@ -10,7 +10,8 @@ public class ParameterLong extends ParameterNumber<Long> {
     public ParameterLong(long defaultValue) {
         super(defaultValue);
     }
-
+    
+    @SuppressWarnings("unused") //See ParameterHelper#parse
     public ParameterLong(ByteBuf buf) {
         super(buf);
     }

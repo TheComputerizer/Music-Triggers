@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.api.data.parameter.primitive;
 import io.netty.buffer.ByteBuf;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 
+@SuppressWarnings("unused")
 public abstract class ParameterNumber<N extends Number> extends Parameter<N> {
 
     protected ParameterNumber(N defaultValue) {

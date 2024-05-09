@@ -18,8 +18,8 @@ public class ParameterList<E> extends Parameter<List<E>> { //TODO Does not curre
         super(defaults);
         this.type = type;
     }
-
-    @SuppressWarnings("unchecked")
+    
+    @SuppressWarnings({"unused","unchecked"}) //See ParameterHelper#parse
     public ParameterList(ByteBuf buf) {
         super(buf);
         this.type = (Class<E>)ClassHelper.findClass(NetworkHelper.readString(buf));

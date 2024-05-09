@@ -21,7 +21,7 @@ public class ParameterHelper {
         if(Collection.class.isAssignableFrom(type))
             return (Parameter<E>)new ParameterList<>(String.class,(List<String>)element); //TODO Should this really be restricted to lists of strings?
         switch(type.getSimpleName()) {
-            case "Boolean": return (Parameter<E>)new ParameterBoolean((Boolean)element);
+            case "Boolean": return (Parameter<E>)new ParameterBool((Boolean)element);
             case "Byte": return (Parameter<E>)new ParameterByte((Byte)element);
             case "Double": return (Parameter<E>)new ParameterDouble((Double)element);
             case "Float": return (Parameter<E>)new ParameterFloat((Float)element);

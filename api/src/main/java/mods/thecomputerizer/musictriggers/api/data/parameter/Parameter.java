@@ -37,7 +37,7 @@ public abstract class Parameter<T> {
     
     @Override
     public String toString() {
-        return this.value+" (default="+this.defaultValue+")";
+        return String.valueOf(this.value);
     }
 
     public void write(ByteBuf buf) {

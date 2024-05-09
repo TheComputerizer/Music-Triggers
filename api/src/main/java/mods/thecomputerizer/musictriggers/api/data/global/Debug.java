@@ -4,7 +4,7 @@ import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
-import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBoolean;
+import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBool;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import java.util.ArrayList;
@@ -25,8 +25,8 @@ public class Debug extends GlobalElement { //TODO Implement log_level and max_ho
     
     public void flipBooleanParameter(String name) {
         Parameter<?> parameter = getParameter(name);
-        if(parameter instanceof ParameterBoolean) {
-            ParameterBoolean bool = (ParameterBoolean)parameter;
+        if(parameter instanceof ParameterBool) {
+            ParameterBool bool = (ParameterBool)parameter;
             bool.setValue(!bool.getValue());
             logInfo("Successfully flipped debug parameter {} from {} to {}",name,!bool.getValue(),bool.getValue());
         }
