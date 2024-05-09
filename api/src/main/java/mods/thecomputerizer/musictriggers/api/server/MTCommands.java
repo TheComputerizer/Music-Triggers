@@ -1,9 +1,11 @@
 package mods.thecomputerizer.musictriggers.api.server;
 
+import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
 import mods.thecomputerizer.musictriggers.api.network.MessageReload;
 import mods.thecomputerizer.musictriggers.api.network.MessageToggleDebugParameter;
+import mods.thecomputerizer.theimpossiblelibrary.api.core.ArrayHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.CommandAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.CommandSenderAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.MinecraftServerAPI;
@@ -25,11 +27,14 @@ public class MTCommands extends CommandAPI {
         ChannelHelper.getGlobalData().logInfo("Executing command on server");
         if("mtreload".equals(this.name)) {
             ChannelHelper.getGlobalData().logInfo("Sending reload packet");
-            MTNetwork.sendToClient(new MessageReload<>(),false,sender.getSender());
+            int ticks = MTRef.randomInt(ChannelHelper.getGlobalData(),"reload_ticks",
+                                        ArrayHelper.isNotEmpty(strings) ? strings[0] : null,5);
+            MTNetwork.sendToClient(new MessageReload<>(ticks),false,sender.getSender());
         }
         else if("mtdebug".equals(this.name)) {
             ChannelHelper.getGlobalData().logInfo("Sending debug packet");
-            MTNetwork.sendToClient(new MessageToggleDebugParameter<>("enable_debug_info"),false,sender.getSender());
+            String parameter = ArrayHelper.isNotEmpty(strings) ? strings[0] : "enable_debug_info";
+            MTNetwork.sendToClient(new MessageToggleDebugParameter<>(parameter),false,sender.getSender());
         }
     }
 

@@ -19,6 +19,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelListener;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.EnumHelper;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
@@ -120,6 +121,26 @@ public class ChannelClient extends ChannelAPI {
     @Override
     public AudioPlayer getPlayer() {
         return this.player;
+    }
+    
+    @Nullable @Override public String getPlayingSongName() {
+        if(Objects.isNull(this.playingPool)) return null;
+        AudioRef ref = this.playingPool;
+        while(ref instanceof AudioPool) ref = ((AudioPool)ref).getQueuedAudio();
+        return Objects.nonNull(ref) ? ref.getName() : null;
+    }
+    
+    @Nullable @Override public String getPlayingSongTime() {
+        AudioTrack track = this.player.getPlayingTrack();
+        if(Objects.isNull(track)) return null;
+        String current = getFormattedTime(track.getPosition());
+        String duration = getFormattedTime(track.getDuration());
+        return current+"/"+duration;
+    }
+    
+    protected String getFormattedTime(long millis) {
+        String format = millis>=3600000 ? "HH:mm:ss:SSS" : (millis>=60000 ? "mm:ss:SSS" : "ss:SSS");
+        return DurationFormatUtils.formatDuration(millis,format,false);
     }
     
     @Override protected String getTypeName() {

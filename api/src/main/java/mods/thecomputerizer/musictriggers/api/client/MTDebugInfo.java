@@ -3,47 +3,194 @@ package mods.thecomputerizer.musictriggers.api.client;
 import lombok.Getter;
 import lombok.Setter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
+import mods.thecomputerizer.musictriggers.api.data.global.Debug;
+import mods.thecomputerizer.musictriggers.api.data.global.GlobalElement;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.font.FontAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.font.FontHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.biome.BiomeAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.effect.EffectAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.effect.EffectInstanceAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextTranslationAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.world.DimensionAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.world.WorldAPI;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.Map.Entry;
+import java.util.function.Function;
 
-public class MTDebugInfo { //TODO finish this
+import static mods.thecomputerizer.musictriggers.api.client.MTDebugInfo.ElementType.*;
+
+public class MTDebugInfo extends GlobalElement {
 
     private static final double MAX_WIDTH_PERCENT = 0.5d;
-    private static Element header;
+    private static final Comparator<Element> elementSorter = Collections.reverseOrder(Comparator.comparingInt(Element::getPriority));
 
     private final List<Element> elements;
+    private final List<Element> visibleElements;
     @Setter private ChannelHelper helper;
     private int maxWidth;
 
     public MTDebugInfo(ChannelHelper helper) {
-        this.elements = new ArrayList<>();
+        super("Debug_Info");
         this.helper = helper;
-        if(Objects.isNull(header)) header = new Element(ElementType.HEADER,getTranslated("header"));
+        this.elements = new ArrayList<>();
+        this.visibleElements = new ArrayList<>();
+        addDefaultElements();
+    }
+    
+    public void initChannelElements() {
+        int priority = 10000;
+        for(String name : this.helper.getChannels().keySet()) {
+            addElement(CHANNEL,"song",true,priority)
+                    .setVisibility(helper -> helper.getDebugBool("show_channel_info") &&
+                                             helper.getDebugBool("show_song_info"))
+                    .setArgSetter(helper -> {
+                        ChannelAPI channel = helper.findChannel(this,name);
+                        String song = null;
+                        String time = null;
+                        if(Objects.nonNull(channel)) {
+                            song = channel.getPlayingSongName();
+                            time = channel.getPlayingSongTime();
+                        }
+                        if(Objects.isNull(song)) song = "?";
+                        if(Objects.isNull(time)) time = "?";
+                        return new Object[]{name,song,time};
+                    });
+            priority--;
+            addElement(CHANNEL,"trigger",true,priority)
+                    .setVisibility(helper -> helper.getDebugBool("show_channel_info") &&
+                                             helper.getDebugBool("show_trigger_info"))
+                    .setArgSetter(helper -> {
+                        ChannelAPI channel = helper.findChannel(this,name);
+                        String active = null;
+                        String playable = null;
+                        if(Objects.nonNull(channel)) {
+                            TriggerAPI trigger = channel.getActiveTrigger();
+                            if(Objects.nonNull(trigger)) active = trigger.toString();
+                            Collection<TriggerAPI> triggers = channel.getPlayableTriggers();
+                            if(!triggers.isEmpty()) playable = triggers.toString();
+                        }
+                        if(Objects.isNull(active)) active = "?";
+                        if(Objects.isNull(playable)) playable = "?";
+                        return new Object[]{name,active,playable};
+                    });
+            priority--;
+        }
+    }
+    
+    private void addDefaultElements() {
+        addElement(HEADER,"").setVisibility(helper -> true);
+        addElement(POSITION,"dimension",true,1003)
+                .setVisibility(helper -> helper.getDebugBool("show_position_info"))
+                .setArgSetter(helper -> {
+                    PlayerAPI<?,?> player = helper.getPlayer();
+                    if(Objects.nonNull(player)) {
+                        DimensionAPI<?> dimension = player.getDimension();
+                        if(Objects.nonNull(dimension))
+                            return new Object[]{dimension.getName(),dimension.getRegistryName()};
+                    }
+                    return new Object[]{"?","?"};
+                });
+        addElement(POSITION,"structure",true,1002)
+                .setVisibility(helper -> helper.getDebugBool("show_position_info"))
+                .setArgSetter(helper -> new Object[]{"?","?"});
+        addElement(POSITION,"biome",true,1001)
+                .setVisibility(helper -> helper.getDebugBool("show_position_info"))
+                .setArgSetter(helper -> {
+                    PlayerAPI<?,?> player = helper.getPlayer();
+                    if(Objects.nonNull(player)) {
+                        BiomeAPI<?> biome = player.getWorld().getBiomeAt(player.getPosRounded());
+                        if(Objects.nonNull(biome))
+                            return new Object[]{"?",biome.getRegistryName(),biome.getTagNames(player.getWorld())};
+                    }
+                    return new Object[]{"?","?","?"};
+                });
+        addElement(POSITION,"light")
+                .setVisibility(helper -> helper.getDebugBool("show_position_info"))
+                .setArgSetter(helper -> {
+                    PlayerAPI<?,?> player = helper.getPlayer();
+                    if(Objects.nonNull(player)) {
+                        WorldAPI<?> world = player.getWorld();
+                        if(Objects.nonNull(world)) {
+                            BlockPosAPI<?> pos = player.getPosRounded();
+                            return new Object[]{world.getLightBlock(pos),world.getLightSky(pos),world.getLightTotal(pos)};
+                        }
+                    }
+                    return new Object[]{"?","?","?"};
+                });
+        addElement(STATUS, "effects")
+                .setVisibility(helper -> helper.getDebugBool("show_status_info"))
+                .setArgSetter(helper -> {
+                    PlayerAPI<?,?> player = helper.getPlayer();
+                    if(Objects.nonNull(player)) {
+                        StringJoiner joiner = new StringJoiner(", ");
+                        for(EffectInstanceAPI<?> instance : player.getActiveEffects()) {
+                            EffectAPI<?> effect = instance.getEffect();
+                            TextAPI<?> text = getTranslated("status","effect","?",effect.getRegistryName());
+                            if(Objects.nonNull(text)) joiner.add(text.getApplied());
+                        }
+                        return new Object[]{joiner.toString()};
+                    }
+                    return new Object[]{"?"};
+                });
+        addElement(TARGET,"block_entity")
+                .setVisibility(helper -> helper.getDebugBool("show_target_info"))
+                .setArgSetter(helper -> new Object[]{"?","?"});
+        addElement(TARGET,"entity")
+                .setVisibility(helper -> helper.getDebugBool("show_target_info"))
+                .setArgSetter(helper -> new Object[]{"?","?"});
+        addElement(OTHER,"blocked.mods",true,5000)
+                .setVisibility(helper -> true)
+                .setArgSetter(helper -> {
+                    Debug debug = helper.getDebug();
+                    if(Objects.isNull(debug)) return new Object[]{"Unknown"};
+                    StringJoiner joiner = new StringJoiner(", ");
+                    for(Entry<String,List<String>> mod : helper.getDebug().getFormattedBlockedMods().entrySet()) {
+                        TextAPI<?> text = getTranslated("other","blocked.mod",mod.getKey(),mod.getValue());
+                        if(Objects.nonNull(text)) joiner.add(text.getApplied());
+                    }
+                    return new Object[]{joiner.toString()};
+                });
+    }
+    
+    public Element addElement(ElementType type, String text) {
+        return addElement(type,text,true,0);
+    }
+    
+    public Element addElement(ElementType type, String text, boolean isTranlation, int priority) {
+        Element element = new Element(type,text,isTranlation,priority);
+        this.elements.add(element);
+        return element;
     }
 
     public void compute() {
-        this.elements.clear();
-        this.elements.add(header);
-        if(Objects.nonNull(this.helper) && this.helper.isClient())
-            this.helper.addDebugElements(this,this.elements);
+        this.visibleElements.clear();
+        for(Element element : this.elements) {
+            if(element.computeVisibility(this.helper).visible) {
+                element.computeArgs(this.helper);
+                this.visibleElements.add(element);
+            }
+        }
     }
-
-    public TextTranslationAPI<?> getTranslated(String category, Object ... args) {
-        return getTranslated(category,null,args);
+    
+    @Override protected TableRef getReferenceData() {
+        return null;
     }
-
-    public TextTranslationAPI<?> getTranslated(String category, @Nullable String extra, Object ... args) {
-        String key = "debug."+MTRef.MODID+"."+category;
-        if(Objects.nonNull(extra)) key = key+"."+extra;
-        return TextHelper.getTranslated(key,args);
+    
+    public TextTranslationAPI<?> getTranslated(String type, String key, Object ... args) {
+        String built = "debug."+MTRef.MODID+"."+type;
+        if(StringUtils.isNotEmpty(key)) built+=("."+key);
+        return TextHelper.getTranslated(built,args);
     }
 
     public void setWidth(int width) {
@@ -52,53 +199,85 @@ public class MTDebugInfo { //TODO finish this
 
     public void toLines(FontAPI font, Collection<String> lines) {
         compute();
-        if(this.elements.isEmpty() || this.maxWidth>=0) return;
-        this.elements.sort(Comparator.comparingInt(Element::getPriority));
-        this.elements.forEach(element -> element.toLines(font,this.maxWidth,lines));
+        if(this.visibleElements.isEmpty() || this.maxWidth<=0) return;
+        this.visibleElements.sort(elementSorter);
+        this.visibleElements.forEach(element -> element.toLines(font,this.maxWidth,lines));
     }
 
     public void toLines(FontAPI font, int width, Collection<String> lines) {
         setWidth(width);
         toLines(font,lines);
     }
-
+    
     public static class Element {
 
         private final ElementType type;
-        private final TextAPI<?> line;
-        private final List<Element> children;
+        private final String text;
+        private final boolean translation;
         @Getter private final int priority;
-        private final int level;
+        private Function<ChannelHelper,Boolean> visibility;
+        @Setter private Function<ChannelHelper,Object[]> argSetter;
+        @Getter private boolean visible;
+        @Getter private Object[] args;
 
-        private Element(ElementType type, TextAPI<?> line) {
-            this(type,line,0,0);
-        }
-
-        private Element(ElementType type, TextAPI<?> line, int priority) {
-            this(type,line,priority,0);
-        }
-
-        private Element(ElementType type, TextAPI<?> line, int priority, int level) {
+        private Element(ElementType type, String text, boolean isTranlation, int priority) {
             this.type = type;
-            this.line = line;
-            this.children = new ArrayList<>();
-            this.priority = priority;
-            this.level = level;
+            this.text = text;
+            this.translation = isTranlation;
+            this.priority = priority!=0 ? priority : type.defaultPriority;
+        }
+        
+        void computeArgs(ChannelHelper helper) {
+            this.args = Objects.nonNull(this.argSetter) ? this.argSetter.apply(helper) : null;
+        }
+        
+        Element computeVisibility(ChannelHelper helper) {
+            this.visible = Objects.isNull(this.visibility) || this.visibility.apply(helper);
+            return this;
         }
 
         public @Nullable String getNotBlankLine() {
-            if(Objects.isNull(this.line)) return null;
-            String applied = this.line.getApplied();
+            TextAPI<?> line = this.translation ?
+                    getTranslated(this.text,Objects.nonNull(this.args) ? this.args : new Object[]{}) :
+                    TextHelper.getLiteral(this.text);
+            if(Objects.isNull(line)) return null;
+            String applied = line.getApplied();
             return StringUtils.isNotBlank(applied) ? applied : null;
+        }
+        
+        private TextTranslationAPI<?> getTranslated(String key, Object ... args) {
+            String built = "debug."+MTRef.MODID+"."+this.type.getId();
+            if(StringUtils.isNotEmpty(key)) built+=("."+key);
+            return TextHelper.getTranslated(built,args);
+        }
+        
+        private Element setVisibility(Function<ChannelHelper,Boolean> visibility) {
+            this.visibility = visibility;
+            return this;
         }
 
         public void toLines(FontAPI font, int maxWidth, Collection<String> lines) {
             if(Objects.isNull(font)) return;
             String applied = getNotBlankLine();
             if(Objects.nonNull(applied)) lines.addAll(FontHelper.splitLines(font,applied,maxWidth));
-            for(Element child : this.children) child.toLines(font,maxWidth,lines);
         }
     }
 
-    public enum ElementType { HEADER, CHANNEL, POSITION, TARGET, OTHER }
+    @Getter
+    public enum ElementType {
+        HEADER(Integer.MAX_VALUE),
+        CHANNEL(10000),
+        POSITION(1000),
+        STATUS(100),
+        TARGET(10),
+        OTHER(0);
+        
+        final String id;
+        final int defaultPriority;
+        
+        ElementType(int priority) {
+            this.id = name().toLowerCase();
+            this.defaultPriority = priority;
+        }
+    }
 }

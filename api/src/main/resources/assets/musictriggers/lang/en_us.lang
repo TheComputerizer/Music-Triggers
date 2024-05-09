@@ -1,3 +1,17 @@
+debug.musictriggers.channel.song=Channel[%1$s] Song: Name = %2$s | Time = %3$s
+debug.musictriggers.channel.trigger=Channel[%1$s] Triggers: Active = %2$s | Playable = %3$s
+debug.musictriggers.header=Music Triggers Debug Information
+debug.musictriggers.other.blocked.mods=Blocked Mods: [ %1$s ]
+debug.musictriggers.other.blocked.mod=ID = %1$s | Categories = %2$s
+debug.musictriggers.position.biome=Biome: Name = %1$s | ID = %2$s |  Tags = %3$s
+debug.musictriggers.position.dimension=Dimension: Name = %1$s | ID = %2$s
+debug.musictriggers.position.light=Light: Block = %1$s | Sky = %2$s | Total = %3$s
+debug.musictriggers.position.structure=Structure: Name = %1$s | ID = %2$s
+debug.musictriggers.status.effects=Active Effects: [ %1$s ]
+debug.musictriggers.status.effect=Name = %1$s | ID = %2$s
+debug.musictriggers.target.block_entity=Block Entity: Name = %1$s | ID = %2$s
+debug.musictriggers.target.entity=Entity: Name = %1$s | ID = %2$s
+
 message.musictriggers.reload.error=Caught an unknown error in channel %1$s
 message.musictriggers.reload.finished=Finished reloading Music Triggers!
 message.musictriggers.reload.queue=Reloading Music Triggers in %1$s tick(s)...

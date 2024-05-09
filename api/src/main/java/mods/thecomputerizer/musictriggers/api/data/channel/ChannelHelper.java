@@ -22,6 +22,7 @@ import mods.thecomputerizer.musictriggers.api.data.global.Debug;
 import mods.thecomputerizer.musictriggers.api.data.global.GlobalData;
 import mods.thecomputerizer.musictriggers.api.data.global.Toggle;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
+import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
 import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
 import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels;
 import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels.ChannelMessage;
@@ -104,10 +105,9 @@ public class ChannelHelper {
         return new ArrayList<>();
     }
     
-    @SneakyThrows public static void initClient(MTDebugInfo debug) {
+    @SneakyThrows public static void initClient() {
         MTRef.logInfo("Initializing client channel data");
         loadConfig("CLIENT",true);
-        PLAYER_MAP.get("CLIENT").setDebugInfo(debug);
     }
     
     public static void loadConfig(String playerID, boolean client) throws TomlWritingException {
@@ -120,14 +120,16 @@ public class ChannelHelper {
         ChannelHelper helper = new ChannelHelper(playerID,client);
         helper.loadFromFile(globalData.getGlobal());
         PLAYER_MAP.put(playerID,helper);
-        loader.finishLoading();
+        loader.setConfig(true);
+        loader.setLoading(false);
     }
     
     public static void loadMessage(MessageInitChannels<?> init) {
         ChannelHelper helper = globalData.loadFromInit(init);
         PLAYER_MAP.put(init.getUuid(),helper);
         helper.setSyncable(true);
-        loader.finishLoading();
+        loader.setConfig(false);
+        loader.setLoading(false);
     }
 
     public static void onClientConnected() {
@@ -139,13 +141,13 @@ public class ChannelHelper {
     }
 
     public static void onReloadQueued() {
+        if(loader.isLoading()) return;
+        loader.setLoading(true);
+        MTLogger.onReloadQueued();
         for(Entry<String,ChannelHelper> entry : PLAYER_MAP.entrySet()) {
             String playerID = entry.getKey();
             ChannelHelper helper = entry.getValue();
-            if(StringUtils.isNotBlank(playerID) && Objects.nonNull(helper)) {
-                loader.queueReload(helper.client,helper.fromConfig);
-                helper.close();
-            }
+            if(StringUtils.isNotBlank(playerID) && Objects.nonNull(helper)) helper.close();
         }
         PLAYER_MAP.clear();
     }
@@ -250,16 +252,17 @@ public class ChannelHelper {
     @Getter private final Map<String,ChannelAPI> channels;
     @Getter private final Set<Toggle> toggles;
     @Getter private final boolean client;
+    @Getter private final MTDebugInfo debugInfo;
     @Getter private boolean syncable;
-    @Getter private MTDebugInfo debugInfo;
     private final String playerID;
-    private boolean fromConfig;
 
     public ChannelHelper(String playerID, boolean client) {
         this.channels = new HashMap<>();
         this.toggles = new HashSet<>();
         this.client = client;
         this.playerID = playerID;
+        this.debugInfo = client ? new MTDebugInfo(this) : null; //Don't initialize the debug info on the server
+        loader.setClient(client);
     }
 
     public void addDebugElements(MTDebugInfo info, Collection<Element> elements) {
@@ -353,10 +356,12 @@ public class ChannelHelper {
         }
         this.toggles.removeIf(toggle -> !toggle.parse());
         globalData.logInfo("Finished loading external channel data");
-        if(this.client) globalData.logInfo("Attempting to load stored audio references");
+        if(this.client) {
+            globalData.logInfo("Attempting to load stored audio references");
+            this.debugInfo.initChannelElements();
+        }
         for(ChannelAPI channel : this.channels.values())
             channel.loadTracks(this.client && loader.areResourcesLoaded());
-        this.fromConfig = false;
     }
 
     private void initChannel(String name, Toml info) {
@@ -391,21 +396,18 @@ public class ChannelHelper {
         for(ChannelAPI channel : this.channels.values()) channel.parseData();
         this.toggles.removeIf(toggle -> !toggle.parse());
         globalData.logInfo("Finished parsing channel data");
-        if(this.client) globalData.logInfo("Attempting to load stored audio references");
+        if(this.client) {
+            globalData.logInfo("Attempting to load stored audio references");
+            this.debugInfo.initChannelElements();
+        }
         for(ChannelAPI channel : this.channels.values())
             channel.loadTracks(this.client && loader.areResourcesLoaded());
-        this.fromConfig = true;
     }
     
     private void parseToggles(Toml toggles) {
         if(Objects.nonNull(toggles) && toggles.hasTable("toggle"))
             for(Toml table : toggles.getTableArray("toggle"))
                 this.toggles.add(new Toggle(this,table));
-    }
-    
-    public void setDebugInfo(MTDebugInfo debugInfo) {
-        this.debugInfo = debugInfo;
-        debugInfo.setHelper(this);
     }
     
     public void setSyncable(boolean sync) {

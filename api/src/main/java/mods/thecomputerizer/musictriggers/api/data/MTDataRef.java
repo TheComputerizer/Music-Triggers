@@ -62,6 +62,8 @@ public final class MTDataRef {
             new ParameterRef<>("show_channel_info",true),
             new ParameterRef<>("show_position_info",true),
             new ParameterRef<>("show_song_info",true),
+            new ParameterRef<>("show_status_info",true),
+            new ParameterRef<>("show_target_info",true),
             new ParameterRef<>("show_trigger_info",true),
             new ParameterRef<>("slow_tick_factor",5f),
             new ParameterRef<>("tick_rate",20),

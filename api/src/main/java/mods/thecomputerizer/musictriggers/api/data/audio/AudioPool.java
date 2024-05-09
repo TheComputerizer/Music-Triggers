@@ -30,7 +30,7 @@ public class AudioPool extends AudioRef {
     private final Set<AudioRef> playableAudio;
     private final TriggerAPI trigger;
     @Getter private final boolean valid;
-    private AudioRef queuedAudio;
+    @Getter private AudioRef queuedAudio;
 
     public AudioPool(String name, AudioRef ref) {
         super(ref.getChannel(),name);

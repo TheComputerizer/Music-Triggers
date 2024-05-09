@@ -9,6 +9,8 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
+import javax.annotation.Nullable;
+
 public class ChannelServer extends ChannelAPI {
 
     public ChannelServer(ChannelHelper helper, Toml table) {
@@ -23,6 +25,16 @@ public class ChannelServer extends ChannelAPI {
     @Override
     public AudioPlayer getPlayer() {
         logError("Tried to get AudioPlayer instance on the server!");
+        return null;
+    }
+    
+    @Nullable @Override public String getPlayingSongName() {
+        logError("Tried to get the name of the playing song on the server!");
+        return null;
+    }
+    
+    @Nullable @Override public String getPlayingSongTime() {
+        logError("Tried to get the time of the playing song on the server!");
         return null;
     }
     

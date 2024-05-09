@@ -23,7 +23,6 @@ import static mods.thecomputerizer.theimpossiblelibrary.api.common.event.types.C
 
 public class MTClientEvents {
 
-    private static MTDebugInfo debugInfo;
     private static AdvancementAPI<?> recentAdvancement;
     private static boolean renderOverlays = true;
     private static int ticksUntilReload = -1;
@@ -36,9 +35,8 @@ public class MTClientEvents {
         }
     }
     
-    public static void init(MTDebugInfo debug) {
+    public static void init() {
         MTRef.logInfo("Initializing client event invokers");
-        debugInfo = debug;
         EventHelper.addListener(PLAYER_ADVANCEMENT,MTClientEvents::onAdvancement);
         EventHelper.addListener(CLIENT_CONNECTED,MTClientEvents::onClientConnected);
         EventHelper.addListener(CLIENT_DISCONNECTED,MTClientEvents::onClientDisconnected);
@@ -70,7 +68,7 @@ public class MTClientEvents {
     private static void onClientTick(ClientTickEventWrapper<?> wrapper) {
         if(wrapper.isPhase(END)) {
             MinecraftAPI mc = wrapper.getMinecraft();
-            if(!renderOverlays && mc.isUnpausedAndFocused()) renderOverlays = true;
+            if(!renderOverlays && !isMTScreenActive(mc)) renderOverlays = true;
             if(ticksUntilReload>=0) {
                 if(ticksUntilReload==0) {
                     ChannelHelper.reload();
@@ -99,13 +97,16 @@ public class MTClientEvents {
     }
 
     private static void onRenderOverlayText(RenderOverlayTextEventWrapper<?> wrapper) {
-        if(renderOverlays && Objects.nonNull(debugInfo)) {
-            MinecraftAPI mc = wrapper.getMinecraft();
-            if(Objects.nonNull(mc)) debugInfo.toLines(mc.getFont(),(int)mc.getWindow().getWidthF(),wrapper.getLeft());
+        if(renderOverlays) {
+            ChannelHelper helper = ChannelHelper.getClientHelper();
+            if(Objects.nonNull(helper) && helper.getDebugBool("enable_debug_info")) {
+                MinecraftAPI mc = wrapper.getMinecraft();
+                helper.getDebugInfo().toLines(mc.getFont(),(int)mc.getWindow().getWidthF(),wrapper.getLeft());
+            }
         }
     }
 
-    public static void queueReload(@Nullable MinecraftAPI mc, int ticks) { //TODO mark ChannelHelper as reloading & save log position
+    public static void queueReload(@Nullable MinecraftAPI mc, int ticks) {
         if(ChannelHelper.getLoader().isLoading()) return;
         if(Objects.nonNull(mc))
             mc.sendMessageToPlayer(getReloadMessage("queue",new Object[]{ticks},

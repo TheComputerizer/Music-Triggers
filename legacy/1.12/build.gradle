@@ -96,7 +96,7 @@ dependencies {
     //noinspection VulnerableLibrariesLocal
     minecraft("net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}")
 
-    runtimeOnly(project(':api'))
+    implementation(project(':api'))
 
     //mod support & utility
     runtimeOnly(fg.deobf("net.darkhax.bookshelf:Bookshelf-${minecraft_version}:${bookshelf_version}"))

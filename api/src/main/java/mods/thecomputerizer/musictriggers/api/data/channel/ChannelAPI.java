@@ -94,6 +94,9 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
         return (PlayerAPI<P,?>)this.selector.getContext().getPlayer();
     }
     
+    public abstract @Nullable String getPlayingSongName();
+    public abstract @Nullable String getPlayingSongTime();
+    
     public Set<String> getRecordLines() {
         Set<String> lines = new HashSet<>();
         for(RecordElement record : this.data.getRecords()) lines.add(record.toString());

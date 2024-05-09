@@ -8,8 +8,6 @@ import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientEntryPoint;
 import javax.annotation.Nullable;
 
 public class MTClientEntryPoint extends ClientEntryPoint {
-
-    public static MTDebugInfo debugInfo;
     
     @Override
     public void onClientSetup() {
@@ -33,13 +31,12 @@ public class MTClientEntryPoint extends ClientEntryPoint {
 
     @Override
     public void onConstructed() {
-        debugInfo = new MTDebugInfo(null);
-        ChannelHelper.initClient(debugInfo);
+        ChannelHelper.initClient();
         MTNetwork.initClient();
     }
 
     @Override
     public void onPreRegistration() {
-        MTClientEvents.init(debugInfo);
+        MTClientEvents.init();
     }
 }

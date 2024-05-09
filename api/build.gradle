@@ -1,14 +1,7 @@
-import org.apache.tools.ant.filters.ReplaceTokens
-
 apply from: rootProject.file('gradle\\java8-module.gradle')
 
 repositories {
-    mavenCentral() {
-        content { //No it probably wasn't worth it
-            [ 'com.google.code.findbugs', 'commons-io', 'io.netty', 'org.apache.commons',
-              'org.apache.logging.log4j', ].forEach { includeGroup it }
-        }
-    }
+    mavenCentral()
 }
 
 dependencies {

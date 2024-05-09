@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
+import java.util.Objects;
 import java.util.Random;
 
 @SuppressWarnings("unused")
@@ -75,6 +76,7 @@ public class MTRef {
      * Uses a fallback in case someone decides to add something that is not a number to a number parameter
      */
     public static int randomInt(LoggableAPI logger, String parameter, String toConvert, int fallback) {
+        if(Objects.isNull(toConvert) || toConvert.isEmpty()) return fallback;
         String[] broken = toConvert.split(":");
         if(broken.length==1) return parse(logger,parameter, broken[0], fallback);
         int min = parse(logger,parameter,broken[0],fallback);

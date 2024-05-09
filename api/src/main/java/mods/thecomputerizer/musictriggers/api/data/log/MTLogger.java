@@ -49,7 +49,7 @@ public class MTLogger {
         log(type,typeName,Level.WARN,msg,args);
     }
 
-    public static void onReload() {
+    public static void onReloadQueued() {
         reloadIndex = LOGGED_MESSAGES.size();
     }
 }
