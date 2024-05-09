@@ -38,7 +38,7 @@ public class MTClientEntryPoint1_12_2 extends ClientEntryPoint {
     
     private @Nullable List<IResourcePack> getResourcePacks(Minecraft mc) {
         try {
-            return ObfuscationReflectionHelper.getPrivateValue(Minecraft.class,mc,"defaultResourcePacks");
+            return ObfuscationReflectionHelper.getPrivateValue(Minecraft.class,mc,"field_110449_ao");
         } catch(Exception ex) {
             MTRef.logError("Unable to get resource pack list",ex);
             return null;
@@ -68,7 +68,7 @@ public class MTClientEntryPoint1_12_2 extends ClientEntryPoint {
     private void setMusicTicker(Minecraft mc, MusicTicker ticker) {
         MTRef.logInfo("Fixing vanilla MusicTicker");
         try {
-            ObfuscationReflectionHelper.setPrivateValue(Minecraft.class,mc,ticker,"musicTicker");
+            ObfuscationReflectionHelper.setPrivateValue(Minecraft.class,mc,ticker,"field_147126_aw");
         } catch(Exception ex) {
             MTRef.logError("Failed to replace MusicTicker",ex);
         }
@@ -77,7 +77,7 @@ public class MTClientEntryPoint1_12_2 extends ClientEntryPoint {
     private void setSoundHandler(Minecraft mc, SoundHandler handler) {
         MTRef.logInfo("Fixing vanilla SoundHandler");
         try {
-            ObfuscationReflectionHelper.setPrivateValue(Minecraft.class,mc,handler,"soundHandler");
+            ObfuscationReflectionHelper.setPrivateValue(Minecraft.class,mc,handler,"field_147127_av");
             MTRef.logInfo("SoundHandler class is now {}",mc.getSoundHandler().getClass());
         } catch(Exception ex) {
             MTRef.logError("Failed to replace SoundHandler",ex);
