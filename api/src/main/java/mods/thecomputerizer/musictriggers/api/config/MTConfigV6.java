@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.api.config;
 
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
@@ -13,6 +14,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.AUDIO;
+import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.FROM;
 
 /**
  Assumes 6.3.1 since V6 didn't have config versioning
@@ -148,6 +152,14 @@ public class MTConfigV6 extends ConfigVersion {
         return entry.getKey().equals("channel") ? new TomlEntry<>("target_channel",entry.getValue()) : entry;
     }
     
+    @Override public TomlEntry<?> remapToggleFrom(TomlEntry<?> entry) {
+        return entry.getKey().equals("condition") ? new TomlEntry<>("event",entry.getValue()) : entry;
+    }
+    
+    @Override public TomlEntry<?> remapToggleTo(TomlEntry<?> entry) {
+        return entry;
+    }
+    
     @Override public TomlEntry<?> remapTriggerEntry(String name, TomlEntry<?> entry) {
         switch(entry.getKey()) {
             case "biome_category": return new TomlEntry<>("biome_tag",entry.getValue());
@@ -174,8 +186,23 @@ public class MTConfigV6 extends ConfigVersion {
         return name.equals("fallingstars") ? "starshower" : name;
     }
     
-    @Nullable @Override public Toml upgradeToTable(TomlEntry<?> entry) {
-        return entry.getKey().equals("interrupt_handler") ? Toml.getEmpty() : null;
+    @Nullable @Override public Toml upgradeToTable(TableRef ref,  TomlEntry<?> entry) {
+        if(ref==FROM && entry.getKey().equals("event")) {
+            Toml table = Toml.getEmpty();
+            String value = String.valueOf(entry.getValue());
+            switch(value) {
+                case "active": {
+                    table.addEntry("name","activate");
+                    break;
+                }
+                case "playable": {
+                    table.addEntry("name","playable");
+                    break;
+                }
+            }
+            return table;
+        }
+        return ref==AUDIO && entry.getKey().equals("interrupt_handler") ? Toml.getEmpty() : null;
     }
     
     @Override public void verifyJukebox(Toml channel) {

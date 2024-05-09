@@ -5,7 +5,7 @@ import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
-import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventRunner;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElementRunner;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.ServerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
@@ -15,7 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Getter
-public class CommandElement extends ChannelEventRunner {
+public class CommandElement extends ChannelElementRunner {
 
     @Getter private static final List<String> headerLines = Arrays.asList("# What are you looking at!?","# ...","# ...?");
 
@@ -28,14 +28,13 @@ public class CommandElement extends ChannelEventRunner {
         this.triggers = new ArrayList<>();
         this.valid = parse(table);
     }
-
-    @Override
-    public boolean canRun(String event) {
-        return !this.channel.isClientChannel() && super.canRun(event);
-    }
     
     @Override public boolean isClient() {
         return false;
+    }
+    
+    @Override public boolean isServer() {
+        return true;
     }
     
     @Override
@@ -77,7 +76,7 @@ public class CommandElement extends ChannelEventRunner {
     }
 
     @Override
-    protected void run() {
+    public void run() {
         ServerHelper.executeCommandLiteral(this.literal);
     }
 }

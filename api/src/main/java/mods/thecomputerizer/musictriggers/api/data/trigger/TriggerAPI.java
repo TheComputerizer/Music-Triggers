@@ -291,6 +291,16 @@ public abstract class TriggerAPI extends ChannelElement {
         Timer timer = TIMER_MAP.containsKey(this) ? TIMER_MAP.get(this).get(name) : null;
         if(Objects.nonNull(timer)) timer.set(state);
     }
+    
+    public void setToggle(boolean on) {
+        State state = getState();
+        if(state==DISABLED && on) setState(IDLE);
+        else if(state!=DISABLED && !on) setState(DISABLED);
+    }
+    
+    public void switchToggle() {
+        setToggle(!isDisabled());
+    }
 
     @Override
     public void stopped() {

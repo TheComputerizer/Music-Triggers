@@ -1,93 +1,58 @@
 package mods.thecomputerizer.musictriggers.api.data.channel;
 
-import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
-import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
-import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
-
-import java.util.Map;
-
-public abstract class ChannelEventRunner extends ChannelElement {
-
-    private int timer;
-
-    protected ChannelEventRunner(ChannelAPI channel, String name) {
-        super(channel,name);
-    }
-
-    @Override
-    public void activate() {
-        if(canRun("activate")) run();
-    }
-
-    public boolean canRun(String event) {
-        return this.channel.isClientChannel()==isClient() && checkResource() &&
-               event.equalsIgnoreCase(getParameterAsString("event"));
-    }
-
-    @Override
-    public void deactivate() {
-        if(canRun("deactivate")) run();
+public interface ChannelEventRunner extends ChannelEventHandler {
+    
+    @Override default void activate() {
+        if(checkSide() && canRun("activate")) run();
     }
     
-    protected void initExtraParameters(Map<String,Parameter<?>> map) {
-        addParameter(map,"event",new ParameterString("activate"));
-        addParameter(map,"event_interval",new ParameterInt(0));
+    boolean canRun(String event);
+    boolean checkSide();
+    
+    @Override default void deactivate() {
+        if(checkSide() && canRun("deactivate")) run();
     }
     
-    public abstract boolean isClient();
-
-    @Override
-    public void play() {
-        if(canRun("play")) run();
+    boolean isClient();
+    boolean isServer();
+    
+    @Override default void play() {
+        if(checkSide() && canRun("play")) run();
     }
-
-    @Override
-    public void playable() {
-        if(canRun("playable")) run();
+    
+    @Override default void playable() {
+        if(checkSide() && canRun("playable")) run();
     }
-
-    @Override
-    public void playing() {
-        if(canRun("playing")) tick();
+    
+    @Override default void playing() {
+        if(checkSide() && canRun("playing") && tick()) run();
     }
-
-    @Override
-    public void queue() {
-        if(canRun("queue")) run();
+    
+    @Override default void queue() {
+        if(checkSide() && canRun("queue")) run();
     }
-
-    protected abstract void run();
-
-    @Override
-    public void stop() {
-        if(canRun("stop")) run();
+    
+    void run();
+    
+    @Override default void stop() {
+        if(checkSide() && canRun("stop")) run();
     }
-
-    @Override
-    public void stopped() {
-        if(canRun("stopped")) run();
+    
+    @Override default void stopped() {
+        if(checkSide() && canRun("stopped")) run();
     }
-
-    private void tick() {
-        this.timer--;
-        if(this.timer<=0) {
-            run();
-            this.timer = getParameterAsInt("event_interval");
-        }
+    
+    boolean tick();
+    
+    @Override default void tickActive() {
+        if(checkSide() && canRun("tick_active") && tick()) run();
     }
-
-    @Override
-    public void tickActive() {
-        if(canRun("tick_active")) tick();
+    
+    @Override default void tickPlayable() {
+        if(checkSide() && canRun("tick_playable") && tick()) run();
     }
-
-    @Override
-    public void tickPlayable() {
-        if(canRun("tick_playable")) tick();
-    }
-
-    @Override
-    public void unplayable() {
-        if(canRun("unplayable")) run();
+    
+    @Override default void unplayable() {
+        if(checkSide() && canRun("unplayable")) run();
     }
 }

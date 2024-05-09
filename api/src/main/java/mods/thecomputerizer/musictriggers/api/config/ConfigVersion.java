@@ -70,7 +70,7 @@ public abstract class ConfigVersion implements LoggableAPI {
                 }
                 @Override public TomlEntry<?> remapEntry(Toml parent, TomlEntry<?> entry) {
                     entry = remapAudioEntry(entry);
-                    Toml table = upgradeToTable(entry);
+                    Toml table = upgradeToTable(ref,entry);
                     if(Objects.nonNull(table)) {
                         parent.addTable(entry.getKey(),table);
                         return null;
@@ -111,8 +111,26 @@ public abstract class ConfigVersion implements LoggableAPI {
                     return remapLinkEntry(parent.getParent().getName(),entry);
                 }
             };
+            case "from": return new TomlRemapper() {
+                @Nullable @Override public TomlRemapper getNextRemapper(String name) {
+                    return null;
+                }
+                @Override public String remapTable(String table) {
+                    return table;
+                }
+                @Override public TomlEntry<?> remapEntry(Toml parent, TomlEntry<?> entry) {
+                    entry = remapToggleFrom(entry);
+                    Toml table = upgradeToTable(ref,entry);
+                    if(Objects.nonNull(table)) {
+                        parent.addTable(entry.getKey(),table);
+                        return null;
+                    }
+                    return entry;
+                }
+            };
             case "global":
-            case "main": return new ConfigRemapper(ref) {
+            case "main":
+            case "toggles": return new ConfigRemapper(ref) {
                 @Override public TomlRemapper getNextRemapper(TableRef next) {
                     return getRemapper(next);
                 }
@@ -136,6 +154,23 @@ public abstract class ConfigVersion implements LoggableAPI {
                     return name;
                 }
                 @Override public TomlEntry<?> remapEntry(Toml toml, TomlEntry<?> entry) {
+                    return entry;
+                }
+            };
+            case "to": return new TomlRemapper() {
+                @Nullable @Override public TomlRemapper getNextRemapper(String name) {
+                    return null;
+                }
+                @Override public String remapTable(String table) {
+                    return table;
+                }
+                @Override public TomlEntry<?> remapEntry(Toml parent, TomlEntry<?> entry) {
+                    entry = remapToggleTo(entry);
+                    Toml table = upgradeToTable(ref,entry);
+                    if(Objects.nonNull(table)) {
+                        parent.addTable(entry.getKey(),table);
+                        return null;
+                    }
                     return entry;
                 }
             };
@@ -242,9 +277,11 @@ public abstract class ConfigVersion implements LoggableAPI {
     public abstract TomlEntry<?> remapChannelInfoEntry(String channel, TomlEntry<?> entry);
     public abstract TomlEntry<?> remapDebugEntry(TomlEntry<?> entry);
     public abstract TomlEntry<?> remapLinkEntry(String trigger, TomlEntry<?> entry);
+    public abstract TomlEntry<?> remapToggleFrom(TomlEntry<?> entry);
+    public abstract TomlEntry<?> remapToggleTo(TomlEntry<?> entry);
     public abstract TomlEntry<?> remapTriggerEntry(String name, TomlEntry<?> entry);
     public abstract String remapTriggerName(String name);
-    public abstract @Nullable Toml upgradeToTable(TomlEntry<?> entry);
+    public abstract @Nullable Toml upgradeToTable(TableRef ref, TomlEntry<?> entry);
     public abstract void verifyJukebox(Toml channel);
     public abstract void verifyRedirct(Toml channel);
     

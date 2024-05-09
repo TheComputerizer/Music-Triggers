@@ -1,6 +1,5 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger;
 
-import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelData;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;

@@ -76,6 +76,15 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
         if(Objects.nonNull(activeTrigger)) logDebug("Deactivated {}",activeTrigger);
         handleActiveEvent(ChannelEventHandler::deactivate);
     }
+    
+    @Override
+    public boolean equals(Object other) {
+        if(other instanceof ChannelAPI) {
+            ChannelAPI channel = (ChannelAPI)other;
+            return isClientChannel()==channel.isClientChannel() && this.name.equals(channel.name);
+        }
+        return false;
+    }
 
     public TriggerAPI getActiveTrigger() {
         return this.selector.getActiveTrigger();

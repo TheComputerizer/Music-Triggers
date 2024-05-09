@@ -48,6 +48,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -173,8 +174,7 @@ public class ChannelHelper {
         for(ChannelHelper helper : PLAYER_MAP.values())
             if(helper.client) {
                 loader.setResourcesLoaded(true);
-                for(ChannelAPI channel : helper.channels.values())
-                    channel.onResourcesLoaded();
+                helper.forEachChannel(ChannelAPI::onResourcesLoaded);
             }
     }
 
@@ -293,6 +293,10 @@ public class ChannelHelper {
         Debug debug = getDebug();
         if(Objects.nonNull(debug)) debug.flipBooleanParameter(name);
     }
+    
+    public void forEachChannel(Consumer<ChannelAPI> consumer) {
+        this.channels.values().forEach(consumer);
+    }
 
     public @Nullable Debug getDebug() {
         return globalData.getDebug();
@@ -359,8 +363,7 @@ public class ChannelHelper {
             globalData.logInfo("Attempting to load stored audio references");
             this.debugInfo.initChannelElements();
         }
-        for(ChannelAPI channel : this.channels.values())
-            channel.loadTracks(this.client && loader.areResourcesLoaded());
+        forEachChannel(channel -> channel.loadTracks(this.client && loader.areResourcesLoaded()));
     }
 
     private void initChannel(String name, Toml info) {
@@ -399,7 +402,7 @@ public class ChannelHelper {
             globalData.logInfo("Attempting to load stored audio references");
             this.debugInfo.initChannelElements();
         }
-        for(ChannelAPI channel : this.channels.values()) {
+        forEachChannel(channel -> {
             channel.loadTracks(this.client && loader.areResourcesLoaded());
             if(this.client) {
                 channel.setMasterVolume(SoundHelper.getCategoryVolume("master"));
@@ -407,7 +410,7 @@ public class ChannelHelper {
                 if(category.equalsIgnoreCase("master")) channel.setCategoryVolume(1f);
                 else channel.setCategoryVolume(SoundHelper.getCategoryVolume(category));
             }
-        }
+        });
     }
     
     private void parseToggles(Toml toggles) {
@@ -417,23 +420,23 @@ public class ChannelHelper {
     }
     
     public void setCategoryVolume(String category, float volume) {
-        for(ChannelAPI channel : this.channels.values()) {
+        forEachChannel(channel -> {
             if(category.equals("master")) channel.setMasterVolume(volume);
             else if(category.equals(channel.getInfo().getCategory())) channel.setCategoryVolume(volume);
-        }
+        });
     }
     
     public void setSyncable(boolean sync) {
-        for(ChannelAPI channel : this.channels.values()) {
+        forEachChannel(channel -> {
             TriggerContext context = channel.getSelector().getContext();
             if(!this.syncable && sync) context.initSync();
             else if(this.syncable && !sync) context.clearSync();
-        }
+        });
         this.syncable = sync;
     }
 
     public void tickChannels() {
-        for(ChannelAPI channel : this.channels.values()) channel.tick();
+        this.channels.values().forEach(ChannelAPI::tick);
     }
 
     private void writeExampleChannel(Toml toml) throws TomlWritingException {

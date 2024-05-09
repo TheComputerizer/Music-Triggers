@@ -26,6 +26,14 @@ import static mods.thecomputerizer.theimpossiblelibrary.api.util.Sorting.ALPHABE
 @SuppressWarnings("BooleanMethodIsAlwaysInverted")
 public final class MTDataRef {
     
+    public static final TableRef EVENT_RUNNER = new TableRef("event",Arrays.asList(
+            new ParameterRef<>("end",Integer.MAX_VALUE),
+            new ParameterRef<>("inverval",0),
+            new ParameterRef<>("name","activate"),
+            new ParameterRef<>("song","_"),
+            new ParameterRef<>("start",0)
+    ));
+    
     /*-------------------------------------------Inner-------------------------------------------*/
     
     /**
@@ -44,7 +52,7 @@ public final class MTDataRef {
             new ParameterRef<>("sound_category","music")));
     public static final TableRef COMMAND = new TableRef("command",Arrays.asList(
             new ParameterRef<>("literal","literally"),
-            new ParameterRef<>("triggers",new ArrayList<>())));
+            new ParameterRef<>("triggers",new ArrayList<>())),EVENT_RUNNER);
     public static final TableRef DEBUG = new TableRef("debug",Arrays.asList(
             new ParameterRef<>("allow_timestamps",false),
             new ParameterRef<>("block_sound_effects",false),
@@ -72,8 +80,7 @@ public final class MTDataRef {
                     "universal_audio","universal_triggers"))));
     public static final TableRef FROM = new TableRef("from",Arrays.asList(
             new ParameterRef<>("channel","not_set"),
-            new ParameterRef<>("condition","active"),
-            new ParameterRef<>("triggers",new ArrayList<>())));
+            new ParameterRef<>("triggers",new ArrayList<>())),EVENT_RUNNER);
     public static final TableRef INTERRUPT_HANDLER = new TableRef("interrupt_handler",Arrays.asList(
             new ParameterRef<>("priority",Integer.MAX_VALUE),
             new ParameterRef<>("trigger_whitelist",new ArrayList<>())));
@@ -86,17 +93,17 @@ public final class MTDataRef {
     public static final TableRef LOOP = new TableRef("loop",Arrays.asList(
             new ParameterRef<>("from",0),
             new ParameterRef<>("loop_count",0),
-            new ParameterRef<>("to",0)));
+            new ParameterRef<>("to",0)),EVENT_RUNNER);
     public static final TableRef TO = new TableRef("to",Arrays.asList(
             new ParameterRef<>("channel","not_set"),
             new ParameterRef<>("condition","switch"),
-            new ParameterRef<>("triggers",new ArrayList<>())));
+            new ParameterRef<>("triggers",new ArrayList<>())),EVENT_RUNNER);
     public static final TableRef UNIVERSAL_AUDIO = new TableRef("universal_audio",Arrays.asList(
             new ParameterRef<>("pitch",1d),
             new ParameterRef<>("play_once",0),
             new ParameterRef<>("speed",1d),
             new ParameterRef<>("volume",1f)
-    ),INTERRUPT_HANDLER);
+    ),EVENT_RUNNER,INTERRUPT_HANDLER);
     public static final TableRef UNIVERSAL_TRIGGERS = new TableRef("universal_triggers",Arrays.asList(
             new ParameterRef<>("active_cooldown","0"),
             new ParameterRef<>("fade_in","0"),
@@ -320,10 +327,6 @@ public final class MTDataRef {
         return Collections.unmodifiableMap(map);
     }
     
-    private static Set<TableRef> buildTables(TableRef ... tables) {
-        return Collections.unmodifiableSet(new HashSet<>(Arrays.asList(tables)));
-    }
-    
     private static TableRef buildRenderCard(String name, ParameterRef<?> ... extraParameters) {
         List<ParameterRef<?>> parameters = new ArrayList<>(Arrays.asList(
                 new ParameterRef<>("fade_in",20),
@@ -340,7 +343,11 @@ public final class MTDataRef {
                 new ParameterRef<>("x",-1),
                 new ParameterRef<>("y",-1)));
         parameters.addAll(Arrays.asList(extraParameters));
-        return new TableRef(name,parameters);
+        return new TableRef(name,parameters,EVENT_RUNNER);
+    }
+    
+    private static Set<TableRef> buildTables(TableRef ... tables) {
+        return Collections.unmodifiableSet(new HashSet<>(Arrays.asList(tables)));
     }
     
     private static TableRef buildTrigger(String name, boolean holder, ParameterRef<?> ... extraParameters) {

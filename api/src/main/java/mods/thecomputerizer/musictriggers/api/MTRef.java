@@ -8,7 +8,8 @@ import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
 
-@SuppressWarnings("unused") public class MTRef {
+@SuppressWarnings("unused")
+public class MTRef {
 
     public static final String CONFIG_PATH = "config/MusicTriggers";
     public static final String GLOBAL_CONFIG = "config/MusicTriggers/global";

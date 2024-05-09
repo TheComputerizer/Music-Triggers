@@ -3,7 +3,7 @@ package mods.thecomputerizer.musictriggers.api.data.render;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
-import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventRunner;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElementRunner;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-public abstract class CardAPI extends ChannelEventRunner {
+public abstract class CardAPI extends ChannelElementRunner {
 
     private final List<TriggerAPI> triggers;
 
@@ -32,6 +32,10 @@ public abstract class CardAPI extends ChannelEventRunner {
     
     @Override
     public boolean isClient() {
+        return true;
+    }
+    
+    @Override public boolean isServer() {
         return true;
     }
 
