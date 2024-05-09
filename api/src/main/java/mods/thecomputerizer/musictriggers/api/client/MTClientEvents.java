@@ -111,7 +111,7 @@ public class MTClientEvents {
         if(Objects.nonNull(mc))
             mc.sendMessageToPlayer(getReloadMessage("queue",new Object[]{ticks},
                     TextStyleAPI::italics,TextStyleAPI::red));
-        ChannelHelper.onReloadQueued();
+        ChannelHelper.onReloadQueued(true);
         ticksUntilReload = ticks;
     }
 

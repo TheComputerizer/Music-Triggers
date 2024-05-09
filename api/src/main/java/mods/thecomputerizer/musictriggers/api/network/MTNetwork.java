@@ -6,6 +6,8 @@ import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHandler;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.message.MessageAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.message.MessageWrapperAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.server.MinecraftServerAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.server.ServerHelper;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -35,6 +37,15 @@ public class MTNetwork {
         if(Objects.nonNull(wrapper)) wrapper.send();
         else MTRef.logError("Cannot null message to the server!");
     }
+    
+    public static void sendToClient(MessageAPI<?> msg, String uuid) {
+        MinecraftServerAPI<?> server = ServerHelper.getAPI();
+        if(Objects.nonNull(server)) {
+            PlayerAPI<?,?> player = server.getPlayerByUUID(uuid);
+            sendToClient(msg,false,player);
+        } else MTRef.logError("Failed to send message to the client since the server is null!");
+    }
+    
     
     public static <P> void sendToClient(MessageAPI<?> msg, boolean login, @Nullable PlayerAPI<P,?> player) {
         sendToClient(msg,login,Objects.nonNull(player) ? player.getEntity() : null);

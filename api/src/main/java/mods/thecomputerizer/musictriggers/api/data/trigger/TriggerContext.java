@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger;
 
 import lombok.Getter;
-import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
@@ -24,8 +23,6 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 public abstract class TriggerContext extends ChannelElement {
-
-    protected static final List<String> NBT_MODES = Arrays.asList("KEY_PRESENT","VAL_PRESENT","GREATER","LESSER","EQUAL","INVERT");
 
     protected final Set<TriggerSynced> syncedTriggers;
     @Getter protected PlayerAPI<?,?> player;
@@ -50,15 +47,16 @@ public abstract class TriggerContext extends ChannelElement {
         }
         return false;
     }
+    
+    public void clearSync() {
+        logInfo("Clearing syncable {} side data",isClient() ? "client" : "server");
+        this.syncedTriggers.clear();
+    }
 
     @Override
     public void close() {
         this.player = null;
         this.world = null;
-    }
-
-    protected Box getBox(int range) {
-        return getBox(range,1f);
     }
 
     protected Box getBox(int range, float yRatio) {

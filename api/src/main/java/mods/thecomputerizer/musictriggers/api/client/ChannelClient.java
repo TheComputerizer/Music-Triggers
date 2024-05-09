@@ -8,7 +8,6 @@ import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
-import mods.thecomputerizer.musictriggers.api.client.MTDebugInfo.Element;
 import mods.thecomputerizer.musictriggers.api.client.audio.TrackLoader;
 import mods.thecomputerizer.musictriggers.api.client.audio.resource.ResourceAudioSourceManager;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
@@ -22,7 +21,6 @@ import mods.thecomputerizer.theimpossiblelibrary.api.util.EnumHelper;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import javax.annotation.Nullable;
-import java.util.Collection;
 import java.util.Objects;
 
 import static com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats.DISCORD_PCM_S16_BE;
@@ -35,7 +33,8 @@ public class ChannelClient extends ChannelAPI {
     private final ChannelListener listener;
     private final TrackLoader trackLoader;
     private boolean registeredResourceAudio;
-    private float categoryVolume = 1f;
+    private float categoryVolume;
+    private float masterVolume;
     private float trackVolume;
     private boolean queued;
     private AudioPool playingPool;
@@ -49,10 +48,6 @@ public class ChannelClient extends ChannelAPI {
         this.listener = new ChannelListener(this);
         this.trackLoader = new TrackLoader();
         logInfo("Successfully registered client channel `{}`!",getName());
-    }
-
-    public void addDebugElements(MTDebugInfo info, Collection<Element> elements) {
-        //if(this.playing) elements.add(new Element(CHANNEL,info.getTranslated("channel","song")));
     }
 
     @Override
@@ -140,7 +135,7 @@ public class ChannelClient extends ChannelAPI {
     
     protected String getFormattedTime(long millis) {
         String format = millis>=3600000 ? "HH:mm:ss:SSS" : (millis>=60000 ? "mm:ss:SSS" : "ss:SSS");
-        return DurationFormatUtils.formatDuration(millis,format,false);
+        return DurationFormatUtils.formatDuration(millis,format);
     }
     
     @Override protected String getTypeName() {
@@ -221,7 +216,15 @@ public class ChannelClient extends ChannelAPI {
             updateVolume();
         }
     }
-
+    
+    @Override public void setMasterVolume(float volume) {
+        if(volume!=this.masterVolume) {
+            logDebug("Setting master volume to {}%",volume*100f);
+            this.masterVolume = volume;
+            updateVolume();
+        }
+    }
+    
     @Override
     public void setTrackVolume(float volume) {
         if(volume!=this.trackVolume) {
@@ -272,6 +275,6 @@ public class ChannelClient extends ChannelAPI {
     }
 
     private void updateVolume() {
-        this.player.setVolume((int)(100f*this.categoryVolume*this.trackVolume));
+        this.player.setVolume((int)(100f*this.masterVolume*this.categoryVolume*this.trackVolume));
     }
 }

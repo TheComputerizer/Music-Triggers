@@ -81,7 +81,11 @@ public class ChannelServer extends ChannelAPI {
     public void setCategoryVolume(float volume) {
         logError("Tried to set category volume on the server!");
     }
-
+    
+    @Override public void setMasterVolume(float volume) {
+        logError("Tried to set master volume on the server!");
+    }
+    
     @Override
     public void setTrackVolume(float volume) {
         logError("Tried to set track volume on the server!");

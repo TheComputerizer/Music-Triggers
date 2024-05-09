@@ -34,7 +34,7 @@ public class MTCommands extends CommandAPI {
         else if("mtdebug".equals(this.name)) {
             ChannelHelper.getGlobalData().logInfo("Sending debug packet");
             String parameter = ArrayHelper.isNotEmpty(strings) ? strings[0] : "enable_debug_info";
-            MTNetwork.sendToClient(new MessageToggleDebugParameter<>(parameter),false,sender.getSender());
+            MTNetwork.sendToClient(new MessageToggleDebugParameter<>(false,parameter),false,sender.getSender());
         }
     }
 

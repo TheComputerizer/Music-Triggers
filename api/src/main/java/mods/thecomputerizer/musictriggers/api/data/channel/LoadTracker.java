@@ -9,7 +9,7 @@ public class LoadTracker {
     private boolean resourcesLoaded;
     @Getter private boolean loading = true;
     @Getter private boolean client;
-    @Getter private boolean config;
+    @Getter private boolean connected;
     
     public boolean areResourcesLoaded() {
         return this.resourcesLoaded;

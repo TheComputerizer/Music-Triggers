@@ -25,8 +25,7 @@ import java.util.Objects;
 import java.util.Set;
 
 public class TriggerContextServer extends TriggerContext {
-
-    private MinecraftServerAPI<?> server;
+    
     private BlockPosAPI<?> pos;
     private StructureAPI<?> structure;
     private BiomeAPI<?> biome;
@@ -37,9 +36,14 @@ public class TriggerContextServer extends TriggerContext {
 
     @Override
     public void cache() {
-        this.server = ServerHelper.getAPI();
-        if(Objects.nonNull(this.server)) {
-            this.player = this.server.getPlayerByUUID(this.channel.getHelper().getPlayerID());
+        MinecraftServerAPI<?> server = ServerHelper.getAPI();
+        if(Objects.nonNull(server)) {
+            try {
+                this.player = server.getPlayerByUUID(this.channel.getHelper().getPlayerID());
+            } catch(NullPointerException ignored) { //This is only thrown when the server is closing and the player list does not exist anymore
+                logDebug("Caught NPE while trying to get player by UUID");
+                this.player = null;
+            }
             this.world = Objects.nonNull(this.player) ? this.player.getWorld() : null;
         } else {
             this.player = null;

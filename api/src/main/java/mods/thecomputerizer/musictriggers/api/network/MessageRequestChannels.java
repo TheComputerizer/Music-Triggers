@@ -30,12 +30,9 @@ public class MessageRequestChannels<CTX> extends MessageAPI<CTX> {
     
     @SuppressWarnings("unchecked")
     @Override public MessageAPI<CTX> handle(CTX ctx) {
-        MTRef.logInfo("Handling incoming login query for UUID {}",this.uuid);
+        MTRef.logInfo("Handling incoming channels request for UUID {}",this.uuid);
         ChannelHelper helper = ChannelHelper.getHelper(this.uuid,this.client);
-        if(Objects.nonNull(helper)) {
-            MTRef.logInfo("Found helper! Responding with init message...");
-            return (MessageAPI<CTX>)helper.getInitMessage();
-        }
+        if(Objects.nonNull(helper)) return (MessageAPI<CTX>)helper.getInitMessage();
         return null;
     }
 }

@@ -16,20 +16,20 @@ import lombok.SneakyThrows;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.ChannelClient;
 import mods.thecomputerizer.musictriggers.api.client.MTDebugInfo;
-import mods.thecomputerizer.musictriggers.api.client.MTDebugInfo.Element;
 import mods.thecomputerizer.musictriggers.api.config.ConfigVersionManager;
 import mods.thecomputerizer.musictriggers.api.data.global.Debug;
 import mods.thecomputerizer.musictriggers.api.data.global.GlobalData;
 import mods.thecomputerizer.musictriggers.api.data.global.Toggle;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
 import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
 import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels;
 import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels.ChannelMessage;
-import mods.thecomputerizer.musictriggers.api.network.MessageRequestChannels;
 import mods.thecomputerizer.musictriggers.api.server.ChannelServer;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.sound.SoundHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
@@ -48,7 +48,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -57,14 +56,25 @@ public class ChannelHelper {
     private static final Map<String,ChannelHelper> PLAYER_MAP = new HashMap<>();
     @Getter private static final GlobalData globalData = new GlobalData();
     @Getter private static final LoadTracker loader = new LoadTracker();
+    
+    public static void closePlayerChannel(String playerID) {
+        ChannelHelper helper = PLAYER_MAP.get(playerID);
+        if(Objects.nonNull(helper)) {
+            helper.close();
+            PLAYER_MAP.remove(playerID);
+        }
+    }
 
     public static @Nullable ChannelAPI findChannel(String playerID, boolean isClient, String channelName) {
         ChannelHelper helper = isClient ? getClientHelper(playerID) : getServerHelper(playerID);
         return Objects.nonNull(helper) ? helper.findChannel(globalData,channelName) : null;
     }
     
-    public static void forEach(Consumer<ChannelHelper> func) {
-        PLAYER_MAP.values().forEach(func);
+    public static void flipDebugParameter(boolean client, String name) {
+        if(client) {
+            ChannelHelper helper = getClientHelper();
+            if(Objects.nonNull(helper)) helper.flipDebugParameter(name);
+        } else for(ChannelHelper helper : PLAYER_MAP.values()) helper.flipDebugParameter(name);
     }
 
     public static int getTickRate() {
@@ -82,7 +92,7 @@ public class ChannelHelper {
     
     private static ChannelHelper getClientHelper(String uuid) {
         ChannelHelper helper = PLAYER_MAP.get("CLIENT");
-        return uuid.equals(helper.getPlayerID()) ? helper : null;
+        return Objects.nonNull(helper) && uuid.equals(String.valueOf(helper.getPlayerID())) ? helper : null;
     }
     
     @SneakyThrows
@@ -120,29 +130,36 @@ public class ChannelHelper {
         ChannelHelper helper = new ChannelHelper(playerID,client);
         helper.loadFromFile(globalData.getGlobal());
         PLAYER_MAP.put(playerID,helper);
-        loader.setConfig(true);
+        loader.setClient(client);
         loader.setLoading(false);
+        if(loader.isConnected() || !client) {
+            if(client) MTNetwork.sendToServer(helper.getInitMessage(),false);
+            else MTNetwork.sendToClient(helper.getInitMessage(),playerID);
+        }
     }
     
     public static void loadMessage(MessageInitChannels<?> init) {
         ChannelHelper helper = globalData.loadFromInit(init);
         PLAYER_MAP.put(init.getUuid(),helper);
         helper.setSyncable(true);
-        loader.setConfig(false);
         loader.setLoading(false);
     }
 
     public static void onClientConnected() {
-
+        loader.setConnected(true);
     }
 
     public static void onClientDisconnected() {
-
+        loader.setConnected(false);
+        ChannelHelper helper = getClientHelper();
+        if(Objects.nonNull(helper)) helper.setSyncable(false);
     }
 
-    public static void onReloadQueued() {
+    public static void onReloadQueued(boolean client) {
         if(loader.isLoading()) return;
         loader.setLoading(true);
+        loader.setClient(client);
+        globalData.logInfo("Queued reload on the {} side",loader.isClient() ? "client" : "server");
         MTLogger.onReloadQueued();
         for(Entry<String,ChannelHelper> entry : PLAYER_MAP.entrySet()) {
             String playerID = entry.getKey();
@@ -162,28 +179,16 @@ public class ChannelHelper {
     }
 
     public static void reload() {
-        if(loader.isConfig()) {
-            try {
-                if(loader.isClient()) { {
-                    loadConfig("CLIENT",true);
-                    MTNetwork.sendToServer(PLAYER_MAP.get("CLIENT").getInitMessage(),false);
-                }
-                } else
-                    for(PlayerAPI<?,?> player : getPlayers(false))
-                        loadConfig(player.getUUID().toString(),false);
-            } catch(TomlWritingException ex) {
-                MTRef.logFatal("Failed to reload config files!",ex);
+        try {
+            if(loader.isClient()) { {
+                loadConfig("CLIENT",true);
+                MTNetwork.sendToServer(PLAYER_MAP.get("CLIENT").getInitMessage(),false);
             }
-        } else requestChannelInformation(!loader.isClient());
-    }
-    
-    public static void requestChannelInformation(boolean toClient) {
-        List<PlayerAPI<?,?>> players = getPlayers(!toClient);
-        if(players.isEmpty()) MTRef.logError("Unable to get list of players for the {} side!",toClient ? "server" : "client");
-        for(PlayerAPI<?,?> player : players) {
-            MessageRequestChannels<?> msg = new MessageRequestChannels<>(player.getUUID().toString(),!toClient);
-            if(toClient) MTNetwork.sendToClient(msg,false,player);
-            else MTNetwork.sendToServer(msg,false);
+            } else
+                for(PlayerAPI<?,?> player : getPlayers(false))
+                    loadConfig(player.getUUID().toString(),false);
+        } catch(TomlWritingException ex) {
+            MTRef.logFatal("Failed to reload config files!",ex);
         }
     }
 
@@ -263,12 +268,6 @@ public class ChannelHelper {
         this.playerID = playerID;
         this.debugInfo = client ? new MTDebugInfo(this) : null; //Don't initialize the debug info on the server
         loader.setClient(client);
-    }
-
-    public void addDebugElements(MTDebugInfo info, Collection<Element> elements) {
-        for(ChannelAPI channel : this.channels.values())
-            if(channel instanceof ChannelClient)
-                ((ChannelClient)channel).addDebugElements(info,elements);
     }
     
     public boolean canVanillaMusicPlay() {
@@ -400,8 +399,15 @@ public class ChannelHelper {
             globalData.logInfo("Attempting to load stored audio references");
             this.debugInfo.initChannelElements();
         }
-        for(ChannelAPI channel : this.channels.values())
+        for(ChannelAPI channel : this.channels.values()) {
             channel.loadTracks(this.client && loader.areResourcesLoaded());
+            if(this.client) {
+                channel.setMasterVolume(SoundHelper.getCategoryVolume("master"));
+                String category = channel.getInfo().getCategory();
+                if(category.equalsIgnoreCase("master")) channel.setCategoryVolume(1f);
+                else channel.setCategoryVolume(SoundHelper.getCategoryVolume(category));
+            }
+        }
     }
     
     private void parseToggles(Toml toggles) {
@@ -410,10 +416,19 @@ public class ChannelHelper {
                 this.toggles.add(new Toggle(this,table));
     }
     
+    public void setCategoryVolume(String category, float volume) {
+        for(ChannelAPI channel : this.channels.values()) {
+            if(category.equals("master")) channel.setMasterVolume(volume);
+            else if(category.equals(channel.getInfo().getCategory())) channel.setCategoryVolume(volume);
+        }
+    }
+    
     public void setSyncable(boolean sync) {
-        if(!this.syncable && sync)
-            for(ChannelAPI channel : this.channels.values())
-                channel.getSelector().getContext().initSync();
+        for(ChannelAPI channel : this.channels.values()) {
+            TriggerContext context = channel.getSelector().getContext();
+            if(!this.syncable && sync) context.initSync();
+            else if(this.syncable && !sync) context.clearSync();
+        }
         this.syncable = sync;
     }
 
