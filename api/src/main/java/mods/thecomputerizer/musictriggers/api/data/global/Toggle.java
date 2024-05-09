@@ -34,7 +34,7 @@ public class Toggle extends GlobalElement {
     }
     
     @Override
-    protected Class<? extends ParameterWrapper> getTypeClass() {
+    public Class<? extends ParameterWrapper> getTypeClass() {
         return Toggle.class;
     }
     

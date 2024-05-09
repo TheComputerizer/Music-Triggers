@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.api.data.channel;
 
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioHelper;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
@@ -121,8 +122,22 @@ public class ChannelData extends ChannelElement {
     }
 
     protected void addUniversals(Map<Class<? extends ChannelElement>,UniversalParameters> map) {
-        map.put(AudioRef.class,UniversalParameters.get(this.channel,"Audio"));
-        map.put(TriggerAPI.class,UniversalParameters.get(this.channel,"Triggers"));
+        map.put(AudioRef.class,UniversalParameters.get(this.channel,MTDataRef.UNIVERSAL_AUDIO));
+        map.put(TriggerAPI.class,UniversalParameters.get(this.channel,MTDataRef.UNIVERSAL_TRIGGERS));
+    }
+    
+    protected void appendUniversals() {
+        logDebug("Appending {} universal types",this.universalMap.size());
+        for(Entry<Class<? extends ChannelElement>,UniversalParameters> entry : this.universalMap.entrySet()) {
+            for(Collection<ChannelEventHandler> handlers : this.triggerEventMap.values()) {
+                for(ChannelEventHandler handler : handlers) {
+                    if(handler instanceof ParameterWrapper) {
+                        ParameterWrapper wrapper = (ParameterWrapper)handler;
+                        if(wrapper.getTypeClass()==entry.getKey()) wrapper.setUniversals(entry.getValue());
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -191,7 +206,7 @@ public class ChannelData extends ChannelElement {
         return null;
     }
     
-    @Override protected Class<? extends ParameterWrapper> getTypeClass() {
+    @Override public Class<? extends ParameterWrapper> getTypeClass() {
         return ChannelData.class;
     }
 
@@ -269,12 +284,13 @@ public class ChannelData extends ChannelElement {
 
     public void organize() {
         extractActiveTriggers();
-        setAudioPools();
+        setupAudioPools();
         addEmptyTriggers();
         for(Map.Entry<TriggerAPI,Collection<ChannelEventHandler>> entry : this.triggerEventMap.entrySet()) {
             entry.getValue().add(entry.getKey());
             logInfo("{} is mapped to event handlers {}",entry.getKey(),entry.getValue());
         }
+        appendUniversals();
     }
 
     public void parse() {
@@ -323,7 +339,7 @@ public class ChannelData extends ChannelElement {
         CardHelper.parseTitleCards(this.channel,this.cards,renders.getTableArray("title"));
     }
 
-    protected void setAudioPools() {
+    protected void setupAudioPools() {
         Set<AudioRef> added = new HashSet<>();
         for(AudioRef ref : this.audio) {
             TriggerAPI trigger = null;

@@ -5,6 +5,7 @@ import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
+import mods.thecomputerizer.musictriggers.api.data.parameter.UniversalParameters;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 
 import javax.annotation.Nullable;
@@ -103,6 +104,12 @@ public class TriggerMerged extends TriggerAPI {
     @Override
     public void playing() {
         for(TriggerAPI trigger : this.triggers) trigger.playing();
+    }
+    
+    @Override
+    public void setUniversals(UniversalParameters universals) {
+        super.setUniversals(universals);
+        for(TriggerAPI trigger : this.triggers) trigger.setUniversals(universals);
     }
 
     @Override

@@ -1,11 +1,9 @@
 package mods.thecomputerizer.musictriggers.api.data.redirect;
 
-import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
-import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
@@ -52,7 +50,7 @@ public class RedirectElement extends ChannelElement {
     }
     
     @Override
-    protected Class<? extends ChannelElement> getTypeClass() {
+    public Class<? extends ChannelElement> getTypeClass() {
         return RedirectElement.class;
     }
 

@@ -1,8 +1,10 @@
 package mods.thecomputerizer.musictriggers.api.data.channel;
 
 import lombok.Getter;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 /**
@@ -12,9 +14,14 @@ import java.util.Objects;
 public abstract class ChannelElement extends ParameterWrapper implements ChannelEventHandler {
 
     protected final ChannelAPI channel;
-
+    
     protected ChannelElement(ChannelAPI channel, String name) {
         super(name);
+        this.channel = channel;
+    }
+
+    protected ChannelElement(ChannelAPI channel, String name, @Nullable TableRef ref) {
+        super(name,ref);
         this.channel = channel;
     }
 

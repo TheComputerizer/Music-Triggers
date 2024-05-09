@@ -29,6 +29,11 @@ public abstract class CardAPI extends ChannelEventRunner {
     public Class<? extends ChannelElement> getTypeClass() {
         return CardAPI.class;
     }
+    
+    @Override
+    public boolean isClient() {
+        return true;
+    }
 
     @Override
     public boolean isResource() {

@@ -96,7 +96,7 @@ public abstract class TriggerAPI extends ChannelElement {
 
     @Override
     public void deactivate() {
-        logInfo("Deactivating");
+        logInfo("Deactivating with fade out value of {}",getParameterAsInt("fade_out"));
         clearTimers(ACTIVE);
         setTimer("active_cooldown",PLAYABLE);
         this.tracksPlayed = 0;
@@ -292,10 +292,6 @@ public abstract class TriggerAPI extends ChannelElement {
         if(Objects.nonNull(timer)) timer.set(state);
     }
 
-    protected void setTimers(State state) {
-        consumeTimers(timer -> timer.set(state));
-    }
-
     @Override
     public void stopped() {
         setTimer("ticks_between_audio",ACTIVE);
@@ -393,7 +389,7 @@ public abstract class TriggerAPI extends ChannelElement {
             return "Link";
         }
         
-        @Override protected Class<? extends ParameterWrapper> getTypeClass() {
+        @Override public Class<? extends ParameterWrapper> getTypeClass() {
             return Link.class;
         }
         

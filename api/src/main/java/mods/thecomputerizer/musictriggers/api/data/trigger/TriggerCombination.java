@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.api.data.trigger;
 import io.netty.buffer.ByteBuf;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
+import mods.thecomputerizer.musictriggers.api.data.parameter.UniversalParameters;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 
 import java.util.*;
@@ -107,6 +108,12 @@ public class TriggerCombination extends TriggerAPI {
         Set<TriggerCombination> parents = trigger.getParents();
         if(removal) parents.remove(this);
         else parents.add(this);
+    }
+    
+    @Override
+    public void setUniversals(UniversalParameters universals) {
+        super.setUniversals(universals);
+        for(TriggerAPI trigger : this.triggers) trigger.setUniversals(universals);
     }
 
     @Override

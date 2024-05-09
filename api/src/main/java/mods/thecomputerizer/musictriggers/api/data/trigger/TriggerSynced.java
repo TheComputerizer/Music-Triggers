@@ -3,8 +3,8 @@ package mods.thecomputerizer.musictriggers.api.data.trigger;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
+import mods.thecomputerizer.musictriggers.api.data.parameter.UniversalParameters;
 
-import java.util.Map;
 import java.util.Objects;
 
 import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.*;
@@ -29,6 +29,10 @@ public class TriggerSynced extends TriggerAPI {
     public Parameter<?> getParameter(String name) {
         return this.reference.getParameter(name);
     }
+    
+    public State getState() {
+        return this.syncedState;
+    }
 
     @Override
     public boolean isPlayableContext(TriggerContext context) {
@@ -48,6 +52,12 @@ public class TriggerSynced extends TriggerAPI {
     @Override
     public boolean matches(TriggerAPI trigger) {
         return this.reference.matches(trigger);
+    }
+    
+    @Override
+    public void setUniversals(UniversalParameters universals) {
+        super.setUniversals(universals);
+        this.reference.setUniversals(universals);
     }
 
     public void sync(State state) {

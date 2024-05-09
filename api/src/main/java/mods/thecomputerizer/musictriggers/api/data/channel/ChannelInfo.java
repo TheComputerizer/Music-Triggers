@@ -83,7 +83,7 @@ public class ChannelInfo extends ChannelElement {
         return "Info";
     }
     
-    @Override protected Class<? extends ParameterWrapper> getTypeClass() {
+    @Override public Class<? extends ParameterWrapper> getTypeClass() {
         return ChannelInfo.class;
     }
     

@@ -104,7 +104,7 @@ public class TriggerSelector extends ChannelElement {
         return "Trigger";
     }
     
-    @Override protected Class<? extends ParameterWrapper> getTypeClass() {
+    @Override public Class<? extends ParameterWrapper> getTypeClass() {
         return TriggerSelector.class;
     }
 
@@ -120,27 +120,32 @@ public class TriggerSelector extends ChannelElement {
     public void select() {
         if(!setContext()) return;
         setCrashHelper("trigger selection");
-        TriggerAPI priorityTrigger = this.activeTrigger;
+        TriggerAPI priorityTrigger = null;
         if(!this.context.hasPlayer()) {
             setCrashHelper("early triggers");
             if(isClient()) {
                 setCrashHelper("loading trigger");
                 BasicTrigger loading = this.channel.getData().getLoadingTrigger();
-                if(Objects.nonNull(loading) && loading.query(this.context)) priorityTrigger = loading;
-                else {
-                    setCrashHelper("menu trigger");
-                    BasicTrigger menu = this.channel.getData().getMenuTrigger();
-                    if(Objects.nonNull(menu) && menu.query(this.context)) priorityTrigger = menu;
+                if(Objects.nonNull(loading)) {
+                    if(loading.query(this.context)) priorityTrigger = loading;
+                    else loading.setState(IDLE);
+                }
+                setCrashHelper("menu trigger");
+                BasicTrigger menu = this.channel.getData().getMenuTrigger();
+                if(Objects.nonNull(menu)) {
+                    if(Objects.isNull(priorityTrigger) && menu.query(this.context)) priorityTrigger = menu;
+                    else menu.setState(IDLE);
                 }
             }
         } else {
             setCrashHelper("normal triggers");
             priorityTrigger = getPriorityTrigger(this.channel.getData().getTriggerEventMap().keySet());
         }
-        if(Objects.isNull(priorityTrigger)) {
-            setCrashHelper("generic trigger");
-            BasicTrigger generic = this.channel.getData().getGenericTrigger();
-            if(Objects.nonNull(generic) && generic.query(this.context)) priorityTrigger = generic;
+        setCrashHelper("generic trigger");
+        BasicTrigger generic = this.channel.getData().getGenericTrigger();
+        if(Objects.nonNull(generic)) {
+            if(Objects.isNull(priorityTrigger) && generic.query(this.context)) priorityTrigger = generic;
+            else generic.setState(IDLE);
         }
         setActivePool(Objects.nonNull(priorityTrigger) ? (priorityTrigger instanceof BasicTrigger ?
                 setBasicTrigger(priorityTrigger) : setActiveTrigger(priorityTrigger)) : null);

@@ -13,6 +13,7 @@ import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
 import mods.thecomputerizer.musictriggers.api.data.redirect.RedirectElement;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerSelector;
 import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels.ChannelMessage;
 import mods.thecomputerizer.musictriggers.api.server.TriggerContextServer;
@@ -82,8 +83,12 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
 
     public Collection<TriggerAPI> getPlayableTriggers() {
         Set<TriggerAPI> triggers = new HashSet<>();
-        for(TriggerAPI trigger : this.data.getTriggers())
-            if(trigger.getState().isPlayable()) triggers.add(trigger);
+        for(TriggerAPI trigger : this.data.getTriggers()) {
+            State state;
+            if(trigger.isSynced()) state = getSelector().getContext().getSyncedState(trigger);
+            else state = trigger.getState();
+            if(state.isPlayable()) triggers.add(trigger);
+        }
         return triggers;
     }
 

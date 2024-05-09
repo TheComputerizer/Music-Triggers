@@ -22,6 +22,8 @@ import org.apache.commons.lang3.StringUtils;
 import javax.annotation.Nullable;
 import java.util.*;
 
+import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.DISABLED;
+
 public abstract class TriggerContext extends ChannelElement {
 
     protected final Set<TriggerSynced> syncedTriggers;
@@ -36,7 +38,7 @@ public abstract class TriggerContext extends ChannelElement {
     public abstract void cache();
 
     protected boolean checkNBT(@Nullable CompoundTagAPI tag, String tagStr) {
-        if(Objects.isNull(tag) || StringUtils.isBlank(tagStr) || tagStr.toUpperCase().matches("ANY")) return true;
+        if(Objects.isNull(tag) || StringUtils.isBlank(tagStr) || tagStr.equalsIgnoreCase("any")) return true;
         NBTMode mode = NBTHelper.getAndInitMode(tagStr.split(";"));
         try {
             if(Objects.nonNull(mode)) mode.checkMatch(this.channel,tag);
@@ -92,13 +94,22 @@ public abstract class TriggerContext extends ChannelElement {
     }
 
     protected boolean getSyncedContext(TriggerAPI trigger) {
-        for(TriggerSynced synced : this.syncedTriggers)
-            if(synced.matches(trigger))
-                return synced.isPlayableContext(this);
-        return false;
+        TriggerSynced synced = getSyncedTrigger(trigger);
+        return Objects.nonNull(synced) && synced.isPlayableContext(this);
     }
     
-    @Override protected Class<? extends ParameterWrapper> getTypeClass() {
+    public State getSyncedState(TriggerAPI trigger) {
+        TriggerSynced synced = getSyncedTrigger(trigger);
+        return Objects.nonNull(synced) ? synced.getState() : DISABLED;
+    }
+    
+    protected TriggerSynced getSyncedTrigger(TriggerAPI trigger) {
+        for(TriggerSynced synced : this.syncedTriggers)
+            if(synced.matches(trigger)) return synced;
+        return null;
+    }
+    
+    @Override public Class<? extends ParameterWrapper> getTypeClass() {
         return TriggerContext.class;
     }
 

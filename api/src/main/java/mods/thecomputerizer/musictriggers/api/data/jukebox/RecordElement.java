@@ -1,11 +1,9 @@
 package mods.thecomputerizer.musictriggers.api.data.jukebox;
 
-import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
-import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
@@ -71,7 +69,7 @@ public class RecordElement extends ChannelElement {
         return "Jukebox";
     }
     
-    @Override protected Class<? extends ChannelElement> getTypeClass() {
+    @Override public Class<? extends ChannelElement> getTypeClass() {
         return RecordElement.class;
     }
 }

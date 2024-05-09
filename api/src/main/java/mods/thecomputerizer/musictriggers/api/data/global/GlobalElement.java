@@ -8,7 +8,7 @@ public abstract class GlobalElement extends ParameterWrapper {
         super(name);
     }
     
-    @Override protected Class<? extends ParameterWrapper> getTypeClass() {
+    @Override public Class<? extends ParameterWrapper> getTypeClass() {
         return GlobalElement.class;
     }
     

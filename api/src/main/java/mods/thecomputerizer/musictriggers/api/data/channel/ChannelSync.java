@@ -51,7 +51,7 @@ public class ChannelSync extends ChannelElement {
         return null;
     }
     
-    @Override protected Class<? extends ParameterWrapper> getTypeClass() {
+    @Override public Class<? extends ParameterWrapper> getTypeClass() {
         return ChannelSync.class;
     }
 }

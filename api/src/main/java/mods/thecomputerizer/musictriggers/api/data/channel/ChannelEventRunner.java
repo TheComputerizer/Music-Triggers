@@ -4,7 +4,6 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterInt;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public abstract class ChannelEventRunner extends ChannelElement {
@@ -17,57 +16,56 @@ public abstract class ChannelEventRunner extends ChannelElement {
 
     @Override
     public void activate() {
-        if(canRun("ACTIVATE")) run();
+        if(canRun("activate")) run();
     }
 
     public boolean canRun(String event) {
-        return checkResource() && event.equals(getParameterAsString("event").toUpperCase());
+        return this.channel.isClientChannel()==isClient() && checkResource() &&
+               event.equalsIgnoreCase(getParameterAsString("event"));
     }
 
     @Override
     public void deactivate() {
-        if(canRun("DEACTIVATE")) run();
+        if(canRun("deactivate")) run();
     }
-
-    @Override
-    protected Map<String, Parameter<?>> initParameterMap() {
-        Map<String,Parameter<?>> map = new HashMap<>();
-        addParameter(map,"event",new ParameterString("ACTIVATE"));
+    
+    protected void initExtraParameters(Map<String,Parameter<?>> map) {
+        addParameter(map,"event",new ParameterString("activate"));
         addParameter(map,"event_interval",new ParameterInt(0));
-        initExtraParameters(map);
-        return map;
     }
+    
+    public abstract boolean isClient();
 
     @Override
     public void play() {
-        if(canRun("PLAY")) run();
+        if(canRun("play")) run();
     }
 
     @Override
     public void playable() {
-        if(canRun("PLAYABLE")) run();
+        if(canRun("playable")) run();
     }
 
     @Override
     public void playing() {
-        if(canRun("PLAYING")) tick();
+        if(canRun("playing")) tick();
     }
 
     @Override
     public void queue() {
-        if(canRun("QUEUE")) run();
+        if(canRun("queue")) run();
     }
 
     protected abstract void run();
 
     @Override
     public void stop() {
-        if(canRun("STOP")) run();
+        if(canRun("stop")) run();
     }
 
     @Override
     public void stopped() {
-        if(canRun("STOPPED")) run();
+        if(canRun("stopped")) run();
     }
 
     private void tick() {
@@ -80,16 +78,16 @@ public abstract class ChannelEventRunner extends ChannelElement {
 
     @Override
     public void tickActive() {
-        if(canRun("TICK_ACTIVE")) tick();
+        if(canRun("tick_active")) tick();
     }
 
     @Override
     public void tickPlayable() {
-        if(canRun("TICK_PLAYABLE")) tick();
+        if(canRun("tick_playable")) tick();
     }
 
     @Override
     public void unplayable() {
-        if(canRun("UNPLAYABLE")) run();
+        if(canRun("unplayable")) run();
     }
 }

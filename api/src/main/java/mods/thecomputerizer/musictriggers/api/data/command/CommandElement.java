@@ -33,7 +33,11 @@ public class CommandElement extends ChannelEventRunner {
     public boolean canRun(String event) {
         return !this.channel.isClientChannel() && super.canRun(event);
     }
-
+    
+    @Override public boolean isClient() {
+        return false;
+    }
+    
     @Override
     public void close() {
         this.literal = null;
@@ -54,7 +58,7 @@ public class CommandElement extends ChannelEventRunner {
     }
     
     @Override
-    protected Class<? extends ChannelElement> getTypeClass() {
+    public Class<? extends ChannelElement> getTypeClass() {
         return CommandElement.class;
     }
     
@@ -64,7 +68,12 @@ public class CommandElement extends ChannelEventRunner {
 
     @Override
     public boolean verifyRequiredParameters() {
-        return hasParameter("literal");
+        if(hasParameter("literal")) {
+            this.literal = getParameterAsString("literal");
+            return true;
+        }
+        logError("Missing required literal parameter");
+        return false;
     }
 
     @Override

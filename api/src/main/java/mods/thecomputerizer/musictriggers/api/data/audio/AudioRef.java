@@ -127,7 +127,7 @@ public class AudioRef extends ChannelElement {
             return MTDataRef.INTERRUPT_HANDLER;
         }
         
-        @Override protected Class<? extends ChannelElement> getTypeClass() {
+        @Override public Class<? extends ChannelElement> getTypeClass() {
             return AudioRef.class;
         }
         

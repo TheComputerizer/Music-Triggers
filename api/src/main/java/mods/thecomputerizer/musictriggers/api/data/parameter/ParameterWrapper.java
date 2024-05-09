@@ -20,16 +20,20 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.Map.Entry;
 
+@SuppressWarnings("unused")
 public abstract class ParameterWrapper implements LoggableAPI {
 
     @Getter protected final String name;
     private final Map<String,Parameter<?>> parameters;
     @Setter @Getter UniversalParameters universals;
-
+    
     protected ParameterWrapper(String name) {
+        this(name,null);
+    }
+    
+    protected ParameterWrapper(String name, TableRef ref) {
         this.name = name;
-        this.parameters = Collections.unmodifiableMap(initParameterMap());
-        if(this instanceof UniversalParameters) this.universals = null;
+        this.parameters = Collections.unmodifiableMap(initParameterMap(Objects.nonNull(ref) ? ref : getReferenceData()));
     }
 
     protected void addParameter(Map<String,Parameter<?>> map, String name, @Nullable Parameter<?> parameter) {
@@ -46,15 +50,14 @@ public abstract class ParameterWrapper implements LoggableAPI {
 
     public @Nullable Parameter<?> getParameter(String name) {
         Parameter<?> parameter = this.parameters.get(name.equals("id") ? "identifier" : name);
-        Parameter<?> universal = getUniversalParameter(name);
-        return Objects.nonNull(parameter) && Objects.nonNull(universal) && !parameter.isDefault() ? universal : parameter;
+        if(this instanceof UniversalParameters || Objects.isNull(this.universals)) return parameter;
+        Parameter<?> universal = this.universals.getParameter(name);
+        return Objects.isNull(parameter) || (Objects.nonNull(universal) && parameter.isDefault()) ? universal : parameter;
     }
 
     public boolean getParameterAsBoolean(String name) {
         Parameter<?> parameter = getParameter(name);
         if(parameter instanceof ParameterBoolean) return ((ParameterBoolean)parameter).getValue();
-        logWarn("Attempting to access non boolean parameter `{}` as a boolean! Things might not get parsed "+
-                "correctly",name);
         if(parameter instanceof ParameterNumber<?>) return ((ParameterNumber<?>)parameter).doubleValue()!=0d;
         return Objects.nonNull(parameter) && Boolean.parseBoolean(parameter.getValue().toString());
     }
@@ -119,10 +122,7 @@ public abstract class ParameterWrapper implements LoggableAPI {
      * Assumes the parameter has already been verified to not be an instance of ParameterNumber
      */
     protected Number getParameterAsNumber(Parameter<?> parameter, String name) {
-        logInfo("Getting parameter ({},{}) as number",name,parameter);
         if(parameter instanceof ParameterString) {
-            logWarn("Attempting to access string parameter `{}` as a number! The type will be assumed to "+
-                    "be double",name);
             String value = parameter.getValue().toString();
             try {
                 return Double.parseDouble(value);
@@ -141,12 +141,8 @@ public abstract class ParameterWrapper implements LoggableAPI {
     }
     
     protected abstract TableRef getReferenceData();
-    protected abstract Class<? extends ParameterWrapper> getTypeClass();
+    public abstract Class<? extends ParameterWrapper> getTypeClass();
     protected abstract String getTypeName();
-    
-    protected @Nullable Parameter<?> getUniversalParameter(String name) {
-        return Objects.nonNull(this.universals) ? this.universals.getParameter(name) : null;
-    }
 
     public boolean hasAllNonDefaultParameter(String ... names) {
         for(String name : names)
@@ -188,9 +184,8 @@ public abstract class ParameterWrapper implements LoggableAPI {
         }
     }
 
-    protected Map<String,Parameter<?>> initParameterMap() {
+    protected Map<String,Parameter<?>> initParameterMap(TableRef table) {
         Map<String,Parameter<?>> map = new HashMap<>();
-        TableRef table = getReferenceData();
         if(Objects.nonNull(table))
             for(ParameterRef<?> ref : table.getParameters())
                 addParameter(map,ref.getName(),ref.toParameter());

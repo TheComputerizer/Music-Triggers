@@ -4,6 +4,8 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
+import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
+import mods.thecomputerizer.musictriggers.api.data.parameter.UniversalParameters;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
@@ -12,10 +14,6 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 public class AudioPool extends AudioRef {
-
-    public static @Nullable AudioPool unsafeMerge(AudioPool ... pools) {
-        return unsafeMerge(Arrays.asList(pools));
-    }
 
     public static @Nullable AudioPool unsafeMerge(Collection<AudioPool> pools) {
         AudioPool merged = null;
@@ -91,6 +89,11 @@ public class AudioPool extends AudioRef {
     public @Nullable InterruptHandler getInterruptHandler() {
         return Objects.nonNull(this.queuedAudio) ? this.queuedAudio.getInterruptHandler() : null;
     }
+    
+    @Override
+    public @Nullable Parameter<?> getParameter(String name) {
+        return Objects.nonNull(this.queuedAudio) ? this.queuedAudio.getParameter(name) : super.getParameter(name);
+    }
 
     @Override
     public float getVolume() {
@@ -105,16 +108,6 @@ public class AudioPool extends AudioRef {
     public void queryInterrupt(@Nullable TriggerAPI next, AudioPlayer player) {
         if(Objects.isNull(this.queuedAudio)) this.channel.getPlayer().stopTrack();
         else this.queuedAudio.queryInterrupt(trigger,player);
-    }
-
-    public AudioPool merge(AudioPool ... pools) {
-        return merge(Arrays.asList(pools));
-    }
-
-    public AudioPool merge(Collection<AudioPool> pools) {
-        AudioPool merged = new AudioPool(this);
-        for(AudioPool pool : pools) merged.addAudio(pool);
-        return merged;
     }
 
     private TriggerAPI parseTrigger(List<TriggerAPI> triggers) {
@@ -151,6 +144,12 @@ public class AudioPool extends AudioRef {
         if(nextQueue instanceof AudioPool) nextQueue.queue();
         this.queuedAudio = nextQueue;
         logInfo("Queued reference {}",this.queuedAudio);
+    }
+    
+    @Override
+    public void setUniversals(UniversalParameters universals) {
+        super.setUniversals(universals);
+        for(AudioRef ref : this.audio) ref.setUniversals(universals);
     }
 
     @Override
