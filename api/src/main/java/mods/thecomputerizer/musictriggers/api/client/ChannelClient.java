@@ -16,6 +16,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelListener;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.Link;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.EnumHelper;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -58,6 +59,7 @@ public class ChannelClient extends ChannelAPI {
                 return false;
             }
             if(Objects.isNull(this.playingPool) || Objects.isNull(this.player.getPlayingTrack())) return true;
+            if(!this.deactivating) deactivateLink();
             this.deactivating = true;
             this.playingPool.queryInterrupt(next,this.player);
             return false;
@@ -101,6 +103,12 @@ public class ChannelClient extends ChannelAPI {
         super.deactivate();
         this.deactivating = false;
     }
+    
+    @Override
+    public void disable(Link link) {
+        super.disable(link);
+        if(Objects.nonNull(this.playingPool)) stop();
+    }
 
     protected AudioConfiguration finalizeManager() {
         this.manager.setFrameBufferDuration(1000);
@@ -111,6 +119,19 @@ public class ChannelClient extends ChannelAPI {
     private @Nullable String findMatchingFile(String path) {
         String[] matches = getInfo().getLocalFolder().list((dir,name) -> name.equals(path) || name.startsWith(path+"."));
         return Objects.nonNull(matches) && matches.length>0 ? matches[0] : null;
+    }
+    
+    @Nullable @Override public String getFormattedSongTime() {
+        AudioTrack track = this.player.getPlayingTrack();
+        if(Objects.isNull(track)) return null;
+        String current = getFormattedTime(track.getPosition());
+        String duration = getFormattedTime(track.getDuration());
+        return current+"/"+duration;
+    }
+    
+    protected String getFormattedTime(long millis) {
+        String format = millis>=3600000 ? "HH:mm:ss:SSS" : (millis>=60000 ? "mm:ss:SSS" : "ss:SSS");
+        return DurationFormatUtils.formatDuration(millis,format);
     }
 
     @Override
@@ -125,17 +146,10 @@ public class ChannelClient extends ChannelAPI {
         return Objects.nonNull(ref) ? ref.getName() : null;
     }
     
-    @Nullable @Override public String getPlayingSongTime() {
+    @Override
+    public long getPlayingSongTime() {
         AudioTrack track = this.player.getPlayingTrack();
-        if(Objects.isNull(track)) return null;
-        String current = getFormattedTime(track.getPosition());
-        String duration = getFormattedTime(track.getDuration());
-        return current+"/"+duration;
-    }
-    
-    protected String getFormattedTime(long millis) {
-        String format = millis>=3600000 ? "HH:mm:ss:SSS" : (millis>=60000 ? "mm:ss:SSS" : "ss:SSS");
-        return DurationFormatUtils.formatDuration(millis,format);
+        return Objects.nonNull(track) ? track.getPosition() : 0L;
     }
     
     @Override protected String getTypeName() {
@@ -235,7 +249,7 @@ public class ChannelClient extends ChannelAPI {
     }
     
     @Override public boolean shouldBlockMusicTicker() {
-        return this.getInfo().isOverridesMusic() && Objects.nonNull(this.playingPool);
+        return this.getInfo().isOverridesMusic() || Objects.nonNull(this.playingPool);
     }
     
     @Override
@@ -247,10 +261,12 @@ public class ChannelClient extends ChannelAPI {
     
     @Override
     public void tick() {
-        if(MTClient.isUnpaused() && (MTClient.isFocused() || !getHelper().getDebugBool("pause_unless_focused"))) {
-            this.player.setPaused(false);
-            super.tick();
-        } else this.player.setPaused(true);
+        if(this.enabled) {
+            if(MTClient.isUnpaused() && (MTClient.isFocused() || !getHelper().getDebugBool("pause_unless_focused"))) {
+                this.player.setPaused(false);
+                super.tick();
+            } else this.player.setPaused(true);
+        } else if(Objects.nonNull(this.playingPool)) playing();
     }
 
     @Override

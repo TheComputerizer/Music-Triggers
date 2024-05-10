@@ -3,12 +3,12 @@ package mods.thecomputerizer.musictriggers.api.data.audio;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
-import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.UniversalParameters;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.RandomHelper;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -136,7 +136,7 @@ public class AudioPool extends AudioRef {
         int sum = 0;
         for(AudioRef audio : this.playableAudio)
             if(audio!=this.queuedAudio) sum+=audio.getParameterAsInt("chance");
-        int rand = sum>0 ? MTRef.randomInt(sum) : 0;
+        int rand = sum>0 ? RandomHelper.randomInt(sum) : 0;
         for(AudioRef audio : this.playableAudio) {
             rand-=(audio==this.queuedAudio ? 0 : audio.getParameterAsInt("chance"));
             if(rand<=0) nextQueue = audio;
@@ -165,8 +165,10 @@ public class AudioPool extends AudioRef {
 
     @Override
     public void stopped() {
-        if(Objects.nonNull(this.queuedAudio) && this.queuedAudio.getParameterAsInt("play_once")>0)
-            this.playableAudio.remove(this.queuedAudio);
-        this.queuedAudio = null;
+        if(Objects.nonNull(this.queuedAudio)) {
+            this.queuedAudio.stopped();
+            if(this.queuedAudio.getParameterAsInt("play_once")>0) this.playableAudio.remove(this.queuedAudio);
+            this.queuedAudio = null;
+        }
     }
 }

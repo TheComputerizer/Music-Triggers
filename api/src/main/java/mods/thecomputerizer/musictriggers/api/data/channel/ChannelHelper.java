@@ -342,30 +342,6 @@ public class ChannelHelper {
         return Objects.nonNull(player) ? player.getUUID().toString() : null;
     }
 
-    public void loadFromFile(@Nullable Toml globalHolder) throws TomlWritingException {
-        if(Objects.isNull(globalHolder)) {
-            globalData.logFatal("Cannot initialize channel or toggle data from missing global config!");
-            return;
-        }
-        initChannels(globalHolder);
-        initToggles();
-        parseData();
-    }
-    
-    public void loadFromInit(MessageInitChannels<?> init) {
-        for(Entry<String,ChannelMessage> entry : init.getChannels().entrySet()) {
-            String name = entry.getKey();
-            loadChannel(name,globalData.getGlobal().getTable("channels").getTable(name),entry.getValue());
-        }
-        this.toggles.removeIf(toggle -> !toggle.parse());
-        globalData.logInfo("Finished loading external channel data");
-        if(this.client) {
-            globalData.logInfo("Attempting to load stored audio references");
-            this.debugInfo.initChannelElements();
-        }
-        forEachChannel(channel -> channel.loadTracks(this.client && loader.areResourcesLoaded()));
-    }
-
     private void initChannel(String name, Toml info) {
         if(this.channels.containsKey(name)) globalData.logError("Channel with name `{}` already exists!");
         else {
@@ -388,16 +364,45 @@ public class ChannelHelper {
         parseToggles(globalData.openToggles(MTRef.CONFIG_PATH));
     }
     
-    private void loadChannel(String name, Toml info, ChannelMessage message) {
-        ChannelAPI channel = this.client ? new ChannelClient(this,info) : new ChannelServer(this,info);
-        channel.loadData(message);
-        this.channels.put(name,channel);
+    public void loadFromFile(@Nullable Toml globalHolder) throws TomlWritingException {
+        if(Objects.isNull(globalHolder)) {
+            globalData.logFatal("Cannot initialize channel or toggle data from missing global config!");
+            return;
+        }
+        initChannels(globalHolder);
+        initToggles();
+        parseData();
+    }
+    
+    public void loadFromInit(MessageInitChannels<?> init) {
+        Set<Entry<String,ChannelMessage>> channelMessages = init.getChannels().entrySet();
+        for(Entry<String,ChannelMessage> entry : channelMessages) {
+            String name = entry.getKey();
+            Toml info = globalData.getGlobal().getTable("channels").getTable(name);
+            ChannelAPI channel = this.client ? new ChannelClient(this,info) : new ChannelServer(this,info);
+            this.channels.put(name,channel);
+        }
+        for(Entry<String,ChannelMessage> entry : channelMessages) {
+            ChannelAPI channel = this.channels.get(entry.getKey());
+            channel.getData().load(entry.getValue());
+        }
+        this.channels.values().forEach(channel -> channel.getData().setupLinkTargets());
+        parseToggles(init.getToggles());
+        this.toggles.removeIf(toggle -> !toggle.parse());
+        globalData.logInfo("Finished loading external channel data");
+        if(this.client) {
+            globalData.logInfo("Attempting to load stored audio references");
+            this.debugInfo.initChannelElements();
+        }
+        forEachChannel(channel -> channel.loadTracks(this.client && loader.areResourcesLoaded()));
     }
 
     public void parseData() {
-        for(ChannelAPI channel : this.channels.values()) channel.parseData();
-        this.toggles.removeIf(toggle -> !toggle.parse());
+        this.channels.values().forEach(ChannelAPI::parseData);
+        this.channels.values().forEach(channel -> channel.getData().setupLinkTargets()); //Needs to be called after all the channels are set up
         globalData.logInfo("Finished parsing channel data");
+        this.toggles.removeIf(toggle -> !toggle.parse());
+        globalData.logInfo("Finished parsing toggles");
         if(this.client) {
             globalData.logInfo("Attempting to load stored audio references");
             this.debugInfo.initChannelElements();

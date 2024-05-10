@@ -4,6 +4,7 @@ import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelData;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.basic.BasicTrigger;
@@ -116,39 +117,36 @@ public class TriggerSelector extends ChannelElement {
     public boolean isResource() {
         return false;
     }
+    
+    public TriggerAPI queryOrIdle(@Nullable TriggerAPI priority, @Nullable TriggerAPI trigger) {
+        if(Objects.nonNull(trigger)) {
+            if(Objects.isNull(priority) && trigger.query(this.context)) priority = trigger;
+            else if(!trigger.isDisabled()) trigger.setState(IDLE);
+        }
+        return priority;
+    }
 
     public void select() {
         if(!setContext()) return;
         setCrashHelper("trigger selection");
         TriggerAPI priorityTrigger = null;
+        ChannelData data = this.channel.getData();
         if(!this.context.hasPlayer()) {
             setCrashHelper("early triggers");
             if(isClient()) {
                 setCrashHelper("loading trigger");
-                BasicTrigger loading = this.channel.getData().getLoadingTrigger();
-                if(Objects.nonNull(loading)) {
-                    if(loading.query(this.context)) priorityTrigger = loading;
-                    else loading.setState(IDLE);
-                }
+                priorityTrigger = queryOrIdle(priorityTrigger,data.getLoadingTrigger());
                 setCrashHelper("menu trigger");
-                BasicTrigger menu = this.channel.getData().getMenuTrigger();
-                if(Objects.nonNull(menu)) {
-                    if(Objects.isNull(priorityTrigger) && menu.query(this.context)) priorityTrigger = menu;
-                    else menu.setState(IDLE);
-                }
+                priorityTrigger = queryOrIdle(priorityTrigger,data.getMenuTrigger());
             }
         } else {
             setCrashHelper("normal triggers");
-            priorityTrigger = getPriorityTrigger(this.channel.getData().getTriggerEventMap().keySet());
+            priorityTrigger = queryOrIdle(priorityTrigger,getPriorityTrigger(data.getTriggerEventMap().keySet()));
         }
         setCrashHelper("generic trigger");
-        BasicTrigger generic = this.channel.getData().getGenericTrigger();
-        if(Objects.nonNull(generic)) {
-            if(Objects.isNull(priorityTrigger) && generic.query(this.context)) priorityTrigger = generic;
-            else generic.setState(IDLE);
-        }
-        setActivePool(Objects.nonNull(priorityTrigger) ? (priorityTrigger instanceof BasicTrigger ?
-                setBasicTrigger(priorityTrigger) : setActiveTrigger(priorityTrigger)) : null);
+        priorityTrigger = queryOrIdle(priorityTrigger,data.getGenericTrigger());
+        setActivePool(priorityTrigger instanceof BasicTrigger ? setBasicTrigger(priorityTrigger) :
+                              setActiveTrigger(priorityTrigger));
     }
 
     protected @Nullable AudioPool setActiveTrigger(TriggerAPI trigger) {

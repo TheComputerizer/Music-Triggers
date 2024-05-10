@@ -60,7 +60,7 @@ public class MTDebugInfo extends GlobalElement {
                         String time = null;
                         if(Objects.nonNull(channel)) {
                             song = channel.getPlayingSongName();
-                            time = channel.getPlayingSongTime();
+                            time = channel.getFormattedSongTime();
                         }
                         if(Objects.isNull(song)) song = "?";
                         if(Objects.isNull(time)) time = "?";

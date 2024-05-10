@@ -12,6 +12,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.Link;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -119,6 +120,7 @@ public class AudioContainer extends AudioRef {
 
     @Override
     public void playing() {
+        this.loops.forEach(Loop::run);
         if(this.fade>0) {
             if(this.fadeFactor==0f) this.fade = 0;
             else this.fade--;
@@ -200,7 +202,8 @@ public class AudioContainer extends AudioRef {
     }
 
     private void setPosition(AudioTrack track) {
-        long position = getParameterAsLong("start_at");
+        long position = this.channel.getStartTime();
+        if(position==0L) position = getParameterAsLong("start_at");
         if(position>0L)  {
             track.setPosition(position);
             logDebug("Set track position to {}",position);
@@ -234,8 +237,18 @@ public class AudioContainer extends AudioRef {
         }
         else stopTrackImmediately();
     }
+    
+    @Override
+    public void stopped() {
+        this.loops.forEach(Loop::reset);
+    }
 
     private void stopTrackImmediately() {
+        TriggerAPI trigger = this.channel.getActiveTrigger();
+        if(Objects.nonNull(trigger)) {
+            Link link = trigger.getActiveLink();
+            if(Objects.nonNull(link)) link.setSnapshotInherit(this.channel.getPlayingSongTime());
+        }
         this.channel.getPlayer().stopTrack();
     }
 }

@@ -68,10 +68,11 @@ public class MessageTriggerStates<CTX> extends MessageAPI<CTX> { //TODO Combine 
         private StateSnapshot(TriggerAPI trigger, String state) {
             this.trigger = trigger;
             this.state = state;
+            MTRef.logDebug("Initialized state snapshot of trigger {} and state {}",trigger,state);
         }
 
         private void apply() {
-            this.trigger.getChannel().getSelector().getContext().updateSyncedState(this.trigger, State.get(this.state));
+            this.trigger.getChannel().getSelector().getContext().updateSyncedState(this.trigger,State.get(this.state));
         }
     }
 }

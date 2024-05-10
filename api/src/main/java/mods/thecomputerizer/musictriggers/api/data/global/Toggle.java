@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.global;
 
+import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
@@ -62,6 +63,7 @@ public class Toggle extends GlobalElement {
     }
     
     public void run() {
+        logDebug("Running toggle!!!!!");
         this.toThese.forEach(To::run);
     }
 
@@ -79,13 +81,14 @@ public class Toggle extends GlobalElement {
             logError("At least 1 `to` table is required to be parsed successfully");
             return false;
         }
+        this.fromThese.forEach(from -> from.channel.getData().addActiveTriggers(from,from.getTriggers(),true));
         return true;
     }
 
     public static class From extends GlobalEventRunner {
 
         private final Toggle parent;
-        private final Set<TriggerAPI> triggers;
+        @Getter private final Set<TriggerAPI> triggers;
         private ChannelAPI channel;
 
         public From(Toggle parent) {
@@ -135,7 +138,7 @@ public class Toggle extends GlobalElement {
         private static final List<String> VALID_CONDITIONS = Arrays.asList("true","false","switch");
 
         private final Toggle parent;
-        private final Set<TriggerAPI> triggers;
+        @Getter private final Set<TriggerAPI> triggers;
         private ChannelAPI channel;
         private String condition;
 

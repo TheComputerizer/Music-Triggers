@@ -21,6 +21,11 @@ public class ChannelServer extends ChannelAPI {
     public boolean checkDeactivate(TriggerAPI current, TriggerAPI next) {
         return current!=next;
     }
+    
+    @Nullable @Override public String getFormattedSongTime() {
+        logError("Tried to get the time of the playing song on the server!");
+        return null;
+    }
 
     @Override
     public AudioPlayer getPlayer() {
@@ -33,9 +38,9 @@ public class ChannelServer extends ChannelAPI {
         return null;
     }
     
-    @Nullable @Override public String getPlayingSongTime() {
+    @Override public long getPlayingSongTime() {
         logError("Tried to get the time of the playing song on the server!");
-        return null;
+        return 0L;
     }
     
     @Override protected String getTypeName() {

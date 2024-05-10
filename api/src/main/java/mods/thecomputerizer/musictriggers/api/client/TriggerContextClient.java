@@ -1,6 +1,5 @@
 package mods.thecomputerizer.musictriggers.api.client;
 
-import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.ResourceContext;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
@@ -20,6 +19,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.integration.ModHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.integration.Weather2API.WeatherData;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.Box;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.RandomHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.DimensionAPI;
 
@@ -76,7 +76,7 @@ public class TriggerContextClient extends TriggerContext {
                 return stacks;
             }
             default: {
-                int slot = MTRef.randomInt(this.channel,"inventory_slot_number",slotMatcher,-1);
+                int slot = RandomHelper.randomInt("inventory_slot_number",slotMatcher,-1);
                 return slot>=0 ? Collections.singleton(inventory.getStack(slot)) : Collections.emptyList();
             }
         }
@@ -246,7 +246,7 @@ public class TriggerContextClient extends TriggerContext {
         ResourceLocationAPI<?> itemName = stack.getItem().getRegistryName();
         if(parts[0].equals(itemName.getNamespace()) && parts[1].equals(itemName.getPath())) {
             if(parts.length==2) return true;
-            if(stack.getCount()==MTRef.randomInt(this.channel,"parsed_item_count",parts[2],-1))
+            if(stack.getCount()==RandomHelper.randomInt("parsed_item_count",parts[2],-1))
                 return parts.length==3 || checkNBT(stack.getTag(),itemString);
         }
         return false;
@@ -279,7 +279,7 @@ public class TriggerContextClient extends TriggerContext {
 
     @Override
     public boolean isActiveMenu() {
-        return Objects.nonNull(this.minecraft) && this.minecraft.isFinishedLoading() && !hasWorld();
+        return Objects.nonNull(this.minecraft) && this.minecraft.isFinishedLoading() && !hasBoth();
     }
 
     @Override

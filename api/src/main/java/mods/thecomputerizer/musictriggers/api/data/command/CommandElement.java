@@ -77,6 +77,7 @@ public class CommandElement extends ChannelElementRunner {
 
     @Override
     public void run() {
+        super.run();
         ServerHelper.executeCommandLiteral(this.literal);
     }
 }

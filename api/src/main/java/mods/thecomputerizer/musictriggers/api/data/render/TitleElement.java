@@ -23,6 +23,7 @@ public class TitleElement extends CardAPI {
     
     @Override
     public void run() {
+        super.run();
         RenderHelper.addRenderable(new RenderableText(asValueMap()));
     }
 

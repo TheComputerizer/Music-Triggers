@@ -15,6 +15,7 @@ import mods.thecomputerizer.musictriggers.api.data.redirect.RedirectElement;
 import mods.thecomputerizer.musictriggers.api.data.render.CardAPI;
 import mods.thecomputerizer.musictriggers.api.data.render.CardHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.Link;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerCombination;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerMerged;
@@ -56,12 +57,12 @@ public class ChannelData extends ChannelElement {
         this.universalMap = initUniversals();
     }
 
-    protected <E extends ChannelEventHandler> void addActiveTriggers(
+    public <E extends ChannelEventHandler> void addActiveTriggers(
             Collection<E> elements, Function<E,Collection<TriggerAPI>> triggers, boolean isEvent) {
         for(E element : elements) addActiveTriggers(element,triggers.apply(element),isEvent);
     }
-
-    protected <E extends ChannelEventHandler> void addActiveTriggers(
+    
+    public <E extends ChannelEventHandler> void addActiveTriggers(
             E element, Collection<TriggerAPI> triggers, boolean isEvent) {
         TriggerAPI active = null;
         for(TriggerAPI trigger : this.triggerEventMap.keySet()) {
@@ -165,7 +166,11 @@ public class ChannelData extends ChannelElement {
     }
 
     protected void extractActiveTriggers() {
-        addActiveTriggers(this.audio,AudioRef::getTriggers,false);
+        addActiveTriggers(this.audio,ref -> {
+            List<TriggerAPI> triggers = ref.getTriggers();
+            addActiveTriggers(ref.getLoops(),loop -> triggers,true);
+            return triggers;
+        },false);
         addActiveTriggers(this.cards,CardAPI::getTriggers,true);
         addActiveTriggers(this.commands,CommandElement::getTriggers,true);
     }
@@ -365,5 +370,10 @@ public class ChannelData extends ChannelElement {
             }
             if(Objects.nonNull(pool) && pool.isValid()) this.triggerEventMap.get(trigger).add(pool);
         }
+    }
+    
+    public void setupLinkTargets() {
+        logInfo("Setting up link targets");
+        this.triggers.forEach(trigger -> trigger.getLinks().forEach(Link::setupTarget));
     }
 }

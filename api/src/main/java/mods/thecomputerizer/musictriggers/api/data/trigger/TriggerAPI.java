@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.api.data.trigger;
 
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
+import lombok.Setter;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
@@ -28,7 +29,8 @@ public abstract class TriggerAPI extends ChannelElement {
     private static final Map<TriggerAPI,Map<String,Timer>> TIMER_MAP = new HashMap<>(); // This needs to be static due to super stuff
 
     private final Set<TriggerCombination> parents;
-    private final Set<Link> links;
+    protected final Set<Link> links;
+    @Setter protected Link activeLink;
     private ResourceContext resourceCtx;
     private State state;
     private int tracksPlayed;
@@ -96,10 +98,10 @@ public abstract class TriggerAPI extends ChannelElement {
 
     @Override
     public void deactivate() {
-        logInfo("Deactivating with fade out value of {}",getParameterAsInt("fade_out"));
         clearTimers(ACTIVE);
         setTimer("active_cooldown",PLAYABLE);
         this.tracksPlayed = 0;
+        if(!isDisabled()) setState(query(this.channel.getSelector().context) ? PLAYABLE : IDLE);
     }
 
     public void encode(ByteBuf buf) {
@@ -294,12 +296,16 @@ public abstract class TriggerAPI extends ChannelElement {
     
     public void setToggle(boolean on) {
         State state = getState();
+        logInfo("Toggling from {} to {}",state!=DISABLED,on);
         if(state==DISABLED && on) setState(IDLE);
         else if(state!=DISABLED && !on) setState(DISABLED);
     }
     
     public void switchToggle() {
-        setToggle(!isDisabled());
+        State state = getState();
+        logInfo("Toggling from {} to {}",state!=DISABLED,state==DISABLED);
+        if(state==DISABLED) setState(IDLE);
+        else setState(DISABLED);
     }
 
     @Override
@@ -356,6 +362,8 @@ public abstract class TriggerAPI extends ChannelElement {
         private final List<TriggerAPI> linkedTriggers;
         private final List<TriggerAPI> requiredTriggers;
         private final boolean valid;
+        @Setter private long snapshotInherit;
+        @Setter private long snapshotLink;
         
         protected Link(TriggerAPI parent, Toml table) {
             super(parent.channel,parent.getNameWithID()+"-link");
@@ -385,7 +393,19 @@ public abstract class TriggerAPI extends ChannelElement {
                     logWarn("Failed to parse required triggers");
                     this.valid = false;
                 }
-                else this.valid = true;
+                else {
+                    this.requiredTriggers.add(this.parent);
+                    this.valid = true;
+                }
+            }
+        }
+        
+        @Override public void activate() {
+            if(this.channel.areTheseActive(this.requiredTriggers)) {
+                logDebug("Link test!");
+                this.snapshotLink = this.channel.getPlayingSongTime();
+                this.targetChannel.getActiveTrigger().activeLink = this;
+                this.channel.disable(this);
             }
         }
         
@@ -405,6 +425,14 @@ public abstract class TriggerAPI extends ChannelElement {
         
         @Override public boolean isResource() {
             return false;
+        }
+        
+        public void setupTarget() {
+            this.targetChannel.getData().addActiveTriggers(this,this.linkedTriggers,true);
+        }
+        
+        public void unlink() {
+            this.channel.enable();
         }
     }
 

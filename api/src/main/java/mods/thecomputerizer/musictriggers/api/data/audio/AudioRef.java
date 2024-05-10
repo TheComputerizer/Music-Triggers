@@ -2,12 +2,14 @@ package mods.thecomputerizer.musictriggers.api.data.audio;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioItem;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
+import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
@@ -15,15 +17,20 @@ import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import javax.annotation.Nullable;
 import java.util.*;
 
+import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.LOOP;
+
 @Getter
 public class AudioRef extends ChannelElement {
 
     private final List<TriggerAPI> triggers;
+    protected final List<Loop> loops;
     private InterruptHandler interruptHandler;
+    protected long inheritedTime;
 
     public AudioRef(ChannelAPI channel, String name) {
         super(channel,name);
         this.triggers = new ArrayList<>();
+        this.loops = new ArrayList<>();
     }
 
     @Override
@@ -74,6 +81,13 @@ public class AudioRef extends ChannelElement {
             logDebug("Successfully parsed with triggers {}",this.triggers);
             if(table.hasTable("interrupt_handler"))
                 this.interruptHandler = new InterruptHandler(this.channel,table.getTable("interrupt_handler"));
+            if(table.hasTable("loop")) {
+                for(Toml loopTable : table.getTableArray("loop")) {
+                    Loop loop = new Loop(this.channel,loopTable);
+                    if(loop.valid) this.loops.add(loop);
+                }
+                logInfo("Registered {} loops",this.loops.size());
+            }
             return true;
         }
         logError("Failed to parse");
@@ -133,6 +147,65 @@ public class AudioRef extends ChannelElement {
         
         @Override protected String getSubTypeName() {
             return "Interrupt_Handler";
+        }
+    }
+    
+    @Getter
+    public static class Loop extends ChannelElement {
+        
+        final boolean valid;
+        final long from;
+        final long to;
+        final int total;
+        int count;
+        
+        protected Loop(ChannelAPI channel, Toml table) {
+            super(channel,"loop_point");
+            boolean valid = parse(table);
+            this.from = getParameterAsLong("from");
+            this.to = getParameterAsLong("to");
+            this.total = getParameterAsInt("loop_count");
+            if(this.from==this.to) {
+                logError("Cannot define loops with equal from and to values! {} = {}",this.from,this.to);
+                valid = false;
+            }
+            if(valid) {
+                logInfo("Successfully parsed loop from {} to {} with count {}",this.from,this.to,this.total);
+            }
+            this.valid = valid;
+        }
+        
+        @Override public void close() {
+        
+        }
+        
+        @Override protected TableRef getReferenceData() {
+            return LOOP;
+        }
+        
+        @Override protected String getSubTypeName() {
+            return "Loop";
+        }
+        
+        @Override public Class<? extends ParameterWrapper> getTypeClass() {
+            return Loop.class;
+        }
+        
+        @Override public boolean isResource() {
+            return false;
+        }
+        
+        public void reset() {
+            this.count = 0;
+        }
+        
+        public void run() {
+            AudioTrack track = this.channel.getPlayer().getPlayingTrack();
+            if(Objects.nonNull(track) && (this.total<=0 || this.count<this.total) && track.getPosition()>=this.from) {
+                logInfo("Running loop to {}",this.to);
+                track.setPosition(this.to);
+                this.count++;
+            }
         }
     }
 }

@@ -5,6 +5,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelData;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.parameter.UniversalParameters;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -23,8 +24,9 @@ public class TriggerHelper {
 
     public static TriggerAPI decodeTrigger(@Nullable ChannelAPI channel, String name, String id) {
         if(Objects.nonNull(channel)) {
+            channel.logDebug("Decoding trigger from {}-{}",name,id);
             ChannelData data = channel.getData();
-            String nameWithID = name+(id.equals("not_set") ? "" : "-"+id);
+            String nameWithID = name+(Misc.equalsAny(id,null,"null","not_set") ? "" :"-"+id);
             switch(nameWithID) {
                 case "generic": return data.getGenericTrigger();
                 case "loading": return data.getLoadingTrigger();

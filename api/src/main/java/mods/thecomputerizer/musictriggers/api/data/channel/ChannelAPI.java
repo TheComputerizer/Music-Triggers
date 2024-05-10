@@ -13,9 +13,9 @@ import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
 import mods.thecomputerizer.musictriggers.api.data.redirect.RedirectElement;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.Link;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerSelector;
-import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels.ChannelMessage;
 import mods.thecomputerizer.musictriggers.api.server.TriggerContextServer;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
@@ -38,8 +38,9 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     private final ChannelSync sync;
     private final TriggerSelector selector;
     private final String name;
-    @Setter private boolean enabled;
+    @Setter protected boolean enabled = true;
     private int ticks;
+    protected Link disabledBy;
 
     protected ChannelAPI(ChannelHelper helper, Toml table) {
         this.helper = helper;
@@ -56,6 +57,11 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
         TriggerAPI activeTrigger = getActiveTrigger();
         if(Objects.nonNull(activeTrigger)) logDebug("Activated {}",activeTrigger);
         handleActiveEvent(ChannelEventHandler::activate);
+    }
+    
+    public boolean areTheseActive(Collection<TriggerAPI> triggers) {
+        TriggerAPI trigger = getActiveTrigger();
+        return Objects.nonNull(trigger) && trigger.matches(triggers);
     }
 
     public abstract boolean checkDeactivate(TriggerAPI current, TriggerAPI next);
@@ -77,6 +83,25 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
         handleActiveEvent(ChannelEventHandler::deactivate);
     }
     
+    public void deactivateLink() {
+        TriggerAPI trigger = getActiveTrigger();
+        if(Objects.nonNull(trigger.getActiveLink())) {
+            Link link = trigger.getActiveLink();
+            link.setSnapshotInherit(getPlayingSongTime());
+            link.unlink();
+            trigger.setActiveLink(null);
+        }
+    }
+    
+    public void disable(Link link) {
+        this.disabledBy = link;
+        this.enabled = false;
+    }
+    
+    public void enable() {
+        this.enabled = true;
+    }
+    
     @Override
     public boolean equals(Object other) {
         if(other instanceof ChannelAPI) {
@@ -89,6 +114,8 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     public TriggerAPI getActiveTrigger() {
         return this.selector.getActiveTrigger();
     }
+    
+    public abstract @Nullable String getFormattedSongTime();
 
     public Collection<TriggerAPI> getPlayableTriggers() {
         Set<TriggerAPI> triggers = new HashSet<>();
@@ -109,7 +136,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     }
     
     public abstract @Nullable String getPlayingSongName();
-    public abstract @Nullable String getPlayingSongTime();
+    public abstract long getPlayingSongTime();
     
     public Set<String> getRecordLines() {
         Set<String> lines = new HashSet<>();
@@ -136,6 +163,25 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
         return map;
     }
     
+    public long getStartTime() {
+        long startAt = 0L;
+        if(Objects.nonNull(this.disabledBy)) {
+            startAt = this.disabledBy.getSnapshotInherit();
+            this.disabledBy.setSnapshotInherit(0L);
+            this.disabledBy = null;
+        } else {
+            TriggerAPI trigger = getActiveTrigger();
+            if(Objects.nonNull(trigger)) {
+                Link link = trigger.getActiveLink();
+                if(Objects.nonNull(link)) {
+                    startAt = link.getSnapshotLink();
+                    link.setSnapshotLink(0L);
+                }
+            }
+        }
+        return startAt;
+    }
+    
     protected abstract String getTypeName();
 
     protected void handleActiveEvent(Consumer<ChannelEventHandler> event) {
@@ -155,10 +201,6 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
 
     public abstract boolean isClientChannel();
     public abstract boolean isValid();
-    
-    public void loadData(ChannelMessage message) {
-        this.data.load(message);
-    }
 
     public abstract void loadLocalTrack(AudioRef ref, String location);
     public abstract void loadRemoteTrack(AudioRef ref, String location);

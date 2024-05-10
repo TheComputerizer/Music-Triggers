@@ -28,7 +28,7 @@ public final class MTDataRef {
     
     public static final TableRef EVENT_RUNNER = new TableRef("event",Arrays.asList(
             new ParameterRef<>("end",Integer.MAX_VALUE),
-            new ParameterRef<>("inverval",0),
+            new ParameterRef<>("interval",0),
             new ParameterRef<>("name","activate"),
             new ParameterRef<>("song","_"),
             new ParameterRef<>("start",0)
@@ -206,9 +206,9 @@ public final class MTDataRef {
                          new ParameterRef<>("resource_name",Collections.singletonList("any"))),
             buildTrigger("harvestmoon",false),
             buildTrigger("height",true,
-                         new ParameterRef<>("check_above_level",true),
+                         new ParameterRef<>("check_above_level",false),
                          new ParameterRef<>("check_for_sky",true),
-                         new ParameterRef<>("level",7)),
+                         new ParameterRef<>("level",0)),
             buildTrigger("home",false,
                          new ParameterRef<>("detection_range",16),
                          new ParameterRef<>("detection_y_ratio",0.5f)),

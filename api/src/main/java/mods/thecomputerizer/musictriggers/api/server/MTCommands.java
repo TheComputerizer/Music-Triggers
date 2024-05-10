@@ -1,6 +1,5 @@
 package mods.thecomputerizer.musictriggers.api.server;
 
-import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
 import mods.thecomputerizer.musictriggers.api.network.MessageReload;
@@ -9,6 +8,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.core.ArrayHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.CommandAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.CommandSenderAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.MinecraftServerAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.RandomHelper;
 
 import static mods.thecomputerizer.theimpossiblelibrary.api.server.CommandAPI.ArgType.ROOT;
 
@@ -27,8 +27,8 @@ public class MTCommands extends CommandAPI {
         ChannelHelper.getGlobalData().logInfo("Executing command on server");
         if("mtreload".equals(this.name)) {
             ChannelHelper.getGlobalData().logInfo("Sending reload packet");
-            int ticks = MTRef.randomInt(ChannelHelper.getGlobalData(),"reload_ticks",
-                                        ArrayHelper.isNotEmpty(strings) ? strings[0] : null,5);
+            int ticks = RandomHelper.randomInt("reload_ticks",
+                                               ArrayHelper.isNotEmpty(strings) ? strings[0] : null,5);
             MTNetwork.sendToClient(new MessageReload<>(ticks),false,sender.getSender());
         }
         else if("mtdebug".equals(this.name)) {

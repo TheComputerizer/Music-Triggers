@@ -62,7 +62,7 @@ public class MTClientEntryPoint1_12_2 extends ClientEntryPoint {
     @Override public void onLoadComplete() {
         Minecraft mc = Minecraft.getMinecraft();
         setMusicTicker(mc,new MTMusicTicker1_12_2(mc));
-        setSoundHandler(mc,new MTSoundHandler1_12_2(mc.getResourceManager(),mc.gameSettings));
+        setSoundHandler(mc,new MTSoundHandler1_12_2(mc.getResourceManager(),mc.gameSettings,mc.getSoundHandler()));
     }
     
     private void setMusicTicker(Minecraft mc, MusicTicker ticker) {
