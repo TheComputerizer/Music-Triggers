@@ -126,6 +126,7 @@ public class MTCommonEntryPoint extends CommonEntryPoint {
         if(!configDir.exists() && !configDir.mkdirs())
             throw new RuntimeException("Unable to create file directory at "+MTRef.CONFIG_PATH+"! Music Triggers "+
                     "is unable to load any further.");
+        MTRegistry.init();
         MTNetwork.initCommon();
         distributeHook(CommonEntryPoint::onConstructed);
     }

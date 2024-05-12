@@ -15,3 +15,6 @@ debug.musictriggers.target.entity=Entity: Name = %1$s | ID = %2$s
 message.musictriggers.reload.error=Caught an unknown error in channel %1$s
 message.musictriggers.reload.finished=Finished reloading Music Triggers!
 message.musictriggers.reload.queue=Reloading Music Triggers in %1$s tick(s)...
+
+item.musictriggers.record.name=Enhanced Music Disc
+item.musictriggers.record.tooltip=Test

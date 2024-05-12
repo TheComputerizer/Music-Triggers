@@ -104,7 +104,7 @@ dependencies {
     //noinspection VulnerableLibrariesLocal
     minecraft("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
 
-    runtimeOnly(project(':api')) //TODO Figure out why this needs implementation while 1.12.2 can be runtimeOnly
+    implementation(project(':api')) //TODO Figure out why this needs implementation while 1.12.2 can be runtimeOnly
 
     //mod support dependencies
     runtimeOnly(fg.deobf("curse.maven:betterweather-400714:${betterweather_version}"))
