@@ -1,4 +1,4 @@
-package mods.thecomputerizer.musictriggers.api.client;
+package mods.thecomputerizer.musictriggers.api.client.channel;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioConfiguration;
 import com.sedmelluq.discord.lavaplayer.player.AudioConfiguration.ResamplingQuality;
@@ -8,6 +8,7 @@ import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
+import mods.thecomputerizer.musictriggers.api.client.MTClient;
 import mods.thecomputerizer.musictriggers.api.client.audio.TrackLoader;
 import mods.thecomputerizer.musictriggers.api.client.audio.resource.ResourceAudioSourceManager;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
@@ -30,7 +31,7 @@ import static com.sedmelluq.discord.lavaplayer.player.AudioConfiguration.Resampl
 public class ChannelClient extends ChannelAPI {
 
     private final AudioPlayerManager manager;
-    private final AudioPlayer player;
+    protected final AudioPlayer player;
     private final ChannelListener listener;
     private final TrackLoader trackLoader;
     private boolean registeredResourceAudio;

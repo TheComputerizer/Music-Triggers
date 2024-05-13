@@ -37,7 +37,7 @@ public class AudioContainer extends AudioRef {
         this.channel.setTrackVolume(getVolume());
     }
 
-    private AudioTrack checkState(@Nullable AudioTrack track) {
+    public AudioTrack checkState(@Nullable AudioTrack track) {
         if(Objects.isNull(track)) {
             logWarn("Unable to get audio track!");
             return null;
@@ -80,7 +80,7 @@ public class AudioContainer extends AudioRef {
         return (float)this.fade*this.fadeFactor;
     }
 
-    protected @Nullable AudioTrack getTrack() {
+    public @Nullable AudioTrack getTrack() {
         if(this.item instanceof AudioTrack) return (AudioTrack)this.item;
         if(this.item instanceof AudioPlaylist) {
             AudioPlaylist playlist = (AudioPlaylist)this.item;

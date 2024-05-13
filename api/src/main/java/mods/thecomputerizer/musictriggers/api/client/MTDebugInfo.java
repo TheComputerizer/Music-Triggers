@@ -67,24 +67,26 @@ public class MTDebugInfo extends GlobalElement {
                         return new Object[]{name,song,time};
                     });
             priority--;
-            addElement(CHANNEL,"trigger",true,priority)
-                    .setVisibility(helper -> helper.getDebugBool("show_channel_info") &&
-                                             helper.getDebugBool("show_trigger_info"))
-                    .setArgSetter(helper -> {
-                        ChannelAPI channel = helper.findChannel(this,name);
-                        String active = null;
-                        String playable = null;
-                        if(Objects.nonNull(channel)) {
-                            TriggerAPI trigger = channel.getActiveTrigger();
-                            if(Objects.nonNull(trigger)) active = trigger.toString();
-                            Collection<TriggerAPI> triggers = channel.getPlayableTriggers();
-                            if(!triggers.isEmpty()) playable = triggers.toString();
-                        }
-                        if(Objects.isNull(active)) active = "?";
-                        if(Objects.isNull(playable)) playable = "?";
-                        return new Object[]{name,active,playable};
-                    });
-            priority--;
+            if(!"jukebox".equals(name) && !"preview".equals(name)) {
+                addElement(CHANNEL,"trigger",true, priority)
+                        .setVisibility(helper -> helper.getDebugBool("show_channel_info") &&
+                                                 helper.getDebugBool("show_trigger_info"))
+                        .setArgSetter(helper -> {
+                            ChannelAPI channel = helper.findChannel(this, name);
+                            String active = null;
+                            String playable = null;
+                            if(Objects.nonNull(channel)) {
+                                TriggerAPI trigger = channel.getActiveTrigger();
+                                if(Objects.nonNull(trigger)) active = trigger.toString();
+                                Collection<TriggerAPI> triggers = channel.getPlayableTriggers();
+                                if(!triggers.isEmpty()) playable = triggers.toString();
+                            }
+                            if(Objects.isNull(active)) active = "?";
+                            if(Objects.isNull(playable)) playable = "?";
+                            return new Object[]{name, active, playable};
+                        });
+                priority--;
+            }
         }
     }
     

@@ -1,17 +1,46 @@
 package mods.thecomputerizer.musictriggers.api.client;
 
 import mods.thecomputerizer.musictriggers.api.MTRef;
+import mods.thecomputerizer.musictriggers.api.client.channel.ChannelJukebox;
+import mods.thecomputerizer.musictriggers.api.client.channel.ChannelPreview;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.CommonAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.*;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.function.Function;
 
 public class MTClient {
+    
+    private static final Toml SPECIAL_CHANNELS = buildSpecialChannels();
+    
+    private static Toml buildSpecialChannels() {
+        Toml toml = Toml.getEmpty();
+        toml.addTable("jukebox",buildSpecialChannel("record"));
+        toml.addTable("preview",buildSpecialChannel("master"));
+        return toml;
+    }
+    
+    private static Toml buildSpecialChannel(String category) {
+        Toml info = Toml.getEmpty();
+        info.addEntry("sound_category",category);
+        info.addEntry("play_normal_music",true);
+        info.addEntry("pauses_overrides",true);
+        return info;
+    }
+    
+    public static ChannelJukebox getJukeboxChannel(ChannelHelper helper) {
+        return new ChannelJukebox(helper,SPECIAL_CHANNELS.getTable("jukebox"));
+    }
+    
+    public static ChannelPreview getPreviewChannel(ChannelHelper helper) {
+        return new ChannelPreview(helper,SPECIAL_CHANNELS.getTable("preview"));
+    }
 
     public static @Nullable TextStyleAPI<?> getStyleAPI() {
         TextHelperAPI<?> api = TILRef.getCommonSubAPI(CommonAPI::getTextHelper);

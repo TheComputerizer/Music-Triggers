@@ -9,6 +9,8 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.basic.TriggerMenu;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.*;
 import mods.thecomputerizer.musictriggers.api.data.trigger.simple.*;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.ReflectionHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.registry.item.DiscBuilderAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Constructor;
@@ -19,6 +21,17 @@ public class TriggerRegistry {
     private static final List<String> BLACKLISTED_NAMES = Arrays.asList("combination","merged","synced");
     private static final Map<String,Class<? extends TriggerAPI>> DEFAULT_TRIGGERS = loadDefaultTriggers();
     private static final Map<String,Class<? extends TriggerAPI>> REGISTERED_TRIGGERS = new HashMap<>(DEFAULT_TRIGGERS);
+    
+    public static DiscBuilderAPI buildProperties(DiscBuilderAPI builder) {
+        for(String name : REGISTERED_TRIGGERS.keySet()) {
+            builder.addProperty(MTRef.res("trigger_"+name),(stack,world) -> {
+                CompoundTagAPI tag = stack.getTag();
+                String trigger = Objects.nonNull(tag) ? tag.getString("triggerID") : null;
+                return Objects.nonNull(trigger) && name.equals(trigger) ? 1f : 0f;
+            });
+        }
+        return builder;
+    }
 
     public static @Nullable TriggerAPI getTriggerInstance(ChannelAPI channel, String name) {
         Class<? extends TriggerAPI> clazz = REGISTERED_TRIGGERS.get(name);

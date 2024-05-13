@@ -48,7 +48,10 @@ public class MessageInitChannels<CTX> extends MessageAPI<CTX> {
     
     Map<String,ChannelMessage> getChannelMap(ChannelHelper helper) {
         Map<String,ChannelMessage> map = new HashMap<>();
-        for(ChannelAPI channel : helper.getChannels().values()) map.put(channel.getName(),new ChannelMessage(channel));
+        for(ChannelAPI channel : helper.getChannels().values()) {
+            String name = channel.getName();
+            if(!"jukebox".equals(name) && !"preview".equals(name)) map.put(name,new ChannelMessage(channel));
+        }
         return map;
     }
     

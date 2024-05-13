@@ -14,9 +14,12 @@ import dev.lavalink.youtube.YoutubeAudioSourceManager;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import mods.thecomputerizer.musictriggers.api.MTRef;
-import mods.thecomputerizer.musictriggers.api.client.ChannelClient;
+import mods.thecomputerizer.musictriggers.api.client.MTClient;
+import mods.thecomputerizer.musictriggers.api.client.channel.ChannelClient;
 import mods.thecomputerizer.musictriggers.api.client.MTDebugInfo;
+import mods.thecomputerizer.musictriggers.api.client.channel.ChannelJukebox;
 import mods.thecomputerizer.musictriggers.api.config.ConfigVersionManager;
+import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.global.Debug;
 import mods.thecomputerizer.musictriggers.api.data.global.GlobalData;
 import mods.thecomputerizer.musictriggers.api.data.global.Toggle;
@@ -325,7 +328,14 @@ public class ChannelHelper {
     }
     
     public @Nullable PlayerAPI<?,?> getPlayer() {
-        for(ChannelAPI channel : this.channels.values()) return channel.getPlayerEntity();
+        if(this.client) {
+            MinecraftAPI mc = TILRef.getClientSubAPI(ClientAPI::getMinecraft);
+            return Objects.nonNull(mc) ? mc.getPlayer() : null;
+        }
+        for(ChannelAPI channel : this.channels.values()) {
+            PlayerAPI<?,?> player = channel.getPlayerEntity();
+            if(Objects.nonNull(player)) return channel.getPlayerEntity();
+        }
         return null;
     }
 
@@ -404,6 +414,8 @@ public class ChannelHelper {
         this.toggles.removeIf(toggle -> !toggle.parse());
         globalData.logInfo("Finished parsing toggles");
         if(this.client) {
+            this.channels.put("jukebox",MTClient.getJukeboxChannel(this));
+            this.channels.put("preview",MTClient.getPreviewChannel(this));
             globalData.logInfo("Attempting to load stored audio references");
             this.debugInfo.initChannelElements();
         }
@@ -422,6 +434,24 @@ public class ChannelHelper {
         if(Objects.nonNull(toggles) && toggles.hasTable("toggle"))
             for(Toml table : toggles.getTableArray("toggle"))
                 this.toggles.add(new Toggle(this,table));
+    }
+    
+    public void playToJukebox(String channelName, String audioRef) {
+        ChannelJukebox jukebox = (ChannelJukebox)this.channels.get("jukebox");
+        if(Objects.isNull(jukebox)) return;
+        if(jukebox.isPlaying()) {
+            jukebox.stop();
+            return;
+        }
+        ChannelAPI channel = this.channels.get(channelName);
+        if(Objects.nonNull(channel)) {
+            AudioRef playThis = null;
+            for(AudioRef ref : channel.getData().getAudio())
+                if(ref.getName().equals(audioRef))
+                    playThis = ref;
+            if(Objects.nonNull(playThis)) jukebox.playReference(playThis);
+            else channel.logError("Unable to find audio with name {} to play for the jukebox channel!",audioRef);
+        } else globalData.logError("Unable to find channel reference {}",channelName);
     }
     
     public void setCategoryVolume(String category, float volume) {

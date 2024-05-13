@@ -16,5 +16,6 @@ message.musictriggers.reload.error=Caught an unknown error in channel %1$s
 message.musictriggers.reload.finished=Finished reloading Music Triggers!
 message.musictriggers.reload.queue=Reloading Music Triggers in %1$s tick(s)...
 
+item.musictriggers.record.desc=Enhanced Music Disc
 item.musictriggers.record.name=Enhanced Music Disc
-item.musictriggers.record.tooltip=Test
+item.musictriggers.record.tooltip=Reference: %1$s

@@ -8,6 +8,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.common.advancement.Advancem
 import mods.thecomputerizer.theimpossiblelibrary.api.common.event.EventHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.event.events.CustomTickEventWrapper;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.event.events.PlayerAdvancementEventWrapper;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.event.events.PlayerInteractBlockEventWrapper;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextStyleAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.CustomTick;
@@ -104,6 +105,10 @@ public class MTClientEvents {
                 helper.getDebugInfo().toLines(mc.getFont(),(int)mc.getWindow().getWidthF(),wrapper.getLeft());
             }
         }
+    }
+    
+    private static void onRightClickBlock(PlayerInteractBlockEventWrapper<?> wrapper) {
+    
     }
 
     public static void queueReload(@Nullable MinecraftAPI mc, int ticks) {
