@@ -30,8 +30,10 @@ import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
 import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
+import mods.thecomputerizer.musictriggers.api.network.MessageFinishedInit;
 import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels;
 import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels.ChannelMessage;
+import mods.thecomputerizer.musictriggers.api.network.MessageTriggerStates;
 import mods.thecomputerizer.musictriggers.api.server.ChannelServer;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
@@ -75,11 +77,6 @@ public class ChannelHelper {
             helper.close();
             PLAYER_MAP.remove(playerID);
         }
-    }
-
-    public static @Nullable ChannelAPI findChannel(String playerID, boolean isClient, String channelName) {
-        ChannelHelper helper = isClient ? getClientHelper(playerID) : getServerHelper(playerID);
-        return Objects.nonNull(helper) ? helper.findChannel(globalData,channelName) : null;
     }
     
     public static void flipDebugParameter(boolean client, String name) {
@@ -150,11 +147,12 @@ public class ChannelHelper {
         }
     }
     
-    public static void loadMessage(MessageInitChannels<?> init) {
+    public static MessageFinishedInit<?> loadMessage(MessageInitChannels<?> init) {
         ChannelHelper helper = globalData.loadFromInit(init);
-        PLAYER_MAP.put(init.getUuid(), helper);
+        PLAYER_MAP.put(init.getUuid(),helper);
         helper.setSyncable(true);
         loader.setLoading(false);
+        return new MessageFinishedInit<>(helper);
     }
 
     public static void onClientConnected() {
@@ -200,14 +198,6 @@ public class ChannelHelper {
                     loadConfig(player.getUUID().toString(),false);
         } catch(TomlWritingException ex) {
             MTRef.logFatal("Failed to reload config files!",ex);
-        }
-    }
-    
-    public static void setCurrentSong(String channel, String song) {
-        synchronized(PLAYER_MAP) {
-            PLAYER_MAP.values().forEach(helper -> {
-                if(!helper.client) ((ChannelServer)helper.channels.get(channel)).setCurrentSong(song);
-            });
         }
     }
 
@@ -279,6 +269,8 @@ public class ChannelHelper {
     @Getter private final MTDebugInfo debugInfo;
     @Getter private boolean syncable;
     private final String playerID;
+    private MessageTriggerStates<?> stateMsg;
+    private int ticks;
 
     public ChannelHelper(String playerID, boolean client) {
         this.channels = new HashMap<>();
@@ -296,6 +288,7 @@ public class ChannelHelper {
     }
 
     public void close() {
+        this.stateMsg = null;
         for(ChannelAPI channel : this.channels.values()) channel.close();
         this.channels.clear();
         for(Toggle toggle : this.toggles) toggle.close();
@@ -365,13 +358,6 @@ public class ChannelHelper {
 
     public String getPlayerID() {
         if(!this.client) return this.playerID;
-        else {
-            MinecraftAPI mc = TILRef.getClientSubAPI(ClientAPI::getMinecraft);
-            if(Objects.nonNull(mc)) {
-                PlayerAPI<?,?> player = mc.getPlayer();
-                return Objects.nonNull(player) ? player.getUUID().toString() : null;
-            }
-        }
         PlayerAPI<?,?> player = getPlayer();
         return Objects.nonNull(player) ? player.getUUID().toString() : null;
     }
@@ -487,6 +473,10 @@ public class ChannelHelper {
         });
     }
     
+    public void setCurrentSong(String channel, String song) {
+        if(!this.client) ((ChannelServer)this.channels.get(channel)).setCurrentSong(song);
+    }
+    
     public void setDiscTag(ItemStackAPI<?> stack, String channel, String trigger, String audio) {
         CompoundTagAPI tag = TagHelper.makeCompoundTag();
         tag.putString("channel",channel);
@@ -507,17 +497,31 @@ public class ChannelHelper {
     public void stopJukeboxAt(BlockPosAPI<?> pos) {
         getJukeboxChannel().checkStop(pos.getPosVec());
     }
-
+    
+    protected void sync() {
+        if(Objects.isNull(this.stateMsg)) this.stateMsg = new MessageTriggerStates<>(this);
+        this.channels.values().forEach(channel -> channel.getSync().addSynced(this.stateMsg));
+        if(this.stateMsg.readyToSend() && MTNetwork.send(this.stateMsg,this,false)) this.stateMsg = null;
+    }
+    
     public void tickChannels() {
-        this.channels.values().forEach(ChannelAPI::tick);
+        boolean slow = (this.ticks++)%this.getDebugNumber("slow_tick_factor").intValue()==0;
+        this.channels.values().forEach(channel -> {
+            channel.tick();
+            if(slow) channel.tickSlow();
+        });
+        if(slow) {
+            sync();
+            this.ticks = 0;
+        }
     }
     
     private boolean writeBasicDisc(ItemStackAPI<?> stack) {
         Map<String,TriggerAPI> activeTriggers = new HashMap<>();
-        for(Entry<String,ChannelAPI> channelEntry : this.channels.entrySet()) {
-            TriggerAPI activeTrigger = channelEntry.getValue().getActiveTrigger();
-            if(Objects.nonNull(activeTrigger)) activeTriggers.put(channelEntry.getKey(),activeTrigger);
-        }
+        this.channels.forEach((name,channel) -> {
+            TriggerAPI activeTrigger = channel.getActiveTrigger();
+            if(Objects.nonNull(activeTrigger)) activeTriggers.put(name,activeTrigger);
+        });
         if(activeTriggers.isEmpty()) return false;
         Entry<String,TriggerAPI> selected = RandomHelper.getBasicRandomEntry(activeTriggers.entrySet());
         String songName = this.channels.get(selected.getKey()).getPlayingSongName();
@@ -538,11 +542,12 @@ public class ChannelHelper {
     
     private boolean writeSpecialDisc(ItemStackAPI<?> stack) {
         Map<String,List<TriggerAPI>> specialTriggers = new HashMap<>();
-        for(Entry<String,ChannelAPI> channelEntry : this.channels.entrySet()) {
+        this.channels.forEach((name,channel) -> {
             List<TriggerAPI> triggers = new ArrayList<>();
-            channelEntry.getValue().getData().collectSpecialTriggers(triggers);
-            if(!triggers.isEmpty()) specialTriggers.put(channelEntry.getKey(),triggers);
-        }
+            channel.getData().collectSpecialTriggers(triggers);
+            if(!triggers.isEmpty()) specialTriggers.put(name,triggers);
+        });
+        if(specialTriggers.isEmpty()) return false;
         Entry<String,List<TriggerAPI>> selected = RandomHelper.getBasicRandomEntry(specialTriggers.entrySet());
         TriggerAPI trigger = RandomHelper.getBasicRandomEntry(selected.getValue());
         if(Objects.isNull(trigger)) return false;

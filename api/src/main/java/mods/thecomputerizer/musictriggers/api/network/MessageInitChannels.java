@@ -17,33 +17,33 @@ import java.util.Map;
 import java.util.Set;
 
 @Getter
-public class MessageInitChannels<CTX> extends MessageAPI<CTX> {
+public class MessageInitChannels<CTX> extends PlayerMessage<CTX> {
     
     final boolean client;
-    final String uuid;
     final Toml global;
     final Toml toggles;
     final Map<String,ChannelMessage> channels;
     
     public MessageInitChannels(Toml global, Toml toggles, ChannelHelper helper) {
+        super(helper.getPlayerID());
         this.client = helper.isClient();
-        this.uuid = helper.getPlayerID();
         this.global = global;
         this.toggles = toggles;
         this.channels = getChannelMap(helper);
-        helper.setSyncable(true);
+        ChannelHelper.getGlobalData().logInfo("Constructued init message");
     }
     
     @SneakyThrows
     public MessageInitChannels(ByteBuf buf) {
+        super(buf);
         this.client = !buf.readBoolean();
-        this.uuid = NetworkHelper.readString(buf);
         this.global = Toml.readBuf(buf);
         this.toggles = Toml.readBuf(buf);
         this.channels = NetworkHelper.readMapEntries(buf,() -> {
             String key = NetworkHelper.readString(buf);
-            return IterableHelper.getMapEntry(key, new ChannelMessage(buf));
+            return IterableHelper.getMapEntry(key,new ChannelMessage(buf));
         });
+        ChannelHelper.getGlobalData().logInfo("Decodeded init message on the {} side",this.client ? "client" : "server");
     }
     
     Map<String,ChannelMessage> getChannelMap(ChannelHelper helper) {
@@ -57,17 +57,16 @@ public class MessageInitChannels<CTX> extends MessageAPI<CTX> {
     
     @Override
     public void encode(ByteBuf buf) {
+        super.encode(buf);
         buf.writeBoolean(this.client);
-        NetworkHelper.writeString(buf,this.uuid);
         this.global.write(buf);
         this.toggles.write(buf);
         NetworkHelper.writeMap(buf,this.channels,name -> NetworkHelper.writeString(buf,name),channel -> channel.write(buf));
     }
     
-    @Override
+    @SuppressWarnings("unchecked") @Override
     public MessageAPI<CTX> handle(CTX ctx) {
-        ChannelHelper.loadMessage(this);
-        return null;
+        return (MessageAPI<CTX>)ChannelHelper.loadMessage(this);
     }
     
     @Getter

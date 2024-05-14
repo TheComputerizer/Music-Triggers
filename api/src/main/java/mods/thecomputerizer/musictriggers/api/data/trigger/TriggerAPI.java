@@ -107,7 +107,6 @@ public abstract class TriggerAPI extends ChannelElement {
     public void encode(ByteBuf buf) {
         NetworkHelper.writeString(buf,getName());
         NetworkHelper.writeString(buf,getIdentifier());
-        NetworkHelper.writeString(buf,this.state.name());
     }
 
     @Override
@@ -445,9 +444,6 @@ public abstract class TriggerAPI extends ChannelElement {
         PLAYABLE(true,true);
 
         private static final Map<String,State> BY_NAME = new HashMap<>();
-        public static State get(String name) {
-            return BY_NAME.getOrDefault(name,IDLE);
-        }
 
         private final boolean activatable;
         private final boolean playable;
@@ -462,9 +458,6 @@ public abstract class TriggerAPI extends ChannelElement {
             return name();
         }
 
-        static {
-            for(State state : values()) BY_NAME.put(state.name(),state);
-        }
     }
 
     protected static class Timer {

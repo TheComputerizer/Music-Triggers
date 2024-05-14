@@ -62,7 +62,7 @@ public class TriggerSelector extends ChannelElement {
     }
 
     /**
-     * Only used when COMBINE_EQUAL_PRIORITY is enabled
+     * Only used when independent_audio_pools is disabled
      */
     public Collection<TriggerAPI> getPriorityTriggers(Collection<TriggerAPI> triggers) {
         Set<TriggerAPI> priority = new HashSet<>();

@@ -5,7 +5,6 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerCombination;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerMerged;
-import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
 import mods.thecomputerizer.musictriggers.api.network.MessageTriggerStates;
 
 import java.util.Collection;
@@ -34,12 +33,11 @@ public class ChannelSync extends ChannelElement {
             this.triggersToSync.add(trigger);
     }
 
-    public void send() {
-        if(this.triggersToSync.isEmpty() || !this.channel.getHelper().isSyncable()) return;
-        MessageTriggerStates<?> msg = new MessageTriggerStates<>(this.channel,this.triggersToSync);
-        if(this.channel.isClientChannel()) MTNetwork.sendToServer(msg,false);
-        else MTNetwork.sendToClient(msg,false,this.channel.getPlayerEntity());
-        this.triggersToSync.clear();
+    public void addSynced(MessageTriggerStates<?> msg) {
+        if(!this.triggersToSync.isEmpty()) {
+            msg.addStates(this.triggersToSync);
+            this.triggersToSync.clear();
+        }
     }
 
     @Override

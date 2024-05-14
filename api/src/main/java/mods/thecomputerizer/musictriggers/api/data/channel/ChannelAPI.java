@@ -15,6 +15,7 @@ import mods.thecomputerizer.musictriggers.api.data.redirect.RedirectElement;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.Link;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerSelector;
 import mods.thecomputerizer.musictriggers.api.server.TriggerContextServer;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
@@ -39,7 +40,6 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     private final TriggerSelector selector;
     private final String name;
     @Setter protected boolean enabled = true;
-    private int ticks;
     protected Link disabledBy;
 
     protected ChannelAPI(ChannelHelper helper, Toml table) {
@@ -73,7 +73,6 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
         this.data.close();
         this.sync.close();
         this.selector.close();
-        this.ticks = 0;
     }
 
     @Override
@@ -286,14 +285,9 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
         handleActiveEvent(ChannelEventHandler::stopped);
     }
 
-    public void sync() {
-        this.sync.send();
-    }
-
     public void tick() {
         tickActive();
         tickPlayable();
-        if((this.ticks++)%getHelper().getDebugNumber("slow_tick_factor").intValue()==0) tickSlow();
     }
 
     @Override
@@ -308,8 +302,6 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
 
     public void tickSlow() {
         this.selector.select();
-        sync();
-        this.ticks = 0;
     }
     
     @Override
@@ -319,4 +311,9 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
 
     @Override
     public void unplayable() {}
+    
+    public void updateSyncedState(Map<TriggerAPI,State> stateMap) {
+        TriggerContext ctx = this.selector.getContext();
+        stateMap.forEach(ctx::updateSyncedState);
+    }
 }

@@ -1,78 +1,67 @@
 package mods.thecomputerizer.musictriggers.api.network;
 
 import io.netty.buffer.ByteBuf;
-import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.iterator.IterableHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.message.MessageAPI;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-public class MessageTriggerStates<CTX> extends MessageAPI<CTX> { //TODO Combine this into a single packet for all channels
+public class MessageTriggerStates<CTX> extends ChannelHelperMessage<CTX> {
+    
+    private final Map<ChannelAPI,Map<TriggerAPI,State>> triggerMap;
 
-    private final String channelName;
-    private final String uuid;
-    private final boolean client;
-    private final Collection<StateSnapshot> snapshots;
-
-    public MessageTriggerStates(ChannelAPI channel, Collection<TriggerAPI> triggers) {
-        this.channelName = channel.getName();
-        this.uuid = channel.getHelper().getPlayerID();
-        this.client = channel.isClientChannel();
-        this.snapshots = StateSnapshot.of(triggers);
+    public MessageTriggerStates(ChannelHelper helper) {
+        super(helper);
+        this.triggerMap = new HashMap<>();
     }
 
     public MessageTriggerStates(ByteBuf buf) {
-        this.channelName = NetworkHelper.readString(buf);
-        this.uuid = NetworkHelper.readString(buf);
-        this.client = !buf.readBoolean();
-        ChannelAPI channel = ChannelHelper.findChannel(this.uuid,this.client,this.channelName);
-        this.snapshots = NetworkHelper.readCollection(buf,() -> {
-            String name = NetworkHelper.readString(buf);
-            String id = NetworkHelper.readString(buf);
-            String state = NetworkHelper.readString(buf);
-            return new StateSnapshot(TriggerHelper.decodeTrigger(channel,name,id),state);
+        super(buf);
+        this.triggerMap = NetworkHelper.readMapEntries(buf,() -> {
+            ChannelAPI channel = this.helper.findChannel(ChannelHelper.getGlobalData(),NetworkHelper.readString(buf));
+            Map<TriggerAPI,State> stateMap = NetworkHelper.readMap(buf,() -> {
+                String name = NetworkHelper.readString(buf);
+                String id = NetworkHelper.readString(buf);
+                return TriggerHelper.decodeTrigger(channel,name,id);
+            },() -> State.valueOf(NetworkHelper.readString(buf)));
+            return IterableHelper.getMapEntry(channel,stateMap);
+        });
+    }
+    
+    public void addStates(Collection<TriggerAPI> triggers) {
+        triggers.forEach(trigger -> {
+            ChannelAPI channel = trigger.getChannel();
+            this.triggerMap.putIfAbsent(channel,new HashMap<>());
+            this.triggerMap.get(channel).put(trigger,trigger.getState());
         });
     }
 
     @Override
     public void encode(ByteBuf buf) {
-        NetworkHelper.writeString(buf,this.channelName);
-        NetworkHelper.writeString(buf,this.uuid);
-        buf.writeBoolean(this.client);
-        NetworkHelper.writeCollection(buf,this.snapshots,snapshot -> snapshot.trigger.encode(buf));
+        super.encode(buf);
+        NetworkHelper.writeMap(buf,this.triggerMap,channel -> NetworkHelper.writeString(buf,channel.getName()),
+                               stateMap -> NetworkHelper.writeMap(buf,stateMap,trigger -> trigger.encode(buf),
+                                       state -> NetworkHelper.writeString(buf,state.name())));
     }
 
     @Override
     public MessageAPI<CTX> handle(CTX ctx) {
-        for(StateSnapshot snapshot : this.snapshots) snapshot.apply();
+        this.triggerMap.forEach(ChannelAPI::updateSyncedState);
         return null;
     }
-
-    private static class StateSnapshot {
-
-        private static Collection<StateSnapshot> of(Collection<TriggerAPI> triggers) {
-            List<StateSnapshot> snapshots = new ArrayList<>();
-            for(TriggerAPI trigger : triggers) snapshots.add(new StateSnapshot(trigger,trigger.getState().name()));
-            return snapshots;
-        }
-
-        private final TriggerAPI trigger;
-        private final String state;
-        private StateSnapshot(TriggerAPI trigger, String state) {
-            this.trigger = trigger;
-            this.state = state;
-            MTRef.logDebug("Initialized state snapshot of trigger {} and state {}",trigger,state);
-        }
-
-        private void apply() {
-            this.trigger.getChannel().getSelector().getContext().updateSyncedState(this.trigger,State.get(this.state));
-        }
+    
+    public boolean readyToSend() {
+        if(!this.triggerMap.isEmpty() && this.helper.isSyncable())
+            for(Map<TriggerAPI,State> stateMap : this.triggerMap.values())
+                if(!stateMap.isEmpty()) return true;
+        return false;
     }
 }

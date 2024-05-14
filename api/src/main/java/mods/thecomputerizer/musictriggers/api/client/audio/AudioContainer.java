@@ -11,6 +11,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.Link;
 import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
@@ -226,8 +227,9 @@ public class AudioContainer extends AudioRef {
         player.setFilterFactory(this::setFilters);
         player.playTrack(track);
         logInfo("Playing track");
-        if(!"jukebox".equals(getChannelName()) && !"preview".equals(getChannelName()) && this.channel.getHelper().isSyncable())
-            MTNetwork.sendToServer(new MessageCurrentSong<>(getChannelName(),this.name), false);
+        ChannelHelper helper = this.channel.getHelper();
+        if(!"jukebox".equals(getChannelName()) && !"preview".equals(getChannelName()) && helper.isSyncable())
+            MTNetwork.sendToServer(new MessageCurrentSong<>(helper,getChannelName(),this.name),false);
     }
 
     @Override
