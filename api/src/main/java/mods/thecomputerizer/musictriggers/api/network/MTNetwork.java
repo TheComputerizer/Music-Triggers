@@ -16,6 +16,7 @@ public class MTNetwork {
     
     public static void initClient() {
         MTRef.logInfo("Initializing client network");
+        NetworkHandler.registerMsgToServer(MessageCurrentSong.class,MessageCurrentSong::new);
         NetworkHandler.registerMsgToServer(MessageInitChannels.class,MessageInitChannels::new);
         NetworkHandler.registerMsgToServer(MessageReload.class,MessageReload::new);
         NetworkHandler.registerMsgToServer(MessageRequestChannels.class, MessageRequestChannels::new);

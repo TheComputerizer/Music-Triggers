@@ -164,6 +164,11 @@ public class ChannelData extends ChannelElement {
         for(ChannelEventHandler handler : handlers) handler.close();
         handlers.clear();
     }
+    
+    public void collectSpecialTriggers(Collection<TriggerAPI> triggers) {
+        if(Objects.nonNull(this.loadingTrigger)) triggers.add(this.loadingTrigger);
+        if(Objects.nonNull(this.menuTrigger)) triggers.add(this.menuTrigger);
+    }
 
     protected void extractActiveTriggers() {
         addActiveTriggers(this.audio,ref -> {

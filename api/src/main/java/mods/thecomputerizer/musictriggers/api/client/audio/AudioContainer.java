@@ -13,6 +13,8 @@ import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.Link;
+import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
+import mods.thecomputerizer.musictriggers.api.network.MessageCurrentSong;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -224,6 +226,8 @@ public class AudioContainer extends AudioRef {
         player.setFilterFactory(this::setFilters);
         player.playTrack(track);
         logInfo("Playing track");
+        if(!"jukebox".equals(getChannelName()) && !"preview".equals(getChannelName()) && this.channel.getHelper().isSyncable())
+            MTNetwork.sendToServer(new MessageCurrentSong<>(getChannelName(),this.name), false);
     }
 
     @Override

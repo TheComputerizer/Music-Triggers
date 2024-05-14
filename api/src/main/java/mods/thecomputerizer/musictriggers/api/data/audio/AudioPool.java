@@ -84,6 +84,19 @@ public class AudioPool extends AudioRef {
         buf.writeInt(this.audio.size());
         for(AudioRef ref : this.audio) ref.encode(buf);
     }
+    
+    public List<AudioRef> getFlattened() {
+        List<AudioRef> flattened = new ArrayList<>();
+        getFlattened(flattened,this);
+        return flattened;
+    }
+    
+    private void getFlattened(List<AudioRef> flattened, AudioPool pool) {
+        for(AudioRef ref : pool.audio) {
+            if(ref instanceof AudioPool) getFlattened(flattened,(AudioPool)ref);
+            else flattened.add(ref);
+        }
+    }
 
     @Override
     public @Nullable InterruptHandler getInterruptHandler() {

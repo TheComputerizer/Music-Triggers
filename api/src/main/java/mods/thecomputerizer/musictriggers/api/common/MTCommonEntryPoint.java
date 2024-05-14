@@ -3,7 +3,7 @@ package mods.thecomputerizer.musictriggers.api.common;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.MTClientEntryPoint;
 import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
-import mods.thecomputerizer.musictriggers.api.registry.MTRegistry;
+import mods.thecomputerizer.musictriggers.api.registry.MTRegistryHandler;
 import mods.thecomputerizer.musictriggers.api.server.MTServerEvents;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientEntryPoint;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.CommonEntryPoint;
@@ -133,7 +133,7 @@ public class MTCommonEntryPoint extends CommonEntryPoint {
 
     @Override
     public void onPreRegistration() {
-        MTRegistry.init();
+        MTRegistryHandler.init();
         MTServerEvents.init();
         distributeHook(CommonEntryPoint::onPreRegistration);
     }

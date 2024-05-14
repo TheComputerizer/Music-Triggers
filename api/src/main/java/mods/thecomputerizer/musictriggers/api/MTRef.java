@@ -6,8 +6,6 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.annotation.Nullable;
-
 @SuppressWarnings("unused")
 public class MTRef {
 
@@ -46,7 +44,7 @@ public class MTRef {
         log(Level.WARN,msg,args);
     }
 
-    public static @Nullable ResourceLocationAPI<?> res(String path) {
+    public static ResourceLocationAPI<?> res(String path) {
         return ResourceHelper.getResource(MODID,path);
     }
 }

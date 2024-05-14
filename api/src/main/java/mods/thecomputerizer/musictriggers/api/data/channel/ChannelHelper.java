@@ -18,13 +18,16 @@ import mods.thecomputerizer.musictriggers.api.client.MTClient;
 import mods.thecomputerizer.musictriggers.api.client.channel.ChannelClient;
 import mods.thecomputerizer.musictriggers.api.client.MTDebugInfo;
 import mods.thecomputerizer.musictriggers.api.client.channel.ChannelJukebox;
+import mods.thecomputerizer.musictriggers.api.client.channel.ChannelPreview;
 import mods.thecomputerizer.musictriggers.api.config.ConfigVersionManager;
+import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.global.Debug;
 import mods.thecomputerizer.musictriggers.api.data.global.GlobalData;
 import mods.thecomputerizer.musictriggers.api.data.global.Toggle;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
 import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
 import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels;
@@ -34,14 +37,19 @@ import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.sound.SoundHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.item.ItemStackAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.MinecraftServerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.ServerHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.tag.TagHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlParsingException;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlWritingException;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.CustomTick;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.RandomHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
@@ -57,7 +65,7 @@ import java.util.stream.Collectors;
 
 public class ChannelHelper {
 
-    private static final Map<String,ChannelHelper> PLAYER_MAP = new HashMap<>();
+    private static final Map<String,ChannelHelper> PLAYER_MAP = Collections.synchronizedMap(new HashMap<>());
     @Getter private static final GlobalData globalData = new GlobalData();
     @Getter private static final LoadTracker loader = new LoadTracker();
     
@@ -101,7 +109,7 @@ public class ChannelHelper {
     
     @SneakyThrows
     private static ChannelHelper getServerHelper(String uuid) {
-        if(!PLAYER_MAP.containsKey(uuid)) PLAYER_MAP.put(uuid,new ChannelHelper(uuid,false));
+        if(!PLAYER_MAP.containsKey(uuid)) PLAYER_MAP.put(uuid, new ChannelHelper(uuid, false));
         return PLAYER_MAP.get(uuid);
     }
     
@@ -133,7 +141,7 @@ public class ChannelHelper {
         }
         ChannelHelper helper = new ChannelHelper(playerID,client);
         helper.loadFromFile(globalData.getGlobal());
-        PLAYER_MAP.put(playerID,helper);
+        PLAYER_MAP.put(playerID, helper);
         loader.setClient(client);
         loader.setLoading(false);
         if(loader.isConnected() || !client) {
@@ -144,7 +152,7 @@ public class ChannelHelper {
     
     public static void loadMessage(MessageInitChannels<?> init) {
         ChannelHelper helper = globalData.loadFromInit(init);
-        PLAYER_MAP.put(init.getUuid(),helper);
+        PLAYER_MAP.put(init.getUuid(), helper);
         helper.setSyncable(true);
         loader.setLoading(false);
     }
@@ -174,24 +182,32 @@ public class ChannelHelper {
     }
 
     public static void onResourcesLoaded() {
-        for(ChannelHelper helper : PLAYER_MAP.values())
+        for(ChannelHelper helper : PLAYER_MAP.values()) {
             if(helper.client) {
                 loader.setResourcesLoaded(true);
                 helper.forEachChannel(ChannelAPI::onResourcesLoaded);
             }
+        }
     }
 
     public static void reload() {
         try {
-            if(loader.isClient()) { {
+            if(loader.isClient()) {
                 loadConfig("CLIENT",true);
-                MTNetwork.sendToServer(PLAYER_MAP.get("CLIENT").getInitMessage(),false);
-            }
+                MTNetwork.sendToServer(PLAYER_MAP.get("CLIENT").getInitMessage(), false);
             } else
                 for(PlayerAPI<?,?> player : getPlayers(false))
                     loadConfig(player.getUUID().toString(),false);
         } catch(TomlWritingException ex) {
             MTRef.logFatal("Failed to reload config files!",ex);
+        }
+    }
+    
+    public static void setCurrentSong(String channel, String song) {
+        synchronized(PLAYER_MAP) {
+            PLAYER_MAP.values().forEach(helper -> {
+                if(!helper.client) ((ChannelServer)helper.channels.get(channel)).setCurrentSong(song);
+            });
         }
     }
 
@@ -327,6 +343,14 @@ public class ChannelHelper {
         return new MessageInitChannels<>(globalData.getGlobal(),toggles,this);
     }
     
+    public ChannelJukebox getJukeboxChannel() {
+        if(!this.client) {
+            globalData.logError("Attempted to get jukebox channel on the server side! Things may break");
+            return null;
+        }
+        return (ChannelJukebox)this.channels.get("jukebox");
+    }
+    
     public @Nullable PlayerAPI<?,?> getPlayer() {
         if(this.client) {
             MinecraftAPI mc = TILRef.getClientSubAPI(ClientAPI::getMinecraft);
@@ -350,6 +374,14 @@ public class ChannelHelper {
         }
         PlayerAPI<?,?> player = getPlayer();
         return Objects.nonNull(player) ? player.getUUID().toString() : null;
+    }
+    
+    public ChannelPreview getPreviewChannel() {
+        if(!this.client) {
+            globalData.logError("Attempted to get preview channel on the server side! Things may break");
+            return null;
+        }
+        return (ChannelPreview)this.channels.get("preview");
     }
 
     private void initChannel(String name, Toml info) {
@@ -436,20 +468,14 @@ public class ChannelHelper {
                 this.toggles.add(new Toggle(this,table));
     }
     
-    public void playToJukebox(String channelName, String audioRef) {
-        ChannelJukebox jukebox = (ChannelJukebox)this.channels.get("jukebox");
-        if(Objects.isNull(jukebox)) return;
-        if(jukebox.isPlaying()) {
-            jukebox.stop();
-            return;
-        }
+    public void playToJukebox(BlockPosAPI<?> pos, String channelName, String audioRef) {
         ChannelAPI channel = this.channels.get(channelName);
         if(Objects.nonNull(channel)) {
             AudioRef playThis = null;
             for(AudioRef ref : channel.getData().getAudio())
                 if(ref.getName().equals(audioRef))
                     playThis = ref;
-            if(Objects.nonNull(playThis)) jukebox.playReference(playThis);
+            if(Objects.nonNull(playThis)) getJukeboxChannel().playReference(playThis,pos.getPosVec());
             else channel.logError("Unable to find audio with name {} to play for the jukebox channel!",audioRef);
         } else globalData.logError("Unable to find channel reference {}",channelName);
     }
@@ -461,6 +487,14 @@ public class ChannelHelper {
         });
     }
     
+    public void setDiscTag(ItemStackAPI<?> stack, String channel, String trigger, String audio) {
+        CompoundTagAPI tag = TagHelper.makeCompoundTag();
+        tag.putString("channel",channel);
+        tag.putString("triggerID",trigger);
+        tag.putString("audio",audio);
+        stack.setTag(tag);
+    }
+    
     public void setSyncable(boolean sync) {
         forEachChannel(channel -> {
             TriggerContext context = channel.getSelector().getContext();
@@ -469,13 +503,55 @@ public class ChannelHelper {
         });
         this.syncable = sync;
     }
+    
+    public void stopJukeboxAt(BlockPosAPI<?> pos) {
+        getJukeboxChannel().checkStop(pos.getPosVec());
+    }
 
     public void tickChannels() {
         this.channels.values().forEach(ChannelAPI::tick);
+    }
+    
+    private boolean writeBasicDisc(ItemStackAPI<?> stack) {
+        Map<String,TriggerAPI> activeTriggers = new HashMap<>();
+        for(Entry<String,ChannelAPI> channelEntry : this.channels.entrySet()) {
+            TriggerAPI activeTrigger = channelEntry.getValue().getActiveTrigger();
+            if(Objects.nonNull(activeTrigger)) activeTriggers.put(channelEntry.getKey(),activeTrigger);
+        }
+        if(activeTriggers.isEmpty()) return false;
+        Entry<String,TriggerAPI> selected = RandomHelper.getBasicRandomEntry(activeTriggers.entrySet());
+        String songName = this.channels.get(selected.getKey()).getPlayingSongName();
+        if(StringUtils.isBlank(songName)) return false;
+        setDiscTag(stack,selected.getKey(),selected.getValue().getName(),songName);
+        this.channels.get(selected.getKey()).logDebug("Successfully recorded music disc");
+        return true;
+    }
+    
+    public boolean writeDisc(ItemStackAPI<?> stack, boolean special) {
+        return special ? writeSpecialDisc(stack) : writeBasicDisc(stack);
     }
 
     private void writeExampleChannel(Toml toml) throws TomlWritingException {
         Toml table = toml.addTable("channels",false);
         ChannelInfo.writeExampleData(table.addTable("example",false));
+    }
+    
+    private boolean writeSpecialDisc(ItemStackAPI<?> stack) {
+        Map<String,List<TriggerAPI>> specialTriggers = new HashMap<>();
+        for(Entry<String,ChannelAPI> channelEntry : this.channels.entrySet()) {
+            List<TriggerAPI> triggers = new ArrayList<>();
+            channelEntry.getValue().getData().collectSpecialTriggers(triggers);
+            if(!triggers.isEmpty()) specialTriggers.put(channelEntry.getKey(),triggers);
+        }
+        Entry<String,List<TriggerAPI>> selected = RandomHelper.getBasicRandomEntry(specialTriggers.entrySet());
+        TriggerAPI trigger = RandomHelper.getBasicRandomEntry(selected.getValue());
+        if(Objects.isNull(trigger)) return false;
+        AudioPool pool = trigger.getAudioPool();
+        if(Objects.isNull(pool)) return false;
+        String songName = RandomHelper.getBasicRandomEntry(pool.getFlattened()).getName();
+        if(StringUtils.isBlank(songName)) return false;
+        setDiscTag(stack,selected.getKey(),trigger.getName(),songName);
+        this.channels.get(selected.getKey()).logDebug("Successfully recorded special music disc");
+        return true;
     }
 }

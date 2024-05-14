@@ -23,10 +23,10 @@ public class MTServerEvents {
 
     public static void init() {
         MTRef.logInfo("Initializing server event invokers");
-        EventHelper.addListener(TICK_SERVER, MTServerEvents::onServerTick);
         EventHelper.addListener(PLAYER_LOGGED_IN,MTServerEvents::onPlayerJoin);
         EventHelper.addListener(PLAYER_LOGGED_OUT,MTServerEvents::onPlayerLeave);
         EventHelper.addListener(REGISTER_COMMANDS,MTServerEvents::onRegisterCommands);
+        EventHelper.addListener(TICK_SERVER, MTServerEvents::onServerTick);
     }
     
     public static void onServerTick(ServerTickEventWrapper<?> wrapper) {
@@ -36,13 +36,6 @@ public class MTServerEvents {
                 ticksUntilReload--;
             }
         }
-        
-    }
-
-    public static void onRegisterCommands(RegisterCommandsEventWrapper<?> wrapper) {
-        MTRef.logInfo("Registering commands");
-        wrapper.registerCommand(MTCommands.root("mtreload"));
-        wrapper.registerCommand(MTCommands.root("mtdebug"));
     }
     
     public static void onPlayerJoin(PlayerLoggedInEventWrapper<?> wrapper) {
@@ -57,6 +50,12 @@ public class MTServerEvents {
         String uuid = player.getUUID().toString();
         MTRef.logInfo("Found leaving player with UUID {}",uuid);
         ChannelHelper.closePlayerChannel(uuid);
+    }
+
+    public static void onRegisterCommands(RegisterCommandsEventWrapper<?> wrapper) {
+        MTRef.logInfo("Registering commands");
+        wrapper.registerCommand(MTCommands.root("mtreload"));
+        wrapper.registerCommand(MTCommands.root("mtdebug"));
     }
     
     public static void queueServerReload(int ticks) {

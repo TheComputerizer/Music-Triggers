@@ -5,6 +5,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.event.events.*;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.advancement.AdvancementAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.block.BlockStateAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.event.EventHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.event.events.CustomTickEventWrapper;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.event.events.PlayerAdvancementEventWrapper;
@@ -12,6 +13,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.common.event.events.PlayerI
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextStyleAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.CustomTick;
+import mods.thecomputerizer.theimpossiblelibrary.api.world.WorldAPI;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -38,15 +40,16 @@ public class MTClientEvents {
     
     public static void init() {
         MTRef.logInfo("Initializing client event invokers");
-        EventHelper.addListener(PLAYER_ADVANCEMENT,MTClientEvents::onAdvancement);
         EventHelper.addListener(CLIENT_CONNECTED,MTClientEvents::onClientConnected);
         EventHelper.addListener(CLIENT_DISCONNECTED,MTClientEvents::onClientDisconnected);
-        EventHelper.addListener(TICK_CLIENT,MTClientEvents::onClientTick);
         EventHelper.addListener(CUSTOM_TICK,MTClientEvents::onCustomTick);
         EventHelper.addListener(KEY_INPUT,MTClientEvents::onInputKey);
-        EventHelper.addListener(SOUND_PLAY,MTClientEvents::onPlaySound);
+        EventHelper.addListener(PLAYER_ADVANCEMENT,MTClientEvents::onAdvancement);
+        EventHelper.addListener(PLAYER_INTERACT_BLOCK,MTClientEvents::onRightClickBlock);
         EventHelper.addListener(RENDER_OVERLAY_PRE,MTClientEvents::onRenderOverlayPre);
         EventHelper.addListener(RENDER_OVERLAY_TEXT,MTClientEvents::onRenderOverlayText);
+        EventHelper.addListener(SOUND_PLAY,MTClientEvents::onPlaySound);
+        EventHelper.addListener(TICK_CLIENT,MTClientEvents::onClientTick);
         CustomTick.addCustomTickTPS(ChannelHelper.getTickRate());
     }
 
@@ -90,7 +93,6 @@ public class MTClientEvents {
     }
 
     private static void onPlaySound(PlaySoundEventWrapper<?,?> wrapper) {
-
     }
 
     private static void onRenderOverlayPre(RenderOverlayPreEventWrapper<?> wrapper) {
@@ -108,7 +110,12 @@ public class MTClientEvents {
     }
     
     private static void onRightClickBlock(PlayerInteractBlockEventWrapper<?> wrapper) {
-    
+        WorldAPI<?> world = wrapper.getPlayer().getWorld();
+        if(world.isClient()) {
+            BlockStateAPI<?> state = world.getStateAt(wrapper.getPos());
+            if("jukebox".equals(state.getBlock().getRegistryName().getPath()) && state.getPropertyBool("has_record"))
+                ChannelHelper.getClientHelper().stopJukeboxAt(wrapper.getPos());
+        }
     }
 
     public static void queueReload(@Nullable MinecraftAPI mc, int ticks) {

@@ -8,10 +8,13 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 
 public class ChannelServer extends ChannelAPI {
+    
+    protected String currentSong;
 
     public ChannelServer(ChannelHelper helper, Toml table) {
         super(helper,table);
@@ -34,8 +37,7 @@ public class ChannelServer extends ChannelAPI {
     }
     
     @Nullable @Override public String getPlayingSongName() {
-        logError("Tried to get the name of the playing song on the server!");
-        return null;
+        return this.currentSong;
     }
     
     @Override public long getPlayingSongTime() {
@@ -85,6 +87,10 @@ public class ChannelServer extends ChannelAPI {
     @Override
     public void setCategoryVolume(float volume) {
         logError("Tried to set category volume on the server!");
+    }
+    
+    public void setCurrentSong(String name) {
+        this.currentSong = StringUtils.isNotBlank(name) ? name : null;
     }
     
     @Override public void setMasterVolume(float volume) {
