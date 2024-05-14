@@ -158,7 +158,7 @@ public class Toggle extends GlobalElement {
 
         @Override
         public boolean parse(Toml table) {
-            return super.parse(table) && parseTriggers(this.channel,this.triggers);
+            return super.parse(table) && parseTriggers(false,this.channel,this.triggers);
         }
         
         public void run() {

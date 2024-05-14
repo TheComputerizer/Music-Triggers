@@ -273,23 +273,43 @@ public abstract class ParameterWrapper implements LoggableAPI {
     }
     
     public boolean parseTriggers(ChannelHelper helper, String channel, Collection<TriggerAPI> triggers) {
-        return parseTriggers(helper,channel,triggers,"triggers");
+        return parseTriggers(true,helper,channel,triggers,"triggers");
+    }
+    
+    public boolean parseTriggers(boolean implyMissing, ChannelHelper helper, String channel, Collection<TriggerAPI> triggers) {
+        return parseTriggers(implyMissing,helper,channel,triggers,"triggers");
     }
     
     public boolean parseTriggers(ChannelHelper helper, String channel, Collection<TriggerAPI> triggers, String parameterName) {
-        return parseTriggers(helper.findChannel(this,channel),triggers,parameterName);
+        return parseTriggers(true,helper.findChannel(this,channel),triggers,parameterName);
+    }
+    
+    public boolean parseTriggers(boolean implyMissing, ChannelHelper helper, String channel, Collection<TriggerAPI> triggers, String parameterName) {
+        return parseTriggers(implyMissing,helper.findChannel(this,channel),triggers,parameterName);
     }
     
     public boolean parseTriggers(ChannelAPI channel, Collection<TriggerAPI> triggers) {
-        return parseTriggers(channel,triggers,"triggers");
+        return parseTriggers(true,channel,triggers,"triggers");
+    }
+    
+    public boolean parseTriggers(boolean implyMissing, ChannelAPI channel, Collection<TriggerAPI> triggers) {
+        return parseTriggers(implyMissing,channel,triggers,"triggers");
     }
     
     public boolean parseTriggers(ChannelAPI channel, Collection<TriggerAPI> triggers, String parameterName) {
-        return parseTriggers(channel,triggers,getParameterAsList(parameterName));
+        return parseTriggers(true,channel,triggers,getParameterAsList(parameterName));
+    }
+    
+    public boolean parseTriggers(boolean implyMissing, ChannelAPI channel, Collection<TriggerAPI> triggers, String parameterName) {
+        return parseTriggers(implyMissing,channel,triggers,getParameterAsList(parameterName));
     }
     
     protected boolean parseTriggers(ChannelAPI channel, Collection<TriggerAPI> triggers, Collection<?> triggerRefs) {
-        if(!TriggerHelper.findTriggers(channel,triggers,triggerRefs)) {
+        return parseTriggers(true,channel,triggers,triggerRefs);
+    }
+    
+    protected boolean parseTriggers(boolean implyMissing, ChannelAPI channel, Collection<TriggerAPI> triggers, Collection<?> triggerRefs) {
+        if(!TriggerHelper.findTriggers(implyMissing,channel,triggers,triggerRefs)) {
             logError("Failed to parse 1 or more triggers!");
             return false;
         }

@@ -53,7 +53,7 @@ public class MTItemRegistry {
             .setRegistryName(MTRef.res("music_recorder"))
             .setStackSize(1)
             .setTootltipFunction((stack,world) -> Collections.singleton(
-                    MTClient.getTranslated("item","music_recorder.tooltip"))).build();
+                    MTClient.getTranslated("tile","music_recorder.tooltip"))).build();
     
     public static DiscBuilderAPI discBuilder(String name, int stackSize) {
         return TriggerRegistry.buildProperties(

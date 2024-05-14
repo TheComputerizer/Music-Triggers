@@ -26,7 +26,7 @@ public class TriggerHelper {
         if(Objects.nonNull(channel)) {
             channel.logDebug("Decoding trigger from {}-{}",name,id);
             ChannelData data = channel.getData();
-            String nameWithID = name+(Misc.equalsAny(id,null,"null","not_set") ? "" :"-"+id);
+            String nameWithID = Misc.equalsAny(id,null,"null","not_set") ? name : name+"-"+id;
             switch(nameWithID) {
                 case "generic": return data.getGenericTrigger();
                 case "loading": return data.getLoadingTrigger();
@@ -67,18 +67,18 @@ public class TriggerHelper {
         return null;
     }
 
-    public static boolean findTriggers(@Nullable ChannelAPI channel, Collection<TriggerAPI> triggers, Collection<?> names) {
+    public static boolean findTriggers(boolean implyMissing, @Nullable ChannelAPI channel,
+            Collection<TriggerAPI> triggers, Collection<?> names) {
         if(Objects.isNull(channel) || Objects.isNull(triggers)) return false;
         if(Objects.isNull(names) || names.isEmpty()) return true;
         for(Object name : names) {
             String nameStr = name.toString();
             TriggerAPI trigger = findTrigger(channel.getHelper(),channel,nameStr);
+            if(Objects.isNull(trigger) && implyMissing && channel.implyTrigger(nameStr))
+                trigger = findTrigger(channel.getHelper(),channel,nameStr);
             if(Objects.isNull(trigger)) {
-                if(channel.implyTrigger(nameStr)) trigger = findTrigger(channel.getHelper(),channel,nameStr);
-                if(Objects.isNull(trigger)) {
-                    channel.logWarn("Unknown trigger `{}` in triggers array!", nameStr);
-                    return false;
-                }
+                channel.logWarn("Unknown trigger `{}` in triggers array!", nameStr);
+                return false;
             }
             triggers.add(trigger);
         }
@@ -128,7 +128,7 @@ public class TriggerHelper {
             }
             else {
                 TriggerAPI trigger = TriggerRegistry.getTriggerInstance(channel,triggerTable.getName());
-                if (checkVersion(trigger) && trigger.parse(triggerTable)) triggers.add(trigger);
+                if(checkVersion(trigger) && trigger.parse(triggerTable)) triggers.add(trigger);
             }
         }
     }

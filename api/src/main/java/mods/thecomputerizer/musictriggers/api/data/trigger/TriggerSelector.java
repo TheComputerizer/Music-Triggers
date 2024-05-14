@@ -12,6 +12,7 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.basic.BasicTrigger;
 import javax.annotation.Nullable;
 import java.util.*;
 
+import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.ACTIVE;
 import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.IDLE;
 import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.PLAYABLE;
 
@@ -51,7 +52,7 @@ public class TriggerSelector extends ChannelElement {
             setCrashHelper("playable ("+trigger.getNameWithID()+")");
             if(trigger.isDisabled() || trigger instanceof BasicTrigger) continue;
             if(trigger.query(this.context)) {
-                trigger.setState(PLAYABLE);
+                if(trigger.getState()!=ACTIVE) trigger.setState(PLAYABLE);
                 playable.add(trigger);
             }
             else trigger.setState(IDLE);

@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.api.registry;
 
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
+import mods.thecomputerizer.shadow.org.joml.Vector3d;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.block.BlockStateAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.blockentity.BlockEntityAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
@@ -31,15 +32,17 @@ public class MTBlockEntityRegistry {
                 if(Objects.nonNull(state)) {
                     boolean recording = state.getPropertyBool("recording");
                     boolean recordingSpecial = state.getPropertyBool("recording_special");
-                    if((recording || recordingSpecial) && RandomHelper.randomDouble(1d)<=0.05d) {
+                    if((recording || recordingSpecial) && RandomHelper.randomDouble(1d)<=0.005d) {
                         List<PlayerAPI<?,?>> players = ChannelHelper.getPlayers(false);
                         if(players.isEmpty()) {
                             MTRef.logError("Unable to record music when there are no players online!");
                             return;
                         }
-                        if(spawnRecordedDisc(entity.getWorld(),entity.getPos(),recordingSpecial)) {
+                        WorldAPI<?> world = entity.getWorld();
+                        BlockPosAPI<?> pos = entity.getPos();
+                        if(spawnRecordedDisc(world,pos,recordingSpecial)) {
                             MTRef.logInfo("Successfully spawned {}music disc",recordingSpecial ? "special " : "");
-                            entity.getWorld().setState(entity.getPos(),state.withProperty("recording",false)
+                            world.setState(pos,state.withProperty("recording",false)
                                     .withProperty("recording_special",false));
                         }
                     }
@@ -84,7 +87,10 @@ public class MTBlockEntityRegistry {
                 MTRef.logError("Unable to find ChannelHelper for player with UUID {}",closestPlayer.getUUID());
                 return false;
             }
-            world.spawnItem(ENHANCED_MUSIC_DISC,stack -> helper.writeDisc(stack,special),
+            Vector3d spawnPos = new Vector3d(RandomHelper.randomDouble(pos.x()+0.7d,pos.x()+0.85d),
+                                             RandomHelper.randomDouble(pos.y()+0.7d,pos.y()+1.36d),
+                                             RandomHelper.randomDouble(pos.z()+0.7d,pos.z()+0.85d));
+            world.spawnItem(ENHANCED_MUSIC_DISC,spawnPos,stack -> helper.writeDisc(stack, special),
                             entity -> entity.setPosition(pos.x(),pos.y()+0.5d,pos.z()));
             return true;
         }
