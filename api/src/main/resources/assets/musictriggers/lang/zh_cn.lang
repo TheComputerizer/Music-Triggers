@@ -8,17 +8,21 @@ debug.musictriggers.position.dimension=当前维度：名称 = %1$s | ID = %2$s
 debug.musictriggers.position.light=光照情况：方块光照 = %1$s | 天空光照 = %2$s | 总和 = %3$s
 debug.musictriggers.position.structure=所在结构：名称 = %1$s | ID = %2$s
 debug.musictriggers.status.effects=状态效果：[ %1$s ]
-debug.musictriggers.status.effect=Name = %1$s | ID = %2$s
+debug.musictriggers.status.effect=名称 = %1$s | ID = %2$s
 debug.musictriggers.target.block_entity=方块实体：名称 = %1$s | ID = %2$s
 debug.musictriggers.target.entity=实体：名称 = %1$s | ID = %2$s
+
+item.musictriggers.record.blank=未储存音频
+item.musictriggers.record.desc=增强的音乐唱片
+item.musictriggers.record.name=增强的音乐唱片
+item.musictriggers.record.tooltip对象：%1$s
 
 message.musictriggers.reload.error=在 %1$s 频道发现了未知错误
 message.musictriggers.reload.finished=成功重载音乐触发器！
 message.musictriggers.reload.queue=重载用时：%1$s 刻…
 
+record.musictriggers.test_dragon=测试成功
+record.musictriggers.test_math=数学？
+
 item.musictriggers.music_recorder.name=音乐录制器
 item.musictriggers.music_recorder.tooltip=能将音频录入到增强的音乐唱片中
-item.musictriggers.record.blank=未储存音频
-item.musictriggers.record.desc=增强的音乐唱片
-item.musictriggers.record.name=增强的音乐唱片
-item.musictriggers.record.tooltip=对象：%1$s
