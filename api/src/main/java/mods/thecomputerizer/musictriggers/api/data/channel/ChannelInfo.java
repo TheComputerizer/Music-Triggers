@@ -38,6 +38,7 @@ public class ChannelInfo extends ChannelElement {
     private final File localFolder;
     private final String mainPath;
     private final boolean overridesMusic;
+    private final boolean pausedByJukebox;
     private final boolean pausesOverrides;
     private final String redirectPath;
     private final String rendersPath;
@@ -52,6 +53,7 @@ public class ChannelInfo extends ChannelElement {
             this.localFolder = new File(getParameterAsString("local_folder"));
             this.mainPath = getParameterAsString("main");
             this.overridesMusic = !getParameterAsBoolean("play_normal_music");
+            this.pausedByJukebox = getParameterAsBoolean("paused_by_jukebox");
             this.pausesOverrides = getParameterAsBoolean("pauses_overrides");
             this.redirectPath = getParameterAsString("redirect");
             this.rendersPath = getParameterAsString("renders");
@@ -63,6 +65,7 @@ public class ChannelInfo extends ChannelElement {
             this.localFolder = new File(MTRef.CONFIG_PATH+"/songs");
             this.mainPath = "main";
             this.overridesMusic = true;
+            this.pausedByJukebox = true;
             this.pausesOverrides = false;
             this.redirectPath = "redirect";
             this.rendersPath = "renders";

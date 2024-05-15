@@ -4,6 +4,7 @@
     "layer0": "musictriggers:item/record_blank"
   },
   "overrides": [
+    {"predicate": {"musictriggers:custom": 1}, "model": "musictriggers:item/record_custom"},
     {"predicate": {"musictriggers:trigger_acidrain": 1}, "model": "musictriggers:item/record_acidrain"},
     {"predicate": {"musictriggers:trigger_adventure": 1}, "model": "musictriggers:item/record_adventure"},
     {"predicate": {"musictriggers:trigger_biome": 1}, "model": "musictriggers:item/record_biome"},

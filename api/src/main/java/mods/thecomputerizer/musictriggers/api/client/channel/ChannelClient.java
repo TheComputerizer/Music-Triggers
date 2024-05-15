@@ -67,6 +67,14 @@ public class ChannelClient extends ChannelAPI {
         }
         return true;
     }
+    
+    public boolean checkFocus() {
+        return MTClient.isFocused() || !getHelper().getDebugBool("pause_unless_focused");
+    }
+    
+    public boolean checkJukebox(boolean jukebox) {
+        return !jukebox || !getInfo().isPausedByJukebox();
+    }
 
     @Override
     public void close() {
@@ -261,11 +269,11 @@ public class ChannelClient extends ChannelAPI {
     }
     
     @Override
-    public void tick() {
+    public void tick(boolean jukebox) {
         if(this.enabled) {
-            if(MTClient.isUnpaused() && (MTClient.isFocused() || !getHelper().getDebugBool("pause_unless_focused"))) {
+            if(MTClient.isUnpaused() && checkFocus() && checkJukebox(jukebox)) {
                 this.player.setPaused(false);
-                super.tick();
+                super.tick(jukebox);
             } else this.player.setPaused(true);
         } else if(Objects.nonNull(this.playingPool)) playing();
     }

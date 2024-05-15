@@ -37,5 +37,5 @@ public final class ChannelPreview extends ChannelClient{
     }
     
     @Override
-    public void tick() {}
+    public void tick(boolean jukebox) {}
 }

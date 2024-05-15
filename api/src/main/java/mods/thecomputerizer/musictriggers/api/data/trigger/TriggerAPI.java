@@ -197,7 +197,8 @@ public abstract class TriggerAPI extends ChannelElement {
     }
 
     public boolean isSynced() {
-        return (isServer() && this.channel.isClientChannel()) || (!isServer() && !this.channel.isClientChannel());
+        if(isServer()) return this.channel.isClientChannel();
+        return !this.channel.isClientChannel();
     }
 
     public boolean matches(Collection<TriggerAPI> triggers) {

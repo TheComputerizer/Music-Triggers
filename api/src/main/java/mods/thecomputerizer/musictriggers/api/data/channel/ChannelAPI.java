@@ -139,7 +139,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     
     public Set<String> getRecordLines() {
         Set<String> lines = new HashSet<>();
-        for(RecordElement record : this.data.getRecords()) lines.add(record.toString());
+        for(RecordElement record : this.data.getRecords()) lines.add(record.getKey()+" = "+record.getValue());
         return lines;
     }
     
@@ -285,7 +285,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
         handleActiveEvent(ChannelEventHandler::stopped);
     }
 
-    public void tick() {
+    public void tick(boolean jukebox) {
         tickActive();
         tickPlayable();
     }

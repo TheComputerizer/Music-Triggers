@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.api.data.channel;
 
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
+import mods.thecomputerizer.musictriggers.api.client.audio.AudioContainer;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioHelper;
@@ -161,13 +162,14 @@ public class ChannelData extends ChannelElement {
     }
 
     private void closeHandlers(Collection<? extends ChannelEventHandler> handlers) {
-        for(ChannelEventHandler handler : handlers) handler.close();
+        handlers.forEach(ChannelEventHandler::close);
         handlers.clear();
     }
     
-    public void collectSpecialTriggers(Collection<TriggerAPI> triggers) {
-        if(Objects.nonNull(this.loadingTrigger)) triggers.add(this.loadingTrigger);
-        if(Objects.nonNull(this.menuTrigger)) triggers.add(this.menuTrigger);
+    public void collectSpecialHandlers(Collection<ChannelEventHandler> handlers) {
+        if(Objects.nonNull(this.loadingTrigger)) handlers.add(this.loadingTrigger);
+        if(Objects.nonNull(this.menuTrigger)) handlers.add(this.menuTrigger);
+        handlers.addAll(this.records);
     }
 
     protected void extractActiveTriggers() {
@@ -191,7 +193,7 @@ public class ChannelData extends ChannelElement {
     public Collection<ChannelEventHandler> getEventHandlers(@Nullable TriggerAPI trigger) {
         if(trigger instanceof TriggerMerged) {
             Set<ChannelEventHandler> handlers = new HashSet<>();
-            for(TriggerAPI t : ((TriggerMerged)trigger).getTriggers()) handlers.addAll(getEventHandlers(t));
+            ((TriggerMerged)trigger).getTriggers().forEach(t -> handlers.addAll(getEventHandlers(t)));
             return Collections.unmodifiableSet(handlers);
         } else if(Objects.nonNull(trigger)) {
             Collection<ChannelEventHandler> c = this.triggerEventMap.get(trigger);
@@ -207,8 +209,9 @@ public class ChannelData extends ChannelElement {
     public Collection<ChannelEventHandler> getPlayableEventHandlers() {
         Set<ChannelEventHandler> handlers = new HashSet<>();
         Collection<TriggerAPI> playables = this.channel.getPlayableTriggers();
-        for(TriggerAPI active : this.triggerEventMap.keySet())
+        this.triggerEventMap.keySet().forEach(active -> {
             if(active.isContained(playables)) handlers.addAll(getEventHandlers(active));
+        });
         return Collections.unmodifiableSet(handlers);
     }
     
@@ -257,12 +260,13 @@ public class ChannelData extends ChannelElement {
         readCommands(message.getTomls().get("commands"));
         readJukebox(message.getRecords());
         organize();
+        setupRecords();
         logInfo("Finished loading external data");
     }
 
     public void loadTracks(boolean loadResources) {
         logInfo("Loading {} audio tracks",this.audio.size());
-        for(AudioRef ref : this.audio) {
+        this.audio.forEach(ref -> {
             String name = ref.getName();
             boolean found = false;
             for(RedirectElement redirect : this.redirects) {
@@ -276,30 +280,31 @@ public class ChannelData extends ChannelElement {
                 String file = ref.getParameterAsString("location");
                 ref.loadLocal(StringUtils.isNotBlank(file) && !"_".equals(file) ? file : ref.getName());
             }
-        }
+        });
     }
 
     public void loadResourceTracks() {
-        for(AudioRef ref : this.audio) {
-            if(ref.isLoaded()) continue;
-            String name = ref.getName();
-            for(RedirectElement redirect : this.redirects) {
-                if(name.equals(redirect.getName())) {
-                    if(redirect.isResource()) ref.loadRemote(redirect.getValue());
-                    break;
+        this.audio.forEach(ref -> {
+            if(!ref.isLoaded()) {
+                String name = ref.getName();
+                for(RedirectElement redirect : this.redirects) {
+                    if(name.equals(redirect.getName())) {
+                        if(redirect.isResource()) ref.loadRemote(redirect.getValue());
+                        break;
+                    }
                 }
             }
-        }
+        });
     }
 
     public void organize() {
         extractActiveTriggers();
         setupAudioPools();
         addEmptyTriggers();
-        for(Map.Entry<TriggerAPI,Collection<ChannelEventHandler>> entry : this.triggerEventMap.entrySet()) {
-            entry.getValue().add(entry.getKey());
-            logInfo("{} is mapped to event handlers {}",entry.getKey(),entry.getValue());
-        }
+        this.triggerEventMap.forEach((trigger,handlers) -> {
+            handlers.add(trigger);
+            logInfo("{} is mapped to event handlers {}",trigger,handlers);
+        });
         appendUniversals();
     }
 
@@ -312,6 +317,7 @@ public class ChannelData extends ChannelElement {
         readCommands(ChannelHelper.openToml(getFilePath(info.getCommandsPath()),true,this));
         readJukebox(ChannelHelper.openTxt(getFilePath(info.getJukeboxPath()),this));
         organize();
+        setupRecords();
         logInfo("Finished parsing local data");
     }
 
@@ -324,10 +330,10 @@ public class ChannelData extends ChannelElement {
     }
 
     public void readJukebox(Collection<String> lines) {
-        for(String line : lines) {
+        lines.forEach(line -> {
             RecordElement record = new RecordElement(getChannel(),line);
             if(record.isValid()) this.records.add(record);
-        }
+        });
     }
 
     public void readMain(@Nullable Toml main) {
@@ -337,10 +343,10 @@ public class ChannelData extends ChannelElement {
     }
 
     public void readRedirect(Collection<String> lines) {
-        for(String line : lines) {
+        lines.forEach(line -> {
             RedirectElement redirect = new RedirectElement(getChannel(),line);
             if(redirect.isValid()) this.redirects.add(redirect);
-        }
+        });
     }
 
     public void readRenders(@Nullable Toml renders) {
@@ -351,7 +357,7 @@ public class ChannelData extends ChannelElement {
 
     protected void setupAudioPools() {
         Set<AudioRef> added = new HashSet<>();
-        for(AudioRef ref : this.audio) {
+        this.audio.forEach(ref -> {
             TriggerAPI trigger = null;
             for(TriggerAPI active : this.triggerEventMap.keySet()) {
                 if(active.matches(ref.getTriggers())) {
@@ -359,7 +365,7 @@ public class ChannelData extends ChannelElement {
                     break;
                 }
             }
-            if(Objects.isNull(trigger)) continue;
+            if(Objects.isNull(trigger)) return;
             Set<AudioRef> pooled = new HashSet<>();
             pooled.add(ref);
             for(AudioRef other : this.audio)
@@ -374,11 +380,30 @@ public class ChannelData extends ChannelElement {
                 }
             }
             if(Objects.nonNull(pool) && pool.isValid()) this.triggerEventMap.get(trigger).add(pool);
-        }
+        });
     }
     
     public void setupLinkTargets() {
         logInfo("Setting up link targets");
         this.triggers.forEach(trigger -> trigger.getLinks().forEach(Link::setupTarget));
+    }
+    
+    private void setupRecords() {
+        this.records.forEach(record -> {
+            AudioRef ref = null;
+            String key = record.getKey();
+            for(AudioRef audio : this.audio) {
+                if(audio.getName().equals(key)) {
+                    ref = audio;
+                    break;
+                }
+            }
+            if(Objects.isNull(ref)) {
+                ref = this.channel.isClientChannel() ?
+                        new AudioContainer(this.channel,key) : new AudioRef(this.channel,key);
+                this.audio.add(ref);
+            }
+            record.setAudio(ref);
+        });
     }
 }

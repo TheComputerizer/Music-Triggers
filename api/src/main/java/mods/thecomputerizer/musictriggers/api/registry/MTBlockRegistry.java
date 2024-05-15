@@ -26,13 +26,16 @@ public class MTBlockRegistry {
                 if(!ctx.getWorld().isClient()) {
                     BlockStateAPI<?> state = ctx.getState();
                     if(MTRef.res("music_recorder").equals(state.getBlock().getRegistryName())) {
-                        if(state.getPropertyBool("recording") || state.getPropertyBool("recording_special")) return PASS;
+                        if(state.getPropertyBool("recording") || state.getPropertyBool("recording_special"))
+                            return PASS;
                         ItemStackAPI<?> stack = ctx.getPlayer().getStackInHand(ctx.getHand());
                         if(MTRef.res("record").equals(stack.getItem().getRegistryName())) {
                             CompoundTagAPI tag = stack.getTag();
                             boolean isSpecial = Objects.nonNull(tag) && tag.contains("channel") &&
-                                                tag.contains("triggerID") && tag.contains("audio");
-                            ctx.getWorld().setState(ctx.getPos(),state.withProperty(isSpecial ? "recording_special" : "recording",true));
+                                                tag.contains("triggerID") && (tag.contains("audio") ||
+                                                                              tag.contains("custom"));
+                            ctx.getWorld().setState(ctx.getPos(),state.withProperty(
+                                    isSpecial ? "recording_special" : "recording",true));
                             stack.decrement();
                             return SUCCESS;
                         }

@@ -1,7 +1,9 @@
 package mods.thecomputerizer.musictriggers.api.data.jukebox;
 
 import lombok.Getter;
+import lombok.Setter;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
+import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import org.apache.commons.lang3.StringUtils;
@@ -21,8 +23,9 @@ public class RecordElement extends ChannelElement {
             "# song1 = dragon");
 
     private final boolean valid;
-    private String name;
+    private String value;
     private String key;
+    @Setter private AudioRef audio;
 
     public RecordElement(ChannelAPI channel, String line) {
         super(channel,"jukebox_element");
@@ -31,13 +34,13 @@ public class RecordElement extends ChannelElement {
 
     @Override
     public void close() {
-        this.name = null;
         this.key = null;
+        this.value = null;
     }
     
     @Override
     public String getName() {
-        return this.key+" = "+this.name;
+        return this.key+" = "+this.value;
     }
 
     @Override
@@ -47,17 +50,17 @@ public class RecordElement extends ChannelElement {
 
     private boolean parse(String line) {
         if(line.startsWith("#") || !line.contains("=") || line.contains("==")) return false;
-        this.name = line.substring(0,line.indexOf('=')-1);
-        this.key = line.substring(line.indexOf('=')+1).trim();
-        if(StringUtils.isBlank(this.name)) {
+        this.key = line.substring(0, line.indexOf('=')-1).trim();
+        this.value = line.substring(line.indexOf('=')+1).trim();
+        if(StringUtils.isBlank(this.key)) {
             logWarn("Skipping blank redirect name from line `{}`",line);
             return false;
         }
-        if(StringUtils.isBlank(this.key)) {
+        if(StringUtils.isBlank(this.value)) {
             logWarn("Skipping blank redirect key from line `{}`",line);
             return false;
         }
-        logInfo("Successfully registed `{}` as a record from key `{}`",this.name,this.key);
+        logInfo("Successfully registed `{}` as a record from key `{}`", this.value, this.key);
         return true;
     }
     

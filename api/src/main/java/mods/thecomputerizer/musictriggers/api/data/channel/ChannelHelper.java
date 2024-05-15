@@ -25,6 +25,7 @@ import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.global.Debug;
 import mods.thecomputerizer.musictriggers.api.data.global.GlobalData;
 import mods.thecomputerizer.musictriggers.api.data.global.Toggle;
+import mods.thecomputerizer.musictriggers.api.data.jukebox.RecordElement;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
@@ -35,9 +36,11 @@ import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels;
 import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels.ChannelMessage;
 import mods.thecomputerizer.musictriggers.api.network.MessageTriggerStates;
 import mods.thecomputerizer.musictriggers.api.server.ChannelServer;
+import mods.thecomputerizer.shadow.org.joml.Vector3d;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.sound.SoundHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.blockentity.BlockEntityAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.item.ItemStackAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
@@ -49,6 +52,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.tag.TagHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlParsingException;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlWritingException;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.Box;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.CustomTick;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.RandomHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
@@ -286,6 +290,18 @@ public class ChannelHelper {
             if(channel.shouldBlockMusicTicker()) return false;
         return true;
     }
+    
+    public boolean checkForJukebox() {
+        PlayerAPI<?,?> player = getPlayer();
+        if(Objects.nonNull(player)) {
+            Vector3d pos = player.getPosExact();
+            Box box = new Box(pos.x-63d,pos.y-63d,pos.z-63d,pos.x+63d,pos.y+63d,pos.z+63d);
+            for(BlockEntityAPI<?,?> entity : player.getWorld().getBlockEntitiesInBox(box))
+                if(entity.getRegistryName().getPath().contains("jukebox") &&
+                   entity.getState().getPropertyBool("has_record")) return true;
+        }
+        return false;
+    }
 
     public void close() {
         this.stateMsg = null;
@@ -477,11 +493,12 @@ public class ChannelHelper {
         if(!this.client) ((ChannelServer)this.channels.get(channel)).setCurrentSong(song);
     }
     
-    public void setDiscTag(ItemStackAPI<?> stack, String channel, String trigger, String audio) {
+    public void setDiscTag(ItemStackAPI<?> stack, String channel, String trigger, String audio, boolean custom) {
         CompoundTagAPI tag = TagHelper.makeCompoundTag();
         tag.putString("channel",channel);
         tag.putString("triggerID",trigger);
-        tag.putString("audio",audio);
+        if(custom) tag.putString("custom",audio);
+        else tag.putString("audio",audio);
         stack.setTag(tag);
     }
     
@@ -505,9 +522,10 @@ public class ChannelHelper {
     }
     
     public void tickChannels() {
+        boolean jukebox = this.client && checkForJukebox();
         boolean slow = (this.ticks++)%this.getDebugNumber("slow_tick_factor").intValue()==0;
         this.channels.values().forEach(channel -> {
-            channel.tick();
+            channel.tick(jukebox);
             if(slow) channel.tickSlow();
         });
         if(slow) {
@@ -526,7 +544,7 @@ public class ChannelHelper {
         Entry<String,TriggerAPI> selected = RandomHelper.getBasicRandomEntry(activeTriggers.entrySet());
         String songName = this.channels.get(selected.getKey()).getPlayingSongName();
         if(StringUtils.isBlank(songName)) return false;
-        setDiscTag(stack,selected.getKey(),selected.getValue().getName(),songName);
+        setDiscTag(stack,selected.getKey(),selected.getValue().getName(),songName,false);
         this.channels.get(selected.getKey()).logDebug("Successfully recorded music disc");
         return true;
     }
@@ -541,22 +559,34 @@ public class ChannelHelper {
     }
     
     private boolean writeSpecialDisc(ItemStackAPI<?> stack) {
-        Map<String,List<TriggerAPI>> specialTriggers = new HashMap<>();
+        Map<String,List<ChannelEventHandler>> specialHandlers = new HashMap<>();
         this.channels.forEach((name,channel) -> {
-            List<TriggerAPI> triggers = new ArrayList<>();
-            channel.getData().collectSpecialTriggers(triggers);
-            if(!triggers.isEmpty()) specialTriggers.put(name,triggers);
+            List<ChannelEventHandler> triggers = new ArrayList<>();
+            channel.getData().collectSpecialHandlers(triggers);
+            if(!triggers.isEmpty()) specialHandlers.put(name,triggers);
         });
-        if(specialTriggers.isEmpty()) return false;
-        Entry<String,List<TriggerAPI>> selected = RandomHelper.getBasicRandomEntry(specialTriggers.entrySet());
-        TriggerAPI trigger = RandomHelper.getBasicRandomEntry(selected.getValue());
-        if(Objects.isNull(trigger)) return false;
-        AudioPool pool = trigger.getAudioPool();
-        if(Objects.isNull(pool)) return false;
-        String songName = RandomHelper.getBasicRandomEntry(pool.getFlattened()).getName();
-        if(StringUtils.isBlank(songName)) return false;
-        setDiscTag(stack,selected.getKey(),trigger.getName(),songName);
-        this.channels.get(selected.getKey()).logDebug("Successfully recorded special music disc");
+        if(specialHandlers.isEmpty()) return false;
+        Entry<String,List<ChannelEventHandler>> selected = RandomHelper.getBasicRandomEntry(specialHandlers.entrySet());
+        ChannelAPI channel = this.channels.get(selected.getKey());
+        if(Objects.isNull(channel)) return false;
+        ChannelEventHandler handler = RandomHelper.getBasicRandomEntry(selected.getValue());
+        boolean custom = false;
+        String songName;
+        String triggerName;
+        if(handler instanceof TriggerAPI) {
+            TriggerAPI trigger = (TriggerAPI)handler;
+            triggerName = trigger.getName();
+            AudioPool pool = trigger.getAudioPool();
+            if(Objects.isNull(pool)) return false;
+            songName = RandomHelper.getBasicRandomEntry(pool.getFlattened()).getName();
+        } else if(handler instanceof RecordElement) {
+            triggerName = "generic";
+            songName = ((RecordElement)handler).getKey();
+            custom = true;
+        } else return false;
+        if(StringUtils.isBlank(songName) || StringUtils.isBlank(triggerName)) return false;
+        setDiscTag(stack,channel.getName(),triggerName,songName,custom);
+        channel.logDebug("Successfully recorded special music disc");
         return true;
     }
 }

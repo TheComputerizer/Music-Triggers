@@ -21,5 +21,8 @@ message.musictriggers.reload.error=Caught an unknown error in channel %1$s
 message.musictriggers.reload.finished=Finished reloading Music Triggers!
 message.musictriggers.reload.queue=Reloading Music Triggers in %1$s tick(s)...
 
+record.musictriggers.test_dragon=Hey cool it worked
+record.musictriggers.test_math=Math???
+
 tile.musictriggers.music_recorder.name=Music Recorder
 tile.musictriggers.music_recorder.tooltip=Used to record audio onto Enhanced Music Discs

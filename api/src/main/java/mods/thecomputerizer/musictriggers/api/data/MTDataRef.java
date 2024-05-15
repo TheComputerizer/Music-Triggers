@@ -46,6 +46,7 @@ public final class MTDataRef {
             new ParameterRef<>("local_folder",MTRef.CONFIG_PATH+"/songs"),
             new ParameterRef<>("main","main"),
             new ParameterRef<>("overrides_music",true),
+            new ParameterRef<>("paused_by_jukebox",true),
             new ParameterRef<>("pauses_overrides",false),
             new ParameterRef<>("redirect","redirect"),
             new ParameterRef<>("renders","renders"),
