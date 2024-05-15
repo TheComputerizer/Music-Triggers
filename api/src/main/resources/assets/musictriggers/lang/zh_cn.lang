@@ -8,7 +8,7 @@ debug.musictriggers.position.dimension=当前维度：名称 = %1$s | ID = %2$s
 debug.musictriggers.position.light=光照情况：方块光照 = %1$s | 天空光照 = %2$s | 总和 = %3$s
 debug.musictriggers.position.structure=所在结构：名称 = %1$s | ID = %2$s
 debug.musictriggers.status.effects=状态效果：[ %1$s ]
-debug.musictriggers.status.effect=Name = %1$s | ID = %2$s
+debug.musictriggers.status.effect=名称 = %1$s | ID = %2$s
 debug.musictriggers.target.block_entity=方块实体：名称 = %1$s | ID = %2$s
 debug.musictriggers.target.entity=实体：名称 = %1$s | ID = %2$s
 
