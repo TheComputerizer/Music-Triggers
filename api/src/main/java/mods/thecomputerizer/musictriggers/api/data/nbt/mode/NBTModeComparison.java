@@ -17,15 +17,15 @@ public abstract class NBTModeComparison extends NBTMode {
         super(name);
     }
 
-    protected int compareCompound(CompoundTagAPI tag) {
+    protected int compareCompound(CompoundTagAPI<?> tag) {
         return Integer.MIN_VALUE;
     }
 
-    protected int compareList(ListTagAPI tag) {
+    protected int compareList(ListTagAPI<?> tag) {
         return Integer.MIN_VALUE;
     }
 
-    protected int comparePrimitive(PrimitiveTagAPI tag) {
+    protected int comparePrimitive(PrimitiveTagAPI<?> tag) {
         Object primitive = parseAsPrimitive();
         switch(primitive.getClass().getSimpleName()) {
             case "Boolean": return Boolean.compare(tag.asBoolean(),(boolean)primitive);
@@ -39,8 +39,8 @@ public abstract class NBTModeComparison extends NBTMode {
         }
     }
 
-    protected int compareString(StringTagAPI tag) {
-        return tag.asString().compareTo(this.comparison);
+    protected int compareString(StringTagAPI<?> tag) {
+        return tag.getValue().compareTo(this.comparison);
     }
 
     protected Object parseAsPrimitive() {

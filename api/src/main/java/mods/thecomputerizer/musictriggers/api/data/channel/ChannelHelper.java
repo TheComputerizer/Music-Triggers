@@ -161,6 +161,12 @@ public class ChannelHelper {
 
     public static void onClientConnected() {
         loader.setConnected(true);
+        ChannelHelper helper = getClientHelper();
+        if(Objects.nonNull(helper)) {
+            helper.forEachChannel(channel -> {
+                //TODO persistent data
+            });
+        }
     }
 
     public static void onClientDisconnected() {
@@ -494,7 +500,7 @@ public class ChannelHelper {
     }
     
     public void setDiscTag(ItemStackAPI<?> stack, String channel, String trigger, String audio, boolean custom) {
-        CompoundTagAPI tag = TagHelper.makeCompoundTag();
+        CompoundTagAPI<?> tag = TagHelper.makeCompoundTag();
         tag.putString("channel",channel);
         tag.putString("triggerID",trigger);
         if(custom) tag.putString("custom",audio);

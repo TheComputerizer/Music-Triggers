@@ -17,12 +17,12 @@ public class NBTModeValPresent extends NBTModeComparison {
     }
 
     @Override
-    protected boolean checkMatchChild(ChannelAPI channel, CompoundTagAPI tag, boolean parentResult) {
+    protected boolean checkMatchChild(ChannelAPI channel, CompoundTagAPI<?> tag, boolean parentResult) {
         return parentResult && checkMatchInner(channel,tag);
     }
 
     @Override
-    protected boolean checkMatchInner(ChannelAPI channel, CompoundTagAPI tag) {
+    protected boolean checkMatchInner(ChannelAPI channel, CompoundTagAPI<?> tag) {
         return Objects.nonNull(stepToTag(tag,this.split.length));
     }
 

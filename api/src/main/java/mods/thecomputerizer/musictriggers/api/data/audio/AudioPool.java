@@ -3,17 +3,25 @@ package mods.thecomputerizer.musictriggers.api.data.audio;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventHandler;
+import mods.thecomputerizer.musictriggers.api.data.nbt.storage.NBTLoadable;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.UniversalParameters;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.tag.ListTagAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.tag.TagHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.RandomHelper;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-public class AudioPool extends AudioRef {
+public class AudioPool extends AudioRef implements NBTLoadable {
 
     public static @Nullable AudioPool unsafeMerge(Collection<AudioPool> pools) {
         AudioPool merged = null;
@@ -37,6 +45,7 @@ public class AudioPool extends AudioRef {
         this.trigger = parseTrigger(ref.getTriggers());
         if(Objects.nonNull(this.trigger)) {
             this.audio.add(ref);
+            this.playableAudio.add(ref);
             this.valid = true;
         }
         else {
@@ -54,6 +63,7 @@ public class AudioPool extends AudioRef {
         this.playableAudio = new HashSet<>();
         this.trigger = parseTrigger(ref.getTriggers());
         this.audio.add(ref);
+        this.playableAudio.add(ref);
         this.valid = true;
     }
 
@@ -64,10 +74,13 @@ public class AudioPool extends AudioRef {
 
     public void addAudio(AudioRef ref) {
         this.audio.add(ref);
+        this.playableAudio.add(ref);
     }
-
-    protected boolean canRequeue(AudioRef ref) {
-        return ref.getParameterAsInt("play_once")<2;
+    
+    @Override
+    public void addHandlers(Collection<ChannelEventHandler> handlers) {
+        handlers.add(this);
+        this.audio.forEach(ref -> ref.addHandlers(handlers));
     }
 
     @Override
@@ -77,12 +90,23 @@ public class AudioPool extends AudioRef {
         this.playableAudio.clear();
         this.queuedAudio = null;
     }
+    
+    @Override
+    public void deactivate() {
+        recalculatePlayable(i -> i<=2);
+    }
 
     @Override
     public void encode(ByteBuf buf) {
         NetworkHelper.writeString(buf,"pool");
         buf.writeInt(this.audio.size());
         for(AudioRef ref : this.audio) ref.encode(buf);
+    }
+    
+    public @Nullable AudioRef getAudioForName(String name) {
+        for(AudioRef ref : this.audio)
+            if(ref.getName().equals(name)) return ref;
+        return null;
     }
     
     public List<AudioRef> getFlattened() {
@@ -104,6 +128,13 @@ public class AudioPool extends AudioRef {
     }
     
     @Override
+    public String getName() {
+        StringJoiner refJoinfer = new StringJoiner("+");
+        this.audio.forEach(ref -> refJoinfer.add(ref.getName()));
+        return this.audio.size()==1 ? refJoinfer.toString() : "pool = "+refJoinfer;
+    }
+    
+    @Override
     public @Nullable Parameter<?> getParameter(String name) {
         return Objects.nonNull(this.queuedAudio) ? this.queuedAudio.getParameter(name) : super.getParameter(name);
     }
@@ -121,6 +152,28 @@ public class AudioPool extends AudioRef {
     public void queryInterrupt(@Nullable TriggerAPI next, AudioPlayer player) {
         if(Objects.isNull(this.queuedAudio)) this.channel.getPlayer().stopTrack();
         else this.queuedAudio.queryInterrupt(trigger,player);
+    }
+    
+    @Override
+    public void onConnected(CompoundTagAPI<?> worldData) {
+        ListTagAPI<?> audioList = worldData.getListTag("audio");
+        if(Objects.nonNull(audioList)) {
+            audioList.iterable().forEach(audio -> {
+                CompoundTagAPI<?> audioTag = audio.asCompoundTag();
+                AudioRef ref = getAudioForName(audioTag.getString("name"));
+                if(Objects.nonNull(ref) && hasPlayedEnough(audioTag.getPrimitiveTag("play_count").asInt()))
+                    this.playableAudio.remove(ref);
+            });
+        }
+    }
+    
+    public void onDisconnected() {
+        recalculatePlayable(i -> i==3);
+    }
+    
+    @Override
+    public void onLoaded(CompoundTagAPI<?> globalData) {
+    
     }
 
     private TriggerAPI parseTrigger(List<TriggerAPI> triggers) {
@@ -141,11 +194,9 @@ public class AudioPool extends AudioRef {
 
     @Override
     public void queue() {
+        if(!this.valid || this.audio.isEmpty()) return;
         AudioRef nextQueue = null;
-        this.playableAudio.removeIf(audio -> Objects.nonNull(this.queuedAudio) && audio==this.queuedAudio);
-        if(this.playableAudio.isEmpty())
-            for(AudioRef ref : this.audio)
-                if(canRequeue(ref)) this.playableAudio.add(ref);
+        if(this.playableAudio.isEmpty()) recalculatePlayable(i -> i<=1);
         int sum = 0;
         for(AudioRef audio : this.playableAudio)
             if(audio!=this.queuedAudio) sum+=audio.getParameterAsInt("chance");
@@ -157,6 +208,32 @@ public class AudioPool extends AudioRef {
         if(nextQueue instanceof AudioPool) nextQueue.queue();
         this.queuedAudio = nextQueue;
         logInfo("Queued reference {}",this.queuedAudio);
+    }
+    
+    protected void recalculatePlayable(Function<Integer,Boolean> func) {
+        this.audio.forEach(ref -> {
+            if(!this.playableAudio.contains(ref) && func.apply(ref.getPlayState()))
+                this.playableAudio.add(ref);
+        });
+    }
+    
+    @Override
+    public void saveGlobalTo(CompoundTagAPI<?> globalData) {}
+    
+    @Override
+    public void saveWorldTo(CompoundTagAPI<?> worldData) {
+        List<AudioRef> played = this.audio.stream()
+                .filter(ref -> !this.playableAudio.contains(ref) && ref.getPlayState()==4)
+                .collect(Collectors.toList());
+        if(played.isEmpty()) return;
+        ListTagAPI<?> tag = TagHelper.makeListTag();
+        played.forEach(ref -> {
+            CompoundTagAPI<?> audioTag = TagHelper.makeCompoundTag();
+            audioTag.putString("name",ref.getName());
+            audioTag.putInt("play_count",1);
+            tag.addTag(audioTag);
+        });
+        worldData.putTag("audio",tag);
     }
     
     @Override
@@ -180,7 +257,7 @@ public class AudioPool extends AudioRef {
     public void stopped() {
         if(Objects.nonNull(this.queuedAudio)) {
             this.queuedAudio.stopped();
-            if(this.queuedAudio.getParameterAsInt("play_once")>0) this.playableAudio.remove(this.queuedAudio);
+            this.playableAudio.remove(this.queuedAudio);
             this.queuedAudio = null;
         }
     }

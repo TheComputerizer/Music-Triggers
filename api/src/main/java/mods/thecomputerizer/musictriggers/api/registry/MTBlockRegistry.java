@@ -30,7 +30,7 @@ public class MTBlockRegistry {
                             return PASS;
                         ItemStackAPI<?> stack = ctx.getPlayer().getStackInHand(ctx.getHand());
                         if(MTRef.res("record").equals(stack.getItem().getRegistryName())) {
-                            CompoundTagAPI tag = stack.getTag();
+                            CompoundTagAPI<?> tag = stack.getTag();
                             boolean isSpecial = Objects.nonNull(tag) && tag.contains("channel") &&
                                                 tag.contains("triggerID") && (tag.contains("audio") ||
                                                                               tag.contains("custom"));

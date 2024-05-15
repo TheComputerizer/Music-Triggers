@@ -17,13 +17,13 @@ public class NBTModeInvert extends NBTMode {
     }
 
     @Override
-    protected boolean checkMatchChild(ChannelAPI channel, CompoundTagAPI tag, boolean parentResult) {
+    protected boolean checkMatchChild(ChannelAPI channel, CompoundTagAPI<?> tag, boolean parentResult) {
         return !parentResult;
     }
 
     @Override
-    protected boolean checkMatchInner(ChannelAPI channel, CompoundTagAPI tag) {
-        BaseTagAPI val = stepToTag(tag,this.split.length);
+    protected boolean checkMatchInner(ChannelAPI channel, CompoundTagAPI<?> tag) {
+        BaseTagAPI<?> val = stepToTag(tag,this.split.length);
         return Objects.isNull(val) || (val.isPrimitive() && !val.asPrimitiveTag().asBoolean());
     }
 

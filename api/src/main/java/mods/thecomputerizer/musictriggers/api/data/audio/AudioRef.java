@@ -9,6 +9,7 @@ import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventHandler;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
@@ -32,6 +33,10 @@ public class AudioRef extends ChannelElement {
         this.triggers = new ArrayList<>();
         this.loops = new ArrayList<>();
     }
+    
+    public void addHandlers(Collection<ChannelEventHandler> handlers) {
+        handlers.addAll(this.loops);
+    }
 
     @Override
     public void close() {
@@ -41,6 +46,10 @@ public class AudioRef extends ChannelElement {
     public void encode(ByteBuf buf) {
         NetworkHelper.writeString(buf,this.name);
         NetworkHelper.writeList(buf,this.triggers,trigger -> trigger.encode(buf));
+    }
+    
+    public int getPlayState() {
+        return getParameterAsInt("play_once");
     }
 
     public float getVolume() {
@@ -60,8 +69,10 @@ public class AudioRef extends ChannelElement {
     protected String getSubTypeName() {
         return "Audio";
     }
-
-    public void queryInterrupt(@Nullable TriggerAPI next, AudioPlayer player) {}
+    
+    public boolean hasPlayedEnough(int count) {
+        return count>=getParameterAsInt("play_x");
+    }
 
     public boolean isLoaded() {
         return false;
@@ -86,13 +97,15 @@ public class AudioRef extends ChannelElement {
                     Loop loop = new Loop(this.channel,loopTable);
                     if(loop.valid) this.loops.add(loop);
                 }
-                logInfo("Registered {} loops",this.loops.size());
+                logInfo("Registered loops: {}",this.loops);
             }
             return true;
         }
         logError("Failed to parse");
         return false;
     }
+    
+    public void queryInterrupt(@Nullable TriggerAPI next, AudioPlayer player) {}
 
     /**
      * fade<0 = fade in
@@ -169,14 +182,13 @@ public class AudioRef extends ChannelElement {
                 logError("Cannot define loops with equal from and to values! {} = {}",this.from,this.to);
                 valid = false;
             }
-            if(valid) {
-                logInfo("Successfully parsed loop from {} to {} with count {}",this.from,this.to,this.total);
-            }
             this.valid = valid;
         }
         
-        @Override public void close() {
+        @Override public void close() {}
         
+        @Override public String getName() {
+            return String.format("(%1$d->%2$d)x%3$d",this.from,this.to,this.total);
         }
         
         @Override protected TableRef getReferenceData() {

@@ -101,12 +101,22 @@ public class Toggle extends GlobalElement {
             this.triggers.clear();
         }
         
+        @Override protected ChannelAPI getChannelReference() {
+            return this.channel;
+        }
+        
+        @Override public String getName() {
+            StringJoiner joiner = new StringJoiner("+");
+            this.triggers.forEach(trigger -> joiner.add(trigger.getNameWithID()));
+            return String.format("From(%1$s) = %2$s",this.channel.getName(),joiner);
+        }
+        
         @Override protected TableRef getReferenceData() {
             return MTDataRef.FROM;
         }
         
-        @Override protected ChannelAPI getChannelReference() {
-            return this.channel;
+        @Override public String getTypeName() {
+            return "Toggle";
         }
         
         @Override public boolean isClient() {
@@ -152,8 +162,18 @@ public class Toggle extends GlobalElement {
             this.triggers.clear();
         }
         
+        @Override public String getName() {
+            StringJoiner joiner = new StringJoiner("+");
+            this.triggers.forEach(trigger -> joiner.add(trigger.getNameWithID()));
+            return String.format("To(%1$s) = %2$s",this.channel.getName(),this.triggers.isEmpty() ? "?" : joiner);
+        }
+        
         @Override protected TableRef getReferenceData() {
             return MTDataRef.TO;
+        }
+        
+        @Override public String getTypeName() {
+            return "Toggle";
         }
 
         @Override

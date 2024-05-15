@@ -24,13 +24,13 @@ public class MTItemRegistry {
     public static final ItemAPI<?> ENHANCED_MUSIC_DISC = discBuilder("record", 1)
             .setSoundNameSupplier(stack -> {
                 if(Objects.isNull(stack)) return MTClient.getTranslated("item","record.desc");
-                CompoundTagAPI tag = stack.getTag();
+                CompoundTagAPI<?> tag = stack.getTag();
                 if(Objects.nonNull(tag) && tag.contains("audio"))
                     return MTClient.getTranslated("item","record.tooltip",tag.getString("audio"));
                 return MTClient.getTranslated("item","record.desc");
             })
             .setTootltipFunction((stack,world) -> {
-                CompoundTagAPI tag = stack.getTag();
+                CompoundTagAPI<?> tag = stack.getTag();
                 if(Objects.nonNull(tag)) {
                     String audio = null;
                     if(tag.contains("custom") && tag.contains("channel")) {
@@ -58,7 +58,7 @@ public class MTItemRegistry {
             .setUseFunc(ctx -> {
                 ActionResult superResult = ctx.getSuperResult();
                 if(superResult==SUCCESS && ctx.getWorld().isClient()) {
-                    CompoundTagAPI tag = ctx.getPlayer().getStackInHand(ctx.getHand()).getTag();
+                    CompoundTagAPI<?> tag = ctx.getPlayer().getStackInHand(ctx.getHand()).getTag();
                     if(Objects.nonNull(tag)) {
                         String channel = tag.getString("channel");
                         String audio = tag.contains("custom") ? tag.getString("custom") : tag.getString("audio");

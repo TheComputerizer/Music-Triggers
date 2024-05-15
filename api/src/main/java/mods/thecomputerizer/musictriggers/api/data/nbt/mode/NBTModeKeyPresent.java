@@ -18,13 +18,13 @@ public class NBTModeKeyPresent extends NBTModeComparison {
     }
 
     @Override
-    protected boolean checkMatchChild(ChannelAPI channel, CompoundTagAPI tag, boolean parentResult) {
+    protected boolean checkMatchChild(ChannelAPI channel, CompoundTagAPI<?> tag, boolean parentResult) {
         return parentResult && checkMatchInner(channel,tag);
     }
 
     @Override
-    protected boolean checkMatchInner(ChannelAPI channel, CompoundTagAPI tag) {
-        BaseTagAPI val = stepToTag(tag,this.split.length);
+    protected boolean checkMatchInner(ChannelAPI channel, CompoundTagAPI<?> tag) {
+        BaseTagAPI<?> val = stepToTag(tag,this.split.length);
         return Objects.nonNull(val) && val.isCompound();
     }
 

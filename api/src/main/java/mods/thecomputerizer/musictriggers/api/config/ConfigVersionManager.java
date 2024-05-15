@@ -19,6 +19,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import static mods.thecomputerizer.musictriggers.api.config.MTConfigV6.V6_3_1;
+import static mods.thecomputerizer.musictriggers.api.config.MTConfigV7.LATEST;
 import static mods.thecomputerizer.musictriggers.api.config.MTConfigV7.V7_0_0_BETA_1;
 import static mods.thecomputerizer.musictriggers.api.config.MTConfigV7.V7_0_0_BETA_3;
 import static mods.thecomputerizer.musictriggers.api.config.MTConfigV7.V7_0_0_BETA_4;
@@ -30,7 +31,7 @@ public class ConfigVersionManager {
     
     private static Set<ConfigVersion> collectVersions() {
         return Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-                V6_3_1,V7_0_0_BETA_1,V7_0_0_BETA_3, V7_0_0_BETA_4)));
+                LATEST,V6_3_1,V7_0_0_BETA_1,V7_0_0_BETA_3,V7_0_0_BETA_4)));
     }
     
     private static ConfigVersion findCurrent() {

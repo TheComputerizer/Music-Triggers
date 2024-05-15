@@ -9,7 +9,6 @@ import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 public abstract class NBTMode {
@@ -38,7 +37,7 @@ public abstract class NBTMode {
         }
     }
 
-    public boolean checkMatch(ChannelAPI channel, BaseTagAPI tag) {
+    public boolean checkMatch(ChannelAPI channel, BaseTagAPI<?> tag) {
         this.potentialChildren = initPotentialChildren();
         findChild(this);
         boolean ret = false;
@@ -55,16 +54,16 @@ public abstract class NBTMode {
         return ret;
     }
 
-    protected abstract boolean checkMatchChild(ChannelAPI channel, CompoundTagAPI tag, boolean parentResult);
+    protected abstract boolean checkMatchChild(ChannelAPI channel, CompoundTagAPI<?> tag, boolean parentResult);
 
-    protected abstract boolean checkMatchInner(ChannelAPI channel, CompoundTagAPI tag);
+    protected abstract boolean checkMatchInner(ChannelAPI channel, CompoundTagAPI<?> tag);
 
-    protected @Nullable CompoundTagAPI getNextCompound(@Nullable CompoundTagAPI tag) {
-        BaseTagAPI based = getNextTag(tag);
+    protected @Nullable CompoundTagAPI<?> getNextCompound(@Nullable CompoundTagAPI<?> tag) {
+        BaseTagAPI<?> based = getNextTag(tag);
         return Objects.nonNull(based) && based.isCompound() ? based.asCompoundTag() : null;
     }
 
-    protected @Nullable BaseTagAPI getNextTag(@Nullable CompoundTagAPI tag) {
+    protected @Nullable BaseTagAPI<?> getNextTag(@Nullable CompoundTagAPI<?> tag) {
         String name = stepSplit();
         return Objects.nonNull(name) && Objects.nonNull(tag) ? tag.getTag(name) : null;
     }
@@ -99,26 +98,8 @@ public abstract class NBTMode {
         return next;
     }
 
-    protected @Nullable BaseTagAPI stepToTag(CompoundTagAPI tag, int steps) {
+    protected @Nullable BaseTagAPI<?> stepToTag(CompoundTagAPI<?> tag, int steps) {
         while(Objects.nonNull(tag) && steps>1) tag = getNextCompound(tag);
         return getNextTag(tag);
-    }
-
-    public enum Operation {
-
-        AND((b1,b2) -> b1 && b2),
-        NOT((b1,b2) -> !b1),
-        OR((b1,b2) -> b1 || b2),
-        XOR((b1,b2) -> (b1 && !b2) || (!b1 && b2));
-
-        private final BiFunction<Boolean,Boolean,Boolean> func;
-
-        Operation(BiFunction<Boolean,Boolean,Boolean> func) {
-            this.func = func;
-        }
-
-        public boolean apply(boolean b1, boolean b2) {
-            return this.func.apply(b1,b2);
-        }
     }
 }

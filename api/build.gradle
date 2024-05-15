@@ -1,15 +1,30 @@
 apply from: rootProject.file('gradle\\java8-module.gradle')
 
 repositories {
-    mavenCentral()
+    mavenCentral() {
+        content {
+            [ 'com.google.code.findbugs', 'commons-io', 'io.netty', 'org.apache.commons', 'org.apache.logging.log4j',
+              'org.ow2', 'org.ow2.asm' ].forEach { includeGroup it }
+        }
+    }
+    maven {
+        name = 'SonaType'
+        url = uri('https://oss.sonatype.org/content/repositories/public/')
+        content {
+            includeGroup 'it.unimi.dsi'
+        }
+    }
 }
 
 dependencies {
     compileOnly("com.google.code.findbugs:jsr305:${jsr_version}")
     compileOnly("commons-io:commons-io:${io_version}")
     compileOnly("io.netty:netty-all:${netty_version}")
+    compileOnly("it.unimi.dsi:fastutil:${fast_version}")
     compileOnly("org.apache.commons:commons-lang3:${lang3_version}")
     compileOnly("org.apache.logging.log4j:log4j-core:${log4j_version}")
+    compileOnly("org.ow2.asm:asm-commons:${asm_version}")
+    compileOnly("org.ow2.asm:asm-util:${asm_version}")
 }
 
 

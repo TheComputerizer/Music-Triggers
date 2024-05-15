@@ -9,9 +9,11 @@ import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventHandler;
+import mods.thecomputerizer.musictriggers.api.data.nbt.storage.NBTLoadable;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -24,7 +26,7 @@ import java.util.function.Consumer;
 import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.*;
 
 @Getter
-public abstract class TriggerAPI extends ChannelElement {
+public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
 
     private static final Map<TriggerAPI,Map<String,Timer>> TIMER_MAP = new HashMap<>(); // This needs to be static due to super stuff
 
@@ -209,12 +211,22 @@ public abstract class TriggerAPI extends ChannelElement {
         return this.equals(trigger);
     }
 
-    public void onConnect() {
-
+    @Override
+    public void onConnected(CompoundTagAPI<?> worldData) {
+        AudioPool pool = getAudioPool();
+        if(Objects.nonNull(pool)) pool.onConnected(worldData);
     }
-
-    public void onDisconnect() {
-
+    
+   
+    public void onDisconnected() {
+        AudioPool pool = getAudioPool();
+        if(Objects.nonNull(pool)) pool.onDisconnected();
+    }
+    
+    @Override
+    public void onLoaded(CompoundTagAPI<?> globalData) {
+        AudioPool pool = getAudioPool();
+        if(Objects.nonNull(pool)) pool.onLoaded(globalData);
     }
 
     @Override
@@ -256,6 +268,29 @@ public abstract class TriggerAPI extends ChannelElement {
             return true;
         }
         return canPersist();
+    }
+    
+    @Override
+    public void saveGlobalTo(CompoundTagAPI<?> globalData) {
+        savePersistentData(globalData,true);
+    }
+    
+    protected void savePersistentData(CompoundTagAPI<?> data, boolean global) {
+        boolean written = false;
+        AudioPool pool = getAudioPool();
+        if(Objects.nonNull(pool) && !global) {
+            pool.saveWorldTo(data);
+            written = true;
+        }
+        if(written) {
+            data.putString("name",getName());
+            data.putString("id",getIdentifier());
+        }
+    }
+    
+    @Override
+    public void saveWorldTo(CompoundTagAPI<?> worldData) {
+        savePersistentData(worldData,false);
     }
     
     protected <V> void setExistingParameterValue(String name, V value) {

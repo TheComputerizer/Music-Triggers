@@ -16,13 +16,13 @@ public class NBTModeLesser extends NBTModeComparison {
     }
 
     @Override
-    protected boolean checkMatchChild(ChannelAPI channel, CompoundTagAPI tag, boolean parentResult) {
+    protected boolean checkMatchChild(ChannelAPI channel, CompoundTagAPI<?> tag, boolean parentResult) {
         return parentResult && checkMatchInner(channel,tag);
     }
 
     @Override
-    protected boolean checkMatchInner(ChannelAPI channel, CompoundTagAPI tag) {
-        BaseTagAPI val = stepToTag(tag,this.split.length);
+    protected boolean checkMatchInner(ChannelAPI channel, CompoundTagAPI<?> tag) {
+        BaseTagAPI<?> val = stepToTag(tag,this.split.length);
         if(Objects.isNull(val)) return false;
         if(val.isPrimitive()) return comparePrimitive(val.asPrimitiveTag())<0;
         if(val.isString()) return compareString(val.asStringTag())<0;

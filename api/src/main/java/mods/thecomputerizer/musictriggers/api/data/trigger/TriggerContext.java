@@ -37,7 +37,7 @@ public abstract class TriggerContext extends ChannelElement {
 
     public abstract void cache();
 
-    protected boolean checkNBT(@Nullable CompoundTagAPI tag, String tagStr) {
+    protected boolean checkNBT(@Nullable CompoundTagAPI<?> tag, String tagStr) {
         if(Objects.isNull(tag) || StringUtils.isBlank(tagStr) || tagStr.equalsIgnoreCase("any")) return true;
         NBTMode mode = NBTHelper.getAndInitMode(tagStr.split(";"));
         try {

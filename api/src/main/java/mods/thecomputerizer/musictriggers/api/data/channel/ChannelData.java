@@ -173,11 +173,7 @@ public class ChannelData extends ChannelElement {
     }
 
     protected void extractActiveTriggers() {
-        addActiveTriggers(this.audio,ref -> {
-            List<TriggerAPI> triggers = ref.getTriggers();
-            addActiveTriggers(ref.getLoops(),loop -> triggers,true);
-            return triggers;
-        },false);
+        setupAudioPools();
         addActiveTriggers(this.cards,CardAPI::getTriggers,true);
         addActiveTriggers(this.commands,CommandElement::getTriggers,true);
     }
@@ -299,7 +295,6 @@ public class ChannelData extends ChannelElement {
 
     public void organize() {
         extractActiveTriggers();
-        setupAudioPools();
         addEmptyTriggers();
         this.triggerEventMap.forEach((trigger,handlers) -> {
             handlers.add(trigger);
@@ -356,8 +351,8 @@ public class ChannelData extends ChannelElement {
     }
 
     protected void setupAudioPools() {
-        Set<AudioRef> added = new HashSet<>();
         this.audio.forEach(ref -> {
+            addActiveTriggers(ref,ref.getTriggers(),false);
             TriggerAPI trigger = null;
             for(TriggerAPI active : this.triggerEventMap.keySet()) {
                 if(active.matches(ref.getTriggers())) {
@@ -366,20 +361,10 @@ public class ChannelData extends ChannelElement {
                 }
             }
             if(Objects.isNull(trigger)) return;
-            Set<AudioRef> pooled = new HashSet<>();
-            pooled.add(ref);
-            for(AudioRef other : this.audio)
-                if(other!=ref && !added.contains(other) && trigger.matches(other.getTriggers()))
-                    pooled.add(other);
-            AudioPool pool = null;
-            for(AudioRef a : pooled) {
-                if(Objects.nonNull(a)) {
-                    if(Objects.isNull(pool)) pool = new AudioPool(a.getName()+"_pool",a);
-                    else pool.addAudio(a);
-                    added.add(a);
-                }
-            }
-            if(Objects.nonNull(pool) && pool.isValid()) this.triggerEventMap.get(trigger).add(pool);
+            AudioPool pool = trigger.getAudioPool();
+            if(Objects.isNull(pool)) pool = new AudioPool(ref.getName()+"_pool",ref);
+            else pool.addAudio(ref);
+            if(pool.isValid()) pool.addHandlers(this.triggerEventMap.get(trigger));
         });
     }
     

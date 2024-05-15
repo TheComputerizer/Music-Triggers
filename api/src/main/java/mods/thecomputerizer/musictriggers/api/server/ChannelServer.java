@@ -81,7 +81,7 @@ public class ChannelServer extends ChannelAPI {
 
     @Override
     public void onTrackStop(AudioTrackEndReason endReason) {
-        logError("onTrackStop called on the server! {}");
+        logError("onTrackStop called on the server! {}",endReason);
     }
 
     @Override
