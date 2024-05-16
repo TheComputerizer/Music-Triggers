@@ -11,14 +11,19 @@ import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.jukebox.RecordElement;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
+import mods.thecomputerizer.musictriggers.api.data.nbt.NBTLoadable;
 import mods.thecomputerizer.musictriggers.api.data.redirect.RedirectElement;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.Link;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerSelector;
 import mods.thecomputerizer.musictriggers.api.server.TriggerContextServer;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.tag.ListTagAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.tag.TagHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import javax.annotation.Nullable;
@@ -31,7 +36,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 @Getter
-public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
+public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NBTLoadable {
 
     private final ChannelHelper helper;
     private final ChannelInfo info;
@@ -54,8 +59,6 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
 
     @Override
     public void activate() {
-        TriggerAPI activeTrigger = getActiveTrigger();
-        if(Objects.nonNull(activeTrigger)) logDebug("Activated {}",activeTrigger);
         handleActiveEvent(ChannelEventHandler::activate);
     }
     
@@ -191,6 +194,13 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
         this.data.getPlayableEventHandlers().forEach(event);
     }
     
+    @Override
+    public boolean hasDataToSave() {
+        for(TriggerAPI trigger : this.data.getTriggerEventMap().keySet())
+            if(trigger.hasDataToSave()) return true;
+        return false;
+    }
+    
     public boolean implyTrigger(String name) {
         int index = name.indexOf('-');
         String id = index!=-1 ? name.substring(index+1) : "implied";
@@ -243,6 +253,20 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
         MTLogger.logWarn(getTypeName(),getName(),msg,args);
     }
 
+    public void onConnected(CompoundTagAPI<?> worldData) {
+        if(worldData.contains("triggers")) {
+            worldData.getListTag("triggers").forEach(based -> {
+                CompoundTagAPI<?> triggerTag = based.asCompoundTag();
+                TriggerAPI trigger = TriggerHelper.decodeTrigger(this,triggerTag);
+                trigger.onConnected(triggerTag);
+            });
+        }
+    }
+    
+    public void onLoaded(CompoundTagAPI<?> globalData) {
+    
+    }
+    
     public abstract void onResourcesLoaded();
     public abstract void onTrackStart(AudioTrack track);
     public abstract void onTrackStop(AudioTrackEndReason endReason);
@@ -267,6 +291,24 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI {
     @Override
     public void queue() {
         handleActiveEvent(ChannelEventHandler::queue);
+    }
+    
+    @Override
+    public void saveGlobalTo(CompoundTagAPI<?> globalData) {
+    
+    }
+    
+    @Override
+    public void saveWorldTo(CompoundTagAPI<?> worldData) {
+        ListTagAPI<?> triggersTag = TagHelper.makeListTag();
+        this.data.getTriggerEventMap().keySet().forEach(trigger -> {
+            if(trigger.hasDataToSave()) {
+                CompoundTagAPI<?> triggerTag = TagHelper.makeCompoundTag();
+                trigger.saveWorldTo(triggerTag);
+                triggersTag.addTag(triggerTag);
+            }
+        });
+        worldData.putTag("triggers",triggersTag);
     }
 
     public abstract void setCategoryVolume(float volume);

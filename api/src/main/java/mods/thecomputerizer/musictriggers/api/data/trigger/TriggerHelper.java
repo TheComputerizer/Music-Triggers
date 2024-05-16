@@ -4,6 +4,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelData;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.parameter.UniversalParameters;
+import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 
@@ -39,6 +40,29 @@ public class TriggerHelper {
             }
         }
         return null;
+    }
+    
+    public static TriggerAPI decodeTrigger(ChannelAPI channel, CompoundTagAPI<?> tag) {
+        TriggerAPI decoded = null;
+        if(tag.contains("name")) {
+            String name = tag.getString("name");
+            if("combination".equals(name)) {
+                List<TriggerAPI> triggers = new ArrayList<>();
+                tag.getListTag("triggers").forEach(based -> {
+                    TriggerAPI trigger = decodeTrigger(channel,based.asCompoundTag());
+                    if(Objects.nonNull(trigger)) triggers.add(trigger);
+                });
+                if(!triggers.isEmpty()) {
+                    for(TriggerAPI trigger : channel.getData().getTriggerEventMap().keySet()) {
+                        if(trigger.matches(triggers)) {
+                            decoded = trigger;
+                            break;
+                        }
+                    }
+                }
+            } else decoded = decodeTrigger(channel,name,tag.contains("id") ? tag.getString("id") : null);
+        }
+        return decoded;
     }
 
     /**

@@ -201,6 +201,10 @@ public class ChannelData extends ChannelElement {
     private String getFilePath(String path) {
         return MTRef.CONFIG_PATH+"/"+getChannelName()+"/"+path;
     }
+    
+    @Override public String getName() {
+        return String.format("data(%1$s)",getChannelName());
+    }
 
     public Collection<ChannelEventHandler> getPlayableEventHandlers() {
         Set<ChannelEventHandler> handlers = new HashSet<>();
@@ -215,8 +219,16 @@ public class ChannelData extends ChannelElement {
         return null;
     }
     
+    @Override protected String getTypeName() {
+        return getChannelTypeName();
+    }
+    
     @Override public Class<? extends ParameterWrapper> getTypeClass() {
         return ChannelData.class;
+    }
+    
+    @Override protected String getSubTypeName() {
+        return "ChannelData";
     }
 
     public @Nullable UniversalParameters getUniversals(Class<? extends ChannelElement> clazz) {
@@ -237,10 +249,6 @@ public class ChannelData extends ChannelElement {
         Map<Class<? extends ChannelElement>,UniversalParameters> map = new HashMap<>();
         addUniversals(map);
         return map;
-    }
-    
-    @Override protected String getSubTypeName() {
-        return "Data";
     }
     
     @Override
@@ -281,7 +289,7 @@ public class ChannelData extends ChannelElement {
 
     public void loadResourceTracks() {
         this.audio.forEach(ref -> {
-            if(!ref.isLoaded()) {
+            if(!ref.isLoaded() && !ref.isLoading()) {
                 String name = ref.getName();
                 for(RedirectElement redirect : this.redirects) {
                     if(name.equals(redirect.getName())) {

@@ -14,6 +14,7 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.RandomHelper.WeightedEntry;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -21,12 +22,15 @@ import java.util.*;
 import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.LOOP;
 
 @Getter
-public class AudioRef extends ChannelElement {
+public class AudioRef extends ChannelElement implements WeightedEntry {
 
     private final List<TriggerAPI> triggers;
     protected final List<Loop> loops;
     private InterruptHandler interruptHandler;
     protected long inheritedTime;
+    protected boolean loaded;
+    protected boolean loading;
+    protected boolean queued;
 
     public AudioRef(ChannelAPI channel, String name) {
         super(channel,name);
@@ -42,6 +46,11 @@ public class AudioRef extends ChannelElement {
     public void close() {
         this.triggers.clear();
     }
+    
+    @Override
+    public void deactivate() {
+        this.queued = false;
+    }
 
     public void encode(ByteBuf buf) {
         NetworkHelper.writeString(buf,this.name);
@@ -51,31 +60,31 @@ public class AudioRef extends ChannelElement {
     public int getPlayState() {
         return getParameterAsInt("play_once");
     }
-
-    public float getVolume() {
-        return 0f;
-    }
     
     @Override protected TableRef getReferenceData() {
         return MTDataRef.AUDIO;
     }
     
     @Override
-    public Class<? extends ChannelElement> getTypeClass() {
-        return AudioRef.class;
-    }
-
-    @Override
     protected String getSubTypeName() {
         return "Audio";
     }
     
+    @Override
+    public Class<? extends ChannelElement> getTypeClass() {
+        return AudioRef.class;
+    }
+    
+    public float getVolume() {
+        return 0f;
+    }
+    
+    @Override public int getWeight() {
+        return getParameterAsInt("chance");
+    }
+    
     public boolean hasPlayedEnough(int count) {
         return count>=getParameterAsInt("play_x");
-    }
-
-    public boolean isLoaded() {
-        return false;
     }
 
     @Override
@@ -113,10 +122,20 @@ public class AudioRef extends ChannelElement {
      */
     public void setFade(int fade) {}
 
-    public void setItem(AudioItem item) {}
+    public void setItem(AudioItem item) {
+        this.loading = false;
+        this.loaded = true;
+    }
+    
+    public void setLoading() {
+        this.loaded = false;
+        this.loading = true;
+    }
+    
+    @Override public void setWeight(int i) {}
 
     public void start(TriggerAPI trigger) {}
-
+    
     public static class InterruptHandler extends ChannelElement {
 
         private final int priority;
@@ -214,7 +233,7 @@ public class AudioRef extends ChannelElement {
         public void run() {
             AudioTrack track = this.channel.getPlayer().getPlayingTrack();
             if(Objects.nonNull(track) && (this.total<=0 || this.count<this.total) && track.getPosition()>=this.from) {
-                logInfo("Running loop to {}",this.to);
+                logInfo("Running");
                 track.setPosition(this.to);
                 this.count++;
             }

@@ -43,6 +43,18 @@ public final class ChannelJukebox extends ChannelClient {
         return Objects.nonNull(this.playingTrack);
     }
     
+    @Override
+    public void logDebug(String msg, Object ... args) {}
+    
+    @Override
+    public void logInfo(String msg, Object ... args) {}
+    
+    @Override
+    public void logTrace(String msg, Object ... args) {}
+    
+    @Override
+    public void parseData() {}
+    
     public void playReference(AudioRef ref, Vector3i pos) {
         if(ref instanceof AudioContainer) {
             AudioContainer container = (AudioContainer)ref;
@@ -55,6 +67,7 @@ public final class ChannelJukebox extends ChannelClient {
             } else logError("Cannot play track null track from {}!",container);
         } else logError("Cannot play track from non audio container!");
     }
+    
     
     public void stop() {
         this.player.stopTrack();

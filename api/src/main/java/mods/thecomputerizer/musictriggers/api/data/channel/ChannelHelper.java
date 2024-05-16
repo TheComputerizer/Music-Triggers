@@ -28,6 +28,7 @@ import mods.thecomputerizer.musictriggers.api.data.global.Toggle;
 import mods.thecomputerizer.musictriggers.api.data.jukebox.RecordElement;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
+import mods.thecomputerizer.musictriggers.api.data.nbt.NBTLoadable;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
 import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
@@ -69,7 +70,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class ChannelHelper {
+public class ChannelHelper implements NBTLoadable {
 
     private static final Map<String,ChannelHelper> PLAYER_MAP = Collections.synchronizedMap(new HashMap<>());
     @Getter private static final GlobalData globalData = new GlobalData();
@@ -172,7 +173,11 @@ public class ChannelHelper {
     public static void onClientDisconnected() {
         loader.setConnected(false);
         ChannelHelper helper = getClientHelper();
-        if(Objects.nonNull(helper)) helper.setSyncable(false);
+        if(Objects.nonNull(helper)) {
+            helper.channels.values().forEach(
+                    channel -> channel.getData().getTriggerEventMap().keySet().forEach(TriggerAPI::onDisconnected));
+            helper.setSyncable(false);
+        }
     }
 
     public static void onReloadQueued(boolean client) {
@@ -444,7 +449,33 @@ public class ChannelHelper {
             globalData.logInfo("Attempting to load stored audio references");
             this.debugInfo.initChannelElements();
         }
-        forEachChannel(channel -> channel.loadTracks(this.client && loader.areResourcesLoaded()));
+        forEachChannel(this::loadTracks);
+    }
+    
+    public void loadTracks(ChannelAPI channel) {
+        if(this.client) {
+            channel.loadTracks(loader.areResourcesLoaded());
+            channel.setMasterVolume(SoundHelper.getCategoryVolume("master"));
+            String category = channel.getInfo().getCategory();
+            if(category.equalsIgnoreCase("master")) channel.setCategoryVolume(1f);
+            else channel.setCategoryVolume(SoundHelper.getCategoryVolume(category));
+        } else channel.getData().getAudio().forEach(ref -> ref.setItem(null));
+    }
+    
+    @Override public boolean hasDataToSave() {
+        for(ChannelAPI channel : this.channels.values())
+            if(channel.hasDataToSave()) return true;
+        return false;
+    }
+    
+    @Override public void onConnected(CompoundTagAPI<?> worldData) {
+        this.channels.forEach((name,channel) -> {
+            if(worldData.contains(name)) channel.onConnected(worldData.getCompoundTag(name));
+        });
+    }
+    
+    @Override public void onLoaded(CompoundTagAPI<?> globalData) {
+    
     }
 
     public void parseData() {
@@ -459,15 +490,7 @@ public class ChannelHelper {
             globalData.logInfo("Attempting to load stored audio references");
             this.debugInfo.initChannelElements();
         }
-        forEachChannel(channel -> {
-            channel.loadTracks(this.client && loader.areResourcesLoaded());
-            if(this.client) {
-                channel.setMasterVolume(SoundHelper.getCategoryVolume("master"));
-                String category = channel.getInfo().getCategory();
-                if(category.equalsIgnoreCase("master")) channel.setCategoryVolume(1f);
-                else channel.setCategoryVolume(SoundHelper.getCategoryVolume(category));
-            }
-        });
+        forEachChannel(this::loadTracks);
     }
     
     private void parseToggles(Toml toggles) {
@@ -486,6 +509,20 @@ public class ChannelHelper {
             if(Objects.nonNull(playThis)) getJukeboxChannel().playReference(playThis,pos.getPosVec());
             else channel.logError("Unable to find audio with name {} to play for the jukebox channel!",audioRef);
         } else globalData.logError("Unable to find channel reference {}",channelName);
+    }
+    
+    @Override public void saveGlobalTo(CompoundTagAPI<?> globalData) {
+    
+    }
+    
+    @Override public void saveWorldTo(CompoundTagAPI<?> worldData) {
+        this.channels.values().forEach(channel -> {
+            if(channel.hasDataToSave()) {
+                CompoundTagAPI<?> channelTag = TagHelper.makeCompoundTag();
+                channel.saveWorldTo(channelTag);
+                worldData.putTag(channel.getName(),channelTag);
+            }
+        });
     }
     
     public void setCategoryVolume(String category, float volume) {

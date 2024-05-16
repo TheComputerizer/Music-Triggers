@@ -48,7 +48,7 @@ public class ChannelClient extends ChannelAPI {
         this.player = createPlayer();
         configure(finalizeManager());
         this.listener = new ChannelListener(this);
-        this.trackLoader = new TrackLoader();
+        this.trackLoader = new TrackLoader(this);
         logInfo("Successfully registered client channel `{}`!",getName());
     }
 
@@ -59,7 +59,8 @@ public class ChannelClient extends ChannelAPI {
                 this.deactivating = false;
                 return false;
             }
-            if(Objects.isNull(this.playingPool) || Objects.isNull(this.player.getPlayingTrack())) return true;
+            if(Objects.isNull(this.playingPool) ||
+               (Objects.isNull(this.player.getPlayingTrack()) && !this.playingPool.isQueued())) return true;
             if(!this.deactivating) deactivateLink();
             this.deactivating = true;
             this.playingPool.queryInterrupt(next,this.player);
@@ -186,7 +187,7 @@ public class ChannelClient extends ChannelAPI {
     public void loadRemoteTrack(AudioRef ref, String location) {
         this.trackLoader.loadRemote(this.manager,ref,location);
     }
-
+    
     @Override
     public void onResourcesLoaded() {
         if(!this.registeredResourceAudio) {
@@ -251,7 +252,6 @@ public class ChannelClient extends ChannelAPI {
     @Override
     public void setTrackVolume(float volume) {
         if(volume!=this.trackVolume) {
-            logDebug("Setting track volume to {}%",volume*100f);
             this.trackVolume = volume;
             updateVolume();
         }
@@ -292,11 +292,6 @@ public class ChannelClient extends ChannelAPI {
                 }
             }
         }
-    }
-
-    @Override
-    public void tickSlow() {
-        if(!this.trackLoader.isQueued()) super.tickSlow();
     }
 
     private void updateVolume() {

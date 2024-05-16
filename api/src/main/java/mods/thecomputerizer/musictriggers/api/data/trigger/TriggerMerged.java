@@ -55,6 +55,13 @@ public class TriggerMerged extends TriggerAPI {
         }
         return AudioPool.unsafeMerge(pools);
     }
+    
+    @Override
+    public String getName() {
+        StringJoiner joiner = new StringJoiner("+");
+        this.triggers.forEach(trigger -> joiner.add(trigger.getNameWithID()));
+        return this.triggers.size()==1 ? joiner.toString() : "combination = "+joiner;
+    }
 
     @Override
     protected void initExtraParameters(Map<String,Parameter<?>> map) {}

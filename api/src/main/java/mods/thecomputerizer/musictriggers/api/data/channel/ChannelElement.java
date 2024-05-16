@@ -45,7 +45,7 @@ public abstract class ChannelElement extends ParameterWrapper implements Channel
     
     protected abstract String getSubTypeName();
     
-    protected final String getTypeName() {
+    protected String getTypeName() {
         return getChannelTypeName()+"["+getChannelName()+"]: "+getSubTypeName();
     }
 

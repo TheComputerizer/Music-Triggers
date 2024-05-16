@@ -9,9 +9,10 @@ import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventHandler;
-import mods.thecomputerizer.musictriggers.api.data.nbt.storage.NBTLoadable;
+import mods.thecomputerizer.musictriggers.api.data.nbt.NBTLoadable;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
+import mods.thecomputerizer.musictriggers.api.data.trigger.holder.HolderTrigger;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
@@ -154,6 +155,12 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
     @Override
     protected String getSubTypeName() {
         return "Trigger";
+    }
+    
+    @Override
+    public boolean hasDataToSave() {
+        AudioPool pool = getAudioPool();
+        return Objects.nonNull(pool) && pool.hasDataToSave();
     }
 
     public boolean hasNonEmptyAudioPool() {
@@ -385,6 +392,11 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
     @Override
     public void unplayable() {
         clearTimers(PLAYABLE);
+    }
+    
+    public void write(CompoundTagAPI<?> tag) {
+        tag.putString("name",getName());
+        if(this instanceof HolderTrigger) tag.putString("id",getIdentifier());
     }
     
     @Getter

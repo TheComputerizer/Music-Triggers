@@ -20,6 +20,9 @@ public final class ChannelPreview extends ChannelClient{
         return Objects.nonNull(this.playingTrack);
     }
     
+    @Override
+    public void parseData() {}
+    
     public void playReference(AudioRef ref) {
         if(ref instanceof AudioContainer) {
             AudioContainer container = (AudioContainer)ref;

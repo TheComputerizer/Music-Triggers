@@ -5,6 +5,9 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.UniversalParameters;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.tag.ListTagAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.tag.TagHelper;
 
 import java.util.*;
 
@@ -51,18 +54,15 @@ public class TriggerCombination extends TriggerAPI {
     
     @Override
     public String getName() {
-        return this.triggers.toString();
+        StringJoiner joiner = new StringJoiner("+");
+        this.triggers.forEach(trigger -> joiner.add(trigger.getNameWithID()));
+        return this.triggers.size()==1 ? joiner.toString() : "combination = "+joiner;
     }
     
     @Override
     public Parameter<?> getParameter(String name) {
         TriggerAPI priority = TriggerHelper.getPriorityTrigger(this.channel.getHelper(),this.triggers);
         return Objects.nonNull(priority) ? priority.getParameter(name) : super.getParameter(name);
-    }
-    
-    @Override
-    protected String getSubTypeName() {
-        return "Combination";
     }
 
     public boolean isContained(TriggerAPI trigger) {
@@ -131,5 +131,16 @@ public class TriggerCombination extends TriggerAPI {
             }
         }
         return true;
+    }
+    
+    @Override
+    public void write(CompoundTagAPI<?> tag) {
+        tag.putString("name","combination");
+        ListTagAPI<?> triggersTag = TagHelper.makeListTag();
+        this.triggers.forEach(trigger -> {
+            CompoundTagAPI<?> triggerTag = TagHelper.makeCompoundTag();
+            trigger.write(triggerTag);
+            triggersTag.addTag(triggerTag);
+        });
     }
 }

@@ -26,17 +26,13 @@ public class AudioContainer extends AudioRef {
     private float fadeFactor;
     private AudioItem item;
     private int playlistIndex;
-    private boolean loaded;
 
     public AudioContainer(ChannelAPI channel, String name) {
         super(channel,name);
     }
 
     private void checkFade(int fade) {
-        if(fade>0) {
-            logDebug("Fading in for {} tick{}",fade,fade>1 ? "s" : "");
-            setFade(-fade);
-        }
+        if(fade>0) setFade(-fade);
         this.channel.setTrackVolume(getVolume());
     }
 
@@ -105,24 +101,21 @@ public class AudioContainer extends AudioRef {
     }
 
     @Override
-    public boolean isLoaded() {
-        return this.loaded;
-    }
-
-    @Override
     public void loadLocal(String location) {
         this.channel.loadLocalTrack(this,location);
-        this.loaded = true;
     }
 
     @Override
     public void loadRemote(String location) {
         this.channel.loadRemoteTrack(this,location);
-        this.loaded = true;
     }
 
     @Override
     public void playing() {
+        if(this.queued) {
+            if(this.loaded) start(this.channel.getActiveTrigger());
+            return;
+        }
         this.loops.forEach(Loop::run);
         if(this.fade>0) {
             if(this.fadeFactor==0f) this.fade = 0;
@@ -171,6 +164,7 @@ public class AudioContainer extends AudioRef {
     @Override
     public void setItem(AudioItem item) {
         this.item = item;
+        super.setItem(item);
     }
 
     private FloatPcmAudioFilter setRotation(
@@ -215,6 +209,12 @@ public class AudioContainer extends AudioRef {
 
     @Override
     public void start(TriggerAPI trigger) {
+        if(!this.loaded || this.loading) {
+            logInfo("Queued track will play once it is finished loading");
+            this.queued = true;
+            return;
+        }
+        this.queued = false;
         AudioPlayer player = this.channel.getPlayer();
         if(Objects.isNull(player)) {
             logFatal("Cannot play track on missing audio player!");

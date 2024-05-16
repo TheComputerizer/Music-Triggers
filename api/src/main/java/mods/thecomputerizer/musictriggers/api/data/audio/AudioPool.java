@@ -4,7 +4,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventHandler;
-import mods.thecomputerizer.musictriggers.api.data.nbt.storage.NBTLoadable;
+import mods.thecomputerizer.musictriggers.api.data.nbt.NBTLoadable;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.UniversalParameters;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
@@ -13,11 +13,11 @@ import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.ListTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.TagHelper;
-import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.RandomHelper;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -69,7 +69,7 @@ public class AudioPool extends AudioRef implements NBTLoadable {
 
     @Override
     public void activate() {
-        this.playableAudio.addAll(this.audio);
+        recalculatePlayable(i -> i<=2);
     }
 
     public void addAudio(AudioRef ref) {
@@ -89,11 +89,6 @@ public class AudioPool extends AudioRef implements NBTLoadable {
         this.audio.clear();
         this.playableAudio.clear();
         this.queuedAudio = null;
-    }
-    
-    @Override
-    public void deactivate() {
-        recalculatePlayable(i -> i<=2);
     }
 
     @Override
@@ -145,7 +140,25 @@ public class AudioPool extends AudioRef implements NBTLoadable {
     }
 
     public boolean hasAudio() {
-        return !this.audio.isEmpty();
+        if(this.playableAudio.isEmpty()) recalculatePlayable(i -> i<=1);
+        return !this.playableAudio.isEmpty();
+    }
+    
+    @Override
+    public boolean hasDataToSave() {
+        for(AudioRef ref : this.audio)
+            if(!this.playableAudio.contains(ref) && ref.getPlayState()==4) return true;
+        return false;
+    }
+    
+    @Override
+    public boolean isLoaded() {
+        return Objects.nonNull(this.queuedAudio) && !this.queuedAudio.isLoading() && this.queuedAudio.isLoaded();
+    }
+    
+    @Override
+    public boolean isQueued() {
+        return Objects.nonNull(this.queuedAudio) && this.queuedAudio.isQueued();
     }
 
     @Override
@@ -156,9 +169,8 @@ public class AudioPool extends AudioRef implements NBTLoadable {
     
     @Override
     public void onConnected(CompoundTagAPI<?> worldData) {
-        ListTagAPI<?> audioList = worldData.getListTag("audio");
-        if(Objects.nonNull(audioList)) {
-            audioList.iterable().forEach(audio -> {
+        if(worldData.contains("audio")) {
+            worldData.getListTag("audio").forEach(audio -> {
                 CompoundTagAPI<?> audioTag = audio.asCompoundTag();
                 AudioRef ref = getAudioForName(audioTag.getString("name"));
                 if(Objects.nonNull(ref) && hasPlayedEnough(audioTag.getPrimitiveTag("play_count").asInt()))
@@ -194,25 +206,16 @@ public class AudioPool extends AudioRef implements NBTLoadable {
 
     @Override
     public void queue() {
-        if(!this.valid || this.audio.isEmpty()) return;
-        AudioRef nextQueue = null;
-        if(this.playableAudio.isEmpty()) recalculatePlayable(i -> i<=1);
-        int sum = 0;
-        for(AudioRef audio : this.playableAudio)
-            if(audio!=this.queuedAudio) sum+=audio.getParameterAsInt("chance");
-        int rand = sum>0 ? RandomHelper.randomInt(sum) : 0;
-        for(AudioRef audio : this.playableAudio) {
-            rand-=(audio==this.queuedAudio ? 0 : audio.getParameterAsInt("chance"));
-            if(rand<=0) nextQueue = audio;
-        }
+        if(!this.valid || this.playableAudio.isEmpty()) return;
+        AudioRef nextQueue = RandomHelper.getWeightedEntry(ThreadLocalRandom.current(),this.playableAudio);
+        if(Objects.isNull(nextQueue)) return;
         if(nextQueue instanceof AudioPool) nextQueue.queue();
         this.queuedAudio = nextQueue;
-        logInfo("Queued reference {}",this.queuedAudio);
     }
     
     protected void recalculatePlayable(Function<Integer,Boolean> func) {
         this.audio.forEach(ref -> {
-            if(!this.playableAudio.contains(ref) && func.apply(ref.getPlayState()))
+            if(func.apply(ref.getPlayState()))
                 this.playableAudio.add(ref);
         });
     }
@@ -258,6 +261,7 @@ public class AudioPool extends AudioRef implements NBTLoadable {
         if(Objects.nonNull(this.queuedAudio)) {
             this.queuedAudio.stopped();
             this.playableAudio.remove(this.queuedAudio);
+            if(this.playableAudio.isEmpty()) recalculatePlayable(i -> i<=1);
             this.queuedAudio = null;
         }
     }
