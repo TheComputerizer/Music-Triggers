@@ -88,12 +88,9 @@ public class MTClientEvents {
         ChannelHelper.tick(wrapper.getTicker());
     }
 
-    private static void onInputKey(InputKeyEventWrapper<?> wrapper) {
+    private static void onInputKey(InputKeyEventWrapper<?> wrapper) {}
 
-    }
-
-    private static void onPlaySound(PlaySoundEventWrapper<?,?> wrapper) {
-    }
+    private static void onPlaySound(PlaySoundEventWrapper<?,?> wrapper) {}
 
     private static void onRenderOverlayPre(RenderOverlayPreEventWrapper<?> wrapper) {
         if(wrapper.isType(ALL) && !renderOverlays) wrapper.setCanceled(true);
@@ -119,7 +116,10 @@ public class MTClientEvents {
     }
 
     public static void queueReload(@Nullable MinecraftAPI mc, int ticks) {
-        if(ChannelHelper.getLoader().isLoading()) return;
+        if(ChannelHelper.getLoader().isLoading()) {
+            ChannelHelper.logGlobalWarn("Tried to reload channels while they were already being reloaded");
+            return;
+        }
         if(Objects.nonNull(mc))
             mc.sendMessageToPlayer(getReloadMessage("queue",new Object[]{ticks},
                     TextStyleAPI::italics,TextStyleAPI::red));

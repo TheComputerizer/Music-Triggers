@@ -7,9 +7,13 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.UniversalParameters;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.RandomHelper;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Only used when independent_audio_pools is disabled
@@ -18,26 +22,31 @@ import java.util.*;
 public class TriggerMerged extends TriggerAPI {
 
     private final Collection<TriggerAPI> triggers;
+    private TriggerAPI playing;
 
     public TriggerMerged(ChannelAPI channel, Collection<TriggerAPI> triggers) {
         super(channel,"merged");
         this.triggers = triggers;
     }
-
+    
     @Override
     public void activate() {
-        for(TriggerAPI trigger : this.triggers) trigger.activate();
+        super.activate();
+        this.triggers.forEach(TriggerAPI::activate);
     }
 
     @Override
     public void close() {
         super.close();
+        this.triggers.forEach(TriggerAPI::close);
         this.triggers.clear();
+        this.playing = null;
     }
-
+    
     @Override
     public void deactivate() {
-        for(TriggerAPI trigger : this.triggers) trigger.deactivate();
+        super.deactivate();
+        this.triggers.forEach(TriggerAPI::deactivate);
     }
 
     @Override
@@ -45,22 +54,43 @@ public class TriggerMerged extends TriggerAPI {
         super.encode(buf);
         NetworkHelper.writeCollection(buf,this.triggers,trigger -> trigger.encode(buf));
     }
+    
+    protected void executePlaying(Consumer<TriggerAPI> executor, Consumer<Void> superExecutor) {
+        TriggerAPI playing = getOrSetPlaying();
+        if(Objects.nonNull(playing)) executor.accept(playing);
+        else superExecutor.accept(null);
+    }
 
     @Override
     public @Nullable AudioPool getAudioPool() {
-        Set<AudioPool> pools = new HashSet<>();
-        for(TriggerAPI trigger : this.triggers) {
-            AudioPool pool = trigger.getAudioPool();
-            if(Objects.nonNull(pool)) pools.add(pool);
-        }
-        return AudioPool.unsafeMerge(pools);
+        return returnPlaying(TriggerAPI::getAudioPool,super::getAudioPool);
     }
     
     @Override
     public String getName() {
         StringJoiner joiner = new StringJoiner("+");
-        this.triggers.forEach(trigger -> joiner.add(trigger.getNameWithID()));
-        return this.triggers.size()==1 ? joiner.toString() : "combination = "+joiner;
+        for(TriggerAPI trigger : this.triggers) joiner.add(trigger.getNameWithID());
+        return this.triggers.size()==1 ? joiner.toString() : "merged = "+joiner;
+    }
+    
+    @Override
+    public String getNameWithID() {
+        return getName();
+    }
+    
+    protected TriggerAPI getOrSetPlaying() {
+        if(Objects.isNull(this.playing)) this.playing = getRandomTrigger();
+        return this.playing;
+    }
+    
+    @Override public @Nullable Parameter<?> getParameter(String name) {
+        return returnPlaying(playing -> playing.getParameter(name),() -> super.getParameter(name));
+    }
+    
+    public @Nullable TriggerAPI getRandomTrigger() {
+        if(this.triggers.isEmpty()) return null;
+        TriggerAPI trigger = RandomHelper.getBasicRandomEntry(this.triggers);
+        return trigger instanceof TriggerMerged ? ((TriggerMerged)trigger).getRandomTrigger() : trigger;
     }
 
     @Override
@@ -95,57 +125,25 @@ public class TriggerMerged extends TriggerAPI {
 
     @Override
     public void queue() {
-        for(TriggerAPI trigger : this.triggers) trigger.queue();
+        executePlaying(TriggerAPI::queue,v -> super.queue());
     }
-
-    @Override
-    public void play() {
-        for(TriggerAPI trigger : this.triggers) trigger.play();
-    }
-
-    @Override
-    public void playable() {
-        for(TriggerAPI trigger : this.triggers) trigger.playable();
-    }
-
-    @Override
-    public void playing() {
-        for(TriggerAPI trigger : this.triggers) trigger.playing();
+    
+    protected <V> V returnPlaying(Function<TriggerAPI,V> func, Supplier<V> superReturn) {
+        TriggerAPI playing = getOrSetPlaying();
+        return Objects.nonNull(playing) ? func.apply(playing) : superReturn.get();
     }
     
     @Override
     public void setUniversals(UniversalParameters universals) {
         super.setUniversals(universals);
-        for(TriggerAPI trigger : this.triggers) trigger.setUniversals(universals);
-    }
-
-    @Override
-    public void stop() {
-        for(TriggerAPI trigger : this.triggers) trigger.stop();
+        this.triggers.forEach(trigger -> trigger.setUniversals(universals));
     }
 
     @Override
     public void stopped() {
-        for(TriggerAPI trigger : this.triggers) trigger.stopped();
-    }
-
-    @Override
-    public void tickActive() {
-        for(TriggerAPI trigger : this.triggers) trigger.tickActive();
-    }
-
-    @Override
-    public void tickPlayable() {
-        for(TriggerAPI trigger : this.triggers) trigger.tickPlayable();
-    }
-
-    @Override
-    public String toString() {
-        return "Merged"+this.triggers;
-    }
-
-    @Override
-    public void unplayable() {
-        for(TriggerAPI trigger : this.triggers) trigger.unplayable();
+        executePlaying(playing -> {
+            playing.stopped();
+            this.playing = null;
+        },v -> {});
     }
 }

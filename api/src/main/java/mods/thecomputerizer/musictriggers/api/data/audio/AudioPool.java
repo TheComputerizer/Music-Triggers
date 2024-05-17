@@ -8,8 +8,8 @@ import mods.thecomputerizer.musictriggers.api.data.nbt.NBTLoadable;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.UniversalParameters;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
-import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.tag.BaseTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.ListTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.TagHelper;
@@ -23,64 +23,16 @@ import java.util.stream.Collectors;
 
 public class AudioPool extends AudioRef implements NBTLoadable {
 
-    public static @Nullable AudioPool unsafeMerge(Collection<AudioPool> pools) {
-        AudioPool merged = null;
-        for(AudioPool pool : pools) {
-            if(Objects.isNull(merged)) merged = new AudioPool(pool);
-            else merged.addAudio(pool);
-        }
-        return merged;
-    }
-
     private final Set<AudioRef> audio;
     private final Set<AudioRef> playableAudio;
     private final TriggerAPI trigger;
-    @Getter private final boolean valid;
     @Getter private AudioRef queuedAudio;
 
-    public AudioPool(String name, AudioRef ref) {
-        super(ref.getChannel(),name);
+    public AudioPool(TriggerAPI trigger) {
+        super(trigger.getChannel(),"audio_pool");
         this.audio = new HashSet<>();
         this.playableAudio = new HashSet<>();
-        this.trigger = parseTrigger(ref.getTriggers());
-        if(Objects.nonNull(this.trigger)) {
-            this.audio.add(ref);
-            this.playableAudio.add(ref);
-            this.valid = true;
-        }
-        else {
-            ref.logWarn("Unable to create audio pool {} from reference! The triggers were not recognized.",name);
-            this.valid = false;
-        }
-    }
-
-    /**
-     * Used for merges only
-     */
-    private AudioPool(AudioRef ref) {
-        super(ref.getChannel(),ref.getName()+"_merge");
-        this.audio = new HashSet<>();
-        this.playableAudio = new HashSet<>();
-        this.trigger = parseTrigger(ref.getTriggers());
-        this.audio.add(ref);
-        this.playableAudio.add(ref);
-        this.valid = true;
-    }
-
-    @Override
-    public void activate() {
-        recalculatePlayable(i -> i<=2);
-    }
-
-    public void addAudio(AudioRef ref) {
-        this.audio.add(ref);
-        this.playableAudio.add(ref);
-    }
-    
-    @Override
-    public void addHandlers(Collection<ChannelEventHandler> handlers) {
-        handlers.add(this);
-        this.audio.forEach(ref -> ref.addHandlers(handlers));
+        this.trigger = trigger;
     }
 
     @Override
@@ -125,7 +77,7 @@ public class AudioPool extends AudioRef implements NBTLoadable {
     @Override
     public String getName() {
         StringJoiner refJoinfer = new StringJoiner("+");
-        this.audio.forEach(ref -> refJoinfer.add(ref.getName()));
+        for(AudioRef ref : this.audio) refJoinfer.add(ref.getName());
         return this.audio.size()==1 ? refJoinfer.toString() : "pool = "+refJoinfer;
     }
     
@@ -151,6 +103,13 @@ public class AudioPool extends AudioRef implements NBTLoadable {
         return false;
     }
     
+    public void injectHandlers(AudioRef ref, Collection<ChannelEventHandler> handlers) {
+        this.audio.add(ref);
+        this.playableAudio.add(ref);
+        handlers.add(this);
+        handlers.addAll(ref.loops);
+    }
+    
     @Override
     public boolean isLoaded() {
         return Objects.nonNull(this.queuedAudio) && !this.queuedAudio.isLoading() && this.queuedAudio.isLoaded();
@@ -170,12 +129,12 @@ public class AudioPool extends AudioRef implements NBTLoadable {
     @Override
     public void onConnected(CompoundTagAPI<?> worldData) {
         if(worldData.contains("audio")) {
-            worldData.getListTag("audio").forEach(audio -> {
+            for(BaseTagAPI<?> audio : worldData.getListTag("audio")) {
                 CompoundTagAPI<?> audioTag = audio.asCompoundTag();
                 AudioRef ref = getAudioForName(audioTag.getString("name"));
                 if(Objects.nonNull(ref) && hasPlayedEnough(audioTag.getPrimitiveTag("play_count").asInt()))
                     this.playableAudio.remove(ref);
-            });
+            }
         }
     }
     
@@ -184,19 +143,16 @@ public class AudioPool extends AudioRef implements NBTLoadable {
     }
     
     @Override
-    public void onLoaded(CompoundTagAPI<?> globalData) {
-    
-    }
-
-    private TriggerAPI parseTrigger(List<TriggerAPI> triggers) {
-        if(triggers.isEmpty()) return null;
-        if(triggers.size()==1) return triggers.get(0);
-        return TriggerHelper.getCombination(getChannel(),triggers);
-    }
+    public void onLoaded(CompoundTagAPI<?> globalData) {}
 
     @Override
     public void play() {
         if(Objects.nonNull(this.queuedAudio)) this.queuedAudio.play();
+    }
+    
+    @Override
+    public void playable() {
+        recalculatePlayable(i -> i<=2);
     }
 
     @Override
@@ -206,7 +162,7 @@ public class AudioPool extends AudioRef implements NBTLoadable {
 
     @Override
     public void queue() {
-        if(!this.valid || this.playableAudio.isEmpty()) return;
+        if(this.playableAudio.isEmpty()) return;
         AudioRef nextQueue = RandomHelper.getWeightedEntry(ThreadLocalRandom.current(),this.playableAudio);
         if(Objects.isNull(nextQueue)) return;
         if(nextQueue instanceof AudioPool) nextQueue.queue();
@@ -214,10 +170,8 @@ public class AudioPool extends AudioRef implements NBTLoadable {
     }
     
     protected void recalculatePlayable(Function<Integer,Boolean> func) {
-        this.audio.forEach(ref -> {
-            if(func.apply(ref.getPlayState()))
-                this.playableAudio.add(ref);
-        });
+        for(AudioRef ref : this.audio)
+            if(func.apply(ref.getPlayState())) this.playableAudio.add(ref);
     }
     
     @Override
@@ -230,12 +184,12 @@ public class AudioPool extends AudioRef implements NBTLoadable {
                 .collect(Collectors.toList());
         if(played.isEmpty()) return;
         ListTagAPI<?> tag = TagHelper.makeListTag();
-        played.forEach(ref -> {
+        for(AudioRef ref : played) {
             CompoundTagAPI<?> audioTag = TagHelper.makeCompoundTag();
             audioTag.putString("name",ref.getName());
             audioTag.putInt("play_count",1);
             tag.addTag(audioTag);
-        });
+        }
         worldData.putTag("audio",tag);
     }
     

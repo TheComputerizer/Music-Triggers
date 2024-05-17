@@ -3,8 +3,8 @@ apply from: rootProject.file('gradle\\java8-module.gradle')
 repositories {
     mavenCentral() {
         content {
-            [ 'com.google.code.findbugs', 'commons-io', 'io.netty', 'org.apache.commons', 'org.apache.logging.log4j',
-              'org.ow2', 'org.ow2.asm' ].forEach { includeGroup it }
+            [ 'biz.aQute.bnd', 'com.google.code.findbugs', 'commons-io', 'io.netty', 'org.apache.commons',
+              'org.apache.logging.log4j', 'org.ow2', 'org.ow2.asm' ].forEach { includeGroup it }
         }
     }
     maven {
@@ -17,6 +17,7 @@ repositories {
 }
 
 dependencies {
+    compileOnly("biz.aQute.bnd:annotation:${bnd_version}")
     compileOnly("com.google.code.findbugs:jsr305:${jsr_version}")
     compileOnly("commons-io:commons-io:${io_version}")
     compileOnly("io.netty:netty-all:${netty_version}")

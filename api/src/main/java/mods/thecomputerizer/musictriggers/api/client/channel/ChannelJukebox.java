@@ -1,21 +1,10 @@
 package mods.thecomputerizer.musictriggers.api.client.channel;
 
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import mods.thecomputerizer.musictriggers.api.client.audio.AudioContainer;
-import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.shadow.org.joml.Vector3i;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
-import java.util.Objects;
-
-public final class ChannelJukebox extends ChannelClient {
-    
-    private static final Vector3i MAX_POS = new Vector3i(Integer.MAX_VALUE,Integer.MAX_VALUE,Integer.MAX_VALUE);
-    
-    private Vector3i playingPos = MAX_POS;
-    private String playingName;
-    private AudioTrack playingTrack;
+public final class ChannelJukebox extends ChannelClientSpecial {
     
     public ChannelJukebox(ChannelHelper helper, Toml table) {
         super(helper,table);
@@ -29,59 +18,13 @@ public final class ChannelJukebox extends ChannelClient {
         return true;
     }
     
+    @Override
     public void checkStop(Vector3i pos) {
         if(this.playingPos==pos || this.playingPos.distance(pos)<=2)
             stop(); //In case the position moves or there is a rounding error?
     }
     
-    @Override
-    public String getPlayingSongName() {
-        return this.playingName;
+    @Override public String getLogType() {
+        return "JUKEBOX";
     }
-    
-    public boolean isPlaying() {
-        return Objects.nonNull(this.playingTrack);
-    }
-    
-    @Override
-    public void logDebug(String msg, Object ... args) {}
-    
-    @Override
-    public void logInfo(String msg, Object ... args) {}
-    
-    @Override
-    public void logTrace(String msg, Object ... args) {}
-    
-    @Override
-    public void parseData() {}
-    
-    public void playReference(AudioRef ref, Vector3i pos) {
-        if(ref instanceof AudioContainer) {
-            AudioContainer container = (AudioContainer)ref;
-            AudioTrack track = container.checkState(container.getTrack());
-            if(Objects.nonNull(track)) {
-                this.playingName = container.getName();
-                this.player.playTrack(track);
-                this.playingTrack = track;
-                this.playingPos = pos;
-            } else logError("Cannot play track null track from {}!",container);
-        } else logError("Cannot play track from non audio container!");
-    }
-    
-    
-    public void stop() {
-        this.player.stopTrack();
-        this.playingTrack = null;
-        this.playingName = null;
-        this.playingPos = MAX_POS;
-    }
-    
-    @Override
-    public void tickActive() {}
-    
-    @Override
-    public void tickPlayable() {}
-    
-    @Override
-    public void tickSlow() {}
 }

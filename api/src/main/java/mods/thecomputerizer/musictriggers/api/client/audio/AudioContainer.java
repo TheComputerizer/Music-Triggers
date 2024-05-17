@@ -116,7 +116,7 @@ public class AudioContainer extends AudioRef {
             if(this.loaded) start(this.channel.getActiveTrigger());
             return;
         }
-        this.loops.forEach(Loop::run);
+        for(Loop loop : this.loops) loop.run();
         if(this.fade>0) {
             if(this.fadeFactor==0f) this.fade = 0;
             else this.fade--;
@@ -156,8 +156,6 @@ public class AudioContainer extends AudioRef {
         output = setTimescale(filters,output,format);
         output = setRotation(filters,output,format);
         Collections.reverse(filters);
-        int size = filters.size();
-        logDebug("Initialized {} audio filter{}",size,size==1 ? "" : "s");
         return filters;
     }
 
@@ -171,7 +169,6 @@ public class AudioContainer extends AudioRef {
             List<AudioFilter> filters, FloatPcmAudioFilter output, AudioDataFormat format) {
         double rotationSpeed = getParameterAsDouble("rotation_speed");
         if(rotationSpeed!=0d) {
-            logDebug("Setting rotation speed to {}",rotationSpeed);
             output = new RotationPcmAudioFilter(output,format.sampleRate).setRotationSpeed(rotationSpeed);
             filters.add(output);
         }
@@ -183,14 +180,8 @@ public class AudioContainer extends AudioRef {
         boolean needsTimeScale = false;
         double pitch = getParameterAsDouble("pitch");
         double speed = getParameterAsDouble("speed");
-        if(pitch!=1d && pitch>0d) {
-            logDebug("Setting pitch to {}",pitch);
-            needsTimeScale = true;
-        }
-        if(speed!=1d && speed>0d) {
-            logDebug("Setting speed to {}",speed);
-            needsTimeScale = true;
-        }
+        if(pitch!=1d && pitch>0d) needsTimeScale = true;
+        if(speed!=1d && speed>0d) needsTimeScale = true;
         if(needsTimeScale) {
             output = new TimescalePcmAudioFilter(output,format.channelCount,format.sampleRate).setPitch(pitch).setSpeed(speed);
             filters.add(output);

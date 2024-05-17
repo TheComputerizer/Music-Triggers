@@ -12,7 +12,7 @@ public abstract class GlobalElement extends ParameterWrapper {
         return GlobalElement.class;
     }
     
-    @Override protected String getTypeName() {
+    @Override protected String getLogPrefix() {
         return "Global";
     }
 }

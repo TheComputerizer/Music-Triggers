@@ -216,31 +216,27 @@ public abstract class ConfigVersion implements LoggableAPI {
         return this.version.hasCloserQualiferThan(version.qualifier.name,version.qualifier.build,closest);
     }
     
-    public void logAll(String msg, Object ...args) {
-        MTLogger.log("ConfigMapper",this.version.toString(),Level.ALL,msg,args);
-    }
-    
-    public void logDebug(String msg, Object ...args) {
+    @Override public void logDebug(String msg, Object ...args) {
         MTLogger.log("ConfigMapper",this.version.toString(),Level.DEBUG,msg,args);
     }
     
-    public void logError(String msg, Object ...args) {
+    @Override public void logError(String msg, Object ...args) {
         MTLogger.log("ConfigMapper",this.version.toString(),Level.ERROR,msg,args);
     }
     
-    public void logFatal(String msg, Object ...args) {
+    @Override public void logFatal(String msg, Object ...args) {
         MTLogger.log("ConfigMapper",this.version.toString(),Level.FATAL,msg,args);
     }
     
-    public void logInfo(String msg, Object ...args) {
+    @Override public void logInfo(String msg, Object ...args) {
         MTLogger.log("ConfigMapper",this.version.toString(),Level.INFO,msg,args);
     }
     
-    public void logTrace(String msg, Object ...args) {
+    @Override public void logTrace(String msg, Object ...args) {
         MTLogger.log("ConfigMapper",this.version.toString(),Level.TRACE,msg,args);
     }
     
-    public void logWarn(String msg, Object ...args) {
+    @Override public void logWarn(String msg, Object ...args) {
         MTLogger.log("ConfigMapper",this.version.toString(),Level.WARN,msg,args);
     }
     

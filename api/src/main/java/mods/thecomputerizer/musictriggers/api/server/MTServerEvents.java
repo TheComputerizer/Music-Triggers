@@ -54,8 +54,8 @@ public class MTServerEvents {
 
     public static void onRegisterCommands(RegisterCommandsEventWrapper<?> wrapper) {
         MTRef.logInfo("Registering commands");
-        wrapper.registerCommand(MTCommands.root("mtreload"));
-        wrapper.registerCommand(MTCommands.root("mtdebug"));
+        wrapper.registerCommand(MTCommands.root(MTRef.MODID));
+        wrapper.registerCommand(MTCommands.root("mt"));
     }
     
     public static void queueServerReload(int ticks) {

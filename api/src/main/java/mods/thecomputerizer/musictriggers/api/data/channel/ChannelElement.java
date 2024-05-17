@@ -36,18 +36,18 @@ public abstract class ChannelElement extends ParameterWrapper implements Channel
     public void deactivate() {}
 
     public String getChannelName() {
-        return Objects.nonNull(this.channel) ? this.channel.getName() : "Unknown";
+        return Objects.nonNull(this.channel) ? this.channel.getName() : "unknown";
     }
     
-    public String getChannelTypeName() {
-        return Objects.nonNull(this.channel) ? this.channel.getTypeName() : "Channel";
+    public String getChannelLogPrefix() {
+        return (Objects.nonNull(this.channel) ? this.channel.getLogType() : "UNKNOWN")+" | Channel";
+    }
+    
+    protected String getLogPrefix() {
+        return getChannelLogPrefix()+"["+getChannelName()+"]: "+getSubTypeName();
     }
     
     protected abstract String getSubTypeName();
-    
-    protected String getTypeName() {
-        return getChannelTypeName()+"["+getChannelName()+"]: "+getSubTypeName();
-    }
 
     public abstract boolean isResource();
 

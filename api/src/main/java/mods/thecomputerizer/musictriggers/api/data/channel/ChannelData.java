@@ -162,7 +162,7 @@ public class ChannelData extends ChannelElement {
     }
 
     private void closeHandlers(Collection<? extends ChannelEventHandler> handlers) {
-        handlers.forEach(ChannelEventHandler::close);
+        for(ChannelEventHandler handler : handlers) handler.close();
         handlers.clear();
     }
     
@@ -189,7 +189,10 @@ public class ChannelData extends ChannelElement {
     public Collection<ChannelEventHandler> getEventHandlers(@Nullable TriggerAPI trigger) {
         if(trigger instanceof TriggerMerged) {
             Set<ChannelEventHandler> handlers = new HashSet<>();
-            ((TriggerMerged)trigger).getTriggers().forEach(t -> handlers.addAll(getEventHandlers(t)));
+            handlers.add(trigger);
+            for(TriggerAPI t : ((TriggerMerged)trigger).getTriggers())
+                for(ChannelEventHandler handler : getEventHandlers(t))
+                    if(handler!=t) handlers.add(handler);
             return Collections.unmodifiableSet(handlers);
         } else if(Objects.nonNull(trigger)) {
             Collection<ChannelEventHandler> c = this.triggerEventMap.get(trigger);
@@ -202,6 +205,10 @@ public class ChannelData extends ChannelElement {
         return MTRef.CONFIG_PATH+"/"+getChannelName()+"/"+path;
     }
     
+    @Override protected String getLogPrefix() {
+        return getChannelLogPrefix();
+    }
+    
     @Override public String getName() {
         return String.format("data(%1$s)",getChannelName());
     }
@@ -209,18 +216,13 @@ public class ChannelData extends ChannelElement {
     public Collection<ChannelEventHandler> getPlayableEventHandlers() {
         Set<ChannelEventHandler> handlers = new HashSet<>();
         Collection<TriggerAPI> playables = this.channel.getPlayableTriggers();
-        this.triggerEventMap.keySet().forEach(active -> {
-            if(active.isContained(playables)) handlers.addAll(getEventHandlers(active));
-        });
+        for(TriggerAPI playable : this.triggerEventMap.keySet())
+            if(playable.isContained(playables)) handlers.addAll(getEventHandlers(playable));
         return Collections.unmodifiableSet(handlers);
     }
     
     @Override protected TableRef getReferenceData() {
         return null;
-    }
-    
-    @Override protected String getTypeName() {
-        return getChannelTypeName();
     }
     
     @Override public Class<? extends ParameterWrapper> getTypeClass() {
@@ -359,7 +361,7 @@ public class ChannelData extends ChannelElement {
     }
 
     protected void setupAudioPools() {
-        this.audio.forEach(ref -> {
+        for(AudioRef ref : this.audio) {
             addActiveTriggers(ref,ref.getTriggers(),false);
             TriggerAPI trigger = null;
             for(TriggerAPI active : this.triggerEventMap.keySet()) {
@@ -370,19 +372,19 @@ public class ChannelData extends ChannelElement {
             }
             if(Objects.isNull(trigger)) return;
             AudioPool pool = trigger.getAudioPool();
-            if(Objects.isNull(pool)) pool = new AudioPool(ref.getName()+"_pool",ref);
-            else pool.addAudio(ref);
-            if(pool.isValid()) pool.addHandlers(this.triggerEventMap.get(trigger));
-        });
+            if(Objects.isNull(pool)) pool = new AudioPool(trigger);
+            pool.injectHandlers(ref, this.triggerEventMap.get(trigger));
+        }
     }
     
     public void setupLinkTargets() {
         logInfo("Setting up link targets");
-        this.triggers.forEach(trigger -> trigger.getLinks().forEach(Link::setupTarget));
+        for(TriggerAPI trigger : this.triggers)
+            for(Link link : trigger.getLinks()) link.setupTarget();
     }
     
     private void setupRecords() {
-        this.records.forEach(record -> {
+        for(RecordElement record : this.records) {
             AudioRef ref = null;
             String key = record.getKey();
             for(AudioRef audio : this.audio) {
@@ -397,6 +399,6 @@ public class ChannelData extends ChannelElement {
                 this.audio.add(ref);
             }
             record.setAudio(ref);
-        });
+        }
     }
 }

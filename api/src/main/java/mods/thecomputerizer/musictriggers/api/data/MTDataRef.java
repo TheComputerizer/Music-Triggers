@@ -494,16 +494,15 @@ public final class MTDataRef {
                         } catch(TomlWritingException ex) {
                             logger.logError("Unable to generate example channel!",ex);
                         }
-                    } else tables.forEach(t -> {
-                        if(CHANNEL_INFO.addMissingDefaults(t,logger)) added.set(true);
-                    });
+                    } else
+                        for(Toml t : tables)
+                            if(CHANNEL_INFO.addMissingDefaults(t,logger)) added.set(true);
                     break;
                 }
                 case "songs": {
-                    table.getAllTables().forEach(t -> {
+                    for(Toml t : table.getAllTables())
                         if((t.getName().equals("universal") ? UNIVERSAL_AUDIO : AUDIO).addMissingDefaults(t,logger))
                             added.set(true);
-                    });
                     break;
                 }
                 default: {

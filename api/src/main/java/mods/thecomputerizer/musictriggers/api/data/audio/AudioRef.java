@@ -9,7 +9,6 @@ import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
-import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventHandler;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
@@ -36,10 +35,6 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
         super(channel,name);
         this.triggers = new ArrayList<>();
         this.loops = new ArrayList<>();
-    }
-    
-    public void addHandlers(Collection<ChannelEventHandler> handlers) {
-        handlers.addAll(this.loops);
     }
 
     @Override

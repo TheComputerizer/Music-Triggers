@@ -109,7 +109,7 @@ dependencies {
     runtimeOnly(fg.deobf("curse.maven:resourcereloader-303876:${reloader_version}"))
     runtimeOnly(fg.deobf("curse.maven:sereneseasons-291874:${seasons_version}"))
     runtimeOnly(fg.deobf("curse.maven:top-245211:${top_version}"))
-    runtimeOnly(fg.deobf("curse.maven:weather2-695602:${weather_version}"))
+    //runtimeOnly(fg.deobf("curse.maven:weather2-695602:${weather_version}"))
 }
 
 reobf {

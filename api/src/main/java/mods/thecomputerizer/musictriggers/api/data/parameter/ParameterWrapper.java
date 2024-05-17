@@ -51,6 +51,15 @@ public abstract class ParameterWrapper implements LoggableAPI {
             map.put(entry.getKey(),entry.getValue().getValue());
         return map;
     }
+    
+    public List<String> getBooleanParameterNames() {
+        List<String> names = new ArrayList<>();
+        for(Entry<String,Parameter<?>> entry : this.parameters.entrySet())
+            if(entry.getValue() instanceof ParameterBool) names.add(entry.getKey());
+        return names;
+    }
+    
+    protected abstract String getLogPrefix();
 
     public @Nullable Parameter<?> getParameter(String name) {
         Parameter<?> parameter = this.parameters.get(name.equals("id") ? "identifier" : name);
@@ -147,7 +156,6 @@ public abstract class ParameterWrapper implements LoggableAPI {
     
     protected abstract TableRef getReferenceData();
     public abstract Class<? extends ParameterWrapper> getTypeClass();
-    protected abstract String getTypeName();
 
     public boolean hasAllNonDefaultParameter(String ... names) {
         for(String name : names)
@@ -205,28 +213,23 @@ public abstract class ParameterWrapper implements LoggableAPI {
     protected void initExtraParameters(Map<String,Parameter<?>> map) {}
     
     @Override
-    public void logAll(String message, Object ... args) {
-        MTLogger.logAll(getTypeName(),getName(),message,args);
-    }
-    
-    @Override
     public void logDebug(String message, Object ... args) {
-        MTLogger.logDebug(getTypeName(),getName(),message,args);
+        MTLogger.logDebug(getLogPrefix(), getName(), message, args);
     }
     
     @Override
     public void logError(String message, Object ... args) {
-        MTLogger.logError(getTypeName(),getName(),message,args);
+        MTLogger.logError(getLogPrefix(), getName(), message, args);
     }
     
     @Override
     public void logFatal(String message, Object ... args) {
-        MTLogger.logFatal(getTypeName(),getName(),message,args);
+        MTLogger.logFatal(getLogPrefix(), getName(), message, args);
     }
     
     @Override
     public void logInfo(String message, Object ... args) {
-        MTLogger.logInfo(getTypeName(),getName(),message,args);
+        MTLogger.logInfo(getLogPrefix(), getName(), message, args);
     }
 
     protected void logMissingParameter(String name) {
@@ -243,12 +246,12 @@ public abstract class ParameterWrapper implements LoggableAPI {
     
     @Override
     public void logTrace(String message, Object ... args) {
-        MTLogger.logTrace(getTypeName(),getName(),message,args);
+        MTLogger.logTrace(getLogPrefix(), getName(), message, args);
     }
     
     @Override
     public void logWarn(String message, Object ... args) {
-        MTLogger.logWarn(getTypeName(),getName(),message,args);
+        MTLogger.logWarn(getLogPrefix(), getName(), message, args);
     }
 
     public boolean matchesAll(ParameterWrapper wrapper) {
@@ -319,12 +322,12 @@ public abstract class ParameterWrapper implements LoggableAPI {
 
     protected <T> void setParameterValue(String name, T value, @Nullable Parameter<?> parameter) {
         if(Objects.nonNull(parameter)) parameter.setValue(value);
-        else logWarn("Cannot set value for paramenter `{}` that does not exist in {}!",name,getTypeName());
+        else logWarn("Cannot set value for paramenter `{}` that does not exist in {}!", name, getLogPrefix());
     }
     
     @Override
     public String toString() {
-        return getTypeName()+"["+getName()+"]";
+        return getLogPrefix()+"["+getName()+"]";
     }
     
     public boolean verifyRequiredParameters() {

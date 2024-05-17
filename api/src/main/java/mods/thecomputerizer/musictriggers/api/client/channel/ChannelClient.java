@@ -49,11 +49,9 @@ public class ChannelClient extends ChannelAPI {
         configure(finalizeManager());
         this.listener = new ChannelListener(this);
         this.trackLoader = new TrackLoader(this);
-        logInfo("Successfully registered client channel `{}`!",getName());
     }
 
-    @Override
-    public boolean checkDeactivate(TriggerAPI current, TriggerAPI next) {
+    @Override public boolean checkDeactivate(TriggerAPI current, TriggerAPI next) {
         if(Objects.nonNull(current)) {
             if(current.matches(next)) {
                 this.deactivating = false;
@@ -77,8 +75,7 @@ public class ChannelClient extends ChannelAPI {
         return !jukebox || !getInfo().isPausedByJukebox();
     }
 
-    @Override
-    public void close() {
+    @Override public void close() {
         super.close();
         this.listener.close();
         this.player.destroy();
@@ -108,14 +105,12 @@ public class ChannelClient extends ChannelAPI {
         return player;
     }
 
-    @Override
-    public void deactivate() {
+    @Override public void deactivate() {
         super.deactivate();
         this.deactivating = false;
     }
     
-    @Override
-    public void disable(Link link) {
+    @Override public void disable(Link link) {
         super.disable(link);
         if(Objects.nonNull(this.playingPool)) stop();
     }
@@ -143,10 +138,17 @@ public class ChannelClient extends ChannelAPI {
         String format = millis>=3600000 ? "HH:mm:ss:SSS" : (millis>=60000 ? "mm:ss:SSS" : "ss:SSS");
         return DurationFormatUtils.formatDuration(millis,format);
     }
+    
+    @Override public String getLogType() {
+        return "CLIENT";
+    }
 
-    @Override
-    public AudioPlayer getPlayer() {
+    @Override public AudioPlayer getPlayer() {
         return this.player;
+    }
+    
+    @Nullable @Override public AudioPool getPlayingPool() {
+        return this.playingPool;
     }
     
     @Nullable @Override public String getPlayingSongName() {
@@ -156,40 +158,30 @@ public class ChannelClient extends ChannelAPI {
         return Objects.nonNull(ref) ? ref.getName() : null;
     }
     
-    @Override
-    public long getPlayingSongTime() {
+    @Override public long getPlayingSongTime() {
         AudioTrack track = this.player.getPlayingTrack();
         return Objects.nonNull(track) ? track.getPosition() : 0L;
     }
     
-    @Override protected String getTypeName() {
-        return "ClientChannel";
-    }
-    
-    @Override
-    public boolean isClientChannel() {
+    @Override public boolean isClientChannel() {
         return true;
     }
 
-    @Override
-    public boolean isValid() {
+    @Override public boolean isValid() {
         return Objects.nonNull(this.trackLoader);
     }
 
-    @Override
-    public void loadLocalTrack(AudioRef ref, String location) {
+    @Override public void loadLocalTrack(AudioRef ref, String location) {
         if(getInfo().canReadFiles()) this.trackLoader.loadLocal(this.manager,ref,getInfo().getLocalFolder(),findMatchingFile(location));
         else logWarn("Unable to load track from file at `{}` for audio `{}` since the local folder does not exist!",
                 location,ref.getName());
     }
 
-    @Override
-    public void loadRemoteTrack(AudioRef ref, String location) {
+    @Override public void loadRemoteTrack(AudioRef ref, String location) {
         this.trackLoader.loadRemote(this.manager,ref,location);
     }
     
-    @Override
-    public void onResourcesLoaded() {
+    @Override public void onResourcesLoaded() {
         if(!this.registeredResourceAudio) {
             this.manager.registerSourceManager(new ResourceAudioSourceManager(this));
             this.registeredResourceAudio = true;
@@ -199,16 +191,12 @@ public class ChannelClient extends ChannelAPI {
         }
     }
 
-    @Override
-    public void onTrackStart(AudioTrack track) {
-    }
+    @Override public void onTrackStart(AudioTrack track) {}
 
-    @Override
-    public void onTrackStop(AudioTrackEndReason endReason) {
+    @Override public void onTrackStop(AudioTrackEndReason endReason) {
         stopped();
     }
 
-    @SuppressWarnings("DataFlowIssue")
     @Override
     public void play() {
         super.play();
@@ -216,24 +204,23 @@ public class ChannelClient extends ChannelAPI {
         TriggerAPI trigger = getActiveTrigger();
         if(trigger.canPlayAudio()) {
             AudioPool pool = trigger.getAudioPool();
-            pool.start(trigger);
-            this.playingPool = pool;
+            if(Objects.nonNull(pool)) {
+                pool.start(trigger);
+                this.playingPool = pool;
+            }
         }
     }
 
-    @Override
-    public void playing() {
+    @Override public void playing() {
         super.playing();
     }
 
-    @Override
-    public void queue() {
+    @Override public void queue() {
         super.queue();
         this.queued = true;
     }
 
-    @Override
-    public void setCategoryVolume(float volume) {
+    @Override public void setCategoryVolume(float volume) {
         if(volume!=this.categoryVolume) {
             logDebug("Setting category volume to {}%",volume*100f);
             this.categoryVolume = volume;
@@ -249,27 +236,28 @@ public class ChannelClient extends ChannelAPI {
         }
     }
     
-    @Override
-    public void setTrackVolume(float volume) {
+    @Override public void setTrackVolume(float volume) {
         if(volume!=this.trackVolume) {
             this.trackVolume = volume;
             updateVolume();
         }
     }
     
+    @Override public boolean showDebugSongInfo() {
+        return super.showDebugSongInfo() && Objects.nonNull(this.player.getPlayingTrack());
+    }
+    
     @Override public boolean shouldBlockMusicTicker() {
         return this.getInfo().isOverridesMusic() || Objects.nonNull(this.playingPool);
     }
     
-    @Override
-    public void stopped() {
+    @Override public void stopped() {
         this.player.stopTrack();
         super.stopped();
         this.playingPool = null;
     }
     
-    @Override
-    public void tick(boolean jukebox) {
+    @Override public void tick(boolean jukebox) {
         if(this.enabled) {
             if(MTClient.isUnpaused() && checkFocus() && checkJukebox(jukebox)) {
                 this.player.setPaused(false);
@@ -278,8 +266,7 @@ public class ChannelClient extends ChannelAPI {
         } else if(Objects.nonNull(this.playingPool)) playing();
     }
 
-    @Override
-    public void tickActive() {
+    @Override public void tickActive() {
         super.tickActive();
         TriggerAPI trigger = getActiveTrigger();
         if(Objects.nonNull(trigger)) {

@@ -93,9 +93,15 @@ public class TriggerSelector extends ChannelElement {
 
     protected @Nullable TriggerAPI getPriorityTrigger(Collection<TriggerAPI> registeredTriggers) {
         Collection<TriggerAPI> triggers = collectPlayableTriggers(registeredTriggers);
-        return this.channel.getHelper().getDebugBool("independent_audio_pools") ?
-                TriggerHelper.getPriorityTrigger(this.channel.getHelper(),triggers) :
-                new TriggerMerged(this.channel,getPriorityTriggers(triggers));
+        if(this.channel.getHelper().getDebugBool("independent_audio_pools"))
+            return TriggerHelper.getPriorityTrigger(this.channel.getHelper(),triggers);
+        else {
+            if(triggers.isEmpty()) return null;
+            triggers = getPriorityTriggers(triggers);
+            if(triggers.size()>1) return new TriggerMerged(this.channel,triggers);
+            for(TriggerAPI trigger : triggers) return trigger;
+        }
+        return null;
     }
     
     @Override protected TableRef getReferenceData() {
@@ -121,7 +127,10 @@ public class TriggerSelector extends ChannelElement {
     
     public TriggerAPI queryOrIdle(@Nullable TriggerAPI priority, @Nullable TriggerAPI trigger) {
         if(Objects.nonNull(trigger)) {
-            if(Objects.isNull(priority) && trigger.query(this.context)) priority = trigger;
+            if(Objects.isNull(priority) && trigger.query(this.context)) {
+                if(trigger.canActivate()) priority = trigger;
+                else trigger.setState(PLAYABLE);
+            }
             else if(!trigger.isDisabled()) trigger.setState(IDLE);
         }
         return priority;
@@ -142,7 +151,7 @@ public class TriggerSelector extends ChannelElement {
             }
         } else {
             setCrashHelper("normal triggers");
-            priorityTrigger = queryOrIdle(priorityTrigger,getPriorityTrigger(data.getTriggerEventMap().keySet()));
+            priorityTrigger = getPriorityTrigger(data.getTriggerEventMap().keySet());
         }
         setCrashHelper("generic trigger");
         priorityTrigger = queryOrIdle(priorityTrigger,data.getGenericTrigger());
@@ -155,7 +164,10 @@ public class TriggerSelector extends ChannelElement {
             if(Objects.nonNull(this.activeTrigger)) this.channel.deactivate();
             this.previousTrigger = this.activeTrigger;
             this.activeTrigger = trigger;
-            if(Objects.nonNull(this.activeTrigger)) this.channel.activate();
+            if(Objects.nonNull(this.activeTrigger)) {
+                logInfo("Activating trigger {}",this.activeTrigger);
+                this.channel.activate();
+            }
         }
         return Objects.nonNull(this.activeTrigger) ? this.activeTrigger.getAudioPool() : null;
     }

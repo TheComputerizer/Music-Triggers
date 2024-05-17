@@ -18,11 +18,9 @@ public class MTLogger {
      * Logs a channel qualified message both the normal log and MT log
      */
     public static void log(String type, String typeName, Level level, String msg, Object ... args) {
-        LOGGED_MESSAGES.add(new LogMessage(level,type+"["+typeName+"]: "+msg,args).log(LOGGER));
-    }
-
-    public static void logAll(String type, String typeName, String msg, Object ... args) {
-        log(type,typeName,Level.ALL,msg,args);
+        synchronized(LOGGER) {
+            LOGGED_MESSAGES.add(new LogMessage(level,type+"["+typeName+"]: "+msg,args).log(LOGGER));
+        }
     }
 
     public static void logDebug(String type, String typeName, String msg, Object ... args) {

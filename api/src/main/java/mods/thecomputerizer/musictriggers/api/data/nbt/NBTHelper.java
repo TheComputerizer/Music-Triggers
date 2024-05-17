@@ -47,7 +47,7 @@ public class NBTHelper {
         try {
             return TagHelper.getGlobalData(MTRef.MODID,true);
         } catch(IOException ex) {
-            ChannelHelper.getGlobalData().logError("Failed to read persistent global data!",ex);
+            ChannelHelper.logGlobalError("Failed to read persistent global data!",ex);
         }
         return TagHelper.makeCompoundTag();
     }
@@ -56,7 +56,7 @@ public class NBTHelper {
         try {
             return TagHelper.getOrCreateCompound(TagHelper.getWorldData(TILRef.MODID),uuid);
         } catch(IOException ex) {
-            MTRef.logError("Failed to read data for uuid {}",uuid);
+            ChannelHelper.logGlobalError("Failed to read data for uuid {}",uuid);
         }
         return TagHelper.makeCompoundTag();
     }
@@ -65,7 +65,7 @@ public class NBTHelper {
         String name = mode.getName();
         if(REGISTERED_MODES.containsKey(name)) {
             if(overrideDefault) REGISTERED_MODES.put(name,mode);
-            else MTRef.logWarn("There is already a NBT mode with the name `{}` registered to `{}`! If you know "+
+            else ChannelHelper.logGlobalWarn("There is already a NBT mode with the name `{}` registered to `{}`! If you know "+
                     "what you are doing and want to override it anyways make sure to call NBTHelper#registerMode with "+
                     "overrideDefault set to true.",name,REGISTERED_MODES.get(name));
         } else REGISTERED_MODES.put(name,mode);
@@ -75,7 +75,7 @@ public class NBTHelper {
         try {
             TagHelper.writeGlobalData(tag,MTRef.MODID);
         } catch(IOException ex) {
-            ChannelHelper.getGlobalData().logFatal("Failed to save persistent global data!",ex);
+            ChannelHelper.logGlobalFatal("Failed to save persistent global data!",ex);
         }
     }
     
@@ -83,7 +83,7 @@ public class NBTHelper {
         try {
             TagHelper.writeWorldData(tag,MTRef.MODID);
         } catch(IOException ex) {
-            ChannelHelper.getGlobalData().logFatal("Failed to save persistent world data!",ex);
+            ChannelHelper.logGlobalFatal("Failed to save persistent world data!",ex);
         }
     }
 }

@@ -38,9 +38,9 @@ public class LogMessage {
         return String.format("%-5s",level.name());
     }
 
-    public synchronized LogMessage log(ModLogger logger) {
-        MTRef.log(this.level, this.msg, this.args);
-        logger.log(this.level, this.msg, this.args);
+    public LogMessage log(ModLogger logger) {
+        MTRef.log(this.level,this.msg,this.args);
+        logger.log(this.level,this.msg,this.args);
         return this;
     }
 }

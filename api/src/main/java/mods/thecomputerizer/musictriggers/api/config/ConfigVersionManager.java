@@ -53,8 +53,8 @@ public class ConfigVersionManager {
             }
         }
         if(Objects.isNull(closest)) {
-            ChannelHelper.getGlobalData().logError("Unable to find latest build for {}.{}.{}! Substituting with "+
-                                                   "current version {}",release,major,minor,CURRENT);
+            ChannelHelper.logGlobalError("Unable to find latest build for {}.{}.{}! Substituting with current "+
+                                         "version {}",release,major,minor,CURRENT);
             closest = CURRENT;
         }
         return closest;

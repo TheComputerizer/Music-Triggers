@@ -37,11 +37,11 @@ public class MessageTriggerStates<CTX> extends ChannelHelperMessage<CTX> {
     }
     
     public void addStates(Collection<TriggerAPI> triggers) {
-        triggers.forEach(trigger -> {
+        for(TriggerAPI trigger : triggers) {
             ChannelAPI channel = trigger.getChannel();
             this.triggerMap.putIfAbsent(channel,new HashMap<>());
             this.triggerMap.get(channel).put(trigger,trigger.getState());
-        });
+        }
     }
 
     @Override

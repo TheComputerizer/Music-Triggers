@@ -3,7 +3,6 @@ package mods.thecomputerizer.musictriggers.api.network;
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import lombok.SneakyThrows;
-import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.iterator.IterableHelper;
@@ -30,7 +29,7 @@ public class MessageInitChannels<CTX> extends PlayerMessage<CTX> {
         this.global = global;
         this.toggles = toggles;
         this.channels = getChannelMap(helper);
-        ChannelHelper.getGlobalData().logInfo("Constructued init message");
+        ChannelHelper.logGlobalInfo("Constructued init message");
     }
     
     @SneakyThrows
@@ -43,7 +42,7 @@ public class MessageInitChannels<CTX> extends PlayerMessage<CTX> {
             String key = NetworkHelper.readString(buf);
             return IterableHelper.getMapEntry(key,new ChannelMessage(buf));
         });
-        ChannelHelper.getGlobalData().logInfo("Decodeded init message on the {} side",this.client ? "client" : "server");
+        ChannelHelper.logGlobalInfo("Decodeded init message on the {} side",this.client ? "client" : "server");
     }
     
     Map<String,ChannelMessage> getChannelMap(ChannelHelper helper) {
@@ -87,7 +86,7 @@ public class MessageInitChannels<CTX> extends PlayerMessage<CTX> {
                 try {
                     return Toml.readBuf(buf);
                 } catch(TomlParsingException ex) {
-                    MTRef.logError("Failed to read TOML from buffer!",ex);
+                    ChannelHelper.logGlobalError("Failed to read TOML from buffer!",ex);
                     return Toml.getEmpty();
                 }
             });

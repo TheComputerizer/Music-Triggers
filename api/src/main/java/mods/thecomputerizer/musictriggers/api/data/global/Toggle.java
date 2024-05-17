@@ -115,7 +115,7 @@ public class Toggle extends GlobalElement {
             return MTDataRef.FROM;
         }
         
-        @Override public String getTypeName() {
+        @Override public String getLogPrefix() {
             return "Toggle";
         }
         
@@ -172,7 +172,7 @@ public class Toggle extends GlobalElement {
             return MTDataRef.TO;
         }
         
-        @Override public String getTypeName() {
+        @Override public String getLogPrefix() {
             return "Toggle";
         }
 

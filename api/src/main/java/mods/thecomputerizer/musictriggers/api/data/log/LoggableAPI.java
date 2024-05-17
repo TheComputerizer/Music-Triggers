@@ -2,7 +2,6 @@ package mods.thecomputerizer.musictriggers.api.data.log;
 
 public interface LoggableAPI {
 
-    void logAll(String msg, Object ...args);
     void logDebug(String msg, Object ...args);
     void logError(String msg, Object ...args);
     void logFatal(String msg, Object ...args);

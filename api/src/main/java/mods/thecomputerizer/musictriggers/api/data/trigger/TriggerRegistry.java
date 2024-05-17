@@ -25,7 +25,7 @@ public class TriggerRegistry {
     public static DiscBuilderAPI buildProperties(DiscBuilderAPI builder) {
         for(String name : REGISTERED_TRIGGERS.keySet()) {
             builder.addProperty(MTRef.res("trigger_"+name),(stack,world) -> {
-                CompoundTagAPI tag = stack.getTag();
+                CompoundTagAPI<?> tag = stack.getTag();
                 String trigger = Objects.nonNull(tag) ? tag.getString("triggerID") : null;
                 return Objects.nonNull(trigger) && name.equals(trigger) ? 1f : 0f;
             });
@@ -115,12 +115,12 @@ public class TriggerRegistry {
 
     public static void registerTrigger(String name, Class<? extends TriggerAPI> clazz, boolean overrideDefault) {
         if(BLACKLISTED_NAMES.contains(name))
-            ChannelHelper.getGlobalData().logError("Tried to register trigger with blacklisted name `{}`!",name);
+            ChannelHelper.logGlobalError("Tried to register trigger with blacklisted name `{}`!",name);
         else if(REGISTERED_TRIGGERS.containsKey(name)) {
             if(overrideDefault) REGISTERED_TRIGGERS.put(name,clazz);
-            else MTRef.logWarn("There is already a trigger with the name `{}` registered to class `{}`! "+
-                    "If you know what you are doing and want to override it anyways make sure to call" +
-                    "TriggerRegistry#registerTrigger with overrideDefault set to true",name,REGISTERED_TRIGGERS.get(name));
+            else ChannelHelper.logGlobalWarn("There is already a trigger with the name {} registered to `{}`! "+
+                    "If you know what you are doing and want to override it anyways make sure to call registerTrigger"+
+                    " with overrideDefault set to true",name,REGISTERED_TRIGGERS.get(name));
         } else REGISTERED_TRIGGERS.put(name,clazz);
     }
 }

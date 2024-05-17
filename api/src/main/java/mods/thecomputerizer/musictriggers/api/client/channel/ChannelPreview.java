@@ -1,44 +1,24 @@
 package mods.thecomputerizer.musictriggers.api.client.channel;
 
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import mods.thecomputerizer.musictriggers.api.client.audio.AudioContainer;
-import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
+import mods.thecomputerizer.shadow.org.joml.Vector3i;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
-import java.util.Objects;
-
-public final class ChannelPreview extends ChannelClient{
-    
-    private AudioTrack playingTrack;
+public final class ChannelPreview extends ChannelClientSpecial {
     
     public ChannelPreview(ChannelHelper helper, Toml table) {
         super(helper,table);
     }
     
-    public boolean isPlaying() {
-        return Objects.nonNull(this.playingTrack);
+    @Override public void checkStop(Vector3i pos) {
+        stop();
     }
     
-    @Override
-    public void parseData() {}
-    
-    public void playReference(AudioRef ref) {
-        if(ref instanceof AudioContainer) {
-            AudioContainer container = (AudioContainer)ref;
-            AudioTrack track = container.checkState(container.getTrack());
-            if(Objects.nonNull(track)) {
-                this.player.playTrack(track);
-                this.playingTrack = track;
-            } else logError("Cannot play track null track from {}!",container);
-        } else logError("Cannot play track from non audio container!");
+    @Override public String getLogType() {
+        return "PREVIEW";
     }
     
-    public void stop() {
-        this.player.stopTrack();
-        this.playingTrack = null;
+    @Override public boolean showDebugSongInfo() {
+        return false;
     }
-    
-    @Override
-    public void tick(boolean jukebox) {}
 }

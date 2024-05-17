@@ -1,24 +1,34 @@
 package mods.thecomputerizer.musictriggers.api.data.global;
 
 import lombok.Getter;
+import mods.thecomputerizer.musictriggers.api.MTRef;
+import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
-import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
+import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlWritingException;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
 
-@Getter
-public class GlobalData implements LoggableAPI {
+import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.GLOBAL;
+import static org.apache.logging.log4j.Level.*;
 
+@Getter
+public class GlobalData extends ParameterWrapper {
+    
+    private final Debug debug;
     private Toml global;
-    private Debug debug;
-    private String toggles = "";
+    private String togglesPath;
+    
+    public GlobalData() {
+        super("Data");
+        this.debug = new Debug();
+    }
+    
+    public void close() {}
     
     public ChannelHelper loadFromInit(MessageInitChannels<?> init) {
         ChannelHelper helper = new ChannelHelper(init.getUuid(),init.isClient());
@@ -26,58 +36,76 @@ public class GlobalData implements LoggableAPI {
         helper.loadFromInit(init);
         return helper;
     }
-
-    @Override
-    public void logAll(String msg, Object ... args) {
-        MTLogger.log("Global","Data",Level.ALL,msg,args);
+    
+    @Override protected String getLogPrefix() {
+        return "Global";
+    }
+    
+    @Override protected TableRef getReferenceData() {
+        return GLOBAL;
+    }
+    
+    @Override public Class<? extends ParameterWrapper> getTypeClass() {
+        return null;
+    }
+    
+    @Override public void logDebug(String msg, Object ... args) {
+        MTLogger.log("Global","Data",DEBUG,msg,args);
     }
 
-    @Override
-    public void logDebug(String msg, Object ... args) {
-        MTLogger.log("Global","Data",Level.DEBUG,msg,args);
+    @Override public void logError(String msg, Object ... args) {
+        MTLogger.log("Global","Data",ERROR,msg,args);
     }
 
-    @Override
-    public void logError(String msg, Object ... args) {
-        MTLogger.log("Global","Data",Level.ERROR,msg,args);
+    @Override public void logFatal(String msg, Object ... args) {
+        MTLogger.log("Global","Data",FATAL,msg,args);
     }
 
-    @Override
-    public void logFatal(String msg, Object ... args) {
-        MTLogger.log("Global","Data",Level.FATAL,msg,args);
+    @Override public void logInfo(String msg, Object ... args) {
+        MTLogger.log("Global","Data",INFO,msg,args);
     }
 
-    @Override
-    public void logInfo(String msg, Object ... args) {
-        MTLogger.log("Global","Data",Level.INFO,msg,args);
+    @Override public void logTrace(String msg, Object ... args) {
+        MTLogger.log("Global","Data",TRACE,msg,args);
     }
 
-    @Override
-    public void logTrace(String msg, Object ... args) {
-        MTLogger.log("Global","Data",Level.TRACE,msg,args);
+    @Override public void logWarn(String msg, Object ... args) {
+        MTLogger.log("Global","Data",WARN,msg,args);
     }
 
-    @Override
-    public void logWarn(String msg, Object ... args) {
-        MTLogger.log("Global","Data",Level.WARN,msg,args);
+    public @Nullable Toml openToggles() {
+        return StringUtils.isNotBlank(this.togglesPath) ?
+                ChannelHelper.openToml(this.togglesPath,true,this) : null;
     }
 
-    public @Nullable Toml openToggles(String path) {
-        return StringUtils.isNotBlank(this.toggles) ?
-                ChannelHelper.openToml(path+"/"+this.toggles,true,this) : null;
-    }
-
-    public void parse(@Nullable Toml global) throws TomlWritingException {
+    public boolean parse(@Nullable Toml global) {
+        this.global = global;
         if(Objects.nonNull(global)) {
             logInfo("Parsing global data");
-            readDebug(global);
-            this.toggles = global.getEntry("toggles_path").getValue().toString();
+            if(!global.hasTable("debug")) logError("Missing debug table!");
+            else if(!this.debug.parse(global.getTable("debug"))) logError("Failed to parse debug parameters");
+            this.togglesPath = MTRef.CONFIG_PATH+"/"+(
+                    super.parse(global) ? getParameterAsString("toggles_path") : "toggles");
+            return true;
         }
-        this.global = global;
+        logError("Tried to parse missing globals file");
+        return false;
     }
-
-    public void readDebug(Toml global) {
-        Debug debug = new Debug();
-        if(debug.parse(global.getTable("debug"))) this.debug = debug;
+    
+    public void parseToggles(ChannelHelper helper) {
+        parseToggles(helper,openToggles());
+    }
+    
+    public void parseToggles(ChannelHelper helper, @Nullable Toml toggles) {
+        if(Objects.isNull(toggles)) {
+            logError("Tried to parse missing toggles file");
+            return;
+        }
+        if(toggles.hasTable("toggle"))  {
+            for(Toml table : toggles.getTableArray("toggle")) {
+                Toggle toggle = new Toggle(helper,table);
+                if(toggle.parse()) helper.getToggles().add(toggle);
+            }
+        }
     }
 }

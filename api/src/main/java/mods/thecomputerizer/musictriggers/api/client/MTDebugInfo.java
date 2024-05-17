@@ -50,43 +50,33 @@ public class MTDebugInfo extends GlobalElement {
     
     public void initChannelElements() {
         int priority = 10000;
-        for(String name : this.helper.getChannels().keySet()) {
+        for(Entry<String,ChannelAPI> entry : this.helper.getChannels().entrySet()) {
+            String name = entry.getKey();
+            ChannelAPI channel = entry.getValue();
             addElement(CHANNEL,"song",true,priority)
-                    .setVisibility(helper -> helper.getDebugBool("show_channel_info") &&
-                                             helper.getDebugBool("show_song_info"))
+                    .setVisibility(helper -> channel.showDebugSongInfo())
                     .setArgSetter(helper -> {
-                        ChannelAPI channel = helper.findChannel(this,name);
-                        String song = null;
-                        String time = null;
-                        if(Objects.nonNull(channel)) {
-                            song = channel.getPlayingSongName();
-                            time = channel.getFormattedSongTime();
-                        }
+                        String song = channel.getPlayingSongName();
+                        String time = channel.getFormattedSongTime();
                         if(Objects.isNull(song)) song = "?";
                         if(Objects.isNull(time)) time = "?";
                         return new Object[]{name,song,time};
                     });
             priority--;
-            if(!"jukebox".equals(name) && !"preview".equals(name)) {
-                addElement(CHANNEL,"trigger",true, priority)
-                        .setVisibility(helper -> helper.getDebugBool("show_channel_info") &&
-                                                 helper.getDebugBool("show_trigger_info"))
-                        .setArgSetter(helper -> {
-                            ChannelAPI channel = helper.findChannel(this, name);
-                            String active = null;
-                            String playable = null;
-                            if(Objects.nonNull(channel)) {
-                                TriggerAPI trigger = channel.getActiveTrigger();
-                                if(Objects.nonNull(trigger)) active = trigger.toString();
-                                Collection<TriggerAPI> triggers = channel.getPlayableTriggers();
-                                if(!triggers.isEmpty()) playable = triggers.toString();
-                            }
-                            if(Objects.isNull(active)) active = "?";
-                            if(Objects.isNull(playable)) playable = "?";
-                            return new Object[]{name, active, playable};
-                        });
-                priority--;
-            }
+            addElement(CHANNEL,"trigger",true, priority)
+                    .setVisibility(helper -> channel.showDebugTriggerInfo())
+                    .setArgSetter(helper -> {
+                        String active = null;
+                        String playable = null;
+                        TriggerAPI trigger = channel.getActiveTrigger();
+                        if(Objects.nonNull(trigger)) active = trigger.toString();
+                        Collection<TriggerAPI> triggers = channel.getPlayableTriggers();
+                        if(!triggers.isEmpty()) playable = triggers.toString();
+                        if(Objects.isNull(active)) active = "?";
+                        if(Objects.isNull(playable)) playable = "?";
+                        return new Object[]{name, active, playable};
+                    });
+            priority--;
         }
     }
     
@@ -203,7 +193,7 @@ public class MTDebugInfo extends GlobalElement {
         compute();
         if(this.visibleElements.isEmpty() || this.maxWidth<=0) return;
         this.visibleElements.sort(elementSorter);
-        this.visibleElements.forEach(element -> element.toLines(font,this.maxWidth,lines));
+        for(Element element : this.visibleElements) element.toLines(font,this.maxWidth,lines);
     }
 
     public void toLines(FontAPI font, int width, Collection<String> lines) {

@@ -55,7 +55,7 @@ public class TriggerCombination extends TriggerAPI {
     @Override
     public String getName() {
         StringJoiner joiner = new StringJoiner("+");
-        this.triggers.forEach(trigger -> joiner.add(trigger.getNameWithID()));
+        for(TriggerAPI trigger : this.triggers) joiner.add(trigger.getNameWithID());
         return this.triggers.size()==1 ? joiner.toString() : "combination = "+joiner;
     }
     
@@ -118,7 +118,7 @@ public class TriggerCombination extends TriggerAPI {
 
     @Override
     public String toString() {
-        return getTypeName()+getName();
+        return getLogPrefix()+getName();
     }
 
     @Override
@@ -137,10 +137,10 @@ public class TriggerCombination extends TriggerAPI {
     public void write(CompoundTagAPI<?> tag) {
         tag.putString("name","combination");
         ListTagAPI<?> triggersTag = TagHelper.makeListTag();
-        this.triggers.forEach(trigger -> {
+        for(TriggerAPI trigger : this.triggers) {
             CompoundTagAPI<?> triggerTag = TagHelper.makeCompoundTag();
             trigger.write(triggerTag);
             triggersTag.addTag(triggerTag);
-        });
+        }
     }
 }

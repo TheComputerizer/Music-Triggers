@@ -72,7 +72,7 @@ import java.util.stream.Collectors;
 
 public class ChannelHelper implements NBTLoadable {
 
-    private static final Map<String,ChannelHelper> PLAYER_MAP = Collections.synchronizedMap(new HashMap<>());
+    private static final Map<String,ChannelHelper> PLAYER_MAP = new HashMap<>();
     @Getter private static final GlobalData globalData = new GlobalData();
     @Getter private static final LoadTracker loader = new LoadTracker();
     
@@ -82,13 +82,15 @@ public class ChannelHelper implements NBTLoadable {
             helper.close();
             PLAYER_MAP.remove(playerID);
         }
+        globalData.close();
     }
     
     public static void flipDebugParameter(boolean client, String name) {
         if(client) {
             ChannelHelper helper = getClientHelper();
             if(Objects.nonNull(helper)) helper.flipDebugParameter(name);
-        } else for(ChannelHelper helper : PLAYER_MAP.values()) helper.flipDebugParameter(name);
+        } else for(ChannelHelper helper : PLAYER_MAP.values())
+            if(!helper.client) helper.flipDebugParameter(name);
     }
 
     public static int getTickRate() {
@@ -130,7 +132,7 @@ public class ChannelHelper implements NBTLoadable {
     }
     
     @SneakyThrows public static void initClient() {
-        MTRef.logInfo("Initializing client channel data");
+        logGlobalInfo("Initializing client channel data");
         loadConfig("CLIENT",true);
     }
     
@@ -159,14 +161,38 @@ public class ChannelHelper implements NBTLoadable {
         loader.setLoading(false);
         return new MessageFinishedInit<>(helper);
     }
+    
+    public static void logGlobalDebug(String msg, Object ... args) {
+        globalData.logDebug(msg,args);
+    }
+    
+    public static void logGlobalError(String msg, Object ... args) {
+        globalData.logError(msg,args);
+    }
+    
+    public static void logGlobalFatal(String msg, Object ... args) {
+        globalData.logFatal(msg,args);
+    }
+    
+    public static void logGlobalInfo(String msg, Object ... args) {
+        globalData.logInfo(msg,args);
+    }
+    
+    public static void logGlobalTrace(String msg, Object ... args) {
+        globalData.logTrace(msg,args);
+    }
+    
+    public static void logGlobalWarn(String msg, Object ... args) {
+        globalData.logWarn(msg,args);
+    }
 
     public static void onClientConnected() {
         loader.setConnected(true);
         ChannelHelper helper = getClientHelper();
         if(Objects.nonNull(helper)) {
-            helper.forEachChannel(channel -> {
+            for(ChannelAPI channel : helper.channels.values()) {
                 //TODO persistent data
-            });
+            }
         }
     }
 
@@ -181,17 +207,12 @@ public class ChannelHelper implements NBTLoadable {
     }
 
     public static void onReloadQueued(boolean client) {
-        if(loader.isLoading()) return;
         loader.setLoading(true);
         loader.setClient(client);
         globalData.logInfo("Queued reload on the {} side",loader.isClient() ? "client" : "server");
-        MTLogger.onReloadQueued();
-        for(Entry<String,ChannelHelper> entry : PLAYER_MAP.entrySet()) {
-            String playerID = entry.getKey();
-            ChannelHelper helper = entry.getValue();
-            if(StringUtils.isNotBlank(playerID) && Objects.nonNull(helper)) helper.close();
-        }
+        for(ChannelHelper helper : PLAYER_MAP.values()) helper.close();
         PLAYER_MAP.clear();
+        MTLogger.onReloadQueued();
     }
 
     public static void onResourcesLoaded() {
@@ -201,24 +222,6 @@ public class ChannelHelper implements NBTLoadable {
                 helper.forEachChannel(ChannelAPI::onResourcesLoaded);
             }
         }
-    }
-
-    public static void reload() {
-        try {
-            if(loader.isClient()) {
-                loadConfig("CLIENT",true);
-                MTNetwork.sendToServer(PLAYER_MAP.get("CLIENT").getInitMessage(), false);
-            } else
-                for(PlayerAPI<?,?> player : getPlayers(false))
-                    loadConfig(player.getUUID().toString(),false);
-        } catch(TomlWritingException ex) {
-            MTRef.logFatal("Failed to reload config files!",ex);
-        }
-    }
-
-    public static void tick(@Nullable CustomTick ticker) {
-        if(!loader.isLoading() && Objects.nonNull(ticker) && ticker.isEquivalentTPS(getTickRate()))
-            for(ChannelHelper helper : PLAYER_MAP.values()) helper.tickChannels();
     }
 
     /**
@@ -236,7 +239,7 @@ public class ChannelHelper implements NBTLoadable {
         } catch(IOException|TomlParsingException ex) {
             String msg = "Unable to read toml file at `{}`!";
             if(Objects.nonNull(logger)) logger.logError(msg,tomlPath,ex);
-            else MTRef.logError(msg,tomlPath,ex);
+            else logGlobalError(msg,tomlPath,ex);
             return null;
         }
     }
@@ -252,8 +255,21 @@ public class ChannelHelper implements NBTLoadable {
         } catch(IOException ex) {
             String msg = "Unable to read txt file at `{}`!";
             if(Objects.nonNull(logger)) logger.logError(msg,ex);
-            else MTRef.logError(msg,ex);
+            else logGlobalError(msg,ex);
             return Collections.emptyList();
+        }
+    }
+    
+    public static void reload() {
+        try {
+            if(loader.isClient()) {
+                loadConfig("CLIENT",true);
+                MTNetwork.sendToServer(PLAYER_MAP.get("CLIENT").getInitMessage(), false);
+            } else
+                for(PlayerAPI<?,?> player : getPlayers(false))
+                    loadConfig(player.getUUID().toString(),false);
+        } catch(TomlWritingException ex) {
+            logGlobalFatal("Failed to reload config files!",ex);
         }
     }
 
@@ -277,9 +293,14 @@ public class ChannelHelper implements NBTLoadable {
             channel.logError("Failed to register remote source for `{}`!",sourceName,ex);
         }
     }
+    
+    public static void tick(@Nullable CustomTick ticker) {
+        if(!loader.isLoading() && Objects.nonNull(ticker) && ticker.isEquivalentTPS(getTickRate()))
+            for(ChannelHelper helper : PLAYER_MAP.values()) helper.tickChannels();
+    }
 
     @Getter private final Map<String,ChannelAPI> channels;
-    @Getter private final Set<Toggle> toggles;
+    @Getter private final List<Toggle> toggles;
     @Getter private final boolean client;
     @Getter private final MTDebugInfo debugInfo;
     @Getter private boolean syncable;
@@ -288,8 +309,8 @@ public class ChannelHelper implements NBTLoadable {
     private int ticks;
 
     public ChannelHelper(String playerID, boolean client) {
-        this.channels = new HashMap<>();
-        this.toggles = new HashSet<>();
+        this.channels = Collections.synchronizedMap(new HashMap<>());
+        this.toggles = new ArrayList<>();
         this.client = client;
         this.playerID = playerID;
         this.debugInfo = client ? new MTDebugInfo(this) : null; //Don't initialize the debug info on the server
@@ -316,7 +337,9 @@ public class ChannelHelper implements NBTLoadable {
 
     public void close() {
         this.stateMsg = null;
-        for(ChannelAPI channel : this.channels.values()) channel.close();
+        synchronized(this.channels) {
+            for(ChannelAPI channel : this.channels.values()) channel.close();
+        }
         this.channels.clear();
         for(Toggle toggle : this.toggles) toggle.close();
         this.toggles.clear();
@@ -334,7 +357,9 @@ public class ChannelHelper implements NBTLoadable {
     }
     
     public void forEachChannel(Consumer<ChannelAPI> consumer) {
-        this.channels.values().forEach(consumer);
+        synchronized(this.channels) {
+            this.channels.values().forEach(consumer);
+        }
     }
 
     public @Nullable Debug getDebug() {
@@ -359,7 +384,7 @@ public class ChannelHelper implements NBTLoadable {
     }
     
     public MessageInitChannels<?> getInitMessage() {
-        Toml toggles = globalData.openToggles(MTRef.CONFIG_PATH);
+        Toml toggles = globalData.openToggles();
         return new MessageInitChannels<>(globalData.getGlobal(),toggles,this);
     }
     
@@ -386,6 +411,7 @@ public class ChannelHelper implements NBTLoadable {
     public String getPlayerID() {
         if(!this.client) return this.playerID;
         PlayerAPI<?,?> player = getPlayer();
+        if(Objects.isNull(player)) logGlobalDebug("Tried to get the client player ID but the player was null");
         return Objects.nonNull(player) ? player.getUUID().toString() : null;
     }
     
@@ -398,11 +424,13 @@ public class ChannelHelper implements NBTLoadable {
     }
 
     private void initChannel(String name, Toml info) {
-        if(this.channels.containsKey(name)) globalData.logError("Channel with name `{}` already exists!");
-        else {
-            ChannelAPI channel = this.client ? new ChannelClient(this,info) : new ChannelServer(this,info);
-            if(channel.isValid()) this.channels.put(name,channel);
-            else globalData.logError("Channel with name `{}` is invalid!");
+        synchronized(this.channels) {
+            if(this.channels.containsKey(name)) globalData.logError("Channel with name `{}` already exists!");
+            else {
+                ChannelAPI channel = this.client ? new ChannelClient(this, info) : new ChannelServer(this, info);
+                if(channel.isValid()) this.channels.put(name, channel);
+                else globalData.logError("Channel with name `{}` is invalid!");
+            }
         }
     }
 
@@ -414,10 +442,6 @@ public class ChannelHelper implements NBTLoadable {
             else globalData.logError("Channel `{}` does not have an info table! This should not be possible.");
         }
     }
-
-    private void initToggles() {
-        parseToggles(globalData.openToggles(MTRef.CONFIG_PATH));
-    }
     
     public void loadFromFile(@Nullable Toml globalHolder) throws TomlWritingException {
         if(Objects.isNull(globalHolder)) {
@@ -425,7 +449,6 @@ public class ChannelHelper implements NBTLoadable {
             return;
         }
         initChannels(globalHolder);
-        initToggles();
         parseData();
     }
     
@@ -435,15 +458,20 @@ public class ChannelHelper implements NBTLoadable {
             String name = entry.getKey();
             Toml info = globalData.getGlobal().getTable("channels").getTable(name);
             ChannelAPI channel = this.client ? new ChannelClient(this,info) : new ChannelServer(this,info);
-            this.channels.put(name,channel);
+            synchronized(this.channels) {
+                this.channels.put(name, channel);
+            }
         }
         for(Entry<String,ChannelMessage> entry : channelMessages) {
-            ChannelAPI channel = this.channels.get(entry.getKey());
-            channel.getData().load(entry.getValue());
+            synchronized(this.channels) {
+                ChannelAPI channel = this.channels.get(entry.getKey());
+                channel.getData().load(entry.getValue());
+            }
         }
-        this.channels.values().forEach(channel -> channel.getData().setupLinkTargets());
-        parseToggles(init.getToggles());
-        this.toggles.removeIf(toggle -> !toggle.parse());
+        synchronized(this.channels) {
+            this.channels.values().forEach(channel -> channel.getData().setupLinkTargets());
+        }
+        globalData.parseToggles(this,init.getToggles());
         globalData.logInfo("Finished loading external channel data");
         if(this.client) {
             globalData.logInfo("Attempting to load stored audio references");
@@ -469,20 +497,18 @@ public class ChannelHelper implements NBTLoadable {
     }
     
     @Override public void onConnected(CompoundTagAPI<?> worldData) {
-        this.channels.forEach((name,channel) -> {
-            if(worldData.contains(name)) channel.onConnected(worldData.getCompoundTag(name));
-        });
+        for(ChannelAPI channel : this.channels.values())
+            if(worldData.contains(channel.getName())) channel.onConnected(worldData.getCompoundTag(channel.getName()));
     }
     
-    @Override public void onLoaded(CompoundTagAPI<?> globalData) {
-    
-    }
+    @Override public void onLoaded(CompoundTagAPI<?> globalData) {}
 
     public void parseData() {
-        this.channels.values().forEach(ChannelAPI::parseData);
-        this.channels.values().forEach(channel -> channel.getData().setupLinkTargets()); //Needs to be called after all the channels are set up
+        for(ChannelAPI channel : this.channels.values()) channel.parseData();
+        for(ChannelAPI channel : this.channels.values())
+            channel.getData().setupLinkTargets(); //Needs to be called after all the channels are set up
         globalData.logInfo("Finished parsing channel data");
-        this.toggles.removeIf(toggle -> !toggle.parse());
+        globalData.parseToggles(this);
         globalData.logInfo("Finished parsing toggles");
         if(this.client) {
             this.channels.put("jukebox",MTClient.getJukeboxChannel(this));
@@ -491,12 +517,6 @@ public class ChannelHelper implements NBTLoadable {
             this.debugInfo.initChannelElements();
         }
         forEachChannel(this::loadTracks);
-    }
-    
-    private void parseToggles(Toml toggles) {
-        if(Objects.nonNull(toggles) && toggles.hasTable("toggle"))
-            for(Toml table : toggles.getTableArray("toggle"))
-                this.toggles.add(new Toggle(this,table));
     }
     
     public void playToJukebox(BlockPosAPI<?> pos, String channelName, String audioRef) {
@@ -516,13 +536,13 @@ public class ChannelHelper implements NBTLoadable {
     }
     
     @Override public void saveWorldTo(CompoundTagAPI<?> worldData) {
-        this.channels.values().forEach(channel -> {
+        for(ChannelAPI channel : this.channels.values()) {
             if(channel.hasDataToSave()) {
                 CompoundTagAPI<?> channelTag = TagHelper.makeCompoundTag();
                 channel.saveWorldTo(channelTag);
                 worldData.putTag(channel.getName(),channelTag);
             }
-        });
+        }
     }
     
     public void setCategoryVolume(String category, float volume) {
@@ -560,17 +580,17 @@ public class ChannelHelper implements NBTLoadable {
     
     protected void sync() {
         if(Objects.isNull(this.stateMsg)) this.stateMsg = new MessageTriggerStates<>(this);
-        this.channels.values().forEach(channel -> channel.getSync().addSynced(this.stateMsg));
+        for(ChannelAPI channel : this.channels.values()) channel.getSync().addSynced(this.stateMsg);
         if(this.stateMsg.readyToSend() && MTNetwork.send(this.stateMsg,this,false)) this.stateMsg = null;
     }
     
     public void tickChannels() {
         boolean jukebox = this.client && checkForJukebox();
         boolean slow = (this.ticks++)%this.getDebugNumber("slow_tick_factor").intValue()==0;
-        this.channels.values().forEach(channel -> {
+        for(ChannelAPI channel : this.channels.values()) {
             channel.tick(jukebox);
             if(slow) channel.tickSlow();
-        });
+        }
         if(slow) {
             sync();
             this.ticks = 0;
@@ -579,21 +599,23 @@ public class ChannelHelper implements NBTLoadable {
     
     private boolean writeBasicDisc(ItemStackAPI<?> stack) {
         Map<String,TriggerAPI> activeTriggers = new HashMap<>();
-        this.channels.forEach((name,channel) -> {
+        for(ChannelAPI channel : this.channels.values()) {
             TriggerAPI activeTrigger = channel.getActiveTrigger();
-            if(Objects.nonNull(activeTrigger)) activeTriggers.put(name,activeTrigger);
-        });
+            if(Objects.nonNull(activeTrigger)) activeTriggers.put(channel.getName(),activeTrigger);
+        }
         if(activeTriggers.isEmpty()) return false;
         Entry<String,TriggerAPI> selected = RandomHelper.getBasicRandomEntry(activeTriggers.entrySet());
         String songName = this.channels.get(selected.getKey()).getPlayingSongName();
         if(StringUtils.isBlank(songName)) return false;
         setDiscTag(stack,selected.getKey(),selected.getValue().getName(),songName,false);
-        this.channels.get(selected.getKey()).logDebug("Successfully recorded music disc");
         return true;
     }
     
-    public boolean writeDisc(ItemStackAPI<?> stack, boolean special) {
-        return special ? writeSpecialDisc(stack) : writeBasicDisc(stack);
+    public void writeDisc(ItemStackAPI<?> stack, boolean special) {
+        String discType = special ? "special music disc" : "music disc";
+        if(special ? writeSpecialDisc(stack) : writeBasicDisc(stack))
+            ChannelHelper.logGlobalDebug("Successfully recorded {}",discType);
+        else ChannelHelper.logGlobalWarn("Failed to record {}",discType);
     }
 
     private void writeExampleChannel(Toml toml) throws TomlWritingException {
@@ -603,11 +625,11 @@ public class ChannelHelper implements NBTLoadable {
     
     private boolean writeSpecialDisc(ItemStackAPI<?> stack) {
         Map<String,List<ChannelEventHandler>> specialHandlers = new HashMap<>();
-        this.channels.forEach((name,channel) -> {
+        for(ChannelAPI channel : this.channels.values()) {
             List<ChannelEventHandler> triggers = new ArrayList<>();
             channel.getData().collectSpecialHandlers(triggers);
-            if(!triggers.isEmpty()) specialHandlers.put(name,triggers);
-        });
+            if(!triggers.isEmpty()) specialHandlers.put(channel.getName(),triggers);
+        }
         if(specialHandlers.isEmpty()) return false;
         Entry<String,List<ChannelEventHandler>> selected = RandomHelper.getBasicRandomEntry(specialHandlers.entrySet());
         ChannelAPI channel = this.channels.get(selected.getKey());
@@ -629,7 +651,6 @@ public class ChannelHelper implements NBTLoadable {
         } else return false;
         if(StringUtils.isBlank(songName) || StringUtils.isBlank(triggerName)) return false;
         setDiscTag(stack,channel.getName(),triggerName,songName,custom);
-        channel.logDebug("Successfully recorded special music disc");
         return true;
     }
 }

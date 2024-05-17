@@ -22,6 +22,7 @@ public class MTNetwork {
         NetworkHandler.registerMsgToServer(MessageInitChannels.class,MessageInitChannels::new);
         NetworkHandler.registerMsgToServer(MessageReload.class,MessageReload::new);
         NetworkHandler.registerMsgToServer(MessageRequestChannels.class, MessageRequestChannels::new);
+        NetworkHandler.registerMsgToServer(MessageSkipSong.class,MessageSkipSong::new);
         NetworkHandler.registerMsgToServer(MessageTriggerStates.class,MessageTriggerStates::new);
         
         NetworkHandler.registerMsgToServerLogin(MessageFinishedInit.class,MessageFinishedInit::new);

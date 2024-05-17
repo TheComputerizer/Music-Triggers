@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.TriggerContextClient;
+import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.jukebox.RecordElement;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
@@ -21,6 +22,7 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerSelector;
 import mods.thecomputerizer.musictriggers.api.server.TriggerContextServer;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.tag.BaseTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.ListTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.TagHelper;
@@ -55,6 +57,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
         this.sync = new ChannelSync(this);
         this.selector = new TriggerSelector(this,helper.isClient() ?
                 new TriggerContextClient(this) : new TriggerContextServer(this));
+        logInfo("Successfully registered");
     }
 
     @Override
@@ -117,6 +120,11 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
         return this.selector.getActiveTrigger();
     }
     
+    private String getLogPrefix() {
+        return getLogType()+" | Channel";
+    }
+    
+    public abstract String getLogType();
     public abstract @Nullable String getFormattedSongTime();
 
     public Collection<TriggerAPI> getPlayableTriggers() {
@@ -137,6 +145,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
         return (PlayerAPI<P,?>)this.selector.getContext().getPlayer();
     }
     
+    public abstract @Nullable AudioPool getPlayingPool();
     public abstract @Nullable String getPlayingSongName();
     public abstract long getPlayingSongTime();
     
@@ -183,8 +192,6 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
         }
         return startAt;
     }
-    
-    protected abstract String getTypeName();
 
     protected void handleActiveEvent(Consumer<ChannelEventHandler> event) {
         this.data.getActiveEventHandlers().forEach(event);
@@ -219,28 +226,23 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
     }
 
     @Override
-    public void logAll(String msg, Object ... args) {
-        MTLogger.logAll(getTypeName(),getName(),msg,args);
-    }
-
-    @Override
     public void logDebug(String msg, Object ... args) {
-        MTLogger.logDebug(getTypeName(),getName(),msg,args);
+        MTLogger.logDebug(getLogPrefix(), getName(), msg, args);
     }
 
     @Override
     public void logError(String msg, Object ... args) {
-        MTLogger.logError(getTypeName(),getName(),msg,args);
+        MTLogger.logError(getLogPrefix(), getName(), msg, args);
     }
 
     @Override
     public void logFatal(String msg, Object ... args) {
-        MTLogger.logFatal(getTypeName(),getName(),msg,args);
+        MTLogger.logFatal(getLogPrefix(), getName(), msg, args);
     }
 
     @Override
     public void logInfo(String msg, Object ... args) {
-        MTLogger.logInfo(getTypeName(),getName(),msg,args);
+        MTLogger.logInfo(getLogPrefix(), getName(), msg, args);
     }
 
     @Override
@@ -250,22 +252,20 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
 
     @Override
     public void logWarn(String msg, Object ... args) {
-        MTLogger.logWarn(getTypeName(),getName(),msg,args);
+        MTLogger.logWarn(getLogPrefix(), getName(), msg, args);
     }
 
     public void onConnected(CompoundTagAPI<?> worldData) {
         if(worldData.contains("triggers")) {
-            worldData.getListTag("triggers").forEach(based -> {
+            for(BaseTagAPI<?> based : worldData.getListTag("triggers")) {
                 CompoundTagAPI<?> triggerTag = based.asCompoundTag();
                 TriggerAPI trigger = TriggerHelper.decodeTrigger(this,triggerTag);
                 trigger.onConnected(triggerTag);
-            });
+            }
         }
     }
     
-    public void onLoaded(CompoundTagAPI<?> globalData) {
-    
-    }
+    public void onLoaded(CompoundTagAPI<?> globalData) {}
     
     public abstract void onResourcesLoaded();
     public abstract void onTrackStart(AudioTrack track);
@@ -301,13 +301,13 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
     @Override
     public void saveWorldTo(CompoundTagAPI<?> worldData) {
         ListTagAPI<?> triggersTag = TagHelper.makeListTag();
-        this.data.getTriggerEventMap().keySet().forEach(trigger -> {
+        for(TriggerAPI trigger : this.data.getTriggerEventMap().keySet()) {
             if(trigger.hasDataToSave()) {
                 CompoundTagAPI<?> triggerTag = TagHelper.makeCompoundTag();
                 trigger.saveWorldTo(triggerTag);
                 triggersTag.addTag(triggerTag);
             }
-        });
+        }
         worldData.putTag("triggers",triggersTag);
     }
 
@@ -315,6 +315,14 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
     public abstract void setMasterVolume(float volume);
     public abstract void setTrackVolume(float volume);
     public abstract boolean shouldBlockMusicTicker();
+    
+    public boolean showDebugSongInfo() {
+        return this.helper.getDebugBool("show_channel_info") && this.helper.getDebugBool("show_song_info");
+    }
+    
+    public boolean showDebugTriggerInfo() {
+        return this.helper.getDebugBool("show_channel_info") && this.helper.getDebugBool("show_trigger_info");
+    }
 
     @Override
     public void stop() {
@@ -348,7 +356,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
     
     @Override
     public String toString() {
-        return getTypeName()+"["+this.name+"]";
+        return getLogPrefix()+"["+this.name+"]";
     }
 
     @Override

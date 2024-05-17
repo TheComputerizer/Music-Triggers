@@ -13,6 +13,7 @@ public class MessageToggleDebugParameter<CTX> extends MessageAPI<CTX> {
     public MessageToggleDebugParameter(boolean client, String name) {
         this.client = client;
         this.name = name;
+        ChannelHelper.flipDebugParameter(this.client,this.name);
     }
     
     public MessageToggleDebugParameter(ByteBuf buf) {
