@@ -7,6 +7,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElementRunner;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.core.TILDev;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.ServerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
@@ -48,7 +49,7 @@ public class CommandElement extends ChannelElementRunner {
         return false;
     }
 
-    public boolean parse(Toml table) {
+    @Override public boolean parse(Toml table) {
         return super.parse(table) && parseTriggers(this.channel,this.triggers);
     }
     
@@ -78,6 +79,7 @@ public class CommandElement extends ChannelElementRunner {
     @Override
     public void run() {
         super.run();
+        TILDev.logInfo("RUNNING COMMAND /"+this.literal);
         ServerHelper.executeCommandLiteral(this.literal);
     }
 }

@@ -21,7 +21,11 @@ public abstract class ChannelElementRunner extends ChannelElement implements Cha
     protected ChannelElementRunner(ChannelAPI channel, String name) {
         super(channel,name);
     }
-
+    
+    @Override public void activate() {
+        if(checkSide() && canRun("activate")) run();
+    }
+    
     public boolean canRun(String event) {
         if(event.equalsIgnoreCase(this.event)) {
             if(isServer()) return true;
@@ -37,6 +41,10 @@ public abstract class ChannelElementRunner extends ChannelElement implements Cha
         if(isClient()) return this.channel.isClientChannel() && checkResource();
         if(isServer()) return !this.channel.isClientChannel();
         return false;
+    }
+    
+    @Override public void deactivate() {
+        if(checkSide() && canRun("deactivate")) run();
     }
     
     @Override
@@ -64,15 +72,51 @@ public abstract class ChannelElementRunner extends ChannelElement implements Cha
         return false;
     }
     
+    @Override public void play() {
+        if(checkSide() && canRun("play")) run();
+    }
+    
+    @Override public void playable() {
+        if(checkSide() && canRun("playable")) run();
+    }
+    
+    @Override public void playing() {
+        if(checkSide() && canRun("playing") && tick()) run();
+    }
+    
+    @Override public void queue() {
+        if(checkSide() && canRun("queue")) run();
+    }
+    
     @Override
     public void run() {
         this.timer = 0;
     }
-
+    
+    @Override public void stop() {
+        if(checkSide() && canRun("stop")) run();
+    }
+    
+    @Override public void stopped() {
+        if(checkSide() && canRun("stopped")) run();
+    }
+    
     @Override
     public boolean tick() {
         this.timer++;
-        return (this.timer<=0 || this.timer%this.interval==0) &&
+        return (this.timer<=0 || this.interval==0 || this.timer%this.interval==0) &&
                this.timer>=this.start && (this.end<=0 || this.timer<this.end);
+    }
+    
+    @Override public void tickActive() {
+        if(checkSide() && canRun("tick_active") && tick()) run();
+    }
+    
+    @Override public void tickPlayable() {
+        if(checkSide() && canRun("tick_playable") && tick()) run();
+    }
+    
+    @Override public void unplayable() {
+        if(checkSide() && canRun("unplayable")) run();
     }
 }

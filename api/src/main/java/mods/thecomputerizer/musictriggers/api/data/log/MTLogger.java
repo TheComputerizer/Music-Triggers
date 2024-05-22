@@ -7,12 +7,19 @@ import mods.thecomputerizer.theimpossiblelibrary.api.io.LogHelper.ModLogger;
 import org.apache.logging.log4j.Level;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class MTLogger {
     public static final ModLogger LOGGER = LogHelper.create(MTRef.MODID);
     private static final List<LogMessage> LOGGED_MESSAGES = new ArrayList<>();
     private static int reloadIndex = 0;
+    
+    public static List<LogMessage> getGUISnapshot() {
+        List<LogMessage> snapshot = new ArrayList<>();
+        for(int i=reloadIndex;i<LOGGED_MESSAGES.size();i++) snapshot.add(LOGGED_MESSAGES.get(i));
+        return Collections.unmodifiableList(snapshot);
+    }
 
     /**
      * Logs a channel qualified message both the normal log and MT log

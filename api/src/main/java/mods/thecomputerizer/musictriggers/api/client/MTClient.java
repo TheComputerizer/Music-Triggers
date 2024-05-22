@@ -8,6 +8,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.CommonAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
+import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.*;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
@@ -36,6 +37,10 @@ public class MTClient {
     
     public static ChannelJukebox getJukeboxChannel(ChannelHelper helper) {
         return new ChannelJukebox(helper,SPECIAL_CHANNELS.getTable("jukebox"));
+    }
+    
+    public static ResourceLocationAPI<?> getLogoTexture() {
+        return MTRef.res("textures/logo.png");
     }
     
     public static ChannelPreview getPreviewChannel(ChannelHelper helper) {

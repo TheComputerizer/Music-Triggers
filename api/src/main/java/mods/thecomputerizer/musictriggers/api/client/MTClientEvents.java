@@ -1,9 +1,12 @@
 package mods.thecomputerizer.musictriggers.api.client;
 
 import mods.thecomputerizer.musictriggers.api.MTRef;
+import mods.thecomputerizer.musictriggers.api.client.gui.MTGUI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.event.events.*;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.ScreenAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.ScreenHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.advancement.AdvancementAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.block.BlockStateAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.event.EventHelper;
@@ -19,6 +22,7 @@ import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.function.Function;
 
+import static mods.thecomputerizer.musictriggers.api.client.gui.MTGUI.GUI_KEY;
 import static mods.thecomputerizer.theimpossiblelibrary.api.client.event.ClientEventWrapper.ClientType.*;
 import static mods.thecomputerizer.theimpossiblelibrary.api.client.event.types.ClientOverlayEventType.OverlayType.ALL;
 import static mods.thecomputerizer.theimpossiblelibrary.api.common.event.CommonEventWrapper.CommonType.*;
@@ -27,7 +31,6 @@ import static mods.thecomputerizer.theimpossiblelibrary.api.common.event.types.C
 public class MTClientEvents {
 
     private static AdvancementAPI<?> recentAdvancement;
-    private static boolean renderOverlays = true;
     private static int ticksUntilReload = -1;
     
     public static void handleError(@Nullable MinecraftAPI mc, String channel) {
@@ -43,7 +46,7 @@ public class MTClientEvents {
         EventHelper.addListener(CLIENT_CONNECTED,MTClientEvents::onClientConnected);
         EventHelper.addListener(CLIENT_DISCONNECTED,MTClientEvents::onClientDisconnected);
         EventHelper.addListener(CUSTOM_TICK,MTClientEvents::onCustomTick);
-        EventHelper.addListener(KEY_INPUT,MTClientEvents::onInputKey);
+        EventHelper.addListener(KEY_INPUT,MTClientEvents::onKeyPress);
         EventHelper.addListener(PLAYER_ADVANCEMENT,MTClientEvents::onAdvancement);
         EventHelper.addListener(PLAYER_INTERACT_BLOCK,MTClientEvents::onRightClickBlock);
         EventHelper.addListener(RENDER_OVERLAY_PRE,MTClientEvents::onRenderOverlayPre);
@@ -51,10 +54,6 @@ public class MTClientEvents {
         EventHelper.addListener(SOUND_PLAY,MTClientEvents::onPlaySound);
         EventHelper.addListener(TICK_CLIENT,MTClientEvents::onClientTick);
         CustomTick.addCustomTickTPS(ChannelHelper.getTickRate());
-    }
-
-    private static boolean isMTScreenActive(MinecraftAPI mc) { //TODO Implement this
-        return false;
     }
 
     private static void onAdvancement(PlayerAdvancementEventWrapper<?> wrapper) {
@@ -72,7 +71,6 @@ public class MTClientEvents {
     private static void onClientTick(ClientTickEventWrapper<?> wrapper) {
         if(wrapper.isPhase(END)) {
             MinecraftAPI mc = wrapper.getMinecraft();
-            if(!renderOverlays && !isMTScreenActive(mc)) renderOverlays = true;
             if(ticksUntilReload>=0) {
                 if(ticksUntilReload==0) {
                     ChannelHelper.reload();
@@ -87,17 +85,19 @@ public class MTClientEvents {
     private static void onCustomTick(CustomTickEventWrapper<?> wrapper) {
         ChannelHelper.tick(wrapper.getTicker());
     }
-
-    private static void onInputKey(InputKeyEventWrapper<?> wrapper) {}
+    
+    public static void onKeyPress(InputKeyEventWrapper<?> wrapper) {
+        if(GUI_KEY.isDown()) MTGUI.open();
+    }
 
     private static void onPlaySound(PlaySoundEventWrapper<?,?> wrapper) {}
 
     private static void onRenderOverlayPre(RenderOverlayPreEventWrapper<?> wrapper) {
-        if(wrapper.isType(ALL) && !renderOverlays) wrapper.setCanceled(true);
+        if(wrapper.isType(ALL) && MTGUI.isActive) wrapper.setCanceled(true);
     }
 
     private static void onRenderOverlayText(RenderOverlayTextEventWrapper<?> wrapper) {
-        if(renderOverlays) {
+        if(!MTGUI.isActive) {
             ChannelHelper helper = ChannelHelper.getClientHelper();
             if(Objects.nonNull(helper) && helper.getDebugBool("enable_debug_info")) {
                 MinecraftAPI mc = wrapper.getMinecraft();
@@ -116,6 +116,7 @@ public class MTClientEvents {
     }
 
     public static void queueReload(@Nullable MinecraftAPI mc, int ticks) {
+        ScreenHelper.open((ScreenAPI)null);
         if(ChannelHelper.getLoader().isLoading()) {
             ChannelHelper.logGlobalWarn("Tried to reload channels while they were already being reloaded");
             return;

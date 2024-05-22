@@ -14,8 +14,9 @@ import mods.thecomputerizer.shadow.org.joml.Vector3i;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.blockentity.BlockEntityAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.EntityAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.shapes.Box;
+import mods.thecomputerizer.theimpossiblelibrary.api.shapes.ShapeHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
-import mods.thecomputerizer.theimpossiblelibrary.api.util.Box;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.WorldAPI;
 import org.apache.commons.lang3.StringUtils;
 
@@ -70,11 +71,7 @@ public abstract class TriggerContext extends ChannelElement {
         double x = pos.x;
         double y = pos.y;
         double z = pos.z;
-        return getBox(x-hRange,y-vRange,z-hRange,x+hRange,y+vRange,z+hRange);
-    }
-
-    protected Box getBox(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-        return new Box(minX,minY,minZ,maxX,maxY,maxZ);
+        return ShapeHelper.box(x-hRange,y-vRange,z-hRange,x+hRange,y+vRange,z+hRange);
     }
 
     protected Collection<BlockEntityAPI<?,?>> getBlockEntitiesAround(Box box) {

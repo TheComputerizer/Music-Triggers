@@ -13,10 +13,26 @@
   "debug.musictriggers.target.block_entity": "Block Entity: Name = %1$s | ID = %2$s",
   "debug.musictriggers.target.entity": "Entity: Name = %1$s | ID = %2$s",
 
+  "gui.musictriggers.tooltip.button.edit.1": "Edit Song Configurations",
+  "gui.musictriggers.tooltip.button.edit.2": "Edit existing song configurations or add new ones",
+  "gui.musictriggers.tooltip.button.edit.3": "All config files can be edited here",
+  "gui.musictriggers.tooltip.button.log.1": "Log visualizer",
+  "gui.musictriggers.tooltip.button.log.2": "See important information since the last reload.",
+  "gui.musictriggers.tooltip.button.playback.1": "Playback Information",
+  "gui.musictriggers.tooltip.button.playback.2": "Shows the time and name of the currently playing song",
+  "gui.musictriggers.tooltip.button.playback.3": "Allows the current song to be skipped or reset",
+  "gui.musictriggers.tooltip.button.reload.1": "Reload Configurations",
+  "gui.musictriggers.tooltip.button.reload.2": "Reloads all of the config files from the mod",
+  "gui.musictriggers.tooltip.button.reload.3": "Applies any changes made within the gui",
+  "gui.musictriggers.tooltip.button.reload.4": "Remember to reload text edits first!",
+
   "item.musictriggers.record.blank": "Nothing has been recorded yet",
   "item.musictriggers.record.desc": "Enhanced Music Disc",
   "item.musictriggers.record.name": "Enhanced Music Disc",
   "item.musictriggers.record.tooltip": "Reference: %1$s",
+
+  "key.categories.musictriggers": "Music Triggers",
+  "key.musictriggers.gui": "Open Music Triggers GUI",
 
   "message.musictriggers.reload.error": "Caught an unknown error in channel %1$s",
   "message.musictriggers.reload.finished": "Finished reloading Music Triggers!",

@@ -6,19 +6,19 @@ import mods.thecomputerizer.musictriggers.api.client.audio.AudioContainer;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.shadow.org.joml.Vector3i;
+import mods.thecomputerizer.theimpossiblelibrary.api.shapes.vectors.VectorHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import org.apache.logging.log4j.Level;
 
 import java.util.Objects;
 
-import static mods.thecomputerizer.theimpossiblelibrary.api.util.VectorHelper.MAX_3I;
 import static org.apache.logging.log4j.Level.*;
 
 public abstract class ChannelClientSpecial extends ChannelClient {
     
     @Setter protected Level logLevel;
     protected String playingName;
-    protected Vector3i playingPos = MAX_3I;
+    protected Vector3i playingPos = VectorHelper.max3I();
     protected AudioTrack playingTrack;
     
     public ChannelClientSpecial(ChannelHelper helper, Toml info) {
@@ -89,7 +89,7 @@ public abstract class ChannelClientSpecial extends ChannelClient {
         this.player.stopTrack();
         this.playingTrack = null;
         this.playingName = null;
-        this.playingPos = MAX_3I;
+        this.playingPos = VectorHelper.max3I();
     }
     
     @Override public void tickActive() {}

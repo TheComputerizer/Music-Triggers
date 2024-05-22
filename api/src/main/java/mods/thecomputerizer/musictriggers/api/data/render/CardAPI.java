@@ -44,7 +44,7 @@ public abstract class CardAPI extends ChannelElementRunner {
         return true;
     }
 
-    public boolean parse(Toml table) {
+    @Override public boolean parse(Toml table) {
         return super.parse(table) && parseTriggers(this.channel,this.triggers);
     }
 }

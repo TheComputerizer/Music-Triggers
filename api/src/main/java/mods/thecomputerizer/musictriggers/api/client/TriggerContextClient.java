@@ -18,7 +18,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.integration.ModAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.integration.ModHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.integration.Weather2API.WeatherData;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
-import mods.thecomputerizer.theimpossiblelibrary.api.util.Box;
+import mods.thecomputerizer.theimpossiblelibrary.api.shapes.Box;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.RandomHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.DimensionAPI;

@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.api.data.global;
 
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.ParameterRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventHandler;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventRunner;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
@@ -11,7 +12,7 @@ import java.util.Objects;
 
 import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.EVENT_RUNNER;
 
-public abstract class GlobalEventRunner extends GlobalElement implements ChannelEventRunner {
+public abstract class GlobalEventRunner extends GlobalElement implements ChannelEventRunner, ChannelEventHandler {
     
     private String event;
     private String song;
@@ -22,6 +23,10 @@ public abstract class GlobalEventRunner extends GlobalElement implements Channel
     
     protected GlobalEventRunner(String name) {
         super(name);
+    }
+    
+    @Override public void activate() {
+        if(checkSide() && canRun("activate")) run();
     }
     
     public boolean canRun(String event) {
@@ -41,6 +46,10 @@ public abstract class GlobalEventRunner extends GlobalElement implements Channel
         if(isServer()) return !channel.isClientChannel();
         logInfo("Wrong side");
         return false;
+    }
+    
+    @Override public void deactivate() {
+        if(checkSide() && canRun("deactivate")) run();
     }
     
     protected abstract ChannelAPI getChannelReference();
@@ -70,10 +79,46 @@ public abstract class GlobalEventRunner extends GlobalElement implements Channel
         return false;
     }
     
+    @Override public void play() {
+        if(checkSide() && canRun("play")) run();
+    }
+    
+    @Override public void playable() {
+        if(checkSide() && canRun("playable")) run();
+    }
+    
+    @Override public void playing() {
+        if(checkSide() && canRun("playing") && tick()) run();
+    }
+    
+    @Override public void queue() {
+        if(checkSide() && canRun("queue")) run();
+    }
+    
+    @Override public void stop() {
+        if(checkSide() && canRun("stop")) run();
+    }
+    
+    @Override public void stopped() {
+        if(checkSide() && canRun("stopped")) run();
+    }
+    
     @Override
     public boolean tick() {
         this.timer++;
         return (this.timer<=0 || this.timer%this.interval==0) &&
                this.timer>=this.start && (this.end<=0 || this.timer<this.end);
+    }
+    
+    @Override public void tickActive() {
+        if(checkSide() && canRun("tick_active") && tick()) run();
+    }
+    
+    @Override public void tickPlayable() {
+        if(checkSide() && canRun("tick_playable") && tick()) run();
+    }
+    
+    @Override public void unplayable() {
+        if(checkSide() && canRun("unplayable")) run();
     }
 }

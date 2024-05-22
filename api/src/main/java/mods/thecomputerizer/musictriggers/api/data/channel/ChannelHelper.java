@@ -48,12 +48,13 @@ import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.MinecraftServerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.ServerHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.shapes.Box;
+import mods.thecomputerizer.theimpossiblelibrary.api.shapes.ShapeHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.TagHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlParsingException;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlWritingException;
-import mods.thecomputerizer.theimpossiblelibrary.api.util.Box;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.CustomTick;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.RandomHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
@@ -210,8 +211,10 @@ public class ChannelHelper implements NBTLoadable {
         loader.setLoading(true);
         loader.setClient(client);
         globalData.logInfo("Queued reload on the {} side",loader.isClient() ? "client" : "server");
-        for(ChannelHelper helper : PLAYER_MAP.values()) helper.close();
-        PLAYER_MAP.clear();
+        synchronized(PLAYER_MAP) {
+            for(ChannelHelper helper : PLAYER_MAP.values()) helper.close();
+            PLAYER_MAP.clear();
+        }
         MTLogger.onReloadQueued();
     }
 
@@ -327,7 +330,7 @@ public class ChannelHelper implements NBTLoadable {
         PlayerAPI<?,?> player = getPlayer();
         if(Objects.nonNull(player)) {
             Vector3d pos = player.getPosExact();
-            Box box = new Box(pos.x-63d,pos.y-63d,pos.z-63d,pos.x+63d,pos.y+63d,pos.z+63d);
+            Box box = ShapeHelper.box(pos,126d);
             for(BlockEntityAPI<?,?> entity : player.getWorld().getBlockEntitiesInBox(box))
                 if(entity.getRegistryName().getPath().contains("jukebox") &&
                    entity.getState().getPropertyBool("has_record")) return true;
@@ -585,6 +588,7 @@ public class ChannelHelper implements NBTLoadable {
     }
     
     public void tickChannels() {
+        if(loader.isLoading()) return; //Why is this needed here when it's already in the static method? I have no idea
         boolean jukebox = this.client && checkForJukebox();
         boolean slow = (this.ticks++)%this.getDebugNumber("slow_tick_factor").intValue()==0;
         for(ChannelAPI channel : this.channels.values()) {
