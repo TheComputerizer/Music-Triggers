@@ -10,7 +10,6 @@ import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.TextWidge
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Widget;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.WidgetList;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.render.FuzzBall;
-import mods.thecomputerizer.theimpossiblelibrary.api.shapes.Box;
 
 public class MTLogVisualizer extends MTGUI {
     
@@ -48,14 +47,6 @@ public class MTLogVisualizer extends MTGUI {
             double height = getHeight();
             if(elementsHeight>height) this.scrollOffset = elementsHeight-height;
             return pos;
-        }
-        
-        @Override public double getOffsetY(double y) {
-            return y+this.scrollOffset;
-        }
-        
-        @Override protected Box getRenderBounds(Widget widget, int index, Vector3d center) {
-            return super.getRenderBounds(widget, index, center).offset(0.0,+this.scrollOffset,0.0);
         }
     }
 }
