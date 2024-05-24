@@ -51,7 +51,15 @@ public class MTGUI extends ScreenAPI {
     
     public static String getButtonType(String screen, int index) {
         switch(screen) {
-            case "main": switch(index) {
+            case "channels": switch(index) {
+                case 0: return "channel_info";
+                case 1: return "commands";
+                case 2: return "jukebox";
+                case 3: return "main";
+                case 4: return "redirect";
+                case 5: return "renders";
+            }
+            case "home": switch(index) {
                 case 0: return "log";
                 case 1: return "reload";
                 case 2: return "edit";
@@ -77,6 +85,7 @@ public class MTGUI extends ScreenAPI {
     
     public static Collection<TextAPI<?>> getTooltip(String category, String type) {
         Collection<TextAPI<?>> lines = new ArrayList<>();
+        lines.add(TextHelper.getTranslated(lang(String.format("%1$s.%2$s.name",category,type))));
         for(int i=1;i<=getTooltipSize(type);i++) lines.add(TextHelper.getTranslated(lang(String.format(
                 "%1$s.%2$s.tooltip.%3$d",category,type,i))));
         return lines;
@@ -85,15 +94,22 @@ public class MTGUI extends ScreenAPI {
     public static int getTooltipSize(String type) {
         switch(type) {
             default: return 0;
-            case "log": return 2;
-            case "edit":
-            case "playback": return 3;
-            case "reload": return 4;
+            case "jukebox": return 1;
+            case "channels":
+            case "commands":
+            case "debug":
+            case "log":
+            case "playback":
+            case "redirect":
+            case "renders":
+            case "toggles": return 2;
+            case "main":
+            case "reload": return 3;
         }
     }
     
     public static void open() {
-        openRadial("main");
+        openRadial("home");
     }
     
     private static void openRadial(String screen) {
@@ -101,7 +117,7 @@ public class MTGUI extends ScreenAPI {
         MTGUI mtgui = new MTGUI(screen,ClientHelper.getWindow(),ClientHelper.getGuiScale());
         mtgui.addRadial(heightRatio,4,(index,button) -> {
             button.getShape().setColor(BLACK);
-            String type = getButtonType("main",index);
+            String type = getButtonType(screen,index);
             Square square = ShapeHelper.square(Y,0.25d,heightRatio);
             Widget texture = ShapeWidget.from(square,getIconTexture(type,false));
             Widget hoverTexture = ShapeWidget.from(square.getScaled(0.95d),getIconTexture(type,true));
@@ -138,7 +154,7 @@ public class MTGUI extends ScreenAPI {
     protected final String type;
     
     public MTGUI(String type, MinecraftWindow window, int guiScale) {
-        super(TextHelper.getTranslated(String.format("gui.%1$s.screen.%2$s",MODID,type)),window,guiScale);
+        super(TextHelper.getTranslated(lang("screen."+type)),window,guiScale);
         this.type = type;
     }
     
