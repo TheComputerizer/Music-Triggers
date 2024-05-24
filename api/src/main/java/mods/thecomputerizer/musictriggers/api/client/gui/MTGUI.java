@@ -15,13 +15,12 @@ import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Widget;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.WidgetGroup;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.input.KeyAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.input.KeyHelper;
-import mods.thecomputerizer.theimpossiblelibrary.api.client.render.FuzzBall;
-import mods.thecomputerizer.theimpossiblelibrary.api.client.render.RenderContext;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.render.RenderHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.render.RenderShape;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.render.TextureWrapper;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.Circle;
+import mods.thecomputerizer.theimpossiblelibrary.api.shapes.Shape;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.ShapeHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.Square;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.vectors.VectorHelper;
@@ -36,7 +35,6 @@ import java.util.function.BiConsumer;
 import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
 import static mods.thecomputerizer.theimpossiblelibrary.api.client.input.KeyAPI.AlphaNum.R;
 import static mods.thecomputerizer.theimpossiblelibrary.api.client.render.ColorHelper.BLACK;
-import static mods.thecomputerizer.theimpossiblelibrary.api.client.render.ColorHelper.WHITE;
 import static mods.thecomputerizer.theimpossiblelibrary.api.common.block.Facing.Axis.Y;
 import static mods.thecomputerizer.theimpossiblelibrary.api.util.MathHelper.RADIANS_45;
 
@@ -47,16 +45,26 @@ public class MTGUI extends ScreenAPI {
     
     public static boolean isActive;
     
+    protected TextAPI<?> buttonDisplay(String name) {
+        return TextHelper.getTranslated(lang(String.format("button.%1$s.name",name)));
+    }
+    
     public static String getButtonType(String screen, int index) {
         switch(screen) {
             case "main": switch(index) {
-                case 0: return "edit";
+                case 0: return "log";
                 case 1: return "reload";
-                case 2: return "playback";
-                case 3: return "log";
+                case 2: return "edit";
+                case 3: return "playback";
+                default: break;
             }
+            default: break;
         }
         return null;
+    }
+    
+    protected static String lang(String key) {
+        return String.format("gui.%1$s.%2$s",MODID,key);
     }
     
     public static ResourceLocationAPI<?> getIconTexture(String type, boolean hover) {
@@ -69,8 +77,8 @@ public class MTGUI extends ScreenAPI {
     
     public static Collection<TextAPI<?>> getTooltip(String category, String type) {
         Collection<TextAPI<?>> lines = new ArrayList<>();
-        for(int i=1;i<=getTooltipSize(type);i++) lines.add(TextHelper.getTranslated(String.format(
-                "gui.%1$s.tooltip.%2$s.%3$s.%4$d",MODID,category,type,i)));
+        for(int i=1;i<=getTooltipSize(type);i++) lines.add(TextHelper.getTranslated(lang(String.format(
+                "%1$s.%2$s.tooltip.%3$d",category,type,i))));
         return lines;
     }
     
@@ -91,7 +99,6 @@ public class MTGUI extends ScreenAPI {
     private static void openRadial(String screen) {
         double heightRatio = RenderHelper.getCurrentHeightRatio();
         MTGUI mtgui = new MTGUI(screen,ClientHelper.getWindow(),ClientHelper.getGuiScale());
-        if("main".equals(screen)) mtgui.addLogo(heightRatio,0.25d);
         mtgui.addRadial(heightRatio,4,(index,button) -> {
             button.getShape().setColor(BLACK);
             String type = getButtonType("main",index);
@@ -106,12 +113,12 @@ public class MTGUI extends ScreenAPI {
             button.addWidget(texture);
             button.setHoverLines(getTooltip("button",type));
             button.setHover(BasicWidgetGroup.from(ShapeWidget.of(RenderShape.from(
-                    button.getShape().getShape().getWrapped()),0d,0d),hoverTexture));
+                    button.getShape().getWrapped().getWrapped()),0d,0d),hoverTexture));
             if(Objects.nonNull(type)) {
                 button.setClickFunc(b -> {
                     switch(type) {
                         case "log": {
-                            MTLogVisualizer.open(ClientHelper.getWindow());
+                            MTLogVisualizer.open(mtgui,ClientHelper.getWindow());
                             break;
                         }
                         case "reload": {
@@ -122,53 +129,55 @@ public class MTGUI extends ScreenAPI {
                 });
             }
         });
+        if("main".equals(screen)) mtgui.addLogo(heightRatio,0.25d);
+        else mtgui.addBackButton();
         ScreenHelper.open(mtgui);
         isActive = true;
     }
     
     protected final String type;
-    protected final ShapeWidget darkBackground;
-    protected final FuzzBall fuzz;
     
     public MTGUI(String type, MinecraftWindow window, int guiScale) {
         super(TextHelper.getTranslated(String.format("gui.%1$s.screen.%2$s",MODID,type)),window,guiScale);
         this.type = type;
-        this.darkBackground = ShapeWidget.from(ShapeHelper.square(Y,2d,1d),BLACK.withAlpha(defaultBackgroundDarkness()));
-        this.fuzz = makeFuzzGenerator(0,5,1f,1f);
     }
     
-    private void addLogo(double heightRatio, double radius) {
+    public MTGUI(ScreenAPI parent, String type, MinecraftWindow window, int guiScale) {
+        super(parent,TextHelper.getTranslated(String.format("gui.%1$s.screen.%2$s",MODID,type)),window,guiScale);
+        this.type = type;
+    }
+    
+    protected void addBackButton() {
+        Button back = Button.basic(buttonDisplay("back"));
+        back.setX(-1d+(back.getWidth()*0.6d));
+        back.setY(1d-(back.getHeight()));
+        back.setClickFunc(button -> ScreenHelper.open(this.parentScreen));
+        addWidget(back);
+    }
+    
+    protected void addFuzz(Shape shape, int maxCount) {
+        addWidget(ShapeWidget.fuzz(shape,maxCount));
+    }
+    
+    protected void addLogo(double heightRatio, double radius) {
         addWidget(ShapeWidget.from(ShapeHelper.square(Y,radius*2d,heightRatio),MTClient.getLogoTexture()));
     }
     
-    private void addRadial(double heightRatio, int slices, BiConsumer<Integer,Button> sliceSettings) {
+    protected void addRadial(double heightRatio, int slices, BiConsumer<Integer,Button> sliceSettings) {
         double radius = 0.65d;
         double innerRadius = 0.35d;
         Circle circle = ShapeHelper.circle(Y,radius,innerRadius,heightRatio);
-        WidgetGroup radialMenu = Button.raidalGroup(circle,0d,0d,slices,-RADIANS_45,sliceSettings);
+        Circle smallRing = circle.getScaled(6d/13d);
+        Circle bigRing = circle.getScaled(1.1d);
+        WidgetGroup radialMenu = Button.radialGroup(circle,0d,0d,slices,RADIANS_45,sliceSettings);
+        addFuzz(bigRing,5);
         addWidget(radialMenu);
-        addWidget(ShapeWidget.outlineFrom(circle.getScaled(6d/13d),10f));
-        addWidget(ShapeWidget.outlineFrom(circle.getScaled(1.1d),10f));
-    }
-    
-    @Override public float defaultBackgroundDarkness() {
-        return 0.65f;
-    }
-    
-    @Override public void draw(RenderContext ctx, Vector3d center, double mouseX, double mouseY) {
-        this.darkBackground.draw(ctx,center,mouseX,mouseY);
-        if(Objects.nonNull(this.fuzz)) this.fuzz.draw2D(ctx);
-        super.draw(ctx,center,mouseX,mouseY);
-    }
-    
-    protected FuzzBall makeFuzzGenerator(int min, int max, float minWidth, float maxWidth) {
-        double heightRatio = RenderHelper.getCurrentHeightRatio();
-        return ShapeHelper.circle(Y,0.715d,0.65d,heightRatio).makeFuzzBall(
-                min,max,minWidth,maxWidth, () -> WHITE.withAlpha(0.75f));
+        addWidget(ShapeWidget.outlineFrom(smallRing,10f));
+        addWidget(ShapeWidget.outlineFrom(bigRing,10f));
     }
     
     @Override public void onScreenClosed() {
-        isActive = false;
+        if(Objects.isNull(this.parentScreen)) isActive = false;
     }
     
     @Override public boolean shouldPauseGame() {

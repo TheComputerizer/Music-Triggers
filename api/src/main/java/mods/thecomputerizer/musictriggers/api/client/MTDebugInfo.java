@@ -32,7 +32,7 @@ import static mods.thecomputerizer.musictriggers.api.client.MTDebugInfo.ElementT
 
 public class MTDebugInfo extends GlobalElement {
 
-    private static final double MAX_WIDTH_PERCENT = 0.5d;
+    private static final double MAX_WIDTH_PERCENT = 2d/3d;
     private static final Comparator<Element> elementSorter = Collections.reverseOrder(Comparator.comparingInt(Element::getPriority));
 
     private final List<Element> elements;
