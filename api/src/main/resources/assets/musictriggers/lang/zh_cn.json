@@ -13,6 +13,23 @@
   "debug.musictriggers.target.block_entity": "方块实体：名称 = %1$s | ID = %2$s",
   "debug.musictriggers.target.entity": "实体：名称 = %1$s | ID = %2$s",
 
+  "gui.musictriggers.button.back.name": "返回",
+  "gui.musictriggers.button.edit.tooltip.1": "编辑音乐配置",
+  "gui.musictriggers.button.edit.tooltip.2": "编辑已有的音乐配置，或添加新的",
+  "gui.musictriggers.button.edit.tooltip.3": "所有配置文件都可以在这里编辑",
+  "gui.musictriggers.button.log.tooltip.1": "日志可视化",
+  "gui.musictriggers.button.log.tooltip.2": "查看自上次重载以来的重要信息",
+  "gui.musictriggers.button.playback.tooltip.1": "播放信息",
+  "gui.musictriggers.button.playback.tooltip.2": "展示当前播放歌曲的时间点和名称",
+  "gui.musictriggers.button.playback.tooltip.3": "你能在这里跳过或重放当前音乐",
+  "gui.musictriggers.button.reload.tooltip.1": "重载配置",
+  "gui.musictriggers.button.reload.tooltip.2": "重载所有本模组的配置文件",
+  "gui.musictriggers.button.reload.tooltip.3": "应用界面内做出的一切更改",
+  "gui.musictriggers.button.reload.tooltip.4": "记得先重载文字编辑！",
+
+  "key.categories.musictriggers": "音乐触发器",
+  "key.musictriggers.gui": "打开音乐触发器界面",
+
   "item.musictriggers.record.blank": "未储存音频",
   "item.musictriggers.record.desc": "增强的音乐唱片",
   "item.musictriggers.record.name": "增强的音乐唱片",
