@@ -13,6 +13,8 @@ debug.musictriggers.target.block_entity=Block Entity: Name = %1$s | ID = %2$s
 debug.musictriggers.target.entity=Entity: Name = %1$s | ID = %2$s
 
 gui.musictriggers.button.back.name=Back
+gui.musictriggers.button.channel_info.name=Channel Info
+gui.musictriggers.button.channel_info.tooltip.1=Edit channel specific parameters
 gui.musictriggers.button.channels.name=Channels
 gui.musictriggers.button.channels.tooltip.1=Edit channel info, commands, records, redirects,
 gui.musictriggers.button.channels.tooltip.2=render cards, songs, and triggers
@@ -44,6 +46,11 @@ gui.musictriggers.button.reload.tooltip.3=Exiting the GUI will clear any queued 
 gui.musictriggers.button.renders.name=Renders
 gui.musictriggers.button.renders.tooltip.1=Add, edit, or remove render entries
 gui.musictriggers.button.renders.tooltip.2=Current renders refer to image cards & title cards
+gui.musictriggers.button.reset_song.name=Reset Song
+gui.musictriggers.button.reset_song.tooltip.1=Restart the currently playing song from the beginning
+gui.musictriggers.button.skip_song.name=Skip Song
+gui.musictriggers.button.skip_song.tooltip.1=Skip the currently playing song
+gui.musictriggers.button.skip_song.tooltip.2=Does not skip any delay parameters that are set
 gui.musictriggers.button.toggles.name=Toggles
 gui.musictriggers.button.toggles.tooltip.1=Add, edit, or remove toggle entries
 gui.musictriggers.button.toggles.tooltip.2=Toggles can be used to set the state of triggers or channels
