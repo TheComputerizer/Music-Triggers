@@ -3,10 +3,8 @@ package mods.thecomputerizer.musictriggers.api.client.gui;
 import mods.thecomputerizer.musictriggers.api.data.log.LogMessage;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
 import mods.thecomputerizer.shadow.org.joml.Vector2d;
-import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.MinecraftWindow;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.ScreenAPI;
-import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.ScreenHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.ShapeWidget;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.TextWidget;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Widget;
@@ -20,11 +18,6 @@ import static mods.thecomputerizer.theimpossiblelibrary.api.client.render.TextBu
 import static mods.thecomputerizer.theimpossiblelibrary.api.common.block.Facing.Axis.Y;
 
 public class MTLogVisualizer extends MTGUI {
-    
-    public static void open(ScreenAPI parent, MinecraftWindow window) {
-        ScreenHelper.open(new MTLogVisualizer(parent,window,ClientHelper.getGuiScale()));
-        MTGUI.isActive = true;
-    }
     
     public MTLogVisualizer(ScreenAPI parent, MinecraftWindow window, int guiScale) {
         super(parent,"log",window,guiScale);
