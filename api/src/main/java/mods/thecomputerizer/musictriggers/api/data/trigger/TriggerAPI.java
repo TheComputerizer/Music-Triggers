@@ -388,6 +388,12 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
     public String toString() {
         return getSubTypeName()+"["+getNameWithID()+"]";
     }
+    
+    @Override protected Toml toTomlExtra(Toml toml) {
+        toml = super.toTomlExtra(toml);
+        for(Link link : this.links) toml.addTable("link",link.toToml());
+        return toml;
+    }
 
     @Override
     public void unplayable() {

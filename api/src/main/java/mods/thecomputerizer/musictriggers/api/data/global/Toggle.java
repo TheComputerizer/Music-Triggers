@@ -66,6 +66,13 @@ public class Toggle extends GlobalElement {
         logDebug("Running toggle!!!!!");
         this.toThese.forEach(To::run);
     }
+    
+    @Override protected Toml toTomlExtra(Toml toml) {
+        toml = super.toTomlExtra(toml);
+        for(From from : this.fromThese) toml.addTable("from",from.toToml());
+        for(To to : this.toThese) toml.addTable("to",to.toToml());
+        return toml;
+    }
 
     @Override
     public boolean verifyRequiredParameters() {

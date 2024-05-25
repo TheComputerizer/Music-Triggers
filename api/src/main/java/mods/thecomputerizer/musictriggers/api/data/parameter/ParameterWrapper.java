@@ -330,6 +330,17 @@ public abstract class ParameterWrapper implements LoggableAPI {
         return getLogPrefix()+"["+getName()+"]";
     }
     
+    public Toml toToml() {
+        Toml toml = Toml.getEmpty();
+        for(Entry<String,Parameter<?>> entry : this.parameters.entrySet())
+            toml.addEntry(entry.getKey(),entry.getValue().getValue());
+        return toTomlExtra(toml);
+    }
+    
+    protected Toml toTomlExtra(Toml toml) {
+        return toml;
+    }
+    
     public boolean verifyRequiredParameters() {
         return true;
     }

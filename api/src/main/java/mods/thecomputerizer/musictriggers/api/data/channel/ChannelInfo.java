@@ -1,8 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.channel;
 
 import lombok.Getter;
-import mods.thecomputerizer.musictriggers.api.MTRef;
-import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
@@ -10,6 +8,9 @@ import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Objects;
+
+import static mods.thecomputerizer.musictriggers.api.MTRef.CONFIG_PATH;
+import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.CHANNEL_INFO;
 
 @Getter
 public class ChannelInfo extends ChannelElement {
@@ -22,7 +23,7 @@ public class ChannelInfo extends ChannelElement {
         table.addEntry("commands","commands");
         table.addEntry("explicitly_overrides",false);
         table.addEntry("jukebox","jukebox");
-        table.addEntry("local_folder",MTRef.CONFIG_PATH+"/songs");
+        table.addEntry("local_folder",CONFIG_PATH+"/songs");
         table.addEntry("main","main");
         table.addEntry("overrides_music",true);
         table.addEntry("pauses_overrides",false);
@@ -62,7 +63,7 @@ public class ChannelInfo extends ChannelElement {
             this.commandsPath = "commands";
             this.excplicitlyOverrides = false;
             this.jukeboxPath = "jukebox";
-            this.localFolder = new File(MTRef.CONFIG_PATH+"/songs");
+            this.localFolder = new File(CONFIG_PATH+"/songs");
             this.mainPath = "main";
             this.overridesMusic = true;
             this.pausedByJukebox = true;
@@ -79,7 +80,7 @@ public class ChannelInfo extends ChannelElement {
     }
     
     @Override protected TableRef getReferenceData() {
-        return MTDataRef.CHANNEL_INFO;
+        return CHANNEL_INFO;
     }
     
     @Override protected String getSubTypeName() {
@@ -96,7 +97,5 @@ public class ChannelInfo extends ChannelElement {
     }
 
     @Override
-    public void close() {
-
-    }
+    public void close() {}
 }

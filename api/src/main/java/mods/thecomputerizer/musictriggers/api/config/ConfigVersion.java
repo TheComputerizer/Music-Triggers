@@ -260,11 +260,11 @@ public abstract class ConfigVersion implements LoggableAPI {
                     logInfo("Remapping channel "+channel.getName());
                     String mainPath = getPathMain(channel);
                     Toml main = ChannelHelper.openToml(mainPath,false,this);
-                    if(Objects.nonNull(main)) writeIfRemapped(main,MTDataRef.FILE_MAP.get("main"),mainPath);
+                    if(Objects.nonNull(main)) writeIfRemapped(main, MTDataRef.TABLE_MAP.get("main"), mainPath);
                 }
             }
             logInfo("Remapping global configs");
-            writeIfRemapped(global,MTDataRef.FILE_MAP.get("global"),MTRef.GLOBAL_CONFIG);
+            writeIfRemapped(global, MTDataRef.TABLE_MAP.get("global"), MTRef.GLOBAL_CONFIG);
         }
         logInfo("Successfully remapped config files!");
     }

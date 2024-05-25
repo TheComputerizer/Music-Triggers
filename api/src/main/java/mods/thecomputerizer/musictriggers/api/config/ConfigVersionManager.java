@@ -118,7 +118,7 @@ public class ConfigVersionManager {
     }
     
     public static void writeDefaults(Toml toml, String name, String path) {
-        TableRef ref = MTDataRef.FILE_MAP.get(name);
+        TableRef ref = MTDataRef.TABLE_MAP.get(name);
         if(Objects.nonNull(ref) && ref.addMissingDefaults(toml,CURRENT)) {
             CURRENT.logInfo("Writing missing default {} values to {}",name,path);
             toml.clearComments();

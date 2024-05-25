@@ -17,11 +17,11 @@ import java.util.Objects;
 import static mods.thecomputerizer.theimpossiblelibrary.api.client.render.ColorHelper.GREEN;
 
 @Getter
-public class MTPlayback extends MTGUI {
+public class PlaybackScreen extends MTGUIScreen {
     
     private ChannelAPI channel;
     
-    public MTPlayback(ScreenAPI parent, MinecraftWindow window, int guiScale) {
+    public PlaybackScreen(ScreenAPI parent, MinecraftWindow window, int guiScale) {
         super(parent,"playback",window,guiScale);
         for(ChannelAPI channel : ChannelHelper.getClientHelper().getChannels().values()) {
             if(Objects.nonNull(channel) && channel.isClientChannel() && !(channel instanceof ChannelClientSpecial)) {

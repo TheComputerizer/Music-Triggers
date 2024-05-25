@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.global;
 
 import lombok.Getter;
-import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBool;
@@ -12,6 +11,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.DEBUG;
 
 @Getter
 public class Debug extends GlobalElement { //TODO Implement log_level and max_hover_elements in the gui
@@ -33,7 +34,7 @@ public class Debug extends GlobalElement { //TODO Implement log_level and max_ho
     }
     
     @Override protected TableRef getReferenceData() {
-        return MTDataRef.DEBUG;
+        return DEBUG;
     }
     
     @Override

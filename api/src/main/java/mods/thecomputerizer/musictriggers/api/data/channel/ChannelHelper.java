@@ -601,6 +601,12 @@ public class ChannelHelper implements NBTLoadable {
         }
     }
     
+    public Toml togglesAsToml() {
+        Toml toml = Toml.getEmpty();
+        for(Toggle toggle : this.toggles) toml.addTable("toggle",toggle.toToml());
+        return toml;
+    }
+    
     private boolean writeBasicDisc(ItemStackAPI<?> stack) {
         Map<String,TriggerAPI> activeTriggers = new HashMap<>();
         for(ChannelAPI channel : this.channels.values()) {

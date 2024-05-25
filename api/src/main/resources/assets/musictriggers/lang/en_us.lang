@@ -57,8 +57,11 @@ gui.musictriggers.button.toggles.name=Toggles
 gui.musictriggers.button.toggles.tooltip.1=Add, edit, or remove toggle entries
 gui.musictriggers.button.toggles.tooltip.2=Toggles can be used to set the state of triggers or channels
 
+gui.musictriggers.screen.channel_info=Channel Info
 gui.musictriggers.screen.channels=Channels
 gui.musictriggers.screen.commands=Commands
+gui.musictriggers.screen.debug=Debug
+gui.musictriggers.screen.help=Help
 gui.musictriggers.screen.home=Music Triggers Home
 gui.musictriggers.screen.jukebox=Custom Music Discs
 gui.musictriggers.screen.log=Log Visualizer

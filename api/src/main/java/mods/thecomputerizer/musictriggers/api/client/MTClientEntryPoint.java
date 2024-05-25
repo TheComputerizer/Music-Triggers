@@ -8,7 +8,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.client.input.KeyHelper;
 
 import javax.annotation.Nullable;
 
-import static mods.thecomputerizer.musictriggers.api.client.gui.MTGUI.GUI_KEY;
+import static mods.thecomputerizer.musictriggers.api.client.gui.MTGUIScreen.GUI_KEY;
 
 public class MTClientEntryPoint extends ClientEntryPoint {
     

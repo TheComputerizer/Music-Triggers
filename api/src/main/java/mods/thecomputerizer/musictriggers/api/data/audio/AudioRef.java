@@ -131,6 +131,14 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
 
     public void start(TriggerAPI trigger) {}
     
+    @Override protected Toml toTomlExtra(Toml toml) {
+        toml = super.toTomlExtra(toml);
+        if(Objects.nonNull(this.interruptHandler))
+            toml.addTable("interrupt_handler",this.interruptHandler.toToml());
+        for(Loop loop :  this.loops) toml.addTable("loop",loop.toToml());
+        return toml;
+    }
+    
     public static class InterruptHandler extends ChannelElement {
 
         private final int priority;

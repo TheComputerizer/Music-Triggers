@@ -15,7 +15,6 @@ import mods.thecomputerizer.theimpossiblelibrary.api.util.Sorting;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static mods.thecomputerizer.theimpossiblelibrary.api.util.Sorting.ALPHABETICAL;
 
@@ -314,17 +313,33 @@ public final class MTDataRef {
             new TableRef("songs",AUDIO,UNIVERSAL_AUDIO), new TableRef("triggers",TRIGGERS));
     public static final TableRef RENDERS = new TableRef("renders",IMAGE_CARD,TITLE_CARD);
     public static final TableRef TOGGLES = new TableRef("toggles",TOGGLE);
-    public static final Map<String,TableRef> FILE_MAP = buildFileMap();
+    public static final Map<String,TableRef> TABLE_MAP = buildTableMap();
     
     /*------------------------------------------Methods------------------------------------------*/
     
-    private static Map<String,TableRef> buildFileMap() {
+    private static Map<String,TableRef> buildTableMap() {
         Map<String,TableRef> map = new HashMap<>();
+        map.put(AUDIO.name,AUDIO);
+        map.put(CHANNEL_INFO.name,CHANNEL_INFO);
+        map.put(COMMAND.name,COMMAND);
         map.put(COMMANDS.name,COMMANDS);
+        map.put(DEBUG.name,DEBUG);
+        map.put(EVENT_RUNNER.name,EVENT_RUNNER);
+        map.put(FROM.name,FROM);
         map.put(GLOBAL.name,GLOBAL);
+        map.put(IMAGE_CARD.name,IMAGE_CARD);
+        map.put(INTERRUPT_HANDLER.name,INTERRUPT_HANDLER);
+        map.put(LINK.name,LINK);
+        map.put(LOOP.name,LOOP);
         map.put(MAIN.name,MAIN);
         map.put(RENDERS.name,RENDERS);
+        map.put(TITLE_CARD.name,TITLE_CARD);
+        map.put(TO.name,TO);
+        map.put(TOGGLE.name,TOGGLE);
         map.put(TOGGLES.name,TOGGLES);
+        map.put(UNIVERSAL_AUDIO.name,UNIVERSAL_AUDIO);
+        map.put(UNIVERSAL_TRIGGERS.name,UNIVERSAL_TRIGGERS);
+        for(TableRef ref : TRIGGERS) map.put(ref.name,ref);
         return Collections.unmodifiableMap(map);
     }
     
@@ -451,6 +466,7 @@ public final class MTDataRef {
         private final Set<ParameterRef<?>> parameters;
         private final Set<TableRef> children;
         private final Sorting[] sorters;
+        private TableRef parent;
         
         private TableRef(String name, TableRef ... children) {
             this(name,new HashSet<>(Arrays.asList(children)));
@@ -469,6 +485,7 @@ public final class MTDataRef {
             this.parameters = Collections.unmodifiableSet(new HashSet<>(parameters));
             this.children = Collections.unmodifiableSet(children);
             this.sorters = new Sorting[]{ALPHABETICAL}; //TODO Per table?
+            for(TableRef child : this.children) child.parent = this;
         }
         
         /**
@@ -477,11 +494,11 @@ public final class MTDataRef {
         public boolean addMissingDefaults(Toml table, LoggableAPI logger) {
             if(!canWriteDefaults(this.name)) return false;
             table.setSorters(this.sorters);
-            AtomicBoolean added = new AtomicBoolean(false);
+            boolean added = false;
             for(ParameterRef<?> parameter : this.parameters) {
                 if(!table.hasEntry(parameter.name)) {
                     table.addEntry(parameter.name, parameter.defaultValue);
-                    added.set(true);
+                    added = true;
                 }
             }
             switch(this.name) {
@@ -490,19 +507,19 @@ public final class MTDataRef {
                     if(tables.isEmpty()) {
                         try {
                             if(CHANNEL_INFO.addMissingDefaults(table.addTable("example",false),logger))
-                                added.set(true);
+                                added = true;
                         } catch(TomlWritingException ex) {
                             logger.logError("Unable to generate example channel!",ex);
                         }
                     } else
                         for(Toml t : tables)
-                            if(CHANNEL_INFO.addMissingDefaults(t,logger)) added.set(true);
+                            if(CHANNEL_INFO.addMissingDefaults(t,logger)) added = true;
                     break;
                 }
                 case "songs": {
                     for(Toml t : table.getAllTables())
                         if((t.getName().equals("universal") ? UNIVERSAL_AUDIO : AUDIO).addMissingDefaults(t,logger))
-                            added.set(true);
+                            added = true;
                     break;
                 }
                 default: {
@@ -513,9 +530,9 @@ public final class MTDataRef {
                             String name = child.name.equals("universal_triggers") ? "universal" : child.name;
                             if(!table.hasTable(name)) {
                                 childTable = table.addTable(name,true);
-                                added.set(true);
+                                added = true;
                             } else childTable = table.getTable(name);
-                            if(child.addMissingDefaults(childTable,logger)) added.set(true);
+                            if(child.addMissingDefaults(childTable,logger)) added = true;
                         } catch(TomlWritingException ex) {
                             logger.logError("Failed to add missing default children",ex);
                         }
@@ -523,7 +540,7 @@ public final class MTDataRef {
                     break;
                 }
             }
-            return added.get();
+            return added;
         }
         
         public @Nullable TableRef findChild(String name) {
@@ -531,6 +548,18 @@ public final class MTDataRef {
             for(TableRef ref : this.children)
                 if(name.equals(ref.name)) return ref;
             return null;
+        }
+        
+        public Toml findToml(ChannelHelper helper) {
+            switch(this.name) {
+                case "debug": return ChannelHelper.getGlobalData().getDebug().toToml();
+                case "toggles": return helper.togglesAsToml();
+                default: return Toml.getEmpty();
+            }
+        }
+        
+        public boolean hasParent() {
+            return Objects.nonNull(this.parent);
         }
     }
     

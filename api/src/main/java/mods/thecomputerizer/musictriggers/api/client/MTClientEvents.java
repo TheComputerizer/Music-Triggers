@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.client;
 
 import mods.thecomputerizer.musictriggers.api.MTRef;
-import mods.thecomputerizer.musictriggers.api.client.gui.MTGUI;
+import mods.thecomputerizer.musictriggers.api.client.gui.MTGUIScreen;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.event.events.*;
@@ -22,7 +22,7 @@ import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.function.Function;
 
-import static mods.thecomputerizer.musictriggers.api.client.gui.MTGUI.GUI_KEY;
+import static mods.thecomputerizer.musictriggers.api.client.gui.MTGUIScreen.GUI_KEY;
 import static mods.thecomputerizer.theimpossiblelibrary.api.client.event.ClientEventWrapper.ClientType.*;
 import static mods.thecomputerizer.theimpossiblelibrary.api.client.event.types.ClientOverlayEventType.OverlayType.ALL;
 import static mods.thecomputerizer.theimpossiblelibrary.api.common.event.CommonEventWrapper.CommonType.*;
@@ -87,17 +87,17 @@ public class MTClientEvents {
     }
     
     public static void onKeyPress(InputKeyEventWrapper<?> wrapper) {
-        if(GUI_KEY.isDown()) MTGUI.open();
+        if(GUI_KEY.isDown()) MTGUIScreen.open();
     }
 
     private static void onPlaySound(PlaySoundEventWrapper<?,?> wrapper) {}
 
     private static void onRenderOverlayPre(RenderOverlayPreEventWrapper<?> wrapper) {
-        if(wrapper.isType(ALL) && MTGUI.isActive) wrapper.setCanceled(true);
+        if(wrapper.isType(ALL) && MTGUIScreen.isActive) wrapper.setCanceled(true);
     }
 
     private static void onRenderOverlayText(RenderOverlayTextEventWrapper<?> wrapper) {
-        if(!MTGUI.isActive) {
+        if(!MTGUIScreen.isActive) {
             ChannelHelper helper = ChannelHelper.getClientHelper();
             if(Objects.nonNull(helper) && helper.getDebugBool("enable_debug_info")) {
                 MinecraftAPI mc = wrapper.getMinecraft();
