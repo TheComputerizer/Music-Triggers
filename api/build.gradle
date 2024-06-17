@@ -1,12 +1,7 @@
 apply from: rootProject.file('gradle\\java8-module.gradle')
 
 repositories {
-    mavenCentral() {
-        content {
-            [ 'biz.aQute.bnd', 'com.google.code.findbugs', 'commons-io', 'io.netty', 'org.apache.commons',
-              'org.apache.logging.log4j', 'org.ow2', 'org.ow2.asm' ].forEach { includeGroup it }
-        }
-    }
+    mavenCentral()
     maven {
         name = 'SonaType'
         url = uri('https://oss.sonatype.org/content/repositories/public/')

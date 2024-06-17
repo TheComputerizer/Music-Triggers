@@ -150,43 +150,6 @@ public class MTGUIScreen extends ScreenAPI {
         }
     }
     
-    public static void setClickFunction(MTGUIScreen screen, Button button, String type) {
-        button.setClickFunc(b -> {
-            switch(type) {
-                case "channels":
-                case "playback": {
-                    openRadial(screen,type);
-                    break;
-                }
-                case "channel_info":
-                case "commands":
-                case "debug":
-                case "help":
-                case "jukebox":
-                case "log":
-                case "main":
-                case "redirect":
-                case "renders":
-                case "toggles": {
-                    open(constructScreen(screen,type,ClientHelper.getWindow(),ClientHelper.getGuiScale()));
-                    break;
-                }
-                case "reload": {
-                    MTClientEvents.queueReload(ClientHelper.getMinecraft(),5);
-                    break;
-                }
-                case "reset_song": {
-                    ((PlaybackScreen)screen).resetSong();
-                    break;
-                }
-                case "skip_song": {
-                    ((PlaybackScreen)screen).skipSong();
-                    break;
-                }
-            }
-        });
-    }
-    
     protected static String lang(String key) {
         return String.format("gui.%1$s.%2$s",MODID,key);
     }
@@ -231,6 +194,43 @@ public class MTGUIScreen extends ScreenAPI {
         }
         ScreenHelper.open(mtgui);
         isActive = true;
+    }
+    
+    public static void setClickFunction(MTGUIScreen screen, Button button, String type) {
+        button.setClickFunc(b -> {
+            switch(type) {
+                case "channels":
+                case "playback": {
+                    openRadial(screen,type);
+                    break;
+                }
+                case "channel_info":
+                case "commands":
+                case "debug":
+                case "help":
+                case "jukebox":
+                case "log":
+                case "main":
+                case "redirect":
+                case "renders":
+                case "toggles": {
+                    open(constructScreen(screen,type,ClientHelper.getWindow(),ClientHelper.getGuiScale()));
+                    break;
+                }
+                case "reload": {
+                    MTClientEvents.queueReload(ClientHelper.getMinecraft(),5);
+                    break;
+                }
+                case "reset_song": {
+                    ((PlaybackScreen)screen).resetSong();
+                    break;
+                }
+                case "skip_song": {
+                    ((PlaybackScreen)screen).skipSong();
+                    break;
+                }
+            }
+        });
     }
     
     protected final String type;

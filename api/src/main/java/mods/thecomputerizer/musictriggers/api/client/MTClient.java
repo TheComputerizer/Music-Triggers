@@ -49,7 +49,7 @@ public class MTClient {
 
     public static @Nullable TextStyleAPI<?> getStyleAPI() {
         TextHelperAPI<?> api = TILRef.getCommonSubAPI(CommonAPI::getTextHelper);
-        return Objects.nonNull(api) ? api.getStyleAPI() : null;
+        return Objects.nonNull(api) ? api.getStyle() : null;
     }
 
     @SuppressWarnings("unchecked")
