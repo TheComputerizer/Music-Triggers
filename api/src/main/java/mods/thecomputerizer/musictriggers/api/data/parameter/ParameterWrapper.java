@@ -2,6 +2,8 @@ package mods.thecomputerizer.musictriggers.api.data.parameter;
 
 import lombok.Getter;
 import lombok.Setter;
+import mods.thecomputerizer.musictriggers.api.client.gui.MTScreenInfo;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.ParameterLink;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.ParameterRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
@@ -57,6 +59,10 @@ public abstract class ParameterWrapper implements LoggableAPI {
         for(Entry<String,Parameter<?>> entry : this.parameters.entrySet())
             if(entry.getValue() instanceof ParameterBool) names.add(entry.getKey());
         return names;
+    }
+    
+    public ParameterLink getLink(@Nullable MTScreenInfo typeInfo) {
+        return new ParameterLink(typeInfo,getReferenceData(),this.parameters);
     }
     
     protected abstract String getLogPrefix();
@@ -237,11 +243,11 @@ public abstract class ParameterWrapper implements LoggableAPI {
     }
 
     protected void logMissingParameters(String ... names) {
-        logError("Missing a 1 or more required parameters from {}! (All of these are required)",TextHelper.arrayToString(", ",(Object[])names));
+        logError("Missing 1 or more required parameters from [{}]! (All of these are required)",TextHelper.arrayToString(", ",(Object[])names));
     }
 
     protected void logMissingPotentialParameter(String ... names) {
-        logError("Missing a required parameter from {}! (Only 1 of these is required)",TextHelper.arrayToString(", ",(Object[])names));
+        logError("Missing a required parameter from [{}]! (Only 1 of these is required)",TextHelper.arrayToString(", ",(Object[])names));
     }
     
     @Override

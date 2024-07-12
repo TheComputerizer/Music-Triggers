@@ -581,6 +581,12 @@ public final class MTDataRef {
             return null;
         }
         
+        public @Nullable ParameterRef<?> findParameter(String name) {
+            for(ParameterRef<?> ref : this.parameters)
+                if(ref.name.equals(name)) return ref;
+            return null;
+        }
+        
         public Toml findToml(ChannelHelper helper) {
             switch(this.name) {
                 case "debug": return ChannelHelper.getGlobalData().getDebug().toToml();

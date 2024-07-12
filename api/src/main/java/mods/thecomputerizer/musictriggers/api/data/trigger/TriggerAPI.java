@@ -193,6 +193,10 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
     public boolean isDisabled() {
         return getState()==State.DISABLED;
     }
+    
+    public boolean isFirstTrack() {
+        return this.tracksPlayed==1;
+    }
 
     public abstract boolean isPlayableContext(TriggerContext context);
 

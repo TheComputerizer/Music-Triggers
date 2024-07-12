@@ -9,6 +9,7 @@ import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
@@ -149,7 +150,7 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
             List<TriggerAPI> triggers = new ArrayList<>();
             if(parse(table) && parseTriggers(this.channel,triggers,"trigger_whitelist"))
                 this.priority = getParameterAsInt("priority");
-            else this.priority = this.channel.getHelper().getDebugBool("reverse_priority") ?
+            else this.priority = ChannelHelper.getDebugBool("reverse_priority") ?
                     Integer.MAX_VALUE : Integer.MIN_VALUE;
             this.triggers = triggers;
         }
@@ -158,7 +159,7 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
             if(Objects.isNull(trigger)) return false;
             if(this.triggers.isEmpty()) return true;
             int priority = trigger.getParameterAsInt("priority");
-            return this.triggers.isEmpty() || (this.channel.getHelper().getDebugBool("reverse_priority") ?
+            return this.triggers.isEmpty() || (ChannelHelper.getDebugBool("reverse_priority") ?
                     priority<=this.priority : priority>=this.priority) || trigger.isContained(this.triggers);
         }
 

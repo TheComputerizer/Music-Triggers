@@ -15,6 +15,36 @@ public class ParameterLong extends ParameterNumber<Long> {
     public ParameterLong(ByteBuf buf) {
         super(buf);
     }
+    
+    @Override public ParameterLong copy() {
+        ParameterLong copy = new ParameterLong(this.defaultValue);
+        copy.value = this.value;
+        return copy;
+    }
+    
+    @Override public boolean isByte() {
+        return false;
+    }
+    
+    @Override public boolean isDouble() {
+        return false;
+    }
+    
+    @Override public boolean isFloat() {
+        return false;
+    }
+    
+    @Override public boolean isInt() {
+        return false;
+    }
+    
+    @Override public boolean isLong() {
+        return true;
+    }
+    
+    @Override public boolean isShort() {
+        return false;
+    }
 
     @Override
     protected Long read(ByteBuf buf) {

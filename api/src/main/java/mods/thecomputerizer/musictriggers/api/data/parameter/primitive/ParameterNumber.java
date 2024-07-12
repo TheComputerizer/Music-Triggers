@@ -17,6 +17,8 @@ public abstract class ParameterNumber<N extends Number> extends Parameter<N> {
     public byte byteValue() {
         return this.value.byteValue();
     }
+    
+    @Override public abstract ParameterNumber<N> copy();
 
     public byte defaultByteValue() {
         return this.defaultValue.byteValue();
@@ -52,6 +54,26 @@ public abstract class ParameterNumber<N extends Number> extends Parameter<N> {
 
     public int intValue() {
         return this.value.intValue();
+    }
+    
+    @Override public boolean isBool() {
+        return false;
+    }
+    
+    @Override public boolean isList() {
+        return false;
+    }
+    
+    @Override public boolean isNumber() {
+        return true;
+    }
+    
+    @Override public boolean isPrimitive() {
+        return true;
+    }
+    
+    @Override public boolean isString() {
+        return false;
     }
 
     public long longValue() {

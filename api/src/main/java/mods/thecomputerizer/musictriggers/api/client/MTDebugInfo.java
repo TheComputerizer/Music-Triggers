@@ -83,7 +83,7 @@ public class MTDebugInfo extends GlobalElement {
     private void addDefaultElements() {
         addElement(HEADER,"").setVisibility(helper -> true);
         addElement(POSITION,"dimension",true,1003)
-                .setVisibility(helper -> helper.getDebugBool("show_position_info"))
+                .setVisibility(helper -> ChannelHelper.getDebugBool("show_position_info"))
                 .setArgSetter(helper -> {
                     PlayerAPI<?,?> player = helper.getPlayer();
                     if(Objects.nonNull(player)) {
@@ -94,10 +94,10 @@ public class MTDebugInfo extends GlobalElement {
                     return new Object[]{"?","?"};
                 });
         addElement(POSITION,"structure",true,1002)
-                .setVisibility(helper -> helper.getDebugBool("show_position_info"))
+                .setVisibility(helper -> ChannelHelper.getDebugBool("show_position_info"))
                 .setArgSetter(helper -> new Object[]{"?","?"});
         addElement(POSITION,"biome",true,1001)
-                .setVisibility(helper -> helper.getDebugBool("show_position_info"))
+                .setVisibility(helper -> ChannelHelper.getDebugBool("show_position_info"))
                 .setArgSetter(helper -> {
                     PlayerAPI<?,?> player = helper.getPlayer();
                     if(Objects.nonNull(player)) {
@@ -108,7 +108,7 @@ public class MTDebugInfo extends GlobalElement {
                     return new Object[]{"?","?","?"};
                 });
         addElement(POSITION,"light")
-                .setVisibility(helper -> helper.getDebugBool("show_position_info"))
+                .setVisibility(helper -> ChannelHelper.getDebugBool("show_position_info"))
                 .setArgSetter(helper -> {
                     PlayerAPI<?,?> player = helper.getPlayer();
                     if(Objects.nonNull(player)) {
@@ -121,7 +121,7 @@ public class MTDebugInfo extends GlobalElement {
                     return new Object[]{"?","?","?"};
                 });
         addElement(STATUS, "effects")
-                .setVisibility(helper -> helper.getDebugBool("show_status_info"))
+                .setVisibility(helper -> ChannelHelper.getDebugBool("show_status_info"))
                 .setArgSetter(helper -> {
                     PlayerAPI<?,?> player = helper.getPlayer();
                     if(Objects.nonNull(player)) {
@@ -136,18 +136,18 @@ public class MTDebugInfo extends GlobalElement {
                     return new Object[]{"?"};
                 });
         addElement(TARGET,"block_entity")
-                .setVisibility(helper -> helper.getDebugBool("show_target_info"))
+                .setVisibility(helper -> ChannelHelper.getDebugBool("show_target_info"))
                 .setArgSetter(helper -> new Object[]{"?","?"});
         addElement(TARGET,"entity")
-                .setVisibility(helper -> helper.getDebugBool("show_target_info"))
+                .setVisibility(helper -> ChannelHelper.getDebugBool("show_target_info"))
                 .setArgSetter(helper -> new Object[]{"?","?"});
         addElement(OTHER,"blocked.mods",true,5000)
                 .setVisibility(helper -> true)
                 .setArgSetter(helper -> {
-                    Debug debug = helper.getDebug();
+                    Debug debug = ChannelHelper.getDebug();
                     if(Objects.isNull(debug)) return new Object[]{"Unknown"};
                     StringJoiner joiner = new StringJoiner(", ");
-                    for(Entry<String,List<String>> mod : helper.getDebug().getFormattedBlockedMods().entrySet()) {
+                    for(Entry<String,List<String>> mod : ChannelHelper.getDebug().getFormattedBlockedMods().entrySet()) {
                         TextAPI<?> text = getTranslated("other","blocked.mod",mod.getKey(),mod.getValue());
                         if(Objects.nonNull(text)) joiner.add(text.getApplied());
                     }

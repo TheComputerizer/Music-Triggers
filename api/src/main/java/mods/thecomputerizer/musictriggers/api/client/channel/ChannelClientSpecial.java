@@ -71,7 +71,7 @@ public abstract class ChannelClientSpecial extends ChannelClient {
     public void playReference(AudioRef ref, Vector3i pos) {
         if(ref instanceof AudioContainer) {
             AudioContainer container = (AudioContainer)ref;
-            AudioTrack track = container.checkState(container.getTrack());
+            AudioTrack track = container.getTrack();
             if(Objects.nonNull(track)) {
                 this.playingName = container.getName();
                 this.player.playTrack(track);

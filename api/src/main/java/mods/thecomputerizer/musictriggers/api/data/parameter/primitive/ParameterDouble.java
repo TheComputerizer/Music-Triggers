@@ -15,6 +15,36 @@ public class ParameterDouble extends ParameterNumber<Double> {
     public ParameterDouble(ByteBuf buf) {
         super(buf);
     }
+    
+    @Override public ParameterDouble copy() {
+        ParameterDouble copy = new ParameterDouble(this.defaultValue);
+        copy.value = this.value;
+        return copy;
+    }
+    
+    @Override public boolean isByte() {
+        return false;
+    }
+    
+    @Override public boolean isDouble() {
+        return true;
+    }
+    
+    @Override public boolean isFloat() {
+        return false;
+    }
+    
+    @Override public boolean isInt() {
+        return false;
+    }
+    
+    @Override public boolean isLong() {
+        return false;
+    }
+    
+    @Override public boolean isShort() {
+        return false;
+    }
 
     @Override
     protected Double read(ByteBuf buf) {

@@ -21,8 +21,8 @@ public class PlaybackScreen extends MTGUIScreen {
     
     private ChannelAPI channel;
     
-    public PlaybackScreen(ScreenAPI parent, MinecraftWindow window, int guiScale) {
-        super(parent,"playback",window,guiScale);
+    public PlaybackScreen(ScreenAPI parent, MTScreenInfo typeInfo, MinecraftWindow window, int guiScale) {
+        super(parent,typeInfo,window,guiScale);
         for(ChannelAPI channel : ChannelHelper.getClientHelper().getChannels().values()) {
             if(Objects.nonNull(channel) && channel.isClientChannel() && !(channel instanceof ChannelClientSpecial)) {
                 this.channel = channel;
@@ -53,6 +53,6 @@ public class PlaybackScreen extends MTGUIScreen {
     }
     
     public void skipSong() {
-        if(this.channel instanceof ChannelClient) this.channel.getPlayer().stopTrack();
+        if(this.channel instanceof ChannelClient) this.channel.getPlayer().stopCurrentTrack();
     }
 }

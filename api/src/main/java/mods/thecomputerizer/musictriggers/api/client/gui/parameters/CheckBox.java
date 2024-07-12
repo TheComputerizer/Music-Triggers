@@ -1,6 +1,7 @@
-package mods.thecomputerizer.musictriggers.api.client.gui;
+package mods.thecomputerizer.musictriggers.api.client.gui.parameters;
 
 import lombok.Setter;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.ParameterLink.ParameterElement;
 import mods.thecomputerizer.shadow.org.joml.Vector3d;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.ScreenHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Selectable;
@@ -16,7 +17,7 @@ import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
 import static mods.thecomputerizer.theimpossiblelibrary.api.client.render.ColorHelper.WHITE;
 import static mods.thecomputerizer.theimpossiblelibrary.api.common.block.Facing.Axis.Y;
 
-public class CheckBox extends WidgetGroup implements ParameterElement, Selectable {
+public class CheckBox extends WidgetGroup implements Selectable {
     
     public static final TextureWrapper CHECKED = checkboxTexture(true,false);
     public static final TextureWrapper CHECKED_HOVER = checkboxTexture(true,true);
@@ -28,6 +29,7 @@ public class CheckBox extends WidgetGroup implements ParameterElement, Selectabl
         return TextureWrapper.of(MODID,path);
     }
     
+    private final ParameterElement link;
     private final ShapeWidget checked;
     private final ShapeWidget checkedHover;
     private final ShapeWidget hoverBackground;
@@ -36,8 +38,9 @@ public class CheckBox extends WidgetGroup implements ParameterElement, Selectabl
     @Setter private boolean selected;
     private final double sideLength;
     
-    public CheckBox(boolean selected, double sideLength, double x, double y) {
-        this.selected = selected;
+    public CheckBox(ParameterElement link, double sideLength, double x, double y) {
+        this.link = link;
+        this.selected = (Boolean)link.getValue();
         this.sideLength = sideLength;
         Shape shape = ShapeHelper.square(Y,sideLength,RenderHelper.getCurrentHeightRatio());
         this.checked = ShapeWidget.from(shape,CHECKED);
@@ -51,7 +54,7 @@ public class CheckBox extends WidgetGroup implements ParameterElement, Selectabl
     }
     
     @Override public CheckBox copy() {
-        CheckBox copy = new CheckBox(this.selected,this.sideLength,this.x,this.y);
+        CheckBox copy = new CheckBox(this.link,this.sideLength,this.x,this.y);
         copy.copyGroup(this);
         return copy;
     }
@@ -90,7 +93,7 @@ public class CheckBox extends WidgetGroup implements ParameterElement, Selectabl
         if(isHovering(mouseX,mouseY)) {
             this.selected = !this.selected;
             playLeftClickSound();
-            save(getParent(),this.selected);
+            this.link.save(this.selected);
             return true;
         }
         return false;

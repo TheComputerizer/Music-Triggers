@@ -68,7 +68,7 @@ public class ChannelClient extends ChannelAPI {
     }
     
     public boolean checkFocus() {
-        return MTClient.isFocused() || !getHelper().getDebugBool("pause_unless_focused");
+        return MTClient.isFocused() || !ChannelHelper.getDebugBool("pause_unless_focused");
     }
     
     public boolean checkJukebox(boolean jukebox) {
@@ -87,8 +87,8 @@ public class ChannelClient extends ChannelAPI {
     }
 
     protected void configure(AudioConfiguration config) {
-        config.setResamplingQuality(EnumHelper.getEnumOrDefault(getHelper().getDebugString("resampling_quality"),ResamplingQuality.class,HIGH));
-        config.setOpusEncodingQuality(getHelper().getDebugNumber("encoding_quality").intValue());
+        config.setResamplingQuality(EnumHelper.getEnumOrDefault(ChannelHelper.getDebugString("resampling_quality"),ResamplingQuality.class,HIGH));
+        config.setOpusEncodingQuality(ChannelHelper.getDebugNumber("encoding_quality").intValue());
         config.setOutputFormat(DISCORD_PCM_S16_BE);
     }
 
@@ -252,7 +252,7 @@ public class ChannelClient extends ChannelAPI {
     }
     
     @Override public void stopped() {
-        this.player.stopTrack();
+        this.player.stopCurrentTrack();
         super.stopped();
         this.playingPool = null;
     }

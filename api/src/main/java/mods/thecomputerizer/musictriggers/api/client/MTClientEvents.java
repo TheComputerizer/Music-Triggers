@@ -99,7 +99,7 @@ public class MTClientEvents {
     private static void onRenderOverlayText(RenderOverlayTextEventWrapper<?> wrapper) {
         if(!MTGUIScreen.isActive) {
             ChannelHelper helper = ChannelHelper.getClientHelper();
-            if(Objects.nonNull(helper) && helper.getDebugBool("enable_debug_info")) {
+            if(Objects.nonNull(helper) && ChannelHelper.getDebugBool("enable_debug_info")) {
                 MinecraftAPI mc = wrapper.getMinecraft();
                 helper.getDebugInfo().toLines(mc.getFont(),(int)mc.getWindow().getWidthF(),wrapper.getLeft());
             }

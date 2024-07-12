@@ -15,6 +15,36 @@ public class ParameterShort extends ParameterNumber<Short> {
     public ParameterShort(ByteBuf buf) {
         super(buf);
     }
+    
+    @Override public ParameterShort copy() {
+        ParameterShort copy = new ParameterShort(this.defaultValue);
+        copy.value = this.value;
+        return copy;
+    }
+    
+    @Override public boolean isByte() {
+        return false;
+    }
+    
+    @Override public boolean isDouble() {
+        return false;
+    }
+    
+    @Override public boolean isFloat() {
+        return false;
+    }
+    
+    @Override public boolean isInt() {
+        return false;
+    }
+    
+    @Override public boolean isLong() {
+        return false;
+    }
+    
+    @Override public boolean isShort() {
+        return true;
+    }
 
     @Override
     protected Short read(ByteBuf buf) {

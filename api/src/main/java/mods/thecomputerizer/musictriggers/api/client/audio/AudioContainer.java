@@ -35,7 +35,9 @@ public class AudioContainer extends AudioRef {
         if(fade>0) setFade(-fade);
         this.channel.setTrackVolume(getVolume());
     }
-
+    
+    @SuppressWarnings({"CommentedOutCode","RedundantSuppression"}) //WHY IS IT REDUNDANT??
+    /*
     public AudioTrack checkState(@Nullable AudioTrack track) {
         if(Objects.isNull(track)) {
             logWarn("Unable to get audio track!");
@@ -65,6 +67,8 @@ public class AudioContainer extends AudioRef {
             default: return track;
         }
     }
+     */
+     
 
     @Override
     public void close() {
@@ -80,16 +84,16 @@ public class AudioContainer extends AudioRef {
     }
 
     public @Nullable AudioTrack getTrack() {
-        if(this.item instanceof AudioTrack) return (AudioTrack)this.item;
-        if(this.item instanceof AudioPlaylist) {
+        if(this.item instanceof AudioTrack) return ((AudioTrack)this.item).makeClone();
+        else if(this.item instanceof AudioPlaylist) {
             AudioPlaylist playlist = (AudioPlaylist)this.item;
-            if(Objects.nonNull(playlist.getSelectedTrack())) return playlist.getSelectedTrack();
+            if(Objects.nonNull(playlist.getSelectedTrack())) return playlist.getSelectedTrack().makeClone();
             List<AudioTrack> tracks = playlist.getTracks();
             if(Objects.nonNull(tracks) && !tracks.isEmpty()) {
                 AudioTrack track = tracks.get(this.playlistIndex);
                 this.playlistIndex++;
                 if(this.playlistIndex>=tracks.size()) this.playlistIndex = 0;
-                return track;
+                return track.makeClone();
             }
         }
         return null;
@@ -115,7 +119,7 @@ public class AudioContainer extends AudioRef {
         if(this.queued) {
             if(this.loaded) start(this.channel.getActiveTrigger());
             return;
-        }
+        } else if(this.loading || !this.loaded) return;
         for(Loop loop : this.loops) loop.run();
         if(this.fade>0) {
             if(this.fadeFactor==0f) this.fade = 0;
@@ -211,13 +215,13 @@ public class AudioContainer extends AudioRef {
             logFatal("Cannot play track on missing audio player!");
             return;
         }
-        AudioTrack track = checkState(getTrack());
+        AudioTrack track = getTrack();
         if(Objects.isNull(track)) return;
-        checkFade(Objects.nonNull(trigger) ? trigger.getParameterAsInt("fade_in") : 0);
+        track.stop();
+        checkFade(Objects.nonNull(trigger) && trigger.isFirstTrack() ? trigger.getParameterAsInt("fade_in") : 0);
         setPosition(track);
         player.setFilterFactory(this::setFilters);
         player.playTrack(track);
-        logInfo("Playing track");
         ChannelHelper helper = this.channel.getHelper();
         if(!"jukebox".equals(getChannelName()) && !"preview".equals(getChannelName()) && helper.isSyncable())
             MTNetwork.sendToServer(new MessageCurrentSong<>(helper,getChannelName(),this.name),false);
@@ -246,6 +250,6 @@ public class AudioContainer extends AudioRef {
             Link link = trigger.getActiveLink();
             if(Objects.nonNull(link)) link.setSnapshotInherit(this.channel.getPlayingSongTime());
         }
-        this.channel.getPlayer().stopTrack();
+        this.channel.getPlayer().stopCurrentTrack();
     }
 }

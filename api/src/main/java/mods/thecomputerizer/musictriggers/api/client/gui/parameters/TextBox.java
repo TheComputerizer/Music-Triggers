@@ -1,5 +1,6 @@
-package mods.thecomputerizer.musictriggers.api.client.gui;
+package mods.thecomputerizer.musictriggers.api.client.gui.parameters;
 
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.ParameterLink.ParameterElement;
 import mods.thecomputerizer.shadow.org.joml.Vector3d;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.BasicTypeableWidget;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.ShapeWidget;
@@ -17,20 +18,22 @@ import static mods.thecomputerizer.theimpossiblelibrary.api.client.render.ColorH
 import static mods.thecomputerizer.theimpossiblelibrary.api.client.render.ColorHelper.WHITE;
 import static mods.thecomputerizer.theimpossiblelibrary.api.common.block.Facing.Axis.Y;
 
-public class TextBox extends BasicTypeableWidget implements ParameterElement {
+public class TextBox extends BasicTypeableWidget {
     
+    private final ParameterElement link;
     private final Widget backgroundHover;
     private final Shape backgroundShape;
     
-    public TextBox(TextBuffer text, double x, double y, double width) {
+    public TextBox(ParameterElement link, TextBuffer text, double x, double y, double width) {
         super(text,x,y,-1);
+        this.link = link;
         this.backgroundShape = ShapeHelper.plane(Y,width,RenderHelper.getScaledFontHeight()*1.5d);
         this.backgroundHover = ShapeWidget.from(this.backgroundShape,WHITE.withAlpha(1f/3f));
         this.backgroundHover.setParent(this);
     }
     
     @Override public TextBox copy() {
-        TextBox copy = new TextBox(this.text.copy(),this.x,this.y,this.width);
+        TextBox copy = new TextBox(link,this.text.copy(),this.x,this.y,this.width);
         copy.copyBasic(this);
         this.cursorBlinkCounter = copy.cursorBlinkCounter;
         this.selected = copy.selected;
@@ -72,7 +75,7 @@ public class TextBox extends BasicTypeableWidget implements ParameterElement {
     
     @Override protected String onTextRemoved() {
         String removed = super.onTextRemoved();
-        if(StringUtils.isNotEmpty(removed)) save(getParent(),toString());
+        if(StringUtils.isNotEmpty(removed)) this.link.save(toString());
         return removed;
     }
 }

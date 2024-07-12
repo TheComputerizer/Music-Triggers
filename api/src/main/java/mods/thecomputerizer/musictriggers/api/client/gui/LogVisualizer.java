@@ -17,8 +17,8 @@ import static mods.thecomputerizer.theimpossiblelibrary.api.client.render.TextBu
 
 public class LogVisualizer extends MTGUIScreen {
     
-    public LogVisualizer(ScreenAPI parent, MinecraftWindow window, int guiScale) {
-        super(parent,"log",window,guiScale);
+    public LogVisualizer(ScreenAPI parent, MTScreenInfo typeInfo, MinecraftWindow window, int guiScale) {
+        super(parent,typeInfo,window,guiScale);
         addTextBackground(0d,0d,2d,1.8d,v -> {
             WidgetList list = new ReverseList(TextWidget.literal("message"));
             list.setSpacing(0.05d);

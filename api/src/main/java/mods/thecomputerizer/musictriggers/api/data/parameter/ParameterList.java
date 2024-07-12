@@ -25,6 +25,56 @@ public class ParameterList<E> extends Parameter<List<E>> { //TODO Does not curre
         this.type = (Class<E>)ClassHelper.findClass(NetworkHelper.readString(buf));
     }
     
+    @Override public ParameterList<E> copy() {
+        ParameterList<E> copy = new ParameterList<>(this.type,this.defaultValue);
+        copy.value = this.value;
+        return copy;
+    }
+    
+    @Override public boolean isBool() {
+        return false;
+    }
+    
+    @Override public boolean isByte() {
+        return false;
+    }
+    
+    @Override public boolean isDouble() {
+        return false;
+    }
+    
+    @Override public boolean isFloat() {
+        return false;
+    }
+    
+    @Override public boolean isInt() {
+        return false;
+    }
+    
+    @Override public boolean isList() {
+        return true;
+    }
+    
+    @Override public boolean isLong() {
+        return false;
+    }
+    
+    @Override public boolean isNumber() {
+        return false;
+    }
+    
+    @Override public boolean isPrimitive() {
+        return false;
+    }
+    
+    @Override public boolean isShort() {
+        return false;
+    }
+    
+    @Override public boolean isString() {
+        return false;
+    }
+    
     @SuppressWarnings("unchecked") @Override
     protected List<E> read(ByteBuf buf) {
         return (List<E>)NetworkHelper.readList(buf,() -> GenericUtils.parseGenericType(NetworkHelper.readString(buf),this.type));

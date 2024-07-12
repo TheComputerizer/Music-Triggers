@@ -15,6 +15,36 @@ public class ParameterInt extends ParameterNumber<Integer> {
     public ParameterInt(ByteBuf buf) {
         super(buf);
     }
+    
+    @Override public ParameterInt copy() {
+        ParameterInt copy = new ParameterInt(this.defaultValue);
+        copy.value = this.value;
+        return copy;
+    }
+    
+    @Override public boolean isByte() {
+        return false;
+    }
+    
+    @Override public boolean isDouble() {
+        return false;
+    }
+    
+    @Override public boolean isFloat() {
+        return false;
+    }
+    
+    @Override public boolean isInt() {
+        return true;
+    }
+    
+    @Override public boolean isLong() {
+        return false;
+    }
+    
+    @Override public boolean isShort() {
+        return false;
+    }
 
     @Override
     protected Integer read(ByteBuf buf) {

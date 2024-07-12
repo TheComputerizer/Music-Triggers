@@ -16,7 +16,57 @@ public class ParameterBool extends Parameter<Boolean> {
     public ParameterBool(ByteBuf buf) {
         super(buf);
     }
-
+    
+    @Override public ParameterBool copy() {
+        ParameterBool copy = new ParameterBool(this.defaultValue);
+        copy.value = this.value;
+        return copy;
+    }
+    
+    @Override public boolean isBool() {
+        return true;
+    }
+    
+    @Override public boolean isByte() {
+        return false;
+    }
+    
+    @Override public boolean isDouble() {
+        return false;
+    }
+    
+    @Override public boolean isFloat() {
+        return false;
+    }
+    
+    @Override public boolean isInt() {
+        return false;
+    }
+    
+    @Override public boolean isList() {
+        return false;
+    }
+    
+    @Override public boolean isLong() {
+        return false;
+    }
+    
+    @Override public boolean isNumber() {
+        return false;
+    }
+    
+    @Override public boolean isPrimitive() {
+        return true;
+    }
+    
+    @Override public boolean isShort() {
+        return false;
+    }
+    
+    @Override public boolean isString() {
+        return false;
+    }
+    
     @Override
     protected Boolean read(ByteBuf buf) {
         return buf.readBoolean();

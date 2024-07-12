@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.Setter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.TriggerContextClient;
+import mods.thecomputerizer.musictriggers.api.client.gui.MTScreenInfo;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.WrapperLink;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.jukebox.RecordElement;
@@ -14,6 +16,9 @@ import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
 import mods.thecomputerizer.musictriggers.api.data.nbt.NBTLoadable;
 import mods.thecomputerizer.musictriggers.api.data.redirect.RedirectElement;
+import mods.thecomputerizer.musictriggers.api.data.render.CardAPI;
+import mods.thecomputerizer.musictriggers.api.data.render.ImageElement;
+import mods.thecomputerizer.musictriggers.api.data.render.TitleElement;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.Link;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State;
@@ -120,12 +125,21 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
         return this.selector.getActiveTrigger();
     }
     
+    public WrapperLink getCommandsLink(MTScreenInfo info) {
+        return new WrapperLink(info,this.data.getCommands());
+    }
+    
+    public abstract @Nullable String getFormattedSongTime();
+    
     private String getLogPrefix() {
         return getLogType()+" | Channel";
     }
     
     public abstract String getLogType();
-    public abstract @Nullable String getFormattedSongTime();
+    
+    public WrapperLink getMainLink(MTScreenInfo info) {
+        return new WrapperLink(info,this.data.getAudio(),this.data.getTriggers());
+    }
 
     public Collection<TriggerAPI> getPlayableTriggers() {
         Set<TriggerAPI> triggers = new HashSet<>();
@@ -155,10 +169,28 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
         return lines;
     }
     
+    public WrapperLink getRecordsLink(MTScreenInfo info) {
+        return new WrapperLink(info,this.data.getRecords());
+    }
+    
     public Set<String> getRedirectLines() {
         Set<String> lines = new HashSet<>();
         for(RedirectElement redirect : this.data.getRedirects()) lines.add(redirect.toString());
         return lines;
+    }
+    
+    public WrapperLink getRedirectLink(MTScreenInfo info) {
+        return new WrapperLink(info,this.data.getRedirects());
+    }
+    
+    public WrapperLink getRendersLink(MTScreenInfo info) {
+        Set<ImageElement> images = new HashSet<>();
+        Set<TitleElement> titles = new HashSet<>();
+        for(CardAPI card : this.data.getCards()) {
+            if(card instanceof ImageElement) images.add((ImageElement)card);
+            else if(card instanceof TitleElement) titles.add((TitleElement)card);
+        }
+        return new WrapperLink(info,images,titles);
     }
     
     public void getSource(Map<String,Toml> map, String name, String path) {
@@ -227,7 +259,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
 
     @Override
     public void logDebug(String msg, Object ... args) {
-        MTLogger.logDebug(getLogPrefix(), getName(), msg, args);
+        MTLogger.logDebug(getLogPrefix(),getName(),msg,args);
     }
 
     @Override
@@ -317,11 +349,11 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
     public abstract boolean shouldBlockMusicTicker();
     
     public boolean showDebugSongInfo() {
-        return this.helper.getDebugBool("show_channel_info") && this.helper.getDebugBool("show_song_info");
+        return ChannelHelper.getDebugBool("show_channel_info") && ChannelHelper.getDebugBool("show_song_info");
     }
     
     public boolean showDebugTriggerInfo() {
-        return this.helper.getDebugBool("show_channel_info") && this.helper.getDebugBool("show_trigger_info");
+        return ChannelHelper.getDebugBool("show_channel_info") && ChannelHelper.getDebugBool("show_trigger_info");
     }
 
     @Override

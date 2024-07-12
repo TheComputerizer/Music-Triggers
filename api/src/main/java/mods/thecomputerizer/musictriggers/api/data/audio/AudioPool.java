@@ -122,7 +122,7 @@ public class AudioPool extends AudioRef implements NBTLoadable {
 
     @Override
     public void queryInterrupt(@Nullable TriggerAPI next, AudioPlayer player) {
-        if(Objects.isNull(this.queuedAudio)) this.channel.getPlayer().stopTrack();
+        if(Objects.isNull(this.queuedAudio)) this.channel.getPlayer().stopCurrentTrack();
         else this.queuedAudio.queryInterrupt(trigger,player);
     }
     

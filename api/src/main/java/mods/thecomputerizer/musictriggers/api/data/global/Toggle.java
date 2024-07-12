@@ -19,7 +19,7 @@ public class Toggle extends GlobalElement {
     private final List<To> toThese;
 
     public Toggle(ChannelHelper helper, Toml table) {
-        super("Toggle");
+        super("toggle");
         this.helper = helper;
         this.table = table;
         this.fromThese = new ArrayList<>();

@@ -17,6 +17,56 @@ public class ParameterString extends Parameter<String> {
         super(buf);
     }
     
+    @Override public ParameterString copy() {
+        ParameterString copy = new ParameterString(this.defaultValue);
+        copy.value = this.value;
+        return copy;
+    }
+    
+    @Override public boolean isBool() {
+        return false;
+    }
+    
+    @Override public boolean isByte() {
+        return false;
+    }
+    
+    @Override public boolean isDouble() {
+        return false;
+    }
+    
+    @Override public boolean isFloat() {
+        return false;
+    }
+    
+    @Override public boolean isInt() {
+        return false;
+    }
+    
+    @Override public boolean isList() {
+        return false;
+    }
+    
+    @Override public boolean isLong() {
+        return false;
+    }
+    
+    @Override public boolean isNumber() {
+        return false;
+    }
+    
+    @Override public boolean isPrimitive() {
+        return false;
+    }
+    
+    @Override public boolean isShort() {
+        return false;
+    }
+    
+    @Override public boolean isString() {
+        return true;
+    }
+    
     @Override
     protected String read(ByteBuf buf) {
         return NetworkHelper.readString(buf);

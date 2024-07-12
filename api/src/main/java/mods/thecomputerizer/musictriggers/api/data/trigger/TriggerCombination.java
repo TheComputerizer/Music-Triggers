@@ -61,7 +61,7 @@ public class TriggerCombination extends TriggerAPI {
     
     @Override
     public Parameter<?> getParameter(String name) {
-        TriggerAPI priority = TriggerHelper.getPriorityTrigger(this.channel.getHelper(),this.triggers);
+        TriggerAPI priority = TriggerHelper.getPriorityTrigger(this.triggers);
         return Objects.nonNull(priority) ? priority.getParameter(name) : super.getParameter(name);
     }
 
@@ -100,7 +100,7 @@ public class TriggerCombination extends TriggerAPI {
     }
     
     protected void recalculateParameters() {
-        TriggerAPI reference = TriggerHelper.getPriorityTrigger(this.channel.getHelper(),this.triggers);
+        TriggerAPI reference = TriggerHelper.getPriorityTrigger(this.triggers);
         if(Objects.nonNull(reference)) inheritParameters(reference);
     }
 

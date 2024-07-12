@@ -1,9 +1,11 @@
 package mods.thecomputerizer.musictriggers.api.client.gui;
 
-import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.MTClient;
 import mods.thecomputerizer.musictriggers.api.client.MTClientEvents;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.DataLink;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
+import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
+import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
 import mods.thecomputerizer.shadow.org.joml.Vector2d;
 import mods.thecomputerizer.shadow.org.joml.Vector3d;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientHelper;
@@ -46,33 +48,35 @@ import static mods.thecomputerizer.theimpossiblelibrary.api.common.block.Facing.
 import static mods.thecomputerizer.theimpossiblelibrary.api.util.MathHelper.RADIANS_45;
 import static mods.thecomputerizer.theimpossiblelibrary.api.util.MathHelper.RADIANS_90;
 
-public class MTGUIScreen extends ScreenAPI {
+public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
     
     public static final KeyAPI<?> GUI_KEY = KeyHelper.create(String.format("key.%1$s.gui",MODID),
             String.format("key.categories.%1$s",MODID),R);
     
     public static boolean isActive;
     
-    public static MTGUIScreen constructScreen(@Nullable ScreenAPI parent, String type, MinecraftWindow window, int scale) {
-        switch(type) {
+    public static MTGUIScreen constructScreen(@Nullable ScreenAPI parent, MTScreenInfo typeInfo,
+            MinecraftWindow window, int scale) {
+        switch(typeInfo.getType()) {
             case "channels":
-            case "home": return new MTGUIScreen(parent,type,window,scale);
-            case "log": return new LogVisualizer(parent,window,scale);
-            case "playback": return new PlaybackScreen(parent,window,scale);
-            default: return constructParametersScreen(parent,findToml(type),type,window,scale);
+            case "home": return new MTGUIScreen(parent,typeInfo,window,scale);
+            case "commands":
+            case "jukebox":
+            case "main":
+            case "redirect":
+            case "renders":
+            case "toggles": return new WrapperScreen(parent,typeInfo,window,scale);
+            case "log": return new LogVisualizer(parent,typeInfo,window,scale);
+            case "playback": return new PlaybackScreen(parent,typeInfo,window,scale);
+            default: return new ParameterScreen(parent,typeInfo,window,scale);
         }
     }
     
-    public static MTGUIScreen constructParametersScreen(@Nullable ScreenAPI parent, Toml toml, String type,
-            MinecraftWindow window, int scale) {
-        return new ParameterScreen(parent,toml,type,window,scale);
-    }
-    
-    protected static Toml findToml(String type) {
-        switch(type) {
-            case "debug": return ChannelHelper.getGlobalData().getDebug().toToml();
-            case "toggles": return ChannelHelper.getClientHelper().togglesAsToml();
-            default: return Toml.getEmpty();
+    protected static @Nullable DataLink findLink(MTScreenInfo info) {
+        switch(info.getType()) {
+            case "debug": return ChannelHelper.getDebug().getLink(info);
+            case "toggles": return ChannelHelper.getClientHelper().getTogglesLink(info);
+            default: return info.findChannelLink();
         }
     }
     
@@ -117,10 +121,6 @@ public class MTGUIScreen extends ScreenAPI {
         return TextHelper.getTranslated(lang(String.format("%1$s.%2$s.name",category,name)));
     }
     
-    public static ResourceLocationAPI<?> getIconTexture(String type, boolean hover) {
-        return MTRef.res(String.format("textures/gui%1$sicon/%2$s.png",hover ? "/hover/" : "/",type));
-    }
-    
     public static Collection<TextAPI<?>> getTooltip(String category, String type) {
         Collection<TextAPI<?>> lines = new ArrayList<>();
         lines.add(getDisplayName(category, type));
@@ -155,7 +155,7 @@ public class MTGUIScreen extends ScreenAPI {
     }
     
     public static void open() {
-        openRadial(null,"home");
+        openRadial(null,MTScreenInfo.get("home"));
     }
     
     public static void open(MTGUIScreen screen) {
@@ -163,15 +163,15 @@ public class MTGUIScreen extends ScreenAPI {
         isActive = true;
     }
     
-    protected static void openRadial(@Nullable ScreenAPI parent, String screen) {
+    protected static void openRadial(@Nullable ScreenAPI parent, MTScreenInfo info) {
         double heightRatio = RenderHelper.getCurrentHeightRatio();
-        MTGUIScreen mtgui = constructScreen(parent,screen,ClientHelper.getWindow(),ClientHelper.getGuiScale());
-        mtgui.addRadial(heightRatio,getButtonCount(screen),(index,button) -> {
+        MTGUIScreen mtgui = constructScreen(parent,info,ClientHelper.getWindow(),ClientHelper.getGuiScale());
+        mtgui.addRadial(heightRatio,getButtonCount(info.getType()),(index,button) -> {
             button.getShape().setColor(BLACK);
-            String type = getButtonType(screen,index);
+            String type = getButtonType(info.getType(),index);
             Square square = ShapeHelper.square(Y,0.25d,heightRatio);
-            Widget texture = ShapeWidget.from(square,getIconTexture(type,false));
-            Widget hoverTexture = ShapeWidget.from(square.getScaled(0.95d),getIconTexture(type,true));
+            Widget texture = ShapeWidget.from(square,info.getIconTexture(type,false));
+            Widget hoverTexture = ShapeWidget.from(square.getScaled(0.95d),info.getIconTexture(type,true));
             Vector3d pos = button.getShape().getCenterForGroup(VectorHelper.zero3D());
             texture.setX(pos.x);
             texture.setY(pos.y);
@@ -183,14 +183,14 @@ public class MTGUIScreen extends ScreenAPI {
                     button.getShape().getWrapped().getWrapped()),0d,0d),hoverTexture));
             if(Objects.nonNull(type)) setClickFunction(mtgui,button,type);
         });
-        if("home".equals(screen)) {
+        if(info.is("home")) {
             mtgui.addCenterIcon(MTClient.getLogoTexture(),heightRatio,0.25d);
             mtgui.addSquareButton(-0.6d,0.3d,"debug");
             mtgui.addSquareButton(-0.6d,-0.3d,"toggles");
             mtgui.addSquareButton(0.6d,0d,"help");
         } else {
-            double radius = "playback".equals(screen) ? 0.2d : 0.18d;
-            mtgui.addCenterIcon(getIconTexture(screen,false),heightRatio,radius);
+            double radius = info.is("playback") ? 0.2d : 0.18d;
+            mtgui.addCenterIcon(info.getIconTexture(false),heightRatio,radius);
         }
         ScreenHelper.open(mtgui);
         isActive = true;
@@ -201,20 +201,9 @@ public class MTGUIScreen extends ScreenAPI {
             switch(type) {
                 case "channels":
                 case "playback": {
-                    openRadial(screen,type);
-                    break;
-                }
-                case "channel_info":
-                case "commands":
-                case "debug":
-                case "help":
-                case "jukebox":
-                case "log":
-                case "main":
-                case "redirect":
-                case "renders":
-                case "toggles": {
-                    open(constructScreen(screen,type,ClientHelper.getWindow(),ClientHelper.getGuiScale()));
+                    MTScreenInfo nextType = screen.typeInfo.next(type);
+                    nextType.setChannel(ChannelHelper.getClientHelper().findFirstUserChannel(),false);
+                    openRadial(screen,nextType);
                     break;
                 }
                 case "reload": {
@@ -229,6 +218,12 @@ public class MTGUIScreen extends ScreenAPI {
                     ((PlaybackScreen)screen).skipSong();
                     break;
                 }
+                default: {
+                    MTScreenInfo nextType = screen.typeInfo.next(type);
+                    nextType.setLink(findLink(nextType));
+                    open(constructScreen(screen,nextType,ClientHelper.getWindow(),ClientHelper.getGuiScale()));
+                    break;
+                }
             }
         });
     }
@@ -237,12 +232,12 @@ public class MTGUIScreen extends ScreenAPI {
     
     }
     
-    protected final String type;
+    protected final MTScreenInfo typeInfo;
     
-    public MTGUIScreen(ScreenAPI parent, String type, MinecraftWindow window, int guiScale) {
-        super(parent,TextHelper.getTranslated(String.format("gui.%1$s.screen.%2$s",MODID,type)),window,guiScale);
-        this.type = type;
-        if(!"home".equals(type)) addBackButton();
+    public MTGUIScreen(ScreenAPI parent, MTScreenInfo typeInfo, MinecraftWindow window, int guiScale) {
+        super(parent,typeInfo.getDisplayName(),window,guiScale);
+        if(!typeInfo.is("home")) addBackButton();
+        this.typeInfo = typeInfo;
     }
     
     protected void addBackButton() {
@@ -279,8 +274,8 @@ public class MTGUIScreen extends ScreenAPI {
     protected void addSquareButton(double x, double y, String iconName) {
         Shape shape = ShapeHelper.square(Y,0.3d,RenderHelper.getCurrentHeightRatio());
         ShapeWidget widget = ShapeWidget.from(shape,BLACK);
-        TextureWrapper texture = new TextureWrapper().setTexture(getIconTexture(iconName,false));
-        TextureWrapper hoverTexture = new TextureWrapper().setTexture(getIconTexture(iconName,true));
+        TextureWrapper texture = new TextureWrapper().setTexture(this.typeInfo.getIconTexture(iconName,false));
+        TextureWrapper hoverTexture = new TextureWrapper().setTexture(this.typeInfo.getIconTexture(iconName,true));
         Widget hover = BasicWidgetGroup.from(ShapeWidget.from(shape),
                 ShapeWidget.from(shape.getScaled(0.75d),hoverTexture),
                 ShapeWidget.outlineFrom(shape.getScaled(1.15d),5f));
@@ -303,8 +298,8 @@ public class MTGUIScreen extends ScreenAPI {
     
     public void addTypeTexture(double offsetX, double offsetY) {
         Shape shape = ShapeHelper.square(Y,0.2d,RenderHelper.getCurrentHeightRatio());
-        TextureWrapper texture = new TextureWrapper().setTexture(getIconTexture(this.type,false));
-        TextWidget text = TextWidget.translated(lang("screen."+this.type)).setColor(GREEN);
+        TextureWrapper texture = new TextureWrapper().setTexture(this.typeInfo.getIconTexture(false));
+        TextWidget text = TextWidget.translated(lang("screen."+this.typeInfo.getType())).setColor(GREEN);
         double textHeight = text.getHeight();
         ShapeWidget widget = ShapeWidget.from(shape,texture,0d,offsetY+0.9d-textHeight*2d-shape.getHeight()/2d);
         double width = ((Math.max(text.getWidth(),widget.getWidth()))/2d)*1.05d;
@@ -328,11 +323,35 @@ public class MTGUIScreen extends ScreenAPI {
         }
     }
     
+    @Override public void logDebug(String msg, Object... args) {
+        MTLogger.logDebug("GUI",this.typeInfo.getType(),msg,args);
+    }
+    
+    @Override public void logError(String msg, Object... args) {
+        MTLogger.logError("GUI",this.typeInfo.getType(),msg,args);
+    }
+    
+    @Override public void logFatal(String msg, Object... args) {
+        MTLogger.logFatal("GUI",this.typeInfo.getType(),msg,args);
+    }
+    
+    @Override public void logInfo(String msg, Object... args) {
+        MTLogger.logInfo("GUI",this.typeInfo.getType(),msg,args);
+    }
+    
+    @Override public void logTrace(String msg, Object... args) {
+        MTLogger.logTrace("GUI",this.typeInfo.getType(),msg,args);
+    }
+    
+    @Override public void logWarn(String msg, Object... args) {
+        MTLogger.logWarn("GUI",this.typeInfo.getType(),msg,args);
+    }
+    
     @Override public void onScreenClosed() {
         if(Objects.isNull(this.parentScreen)) isActive = false;
     }
     
     @Override public boolean shouldPauseGame() {
-        return !"playback".equals(this.type);
+        return !this.typeInfo.is("playback");
     }
 }

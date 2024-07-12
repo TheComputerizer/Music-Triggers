@@ -19,6 +19,8 @@ import mods.thecomputerizer.musictriggers.api.client.channel.ChannelClient;
 import mods.thecomputerizer.musictriggers.api.client.MTDebugInfo;
 import mods.thecomputerizer.musictriggers.api.client.channel.ChannelJukebox;
 import mods.thecomputerizer.musictriggers.api.client.channel.ChannelPreview;
+import mods.thecomputerizer.musictriggers.api.client.gui.MTScreenInfo;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.WrapperLink;
 import mods.thecomputerizer.musictriggers.api.config.ConfigVersionManager;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
@@ -56,6 +58,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlParsingException;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlWritingException;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.CustomTick;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.RandomHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
 import org.apache.commons.lang3.StringUtils;
@@ -92,6 +95,27 @@ public class ChannelHelper implements NBTLoadable {
             if(Objects.nonNull(helper)) helper.flipDebugParameter(name);
         } else for(ChannelHelper helper : PLAYER_MAP.values())
             if(!helper.client) helper.flipDebugParameter(name);
+    }
+    
+    public static Debug getDebug() {
+        return globalData.getDebug();
+    }
+    
+    public static boolean getDebugBool(String name) {
+        Debug debug = getDebug();
+        return Objects.nonNull(debug) && debug.getParameterAsBoolean(name);
+    }
+    
+    public static Number getDebugNumber(String name) {
+        Debug debug = getDebug();
+        return Objects.nonNull(debug) ? debug.getParameterAsNumber(name) : 0;
+    }
+    
+    public static String getDebugString(String name) {
+        Debug debug = getDebug();
+        if(Objects.isNull(debug)) return "";
+        String ret = debug.getParameterAsString(name);
+        return Objects.nonNull(ret) ? ret : "";
     }
 
     public static int getTickRate() {
@@ -354,6 +378,14 @@ public class ChannelHelper implements NBTLoadable {
         return channel;
     }
     
+    public @Nullable ChannelAPI findFirstUserChannel() {
+        for(ChannelAPI channel : this.channels.values())
+            if(channel.isClientChannel()==this.client && !Misc.equalsAny(channel.getName(),"jukebox","preview"))
+                return channel;
+        logGlobalWarn("Unable to find any user specified channels!");
+        return null;
+    }
+    
     public void flipDebugParameter(String name) {
         Debug debug = getDebug();
         if(Objects.nonNull(debug)) debug.flipBooleanParameter(name);
@@ -363,27 +395,6 @@ public class ChannelHelper implements NBTLoadable {
         synchronized(this.channels) {
             this.channels.values().forEach(consumer);
         }
-    }
-
-    public @Nullable Debug getDebug() {
-        return globalData.getDebug();
-    }
-
-    public boolean getDebugBool(String name) {
-        Debug debug = getDebug();
-        return Objects.nonNull(debug) && debug.getParameterAsBoolean(name);
-    }
-
-    public Number getDebugNumber(String name) {
-        Debug debug = getDebug();
-        return Objects.nonNull(debug) ? debug.getParameterAsNumber(name) : 0;
-    }
-
-    public String getDebugString(String name) {
-        Debug debug = getDebug();
-        if(Objects.isNull(debug)) return "";
-        String ret = debug.getParameterAsString(name);
-        return Objects.nonNull(ret) ? ret : "";
     }
     
     public MessageInitChannels<?> getInitMessage() {
@@ -424,6 +435,10 @@ public class ChannelHelper implements NBTLoadable {
             return null;
         }
         return (ChannelPreview)this.channels.get("preview");
+    }
+    
+    public WrapperLink getTogglesLink(MTScreenInfo info) {
+        return new WrapperLink(info,this.toggles);
     }
 
     private void initChannel(String name, Toml info) {
@@ -592,7 +607,7 @@ public class ChannelHelper implements NBTLoadable {
     public void tickChannels() {
         if(loader.isLoading()) return; //Why is this needed here when it's already in the static method? I have no idea
         boolean jukebox = this.client && checkForJukebox();
-        boolean slow = (this.ticks++)%this.getDebugNumber("slow_tick_factor").intValue()==0;
+        boolean slow = (this.ticks++)%ChannelHelper.getDebugNumber("slow_tick_factor").intValue()==0;
         for(ChannelAPI channel : this.channels.values()) {
             channel.tick(jukebox);
             if(slow) channel.tickSlow();

@@ -23,14 +23,29 @@ public abstract class Parameter<T> {
         this.value = read(buf);
     }
     
+    public abstract Parameter<T> copy();
+    
     @Override
     public boolean equals(Object other) {
         return other instanceof Parameter<?> && GenericUtils.matches(this.value,((Parameter<?>)other).value);
     }
+    
+    public abstract boolean isBool();
+    public abstract boolean isByte();
 
     public boolean isDefault() {
         return GenericUtils.matches(this.value,this.defaultValue);
     }
+    
+    public abstract boolean isDouble();
+    public abstract boolean isFloat();
+    public abstract boolean isInt();
+    public abstract boolean isList();
+    public abstract boolean isLong();
+    public abstract boolean isNumber();
+    public abstract boolean isPrimitive();
+    public abstract boolean isShort();
+    public abstract boolean isString();
 
     protected abstract T read(ByteBuf buf);
     public abstract void setValue(@Nullable Object value);

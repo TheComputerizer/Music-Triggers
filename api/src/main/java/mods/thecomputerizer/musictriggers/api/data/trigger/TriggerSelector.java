@@ -6,6 +6,7 @@ import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelData;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.basic.BasicTrigger;
 
@@ -75,7 +76,7 @@ public class TriggerSelector extends ChannelElement {
             }
             else if(tPriority==priorityVal) priority.add(trigger);
             else {
-                if(this.channel.getHelper().getDebugBool("reverse_priority")) {
+                if(ChannelHelper.getDebugBool("reverse_priority")) {
                     if(tPriority<priorityVal) {
                         priority.clear();
                         priority.add(trigger);
@@ -93,8 +94,8 @@ public class TriggerSelector extends ChannelElement {
 
     protected @Nullable TriggerAPI getPriorityTrigger(Collection<TriggerAPI> registeredTriggers) {
         Collection<TriggerAPI> triggers = collectPlayableTriggers(registeredTriggers);
-        if(this.channel.getHelper().getDebugBool("independent_audio_pools"))
-            return TriggerHelper.getPriorityTrigger(this.channel.getHelper(),triggers);
+        if(ChannelHelper.getDebugBool("independent_audio_pools"))
+            return TriggerHelper.getPriorityTrigger(triggers);
         else {
             if(triggers.isEmpty()) return null;
             triggers = getPriorityTriggers(triggers);

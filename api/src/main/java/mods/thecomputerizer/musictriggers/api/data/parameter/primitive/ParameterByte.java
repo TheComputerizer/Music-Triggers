@@ -15,7 +15,37 @@ public class ParameterByte extends ParameterNumber<Byte> {
     public ParameterByte(ByteBuf buf) {
         super(buf);
     }
-
+    
+    @Override public ParameterByte copy() {
+        ParameterByte copy = new ParameterByte(this.defaultValue);
+        copy.value = this.value;
+        return copy;
+    }
+    
+    @Override public boolean isByte() {
+        return true;
+    }
+    
+    @Override public boolean isDouble() {
+        return false;
+    }
+    
+    @Override public boolean isFloat() {
+        return false;
+    }
+    
+    @Override public boolean isInt() {
+        return false;
+    }
+    
+    @Override public boolean isLong() {
+        return false;
+    }
+    
+    @Override public boolean isShort() {
+        return false;
+    }
+    
     @Override
     protected Byte read(ByteBuf buf) {
         return buf.readByte();
