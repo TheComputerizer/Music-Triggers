@@ -455,7 +455,6 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
         
         @Override public void activate() {
             if(this.channel.areTheseActive(this.requiredTriggers)) {
-                logDebug("Link test!");
                 this.snapshotLink = this.channel.getPlayingSongTime();
                 this.targetChannel.getActiveTrigger().activeLink = this;
                 this.channel.disable(this);

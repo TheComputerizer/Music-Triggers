@@ -16,7 +16,7 @@ import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
 import static mods.thecomputerizer.theimpossiblelibrary.api.client.render.ColorHelper.WHITE;
 import static mods.thecomputerizer.theimpossiblelibrary.api.common.block.Facing.Axis.Y;
 
-public class CheckBox extends WidgetGroup implements Selectable {
+public class CheckBox extends WidgetGroup implements ParameterElement, Selectable {
     
     public static final TextureWrapper CHECKED = checkboxTexture(true,false);
     public static final TextureWrapper CHECKED_HOVER = checkboxTexture(true,true);
@@ -90,6 +90,7 @@ public class CheckBox extends WidgetGroup implements Selectable {
         if(isHovering(mouseX,mouseY)) {
             this.selected = !this.selected;
             playLeftClickSound();
+            save(getParent(),this.selected);
             return true;
         }
         return false;

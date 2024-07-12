@@ -13,7 +13,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.client.render.TextBuffer;
 
 import java.util.Objects;
 
-import static mods.thecomputerizer.theimpossiblelibrary.api.client.render.TextBuffer.Alignment.LEFT;
+import static mods.thecomputerizer.theimpossiblelibrary.api.client.render.TextBuffer.Alignment.TOP_LEFT;
 
 public class LogVisualizer extends MTGUIScreen {
     
@@ -24,7 +24,7 @@ public class LogVisualizer extends MTGUIScreen {
             list.setSpacing(0.05d);
             for(LogMessage message : MTLogger.getGUISnapshot()) {
                 TextBuffer buffer = TextBuffer.literalBuilder(message.getDisplay())
-                        .setColor(message.getColor()).setAlignment(LEFT).setTranslateX(list.getScrollBar().getWidth()*2d).build();
+                        .setColor(message.getColor()).setAlignment(TOP_LEFT).setTranslateX(list.getScrollBar().getWidth()*2d).build();
                 double textWidth = list.getWidth()*0.95d;
                 TextWidget text = TextWidget.from(buffer);
                 text.setWidth(textWidth);

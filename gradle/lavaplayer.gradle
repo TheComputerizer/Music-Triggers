@@ -5,29 +5,36 @@ repositories {
         name = 'JitPack'
         url = uri('https://jitpack.io')
         content {
-            [ 'com.github.devoxin', 'com.github.JustRed23', 'com.github.lavalink-devs',
-              'com.github.lavalink-devs.youtube-source', 'com.github.natanbc', 'com.github.walkyst',
-              'com.github.walkyst.JAADec-fork', 'com.github.walkyst.lavaplayer-fork' ].forEach { includeGroup it }
+            [ 'com.github.devoxin', 'com.github.devoxin.lavaplayer', 'com.github.JustRed23','com.github.natanbc',
+              'com.github.walkyst', 'com.github.walkyst.JAADec-fork' ].forEach { includeGroup it }
+        }
+    }
+    maven {
+        name = 'LavaLink'
+        url = uri('https://maven.lavalink.dev/releases')
+        content {
+            [ 'dev.lavalink.youtube' ].forEach { includeGroup it }
         }
     }
 }
 
 dependencies {
     //lavaplayer base
-    shaded("com.github.walkyst:lavaplayer-fork:${lava_version}") { transitive = false }
+    shaded("com.github.devoxin:lavaplayer:${lava_version}") { transitive = false }
 
     //lavaplayer dependencies
     shaded("com.github.devoxin:lavaplayer-natives-fork:${lava_natives_version}") { transitive = false }
-    shaded("com.github.lavalink-devs.youtube-source:common:${youtube_source_version}") { transitive = false }
+    shaded("com.github.devoxin.lavaplayer:lava-common:${lava_version}") { transitive = false }
+    shaded("com.github.devoxin.lavaplayer:lavaplayer:${lava_version}") { transitive = false }
+    shaded("com.github.devoxin.lavaplayer:lavaplayer-ext-format-xm:${lava_version}") { transitive = false }
+    shaded("com.github.devoxin.lavaplayer:lavaplayer-ext-youtube-rotator:${lava_version}") { transitive = false }
+    shaded("com.github.devoxin.lavaplayer:lavaplayer-stream-merger:${lava_version}") { transitive = false }
+    shaded("com.github.devoxin.lavaplayer:lavaplayer-test-samples:${lava_version}") { transitive = false }
+    shaded("com.github.devoxin:LavaDSPX:${lava_dspx_version}") { transitive = false }
     shaded("com.github.natanbc:native-loader:${native_loader_version}") { transitive = false }
     shaded("com.github.walkyst:ibxm-fork:${ibxm_version}") { transitive = false }
     shaded("com.github.walkyst.JAADec-fork:jaadec-ext-aac:${jaadec_version}") { transitive = false }
-    shaded("com.github.walkyst.lavaplayer-fork:lava-common:${lava_version}") { transitive = false }
-    shaded("com.github.walkyst.lavaplayer-fork:lavaplayer:${lava_version}") { transitive = false }
-    shaded("com.github.walkyst.lavaplayer-fork:lavaplayer-ext-format-xm:${lava_version}") { transitive = false }
-    shaded("com.github.walkyst.lavaplayer-fork:lavaplayer-ext-youtube-rotator:${lava_version}") { transitive = false }
-    shaded("com.github.walkyst.lavaplayer-fork:lavaplayer-stream-merger:${lava_version}") { transitive = false }
-    shaded("com.github.walkyst.lavaplayer-fork:lavaplayer-test-samples:${lava_version}") { transitive = false }
-    shaded("com.github.JustRed23:lavadsp:${lava_filters_version}") { transitive = false }
-    shaded("com.github.JustRed23:lavadsp-natives:${lava_filters_version}") { transitive = false }
+    shaded("com.github.JustRed23:lavadsp:${lava_dsp_version}") { transitive = false }
+    shaded("com.github.JustRed23:lavadsp-natives:${lava_dsp_version}") { transitive = false }
+    shaded("dev.lavalink.youtube:common:${youtube_source_version}") { transitive = false }
 }

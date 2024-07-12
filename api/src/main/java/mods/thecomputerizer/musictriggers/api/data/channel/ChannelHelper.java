@@ -582,9 +582,11 @@ public class ChannelHelper implements NBTLoadable {
     }
     
     protected void sync() {
-        if(Objects.isNull(this.stateMsg)) this.stateMsg = new MessageTriggerStates<>(this);
-        for(ChannelAPI channel : this.channels.values()) channel.getSync().addSynced(this.stateMsg);
-        if(this.stateMsg.readyToSend() && MTNetwork.send(this.stateMsg,this,false)) this.stateMsg = null;
+        if(this.syncable) {
+            if(Objects.isNull(this.stateMsg)) this.stateMsg = new MessageTriggerStates<>(this);
+            for(ChannelAPI channel : this.channels.values()) channel.getSync().addSynced(this.stateMsg);
+            if(this.stateMsg.readyToSend() && MTNetwork.send(this.stateMsg,this,false)) this.stateMsg = null;
+        }
     }
     
     public void tickChannels() {

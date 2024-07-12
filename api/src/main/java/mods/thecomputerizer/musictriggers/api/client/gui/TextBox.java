@@ -2,26 +2,77 @@ package mods.thecomputerizer.musictriggers.api.client.gui;
 
 import mods.thecomputerizer.shadow.org.joml.Vector3d;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.BasicTypeableWidget;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.ShapeWidget;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Widget;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.render.RenderContext;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.render.RenderHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.render.TextBuffer;
+import mods.thecomputerizer.theimpossiblelibrary.api.shapes.Shape;
+import mods.thecomputerizer.theimpossiblelibrary.api.shapes.ShapeHelper;
+import org.apache.commons.lang3.StringUtils;
 
-public class TextBox extends BasicTypeableWidget {
+import java.util.Objects;
+
+import static mods.thecomputerizer.theimpossiblelibrary.api.client.render.ColorHelper.AQUA;
+import static mods.thecomputerizer.theimpossiblelibrary.api.client.render.ColorHelper.WHITE;
+import static mods.thecomputerizer.theimpossiblelibrary.api.common.block.Facing.Axis.Y;
+
+public class TextBox extends BasicTypeableWidget implements ParameterElement {
     
-    private Widget background;
-    private Widget backgroundHover;
+    private final Widget backgroundHover;
+    private final Shape backgroundShape;
     
-    public TextBox(TextBuffer text, double x, double y) {
+    public TextBox(TextBuffer text, double x, double y, double width) {
         super(text,x,y,-1);
+        this.backgroundShape = ShapeHelper.plane(Y,width,RenderHelper.getScaledFontHeight()*1.5d);
+        this.backgroundHover = ShapeWidget.from(this.backgroundShape,WHITE.withAlpha(1f/3f));
+        this.backgroundHover.setParent(this);
     }
     
     @Override public TextBox copy() {
-        TextBox copy = new TextBox(this.text.copy(),this.x,this.y);
+        TextBox copy = new TextBox(this.text.copy(),this.x,this.y,this.width);
         copy.copyBasic(this);
+        this.cursorBlinkCounter = copy.cursorBlinkCounter;
+        this.selected = copy.selected;
         return copy;
     }
     
     @Override public void draw(RenderContext ctx, Vector3d center, double mouseX, double mouseY) {
+        if(this.backgroundShape.isInside(mouseX-getX(),mouseY-getY(),0d)) {
+            this.backgroundHover.draw(ctx,center,mouseX,mouseY);
+            this.colorOverride = AQUA;
+        } else this.colorOverride = WHITE;
         super.draw(ctx,center,mouseX,mouseY);
+    }
+    
+    @Override public boolean onLeftClick(double x, double y) {
+        if(this.backgroundShape.isInside(x-getX(),y-getY(),0d)) {
+            this.selected = true;
+            double width = getWidth();
+            double parentWidth = Objects.nonNull(this.parent) ? this.parent.getWidth() : 0d;
+            double height = getHeight();
+            Vector3d center = getCenter(0d);
+            int pos = this.text.getCharPos(RenderHelper.getContext(),x,y,getCenter(0d),
+                    getMinX(center.x,width,parentWidth),getMinY(center.y,height),getMaxX(center.x,width,parentWidth),
+                    getMaxY(center.y,height));
+            if(pos!=-1) {
+                this.text.setBlinkerPos(pos);
+                return true;
+            }
+        } else {
+            this.text.setBlinkerVisible(false);
+            this.selected = false;
+        }
+        return false;
+    }
+    
+    @Override protected void onTextAdded(String text) {
+        super.onTextAdded(text);
+    }
+    
+    @Override protected String onTextRemoved() {
+        String removed = super.onTextRemoved();
+        if(StringUtils.isNotEmpty(removed)) save(getParent(),toString());
+        return removed;
     }
 }

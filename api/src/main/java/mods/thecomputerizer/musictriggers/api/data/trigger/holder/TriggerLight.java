@@ -3,8 +3,6 @@ package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
 
-import java.util.Collections;
-
 public class TriggerLight extends HolderTrigger {
 
     public TriggerLight(ChannelAPI channel) {

@@ -233,6 +233,10 @@ public class MTGUIScreen extends ScreenAPI {
         });
     }
     
+    protected void write(Toml toml, String path) {
+    
+    }
+    
     protected final String type;
     
     public MTGUIScreen(ScreenAPI parent, String type, MinecraftWindow window, int guiScale) {
@@ -243,8 +247,9 @@ public class MTGUIScreen extends ScreenAPI {
     
     protected void addBackButton() {
         Button back = Button.basic(getDisplayName("button","back"));
-        back.setX(-1d+(back.getWidth()*0.6d));
-        back.setY(1d-(back.getHeight()));
+        double offset = 2d/1.1d;
+        back.setX(-1d+(back.getWidth()/offset));
+        back.setY(1d-(back.getHeight()/offset));
         back.setClickFunc(button -> ScreenHelper.open(this.parentScreen));
         addWidget(back);
     }
