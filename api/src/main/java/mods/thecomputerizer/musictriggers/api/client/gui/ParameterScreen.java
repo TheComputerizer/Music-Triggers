@@ -15,6 +15,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.WidgetLis
 import mods.thecomputerizer.theimpossiblelibrary.api.client.render.RenderContext;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -30,7 +31,9 @@ public class ParameterScreen extends MTGUIScreen {
             DataList list = new DataList(0.5d, 0d, 1d, 1.8d, 0.05d);
             DataLink link = this.typeInfo.getLink();
             if(link instanceof ParameterLink) {
-                for(ParameterElement parameter : ((ParameterLink)link).getParameters()) {
+                List<ParameterElement> parameters = new ArrayList<>(((ParameterLink)link).getParameters());
+                parameters.sort(Comparator.comparing(e -> e.getDisplayName().toString()));
+                for(ParameterElement parameter : parameters) {
                     list.addButton(parameter.getDisplayName(),b -> {
                         this.activeParameter = parameter;
                         if(Objects.nonNull(this.activeWidget)) this.activeWidget.setVisible(false);

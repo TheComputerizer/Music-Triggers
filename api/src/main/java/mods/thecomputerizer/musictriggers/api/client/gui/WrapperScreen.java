@@ -18,10 +18,10 @@ public class WrapperScreen extends MTGUIScreen {
             DataLink data = this.typeInfo.getLink();
             if(data instanceof WrapperLink) {
                 WrapperLink link = (WrapperLink)data;
-                DataList list = link.getList();
+                DataList list = link.getList(this);
                 addWidget(list);
                 addTypeTexture(-list.getScrollBar().getWidth(),0d);
-                DataList otherList = link.getOtherList();
+                DataList otherList = link.getOtherList(this);
                 if(Objects.nonNull(otherList)) {
                     addWidget(otherList);
                     addTypeTexture(-otherList.getScrollBar().getWidth(),0d);

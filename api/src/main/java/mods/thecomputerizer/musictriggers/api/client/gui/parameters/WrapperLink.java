@@ -1,18 +1,25 @@
 package mods.thecomputerizer.musictriggers.api.client.gui.parameters;
 
+import mods.thecomputerizer.musictriggers.api.client.gui.MTGUIScreen;
 import mods.thecomputerizer.musictriggers.api.client.gui.MTScreenInfo;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
+import static mods.thecomputerizer.musictriggers.api.client.gui.MTGUIScreen.constructScreen;
+import static mods.thecomputerizer.musictriggers.api.client.gui.MTGUIScreen.open;
 
 public class WrapperLink extends DataLink {
     
@@ -37,21 +44,26 @@ public class WrapperLink extends DataLink {
         for(ParameterWrapper wrapper : otherWrappers) this.otherWrappers.add(new WrapperElement(this,wrapper));
     }
     
-    public DataList getList() {
-        DataList list = new DataList(this.dual ? -0.5d : 0d,0d,this.dual ? 1d : 2d,1.8d,0.05d);
-        for(WrapperElement element : this.wrappers) {
-            list.addButton(element.getDisplayName(),b -> {});
+    private DataList addElements(MTGUIScreen screen, double x, double width, Collection<WrapperElement> wrappers) {
+        DataList list = new DataList(x,0d,width,1.8d,0.05d);
+        List<WrapperElement> ordered = new ArrayList<>(wrappers);
+        ordered.sort(Comparator.comparing(e -> e.getDisplayName().toString()));
+        for(WrapperElement element : ordered) {
+            list.addButton(element.getDisplayName(),b -> {
+                MTScreenInfo next = screen.getTypeInfo().next(element.wrapper.getName());
+                next.setLink(element.wrapper.getLink(next));
+                open(constructScreen(screen,next,ClientHelper.getWindow(),ClientHelper.getGuiScale()));
+            });
         }
         return list;
     }
     
-    public @Nullable DataList getOtherList() {
-        if(!this.dual) return null;
-        DataList list = new DataList(0.5d,0d,1d,1.8d,0.05d);
-        for(WrapperElement element : this.otherWrappers) {
-            list.addButton(element.getDisplayName(),b -> {});
-        }
-        return list;
+    public DataList getList(MTGUIScreen screen) {
+        return addElements(screen,this.dual ? -0.5d : 0d,this.dual ? 1d : 2d,this.wrappers);
+    }
+    
+    public @Nullable DataList getOtherList(MTGUIScreen screen) {
+        return this.dual ? addElements(screen,0.5d,1d,this.otherWrappers) : null;
     }
     
     private TextAPI<?> wrapperDesc(String name) {

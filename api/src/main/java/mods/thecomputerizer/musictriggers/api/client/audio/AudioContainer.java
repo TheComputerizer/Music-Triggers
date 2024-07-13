@@ -35,40 +35,6 @@ public class AudioContainer extends AudioRef {
         if(fade>0) setFade(-fade);
         this.channel.setTrackVolume(getVolume());
     }
-    
-    @SuppressWarnings({"CommentedOutCode","RedundantSuppression"}) //WHY IS IT REDUNDANT??
-    /*
-    public AudioTrack checkState(@Nullable AudioTrack track) {
-        if(Objects.isNull(track)) {
-            logWarn("Unable to get audio track!");
-            return null;
-        }
-        switch(track.getState()) {
-            case LOADING: {
-                logWarn("Tried to play track that was still loading!");
-                return null;
-            }
-            case FINISHED: {
-                logDebug("Cloning finished track");
-                return track.makeClone();
-            }
-            case PLAYING: {
-                logInfo("Tried to play track that was already playing!");
-                return null;
-            }
-            case SEEKING: {
-                logInfo("Trying to play track from seeking state");
-                return track;
-            }
-            case STOPPING: {
-                logInfo("Trying to play track while it is stopping?");
-                return track;
-            }
-            default: return track;
-        }
-    }
-     */
-     
 
     @Override
     public void close() {

@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.client.gui;
 
+import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.client.MTClient;
 import mods.thecomputerizer.musictriggers.api.client.MTClientEvents;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.DataLink;
@@ -48,6 +49,7 @@ import static mods.thecomputerizer.theimpossiblelibrary.api.common.block.Facing.
 import static mods.thecomputerizer.theimpossiblelibrary.api.util.MathHelper.RADIANS_45;
 import static mods.thecomputerizer.theimpossiblelibrary.api.util.MathHelper.RADIANS_90;
 
+@Getter
 public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
     
     public static final KeyAPI<?> GUI_KEY = KeyHelper.create(String.format("key.%1$s.gui",MODID),
