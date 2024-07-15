@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.api.client.gui;
 
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.DataLink;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.DataList;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.SelectionLink;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.WrapperLink;
 import mods.thecomputerizer.shadow.org.joml.Vector3d;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.MinecraftWindow;
@@ -9,6 +10,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.ScreenAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.render.RenderContext;
 
 import java.util.Objects;
+import java.util.function.Supplier;
 
 public class WrapperScreen extends MTGUIScreen {
     
@@ -18,18 +20,25 @@ public class WrapperScreen extends MTGUIScreen {
             DataLink data = this.typeInfo.getLink();
             if(data instanceof WrapperLink) {
                 WrapperLink link = (WrapperLink)data;
-                DataList list = link.getList(this);
-                addWidget(list);
-                double typeOffset = -list.getScrollBar().getWidth();
-                DataList otherList = link.getOtherList(this);
-                if(Objects.nonNull(otherList)) {
-                    addWidget(otherList);
-                    autoAddTypeTexture(-otherList.getScrollBar().getWidth());
-                    typeOffset-=1d;
-                }
-                autoAddTypeTexture(typeOffset);
+                addElements(() -> link.getList(this),() -> link.getOtherList(this));
+            } else if(data instanceof SelectionLink) {
+                SelectionLink link = (SelectionLink)data;
+                addElements(() -> link.getList(this),() -> link.getOtherList(this));
             }
         });
+    }
+    
+    public <D extends DataLink> void addElements(Supplier<DataList> getList, Supplier<DataList> getOtherList) {
+        DataList list = getList.get();
+        addWidget(list);
+        double typeOffset = -list.getScrollBar().getWidth();
+        DataList otherList = getOtherList.get();
+        if(Objects.nonNull(otherList)) {
+            addWidget(otherList);
+            autoAddTypeTexture(-otherList.getScrollBar().getWidth());
+            typeOffset-=1d;
+        }
+        autoAddTypeTexture(typeOffset);
     }
     
     public float defaultBackgroundDarkness() {

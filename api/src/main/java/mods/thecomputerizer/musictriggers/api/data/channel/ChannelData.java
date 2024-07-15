@@ -31,6 +31,9 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.Function;
 
+import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.UNIVERSAL_AUDIO;
+import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.UNIVERSAL_TRIGGERS;
+
 @Getter
 public class ChannelData extends ChannelElement {
 
@@ -124,8 +127,8 @@ public class ChannelData extends ChannelElement {
     }
 
     protected void addUniversals(Map<Class<? extends ChannelElement>,UniversalParameters> map) {
-        map.put(AudioRef.class,UniversalParameters.get(this.channel,MTDataRef.UNIVERSAL_AUDIO));
-        map.put(TriggerAPI.class,UniversalParameters.get(this.channel,MTDataRef.UNIVERSAL_TRIGGERS));
+        map.put(AudioRef.class,UniversalParameters.get(this.channel,UNIVERSAL_AUDIO));
+        map.put(TriggerAPI.class,UniversalParameters.get(this.channel,UNIVERSAL_TRIGGERS));
     }
     
     protected void appendUniversals() {

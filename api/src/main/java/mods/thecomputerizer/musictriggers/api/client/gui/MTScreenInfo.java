@@ -5,12 +5,21 @@ import lombok.Setter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.MTClientEvents;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.DataLink;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.DataList;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.ParameterLink;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.ParameterLink.ParameterElement;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.SelectionLink;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.SelectionLink.SelectionElement;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.WrapperLink;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.WrapperLink.WrapperElement;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
+import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
+import mods.thecomputerizer.musictriggers.api.data.redirect.RedirectElement;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerRegistry;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Button;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
@@ -21,9 +30,14 @@ import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 
 import javax.annotation.Nullable;
 
+import java.io.File;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
 
 import static mods.thecomputerizer.musictriggers.api.MTRef.CONFIG_PATH;
 import static mods.thecomputerizer.musictriggers.api.MTRef.GLOBAL_CONFIG;
@@ -39,14 +53,14 @@ public class MTScreenInfo {
         return new MTScreenInfo(parent,type);
     }
     
-    private final MTScreenInfo parent;
+    @Getter private final MTScreenInfo parent;
     @Getter private final String type;
     private final Map<ChannelAPI,Map<String,MTScreenInfo>> channelCache;
     private final Map<ChannelAPI,DataLink> channelLinks;
     private final Map<String,MTScreenInfo> globalCache;
     private final boolean global;
     private DataLink globalLink;
-    private ChannelAPI channel;
+    @Getter private ChannelAPI channel;
     @Setter private Button applyButton;
     
     public MTScreenInfo(@Nullable MTScreenInfo parent, String type) {
@@ -103,8 +117,6 @@ public class MTScreenInfo {
     }
     
     private void buildChannelFiles(MTScreenInfo info, Toml toml) {
-        info.channel.logInfo("Beginning build from GUI}");
-        info.channel.logInfo("Info is {} and is global? {}",info,info.global);
         Map<String,MTScreenInfo> infoMap = info.channelCache.get(info.channel);
         info.writeChannelFile(toml,buildChannelFile(info.channel,infoMap.get("commands")),"commands");
         info.writeChannelFile(toml,buildChannelFile(info.channel,infoMap.get("main")),"main");
@@ -112,11 +124,8 @@ public class MTScreenInfo {
     }
     
     private @Nullable Toml buildChannelFile(ChannelAPI channel, @Nullable MTScreenInfo info) {
-        channel.logInfo("Building toml from GUI data for {}",info);
         if(Objects.isNull(info) || !info.isModifiedOnChannel(channel)) return null;
-        channel.logInfo("Verfied modification have been made");
         if(Objects.nonNull(info.getLink())) {
-            channel.logInfo("Populating toml data");
             Toml toml = Toml.getEmpty();
             info.getLink().populateToml(toml);
             return toml;
@@ -149,6 +158,69 @@ public class MTScreenInfo {
             case "renders": return this.channel.getRendersLink(this);
             default: return null;
         }
+    }
+    
+    public Collection<String> findLocalAudio() {
+        File folder = findLocalFolder();
+        File[] files = folder.exists() && folder.isDirectory() ? folder.listFiles(((dir,name) -> name.length()>4 &&
+                Misc.equalsAny(name.substring(name.length()-4),".aac",".m3u",".mp3",".mp4",".ogg",".wav"))) : null;
+        Set<String> names = new HashSet<>();
+        if(Objects.nonNull(files))
+            for(File file : files)
+                if(!file.isDirectory()) names.add(file.getName());
+        return names;
+    }
+    
+    public File findLocalFolder() {
+        MTScreenInfo info = this;
+        while(Objects.nonNull(info.parent)) info = info.parent;
+        info = info.next("channels").next("channel_info");
+        info.setLink(info.findChannelLink());
+        String path = CONFIG_PATH+"/songs";
+        ParameterLink link = (ParameterLink)info.getLink();
+        if(Objects.nonNull(link)) {
+            for(ParameterElement parameter : link.getParameters()) {
+                if(parameter.getName().equals("local_folder")) {
+                    path = parameter.getLiteralValue();
+                    break;
+                }
+            }
+        }
+        return new File(path);
+    }
+    
+    public Set<RedirectElement> findRedirects() {
+        Set<RedirectElement> redirects = new HashSet<>();
+        MTScreenInfo info = this;
+        while(Objects.nonNull(info.parent)) info = info.parent;
+        info = info.next("channels").next("redirect");
+        info.setLink(info.findChannelLink());
+        DataLink link = info.getLink();
+        if(link instanceof WrapperLink) {
+            for(WrapperElement wrapper : ((WrapperLink)link).getWrappers()) {
+                ParameterLink parameter = wrapper.getAsParameter();
+                if(Objects.nonNull(parameter) && parameter.getWrapper() instanceof RedirectElement)
+                    redirects.add((RedirectElement)parameter.getWrapper());
+            }
+        }
+        return redirects;
+    }
+    
+    public Set<TriggerAPI> findRegisteredTriggers() {
+        Set<TriggerAPI> triggers = new HashSet<>();
+        MTScreenInfo info = this;
+        while(Objects.nonNull(info.parent)) info = info.parent;
+        info = info.next("channels").next("main");
+        info.setLink(info.findChannelLink());
+        DataLink link = info.getLink();
+        if(link instanceof WrapperLink) {
+            for(WrapperElement wrapper : ((WrapperLink)link).getWrappers()) {
+                ParameterLink parameter = wrapper.getAsParameter();
+                if(Objects.nonNull(parameter) && parameter.getWrapper() instanceof TriggerAPI)
+                    triggers.add((TriggerAPI)parameter.getWrapper());
+            }
+        }
+        return triggers;
     }
     
     public TextAPI<?> getDisplayName() {
@@ -193,19 +265,12 @@ public class MTScreenInfo {
     }
     
     public boolean isModifiedOnChannel(ChannelAPI channel) {
-        channel.logInfo("Checking channel specific modification for {}",this.type);
         if(this.global) return false;
         if(Objects.nonNull(this.globalLink) && this.globalLink.isModified()) return true;
         if(this.channelLinks.containsKey(channel) && this.channelLinks.get(channel).isModified()) return true;
-        channel.logInfo("Channel link isnt modified");
-        if(this.channelCache.containsKey(channel)) {
-            channel.logInfo("Cache has the channel");
-            for(MTScreenInfo info : this.channelCache.get(channel).values()) {
-                channel.logInfo("Checking child info");
+        if(this.channelCache.containsKey(channel))
+            for(MTScreenInfo info : this.channelCache.get(channel).values())
                 if(info.isModifiedOnChannel(channel)) return true;
-            }
-        }
-        channel.logInfo("BAD!!!!!!!!!");
         return false;
     }
     
@@ -228,6 +293,60 @@ public class MTScreenInfo {
         return this.global ? (this.globalCache.containsKey(type) ? this.globalCache.get(type) : get(this,type)) :
                 (this.channelCache.get(this.channel).containsKey(type) ?
                         this.channelCache.get(this.channel).get(type) : get(this,type));
+    }
+    
+    public void openAudioSelectionScreen(MTGUIScreen screen, DataList list, Collection<WrapperElement> wrappers) {
+        openSelectionScreen(screen,"potential_audio", next -> {
+            SelectionLink link = SelectionLink.dualSingle(next,wrapper ->
+                    ((WrapperLink)screen.typeInfo.getLink()).addNewWrapper(screen,list,wrappers,wrapper));
+            for(String file : findLocalAudio())
+                link.addElementMaker(element -> file,d -> new SelectionElement(link,e ->
+                    d.makeButton(TextHelper.getLiteral(file),b -> e.onLeftClick(screen)),() -> AudioRef.addToGui(
+                        screen.getTypeInfo(),file.substring(0,file.lastIndexOf(".")),file,true)));
+            for(RedirectElement redirect : findRedirects()) {
+                String key = redirect.getKey();
+                String value = redirect.getValue();
+                link.addOtherElementMaker(element -> key,d -> new SelectionElement(link,e ->
+                        d.makeButton(TextHelper.getLiteral(key+" = "+value),b -> e.onLeftClick(screen)),
+                        () -> AudioRef.addToGui(screen.getTypeInfo(),key,value,true)));
+            }
+            return link;
+        });
+    }
+    
+    public void openImageSelectionScreen(MTGUIScreen screen, DataList list, Collection<WrapperElement> wrappers) {
+        openSelectionScreen(screen,"potential_images",next -> SelectionLink.singleSingle(next,
+                        wrapper -> ((WrapperLink)screen.typeInfo.getLink()).addNewWrapper(screen,list,wrappers,wrapper)));
+    }
+    
+    protected void openSelectionScreen(MTGUIScreen screen, String nextType,
+            Function<MTScreenInfo,SelectionLink> linkMaker) {
+        MTScreenInfo type = screen.typeInfo;
+        MTScreenInfo next = type.next(nextType);
+        next.setLink(linkMaker.apply(next));
+        MTGUIScreen.open(MTGUIScreen.constructScreen(screen,next,ClientHelper.getWindow(),ClientHelper.getGuiScale()));
+    }
+    
+    public void openTriggerSelectionScreen(MTGUIScreen screen, DataList list, Collection<WrapperElement> wrappers) {
+        openSelectionScreen(screen,"potential_triggers", next -> {
+            SelectionLink link = SelectionLink.singleSingle(next,wrapper -> ((WrapperLink)screen.typeInfo.getLink())
+                                             .addNewWrapper(screen,list,wrappers,wrapper));
+            for(String trigger : TriggerRegistry.getTriggerNames()) {
+                TextAPI<?> displayName = MTGUIScreen.triggerName(trigger,"not_set");
+                link.addElementMaker(element -> displayName.toString(),d -> new SelectionElement(link,e ->
+                        d.makeButton(displayName,b -> e.onLeftClick(screen)),
+                        () -> TriggerRegistry.getTriggerInstance(this.channel,trigger)));
+            }
+            return link;
+        });
+    }
+    
+    public void openTriggerMultiSelectionScreen(MTGUIScreen screen, DataList list, Collection<WrapperElement> wrappers) {
+        openSelectionScreen(screen,"potential_triggers",next -> SelectionLink.dualMulti(next,
+                           selected -> {
+                               for(ParameterWrapper wrapper : selected)
+                                   ((WrapperLink)screen.typeInfo.getLink()).addNewWrapper(screen,list,wrappers,wrapper);
+        }));
     }
     
     public void setChannel(ChannelAPI channel, boolean force) {

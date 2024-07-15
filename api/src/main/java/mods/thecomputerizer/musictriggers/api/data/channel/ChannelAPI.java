@@ -15,6 +15,7 @@ import mods.thecomputerizer.musictriggers.api.data.jukebox.RecordElement;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
 import mods.thecomputerizer.musictriggers.api.data.nbt.NBTLoadable;
+import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.redirect.RedirectElement;
 import mods.thecomputerizer.musictriggers.api.data.render.CardAPI;
 import mods.thecomputerizer.musictriggers.api.data.render.ImageElement;
@@ -34,9 +35,11 @@ import mods.thecomputerizer.theimpossiblelibrary.api.tag.TagHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -138,7 +141,13 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
     public abstract String getLogType();
     
     public WrapperLink getMainLink(MTScreenInfo info) {
-        return new WrapperLink(info,this.data.getAudio(),this.data.getTriggers());
+        List<ParameterWrapper> audio = new ArrayList<>();
+        audio.add(this.data.getUniversals(AudioRef.class));
+        audio.addAll(this.data.getAudio());
+        List<ParameterWrapper> triggers = new ArrayList<>();
+        triggers.add(this.data.getUniversals(TriggerAPI.class));
+        triggers.addAll(this.data.getTriggers());
+        return new WrapperLink(info,audio,triggers);
     }
 
     public Collection<TriggerAPI> getPlayableTriggers() {
@@ -250,8 +259,8 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
     public abstract boolean isClientChannel();
     public abstract boolean isValid();
 
-    public abstract void loadLocalTrack(AudioRef ref, String location);
-    public abstract void loadRemoteTrack(AudioRef ref, String location);
+    public abstract String loadLocalTrack(AudioRef ref, String location);
+    public abstract String loadRemoteTrack(AudioRef ref, String location);
     
     public void loadTracks(boolean loadResources) {
         this.data.loadTracks(loadResources);

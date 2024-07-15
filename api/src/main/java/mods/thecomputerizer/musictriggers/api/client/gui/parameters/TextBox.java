@@ -56,34 +56,34 @@ public class TextBox extends BasicTypeableWidget {
     
     @Override public boolean onLeftClick(double x, double y) {
         if(this.backgroundShape.isInside(x-getX(),y-getY(),0d)) {
-            DataList list = (DataList)this.parent;
             boolean remove = false;
-            Collection<Widget> widgets = ((DataList)this.parent).getWidgets();
-            for(Widget widget : widgets) {
-                if(widget instanceof Button && ((Button)widget).getText().getColor()==RED) {
-                    remove = true;
-                    break;
+            if(this.parent instanceof DataList) {
+                DataList list = (DataList)this.parent;
+                Collection<Widget> widgets = ((DataList)this.parent).getWidgets();
+                for(Widget widget : widgets) {
+                    if(widget instanceof Button && ((Button)widget).getText().getColor()==RED) {
+                        remove = true;
+                        break;
+                    }
                 }
-            }
-            if(remove) {
-                widgets.remove(this);
-                list.setWidgets(widgets);
-                ScreenHelper.playVanillaClickSound();
-                this.link.parent.setModified(true);
-                return true;
-            } else {
-                this.selected = true;
-                double width = getWidth();
-                double parentWidth = Objects.nonNull(this.parent) ? this.parent.getWidth() : 0d;
-                double height = getHeight();
-                Vector3d center = getCenter(0d);
-                int pos = this.text.getCharPos(RenderHelper.getContext(),x,y,getCenter(0d),
-                                               getMinX(center.x,width,parentWidth),getMinY(center.y,height),getMaxX(center.x,width,parentWidth),
-                                               getMaxY(center.y,height));
-                if(pos!=-1) {
-                    this.text.setBlinkerPos(pos);
+                if(remove) {
+                    widgets.remove(this);
+                    list.setWidgets(widgets);
+                    this.link.parent.setModified(true);
                     return true;
                 }
+            }
+            this.selected = true;
+            double width = getWidth();
+            double parentWidth = Objects.nonNull(this.parent) ? this.parent.getWidth() : 0d;
+            double height = getHeight();
+            Vector3d center = getCenter(0d);
+            int pos = this.text.getCharPos(RenderHelper.getContext(),x,y,getCenter(0d),
+                                           getMinX(center.x,width,parentWidth),getMinY(center.y,height),getMaxX(center.x,width,parentWidth),
+                                           getMaxY(center.y,height));
+            if(pos!=-1) {
+                this.text.setBlinkerPos(pos);
+                return true;
             }
         } else {
             this.text.setBlinkerVisible(false);

@@ -3,6 +3,10 @@ package mods.thecomputerizer.musictriggers.api.data.trigger;
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import lombok.Setter;
+import mods.thecomputerizer.musictriggers.api.client.gui.MTScreenInfo;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.DataLink;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.ParameterLink;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.WrapperLink;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
@@ -124,10 +128,13 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
             if(handler instanceof AudioPool) return (AudioPool)handler;
         return null;
     }
+    
+    @Override public Collection<DataLink> getChildWrappers(MTScreenInfo parent) {
+        return Collections.singletonList(new WrapperLink(parent.next("links"),this.links));
+    }
 
     public String getIdentifier() {
-        String id = getParameterAsString("identifier");
-        return Objects.nonNull(id) ? id : "not_set";
+        return hasParameter("identifier") ? getParameterAsString("identifier") : "not_set";
     }
 
     public String getNameWithID() {
@@ -411,6 +418,13 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
     
     @Getter
     public static class Link extends ChannelElement {
+        
+        public static Link addToGui(MTScreenInfo info) {
+            TriggerAPI parent = (TriggerAPI)((ParameterLink)info.getLink()).getWrapper();
+            Toml table = Toml.getEmpty();
+            table.addEntry("target_channel",parent.channel.getName());
+            return new Link(parent,table);
+        }
         
         private final TriggerAPI parent;
         private final ChannelAPI targetChannel;

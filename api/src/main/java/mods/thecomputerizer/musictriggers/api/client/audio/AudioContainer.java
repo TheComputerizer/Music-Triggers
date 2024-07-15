@@ -72,12 +72,14 @@ public class AudioContainer extends AudioRef {
 
     @Override
     public void loadLocal(String location) {
-        this.channel.loadLocalTrack(this,location);
+        this.location = this.channel.loadLocalTrack(this,location);
+        this.file = true;
     }
 
     @Override
     public void loadRemote(String location) {
-        this.channel.loadRemoteTrack(this,location);
+        this.location = this.channel.loadRemoteTrack(this,location);
+        this.file = false;
     }
 
     @Override

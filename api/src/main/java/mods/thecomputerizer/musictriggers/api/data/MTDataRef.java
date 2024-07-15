@@ -11,6 +11,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.core.ArrayHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlWritingException;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.GenericUtils;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.Sorting;
 
 import javax.annotation.Nullable;
@@ -620,6 +621,13 @@ public final class MTDataRef {
         
         public boolean hasPotentialValues() {
             return !this.potentialValues.isEmpty();
+        }
+        
+        public boolean isValid(Object value) {
+            if(this.potentialValues.isEmpty()) return true;
+            for(T potential : this.potentialValues)
+                if(GenericUtils.matches(potential,value)) return true;
+            return false;
         }
         
         @SuppressWarnings("unchecked")

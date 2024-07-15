@@ -1,12 +1,19 @@
 package mods.thecomputerizer.musictriggers.api.client.gui.parameters;
 
 import lombok.Getter;
+import mods.thecomputerizer.musictriggers.api.client.gui.MTGUIScreen;
 import mods.thecomputerizer.musictriggers.api.client.gui.MTScreenInfo;
 import mods.thecomputerizer.musictriggers.api.client.gui.ParameterScreen;
+import mods.thecomputerizer.musictriggers.api.client.gui.WrapperScreen;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.ParameterRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
+import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef.InterruptHandler;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventRunner;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventRunner.EventInstance;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.MinecraftWindow;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.ScreenHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.BasicWidgetGroup;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Button;
@@ -29,7 +36,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
-import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
+import static mods.thecomputerizer.musictriggers.api.client.gui.MTGUIScreen.open;
 import static mods.thecomputerizer.theimpossiblelibrary.api.client.render.ColorHelper.*;
 import static mods.thecomputerizer.theimpossiblelibrary.api.client.render.TextBuffer.Alignment.TOP_CENTER;
 
@@ -48,16 +55,24 @@ public class ParameterLink extends DataLink {
             this.parameters.add(new ParameterElement(this,entry.getKey(),ref,entry.getValue()));
     }
     
-    private TextAPI<?> parameterDesc(String name) {
-        return TextHelper.getTranslated(parameterLang(name, "desc"));
+    public void addChildren(MTGUIScreen screen,DataList list) {
+        for(DataLink link : this.wrapper.getChildWrappers(this.type)) {
+            list.addButton(link.getDisplayName(),b -> {
+                link.type.setLink(link);
+                MinecraftWindow window = ClientHelper.getWindow();
+                int scale = ClientHelper.getGuiScale();
+                open(link instanceof ParameterLink ? new ParameterScreen(screen,link.type,window,scale) :
+                             new WrapperScreen(screen,link.type,window,scale));
+            },link.getDescription());
+        }
     }
     
-    private String parameterLang(String name, String suffix) {
-        return String.format("parameter.%1$s.%2$s.%3$s",MODID,name,suffix);
+    @Override public TextAPI<?> getDescription() {
+        return MTGUIScreen.selectionDesc(this.type.getType());
     }
     
-    private TextAPI<?> parameterName(String name) {
-        return TextHelper.getTranslated(parameterLang(name,"name"));
+    @Override public TextAPI<?> getDisplayName() {
+        return MTGUIScreen.selectionName(this.type.getType());
     }
     
     @Override public void populateToml(Toml toml) {
@@ -87,11 +102,21 @@ public class ParameterLink extends DataLink {
         }
         
         public TextAPI<?> getDescription() {
-            return this.parent.parameterDesc(this.name);
+            String name = this.name;
+            if(name.equals("priority") && this.parent.wrapper instanceof InterruptHandler) name = "interrupt_"+name;
+            if(this.parent.wrapper instanceof EventInstance) name = "event_"+name;
+            return MTGUIScreen.parameterDesc(name);
+        }
+        
+        public TextAPI<?> getHover() {
+            return TextHelper.getLiteral(this.name);
         }
         
         public TextAPI<?> getDisplayName() {
-            return this.parent.parameterName(this.name);
+            String name = this.name;
+            if(name.equals("priority") && this.parent.wrapper instanceof InterruptHandler) name = "interrupt_"+name;
+            if(this.parent.wrapper instanceof EventInstance) name = "event_"+name;
+            return MTGUIScreen.parameterName(name);
         }
         
         public String getLiteralValue() {

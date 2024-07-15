@@ -15,8 +15,12 @@ import java.io.File;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import static mods.thecomputerizer.musictriggers.api.MTRef.CONFIG_PATH;
+import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
+import static mods.thecomputerizer.musictriggers.api.MTRef.NAME;
+
 @SuppressWarnings("unused")
-@MultiVersionMod(modid = MTRef.MODID, modName = MTRef.NAME, modVersion = MTRef.VERSION)
+@MultiVersionMod(modid = MODID, modName = NAME, modVersion = MTRef.VERSION)
 public class MTCommonEntryPoint extends CommonEntryPoint {
     
     private static final Class<CommonEntryPoint> versionClass = findVersionEntryClass(CoreAPI.INSTANCE);
@@ -113,19 +117,19 @@ public class MTCommonEntryPoint extends CommonEntryPoint {
 
     @Override
     protected String getModID() {
-        return MTRef.MODID;
+        return MODID;
     }
 
     @Override
     protected String getModName() {
-        return MTRef.NAME;
+        return NAME;
     }
 
     @Override
     public void onConstructed() {
-        File configDir = new File(MTRef.CONFIG_PATH);
+        File configDir = new File(CONFIG_PATH);
         if(!configDir.exists() && !configDir.mkdirs())
-            throw new RuntimeException("Unable to create file directory at "+MTRef.CONFIG_PATH+"! Music Triggers "+
+            throw new RuntimeException("Unable to create file directory at "+CONFIG_PATH+"! Music Triggers "+
                     "is unable to load any further.");
         MTNetwork.initCommon();
         distributeHook(CommonEntryPoint::onConstructed);

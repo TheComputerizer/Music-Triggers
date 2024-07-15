@@ -62,12 +62,14 @@ public class ChannelServer extends ChannelAPI {
         return true;
     }
 
-    @Override public void loadLocalTrack(AudioRef ref, String location) {
+    @Override public String loadLocalTrack(AudioRef ref, String location) {
         logError("Tried to load local audio track on the server!");
+        return null;
     }
 
-    @Override public void loadRemoteTrack(AudioRef ref, String location) {
+    @Override public String loadRemoteTrack(AudioRef ref, String location) {
         logError("Tried to load remote audio track on the server!");
+        return null;
     }
 
     @Override public void onResourcesLoaded() {

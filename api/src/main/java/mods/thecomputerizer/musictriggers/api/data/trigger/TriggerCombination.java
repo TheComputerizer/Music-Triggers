@@ -56,7 +56,7 @@ public class TriggerCombination extends TriggerAPI {
     public String getName() {
         StringJoiner joiner = new StringJoiner("+");
         for(TriggerAPI trigger : this.triggers) joiner.add(trigger.getNameWithID());
-        return this.triggers.size()==1 ? joiner.toString() : "combination = "+joiner;
+        return this.triggers.size()==1 ? joiner.toString() : "Combination = "+joiner;
     }
     
     @Override
@@ -115,10 +115,10 @@ public class TriggerCombination extends TriggerAPI {
         super.setUniversals(universals);
         for(TriggerAPI trigger : this.triggers) trigger.setUniversals(universals);
     }
-
+    
     @Override
     public String toString() {
-        return getLogPrefix()+getName();
+        return getSubTypeName()+"["+getName()+"]";
     }
 
     @Override

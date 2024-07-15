@@ -48,6 +48,10 @@ public class TriggerRegistry {
         return null;
     }
     
+    public static Set<String> getTriggerNames() {
+        return new HashSet<>(REGISTERED_TRIGGERS.keySet());
+    }
+    
     public static boolean isRegistred(String name) {
         return REGISTERED_TRIGGERS.containsKey(name);
     }

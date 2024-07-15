@@ -117,7 +117,11 @@ public class AudioPool extends AudioRef implements NBTLoadable {
     
     @Override
     public boolean isQueued() {
-        return Objects.nonNull(this.queuedAudio) && this.queuedAudio.isQueued();
+        return hasQueue() && this.queuedAudio.isQueued();
+    }
+    
+    public boolean hasQueue() {
+        return Objects.nonNull(this.queuedAudio);
     }
 
     @Override
@@ -202,7 +206,7 @@ public class AudioPool extends AudioRef implements NBTLoadable {
     @Override
     public void start(TriggerAPI trigger) {
         if(Objects.nonNull(this.queuedAudio)) this.queuedAudio.start(trigger);
-        else logDebug("Why was the queued reference null");
+        else logWarn("Tried to start empty queue from {}",trigger);
     }
 
     @Override

@@ -5,6 +5,9 @@ import com.sedmelluq.discord.lavaplayer.track.AudioItem;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
+import mods.thecomputerizer.musictriggers.api.client.gui.MTScreenInfo;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.DataLink;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.WrapperLink;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
@@ -19,15 +22,27 @@ import mods.thecomputerizer.theimpossiblelibrary.api.util.RandomHelper.WeightedE
 import javax.annotation.Nullable;
 import java.util.*;
 
+import static java.lang.Integer.MAX_VALUE;
+import static java.lang.Integer.MIN_VALUE;
+import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.AUDIO;
 import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.LOOP;
 
 @Getter
 public class AudioRef extends ChannelElement implements WeightedEntry {
+    
+    public static AudioRef addToGui(MTScreenInfo info, String name, String location, boolean file) {
+        AudioRef ref = new AudioRef(info.getChannel(),name);
+        ref.location = location;
+        ref.file = file;
+        return ref;
+    }
 
     private final List<TriggerAPI> triggers;
     protected final List<Loop> loops;
     private InterruptHandler interruptHandler;
     protected long inheritedTime;
+    protected boolean file;
+    protected String location;
     protected boolean loaded;
     protected boolean loading;
     protected boolean queued;
@@ -53,12 +68,19 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
         NetworkHelper.writeList(buf,this.triggers,trigger -> trigger.encode(buf));
     }
     
+    @Override public Collection<DataLink> getChildWrappers(MTScreenInfo parent) {
+        if(Objects.isNull(this.interruptHandler))
+            this.interruptHandler = new InterruptHandler(this.channel,Toml.getEmpty());
+        return Arrays.asList(this.interruptHandler.getLink(parent.next("interrupt_handler")),
+                             new WrapperLink(parent.next("loops"),this.loops));
+    }
+    
     public int getPlayState() {
         return getParameterAsInt("play_once");
     }
     
     @Override public TableRef getReferenceData() {
-        return MTDataRef.AUDIO;
+        return AUDIO;
     }
     
     @Override
@@ -91,12 +113,13 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
     public void loadLocal(String location) {}
 
     public void loadRemote(String location) {}
-
+    
     public boolean parse(Toml table) {
         if(super.parse(table) && parseTriggers(this.channel,this.triggers)) {
             logDebug("Successfully parsed with triggers {}",this.triggers);
             if(table.hasTable("interrupt_handler"))
                 this.interruptHandler = new InterruptHandler(this.channel,table.getTable("interrupt_handler"));
+            else this.interruptHandler = new InterruptHandler(this.channel,Toml.getEmpty());
             if(table.hasTable("loop")) {
                 for(Toml loopTable : table.getTableArray("loop")) {
                     Loop loop = new Loop(this.channel,loopTable);
@@ -148,10 +171,10 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
         public InterruptHandler(ChannelAPI channel, Toml table) {
             super(channel,"interrupt_handler");
             List<TriggerAPI> triggers = new ArrayList<>();
+            int priority = ChannelHelper.getDebugBool("reverse_priority") ? MAX_VALUE : MIN_VALUE;
             if(parse(table) && parseTriggers(this.channel,triggers,"trigger_whitelist"))
-                this.priority = getParameterAsInt("priority");
-            else this.priority = ChannelHelper.getDebugBool("reverse_priority") ?
-                    Integer.MAX_VALUE : Integer.MIN_VALUE;
+                priority = getParameterAsInt("priority");
+            this.priority = priority;
             this.triggers = triggers;
         }
 
@@ -189,6 +212,10 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
     @Getter
     public static class Loop extends ChannelElement {
         
+        public static Loop addToGui(MTScreenInfo info) {
+            return new Loop(info.getChannel(),Toml.getEmpty());
+        }
+        
         final boolean valid;
         final long from;
         final long to;
@@ -196,13 +223,17 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
         int count;
         
         protected Loop(ChannelAPI channel, Toml table) {
+            this(channel,table,false);
+        }
+        
+        Loop(ChannelAPI channel, Toml table, boolean silent) {
             super(channel,"loop_point");
             boolean valid = parse(table);
             this.from = getParameterAsLong("from");
             this.to = getParameterAsLong("to");
             this.total = getParameterAsInt("loop_count");
             if(this.from==this.to) {
-                logError("Cannot define loops with equal from and to values! {} = {}",this.from,this.to);
+                if(!silent) logError("Cannot define loops with equal from and to values! {} = {}",this.from,this.to);
                 valid = false;
             }
             this.valid = valid;

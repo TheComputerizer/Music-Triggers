@@ -23,6 +23,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.util.EnumHelper;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import javax.annotation.Nullable;
+import java.io.File;
 import java.util.Objects;
 
 import static com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats.DISCORD_PCM_S16_BE;
@@ -171,14 +172,21 @@ public class ChannelClient extends ChannelAPI {
         return Objects.nonNull(this.trackLoader);
     }
 
-    @Override public void loadLocalTrack(AudioRef ref, String location) {
-        if(getInfo().canReadFiles()) this.trackLoader.loadLocal(this.manager,ref,getInfo().getLocalFolder(),findMatchingFile(location));
-        else logWarn("Unable to load track from file at `{}` for audio `{}` since the local folder does not exist!",
+    @Override public String loadLocalTrack(AudioRef ref, String location) {
+        if(getInfo().canReadFiles()) {
+            File folder = getInfo().getLocalFolder();
+            String match = findMatchingFile(location);
+            this.trackLoader.loadLocal(this.manager,ref,folder,match);
+            return Objects.nonNull(match) ? match : location;
+        }
+        logWarn("Unable to load track from file at `{}` for audio `{}` since the local folder does not exist!",
                 location,ref.getName());
+        return location;
     }
 
-    @Override public void loadRemoteTrack(AudioRef ref, String location) {
+    @Override public String loadRemoteTrack(AudioRef ref, String location) {
         this.trackLoader.loadRemote(this.manager,ref,location);
+        return location;
     }
     
     @Override public void onResourcesLoaded() {
@@ -205,8 +213,10 @@ public class ChannelClient extends ChannelAPI {
         if(trigger.canPlayAudio()) {
             AudioPool pool = trigger.getAudioPool();
             if(Objects.nonNull(pool)) {
-                pool.start(trigger);
-                this.playingPool = pool;
+                if(pool.hasQueue()) {
+                    pool.start(trigger);
+                    this.playingPool = pool;
+                } else pool.queue();
             }
         }
     }

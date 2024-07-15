@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.api.client.gui.parameters;
 
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.client.gui.MTScreenInfo;
+import mods.thecomputerizer.theimpossiblelibrary.api.text.TextAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 public abstract class DataLink {
@@ -14,6 +15,10 @@ public abstract class DataLink {
         this.type = type;
         this.dual = dual;
     }
+    
+    public abstract TextAPI<?> getDescription();
+    
+    public abstract TextAPI<?> getDisplayName();
     
     public String getTypeName() {
         return this.type.getType();

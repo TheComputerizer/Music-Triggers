@@ -1,6 +1,10 @@
 package mods.thecomputerizer.musictriggers.api.data.global;
 
 import lombok.Getter;
+import mods.thecomputerizer.musictriggers.api.client.gui.MTScreenInfo;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.DataLink;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.ParameterLink;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.WrapperLink;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
@@ -10,6 +14,8 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import java.util.*;
+
+import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.TOGGLE;
 
 public class Toggle extends GlobalElement {
 
@@ -33,8 +39,13 @@ public class Toggle extends GlobalElement {
         this.toThese.clear();
     }
     
+    @Override public Collection<DataLink> getChildWrappers(MTScreenInfo parent) {
+        return Arrays.asList(new WrapperLink(parent.next("from_list"),this.fromThese),
+                             new WrapperLink(parent.next("to_list"),this.toThese));
+    }
+    
     @Override public TableRef getReferenceData() {
-        return MTDataRef.TOGGLE;
+        return TOGGLE;
     }
     
     @Override
@@ -93,6 +104,10 @@ public class Toggle extends GlobalElement {
     }
 
     public static class From extends GlobalEventRunner {
+        
+        public static From addToGui(MTScreenInfo info) {
+            return new From((Toggle)((ParameterLink)info.getLink()).getWrapper());
+        }
 
         private final Toggle parent;
         @Getter private final Set<TriggerAPI> triggers;
@@ -153,6 +168,10 @@ public class Toggle extends GlobalElement {
     public static class To extends GlobalElement {
 
         private static final List<String> VALID_CONDITIONS = Arrays.asList("true","false","switch");
+        
+        public static To addToGui(MTScreenInfo info) {
+            return new To((Toggle)((ParameterLink)info.getLink()).getWrapper());
+        }
 
         private final Toggle parent;
         @Getter private final Set<TriggerAPI> triggers;

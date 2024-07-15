@@ -13,10 +13,10 @@ public class AudioHelper {
 
     public static void parseAudio(ChannelAPI channel, Collection<AudioRef> audio, @Nullable Toml table) {
         if(Objects.isNull(table)) return;
+        UniversalParameters universal = channel.getData().getUniversals(AudioRef.class);
         for(Toml songsTable : table.getAllTables()) {
             String name = songsTable.getName();
             if(name.equals("universal")) {
-                UniversalParameters universal = channel.getData().getUniversals(AudioRef.class);
                 if(Objects.isNull(universal) || !universal.parse(songsTable))
                     channel.logError("Failed to parse universal songs");
                 else channel.logInfo("Intialized universal songs data");

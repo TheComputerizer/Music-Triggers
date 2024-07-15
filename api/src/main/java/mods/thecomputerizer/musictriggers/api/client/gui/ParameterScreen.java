@@ -29,9 +29,11 @@ public class ParameterScreen extends MTGUIScreen {
         super(parent,info,window,guiScale);
         addTextBackground(v -> {
             DataList list = new DataList(0.5d, 0d, 1d, 1.8d, 0.05d);
-            DataLink link = this.typeInfo.getLink();
-            if(link instanceof ParameterLink) {
-                List<ParameterElement> parameters = new ArrayList<>(((ParameterLink)link).getParameters());
+            DataLink typeLink = this.typeInfo.getLink();
+            if(typeLink instanceof ParameterLink) {
+                ParameterLink link = (ParameterLink)typeLink;
+                link.addChildren(this,list);
+                List<ParameterElement> parameters = new ArrayList<>(link.getParameters());
                 parameters.sort(Comparator.comparing(e -> e.getDisplayName().toString()));
                 for(ParameterElement parameter : parameters) {
                     list.addButton(parameter.getDisplayName(),b -> {
@@ -39,7 +41,7 @@ public class ParameterScreen extends MTGUIScreen {
                         if(Objects.nonNull(this.activeWidget)) this.activeWidget.setVisible(false);
                         this.activeWidget = parameter.toWidget(this);
                         this.activeWidget.setVisible(true);
-                    });
+                    },parameter.getHover());
                 }
             }
             addWidget(list);

@@ -6,6 +6,8 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.render.RenderHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.render.RenderableText;
 
+import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.TITLE_CARD;
+
 public class TitleElement extends CardAPI {
 
     public TitleElement(ChannelAPI channel) {
@@ -18,7 +20,7 @@ public class TitleElement extends CardAPI {
     }
     
     @Override public TableRef getReferenceData() {
-        return MTDataRef.TITLE_CARD;
+        return TITLE_CARD;
     }
     
     @Override

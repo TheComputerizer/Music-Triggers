@@ -1,12 +1,13 @@
 package mods.thecomputerizer.musictriggers.api.data.render;
 
-import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.render.RenderHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.CommonAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceAPI;
+
+import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.IMAGE_CARD;
 
 public class ImageElement extends CardAPI {
 
@@ -25,7 +26,7 @@ public class ImageElement extends CardAPI {
     }
     
     @Override public TableRef getReferenceData() {
-        return MTDataRef.IMAGE_CARD;
+        return IMAGE_CARD;
     }
     
     @Override

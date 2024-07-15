@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.api.data.parameter;
 import lombok.Getter;
 import lombok.Setter;
 import mods.thecomputerizer.musictriggers.api.client.gui.MTScreenInfo;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.DataLink;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.ParameterLink;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.ParameterRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
@@ -59,6 +60,10 @@ public abstract class ParameterWrapper implements LoggableAPI {
         for(Entry<String,Parameter<?>> entry : this.parameters.entrySet())
             if(entry.getValue() instanceof ParameterBool) names.add(entry.getKey());
         return names;
+    }
+    
+    public Collection<DataLink> getChildWrappers(MTScreenInfo parent) {
+        return Collections.emptySet();
     }
     
     public ParameterLink getLink(@Nullable MTScreenInfo typeInfo) {
@@ -348,6 +353,16 @@ public abstract class ParameterWrapper implements LoggableAPI {
     }
     
     public boolean verifyRequiredParameters() {
+        TableRef table = getReferenceData();
+        if(Objects.isNull(table)) return true;
+        for(Entry<String,Parameter<?>> entry : this.parameters.entrySet()) {
+            String name = entry.getKey();
+            ParameterRef<?> ref = table.findParameter(name);
+            Object value = entry.getValue().getValue();
+            if(Objects.isNull(ref) || ref.isValid(value)) continue;
+            logError("`{}` is not a valid value for the parameter {}!",value,name);
+            return false;
+        }
         return true;
     }
 }

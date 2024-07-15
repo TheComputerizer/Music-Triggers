@@ -7,6 +7,7 @@ import mods.thecomputerizer.musictriggers.api.client.gui.parameters.DataLink;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.shadow.org.joml.Vector2d;
 import mods.thecomputerizer.shadow.org.joml.Vector3d;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientHelper;
@@ -38,6 +39,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.StringJoiner;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -64,6 +66,9 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
             case "commands":
             case "jukebox":
             case "main":
+            case "potential_audio":
+            case "potential_images":
+            case "potential_triggers":
             case "redirect":
             case "renders":
             case "toggles": return new WrapperScreen(parent,typeInfo,window,scale);
@@ -197,6 +202,22 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
         isActive = true;
     }
     
+    public static TextAPI<?> parameterDesc(String name) {
+        return TextHelper.getTranslated(String.format("parameter.%1$s.%2$s.desc",MODID,name));
+    }
+    
+    public static TextAPI<?> parameterName(String name) {
+        return TextHelper.getTranslated(String.format("parameter.%1$s.%2$s.name",MODID,name));
+    }
+    
+    public static TextAPI<?> selectionDesc(String name, Object ... args) {
+        return TextHelper.getTranslated(String.format("selection.%1$s.%2$s.desc",MODID,name),args);
+    }
+    
+    public static TextAPI<?> selectionName(String name) {
+        return TextHelper.getTranslated(String.format("selection.%1$s.%2$s.name",MODID,name));
+    }
+    
     public static void setClickFunction(MTGUIScreen screen, Button button, String type) {
         button.setClickFunc(b -> {
             switch(type) {
@@ -230,6 +251,31 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
         });
     }
     
+    public static TextAPI<?> triggerDesc(String name) {
+        return TextHelper.getTranslated(String.format("trigger.%1$s.%2$s.desc",MODID,name));
+    }
+    
+    public static TextAPI<?> triggerName(String name, String id) {
+        if(!id.equals("not_set")) name+=".id";
+        return TextHelper.getTranslated(String.format("trigger.%1$s.%2$s",MODID,name),id);
+    }
+    
+    public static String triggerNames(Collection<TriggerAPI> triggers) {
+        if(Objects.isNull(triggers) || triggers.isEmpty()) return "[]";
+        String combo = type("trigger")+"["+type("combination").toString()+" = ";
+        StringJoiner joiner = new StringJoiner("+");
+        for(TriggerAPI trigger : triggers) {
+            String name = triggerName(trigger.getName(),trigger.getIdentifier()).toString();
+            if(triggers.size()==1) return name;
+            joiner.add(name);
+        }
+        return combo+joiner+"]";
+    }
+    
+    public static TextAPI<?> type(String type) {
+        return TextHelper.getTranslated(String.format("types.%1$s.%2$s",MODID,type));
+    }
+    
     protected final MTScreenInfo typeInfo;
     
     public MTGUIScreen(ScreenAPI parent, MTScreenInfo typeInfo, MinecraftWindow window, int guiScale) {
@@ -255,7 +301,7 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
         double offset = 2d/1.1d;
         back.setX(-1d+(back.getWidth()/offset));
         back.setY(1d-(back.getHeight()/offset));
-        back.setClickFunc(button -> ScreenHelper.open(this.parentScreen));
+        back.setClickFunc(button -> back());
         addWidget(back);
     }
     
@@ -345,6 +391,8 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
         switch(this.typeInfo.getType()) {
             case "channel_info":
             case "commands":
+            case "debug":
+            case "help":
             case "jukebox":
             case "log":
             case "playback":
@@ -355,6 +403,10 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
             }
             case "command_element": {
                 addTypeTexture(offsetX,0d,"commands");
+                break;
+            }
+            case "event": {
+                addTypeTexture(offsetX,0d,this.typeInfo.getDisplayName(),MTClient.getLogoTexture());
                 break;
             }
             case "from":
@@ -368,12 +420,26 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
                 addTypeTexture(offsetX,0d,"renders");
                 break;
             }
+            case "interrupt_handler":
+            case "universal_audio":
+            case "universal_triggers": {
+                addTypeTexture(offsetX,0d,"main");
+                break;
+            }
             case "jukebox_element": {
                 addTypeTexture(offsetX,0d,"jukebox");
                 break;
             }
             case "main": {
                 addTypeTexture(offsetX,0d,this.typeInfo.getDisplayName(offsetX<=-1d ? "songs" : "triggers"));
+                break;
+            }
+            case "potential_audio": {
+                addTypeTexture(offsetX,0d,this.typeInfo.getDisplayName(offsetX<=-1d ? "potential_files" : "potential_redirects"),"main");
+                break;
+            }
+            case "potential_triggers": {
+                addTypeTexture(offsetX,0d,this.typeInfo.getDisplayName(offsetX<=-1d ? "registered_triggers" : "potential_triggers"),"main");
                 break;
             }
             case "redirect_element": {
@@ -389,6 +455,10 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
                 break;
             }
         }
+    }
+    
+    public void back() {
+        ScreenHelper.open(this.parentScreen);
     }
     
     protected double getRadialOffset(int slices) {

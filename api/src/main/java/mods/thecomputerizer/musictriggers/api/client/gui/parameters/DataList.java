@@ -10,6 +10,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.shapes.Shape;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.ShapeHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextAPI;
 
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import static mods.thecomputerizer.theimpossiblelibrary.api.client.render.ColorHelper.AQUA;
@@ -24,8 +25,11 @@ public class DataList extends WidgetList {
         this.spacing = spacing;
     }
     
-    public void addButton(TextAPI<?> text, Consumer<Button> onClick) {
-        addWidget(makeButton(text,onClick));
+    public void addButton(TextAPI<?> text, Consumer<Button> onClick, TextAPI<?> ... hoverLines) {
+        Button button = makeButton(text,onClick);
+        for(TextAPI<?> line : hoverLines)
+            if(Objects.nonNull(line)) button.addHoverLine(line);
+        addWidget(button);
     }
     
     public Button makeButton(TextAPI<?> text, Consumer<Button> onClick) {
