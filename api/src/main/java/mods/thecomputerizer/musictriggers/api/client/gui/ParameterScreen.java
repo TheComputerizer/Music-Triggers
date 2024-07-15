@@ -27,7 +27,7 @@ public class ParameterScreen extends MTGUIScreen {
     
     public ParameterScreen(ScreenAPI parent, MTScreenInfo info, MinecraftWindow window, int guiScale) {
         super(parent,info,window,guiScale);
-        addTextBackground(0d,0d,2d,1.8d,v -> {
+        addTextBackground(v -> {
             DataList list = new DataList(0.5d, 0d, 1d, 1.8d, 0.05d);
             DataLink link = this.typeInfo.getLink();
             if(link instanceof ParameterLink) {
@@ -43,7 +43,7 @@ public class ParameterScreen extends MTGUIScreen {
                 }
             }
             addWidget(list);
-            addTypeTexture(-list.getScrollBar().getWidth(),0d);
+            autoAddTypeTexture(-list.getScrollBar().getWidth());
         });
     }
     

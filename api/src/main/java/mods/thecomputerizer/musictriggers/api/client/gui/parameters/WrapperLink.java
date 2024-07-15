@@ -2,10 +2,13 @@ package mods.thecomputerizer.musictriggers.api.client.gui.parameters;
 
 import mods.thecomputerizer.musictriggers.api.client.gui.MTGUIScreen;
 import mods.thecomputerizer.musictriggers.api.client.gui.MTScreenInfo;
+import mods.thecomputerizer.musictriggers.api.data.jukebox.RecordElement;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
+import mods.thecomputerizer.musictriggers.api.data.redirect.RedirectElement;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 
 import javax.annotation.Nullable;
@@ -49,11 +52,8 @@ public class WrapperLink extends DataLink {
         List<WrapperElement> ordered = new ArrayList<>(wrappers);
         ordered.sort(Comparator.comparing(e -> e.getDisplayName().toString()));
         for(WrapperElement element : ordered) {
-            list.addButton(element.getDisplayName(),b -> {
-                MTScreenInfo next = screen.getTypeInfo().next(element.wrapper.getName());
-                next.setLink(element.wrapper.getLink(next));
-                open(constructScreen(screen,next,ClientHelper.getWindow(),ClientHelper.getGuiScale()));
-            });
+            list.addButton(element.getDisplayName(),b ->
+                    open(constructScreen(screen,element.link.type,ClientHelper.getWindow(),ClientHelper.getGuiScale())));
         }
         return list;
     }
@@ -64,6 +64,15 @@ public class WrapperLink extends DataLink {
     
     public @Nullable DataList getOtherList(MTGUIScreen screen) {
         return this.dual ? addElements(screen,0.5d,1d,this.otherWrappers) : null;
+    }
+    
+    @Override public boolean isModified() {
+        if(this.modified) return true;
+        for(WrapperElement wrapper : this.wrappers)
+            if(wrapper.link.isModified()) return true;
+        for(WrapperElement wrapper : this.otherWrappers)
+            if(wrapper.link.isModified()) return true;
+        return false;
     }
     
     private TextAPI<?> wrapperDesc(String name) {
@@ -79,22 +88,54 @@ public class WrapperLink extends DataLink {
                 TextHelper.getTranslated(wrapperLang(name,"name"));
     }
     
+    @Override public void populateToml(Toml toml) {
+        Toml parent = toml;
+        String typeName = this.type.getType();
+        if(Misc.equalsAny(typeName,"main","renders")) parent = Toml.getEmpty();
+        for(WrapperElement wrapper : this.wrappers) {
+            Toml next = Toml.getEmpty();
+            wrapper.link.populateToml(next);
+            if(!next.getEntryValuesAsMap().isEmpty() || !next.getAllTables().isEmpty())
+                parent.addTable(wrapper.link.type.getType(),next);
+        }
+        if(typeName.equals("main")) {
+            if(!parent.getAllTables().isEmpty()) toml.addTable("songs",parent);
+            parent = Toml.getEmpty();
+        }
+        else if(typeName.equals("renders")) {
+            if(!parent.getAllTables().isEmpty()) toml.addTable("image",parent);
+            parent = Toml.getEmpty();
+        }
+        for(WrapperElement wrapper : this.otherWrappers) {
+            Toml next = Toml.getEmpty();
+            wrapper.link.populateToml(next);
+            if(!next.getEntryValuesAsMap().isEmpty() || !next.getAllTables().isEmpty())
+                parent.addTable(wrapper.link.type.getType(),next);
+        }
+        if(typeName.equals("main") && !parent.getAllTables().isEmpty()) toml.addTable("triggers",parent);
+        else if(typeName.equals("renders") && !parent.getAllTables().isEmpty()) toml.addTable("title",parent);
+    }
+    
     public static final class WrapperElement {
         
         final WrapperLink parent;
-        final ParameterWrapper wrapper;
+        final DataLink link;
         
         WrapperElement(WrapperLink parent, ParameterWrapper wrapper) {
             this.parent = parent;
-            this.wrapper = wrapper;
+            String nextType = wrapper instanceof RedirectElement ? "redirect_element" :
+                    (wrapper instanceof RecordElement ? "jukebox_element" : wrapper.getName());
+            MTScreenInfo next = parent.type.next(nextType);
+            this.link = wrapper.getLink(next);
+            next.setLink(this.link);
         }
         
         TextAPI<?> getDisplayName() {
-            return this.parent.wrapperName(this.wrapper.getName());
+            return this.parent.wrapperName(((ParameterLink)this.link).getWrapper().getName());
         }
         
         TextAPI<?> getDescription() {
-            return this.parent.wrapperDesc(this.wrapper.getName());
+            return this.parent.wrapperDesc(this.link.type.getType());
         }
     }
 }

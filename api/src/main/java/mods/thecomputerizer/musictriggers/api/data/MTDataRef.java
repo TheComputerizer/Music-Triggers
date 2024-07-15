@@ -32,7 +32,7 @@ public final class MTDataRef {
             buildParameter("end",MAX_VALUE),
             buildParameter("interval",0),
             buildString("name","activate","deactivate","play","playable","playing",
-                        "queue","stop","stopped","tickActive","tickPlayable","unplayable"),
+                        "queue","stop","stopped","tick_active","tick_playable","unplayable"),
             buildParameter("song","_"),
             buildParameter("start",0)
     ));
@@ -312,7 +312,7 @@ public final class MTDataRef {
     public static final TableRef COMMANDS = new TableRef("commands",COMMAND);
     public static final TableRef GLOBAL = new TableRef("global",Collections.singleton(
             buildParameter("toggles_path","toggles")),
-                                                       new TableRef("channels",CHANNEL_INFO),DEBUG);
+            new TableRef("channels",CHANNEL_INFO),DEBUG);
     public static final TableRef MAIN = new TableRef("main",
             new TableRef("songs",AUDIO,UNIVERSAL_AUDIO), new TableRef("triggers",TRIGGERS));
     public static final TableRef RENDERS = new TableRef("renders",IMAGE_CARD,TITLE_CARD);
@@ -409,9 +409,10 @@ public final class MTDataRef {
         return new TableRef(name,parameters,LINK);
     }
     
-    private static boolean canWriteDefaults(String type) {
+    public static boolean canWriteDefaults(String type) {
         Debug debug = ChannelHelper.getGlobalData().getDebug();
-        return Objects.isNull(debug) || debug.getParameterAsList("write_default_values").contains(type);
+        return type.equals("debug") || type.equals("global") ||
+               debug.getParameterAsList("write_default_values").contains(type);
     }
     
     private static String[] colors() {
@@ -528,7 +529,7 @@ public final class MTDataRef {
             boolean added = false;
             for(ParameterRef<?> parameter : this.parameters) {
                 if(!table.hasEntry(parameter.name)) {
-                    table.addEntry(parameter.name, parameter.defaultValue);
+                    table.addEntry(parameter.name,parameter.defaultValue);
                     added = true;
                 }
             }

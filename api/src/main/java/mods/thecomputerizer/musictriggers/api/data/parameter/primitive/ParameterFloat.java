@@ -55,7 +55,11 @@ public class ParameterFloat extends ParameterNumber<Float> {
         if(Objects.isNull(value)) this.value = 0f;
         else if(value instanceof Boolean) this.value = (Boolean)value ? 1f : 0f;
         else if(value instanceof Number) this.value = ((Number)value).floatValue();
-        else this.value = Float.parseFloat(value.toString());
+        else {
+            try {
+                this.value = Float.parseFloat(value.toString());
+            } catch(NumberFormatException ignored) {}
+        }
     }
     
     @Override

@@ -55,7 +55,11 @@ public class ParameterShort extends ParameterNumber<Short> {
         if(Objects.isNull(value)) this.value = 0;
         else if(value instanceof Boolean) this.value = (Boolean)value ? (short)1 : 0;
         else if(value instanceof Number) this.value = ((Number)value).shortValue();
-        else this.value = Short.parseShort(value.toString());
+        else {
+            try {
+                this.value = Short.parseShort(value.toString());
+            } catch(NumberFormatException ignored) {}
+        }
     }
     
     @Override

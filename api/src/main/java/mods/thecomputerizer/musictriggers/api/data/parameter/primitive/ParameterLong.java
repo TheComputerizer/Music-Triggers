@@ -55,7 +55,11 @@ public class ParameterLong extends ParameterNumber<Long> {
         if(Objects.isNull(value)) this.value = 0L;
         else if(value instanceof Boolean) this.value = (Boolean)value ? 1L : 0L;
         else if(value instanceof Number) this.value = ((Number)value).longValue();
-        else this.value = Long.parseLong(value.toString());
+        else {
+            try {
+                this.value = Long.parseLong(value.toString());
+            } catch(NumberFormatException ignored) {}
+        }
     }
     
     @Override

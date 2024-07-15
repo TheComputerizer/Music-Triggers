@@ -45,7 +45,7 @@ public class ChannelSync extends ChannelElement {
         this.triggersToSync.clear();
     }
     
-    @Override protected TableRef getReferenceData() {
+    @Override public TableRef getReferenceData() {
         return null;
     }
     

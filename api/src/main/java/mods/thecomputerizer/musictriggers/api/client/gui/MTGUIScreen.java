@@ -33,7 +33,6 @@ import mods.thecomputerizer.theimpossiblelibrary.api.shapes.Square;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.vectors.VectorHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
-import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -209,7 +208,8 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
                     break;
                 }
                 case "reload": {
-                    MTClientEvents.queueReload(ClientHelper.getMinecraft(),5);
+                    if(screen.typeInfo.isGloballyModified()) screen.typeInfo.applyChanges();
+                    else MTClientEvents.queueReload(ClientHelper.getMinecraft(),5);
                     break;
                 }
                 case "reset_song": {
@@ -230,16 +230,24 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
         });
     }
     
-    protected void write(Toml toml, String path) {
-    
-    }
-    
     protected final MTScreenInfo typeInfo;
     
     public MTGUIScreen(ScreenAPI parent, MTScreenInfo typeInfo, MinecraftWindow window, int guiScale) {
         super(parent,typeInfo.getDisplayName(),window,guiScale);
         if(!typeInfo.is("home")) addBackButton();
         this.typeInfo = typeInfo;
+        addApplyButton();
+    }
+    
+    protected void addApplyButton() {
+        Button apply = Button.basic(getDisplayName("button","apply"));
+        double offset = 2d/1.1d;
+        apply.setX(1d-(apply.getWidth()/offset));
+        apply.setY(1d-(apply.getHeight()/offset));
+        apply.setClickFunc(button -> this.typeInfo.applyChanges());
+        if(!this.typeInfo.isGloballyModified()) apply.setVisible(false);
+        addWidget(apply);
+        this.typeInfo.setApplyButton(apply);
     }
     
     protected void addBackButton() {
@@ -255,8 +263,8 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
         addWidget(ShapeWidget.from(ShapeHelper.square(Y,radius*2d,heightRatio),texture));
     }
     
-    protected void addFuzz(Shape shape, int maxCount) {
-        addWidget(ShapeWidget.fuzz(shape,maxCount));
+    protected void addFuzz(Shape shape) {
+        addWidget(ShapeWidget.fuzz(shape,5));
     }
     
     protected void addRadial(double heightRatio, int slices, BiConsumer<Integer,Button> sliceSettings) {
@@ -266,7 +274,7 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
         Circle smallRing = circle.getScaled(6d/13d);
         Circle bigRing = circle.getScaled(1.1d);
         WidgetGroup radialMenu = Button.radialGroup(circle,0d,0d,slices,getRadialOffset(slices),sliceSettings);
-        addFuzz(bigRing,5);
+        addFuzz(bigRing);
         addWidget(radialMenu);
         addWidget(ShapeWidget.from(ShapeHelper.circle(Y,0.25d,heightRatio),BLACK));
         addWidget(ShapeWidget.outlineFrom(smallRing,10f));
@@ -291,17 +299,33 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
         addWidget(button);
     }
     
-    protected void addTextBackground(double x, double y, double width, double height, Consumer<Void> doThisBetween) {
-        Plane back = ShapeHelper.plane(Y,new Vector2d(-(width/2d),-(height/2d)),new Vector2d((width/2d),(height/2d)));
-        addWidget(ShapeWidget.from(back,BLACK.withAlpha(0.65f),x,y));
+    protected void addTextBackground(Consumer<Void> doThisBetween) {
+        Plane back = ShapeHelper.plane(Y,new Vector2d(-1d,-0.9d),new Vector2d(1d,0.9d));
+        addWidget(ShapeWidget.from(back,BLACK.withAlpha(0.65f)));
         doThisBetween.accept(null);
-        addWidget(ShapeWidget.outlineFrom(back,5f,x,y));
+        addWidget(ShapeWidget.outlineFrom(back,5f));
     }
     
     public void addTypeTexture(double offsetX, double offsetY) {
+        addTypeTexture(offsetX,offsetY,this.typeInfo.getDisplayName(),this.typeInfo.getIconTexture(false));
+    }
+    
+    public void addTypeTexture(double offsetX, double offsetY, TextAPI<?> displayName) {
+        addTypeTexture(offsetX,offsetY,displayName,this.typeInfo.getIconTexture(false));
+    }
+    
+    public void addTypeTexture(double offsetX, double offsetY, String textureType) {
+        addTypeTexture(offsetX,offsetY,this.typeInfo.getDisplayName(),this.typeInfo.getIconTexture(textureType,false));
+    }
+    
+    public void addTypeTexture(double offsetX, double offsetY, TextAPI<?> displayName, String textureType) {
+        addTypeTexture(offsetX,offsetY,displayName,this.typeInfo.getIconTexture(textureType,false));
+    }
+    
+    public void addTypeTexture(double offsetX, double offsetY, TextAPI<?> displayName, ResourceLocationAPI<?> iconLocation) {
         Shape shape = ShapeHelper.square(Y,0.2d,RenderHelper.getCurrentHeightRatio());
-        TextureWrapper texture = new TextureWrapper().setTexture(this.typeInfo.getIconTexture(false));
-        TextWidget text = TextWidget.translated(lang("screen."+this.typeInfo.getType())).setColor(GREEN);
+        TextureWrapper texture = new TextureWrapper().setTexture(iconLocation);
+        TextWidget text = TextWidget.from(displayName).setColor(GREEN);
         double textHeight = text.getHeight();
         ShapeWidget widget = ShapeWidget.from(shape,texture,0d,offsetY+0.9d-textHeight*2d-shape.getHeight()/2d);
         double width = ((Math.max(text.getWidth(),widget.getWidth()))/2d)*1.05d;
@@ -315,6 +339,56 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
         addWidget(text);
         addWidget(widget);
         addWidget(ShapeWidget.outlineFrom(total,3f,1d-width+offsetX,offsetY));
+    }
+    
+    protected void autoAddTypeTexture(double offsetX) {
+        switch(this.typeInfo.getType()) {
+            case "channel_info":
+            case "commands":
+            case "jukebox":
+            case "log":
+            case "playback":
+            case "redirect":
+            case "toggles": {
+                addTypeTexture(offsetX,0d);
+                break;
+            }
+            case "command_element": {
+                addTypeTexture(offsetX,0d,"commands");
+                break;
+            }
+            case "from":
+            case "to":
+            case "toggle": {
+                addTypeTexture(offsetX,0d,"toggles");
+                break;
+            }
+            case "image_element":
+            case "title_element": {
+                addTypeTexture(offsetX,0d,"renders");
+                break;
+            }
+            case "jukebox_element": {
+                addTypeTexture(offsetX,0d,"jukebox");
+                break;
+            }
+            case "main": {
+                addTypeTexture(offsetX,0d,this.typeInfo.getDisplayName(offsetX<=-1d ? "songs" : "triggers"));
+                break;
+            }
+            case "redirect_element": {
+                addTypeTexture(offsetX,0d,"redirect");
+                break;
+            }
+            case "renders": {
+                addTypeTexture(offsetX,0d,this.typeInfo.getDisplayName(offsetX<=-1d ? "images" : "titles"));
+                break;
+            }
+            default: {
+                addTypeTexture(offsetX,0d,this.typeInfo.getSpecialDisplayName(),"main");
+                break;
+            }
+        }
     }
     
     protected double getRadialOffset(int slices) {

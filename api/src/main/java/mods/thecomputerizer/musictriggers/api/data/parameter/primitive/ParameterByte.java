@@ -55,7 +55,11 @@ public class ParameterByte extends ParameterNumber<Byte> {
         if(Objects.isNull(value)) this.value = 0;
         else if(value instanceof Boolean) this.value = (Boolean)value ? (byte)1 : 0;
         else if(value instanceof Number) this.value = ((Number)value).byteValue();
-        else this.value = Byte.parseByte(value.toString());
+        else {
+            try {
+                this.value = Byte.parseByte(value.toString());
+            } catch(NumberFormatException ignored) {}
+        }
     }
     
     @Override

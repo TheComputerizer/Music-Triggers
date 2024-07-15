@@ -82,7 +82,7 @@ public abstract class TriggerContext extends ChannelElement {
         return hasBoth() ? this.world.getEntitiesInBox(box) : Collections.emptyList();
     }
     
-    @Override protected TableRef getReferenceData() {
+    @Override public TableRef getReferenceData() {
         return null;
     }
     

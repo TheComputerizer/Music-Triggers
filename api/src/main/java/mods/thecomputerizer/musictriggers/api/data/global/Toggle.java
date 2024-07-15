@@ -33,7 +33,7 @@ public class Toggle extends GlobalElement {
         this.toThese.clear();
     }
     
-    @Override protected TableRef getReferenceData() {
+    @Override public TableRef getReferenceData() {
         return MTDataRef.TOGGLE;
     }
     
@@ -118,7 +118,7 @@ public class Toggle extends GlobalElement {
             return String.format("From(%1$s) = %2$s",this.channel.getName(),joiner);
         }
         
-        @Override protected TableRef getReferenceData() {
+        @Override public TableRef getReferenceData() {
             return MTDataRef.FROM;
         }
         
@@ -175,7 +175,7 @@ public class Toggle extends GlobalElement {
             return String.format("To(%1$s) = %2$s",this.channel.getName(),this.triggers.isEmpty() ? "?" : joiner);
         }
         
-        @Override protected TableRef getReferenceData() {
+        @Override public TableRef getReferenceData() {
             return MTDataRef.TO;
         }
         

@@ -139,7 +139,7 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
                 ACTIVE : (Misc.equalsAny(name,"active_cooldown","ticks_before_active") ? PLAYABLE : DISABLED);
     }
     
-    @Override protected TableRef getReferenceData() {
+    @Override public TableRef getReferenceData() {
         return MTDataRef.findTriggerRef(this.name);
     }
 
@@ -467,7 +467,7 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
         
         @Override public void close() {}
         
-        @Override protected TableRef getReferenceData() {
+        @Override public TableRef getReferenceData() {
             return MTDataRef.LINK;
         }
         

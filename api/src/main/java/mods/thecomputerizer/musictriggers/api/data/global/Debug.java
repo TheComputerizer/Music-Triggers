@@ -33,7 +33,7 @@ public class Debug extends GlobalElement { //TODO Implement log_level and max_ho
         }
     }
     
-    @Override protected TableRef getReferenceData() {
+    @Override public TableRef getReferenceData() {
         return DEBUG;
     }
     

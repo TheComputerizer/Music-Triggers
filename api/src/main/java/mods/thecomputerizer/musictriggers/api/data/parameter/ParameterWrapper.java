@@ -62,7 +62,7 @@ public abstract class ParameterWrapper implements LoggableAPI {
     }
     
     public ParameterLink getLink(@Nullable MTScreenInfo typeInfo) {
-        return new ParameterLink(typeInfo,getReferenceData(),this.parameters);
+        return new ParameterLink(typeInfo,this,this.parameters);
     }
     
     protected abstract String getLogPrefix();
@@ -160,7 +160,7 @@ public abstract class ParameterWrapper implements LoggableAPI {
         return fromString.apply(String.valueOf(value));
     }
     
-    protected abstract TableRef getReferenceData();
+    public abstract TableRef getReferenceData();
     public abstract Class<? extends ParameterWrapper> getTypeClass();
 
     public boolean hasAllNonDefaultParameter(String ... names) {

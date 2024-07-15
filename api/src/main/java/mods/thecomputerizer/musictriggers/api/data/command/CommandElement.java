@@ -53,7 +53,7 @@ public class CommandElement extends ChannelElementRunner {
         return super.parse(table) && parseTriggers(this.channel,this.triggers);
     }
     
-    @Override protected TableRef getReferenceData() {
+    @Override public TableRef getReferenceData() {
         return MTDataRef.COMMAND;
     }
     

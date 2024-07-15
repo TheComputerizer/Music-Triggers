@@ -221,7 +221,7 @@ public class ChannelData extends ChannelElement {
         return Collections.unmodifiableSet(handlers);
     }
     
-    @Override protected TableRef getReferenceData() {
+    @Override public TableRef getReferenceData() {
         return null;
     }
     

@@ -79,7 +79,7 @@ public class ChannelInfo extends ChannelElement {
         return Objects.nonNull(this.localFolder) && this.localFolder.exists() && this.localFolder.isDirectory();
     }
     
-    @Override protected TableRef getReferenceData() {
+    @Override public TableRef getReferenceData() {
         return CHANNEL_INFO;
     }
     

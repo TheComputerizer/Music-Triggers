@@ -14,18 +14,20 @@ public class WrapperScreen extends MTGUIScreen {
     
     public WrapperScreen(ScreenAPI parent, MTScreenInfo typeInfo, MinecraftWindow window, int guiScale) {
         super(parent,typeInfo,window,guiScale);
-        addTextBackground(0d,0d,2d,1.8d,v -> {
+        addTextBackground(v -> {
             DataLink data = this.typeInfo.getLink();
             if(data instanceof WrapperLink) {
                 WrapperLink link = (WrapperLink)data;
                 DataList list = link.getList(this);
                 addWidget(list);
-                addTypeTexture(-list.getScrollBar().getWidth(),0d);
+                double typeOffset = -list.getScrollBar().getWidth();
                 DataList otherList = link.getOtherList(this);
                 if(Objects.nonNull(otherList)) {
                     addWidget(otherList);
-                    addTypeTexture(-otherList.getScrollBar().getWidth(),0d);
+                    autoAddTypeTexture(-otherList.getScrollBar().getWidth());
+                    typeOffset-=1d;
                 }
+                autoAddTypeTexture(typeOffset);
             }
         });
     }

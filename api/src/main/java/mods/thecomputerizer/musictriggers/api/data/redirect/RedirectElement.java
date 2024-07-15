@@ -41,7 +41,7 @@ public class RedirectElement extends ChannelElement {
         return this.key+" "+(this.remote ? "=" : "==")+" "+this.value;
     }
     
-    @Override protected TableRef getReferenceData() {
+    @Override public TableRef getReferenceData() {
         return null;
     }
     

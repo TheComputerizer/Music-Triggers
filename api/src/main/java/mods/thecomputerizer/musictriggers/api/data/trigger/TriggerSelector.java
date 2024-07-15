@@ -105,7 +105,7 @@ public class TriggerSelector extends ChannelElement {
         return null;
     }
     
-    @Override protected TableRef getReferenceData() {
+    @Override public TableRef getReferenceData() {
         return null;
     }
     

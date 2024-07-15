@@ -17,7 +17,7 @@ public class TitleElement extends CardAPI {
         return "Title_Card";
     }
     
-    @Override protected TableRef getReferenceData() {
+    @Override public TableRef getReferenceData() {
         return MTDataRef.TITLE_CARD;
     }
     

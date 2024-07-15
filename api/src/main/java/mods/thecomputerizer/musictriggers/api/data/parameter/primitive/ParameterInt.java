@@ -55,7 +55,11 @@ public class ParameterInt extends ParameterNumber<Integer> {
         if(Objects.isNull(value)) this.value = 0;
         else if(value instanceof Boolean) this.value = (Boolean)value ? 1 : 0;
         else if(value instanceof Number) this.value = ((Number)value).intValue();
-        else this.value = Integer.parseInt(value.toString());
+        else {
+            try {
+                this.value = Integer.parseInt(value.toString());
+            } catch(NumberFormatException ignored) {}
+        }
     }
     
     @Override

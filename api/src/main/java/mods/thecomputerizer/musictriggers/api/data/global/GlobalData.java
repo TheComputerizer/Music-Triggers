@@ -41,7 +41,7 @@ public class GlobalData extends ParameterWrapper {
         return "Global";
     }
     
-    @Override protected TableRef getReferenceData() {
+    @Override public TableRef getReferenceData() {
         return GLOBAL;
     }
     

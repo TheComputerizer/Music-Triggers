@@ -64,7 +64,7 @@ public class RecordElement extends ChannelElement {
         return true;
     }
     
-    @Override protected TableRef getReferenceData() {
+    @Override public TableRef getReferenceData() {
         return null;
     }
     

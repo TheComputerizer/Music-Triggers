@@ -20,7 +20,7 @@ public class UniversalParameters extends ChannelElement {
     @Override
     public void close() {}
     
-    @Override protected TableRef getReferenceData() {
+    @Override public TableRef getReferenceData() {
         return this.ref;
     }
     

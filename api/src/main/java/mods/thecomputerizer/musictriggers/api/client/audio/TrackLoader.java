@@ -87,7 +87,7 @@ public class TrackLoader extends ChannelElement {
     
     @Override public void close() {}
     
-    @Override protected TableRef getReferenceData() {
+    @Override public TableRef getReferenceData() {
         return null;
     }
     

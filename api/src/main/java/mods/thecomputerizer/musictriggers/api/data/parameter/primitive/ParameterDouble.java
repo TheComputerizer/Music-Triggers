@@ -55,7 +55,11 @@ public class ParameterDouble extends ParameterNumber<Double> {
         if(Objects.isNull(value)) this.value = 0d;
         else if(value instanceof Boolean) this.value = (Boolean)value ? 1d : 0d;
         else if(value instanceof Number) this.value = ((Number)value).doubleValue();
-        else this.value = Double.parseDouble(value.toString());
+        else {
+            try {
+                this.value = Double.parseDouble(value.toString());
+            } catch(NumberFormatException ignored) {}
+        }
     }
     
     @Override

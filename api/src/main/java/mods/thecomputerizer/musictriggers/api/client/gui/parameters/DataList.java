@@ -30,9 +30,9 @@ public class DataList extends WidgetList {
     
     public Button makeButton(TextAPI<?> text, Consumer<Button> onClick) {
         Shape shape = ShapeHelper.plane(Y,0.75d,0.1d);
-        ShapeWidget widget = ShapeWidget.from(shape, BLACK.withAlpha(0f));
+        ShapeWidget widget = ShapeWidget.from(shape,BLACK.withAlpha(0f));
         TextWidget w = TextWidget.from(text);
-        Widget hover = BasicWidgetGroup.from(ShapeWidget.from(shape, WHITE.withAlpha(1f/3f)), w.copy().setColor(AQUA));
+        Widget hover = BasicWidgetGroup.from(0.75d,0.1d,ShapeWidget.from(shape,WHITE.withAlpha(1f/3f)),w.copy().setColor(AQUA));
         Button button = new Button(widget,w,hover);
         button.setClickFunc(onClick);
         return button;

@@ -57,7 +57,7 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
         return getParameterAsInt("play_once");
     }
     
-    @Override protected TableRef getReferenceData() {
+    @Override public TableRef getReferenceData() {
         return MTDataRef.AUDIO;
     }
     
@@ -173,7 +173,7 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
             this.triggers.clear();
         }
         
-        @Override protected TableRef getReferenceData() {
+        @Override public TableRef getReferenceData() {
             return MTDataRef.INTERRUPT_HANDLER;
         }
         
@@ -214,7 +214,7 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
             return String.format("(%1$d->%2$d)x%3$d",this.from,this.to,this.total);
         }
         
-        @Override protected TableRef getReferenceData() {
+        @Override public TableRef getReferenceData() {
             return LOOP;
         }
         

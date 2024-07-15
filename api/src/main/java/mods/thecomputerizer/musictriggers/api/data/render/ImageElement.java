@@ -24,7 +24,7 @@ public class ImageElement extends CardAPI {
         return "Image_Card";
     }
     
-    @Override protected TableRef getReferenceData() {
+    @Override public TableRef getReferenceData() {
         return MTDataRef.IMAGE_CARD;
     }
     
