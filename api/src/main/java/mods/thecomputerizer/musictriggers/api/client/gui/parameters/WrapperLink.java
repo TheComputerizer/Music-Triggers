@@ -20,7 +20,6 @@ import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.ScreenHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Button;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Widget;
-import mods.thecomputerizer.theimpossiblelibrary.api.iterator.IterableHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
@@ -48,7 +47,6 @@ public class WrapperLink extends DataLink {
     
     private final Set<WrapperElement> wrappers;
     private final Set<WrapperElement> otherWrappers;
-    private Button addButton;
     
     public WrapperLink(MTScreenInfo type, Collection<? extends ParameterWrapper> wrappers) {
         this(type,false,wrappers,Collections.emptySet());
@@ -74,11 +72,11 @@ public class WrapperLink extends DataLink {
         List<WrapperElement> ordered = new ArrayList<>(wrappers);
         ordered.sort(Comparator.comparing(e -> e.getDisplayName().toString()));
         for(WrapperElement element : ordered)
-            list.addButton(element.getDisplayName(), b -> {
+            list.addButton(element.getDisplayName(),b -> {
                 if(!deleteElement(list,b,element,wrappers))
                     open(constructScreen(screen,element.link.type,ClientHelper.getWindow(),ClientHelper.getGuiScale()));
             },element.getDescription());
-        Button add = list.makeButton(this.type.getSpecialLang("gui","button.add_entry.name"),b -> {
+        SpecialButton add = list.makeSpecialButton(this.type.getSpecialLang("gui","button.add_entry.name"),b -> {
             Collection<Widget> widgets = list.getWidgets();
             for(Widget w : widgets)
                 if(w instanceof Button && ((Button)w).getText().getColor()==RED) return;
@@ -90,7 +88,8 @@ public class WrapperLink extends DataLink {
         });
         add.getText().setColor(GRAY.withAlpha(0.7f));
         add.setContextFunc(b -> {
-            boolean delete = b.getText().getColor()==RED;
+            SpecialButton special = (SpecialButton)b;
+            boolean delete = special.isDeleting();
             b.getText().setColor(delete ? GRAY.withAlpha(0.7f) : RED);
             TextAPI<?> text = this.type.getSpecialLang("gui",
                     "button."+(delete ? "add" : "remove")+"_entry.name");
@@ -99,6 +98,7 @@ public class WrapperLink extends DataLink {
                 h.setColor(delete ? AQUA : DARK_RED);
                 h.setText(text);
             });
+            special.setDeleting(!delete);
             ScreenHelper.playVanillaClickSound();
         });
         list.addWidget(add);
@@ -109,12 +109,19 @@ public class WrapperLink extends DataLink {
         WrapperElement element = getElementFor(wrapper);
         wrappers.add(element);
         Collection<Widget> widgets = list.getWidgets();
-        Widget widget = IterableHelper.getElement(widgets.size()-1,widgets);
+        Widget widget = null;
+        for(Widget w : widgets) {
+            if(w instanceof SpecialButton) {
+                widget = w;
+                break;
+            }
+        }
         if(Objects.nonNull(widget)) widgets.remove(widget);
-        list.addButton(element.getDisplayName(),
-                       b -> open(constructScreen(screen,element.link.type,ClientHelper.getWindow(),
-                                                 ClientHelper.getGuiScale())),element.getDescription());
-        list.addWidget(widget);
+        list.addButton(element.getDisplayName(),b -> {
+            if(!deleteElement(list,b,element,wrappers))
+                open(constructScreen(screen,element.link.type,ClientHelper.getWindow(),ClientHelper.getGuiScale()));
+            },element.getDescription());
+        if(Objects.nonNull(widget)) list.addWidget(widget);
     }
     
     public void addNewWrapper(MTGUIScreen screen, DataList list, Collection<WrapperElement> wrappers, boolean left) {
@@ -172,11 +179,12 @@ public class WrapperLink extends DataLink {
         if(Objects.nonNull(wrapper)) addNewWrapper(screen,list,wrappers,wrapper);
     }
     
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private boolean deleteElement(DataList list, Button b, WrapperElement element, Collection<WrapperElement> wrappers) {
         Collection<Widget> widgets = list.getWidgets();
         boolean remove = false;
         for(Widget widget : widgets) {
-            if(widget instanceof Button && ((Button)widget).getText().getColor()==RED) {
+            if(widget instanceof SpecialButton && ((SpecialButton)widget).isDeleting()) {
                 remove = true;
                 break;
             }
@@ -230,12 +238,28 @@ public class WrapperLink extends DataLink {
         }
         if(wrapper instanceof CommandElement)
             return MTGUIScreen.selectionDesc(name,wrapper.getParameterAsString("literal"));
+        else if(wrapper instanceof Toggle)
+            return MTGUIScreen.selectionDesc(name,((Toggle)wrapper).getTargetCount());
+        else if(wrapper instanceof From)
+            return MTGUIScreen.selectionDesc("from",wrapper.getParameterAsString("triggers"));
+        else if(wrapper instanceof To)
+            return MTGUIScreen.selectionDesc("to",wrapper.getParameterAsString("triggers"));
+        else if(wrapper instanceof RedirectElement) name = "redirect";
+        else if(wrapper instanceof RecordElement) name = "jukebox";
+        else if(wrapper instanceof Link)
+            return MTGUIScreen.selectionDesc("link",wrapper.getParameterAsList("linked_triggers"));
+        else if(wrapper instanceof Loop)
+            return MTGUIScreen.selectionDesc("loop",wrapper.getName());
         return wrapper instanceof TriggerAPI ? MTGUIScreen.triggerDesc(name) : MTGUIScreen.selectionDesc(name);
     }
     
     private TextAPI<?> wrapperName(ParameterWrapper wrapper) {
         String name = wrapper.getName();
         if(wrapper instanceof TriggerAPI) return MTGUIScreen.triggerName(name,((TriggerAPI)wrapper).getIdentifier());
+        else if(wrapper instanceof From) name = "from";
+        else if(wrapper instanceof To) name = "to";
+        else if(wrapper instanceof Link) name = "link";
+        else if(wrapper instanceof Loop) name = "loop";
         boolean literal = !Misc.equalsAny(name,"universal_audio","universal_triggers");
         literal = literal && Misc.equalsAny(this.type.getType(),"jukebox","main","redirect");
         return literal ? TextHelper.getLiteral(name) : MTGUIScreen.selectionName(name);
@@ -282,8 +306,13 @@ public class WrapperLink extends DataLink {
         
         WrapperElement(WrapperLink parent, ParameterWrapper wrapper) {
             this.parent = parent;
-            String nextType = wrapper instanceof RedirectElement ? "redirect_element" :
-                    (wrapper instanceof RecordElement ? "jukebox_element" : wrapper.getName());
+            String nextType = wrapper.getName();
+            if(wrapper instanceof RedirectElement) nextType = "redirect_element";
+            else if(wrapper instanceof RecordElement) nextType = "jukebox_element";
+            else if(wrapper instanceof Link) nextType = "link";
+            else if(wrapper instanceof Loop) nextType = "loop";
+            else if(wrapper instanceof From) nextType = "from";
+            else if(wrapper instanceof To) nextType = "to";
             MTScreenInfo next = parent.type.next(nextType);
             this.link = wrapper.getLink(next);
             next.setLink(this.link);
@@ -298,8 +327,7 @@ public class WrapperLink extends DataLink {
         }
         
         TextAPI<?> getDescription() {
-            return this.parent.type.getType().equals("redirect") ? null :
-                    this.parent.wrapperDesc(((ParameterLink)this.link).getWrapper());
+            return this.parent.wrapperDesc(((ParameterLink)this.link).getWrapper());
         }
     }
 }

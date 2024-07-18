@@ -8,15 +8,16 @@ import mods.thecomputerizer.musictriggers.api.client.gui.WrapperScreen;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.ParameterRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef.InterruptHandler;
-import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventRunner;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventRunner.EventInstance;
+import mods.thecomputerizer.musictriggers.api.data.jukebox.RecordElement;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
+import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
+import mods.thecomputerizer.musictriggers.api.data.redirect.RedirectElement;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.MinecraftWindow;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.ScreenHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.BasicWidgetGroup;
-import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Button;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.ShapeWidget;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.TextWidget;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Widget;
@@ -53,6 +54,16 @@ public class ParameterLink extends DataLink {
         TableRef ref = wrapper.getReferenceData();
         for(Entry<String,Parameter<?>> entry : parameters.entrySet())
             this.parameters.add(new ParameterElement(this,entry.getKey(),ref,entry.getValue()));
+        if(wrapper instanceof RecordElement) {
+            RecordElement record = (RecordElement)wrapper;
+            this.parameters.add(new ParameterElement(this,"jukebox_key",null,new ParameterString(record.getKey())));
+            this.parameters.add(new ParameterElement(this,"jukebox_value",null,new ParameterString(record.getValue())));
+        }
+        else if(wrapper instanceof RedirectElement) {
+            RedirectElement record = (RedirectElement)wrapper;
+            this.parameters.add(new ParameterElement(this,"redirect_key",null,new ParameterString(record.getKey())));
+            this.parameters.add(new ParameterElement(this,"redirect_value",null,new ParameterString(record.getValue())));
+        }
     }
     
     public void addChildren(MTGUIScreen screen,DataList list) {
@@ -82,6 +93,7 @@ public class ParameterLink extends DataLink {
                !GenericUtils.matches(parameter.ref.getDefaultValue(),value))
                 toml.addEntry(parameter.name,value);
         }
+        this.type.populateNext(toml,true);
     }
     
     public static final class ParameterElement {
@@ -93,10 +105,10 @@ public class ParameterLink extends DataLink {
         Parameter<?> modifiable;
         Widget widget;
         
-        ParameterElement(ParameterLink parent, String name, TableRef ref, Parameter<?> parameter) {
+        ParameterElement(ParameterLink parent, String name, @Nullable TableRef ref, Parameter<?> parameter) {
             this.parent = parent;
             this.name = name;
-            this.ref = ref.findParameter(name);
+            this.ref = Objects.nonNull(ref) ? ref.findParameter(name) : null;
             this.original = parameter;
             this.modifiable = parameter.copy();
         }
@@ -170,11 +182,11 @@ public class ParameterLink extends DataLink {
                     TextBuffer text = TextBuffer.literal(String.valueOf(element));
                     list.addWidget(new TextBox(this,text,0d,0d,list.getWidth()));
                 }
-                Button add = list.makeButton(this.parent.type.getSpecialLang(
+                SpecialButton add = list.makeSpecialButton(this.parent.type.getSpecialLang(
                         "gui","button.add_entry.name"),b -> {
                     Collection<Widget> widgets = list.getWidgets();
                     for(Widget w : widgets)
-                        if(w instanceof Button && ((Button)w).getText().getColor()==RED) return;
+                        if(w instanceof SpecialButton && ((SpecialButton)w).isDeleting()) return;
                     widgets.remove(b);
                     TextBuffer text = TextBuffer.literal("_");
                     list.addWidget(new TextBox(this,text,0d,0d,list.getWidth()));
@@ -184,7 +196,8 @@ public class ParameterLink extends DataLink {
                 });
                 add.getText().setColor(GRAY.withAlpha(0.7f));
                 add.setContextFunc(b -> {
-                    boolean delete = b.getText().getColor()==RED;
+                    SpecialButton specialButton = (SpecialButton)b;
+                    boolean delete = specialButton.isDeleting();
                     b.getText().setColor(delete ? GRAY.withAlpha(0.7f) : RED);
                     TextAPI<?> text = this.parent.type.getSpecialLang("gui",
                             "button."+(delete ? "add" : "remove")+"_entry.name");
@@ -193,6 +206,7 @@ public class ParameterLink extends DataLink {
                         h.setColor(delete ? AQUA : DARK_RED);
                         h.setText(text);
                     });
+                    specialButton.setDeleting(!delete);
                     ScreenHelper.playVanillaClickSound();
                 });
                 list.addWidget(add);

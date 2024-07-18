@@ -85,6 +85,10 @@ public class AudioPool extends AudioRef implements NBTLoadable {
     public @Nullable Parameter<?> getParameter(String name) {
         return Objects.nonNull(this.queuedAudio) ? this.queuedAudio.getParameter(name) : super.getParameter(name);
     }
+    
+    @Override public double getSpeed() {
+        return Objects.nonNull(this.queuedAudio) ? this.queuedAudio.getSpeed() : 1d;
+    }
 
     @Override
     public float getVolume() {
@@ -113,6 +117,10 @@ public class AudioPool extends AudioRef implements NBTLoadable {
     @Override
     public boolean isLoaded() {
         return Objects.nonNull(this.queuedAudio) && !this.queuedAudio.isLoading() && this.queuedAudio.isLoaded();
+    }
+    
+    @Override public boolean isLooping() {
+        return Objects.nonNull(this.queuedAudio) && this.queuedAudio.looping;
     }
     
     @Override

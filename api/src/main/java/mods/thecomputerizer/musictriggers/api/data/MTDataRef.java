@@ -361,7 +361,6 @@ public final class MTDataRef {
                 buildParameter("scale_y",1f),
                 buildParameter("time",100),
                 buildParameter("triggers",new ArrayList<>()),
-                buildParameter("vague",false),
                 buildString("vertical_alignment","center","center","left","right"),
                 buildParameter("x",-1),
                 buildParameter("y",-1)));

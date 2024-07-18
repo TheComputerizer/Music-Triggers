@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.config;
 
 import lombok.Getter;
-import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
@@ -18,6 +17,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+
+import static mods.thecomputerizer.musictriggers.api.MTRef.GLOBAL_CONFIG;
+import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.TABLE_MAP;
 
 @SuppressWarnings("UnusedReturnValue") @Getter
 public abstract class ConfigVersion implements LoggableAPI {
@@ -260,11 +262,11 @@ public abstract class ConfigVersion implements LoggableAPI {
                     logInfo("Remapping channel "+channel.getName());
                     String mainPath = getPathMain(channel);
                     Toml main = ChannelHelper.openToml(mainPath,false,this);
-                    if(Objects.nonNull(main)) writeIfRemapped(main, MTDataRef.TABLE_MAP.get("main"), mainPath);
+                    if(Objects.nonNull(main)) writeIfRemapped(main,TABLE_MAP.get("main"), mainPath);
                 }
             }
             logInfo("Remapping global configs");
-            writeIfRemapped(global, MTDataRef.TABLE_MAP.get("global"), MTRef.GLOBAL_CONFIG);
+            writeIfRemapped(global,TABLE_MAP.get("global"),GLOBAL_CONFIG);
         }
         logInfo("Successfully remapped config files!");
     }

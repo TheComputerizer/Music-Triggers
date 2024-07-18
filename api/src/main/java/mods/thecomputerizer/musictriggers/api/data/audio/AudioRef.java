@@ -46,6 +46,7 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
     protected boolean loaded;
     protected boolean loading;
     protected boolean queued;
+    @Getter protected boolean looping;
 
     public AudioRef(ChannelAPI channel, String name) {
         super(channel,name);
@@ -81,6 +82,10 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
     
     @Override public TableRef getReferenceData() {
         return AUDIO;
+    }
+    
+    public double getSpeed() {
+        return getParameterAsDouble("speed");
     }
     
     @Override
@@ -265,13 +270,15 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
             this.count = 0;
         }
         
-        public void run() {
+        public boolean run() {
             AudioTrack track = this.channel.getPlayer().getPlayingTrack();
-            if(Objects.nonNull(track) && (this.total<=0 || this.count<this.total) && track.getPosition()>=this.from) {
+            if(Objects.nonNull(track) && (this.total<=0 || this.count<this.total) && this.channel.getPlayingSongTime()>=this.from) {
                 logInfo("Running");
                 track.setPosition(this.to);
                 this.count++;
+                return true;
             }
+            return false;
         }
     }
 }

@@ -41,4 +41,14 @@ public class DataList extends WidgetList {
         button.setClickFunc(onClick);
         return button;
     }
+    
+    public SpecialButton makeSpecialButton(TextAPI<?> text, Consumer<SpecialButton> onClick) {
+        Shape shape = ShapeHelper.plane(Y,0.75d,0.1d);
+        ShapeWidget widget = ShapeWidget.from(shape,BLACK.withAlpha(0f));
+        TextWidget w = TextWidget.from(text);
+        Widget hover = BasicWidgetGroup.from(0.75d,0.1d,ShapeWidget.from(shape,WHITE.withAlpha(1f/3f)),w.copy().setColor(AQUA));
+        SpecialButton button = new SpecialButton(widget,w,hover);
+        button.setClickFunc(b -> onClick.accept((SpecialButton)b));
+        return button;
+    }
 }

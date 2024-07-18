@@ -2,9 +2,7 @@ package mods.thecomputerizer.musictriggers.api.client.gui.parameters;
 
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.ParameterLink.ParameterElement;
 import mods.thecomputerizer.shadow.org.joml.Vector3d;
-import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.ScreenHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.BasicTypeableWidget;
-import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Button;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.ShapeWidget;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Widget;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.render.RenderContext;
@@ -61,7 +59,7 @@ public class TextBox extends BasicTypeableWidget {
                 DataList list = (DataList)this.parent;
                 Collection<Widget> widgets = ((DataList)this.parent).getWidgets();
                 for(Widget widget : widgets) {
-                    if(widget instanceof Button && ((Button)widget).getText().getColor()==RED) {
+                    if(widget instanceof SpecialButton && ((SpecialButton)widget).isDeleting()) {
                         remove = true;
                         break;
                     }

@@ -130,7 +130,7 @@ public class ChannelClient extends ChannelAPI {
     @Nullable @Override public String getFormattedSongTime() {
         AudioTrack track = this.player.getPlayingTrack();
         if(Objects.isNull(track)) return null;
-        String current = getFormattedTime(track.getPosition());
+        String current = getFormattedTime(getPlayingSongTime());
         String duration = getFormattedTime(track.getDuration());
         return current+"/"+duration;
     }
@@ -161,7 +161,8 @@ public class ChannelClient extends ChannelAPI {
     
     @Override public long getPlayingSongTime() {
         AudioTrack track = this.player.getPlayingTrack();
-        return Objects.nonNull(track) ? track.getPosition() : 0L;
+        double speed = Objects.nonNull(this.playingPool) ? this.playingPool.getSpeed() : 1d;
+        return Objects.nonNull(track) ? (long)(track.getPosition()*speed) : 0L;
     }
     
     @Override public boolean isClientChannel() {

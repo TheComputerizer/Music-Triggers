@@ -88,7 +88,15 @@ public class AudioContainer extends AudioRef {
             if(this.loaded) start(this.channel.getActiveTrigger());
             return;
         } else if(this.loading || !this.loaded) return;
-        for(Loop loop : this.loops) loop.run();
+        if(this.looping) this.looping = false;
+        else {
+            for(Loop loop : this.loops) {
+                if(loop.run()) {
+                    this.looping = true;
+                    break;
+                }
+            }
+        }
         if(this.fade>0) {
             if(this.fadeFactor==0f) this.fade = 0;
             else this.fade--;
@@ -151,7 +159,7 @@ public class AudioContainer extends AudioRef {
             List<AudioFilter> filters, FloatPcmAudioFilter output, AudioDataFormat format) {
         boolean needsTimeScale = false;
         double pitch = getParameterAsDouble("pitch");
-        double speed = getParameterAsDouble("speed");
+        double speed = getSpeed();
         if(pitch!=1d && pitch>0d) needsTimeScale = true;
         if(speed!=1d && speed>0d) needsTimeScale = true;
         if(needsTimeScale) {
@@ -219,5 +227,6 @@ public class AudioContainer extends AudioRef {
             if(Objects.nonNull(link)) link.setSnapshotInherit(this.channel.getPlayingSongTime());
         }
         this.channel.getPlayer().stopCurrentTrack();
+        this.looping = false;
     }
 }

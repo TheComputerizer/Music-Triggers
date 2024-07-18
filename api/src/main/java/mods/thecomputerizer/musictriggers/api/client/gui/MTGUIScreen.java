@@ -410,9 +410,15 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
                 break;
             }
             case "from":
+            case "from_list":
             case "to":
-            case "toggle": {
+            case "toggle":
+            case "to_list": {
                 addTypeTexture(offsetX,0d,"toggles");
+                break;
+            }
+            case "image_card": {
+                addTypeTexture(offsetX,0d,this.typeInfo.getDisplayName("image_element"),"renders");
                 break;
             }
             case "image_element":
@@ -421,6 +427,8 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
                 break;
             }
             case "interrupt_handler":
+            case "link":
+            case "loop":
             case "universal_audio":
             case "universal_triggers": {
                 addTypeTexture(offsetX,0d,"main");
@@ -448,6 +456,10 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
             }
             case "renders": {
                 addTypeTexture(offsetX,0d,this.typeInfo.getDisplayName(offsetX<=-1d ? "images" : "titles"));
+                break;
+            }
+            case "title_card": {
+                addTypeTexture(offsetX,0d,this.typeInfo.getDisplayName("title_element"),"renders");
                 break;
             }
             default: {

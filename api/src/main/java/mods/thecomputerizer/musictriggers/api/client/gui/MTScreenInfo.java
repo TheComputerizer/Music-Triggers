@@ -16,12 +16,14 @@ import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
+import mods.thecomputerizer.musictriggers.api.data.jukebox.RecordElement;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.redirect.RedirectElement;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerRegistry;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Button;
+import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
@@ -31,10 +33,13 @@ import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 import javax.annotation.Nullable;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
@@ -118,9 +123,11 @@ public class MTScreenInfo {
     
     private void buildChannelFiles(MTScreenInfo info, Toml toml) {
         Map<String,MTScreenInfo> infoMap = info.channelCache.get(info.channel);
-        info.writeChannelFile(toml,buildChannelFile(info.channel,infoMap.get("commands")),"commands");
-        info.writeChannelFile(toml,buildChannelFile(info.channel,infoMap.get("main")),"main");
-        info.writeChannelFile(toml,buildChannelFile(info.channel,infoMap.get("renders")),"renders");
+        info.writeChannelToml(toml,buildChannelFile(info.channel,infoMap.get("commands")),"commands");
+        info.writeChannelToml(toml,buildChannelFile(info.channel,infoMap.get("main")),"main");
+        info.writeChannelToml(toml,buildChannelFile(info.channel,infoMap.get("renders")),"renders");
+        info.writeChannelTxt(toml,buildRecords(info.channel,infoMap.get("jukebox")),"jukebox");
+        info.writeChannelTxt(toml,buildRedirect(info.channel,infoMap.get("redirect")),"redirect");
     }
     
     private @Nullable Toml buildChannelFile(ChannelAPI channel, @Nullable MTScreenInfo info) {
@@ -129,6 +136,39 @@ public class MTScreenInfo {
             Toml toml = Toml.getEmpty();
             info.getLink().populateToml(toml);
             return toml;
+        }
+        return null;
+    }
+    
+    private @Nullable List<String> buildRecords(ChannelAPI channel, @Nullable MTScreenInfo info) {
+        if(Objects.isNull(info) || !info.isModifiedOnChannel(channel)) return null;
+        if(info.getLink() instanceof WrapperLink) {
+            List<String> lines = new ArrayList<>();
+            for(WrapperElement element : ((WrapperLink)info.getLink()).getWrappers()) {
+                ParameterLink link = element.getAsParameter();
+                if(Objects.nonNull(link) && link.getWrapper() instanceof RecordElement) {
+                    RecordElement redirect = (RecordElement)link.getWrapper();
+                    lines.add(redirect.getKey()+" = "+redirect.getValue());
+                }
+            }
+            return lines;
+        }
+        return null;
+    }
+    
+    private @Nullable List<String> buildRedirect(ChannelAPI channel, @Nullable MTScreenInfo info) {
+        if(Objects.isNull(info) || !info.isModifiedOnChannel(channel)) return null;
+        if(info.getLink() instanceof WrapperLink) {
+            List<String> lines = new ArrayList<>();
+            for(WrapperElement element : ((WrapperLink)info.getLink()).getWrappers()) {
+                ParameterLink link = element.getAsParameter();
+                if(Objects.nonNull(link) && link.getWrapper() instanceof RedirectElement) {
+                    RedirectElement redirect = (RedirectElement)link.getWrapper();
+                    String separator = redirect.isRemote() ? " = " : " == ";
+                    lines.add(redirect.getKey()+separator+redirect.getValue());
+                }
+            }
+            return lines;
         }
         return null;
     }
@@ -349,6 +389,20 @@ public class MTScreenInfo {
         }));
     }
     
+    public void populateNext(Toml parent, boolean forced) {
+        for(Entry<String,MTScreenInfo> entry : this.channelCache.get(this.channel).entrySet()) {
+            MTScreenInfo next = entry.getValue();
+            if(forced || next.isModified()) {
+                DataLink link = next.getLink();
+                if(link instanceof ParameterLink) {
+                    Toml toml = Toml.getEmpty();
+                    link.populateToml(toml);
+                    parent.addTable(entry.getKey(),toml);
+                } else if(Objects.nonNull(link)) link.populateToml(parent);
+            }
+        }
+    }
+    
     public void setChannel(ChannelAPI channel, boolean force) {
         if(force || Objects.isNull(this.channel)) this.channel = channel;
     }
@@ -364,11 +418,19 @@ public class MTScreenInfo {
         return this.type;
     }
     
-    private void writeChannelFile(Toml info, @Nullable Toml toml, String type) {
-        MTRef.logInfo("Potentially writing file type {}",type);
+    private void writeChannelToml(Toml info, @Nullable Toml toml, String type) {
         if(Objects.nonNull(toml)) {
-            MTRef.logInfo("{} is being written to",CONFIG_PATH+"/"+this.channel.getName()+"/"+info.getValueString(type));
-            MTDataRef.writeToFile(toml,CONFIG_PATH+"/"+this.channel.getName()+"/"+info.getValueString(type));
+            String path = CONFIG_PATH+"/"+this.channel.getName()+"/"+info.getValueString(type);
+            MTRef.logInfo("{} is being written to",path);
+            MTDataRef.writeToFile(toml,path);
+        }
+    }
+    
+    private void writeChannelTxt(Toml info, List<String> lines, String type) {
+        if(Objects.nonNull(lines)) {
+            String path = CONFIG_PATH+"/"+this.channel.getName()+"/"+info.getValueString(type);
+            MTRef.logInfo("{} is being written to",path);
+            FileHelper.writeLines(path+".txt",lines,false);
         }
     }
 }

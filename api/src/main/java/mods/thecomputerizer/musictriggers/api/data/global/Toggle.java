@@ -5,7 +5,6 @@ import mods.thecomputerizer.musictriggers.api.client.gui.MTScreenInfo;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.DataLink;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.ParameterLink;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.WrapperLink;
-import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
@@ -15,6 +14,8 @@ import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import java.util.*;
 
+import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.FROM;
+import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.TO;
 import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.TOGGLE;
 
 public class Toggle extends GlobalElement {
@@ -48,6 +49,10 @@ public class Toggle extends GlobalElement {
         return TOGGLE;
     }
     
+    public int getTargetCount() {
+        return this.toThese.size();
+    }
+    
     @Override
     public Class<? extends ParameterWrapper> getTypeClass() {
         return Toggle.class;
@@ -74,7 +79,6 @@ public class Toggle extends GlobalElement {
     }
     
     public void run() {
-        logDebug("Running toggle!!!!!");
         this.toThese.forEach(To::run);
     }
     
@@ -106,7 +110,9 @@ public class Toggle extends GlobalElement {
     public static class From extends GlobalEventRunner {
         
         public static From addToGui(MTScreenInfo info) {
-            return new From((Toggle)((ParameterLink)info.getLink()).getWrapper());
+            From from = new From((Toggle)((ParameterLink)info.getLink()).getWrapper());
+            from.channel = info.getChannel();
+            return from;
         }
 
         private final Toggle parent;
@@ -134,7 +140,7 @@ public class Toggle extends GlobalElement {
         }
         
         @Override public TableRef getReferenceData() {
-            return MTDataRef.FROM;
+            return FROM;
         }
         
         @Override public String getLogPrefix() {
@@ -170,7 +176,9 @@ public class Toggle extends GlobalElement {
         private static final List<String> VALID_CONDITIONS = Arrays.asList("true","false","switch");
         
         public static To addToGui(MTScreenInfo info) {
-            return new To((Toggle)((ParameterLink)info.getLink()).getWrapper());
+            To to = new To((Toggle)((ParameterLink)info.getLink()).getWrapper());
+            to.channel = info.getChannel();
+            return to;
         }
 
         private final Toggle parent;
@@ -195,7 +203,7 @@ public class Toggle extends GlobalElement {
         }
         
         @Override public TableRef getReferenceData() {
-            return MTDataRef.TO;
+            return TO;
         }
         
         @Override public String getLogPrefix() {
