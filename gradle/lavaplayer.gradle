@@ -20,7 +20,7 @@ repositories {
 
 dependencies {
     //lavaplayer base
-    shaded("com.github.devoxin:lavaplayer:${lava_version}") { transitive = false }
+    //shaded("com.github.devoxin:lavaplayer:${lava_version}") { transitive = false }
 
     //lavaplayer dependencies
     shaded("com.github.devoxin:lavaplayer-natives-fork:${lava_natives_version}") { transitive = false }

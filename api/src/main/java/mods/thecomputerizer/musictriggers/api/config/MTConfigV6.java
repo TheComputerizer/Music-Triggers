@@ -1,6 +1,5 @@
 package mods.thecomputerizer.musictriggers.api.config;
 
-import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
@@ -15,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static mods.thecomputerizer.musictriggers.api.MTRef.CONFIG_PATH;
 import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.AUDIO;
 import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.FROM;
 
@@ -36,33 +36,33 @@ public class MTConfigV6 extends ConfigVersion {
     
     @Override public Toml getGlobal() {
         Toml global = Toml.getEmpty();
-        Toml debug = ChannelHelper.openToml(MTRef.CONFIG_PATH+"/debug",false,this);
+        Toml debug = ChannelHelper.openToml(CONFIG_PATH+"/debug", false, this);
         if(Objects.nonNull(debug)) {
-            Toml registration = ChannelHelper.openToml(MTRef.CONFIG_PATH+"/registration",false,this);
+            Toml registration = ChannelHelper.openToml(CONFIG_PATH+"/registration", false, this);
             if(Objects.nonNull(registration)) {
                 TomlEntry<?> entry = registration.getEntry("CLIENT_SIDE_ONLY");
                 if(Objects.nonNull(entry)) debug.addEntry(entry.getKey(),entry.getValue());
                 entry = registration.getEntry("REGISTER_DISCS");
                 if(Objects.nonNull(entry)) debug.addEntry(entry.getKey(),entry.getValue());
-                FileHelper.get(MTRef.CONFIG_PATH+"/registration.toml",false).delete();
+                FileHelper.get(CONFIG_PATH+"/registration.toml", false).delete();
             }
             global.addTable("debug",debug);
-            FileHelper.get(MTRef.CONFIG_PATH+"/debug.toml",false).delete();
+            FileHelper.get(CONFIG_PATH+"/debug.toml", false).delete();
         }
-        Toml channels = ChannelHelper.openToml(MTRef.CONFIG_PATH+"/channels",false,this);
+        Toml channels = ChannelHelper.openToml(CONFIG_PATH+"/channels", false, this);
         if(Objects.nonNull(channels)) {
             global.addTable("channels",channels);
-            FileHelper.get(MTRef.CONFIG_PATH+"/channels.toml",false).delete();
+            FileHelper.get(CONFIG_PATH+"/channels.toml", false).delete();
         }
         return global;
     }
     
     @Override public String getPathMain(Toml channel) {
-        return MTRef.CONFIG_PATH+"/"+channel.getOrSetValue("main",channel.getName()+"/main"); //6.3.1 Didn't write the default parameters
+        return CONFIG_PATH+"/"+channel.getOrSetValue("main",channel.getName()+"/main"); //6.3.1 Didn't write the default parameters
     }
     
     @Override public Toml getRenders(Toml channel) {
-        String path = MTRef.CONFIG_PATH+"/"+channel.getOrSetValue("transitions",channel.getName()+"/transitions");
+        String path = CONFIG_PATH+"/"+channel.getOrSetValue("transitions",channel.getName()+"/transitions");
         Toml renders = ChannelHelper.openToml(path,false,this);
         if(Objects.nonNull(renders)) {
             File file = FileHelper.get(path+".toml",false);
@@ -77,7 +77,7 @@ public class MTConfigV6 extends ConfigVersion {
         Toml channels = global.getTable("channels");
         if(Objects.nonNull(channels)) {
             for(Toml channel : channels.getAllTables()) {
-                String path = MTRef.CONFIG_PATH+"/"+channel.getOrSetValue("toggles",channel.getName()+"/toggles");
+                String path = CONFIG_PATH+"/"+channel.getOrSetValue("toggles",channel.getName()+"/toggles");
                 Toml channelToggles = ChannelHelper.openToml(path,false,this);
                 if(Objects.nonNull(channelToggles)) {
                     for(Toml toggle : channelToggles.getAllTables())
@@ -87,7 +87,7 @@ public class MTConfigV6 extends ConfigVersion {
             }
         }
         toggles.addComments(getHeaderLines("toggles"));
-        MTDataRef.writeToFile(toggles,MTRef.CONFIG_PATH+"/"+global.getOrSetValue("toggles_path","toggles"));
+        MTDataRef.writeToFile(toggles,CONFIG_PATH+"/"+global.getOrSetValue("toggles_path","toggles"));
         return toggles;
     }
     
@@ -206,7 +206,7 @@ public class MTConfigV6 extends ConfigVersion {
     }
     
     @Override public void verifyJukebox(Toml channel) {
-        String path = MTRef.CONFIG_PATH+"/"+channel.getOrSetValue("jukebox",channel.getName()+"/jukebox");
+        String path = CONFIG_PATH+"/"+channel.getOrSetValue("jukebox",channel.getName()+"/jukebox");
         List<String> oldLines = ChannelHelper.openTxt(path,this);
         oldLines.removeIf(str -> StringUtils.isEmpty(str) ||
                                  str.startsWith("Format this like name") ||
@@ -221,7 +221,7 @@ public class MTConfigV6 extends ConfigVersion {
     }
     
     @Override public void verifyRedirct(Toml channel) {
-        String path = MTRef.CONFIG_PATH+"/"+channel.getOrSetValue("redirect",channel.getName()+"/redirect");
+        String path = CONFIG_PATH+"/"+channel.getOrSetValue("redirect",channel.getName()+"/redirect");
         List<String> oldLines = ChannelHelper.openTxt(path,this);
         oldLines.removeIf(str -> StringUtils.isEmpty(str) ||
                               str.startsWith("Format this like name") ||

@@ -1,6 +1,5 @@
 package mods.thecomputerizer.musictriggers.api.config;
 
-import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.config.ConfigVersion.Qualifier;
 import mods.thecomputerizer.musictriggers.api.config.ConfigVersion.Version;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
@@ -18,11 +17,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import static mods.thecomputerizer.musictriggers.api.MTRef.CONFIG_PATH;
+import static mods.thecomputerizer.musictriggers.api.MTRef.VERSION;
 import static mods.thecomputerizer.musictriggers.api.config.MTConfigV6.V6_3_1;
 import static mods.thecomputerizer.musictriggers.api.config.MTConfigV7.LATEST;
 import static mods.thecomputerizer.musictriggers.api.config.MTConfigV7.V7_0_0_BETA_1;
 import static mods.thecomputerizer.musictriggers.api.config.MTConfigV7.V7_0_0_BETA_3;
 import static mods.thecomputerizer.musictriggers.api.config.MTConfigV7.V7_0_0_BETA_4;
+import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.TABLE_MAP;
 
 public class ConfigVersionManager {
     
@@ -35,7 +37,7 @@ public class ConfigVersionManager {
     }
     
     private static ConfigVersion findCurrent() {
-        return findVersion(MTRef.VERSION);
+        return findVersion(VERSION);
     }
     
     public static ConfigVersion findLatestQualified(int release, int major, int minor) {
@@ -104,7 +106,7 @@ public class ConfigVersionManager {
     }
     
     public static void queryRemap() {
-        String versionPath = MTRef.CONFIG_PATH+"/version";
+        String versionPath = CONFIG_PATH+"/version";
         File version = FileHelper.get(versionPath+".txt",false); //Ensures the file exists before trying to read it
         List<String> versionLines = ChannelHelper.openTxt(versionPath,CURRENT);
         ConfigVersion fileVersion;
@@ -114,11 +116,11 @@ public class ConfigVersionManager {
         } else fileVersion = findVersion(versionLines.get(0).trim());
         if(Objects.isNull(fileVersion)) CURRENT.logFatal("Unable to remap missing config version!");
         else fileVersion.remap();
-        FileHelper.writeLine(version,MTRef.VERSION,false);
+        FileHelper.writeLine(version,VERSION,false);
     }
     
     public static void writeDefaults(Toml toml, String name, String path) {
-        TableRef ref = MTDataRef.TABLE_MAP.get(name);
+        TableRef ref = TABLE_MAP.get(name);
         if(Objects.nonNull(ref) && ref.addMissingDefaults(toml,CURRENT)) {
             CURRENT.logInfo("Writing missing default {} values to {}",name,path);
             toml.clearComments();

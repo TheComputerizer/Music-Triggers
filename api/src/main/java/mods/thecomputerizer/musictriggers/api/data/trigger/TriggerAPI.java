@@ -130,7 +130,9 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
     }
     
     @Override public Collection<DataLink> getChildWrappers(MTScreenInfo parent) {
-        return Collections.singletonList(new WrapperLink(parent.next("links"),this.links));
+        WrapperLink links = new WrapperLink(this.links);
+        links.setType(parent.next("links",links));
+        return Collections.singletonList(links);
     }
 
     public String getIdentifier() {

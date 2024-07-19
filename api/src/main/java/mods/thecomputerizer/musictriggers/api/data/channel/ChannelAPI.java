@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.Setter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.TriggerContextClient;
-import mods.thecomputerizer.musictriggers.api.client.gui.MTScreenInfo;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.WrapperLink;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
@@ -128,8 +127,8 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
         return this.selector.getActiveTrigger();
     }
     
-    public WrapperLink getCommandsLink(MTScreenInfo info) {
-        return new WrapperLink(info,this.data.getCommands());
+    public WrapperLink getCommandsLink() {
+        return new WrapperLink(this.data.getCommands());
     }
     
     public abstract @Nullable String getFormattedSongTime();
@@ -140,14 +139,14 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
     
     public abstract String getLogType();
     
-    public WrapperLink getMainLink(MTScreenInfo info) {
+    public WrapperLink getMainLink() {
         List<ParameterWrapper> audio = new ArrayList<>();
         audio.add(this.data.getUniversals(AudioRef.class));
         audio.addAll(this.data.getAudio());
         List<ParameterWrapper> triggers = new ArrayList<>();
         triggers.add(this.data.getUniversals(TriggerAPI.class));
         triggers.addAll(this.data.getTriggers());
-        return new WrapperLink(info,audio,triggers);
+        return new WrapperLink(audio,triggers);
     }
 
     public Collection<TriggerAPI> getPlayableTriggers() {
@@ -178,8 +177,8 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
         return lines;
     }
     
-    public WrapperLink getRecordsLink(MTScreenInfo info) {
-        return new WrapperLink(info,this.data.getRecords());
+    public WrapperLink getRecordsLink() {
+        return new WrapperLink(this.data.getRecords());
     }
     
     public Set<String> getRedirectLines() {
@@ -188,18 +187,18 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
         return lines;
     }
     
-    public WrapperLink getRedirectLink(MTScreenInfo info) {
-        return new WrapperLink(info,this.data.getRedirects());
+    public WrapperLink getRedirectLink() {
+        return new WrapperLink(this.data.getRedirects());
     }
     
-    public WrapperLink getRendersLink(MTScreenInfo info) {
+    public WrapperLink getRendersLink() {
         Set<ImageElement> images = new HashSet<>();
         Set<TitleElement> titles = new HashSet<>();
         for(CardAPI card : this.data.getCards()) {
             if(card instanceof ImageElement) images.add((ImageElement)card);
             else if(card instanceof TitleElement) titles.add((TitleElement)card);
         }
-        return new WrapperLink(info,images,titles);
+        return new WrapperLink(images,titles);
     }
     
     public void getSource(Map<String,Toml> map, String name, String path) {

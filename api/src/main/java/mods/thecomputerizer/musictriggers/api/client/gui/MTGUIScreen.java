@@ -4,10 +4,13 @@ import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.client.MTClient;
 import mods.thecomputerizer.musictriggers.api.client.MTClientEvents;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.DataLink;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.ParameterLink;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
+import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.holder.HolderTrigger;
 import mods.thecomputerizer.shadow.org.joml.Vector2d;
 import mods.thecomputerizer.shadow.org.joml.Vector3d;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientHelper;
@@ -78,11 +81,11 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
         }
     }
     
-    protected static @Nullable DataLink findLink(MTScreenInfo info) {
-        switch(info.getType()) {
-            case "debug": return ChannelHelper.getDebug().getLink(info);
-            case "toggles": return ChannelHelper.getClientHelper().getTogglesLink(info);
-            default: return info.findChannelLink();
+    public static @Nullable DataLink findLink(MTScreenInfo parent, String type, @Nullable ParameterWrapper wrapper) {
+        switch(type) {
+            case "debug": return ChannelHelper.getDebug().getLink();
+            case "toggles": return ChannelHelper.getClientHelper().getTogglesLink();
+            default: return parent.findChannelLink(type,wrapper);
         }
     }
     
@@ -156,6 +159,12 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
         }
     }
     
+    public static TextAPI<?> jukeboxName(ParameterLink link) {
+        String key = String.valueOf(link.getModifiedValue("jukebox_key"));
+        String value = String.valueOf(link.getModifiedValue("jukebox_value"));
+        return TextHelper.getLiteral(key+" = "+value);
+    }
+    
     protected static String lang(String key) {
         return String.format("gui.%1$s.%2$s",MODID,key);
     }
@@ -210,6 +219,12 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
         return TextHelper.getTranslated(String.format("parameter.%1$s.%2$s.name",MODID,name));
     }
     
+    public static TextAPI<?> redirectName(ParameterLink link) {
+        String key = String.valueOf(link.getModifiedValue("redirect_key"));
+        String value = String.valueOf(link.getModifiedValue("redirect_value"));
+        return TextHelper.getLiteral(key+" = "+value);
+    }
+    
     public static TextAPI<?> selectionDesc(String name, Object ... args) {
         return TextHelper.getTranslated(String.format("selection.%1$s.%2$s.desc",MODID,name),args);
     }
@@ -219,11 +234,15 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
     }
     
     public static void setClickFunction(MTGUIScreen screen, Button button, String type) {
+        setClickFunction(screen,button,type,null);
+    }
+    
+    public static void setClickFunction(MTGUIScreen screen, Button button, String type, @Nullable DataLink link) {
         button.setClickFunc(b -> {
             switch(type) {
                 case "channels":
                 case "playback": {
-                    MTScreenInfo nextType = screen.typeInfo.next(type);
+                    MTScreenInfo nextType = screen.typeInfo.next(type,null);
                     nextType.setChannel(ChannelHelper.getClientHelper().findFirstUserChannel(),false);
                     openRadial(screen,nextType);
                     break;
@@ -242,8 +261,7 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
                     break;
                 }
                 default: {
-                    MTScreenInfo nextType = screen.typeInfo.next(type);
-                    nextType.setLink(findLink(nextType));
+                    MTScreenInfo nextType = screen.typeInfo.next(type,link);
                     open(constructScreen(screen,nextType,ClientHelper.getWindow(),ClientHelper.getGuiScale()));
                     break;
                 }
@@ -255,8 +273,9 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
         return TextHelper.getTranslated(String.format("trigger.%1$s.%2$s.desc",MODID,name));
     }
     
-    public static TextAPI<?> triggerName(String name, String id) {
-        if(!id.equals("not_set")) name+=".id";
+    public static TextAPI<?> triggerName(String name, String id, boolean holder) {
+        if(id.equals("null")) id = "not_set";
+        if(holder) name+=".id";
         return TextHelper.getTranslated(String.format("trigger.%1$s.%2$s",MODID,name),id);
     }
     
@@ -265,7 +284,7 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
         String combo = type("trigger")+"["+type("combination").toString()+" = ";
         StringJoiner joiner = new StringJoiner("+");
         for(TriggerAPI trigger : triggers) {
-            String name = triggerName(trigger.getName(),trigger.getIdentifier()).toString();
+            String name = triggerName(trigger.getName(),trigger.getIdentifier(),trigger instanceof HolderTrigger).toString();
             if(triggers.size()==1) return name;
             joiner.add(name);
         }

@@ -1,18 +1,18 @@
 package mods.thecomputerizer.musictriggers.api.client.gui.parameters;
 
 import lombok.Getter;
+import lombok.Setter;
 import mods.thecomputerizer.musictriggers.api.client.gui.MTScreenInfo;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 public abstract class DataLink {
     
-    protected final MTScreenInfo type;
     protected final boolean dual;
+    @Getter @Setter protected MTScreenInfo type;
     @Getter protected boolean modified;
     
-    protected DataLink(MTScreenInfo type, boolean dual) {
-        this.type = type;
+    protected DataLink(boolean dual) {
         this.dual = dual;
     }
     

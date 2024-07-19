@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.client.gui.parameters;
 
 import lombok.Getter;
+import lombok.Setter;
 import mods.thecomputerizer.musictriggers.api.client.gui.MTGUIScreen;
 import mods.thecomputerizer.musictriggers.api.client.gui.MTScreenInfo;
 import mods.thecomputerizer.musictriggers.api.client.gui.ParameterScreen;
@@ -14,6 +15,7 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.redirect.RedirectElement;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.MinecraftWindow;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.ScreenHelper;
@@ -32,6 +34,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -44,13 +47,15 @@ import static mods.thecomputerizer.theimpossiblelibrary.api.client.render.TextBu
 @Getter
 public class ParameterLink extends DataLink {
     
-    private final ParameterWrapper wrapper;
     private final Set<ParameterElement> parameters;
+    @Getter private final Set<DataLink> children;
+    @Setter private ParameterWrapper wrapper;
     
-    public ParameterLink(@Nullable MTScreenInfo type, ParameterWrapper wrapper, Map<String,Parameter<?>> parameters) {
-        super(type,false);
-        this.wrapper = wrapper;
+    public ParameterLink(ParameterWrapper wrapper, Map<String,Parameter<?>> parameters) {
+        super(false);
         this.parameters = new HashSet<>();
+        this.children = new HashSet<>();
+        this.wrapper = wrapper;
         TableRef ref = wrapper.getReferenceData();
         for(Entry<String,Parameter<?>> entry : parameters.entrySet())
             this.parameters.add(new ParameterElement(this,entry.getKey(),ref,entry.getValue()));
@@ -66,8 +71,8 @@ public class ParameterLink extends DataLink {
         }
     }
     
-    public void addChildren(MTGUIScreen screen,DataList list) {
-        for(DataLink link : this.wrapper.getChildWrappers(this.type)) {
+    public void addChildren(MTGUIScreen screen, DataList list) {
+        for(DataLink link : this.children) {
             list.addButton(link.getDisplayName(),b -> {
                 link.type.setLink(link);
                 MinecraftWindow window = ClientHelper.getWindow();
@@ -75,6 +80,16 @@ public class ParameterLink extends DataLink {
                 open(link instanceof ParameterLink ? new ParameterScreen(screen,link.type,window,scale) :
                              new WrapperScreen(screen,link.type,window,scale));
             },link.getDescription());
+        }
+    }
+    
+    public void distributeExternalChange(String name, Object value) {
+        for(ParameterElement element : this.parameters) {
+            if(element.name.equals(name)) {
+                element.modifiable.setValue(value);
+                element.refreshWidget();
+                return;
+            }
         }
     }
     
@@ -86,6 +101,12 @@ public class ParameterLink extends DataLink {
         return MTGUIScreen.selectionName(this.type.getType());
     }
     
+    public @Nullable Object getModifiedValue(String name) {
+        for(ParameterElement element : this.parameters)
+            if(element.name.equals(name)) return element.getValue();
+        return null;
+    }
+    
     @Override public void populateToml(Toml toml) {
         for(ParameterElement parameter : this.parameters) {
             Object value = parameter.getValue();
@@ -94,6 +115,11 @@ public class ParameterLink extends DataLink {
                 toml.addEntry(parameter.name,value);
         }
         this.type.populateNext(toml,true);
+    }
+    
+    @Override public void setType(MTScreenInfo type) {
+        this.type = type;
+        if(this.children.isEmpty()) this.children.addAll(this.wrapper.getChildWrappers(this.type));
     }
     
     public static final class ParameterElement {
@@ -139,9 +165,43 @@ public class ParameterLink extends DataLink {
             return this.modifiable.getValue();
         }
         
+        void refreshWidget() {
+            if(this.widget instanceof WidgetGroup) {
+                for(Widget widget : ((WidgetGroup)this.widget).getWidgets()) {
+                    if(widget instanceof CheckBox) ((CheckBox)widget).setSelected((Boolean)getValue());
+                    else if(widget instanceof DataList) {
+                        DataList data = (DataList)widget;
+                        Collection<Widget> widgets = data.getWidgets();
+                        List<?> updated = (List<?>)getValue();
+                        Widget button = null;
+                        for(Widget w : widgets) {
+                            if(w instanceof SpecialButton) {
+                                button = w;
+                                break;
+                            }
+                        }
+                        widgets.clear();
+                        for(Object value : updated) {
+                            TextBuffer text = TextBuffer.literal(String.valueOf(value));
+                            data.addWidget(new TextBox(this,text,0d,0d,widget.getWidth()));
+                        }
+                        if(Objects.nonNull(button)) data.addWidget(button);
+                    } else if(widget instanceof TextBox) ((TextBox)widget).setText(getLiteralValue());
+                }
+            }
+        }
+        
         public void save(Object value) {
+            String previous = String.valueOf(this.modifiable.getValue());
             this.modifiable.setValue(value);
             this.parent.setModified(true);
+            MTScreenInfo type = this.parent.type;
+            if(this.parent.wrapper instanceof RecordElement)
+                type.distributeJukeboxChange(this.parent);
+            else if(this.parent.wrapper instanceof RedirectElement)
+                type.distributeRedirectChange(this.parent,previous);
+            else if(this.name.equals("identifier") && this.parent.wrapper instanceof TriggerAPI)
+                type.distributeIdentifierChange(this.parent,getLiteralValue(),previous);
         }
         
         public Widget toWidget(ParameterScreen screen) {

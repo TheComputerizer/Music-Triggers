@@ -8,6 +8,7 @@ import mods.thecomputerizer.musictriggers.api.client.gui.parameters.WrapperLink;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
+import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
@@ -41,8 +42,11 @@ public class Toggle extends GlobalElement {
     }
     
     @Override public Collection<DataLink> getChildWrappers(MTScreenInfo parent) {
-        return Arrays.asList(new WrapperLink(parent.next("from_list"),this.fromThese),
-                             new WrapperLink(parent.next("to_list"),this.toThese));
+        WrapperLink from = new WrapperLink(this.fromThese);
+        from.setType(parent.next("from_list",from));
+        WrapperLink to = new WrapperLink(this.toThese);
+        to.setType(parent.next("to_list",to));
+        return Arrays.asList(from,to);
     }
     
     @Override public TableRef getReferenceData() {
@@ -112,6 +116,8 @@ public class Toggle extends GlobalElement {
         public static From addToGui(MTScreenInfo info) {
             From from = new From((Toggle)((ParameterLink)info.getLink()).getWrapper());
             from.channel = info.getChannel();
+            Parameter<?> parameter = from.getParameter("channel");
+            if(Objects.nonNull(parameter)) parameter.setValue(info.getChannel().getName());
             return from;
         }
 
@@ -178,6 +184,8 @@ public class Toggle extends GlobalElement {
         public static To addToGui(MTScreenInfo info) {
             To to = new To((Toggle)((ParameterLink)info.getLink()).getWrapper());
             to.channel = info.getChannel();
+            Parameter<?> parameter = to.getParameter("channel");
+            if(Objects.nonNull(parameter)) parameter.setValue(info.getChannel().getName());
             return to;
         }
 

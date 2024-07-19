@@ -66,8 +66,8 @@ public abstract class ParameterWrapper implements LoggableAPI {
         return Collections.emptySet();
     }
     
-    public ParameterLink getLink(@Nullable MTScreenInfo typeInfo) {
-        return new ParameterLink(typeInfo,this,this.parameters);
+    public ParameterLink getLink() {
+        return new ParameterLink(this,this.parameters);
     }
     
     protected abstract String getLogPrefix();

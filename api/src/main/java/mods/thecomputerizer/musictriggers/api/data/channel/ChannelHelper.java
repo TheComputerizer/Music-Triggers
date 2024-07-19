@@ -13,13 +13,11 @@ import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
 import lombok.Getter;
 import lombok.SneakyThrows;
-import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.MTClient;
 import mods.thecomputerizer.musictriggers.api.client.channel.ChannelClient;
 import mods.thecomputerizer.musictriggers.api.client.MTDebugInfo;
 import mods.thecomputerizer.musictriggers.api.client.channel.ChannelJukebox;
 import mods.thecomputerizer.musictriggers.api.client.channel.ChannelPreview;
-import mods.thecomputerizer.musictriggers.api.client.gui.MTScreenInfo;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.WrapperLink;
 import mods.thecomputerizer.musictriggers.api.config.ConfigVersionManager;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
@@ -73,6 +71,8 @@ import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import static mods.thecomputerizer.musictriggers.api.MTRef.GLOBAL_CONFIG;
 
 public class ChannelHelper implements NBTLoadable {
 
@@ -164,7 +164,7 @@ public class ChannelHelper implements NBTLoadable {
     public static void loadConfig(String playerID, boolean client) throws TomlWritingException {
         try {
             ConfigVersionManager.queryRemap();
-            globalData.parse(openToml(MTRef.GLOBAL_CONFIG,true,globalData));
+            globalData.parse(openToml(GLOBAL_CONFIG,true,globalData));
         } catch(Exception ex) {
             throw new RuntimeException("Error parsing global data!",ex);
         }
@@ -437,8 +437,8 @@ public class ChannelHelper implements NBTLoadable {
         return (ChannelPreview)this.channels.get("preview");
     }
     
-    public WrapperLink getTogglesLink(MTScreenInfo info) {
-        return new WrapperLink(info,this.toggles);
+    public WrapperLink getTogglesLink() {
+        return new WrapperLink(this.toggles);
     }
 
     private void initChannel(String name, Toml info) {

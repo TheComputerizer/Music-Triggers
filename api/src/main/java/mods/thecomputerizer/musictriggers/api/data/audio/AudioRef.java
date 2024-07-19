@@ -72,8 +72,11 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
     @Override public Collection<DataLink> getChildWrappers(MTScreenInfo parent) {
         if(Objects.isNull(this.interruptHandler))
             this.interruptHandler = new InterruptHandler(this.channel,Toml.getEmpty());
-        return Arrays.asList(this.interruptHandler.getLink(parent.next("interrupt_handler")),
-                             new WrapperLink(parent.next("loops"),this.loops));
+        DataLink interrupt = this.interruptHandler.getLink();
+        interrupt.setType(parent.next("interrupt_handler",interrupt));
+        WrapperLink loops = new WrapperLink(this.loops);
+        loops.setType(parent.next("loops",loops));
+        return Arrays.asList(interrupt,loops);
     }
     
     public int getPlayState() {

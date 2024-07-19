@@ -2,20 +2,11 @@ package mods.thecomputerizer.musictriggers.api.data.channel;
 
 import mods.thecomputerizer.musictriggers.api.client.gui.MTScreenInfo;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.DataLink;
-import mods.thecomputerizer.musictriggers.api.client.gui.parameters.WrapperLink;
-import mods.thecomputerizer.musictriggers.api.data.MTDataRef.ParameterRef;
-import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
-import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
-import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Objects;
-
-import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.EVENT_RUNNER;
 
 public abstract class ChannelElementRunner extends ChannelElement implements ChannelEventRunner {
 
@@ -39,7 +30,9 @@ public abstract class ChannelElementRunner extends ChannelElement implements Cha
     
     @Override public Collection<DataLink> getChildWrappers(MTScreenInfo parent) {
         if(Objects.isNull(this.instance)) this.instance = new EventInstance(this.channel,this);
-        return Collections.singletonList(this.instance.getLink(parent.next("event")));
+        DataLink link = this.instance.getLink();
+        link.setType(parent.next("event",link));
+        return Collections.singletonList(link);
     }
     
     @Override public String getLogPrefix() {

@@ -16,6 +16,7 @@ import mods.thecomputerizer.musictriggers.api.data.redirect.RedirectElement;
 import mods.thecomputerizer.musictriggers.api.data.render.TitleElement;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.Link;
+import mods.thecomputerizer.musictriggers.api.data.trigger.holder.HolderTrigger;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.ScreenHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Button;
@@ -48,18 +49,18 @@ public class WrapperLink extends DataLink {
     private final Set<WrapperElement> wrappers;
     private final Set<WrapperElement> otherWrappers;
     
-    public WrapperLink(MTScreenInfo type, Collection<? extends ParameterWrapper> wrappers) {
-        this(type,false,wrappers,Collections.emptySet());
+    public WrapperLink(Collection<? extends ParameterWrapper> wrappers) {
+        this(false,wrappers,Collections.emptySet());
     }
     
-    public WrapperLink(MTScreenInfo type, Collection<? extends ParameterWrapper> wrappers,
+    public WrapperLink(Collection<? extends ParameterWrapper> wrappers,
             Collection<? extends ParameterWrapper> otherWrappers) {
-        this(type,true,wrappers,otherWrappers);
+        this(true,wrappers,otherWrappers);
     }
     
-    private WrapperLink(MTScreenInfo type, boolean dual, Collection<? extends ParameterWrapper> wrappers,
+    private WrapperLink(boolean dual, Collection<? extends ParameterWrapper> wrappers,
             Collection<? extends ParameterWrapper> otherWrappers) {
-        super(type,dual);
+        super(dual);
         this.wrappers = new HashSet<>();
         for(ParameterWrapper wrapper : wrappers) this.wrappers.add(new WrapperElement(this,wrapper));
         this.otherWrappers = new HashSet<>();
@@ -71,11 +72,15 @@ public class WrapperLink extends DataLink {
         DataList list = new DataList(x,0d,width,1.8d,0.05d);
         List<WrapperElement> ordered = new ArrayList<>(wrappers);
         ordered.sort(Comparator.comparing(e -> e.getDisplayName().toString()));
-        for(WrapperElement element : ordered)
-            list.addButton(element.getDisplayName(),b -> {
+        for(WrapperElement element : ordered) {
+            Button button = list.makeButton(element.getDisplayName(),b -> {
                 if(!deleteElement(list,b,element,wrappers))
                     open(constructScreen(screen,element.link.type,ClientHelper.getWindow(),ClientHelper.getGuiScale()));
-            },element.getDescription());
+            });
+            button.addHoverLine(element.getDescription());
+            element.widget = button;
+            list.addWidget(button);
+        }
         SpecialButton add = list.makeSpecialButton(this.type.getSpecialLang("gui","button.add_entry.name"),b -> {
             Collection<Widget> widgets = list.getWidgets();
             for(Widget w : widgets)
@@ -117,10 +122,15 @@ public class WrapperLink extends DataLink {
             }
         }
         if(Objects.nonNull(widget)) widgets.remove(widget);
-        list.addButton(element.getDisplayName(),b -> {
+        Button button = list.makeButton(element.getDisplayName(),b -> {
             if(!deleteElement(list,b,element,wrappers))
                 open(constructScreen(screen,element.link.type,ClientHelper.getWindow(),ClientHelper.getGuiScale()));
-            },element.getDescription());
+        });
+        button.addHoverLine(element.getDescription());
+        element.widget = button;
+        list.addWidget(button);
+        if(list.getWidgets() instanceof List<?>)
+            ((List<Widget>)list.getWidgets()).sort(Comparator.comparing(w -> ((Button)w).getText().toString()));
         if(Objects.nonNull(widget)) list.addWidget(widget);
     }
     
@@ -208,7 +218,9 @@ public class WrapperLink extends DataLink {
     }
     
     public WrapperElement getElementFor(ParameterWrapper wrapper) {
-        return new WrapperElement(this,wrapper);
+        WrapperElement element = new WrapperElement(this,wrapper);
+        if(Objects.nonNull(this.type)) element.setLink(this.type);
+        return element;
     }
     
     public DataList getList(MTGUIScreen screen) {
@@ -226,6 +238,27 @@ public class WrapperLink extends DataLink {
         for(WrapperElement wrapper : this.otherWrappers)
             if(wrapper.link.isModified()) return true;
         return false;
+    }
+    
+    public void setElementDisplayName(ParameterLink link, TextAPI<?> name) {
+        for(WrapperElement element : this.wrappers) {
+            if(element.link==link) {
+                element.setDisplayName(name);
+                return;
+            }
+        }
+        for(WrapperElement element : this.otherWrappers) {
+            if(element.link==link) {
+                element.setDisplayName(name);
+                return;
+            }
+        }
+    }
+    
+    @Override public void setType(MTScreenInfo type) {
+        this.type = type;
+        for(WrapperElement wrapper : this.wrappers) wrapper.setLink(type);
+        for(WrapperElement wrapper : this.otherWrappers) wrapper.setLink(type);
     }
     
     private TextAPI<?> wrapperDesc(ParameterWrapper wrapper) {
@@ -253,16 +286,19 @@ public class WrapperLink extends DataLink {
         return wrapper instanceof TriggerAPI ? MTGUIScreen.triggerDesc(name) : MTGUIScreen.selectionDesc(name);
     }
     
-    private TextAPI<?> wrapperName(ParameterWrapper wrapper) {
+    private TextAPI<?> wrapperName(ParameterLink link) {
+        ParameterWrapper wrapper = link.getWrapper();
         String name = wrapper.getName();
-        if(wrapper instanceof TriggerAPI) return MTGUIScreen.triggerName(name,((TriggerAPI)wrapper).getIdentifier());
+        if(wrapper instanceof AudioRef) return TextHelper.getLiteral(name);
         else if(wrapper instanceof From) name = "from";
-        else if(wrapper instanceof To) name = "to";
         else if(wrapper instanceof Link) name = "link";
         else if(wrapper instanceof Loop) name = "loop";
-        boolean literal = !Misc.equalsAny(name,"universal_audio","universal_triggers");
-        literal = literal && Misc.equalsAny(this.type.getType(),"jukebox","main","redirect");
-        return literal ? TextHelper.getLiteral(name) : MTGUIScreen.selectionName(name);
+        else if(wrapper instanceof RecordElement) return MTGUIScreen.jukeboxName(link);
+        else if(wrapper instanceof RedirectElement) return MTGUIScreen.redirectName(link);
+        else if(wrapper instanceof To) name = "to";
+        else if(wrapper instanceof TriggerAPI)
+            return MTGUIScreen.triggerName(name,String.valueOf(link.getModifiedValue("identifier")),wrapper instanceof HolderTrigger);
+        return MTGUIScreen.selectionName(name);
     }
     
     @Override public void populateToml(Toml toml) {
@@ -302,20 +338,31 @@ public class WrapperLink extends DataLink {
     public static final class WrapperElement {
         
         final WrapperLink parent;
-        final DataLink link;
+        final ParameterWrapper wrapper;
+        DataLink link;
+        Widget widget;
         
         WrapperElement(WrapperLink parent, ParameterWrapper wrapper) {
             this.parent = parent;
-            String nextType = wrapper.getName();
-            if(wrapper instanceof RedirectElement) nextType = "redirect_element";
-            else if(wrapper instanceof RecordElement) nextType = "jukebox_element";
-            else if(wrapper instanceof Link) nextType = "link";
-            else if(wrapper instanceof Loop) nextType = "loop";
-            else if(wrapper instanceof From) nextType = "from";
-            else if(wrapper instanceof To) nextType = "to";
-            MTScreenInfo next = parent.type.next(nextType);
-            this.link = wrapper.getLink(next);
-            next.setLink(this.link);
+            this.wrapper = wrapper;
+        }
+        
+        void setLink(MTScreenInfo type) {
+            String nextType = this.wrapper.getName();
+            if(this.wrapper instanceof RedirectElement) nextType = "redirect_element";
+            else if(this.wrapper instanceof RecordElement) nextType = "jukebox_element";
+            else if(this.wrapper instanceof Link) nextType = "link";
+            else if(this.wrapper instanceof Loop) nextType = "loop";
+            else if(this.wrapper instanceof From) nextType = "from";
+            else if(this.wrapper instanceof To) nextType = "to";
+            DataLink link = null;
+            for(DataLink next : type.getCache())
+                if(next instanceof ParameterLink && ((ParameterLink)next).getWrapper()==this.wrapper)
+                    link = next;
+            if(Objects.isNull(link)) link = MTGUIScreen.findLink(type,nextType,this.wrapper);
+            MTScreenInfo next = type.next(nextType,link);
+            if(Objects.nonNull(link)) link.setType(next);
+            this.link = link;
         }
         
         public @Nullable ParameterLink getAsParameter() {
@@ -323,11 +370,19 @@ public class WrapperLink extends DataLink {
         }
         
         TextAPI<?> getDisplayName() {
-            return this.parent.wrapperName(((ParameterLink)this.link).getWrapper());
+            return this.parent.wrapperName((ParameterLink)this.link);
         }
         
         TextAPI<?> getDescription() {
             return this.parent.wrapperDesc(((ParameterLink)this.link).getWrapper());
+        }
+        
+        public void setDisplayName(TextAPI<?> text) {
+            if(this.widget instanceof Button) {
+                Button button = (Button)this.widget;
+                button.setText(text);
+                button.setHoverText(w -> w.setText(text));
+            }
         }
     }
 }

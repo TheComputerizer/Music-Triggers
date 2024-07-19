@@ -2,7 +2,6 @@ package mods.thecomputerizer.musictriggers.api.client.gui.parameters;
 
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.client.gui.MTGUIScreen;
-import mods.thecomputerizer.musictriggers.api.client.gui.MTScreenInfo;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Widget;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextAPI;
@@ -16,20 +15,20 @@ import java.util.function.Supplier;
 
 public class SelectionLink extends DataLink {
     
-    public static SelectionLink singleSingle(MTScreenInfo type, Consumer<ParameterWrapper> singleSelect) {
-        return new SelectionLink(type,false,false,singleSelect,null);
+    public static SelectionLink singleSingle(Consumer<ParameterWrapper> singleSelect) {
+        return new SelectionLink(false,false,singleSelect,null);
     }
     
-    public static SelectionLink singleMulti(MTScreenInfo type, Consumer<Collection<ParameterWrapper>> multiSelect) {
-        return new SelectionLink(type,false,true,null,multiSelect);
+    public static SelectionLink singleMulti(Consumer<Collection<ParameterWrapper>> multiSelect) {
+        return new SelectionLink(false,true,null,multiSelect);
     }
     
-    public static SelectionLink dualSingle(MTScreenInfo type, Consumer<ParameterWrapper> singleSelect) {
-        return new SelectionLink(type,true,false,singleSelect,null);
+    public static SelectionLink dualSingle(Consumer<ParameterWrapper> singleSelect) {
+        return new SelectionLink(true,false,singleSelect,null);
     }
     
-    public static SelectionLink dualMulti(MTScreenInfo type, Consumer<Collection<ParameterWrapper>> multiSelect) {
-        return new SelectionLink(type,true,true,null,multiSelect);
+    public static SelectionLink dualMulti(Consumer<Collection<ParameterWrapper>> multiSelect) {
+        return new SelectionLink(true,true,null,multiSelect);
     }
     
     private final boolean multi;
@@ -39,9 +38,9 @@ public class SelectionLink extends DataLink {
     private final Map<Function<SelectionElement,String>,Function<DataList,SelectionElement>> elementMakers;
     private final Map<Function<SelectionElement,String>,Function<DataList,SelectionElement>> otherElementMakers;
     
-    SelectionLink(MTScreenInfo type, boolean dual, boolean multi, Consumer<ParameterWrapper> singleSelect,
+    SelectionLink(boolean dual, boolean multi, Consumer<ParameterWrapper> singleSelect,
             Consumer<Collection<ParameterWrapper>> multiSelect) {
-        super(type,dual);
+        super(dual);
         this.multi = multi;
         this.singleSelect = singleSelect;
         this.multiSelect = multiSelect;
