@@ -46,7 +46,7 @@ public class TriggerSelector extends ChannelElement {
         clear();
     }
 
-    protected Collection<TriggerAPI> collectPlayableTriggers(Collection<TriggerAPI> triggers) {
+    protected Collection<TriggerAPI> collectPlayableTriggers(Collection<TriggerAPI> triggers, boolean unpaused) {
         setCrashHelper("playable (trigger collection)");
         Set<TriggerAPI> playable = new HashSet<>();
         for(TriggerAPI trigger : triggers) {
@@ -92,8 +92,8 @@ public class TriggerSelector extends ChannelElement {
         return priority;
     }
 
-    protected @Nullable TriggerAPI getPriorityTrigger(Collection<TriggerAPI> registeredTriggers) {
-        Collection<TriggerAPI> triggers = collectPlayableTriggers(registeredTriggers);
+    protected @Nullable TriggerAPI getPriorityTrigger(Collection<TriggerAPI> registeredTriggers, boolean unpaused) {
+        Collection<TriggerAPI> triggers = collectPlayableTriggers(registeredTriggers,unpaused);
         if(ChannelHelper.getDebugBool("independent_audio_pools"))
             return TriggerHelper.getPriorityTrigger(triggers);
         else {
@@ -126,7 +126,7 @@ public class TriggerSelector extends ChannelElement {
         return false;
     }
     
-    public TriggerAPI queryOrIdle(@Nullable TriggerAPI priority, @Nullable TriggerAPI trigger) {
+    public TriggerAPI queryOrIdle(@Nullable TriggerAPI priority, @Nullable TriggerAPI trigger, boolean unpaused) {
         if(Objects.nonNull(trigger)) {
             if(Objects.isNull(priority) && trigger.query(this.context)) {
                 if(trigger.canActivate()) priority = trigger;
@@ -137,7 +137,7 @@ public class TriggerSelector extends ChannelElement {
         return priority;
     }
 
-    public void select() {
+    public void select(boolean unpaused) { //TODO Figure out better pausing stuff
         if(!setContext()) return;
         setCrashHelper("trigger selection");
         TriggerAPI priorityTrigger = null;
@@ -146,16 +146,16 @@ public class TriggerSelector extends ChannelElement {
             setCrashHelper("early triggers");
             if(isClient()) {
                 setCrashHelper("loading trigger");
-                priorityTrigger = queryOrIdle(priorityTrigger,data.getLoadingTrigger());
+                priorityTrigger = queryOrIdle(null,data.getLoadingTrigger(),unpaused);
                 setCrashHelper("menu trigger");
-                priorityTrigger = queryOrIdle(priorityTrigger,data.getMenuTrigger());
+                priorityTrigger = queryOrIdle(priorityTrigger,data.getMenuTrigger(),unpaused);
             }
         } else {
             setCrashHelper("normal triggers");
-            priorityTrigger = getPriorityTrigger(data.getTriggerEventMap().keySet());
+            priorityTrigger = getPriorityTrigger(data.getTriggerEventMap().keySet(),unpaused);
         }
         setCrashHelper("generic trigger");
-        priorityTrigger = queryOrIdle(priorityTrigger,data.getGenericTrigger());
+        priorityTrigger = queryOrIdle(priorityTrigger,data.getGenericTrigger(),unpaused);
         setActivePool(priorityTrigger instanceof BasicTrigger ? setBasicTrigger(priorityTrigger) :
                               setActiveTrigger(priorityTrigger));
     }

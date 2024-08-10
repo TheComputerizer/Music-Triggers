@@ -91,8 +91,8 @@ public class AudioPool extends AudioRef implements NBTLoadable {
     }
 
     @Override
-    public float getVolume() {
-        return Objects.nonNull(this.queuedAudio) ? this.queuedAudio.getVolume() : 0f;
+    public float getVolume(boolean unpaused) {
+        return Objects.nonNull(this.queuedAudio) ? this.queuedAudio.getVolume(unpaused) : 0f;
     }
 
     public boolean hasAudio() {
@@ -158,8 +158,8 @@ public class AudioPool extends AudioRef implements NBTLoadable {
     public void onLoaded(CompoundTagAPI<?> globalData) {}
 
     @Override
-    public void play() {
-        if(Objects.nonNull(this.queuedAudio)) this.queuedAudio.play();
+    public void play(boolean unpaused) {
+        if(Objects.nonNull(this.queuedAudio)) this.queuedAudio.play(unpaused);
     }
     
     @Override
@@ -168,8 +168,8 @@ public class AudioPool extends AudioRef implements NBTLoadable {
     }
 
     @Override
-    public void playing() {
-        if(Objects.nonNull(this.queuedAudio)) this.queuedAudio.playing();
+    public void playing(boolean unpaused) {
+        if(Objects.nonNull(this.queuedAudio)) this.queuedAudio.playing(unpaused);
     }
 
     @Override
@@ -212,8 +212,8 @@ public class AudioPool extends AudioRef implements NBTLoadable {
     }
 
     @Override
-    public void start(TriggerAPI trigger) {
-        if(Objects.nonNull(this.queuedAudio)) this.queuedAudio.start(trigger);
+    public void start(TriggerAPI trigger, boolean unpaused) {
+        if(Objects.nonNull(this.queuedAudio)) this.queuedAudio.start(trigger,unpaused);
         else logWarn("Tried to start empty queue from {}",trigger);
     }
 

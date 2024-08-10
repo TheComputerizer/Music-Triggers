@@ -57,7 +57,7 @@ public abstract class GlobalEventRunner extends GlobalElement implements Channel
         return false;
     }
     
-    @Override public void play() {
+    @Override public void play(boolean unpaused) {
         if(checkRun("play")) run();
     }
     
@@ -65,7 +65,7 @@ public abstract class GlobalEventRunner extends GlobalElement implements Channel
         if(checkRun("playable")) run();
     }
     
-    @Override public void playing() {
+    @Override public void playing(boolean unpaused) {
         if(checkRun("playing")) run();
     }
     
@@ -91,11 +91,11 @@ public abstract class GlobalEventRunner extends GlobalElement implements Channel
         return this.instance.tick();
     }
     
-    @Override public void tickActive() {
+    @Override public void tickActive(boolean unpaused) {
         if(checkRun("tick_active")) run();
     }
     
-    @Override public void tickPlayable() {
+    @Override public void tickPlayable(boolean unpaused) {
         if(checkRun("tick_playable")) run();
     }
     

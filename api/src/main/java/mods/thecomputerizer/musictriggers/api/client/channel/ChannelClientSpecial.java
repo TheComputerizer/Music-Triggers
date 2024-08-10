@@ -92,9 +92,9 @@ public abstract class ChannelClientSpecial extends ChannelClient {
         this.playingPos = VectorHelper.max3I();
     }
     
-    @Override public void tickActive() {}
+    @Override public void tickActive(boolean unpaused) {}
     
-    @Override public void tickPlayable() {}
+    @Override public void tickPlayable(boolean unpaused) {}
     
-    @Override public void tickSlow() {}
+    @Override public void tickSlow(boolean unpaused) {}
 }

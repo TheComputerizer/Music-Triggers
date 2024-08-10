@@ -101,8 +101,8 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
         return AudioRef.class;
     }
     
-    public float getVolume() {
-        return 0f;
+    public float getVolume(boolean unpaused) {
+        return getParameterAsFloat(unpaused ? "volume" : "volume_when_paused");
     }
     
     @Override public int getWeight() {
@@ -161,7 +161,7 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
     
     @Override public void setWeight(int i) {}
 
-    public void start(TriggerAPI trigger) {}
+    public void start(TriggerAPI trigger, boolean unpaused) {}
     
     @Override protected Toml toTomlExtra(Toml toml) {
         toml = super.toTomlExtra(toml);

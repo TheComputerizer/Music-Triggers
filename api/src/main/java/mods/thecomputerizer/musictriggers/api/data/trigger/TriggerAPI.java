@@ -77,6 +77,10 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
         int maxTracks = getParameterAsInt("max_tracks");
         return (maxTracks<=0 || this.tracksPlayed<maxTracks) && !hasTime("ticks_between_audio");
     }
+    
+    public boolean checkPaused(boolean unpaused) {
+        return unpaused || getParameterAsBoolean("play_when_paused");
+    }
 
     protected boolean checkSidedContext(TriggerContext context) {
         return isSynced() ? context.getSyncedContext(this) : isPlayableContext(context);
@@ -269,7 +273,7 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
     }
 
     @Override
-    public void play() {
+    public void play(boolean unpaused) {
         this.tracksPlayed++;
     }
 
@@ -384,12 +388,12 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
     }
 
     @Override
-    public void tickActive() {
+    public void tickActive(boolean unpaused) {
         tickTimers(ACTIVE);
     }
 
     @Override
-    public void tickPlayable() {
+    public void tickPlayable(boolean unpaused) {
         tickTimers(PLAYABLE);
     }
 

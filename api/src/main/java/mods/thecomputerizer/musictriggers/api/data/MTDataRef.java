@@ -46,6 +46,7 @@ public final class MTDataRef {
     public static final TableRef CHANNEL_INFO = new TableRef("channel",Arrays.asList(
             buildParameter("commands","commands"),
             buildParameter("explicitly_overrides",false),
+            buildParameter("has_paused_music",false),
             buildParameter("jukebox","jukebox"),
             buildParameter("local_folder",CONFIG_PATH+"/songs"),
             buildParameter("main","main"),
@@ -134,7 +135,8 @@ public final class MTDataRef {
             buildParameter("speed",1d),
             buildParameter("start_at",0),
             buildParameter("triggers",new ArrayList<>()),
-            buildParameter("volume",1f)
+            buildParameter("volume",1f),
+            buildParameter("volume_when_paused",0.25f)
     ),INTERRUPT_HANDLER,LOOP);
     public static final TableRef IMAGE_CARD = buildRenderCard("image",
             buildParameter("animated",false),
@@ -397,6 +399,7 @@ public final class MTDataRef {
                 buildParameter("not",false),
                 buildParameter("passive_persistence",0),
                 buildParameter("persistence",0),
+                buildParameter("play_when_paused",false),
                 buildParameter("priority",defaultPriority(name)),
                 buildParameter("start_as_disabled",false),
                 buildParameter("ticks_before_active",0),

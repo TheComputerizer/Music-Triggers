@@ -321,6 +321,14 @@ public class ChannelHelper implements NBTLoadable {
         }
     }
     
+    public static void setDebugParameter(boolean client, String name, Object value) {
+        if(client) {
+            ChannelHelper helper = getClientHelper();
+            if(Objects.nonNull(helper)) helper.setDebugParameter(name,value);
+        } else for(ChannelHelper helper : PLAYER_MAP.values())
+            if(!helper.client) helper.setDebugParameter(name,value);
+    }
+    
     public static void tick(@Nullable CustomTick ticker) {
         if(!loader.isLoading() && Objects.nonNull(ticker) && ticker.isEquivalentTPS(getTickRate()))
             for(ChannelHelper helper : PLAYER_MAP.values()) helper.tickChannels();
@@ -574,6 +582,13 @@ public class ChannelHelper implements NBTLoadable {
         if(!this.client) ((ChannelServer)this.channels.get(channel)).setCurrentSong(song);
     }
     
+    public void setDebugParameter(String name, Object value) {
+        Debug debug = getDebug();
+        if(Objects.nonNull(debug)) debug.setParameterValue(name,value);
+        else logGlobalError("Cannot set debug value {} = {} because Debug does not exist??",name,
+                            value instanceof String ? "\""+value+"\"" : value);
+    }
+    
     public void setDiscTag(ItemStackAPI<?> stack, String channel, String trigger, String audio, boolean custom) {
         CompoundTagAPI<?> tag = TagHelper.makeCompoundTag();
         tag.putString("channel",channel);
@@ -605,12 +620,12 @@ public class ChannelHelper implements NBTLoadable {
     }
     
     public void tickChannels() {
-        if(loader.isLoading()) return; //Why is this needed here when it's already in the static method? I have no idea
+        if(loader.isLoading()) return; //Why is this necessary here when it's already in the static method? I have no idea
         boolean jukebox = this.client && checkForJukebox();
         boolean slow = (this.ticks++)%ChannelHelper.getDebugNumber("slow_tick_factor").intValue()==0;
         for(ChannelAPI channel : this.channels.values()) {
-            channel.tick(jukebox);
-            if(slow) channel.tickSlow();
+            boolean unpaused = channel.tick(jukebox,true);
+            if(slow) channel.tickSlow(unpaused);
         }
         if(slow) {
             sync();

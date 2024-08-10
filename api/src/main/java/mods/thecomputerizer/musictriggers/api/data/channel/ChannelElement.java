@@ -52,13 +52,13 @@ public abstract class ChannelElement extends ParameterWrapper implements Channel
     public abstract boolean isResource();
 
     @Override
-    public void play() {}
+    public void play(boolean unpaused) {}
 
     @Override
     public void playable() {}
 
     @Override
-    public void playing() {}
+    public void playing(boolean unpaused) {}
 
     @Override
     public void queue() {}
@@ -70,10 +70,10 @@ public abstract class ChannelElement extends ParameterWrapper implements Channel
     public void stopped() {}
 
     @Override
-    public void tickActive() {}
+    public void tickActive(boolean unpaused) {}
 
     @Override
-    public void tickPlayable() {}
+    public void tickPlayable(boolean unpaused) {}
     
     @Override
     public String toString() {

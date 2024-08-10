@@ -182,6 +182,8 @@ parameter.musictriggers.fps.desc=Determines the target FPS of the image card if 
 parameter.musictriggers.fps.name=FPS
 parameter.musictriggers.from.desc=Determines the time in milliseconds that this loop will activate at. For example, setting a value of 10000 means that the audio this loop is attached to will be set to the target time when it reaches exactly 10 seconds. Note that loop checks can only be as accurate as the tick rate which by default is every 50 milliseconds via a rate of 20. See the tick_rate debug parameter for more information.\n\n<default: 0>
 parameter.musictriggers.from.name=Activation Time
+parameter.musictriggers.has_paused_music.desc=Enables audio playback when the game is paused for the channel. Use the play_when_paused trigger parameter and volume_when_paused audio parameter for fine tuning.\n\n<default: false>
+parameter.musictriggers.has_paused_music.name=Has Paused Music
 parameter.musictriggers.health.desc=Determines the (inclusive) maxiumum health percentage an entity can have in order for the trigger to activate.\n\n<default: 100.0>
 parameter.musictriggers.health.name=Health
 parameter.musictriggers.highest_day_number.desc=The (inclusive) maximum day number of the world that the trigger can be active in. \n\n<default: 2147483647>
@@ -264,6 +266,8 @@ parameter.musictriggers.play_normal_music.desc=Determines whether the vanilla so
 parameter.musictriggers.play_normal_music.name=Play Normal Music
 parameter.musictriggers.play_once.desc=Integer based presets for determining what happens when the audio finishes playing. Accepts values from 0-5.\n\n0 = Inactive\n\n1 = The audio will not be allowed to play again until all songs in the pool have been played or the trigger is no longer active.\n\n2 = The audio will not be allowed to play again until the trigger is no longer active.\n\n3 = The audio will not be allowed to play until the player logs out of the world.\n\n4 = The audio will only play once for a world regardless of disconnects and restarts.\n\n5 = The audio will not be allowed to play until the game is restarted.\n\n<default: 0>
 parameter.musictriggers.play_once.name=Play Once
+parameter.musictriggers.play_when_paused.desc=Determines whether the trigger is playable while the game is paused. Requires has_paused_music to be active for the channel.\n\n<default: false>
+parameter.musictriggers.play_when_paused.name=Play When Paused
 parameter.musictriggers.play_x.desc=Determines the number of times the audio must be played before the play_once parameter takes effect. Only positive values will be accepted.\n\n<default: 1>
 parameter.musictriggers.play_x.name=Play X
 parameter.musictriggers.priority.desc=The priority value of the trigger in regards to other triggers that are playable at the same time. By default the highest priority trigger always wins and will be active, but that can be changed via the debug config. See the independent_audio_pools and reverse_priority debug paremters for more info. For trigger combinations, nonspecific parameters like fade_out are taken from the highest priority trigger.\n\n<default: See the help page or wiki for default priority values>
@@ -368,6 +372,8 @@ parameter.musictriggers.victory_percentage.desc=The percentage of entities that 
 parameter.musictriggers.victory_percentage.name=Victory Percentage
 parameter.musictriggers.volume.desc=The decimal volume the audio will play at where 1 = 100. Values lower than 0.01 (after multiplying the category and master volumes) may be rounded down to 0. Supports values between 0-10 but going above 1 is not recommended.\n\n<default: 1>
 parameter.musictriggers.volume.name=Volume
+parameter.musictriggers.volume_when_paused.desc=If has_paused_music is enabled for the channel and play_when_paused is enabled for the trigger, this will determine the volume the audio will play at when the game is paused.\n\n<default: 0.25>
+parameter.musictriggers.volume_when_paused.name=Volume When Paused
 parameter.musictriggers.write_default_values.desc=Determines the name of the config file type or table that will write default values to the config. What this means is that whenever the config files are written to or loaded, any tables listed here that also have their parent table or file listed here will have all of its accepted parameters written out. Tables not listed here will not write parameters that match their default values. The debug config file will always have all of its parameters written out regardless of whether it is listed here.\n\n<default: [ "channel", "from", "image", "interrupt_handler", "main", "songs", "title", "toggle", "triggers", "universal_audio", "universal_triggers" ]>
 parameter.musictriggers.write_default_values.name=Write Defualt Values
 parameter.musictriggers.x.desc=The offset of the X position in relation to the screen that will applied after all other alignment and scaling parameters. Uses normalized screen positions where 0 is the center, -1 is the left, and 1 is the right.\n\n<default: 0>

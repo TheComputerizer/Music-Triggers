@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.DEBUG;
 
@@ -35,6 +36,15 @@ public class Debug extends GlobalElement { //TODO Implement log_level and max_ho
     
     @Override public TableRef getReferenceData() {
         return DEBUG;
+    }
+    
+    public void setParameterValue(String name, Object value) {
+        Parameter<?> parameter = getParameter(name);
+        if(Objects.nonNull(parameter)) {
+            Object old = parameter.getValue();
+            setParameterValue(name,value,parameter);
+            logInfo("Successfully set debug parameter {} from {} to {}",name,old,value);
+        }
     }
     
     @Override

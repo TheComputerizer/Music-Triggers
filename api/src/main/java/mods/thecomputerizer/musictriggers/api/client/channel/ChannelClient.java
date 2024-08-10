@@ -28,6 +28,7 @@ import java.util.Objects;
 
 import static com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats.DISCORD_PCM_S16_BE;
 import static com.sedmelluq.discord.lavaplayer.player.AudioConfiguration.ResamplingQuality.HIGH;
+import static java.lang.Long.MAX_VALUE;
 
 public class ChannelClient extends ChannelAPI {
 
@@ -75,6 +76,10 @@ public class ChannelClient extends ChannelAPI {
     public boolean checkJukebox(boolean jukebox) {
         return !jukebox || !getInfo().isPausedByJukebox();
     }
+    
+    public boolean checkPaused(boolean unpaused) {
+        return unpaused || getInfo().hasPausedMusic();
+    }
 
     @Override public void close() {
         super.close();
@@ -88,7 +93,8 @@ public class ChannelClient extends ChannelAPI {
     }
 
     protected void configure(AudioConfiguration config) {
-        config.setResamplingQuality(EnumHelper.getEnumOrDefault(ChannelHelper.getDebugString("resampling_quality"),ResamplingQuality.class,HIGH));
+        String resamplingQuality = ChannelHelper.getDebugString("resampling_quality");
+        config.setResamplingQuality(EnumHelper.getEnumOrDefault(resamplingQuality,ResamplingQuality.class,HIGH));
         config.setOpusEncodingQuality(ChannelHelper.getDebugNumber("encoding_quality").intValue());
         config.setOutputFormat(DISCORD_PCM_S16_BE);
     }
@@ -118,7 +124,7 @@ public class ChannelClient extends ChannelAPI {
 
     protected AudioConfiguration finalizeManager() {
         this.manager.setFrameBufferDuration(1000);
-        this.manager.setPlayerCleanupThreshold(Long.MAX_VALUE);
+        this.manager.setPlayerCleanupThreshold(MAX_VALUE);
         return this.manager.getConfiguration();
     }
 
@@ -207,23 +213,23 @@ public class ChannelClient extends ChannelAPI {
     }
 
     @Override
-    public void play() {
-        super.play();
+    public void play(boolean unpaused) {
+        super.play(unpaused);
         this.queued = false;
         TriggerAPI trigger = getActiveTrigger();
         if(trigger.canPlayAudio()) {
             AudioPool pool = trigger.getAudioPool();
             if(Objects.nonNull(pool)) {
                 if(pool.hasQueue()) {
-                    pool.start(trigger);
+                    pool.start(trigger,unpaused);
                     this.playingPool = pool;
                 } else pool.queue();
             }
         }
     }
 
-    @Override public void playing() {
-        super.playing();
+    @Override public void playing(boolean unpaused) {
+        super.playing(unpaused);
     }
 
     @Override public void queue() {
@@ -268,28 +274,35 @@ public class ChannelClient extends ChannelAPI {
         this.playingPool = null;
     }
     
-    @Override public void tick(boolean jukebox) {
+    @Override public boolean tick(boolean jukebox, boolean unpaused) {
         if(this.enabled) {
-            if(MTClient.isUnpaused() && checkFocus() && checkJukebox(jukebox)) {
+            unpaused = MTClient.isUnpaused();
+            if(checkPaused(unpaused) && checkFocus() && checkJukebox(jukebox)) {
                 this.player.setPaused(false);
-                super.tick(jukebox);
+                unpaused = super.tick(jukebox,unpaused);
             } else this.player.setPaused(true);
-        } else if(Objects.nonNull(this.playingPool)) playing();
+            return unpaused || !getInfo().hasPausedMusic();
+        } else if(Objects.nonNull(this.playingPool)) playing(unpaused);
+        return false;
     }
 
-    @Override public void tickActive() {
-        super.tickActive();
+    @Override public void tickActive(boolean unpaused) {
+        super.tickActive(unpaused);
         TriggerAPI trigger = getActiveTrigger();
         if(Objects.nonNull(trigger)) {
             AudioPool activePool = getData().getActivePool();
             if(Objects.nonNull(activePool)) {
-                if(Objects.nonNull(this.playingPool)) playing();
+                if(Objects.nonNull(this.playingPool)) playing(unpaused);
                 else if(!this.deactivating) {
-                    if(this.queued) play();
+                    if(this.queued) play(unpaused);
                     else queue();
                 }
             }
         }
+    }
+    
+    @Override public void tickSlow(boolean unpaused) {
+        if(checkPaused(unpaused)) super.tickSlow(unpaused);
     }
 
     private void updateVolume() {

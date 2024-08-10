@@ -26,14 +26,15 @@ public class AudioContainer extends AudioRef {
     private float fadeFactor;
     private AudioItem item;
     private int playlistIndex;
+    private boolean previousPauseStatus;
 
     public AudioContainer(ChannelAPI channel, String name) {
         super(channel,name);
     }
 
-    private void checkFade(int fade) {
+    private void checkFade(int fade, boolean unpaused) {
         if(fade>0) setFade(-fade);
-        this.channel.setTrackVolume(getVolume());
+        this.channel.setTrackVolume(getVolume(unpaused));
     }
 
     @Override
@@ -66,8 +67,15 @@ public class AudioContainer extends AudioRef {
     }
 
     @Override
-    public float getVolume() {
-        return this.fade<=0 ? 1f : (this.fadeFactor<=0 ? 1f+getFade() : getFade());
+    public float getVolume(boolean unpaused) {
+        return super.getVolume(unpaused)*(this.fade<=0 ? 1f : (this.fadeFactor<=0 ? 1f+getFade() : getFade()));
+    }
+    
+    private void handlePaused(boolean unpaused) {
+        if(this.previousPauseStatus!=unpaused) {
+            this.channel.setTrackVolume(getVolume(unpaused));
+            this.previousPauseStatus = unpaused;
+        }
     }
 
     @Override
@@ -83,9 +91,9 @@ public class AudioContainer extends AudioRef {
     }
 
     @Override
-    public void playing() {
+    public void playing(boolean unpaused) {
         if(this.queued) {
-            if(this.loaded) start(this.channel.getActiveTrigger());
+            if(this.loaded) start(this.channel.getActiveTrigger(),unpaused);
             return;
         } else if(this.loading || !this.loaded) return;
         if(this.looping) this.looping = false;
@@ -104,8 +112,8 @@ public class AudioContainer extends AudioRef {
                 if(this.fadeFactor>0f) stopTrackImmediately();
                 this.fadeFactor = 0f;
             }
-            this.channel.setTrackVolume(getVolume());
-        }
+            this.channel.setTrackVolume(getVolume(unpaused));
+        } else handlePaused(unpaused);
     }
 
     @Override
@@ -179,7 +187,7 @@ public class AudioContainer extends AudioRef {
     }
 
     @Override
-    public void start(TriggerAPI trigger) {
+    public void start(TriggerAPI trigger, boolean unpaused) {
         if(!this.loaded || this.loading) {
             logInfo("Queued track will play once it is finished loading");
             this.queued = true;
@@ -194,7 +202,7 @@ public class AudioContainer extends AudioRef {
         AudioTrack track = getTrack();
         if(Objects.isNull(track)) return;
         track.stop();
-        checkFade(Objects.nonNull(trigger) && trigger.isFirstTrack() ? trigger.getParameterAsInt("fade_in") : 0);
+        checkFade(Objects.nonNull(trigger) && trigger.isFirstTrack() ? trigger.getParameterAsInt("fade_in") : 0,unpaused);
         setPosition(track);
         player.setFilterFactory(this::setFilters);
         player.playTrack(track);

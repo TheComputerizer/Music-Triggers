@@ -316,16 +316,16 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
     }
 
     @Override
-    public void play() {
-        handleActiveEvent(ChannelEventHandler::play);
+    public void play(boolean unpaused) {
+        handleActiveEvent(handler -> handler.play(unpaused));
     }
 
     @Override
     public void playable() {}
 
     @Override
-    public void playing() {
-        handleActiveEvent(ChannelEventHandler::playing);
+    public void playing(boolean unpaused) {
+        handleActiveEvent(handler -> handler.playing(unpaused));
     }
 
     @Override
@@ -375,23 +375,24 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
         handleActiveEvent(ChannelEventHandler::stopped);
     }
 
-    public void tick(boolean jukebox) {
-        tickActive();
-        tickPlayable();
+    public boolean tick(boolean jukebox, boolean unpaused) {
+        tickActive(unpaused);
+        tickPlayable(unpaused);
+        return unpaused;
     }
 
     @Override
-    public void tickActive() {
-        handleActiveEvent(ChannelEventHandler::tickActive);
+    public void tickActive(boolean unpaused) {
+        handleActiveEvent(handler -> handler.tickActive(unpaused));
     }
 
     @Override
-    public void tickPlayable() {
-        handlePlayableEvent(ChannelEventHandler::tickPlayable);
+    public void tickPlayable(boolean unpaused) {
+        handlePlayableEvent(handler -> handler.tickPlayable(unpaused));
     }
 
-    public void tickSlow() {
-        this.selector.select();
+    public void tickSlow(boolean unpaused) {
+        this.selector.select(unpaused);
     }
     
     @Override
