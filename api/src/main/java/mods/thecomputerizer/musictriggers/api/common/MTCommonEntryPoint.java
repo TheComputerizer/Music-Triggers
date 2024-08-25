@@ -7,6 +7,7 @@ import mods.thecomputerizer.musictriggers.api.registry.MTRegistryHandler;
 import mods.thecomputerizer.musictriggers.api.server.MTServerEvents;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientEntryPoint;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.CommonEntryPoint;
+import mods.thecomputerizer.theimpossiblelibrary.api.core.ClassHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.CoreAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.loader.MultiVersionMod;
 
@@ -23,85 +24,19 @@ import static mods.thecomputerizer.musictriggers.api.MTRef.NAME;
 @MultiVersionMod(modid = MODID, modName = NAME, modVersion = MTRef.VERSION)
 public class MTCommonEntryPoint extends CommonEntryPoint {
     
-    private static final Class<CommonEntryPoint> versionClass = findVersionEntryClass(CoreAPI.INSTANCE);
-    
-    @SuppressWarnings("unchecked")
-    private static Class<CommonEntryPoint> findVersionEntryClass(CoreAPI instance) {
-        String pkg = "mods.thecomputerizer.musictriggers.";
-        switch(instance.getModLoader()) {
-            case FABRIC: {
-                pkg+="fabric.";
-                break;
-            }
-            case FORGE: {
-                pkg+="forge.";
-                break;
-            }
-            case LEGACY: {
-                pkg+="legacy.";
-                break;
-            }
-            case NEOFORGE: {
-                pkg+="neoforge.";
-                break;
-            }
-        }
-        String cls = "MTCommonEntryPoint1_";
-        switch(instance.getVersion()) {
-            case V12: {
-                pkg+="v12.m2";
-                cls+="12_2";
-                break;
-            }
-            case V16: {
-                pkg+="v16.m5";
-                cls+="16_5";
-                break;
-            }
-            case V18: {
-                pkg+="v18.m2";
-                cls+="18_2";
-                break;
-            }
-            case V19: { //TODO Support multiple minor versions?
-                pkg+="v19";
-                cls+="19";
-                break;
-            }
-            case V20: {
-                pkg+="v20";
-                cls+="20";
-                break;
-            }
-            case V21: {
-                pkg+="v21";
-                cls+="21";
-                break;
-            }
-        }
-        String classpath = pkg+".common."+cls;
-        try {
-            Class<CommonEntryPoint> clazz = (Class<CommonEntryPoint>)Class.forName(classpath);
-            MTRef.logInfo("Successfully located versioned entrypoint {}",clazz);
-            return clazz;
-        } catch(ClassNotFoundException | ClassCastException ex) {
-            if(ex instanceof ClassCastException) MTRef.logError("Classpath `{}` is not an entrypoint!",classpath,ex);
-            else MTRef.logError("Unable to locate version specific entrypoint classpath {}",classpath,ex);
-            return null;
-        }
-    }
-    
     final CommonEntryPoint versionInstance;
     
     public MTCommonEntryPoint() {
+        MTRef.logDebug("Constructing MTCommonEntryPoint on ClassLoader {}",getClass().getClassLoader());
         CommonEntryPoint instance = null;
+        Class<? extends CommonEntryPoint> versionClass = findVersionEntryClass(CoreAPI.getInstance());
         if(Objects.nonNull(versionClass)) {
             try {
                 instance = versionClass.newInstance();
             } catch(ReflectiveOperationException ex) {
                 MTRef.logFatal("Unable to instantiate versioned instance!",ex);
             }
-        }
+        } else MTRef.logError("Versioned entrypoint not found! Things might not work properly");
         this.versionInstance = instance;
     }
 
@@ -113,6 +48,26 @@ public class MTCommonEntryPoint extends CommonEntryPoint {
     private void distributeHook(Consumer<CommonEntryPoint> hook) {
         if(Objects.nonNull(this.versionInstance)) hook.accept(this.versionInstance);
         if(Objects.nonNull(this.delegatedClient)) hook.accept(this.delegatedClient);
+    }
+    
+    @SuppressWarnings("unchecked")
+    private Class<? extends CommonEntryPoint> findVersionEntryClass(CoreAPI instance) {
+        MTRef.logDebug("Finding version entrypoint on ClassLoader {}",instance.getClass().getClassLoader());
+        String pkg = CoreAPI.getInstance().getPackageName("mods.thecomputerizer.musictriggers");
+        String version = instance.getVersion().getName().replace('.','_');
+        String classpath = pkg+".common.MTCommonEntryPoint"+version;
+        //Sync the version entry class to the context class loader
+        ClassLoader systemLoader = ClassLoader.getSystemClassLoader();
+        ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
+        ClassHelper.syncSourcesAndLoadClass(systemLoader,contextLoader,classpath);
+        try {
+            Class<CommonEntryPoint> clazz = (Class<CommonEntryPoint>)ClassHelper.findClass(classpath,contextLoader);
+            MTRef.logInfo("Successfully located versioned entrypoint {} using loader {}",clazz,contextLoader);
+            return clazz;
+        } catch(ClassCastException ex) {
+            MTRef.logError("Classpath `{}` is not an entrypoint!",classpath,ex);
+            return null;
+        }
     }
 
     @Override

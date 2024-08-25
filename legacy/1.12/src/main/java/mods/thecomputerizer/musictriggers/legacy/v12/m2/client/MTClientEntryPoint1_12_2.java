@@ -17,6 +17,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
+import static mods.thecomputerizer.musictriggers.api.MTRef.NAME;
+
 public class MTClientEntryPoint1_12_2 extends ClientEntryPoint {
     
     private static final List<String> MCMETA_LINES = Arrays.asList(
@@ -29,11 +32,11 @@ public class MTClientEntryPoint1_12_2 extends ClientEntryPoint {
     }
     
     @Override protected String getModID() {
-        return MTRef.MODID;
+        return MODID;
     }
     
     @Override protected String getModName() {
-        return MTRef.NAME;
+        return NAME;
     }
     
     private @Nullable List<IResourcePack> getResourcePacks(Minecraft mc) {

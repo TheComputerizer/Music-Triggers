@@ -50,7 +50,9 @@ minecraft {
     accessTransformer = file("src/main/resources/META-INF/${mod_accesstransformer}")
     runs {
         def args = [
-                '-DtilDev=true'
+            '-DtilDev=true',
+            '-DtilLoaderFile=theimpossiblelibrary-0.4.0_mapped_parchment_2022.03.06-1.16.5.jar', //Only needed in dev
+            '-DtilClassPathMods='+mod_entrypoint
         ]
         client {
             workingDirectory file('run_client')
@@ -84,14 +86,6 @@ repositories {
         }
     }
     maven {
-        name = 'Modding Legacy'
-        url = uri('https://maven.moddinglegacy.com/maven')
-        content {
-            includeGroup 'com.legacy'
-        }
-    }
-
-    maven {
         name = 'Progwml6 Maven'
         url = uri('https://dvs1.progwml6.com/files/maven/')
         content {
@@ -105,19 +99,20 @@ dependencies {
     minecraft("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
 
     implementation(project(':api')) //TODO Figure out why this needs implementation while 1.12.2 can be runtimeOnly
+    implementation(fg.deobf("mods.thecomputerizer:theimpossiblelibrary:${til_version}"))
 
     //mod support dependencies
     runtimeOnly(fg.deobf("curse.maven:betterweather-400714:${betterweather_version}"))
     runtimeOnly(fg.deobf("curse.maven:blueskies-312918:${blueskies_version}"))
-    runtimeOnly(fg.deobf("net.darkhax.bookshelf:Bookshelf-${minecraft_version}:${bookshelf_version}"))
     runtimeOnly(fg.deobf("curse.maven:champions-307152:${champions_version}"))
     runtimeOnly(fg.deobf("curse.maven:configured-457570:${configured_version}"))
     runtimeOnly(fg.deobf("curse.maven:dsurround-238891:${dsurround_version}"))
     runtimeOnly(fg.deobf("curse.maven:enhancedcelestials-438447:${enhancedcelestials_version}"))
-    runtimeOnly(fg.deobf("net.darkhax.gamestages:GameStages-Forge-${minecraft_version}:${gamestages_version}"))
-    runtimeOnly(fg.deobf("mezz.jei:jei-${minecraft_version}:${jei_version}"))
     runtimeOnly(fg.deobf("curse.maven:sereneseasons-291874:${seasons_version}"))
-    runtimeOnly(fg.deobf("com.legacy:structure-gel:${minecraft_version}-${structuregel_version}"))
+    runtimeOnly(fg.deobf("curse.maven:structure-gel-378802:${structuregel_version}"))
+    runtimeOnly(fg.deobf("mezz.jei:jei-${minecraft_version}:${jei_version}"))
+    runtimeOnly(fg.deobf("net.darkhax.bookshelf:Bookshelf-${minecraft_version}:${bookshelf_version}"))
+    runtimeOnly(fg.deobf("net.darkhax.gamestages:GameStages-Forge-${minecraft_version}:${gamestages_version}"))
 }
 
 mixin {
@@ -153,6 +148,7 @@ jar {
                 'FMLAT': mod_accesstransformer,
                 'Implementation-Title': project.name,
                 'MixinConfigs': mod_mixin,
+                'TILMultiversionMods': mod_entrypoint,
                 'TweakClass': mod_tweakclass,
                 'TweakOrder': 0
         ])

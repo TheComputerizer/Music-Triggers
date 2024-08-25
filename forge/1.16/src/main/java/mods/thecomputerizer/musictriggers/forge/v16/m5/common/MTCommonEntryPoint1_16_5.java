@@ -8,6 +8,9 @@ import mods.thecomputerizer.theimpossiblelibrary.api.common.CommonEntryPoint;
 import javax.annotation.Nullable;
 import java.util.Objects;
 
+import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
+import static mods.thecomputerizer.musictriggers.api.MTRef.NAME;
+
 @SuppressWarnings("unused")
 public class MTCommonEntryPoint1_16_5 extends CommonEntryPoint {
     
@@ -16,21 +19,20 @@ public class MTCommonEntryPoint1_16_5 extends CommonEntryPoint {
     }
     
     @Override protected String getModID() {
-        return MTRef.MODID;
+        return MODID;
     }
     
     @Override protected String getModName() {
-        return MTRef.NAME;
+        return NAME;
     }
     
     @Override public void onConstructed() {
-        this.onLoadComplete();
-        MTRef.logInfo("Running version specific onConstructed for 1.12.2");
+        MTRef.logInfo("Running version specific onConstructed for 1.16.5");
         if(Objects.nonNull(this.delegatedClient)) this.delegatedClient.onConstructed();
     }
     
     @Override public void onLoadComplete() {
-        MTRef.logInfo("Running version onLoadComplete for 1.12.2");
+        MTRef.logInfo("Running version onLoadComplete for 1.16.5");
         if(Objects.nonNull(this.delegatedClient)) this.delegatedClient.onLoadComplete();
     }
 }

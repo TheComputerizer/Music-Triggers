@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.api.client;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.gui.MTGUIScreen;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.event.events.*;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.ScreenAPI;
@@ -37,12 +38,12 @@ public class MTClientEvents {
         if(Objects.nonNull(mc)) {
             mc.sendMessageToPlayer(getReloadMessage(
                     "error",new Object[]{channel},TextStyleAPI::italics,TextStyleAPI::darkRed));
-            queueReload(mc, 100);
+            queueReload(mc,100);
         }
     }
     
     public static void init() {
-        MTRef.logInfo("Initializing client event invokers");
+        MTRef.logInfo("Initializing client event invokers {}",ClientHelper.getMinecraft());
         EventHelper.addListener(CLIENT_CONNECTED,MTClientEvents::onClientConnected);
         EventHelper.addListener(CLIENT_DISCONNECTED,MTClientEvents::onClientDisconnected);
         EventHelper.addListener(CUSTOM_TICK,MTClientEvents::onCustomTick);

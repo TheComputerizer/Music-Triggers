@@ -1,4 +1,5 @@
 apply from: rootProject.file('gradle\\java8-module.gradle')
+apply from: rootProject.file('gradle\\til-compile.gradle')
 
 repositories {
     mavenCentral()

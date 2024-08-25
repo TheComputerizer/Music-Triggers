@@ -34,6 +34,7 @@ buildscript {
 }
 
 apply from: rootProject.file('gradle\\java8-module.gradle')
+apply from: rootProject.file('gradle\\til.gradle')
 apply from: rootProject.file('gradle\\shadow-relocate.gradle')
 
 plugins.apply('net.minecraftforge.gradle')
