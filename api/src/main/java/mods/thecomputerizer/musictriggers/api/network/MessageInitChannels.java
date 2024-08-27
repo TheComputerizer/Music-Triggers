@@ -45,15 +45,6 @@ public class MessageInitChannels<CTX> extends PlayerMessage<CTX> {
         ChannelHelper.logGlobalInfo("Decodeded init message on the {} side",this.client ? "client" : "server");
     }
     
-    Map<String,ChannelMessage> getChannelMap(ChannelHelper helper) {
-        Map<String,ChannelMessage> map = new HashMap<>();
-        for(ChannelAPI channel : helper.getChannels().values()) {
-            String name = channel.getName();
-            if(!"jukebox".equals(name) && !"preview".equals(name)) map.put(name,new ChannelMessage(channel));
-        }
-        return map;
-    }
-    
     @Override
     public void encode(ByteBuf buf) {
         super.encode(buf);
@@ -61,6 +52,15 @@ public class MessageInitChannels<CTX> extends PlayerMessage<CTX> {
         this.global.write(buf);
         this.toggles.write(buf);
         NetworkHelper.writeMap(buf,this.channels,name -> NetworkHelper.writeString(buf,name),channel -> channel.write(buf));
+    }
+    
+    Map<String,ChannelMessage> getChannelMap(ChannelHelper helper) {
+        Map<String,ChannelMessage> map = new HashMap<>();
+        for(ChannelAPI channel : helper.getChannels().values()) {
+            String name = channel.getName();
+            if(!"jukebox".equals(name) && !"preview".equals(name)) map.put(name,new ChannelMessage(channel));
+        }
+        return map;
     }
     
     @SuppressWarnings("unchecked") @Override

@@ -2,7 +2,6 @@ package mods.thecomputerizer.musictriggers.legacy.v12.m2.client;
 
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientEntryPoint;
-import mods.thecomputerizer.theimpossiblelibrary.api.core.TILDev;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.MusicTicker;
@@ -19,6 +18,7 @@ import java.util.Objects;
 
 import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
 import static mods.thecomputerizer.musictriggers.api.MTRef.NAME;
+import static mods.thecomputerizer.theimpossiblelibrary.api.core.TILDev.DEV;
 
 public class MTClientEntryPoint1_12_2 extends ClientEntryPoint {
     
@@ -49,7 +49,7 @@ public class MTClientEntryPoint1_12_2 extends ClientEntryPoint {
     }
     
     @Override public void onConstructed() {
-        if(TILDev.DEV) {
+        if(DEV) {
             MTRef.logInfo("Attmpting to manually define dev resources");
             File resourceDir = new File("MTResources");
             if(resourceDir.exists() && resourceDir.isDirectory()) {

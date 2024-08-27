@@ -16,12 +16,10 @@ import java.io.File;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import static mods.thecomputerizer.musictriggers.api.MTRef.CONFIG_PATH;
-import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
-import static mods.thecomputerizer.musictriggers.api.MTRef.NAME;
+import static mods.thecomputerizer.musictriggers.api.MTRef.*;
 
 @SuppressWarnings("unused")
-@MultiVersionMod(modid = MODID, modName = NAME, modVersion = MTRef.VERSION)
+@MultiVersionMod(modDescription = DESCRIPTION, modid = MODID, modName = NAME, modVersion = VERSION)
 public class MTCommonEntryPoint extends CommonEntryPoint {
     
     final CommonEntryPoint versionInstance;

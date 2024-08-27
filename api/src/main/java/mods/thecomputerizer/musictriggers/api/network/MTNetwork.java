@@ -21,13 +21,13 @@ public class MTNetwork {
         NetworkHandler.registerMsgToServer(MessageFinishedInit.class,MessageFinishedInit::new);
         NetworkHandler.registerMsgToServer(MessageInitChannels.class,MessageInitChannels::new);
         NetworkHandler.registerMsgToServer(MessageReload.class,MessageReload::new);
-        NetworkHandler.registerMsgToServer(MessageRequestChannels.class, MessageRequestChannels::new);
+        NetworkHandler.registerMsgToServer(MessageRequestChannels.class,MessageRequestChannels::new);
         NetworkHandler.registerMsgToServer(MessageSkipSong.class,MessageSkipSong::new);
         NetworkHandler.registerMsgToServer(MessageTriggerStates.class,MessageTriggerStates::new);
         
         NetworkHandler.registerMsgToServerLogin(MessageFinishedInit.class,MessageFinishedInit::new);
         NetworkHandler.registerMsgToServerLogin(MessageInitChannels.class,MessageInitChannels::new);
-        NetworkHandler.registerMsgToServerLogin(MessageRequestChannels.class, MessageRequestChannels::new);
+        NetworkHandler.registerMsgToServerLogin(MessageRequestChannels.class,MessageRequestChannels::new);
     }
     
     public static void initCommon() {
@@ -35,13 +35,13 @@ public class MTNetwork {
         NetworkHandler.registerMsgToClient(MessageFinishedInit.class,MessageFinishedInit::new);
         NetworkHandler.registerMsgToClient(MessageInitChannels.class,MessageInitChannels::new);
         NetworkHandler.registerMsgToClient(MessageReload.class,MessageReload::new);
-        NetworkHandler.registerMsgToClient(MessageRequestChannels.class, MessageRequestChannels::new);
+        NetworkHandler.registerMsgToClient(MessageRequestChannels.class,MessageRequestChannels::new);
         NetworkHandler.registerMsgToClient(MessageToggleDebugParameter.class,MessageToggleDebugParameter::new);
         NetworkHandler.registerMsgToClient(MessageTriggerStates.class,MessageTriggerStates::new);
         
         NetworkHandler.registerMsgToClientLogin(MessageFinishedInit.class,MessageFinishedInit::new);
         NetworkHandler.registerMsgToClientLogin(MessageInitChannels.class,MessageInitChannels::new);
-        NetworkHandler.registerMsgToClientLogin(MessageRequestChannels.class, MessageRequestChannels::new);
+        NetworkHandler.registerMsgToClientLogin(MessageRequestChannels.class,MessageRequestChannels::new);
     }
     
     public static <D> void sendToServer(MessageAPI<?> msg, boolean login) {

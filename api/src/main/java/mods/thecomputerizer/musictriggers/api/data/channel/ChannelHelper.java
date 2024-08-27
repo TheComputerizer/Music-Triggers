@@ -291,7 +291,7 @@ public class ChannelHelper implements NBTLoadable {
         try {
             if(loader.isClient()) {
                 loadConfig("CLIENT",true);
-                MTNetwork.sendToServer(PLAYER_MAP.get("CLIENT").getInitMessage(), false);
+                MTNetwork.sendToServer(PLAYER_MAP.get("CLIENT").getInitMessage(),false);
             } else
                 for(PlayerAPI<?,?> player : getPlayers(false))
                     loadConfig(player.getUUID().toString(),false);
@@ -613,7 +613,8 @@ public class ChannelHelper implements NBTLoadable {
     
     protected void sync() {
         if(this.syncable) {
-            if(Objects.isNull(this.stateMsg)) this.stateMsg = new MessageTriggerStates<>(this);
+            if(Objects.isNull(this.stateMsg))
+                this.stateMsg = new MessageTriggerStates<>(this);
             for(ChannelAPI channel : this.channels.values()) channel.getSync().addSynced(this.stateMsg);
             if(this.stateMsg.readyToSend() && MTNetwork.send(this.stateMsg,this,false)) this.stateMsg = null;
         }

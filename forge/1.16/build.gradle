@@ -45,6 +45,10 @@ plugins.apply('net.minecraftforge.gradle')
 plugins.apply('org.spongepowered.mixin')
 plugins.apply('org.parchmentmc.librarian.forgegradle')
 
+sourceSets {
+    main.output.resourcesDir = rootProject.file('forge\\1.16\\run_client\\MTResources')
+}
+
 minecraft {
     mappings channel: 'parchment', version: "${parchment_version}-${minecraft_version}"
     accessTransformer = file("src/main/resources/META-INF/${mod_accesstransformer}")

@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 public class MTRef {
 
     public static final String CONFIG_PATH = "config/MusicTriggers";
+    public static final String DESCRIPTION = "Multiversion mod for playing music and sounds based on in-game triggers.";
     public static final String GLOBAL_CONFIG = "config/MusicTriggers/global";
     public static final Logger LOGGER = LogManager.getLogger("Music Triggers");
     public static final String MODID = "musictriggers";

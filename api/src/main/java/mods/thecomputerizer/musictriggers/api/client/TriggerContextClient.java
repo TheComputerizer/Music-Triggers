@@ -328,7 +328,7 @@ public class TriggerContextClient extends TriggerContext {
 
     @Override
     public boolean isActiveSandstorm(int range) {
-        return Objects.nonNull(this.pos) && checkMod(ModHelper::weather2,mod ->
+        return Objects.nonNull(this.pos) && hasWorld() && checkMod(ModHelper::weather2,mod ->
                 Objects.nonNull(mod.getClosestSandStorm(this.world,this.pos,range)));
     }
 
@@ -393,7 +393,7 @@ public class TriggerContextClient extends TriggerContext {
 
     @Override
     public boolean isActiveTornado(int range, int level) {
-        return Objects.nonNull(this.pos) && checkMod(ModHelper::weather2,mod -> {
+        return Objects.nonNull(this.pos) && hasWorld() && checkMod(ModHelper::weather2,mod -> {
             WeatherData data = mod.getClosestTornado(this.world,this.pos,range);
             return Objects.nonNull(data) && data.getLevel()>=level;
         });
@@ -401,7 +401,7 @@ public class TriggerContextClient extends TriggerContext {
 
     @Override
     public boolean isActiveUnderwater() {
-        return Objects.nonNull(this.pos) && this.world.isUnderwater(this.pos);
+        return Objects.nonNull(this.pos) && hasWorld() && this.world.isUnderwater(this.pos);
     }
 
     @Override

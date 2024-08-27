@@ -11,6 +11,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.common.event.events.PlayerL
 import mods.thecomputerizer.theimpossiblelibrary.api.common.event.events.RegisterCommandsEventWrapper;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.event.events.ServerTickEventWrapper;
 
+import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
 import static mods.thecomputerizer.theimpossiblelibrary.api.common.event.CommonEventWrapper.CommonType.PLAYER_LOGGED_OUT;
 import static mods.thecomputerizer.theimpossiblelibrary.api.common.event.types.CommonTickableEventType.TickPhase.END;
 import static mods.thecomputerizer.theimpossiblelibrary.api.server.event.ServerEventWrapper.ServerType.TICK_SERVER;
@@ -26,7 +27,7 @@ public class MTServerEvents {
         EventHelper.addListener(PLAYER_LOGGED_IN,MTServerEvents::onPlayerJoin);
         EventHelper.addListener(PLAYER_LOGGED_OUT,MTServerEvents::onPlayerLeave);
         EventHelper.addListener(REGISTER_COMMANDS,MTServerEvents::onRegisterCommands);
-        EventHelper.addListener(TICK_SERVER, MTServerEvents::onServerTick);
+        EventHelper.addListener(TICK_SERVER,MTServerEvents::onServerTick);
     }
     
     public static void onServerTick(ServerTickEventWrapper<?> wrapper) {
@@ -42,7 +43,7 @@ public class MTServerEvents {
         PlayerAPI<?,?> player = wrapper.getPlayer();
         String uuid = player.getUUID().toString();
         MTRef.logInfo("Found joining player with UUID {}",uuid);
-        MTNetwork.sendToClient(new MessageRequestChannels<>(uuid,false),true,player);
+        MTNetwork.sendToClient(new MessageRequestChannels<>(uuid,false),false,player);
     }
     
     public static void onPlayerLeave(PlayerLoggedOutEventWrapper<?> wrapper) {
@@ -54,7 +55,7 @@ public class MTServerEvents {
 
     public static void onRegisterCommands(RegisterCommandsEventWrapper<?> wrapper) {
         MTRef.logInfo("Registering commands");
-        wrapper.registerCommand(MTCommands.root(MTRef.MODID));
+        wrapper.registerCommand(MTCommands.root(MODID));
         wrapper.registerCommand(MTCommands.root("mt"));
     }
     

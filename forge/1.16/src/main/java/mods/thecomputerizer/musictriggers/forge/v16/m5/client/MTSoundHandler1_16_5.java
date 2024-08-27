@@ -34,11 +34,16 @@ public class MTSoundHandler1_16_5 extends SoundHandler {
         this.wrapped.addListener(listener);
     }
     
+    @Override protected Loader prepare(IResourceManager manager, IProfiler profiler) {
+        return (Loader)ReflectionHelper.invokeMethod(this.wrapped.getClass(),"prepare",this.wrapped,new Class<?>[]{
+                        IResourceManager.class,IProfiler.class},manager,profiler);
+    }
+    
     /**
      * I should really make some hooks for version specific ASM
      */
     @Override protected void apply(Loader loader, IResourceManager manager, IProfiler profiler) {
-        ReflectionHelper.invokeMethod(SoundHandler.class,"apply",this.wrapped,new Class<?>[]{
+        ReflectionHelper.invokeMethod(this.wrapped.getClass(),"apply",this.wrapped,new Class<?>[]{
                 Loader.class,IResourceManager.class,IProfiler.class},loader,manager,profiler);
     }
     
