@@ -25,21 +25,21 @@ public class ResourceContext {
         switch(matcherType.toUpperCase()) {
             case "EXACT": return (id,matchThese) -> {
                 if(Objects.isNull(id)) return false;
-                if(matchThese.get(0).equals("ANY")) return true;
+                if(matchThese.get(0).equals("any")) return true;
                 for(String matchThis : matchThese)
                     if(id.equals(matchThis)) return true;
                 return false;
             };
             case "PARTIAL": return (id,matchThese) -> {
                 if(Objects.isNull(id)) return false;
-                if(matchThese.get(0).equals("ANY")) return true;
+                if(matchThese.get(0).equals("any")) return true;
                 for(String matchThis : matchThese)
                     if(id.contains(matchThis)) return true;
                 return false;
             };
             case "REGEX": return (id,matchThese) -> {
                 if(Objects.isNull(id)) return false;
-                if(matchThese.get(0).equals("ANY")) return true;
+                if(matchThese.get(0).equals("any")) return true;
                 for(String matchThis : matchThese)
                     if(id.matches(matchThis)) return true;
                 return false;

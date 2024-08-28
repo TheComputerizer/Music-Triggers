@@ -14,9 +14,7 @@ jar {
     manifest {
         attributes([
                 'Implementation-Title': project.name,
-                'MixinConfigs': mod_mixin,
-                'TILMultiversionMods': mod_entrypoint,
-                'TweakOrder': 0
+                'TILMultiversionMods': mod_entrypoint
         ])
     }
 }

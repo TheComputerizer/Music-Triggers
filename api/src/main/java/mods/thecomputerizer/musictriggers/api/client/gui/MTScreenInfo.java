@@ -98,10 +98,7 @@ public class MTScreenInfo {
             this.parent.applyChanges();
             return;
         }
-        if(!isModified()) {
-            MTGUIScreen.isActive = false;
-            return;
-        }
+        if(!isModified()) return;
         Toml global = Toml.getEmpty();
         Toml debugTable = Toml.getEmpty();
         MTScreenInfo debug = next("debug",null);

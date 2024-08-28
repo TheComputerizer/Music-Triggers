@@ -250,6 +250,7 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
                 case "reload": {
                     if(screen.typeInfo.isGloballyModified()) screen.typeInfo.applyChanges();
                     else MTClientEvents.queueReload(ClientHelper.getMinecraft(),5);
+                    isActive = false;
                     break;
                 }
                 case "reset_song": {

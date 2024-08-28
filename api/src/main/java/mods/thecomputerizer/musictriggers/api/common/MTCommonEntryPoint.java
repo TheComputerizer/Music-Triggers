@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 import static mods.thecomputerizer.musictriggers.api.MTRef.*;
+import static mods.thecomputerizer.theimpossiblelibrary.api.core.TILDev.DEV;
 
 @SuppressWarnings("unused")
 @MultiVersionMod(modDescription = DESCRIPTION, modid = MODID, modName = NAME, modVersion = VERSION)
@@ -54,10 +55,12 @@ public class MTCommonEntryPoint extends CommonEntryPoint {
         String pkg = CoreAPI.getInstance().getPackageName("mods.thecomputerizer.musictriggers");
         String version = instance.getVersion().getName().replace('.','_');
         String classpath = pkg+".common.MTCommonEntryPoint"+version;
-        //Sync the version entry class to the context class loader
-        ClassLoader systemLoader = ClassLoader.getSystemClassLoader();
         ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
-        ClassHelper.syncSourcesAndLoadClass(systemLoader,contextLoader,classpath);
+        if(instance.getVersion().isCompatibleModernForge() && DEV) {
+            //Sync the version entry class to the context class loader
+            ClassLoader systemLoader = ClassLoader.getSystemClassLoader();
+            ClassHelper.syncSourcesAndLoadClass(systemLoader, contextLoader, classpath);
+        }
         try {
             Class<CommonEntryPoint> clazz = (Class<CommonEntryPoint>)ClassHelper.findClass(classpath,contextLoader);
             MTRef.logInfo("Successfully located versioned entrypoint {} using loader {}",clazz,contextLoader);
