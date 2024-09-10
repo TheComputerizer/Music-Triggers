@@ -36,17 +36,17 @@ public class MTCommands extends CommandAPI {
         String type = args[0];
         if("skip".equals(type)) {
             ChannelHelper.logGlobalInfo("Sending skip packet");
-            MTNetwork.sendToClient(new MessageSkipSong<>(),false,sender.getSender());
+            MTNetwork.sendToClient(new MessageSkipSong<>(),false,sender.getWrapped());
         }
         else if("reload".equals(type)) {
             ChannelHelper.logGlobalInfo("Sending reload packet");
             int ticks = RandomHelper.randomInt("reload_ticks", args.length==1 ? null : args[1],5);
-            MTNetwork.sendToClient(new MessageReload<>(ticks),false,sender.getSender());
+            MTNetwork.sendToClient(new MessageReload<>(ticks),false,sender.getWrapped());
         }
         else if("debug".equals(type)) {
             ChannelHelper.logGlobalInfo("Sending debug packet");
             String parameter = args.length==1 ? "enable_debug_info" : args[1];
-            MTNetwork.sendToClient(new MessageToggleDebugParameter<>(false,parameter),false,sender.getSender());
+            MTNetwork.sendToClient(new MessageToggleDebugParameter<>(false,parameter),false,sender.getWrapped());
         }
     }
     

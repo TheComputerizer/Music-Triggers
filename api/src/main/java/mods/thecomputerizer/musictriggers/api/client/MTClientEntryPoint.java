@@ -15,40 +15,33 @@ import static mods.thecomputerizer.musictriggers.api.client.gui.MTGUIScreen.GUI_
 
 public class MTClientEntryPoint extends ClientEntryPoint {
     
-    @Override
-    public void onClientSetup() {
+    @Override public void onClientSetup() {
         KeyHelper.register(GUI_KEY);
         ChannelHelper.onResourcesLoaded();
     }
 
-    @Override
-    public @Nullable ClientEntryPoint delegatedClientEntry() {
+    @Override public @Nullable ClientEntryPoint delegatedClientEntry() {
         return this;
     }
 
-    @Override
-    protected String getModID() {
+    @Override protected String getModID() {
         return MODID;
     }
 
-    @Override
-    protected String getModName() {
+    @Override protected String getModName() {
         return NAME;
     }
 
-    @Override
-    public void onConstructed() {
+    @Override public void onConstructed() {
         ChannelHelper.initClient();
         MTNetwork.initClient();
     }
 
-    @Override
-    public void onPreRegistration() {
+    @Override public void onPreRegistration() {
         MTClientEvents.init();
     }
     
-    @Override
-    public void onLoadComplete() {
+    @Override public void onLoadComplete() {
         MTRef.logInfo("Minecraft instance (LoadComplete) is",ClientHelper.getMinecraft());
     }
 }

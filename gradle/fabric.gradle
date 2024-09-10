@@ -1,0 +1,15 @@
+repositories {
+    maven {
+        name 'ParchmentMC'
+        url = uri('https://maven.parchmentmc.org')
+        content {
+            [ 'org.parchmentmc', 'org.parchmentmc.data', 'org.parchmentmc.feather',
+              'org.parchmentmc.librarian.forgegradle' ].forEach { includeGroup it }
+        }
+    }
+}
+
+dependencies {
+    compileOnly('com.google.code.findbugs:jsr305:3.0.+')
+    compileOnly('org.apache.logging.log4j:log4j-core:2.+')
+}

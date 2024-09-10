@@ -14,10 +14,14 @@ plugins {
 }
 
 rootProject.name = 'Music Triggers'
-include 'api'
-include 'forge'
-include 'legacy'
-include 'legacy:1.12'
-include 'forge:1.16'
-findProject(':forge:1.16')?.name = 'forge.1_16'
-findProject(':legacy:1.12')?.name = 'legacy.1_12'
+
+[ 'api', 'fabric', 'forge', 'legacy', 'shared',
+  'legacy:1.12',
+  'fabric:1.16',
+  'forge:1.16',
+  'shared:1.16', ].forEach { include it }
+
+[ ':fabric:1.16',
+  ':forge:1.16',
+  ':legacy:1.12',
+  ':shared:1.16' ].forEach {findProject(it)?.name = it.substring(1).replace('.','_').replace(':','.') }

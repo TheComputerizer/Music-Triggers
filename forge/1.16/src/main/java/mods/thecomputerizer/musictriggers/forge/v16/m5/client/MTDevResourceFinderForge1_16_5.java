@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.forge.v16.m5.client;
 
+import mods.thecomputerizer.theimpossiblelibrary.api.core.annotation.IndirectCallers;
 import net.minecraft.resources.FolderPack;
 import net.minecraft.resources.IPackFinder;
 import net.minecraft.resources.ResourcePackInfo;
@@ -9,15 +10,15 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
 import java.util.function.Consumer;
 
-import static net.minecraft.resources.ResourcePackInfo.Priority.TOP;
 import static net.minecraft.resources.IPackNameDecorator.DEFAULT;
+import static net.minecraft.resources.ResourcePackInfo.Priority.TOP;
 
-@ParametersAreNonnullByDefault
-public class MTDevResourceFinder1_16_5 implements IPackFinder {
+@IndirectCallers @ParametersAreNonnullByDefault
+public class MTDevResourceFinderForge1_16_5 implements IPackFinder {
     
     final File devResources;
     
-    public MTDevResourceFinder1_16_5(File file) {
+    public MTDevResourceFinderForge1_16_5(File file) {
         this.devResources = file;
     }
     

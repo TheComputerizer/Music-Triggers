@@ -1,0 +1,22 @@
+/**
+ * Pass through parent module for shared version modules
+ */
+
+apply from: rootProject.file('buildSrc\\shared.gradle')
+
+jar {
+    from(project(':api').jar.archiveFile.collect {
+        include 'mods/**'
+        zipTree(it)
+    })
+}
+
+processResources {
+    from(project(':api').processResources.outputs)
+}
+
+processTestResources {
+    from(project(':api').processTestResources.outputs)
+}
+
+tasks.jar.dependsOn(':api:build')

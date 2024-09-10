@@ -1,0 +1,113 @@
+buildscript {
+    repositories {
+        gradlePluginPortal() {
+            content {
+                [ 'com.fasterxml.woodstox', 'com.fasterxml.jackson.core', 'com.fasterxml.jackson', 'com.fasterxml',
+                  'com.google.code.findbugs', 'com.google.code.gson', 'com.google.errorprone', 'com.google.guava',
+                  'com.google.j2objc', 'commons-io', 'io.fabric8', 'io.github.goooler.shadow', 'io.netty',
+                  'jakarta.platform', 'me.jamiemansfield', 'org.apache', 'org.apache.ant', 'org.apache.commons',
+                  'org.apache.logging', 'org.apache.logging.log4j', 'org.apache.maven', 'org.benf', 'org.cadixdev',
+                  'org.checkerframework', 'org.codehaus.groovy', 'org.codehaus.plexus', 'org.codehaus.woodstox',
+                  'org.eclipse.ee4j', 'org.eclipse.jdt', 'org.eclipse.jetty', 'org.eclipse.platform', 'org.jdom',
+                  'org.jetbrains', 'org.jetbrains.kotlinx', 'org.junit', 'org.mockito', 'org.ow2', 'org.ow2.asm',
+                  'org.slf4j', 'org.sonatype.oss', 'org.springframework', 'org.vafer',
+                  'org.zeroturnaround'].forEach { includeGroup it }
+            }
+        }
+        maven {
+            name = 'Fabric'
+            url = uri('https://maven.fabricmc.net/')
+            content {
+                [ 'fabric-loom', 'net.fabricmc', 'net.fabricmc.fabric-api' ].forEach { includeGroup it }
+            }
+        }
+    }
+    dependencies {
+        classpath('fabric-loom:fabric-loom.gradle.plugin:1.+')
+        classpath('io.github.goooler.shadow:shadow-gradle-plugin:8.+')
+    }
+}
+
+apply from: rootProject.file('gradle\\java17-module.gradle')
+apply from: rootProject.file('gradle\\fabric.gradle')
+apply from: rootProject.file('gradle\\shadow-relocate.gradle')
+
+plugins.apply('fabric-loom')
+
+def args = [
+        '-Dfabric.log.level=debug',
+        '-Dtil.dev=true',
+        '-Dtil.classpath.mods=mods.thecomputerizer.theimpossiblelibrary.api.common.TILCommonEntryPoint;'+mod_entrypoint
+]
+
+[ runClient, runServer ].forEach { it.jvmArgs args}
+
+repositories {
+    maven {
+        name 'Modrinth'
+        url = uri('https://api.modrinth.com/maven')
+        content {
+            includeGroup 'maven.modrinth'
+        }
+    }
+}
+
+def shared = project(':shared:shared.1_16')
+
+dependencies {
+    minecraft("com.mojang:minecraft:${shared.minecraft_version}")
+    mappings loom.layered() {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-${shared.minecraft_version}:${shared.parchment_version}@zip")
+    }
+    implementation(project(path: ':api', configuration: 'dev'))
+    implementation(project(path: ':fabric', configuration: 'dev'))
+    //The shared module builds with forge but since it only touches vanilla code this is fine
+    implementation(project(path: ':shared:shared.1_16', configuration: 'dev'))
+
+    modImplementation("net.fabricmc:fabric-loader:${loader_version}")
+    modImplementation("net.fabricmc.fabric-api:fabric-api:${shared.fabric_version}+1.16")
+    modImplementation("mods.thecomputerizer:theimpossiblelibrary:${til_version}")
+    modImplementation("maven.modrinth:cloth-config:${cloth_version}")
+    modImplementation("maven.modrinth:modmenu:${modmenu_version}")
+}
+
+remapJar {
+    inputFile = tasks.shadowJar.archiveFile
+}
+
+processResources {
+    from(project(':api').processResources.outputs)
+}
+
+processTestResources {
+    from(project(':api').processTestResources.outputs)
+}
+
+compileJava {
+    source(project(':api').sourceSets.main.allJava,
+            //shared.sourceSets.main.allJava,
+            project(':fabric').sourceSets.main.allJava)
+}
+
+compileTestJava {
+    source(project(':api').sourceSets.test.allJava,
+            //shared.sourceSets.test.allJava,
+            project(':fabric').sourceSets.test.allJava)
+}
+
+jar {
+    from(project(':fabric').jar.archiveFile.collect { zipTree(it) })
+    //from(shared.jar.archiveFile.collect { zipTree(it) })
+    manifest {
+        attributes([
+                'Implementation-Title': name,
+                'Implementation-Version': version
+        ])
+    }
+}
+
+tasks.remapJar.dependsOn('shadowJar')
+tasks.jar.finalizedBy('remapJar')
+tasks.jar.dependsOn(':shared:shared.1_16:build')
+tasks.jar.dependsOn(':fabric:build')

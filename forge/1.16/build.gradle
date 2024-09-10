@@ -49,14 +49,16 @@ sourceSets {
     main.output.resourcesDir = rootProject.file('forge\\1.16\\run_client\\MTResources')
 }
 
+def shared = project(':shared:shared.1_16')
+
 minecraft {
-    mappings channel: 'parchment', version: "${parchment_version}-${minecraft_version}"
+    mappings channel: 'parchment', version: "${shared.parchment_version}-${shared.minecraft_version}"
     accessTransformer = file("src/main/resources/META-INF/${mod_accesstransformer}")
     runs {
         def args = [
-            '-DtilDev=true',
-            '-DtilLoaderFile=theimpossiblelibrary-0.4.0_mapped_parchment_2022.03.06-1.16.5.jar', //Only needed in dev
-            '-DtilClassPathMods='+mod_entrypoint
+            '-Dtil.dev=true',
+            '-Dtil.classpath.file=theimpossiblelibrary-0.4.0_mapped_parchment_2022.03.06-1.16.5.jar', //Only needed in dev
+            '-Dtil.classpath.mods='+mod_entrypoint
         ]
         client {
             workingDirectory file('run_client')
@@ -102,7 +104,10 @@ dependencies {
     //noinspection VulnerableLibrariesLocal
     minecraft("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
 
-    implementation(project(':api')) //TODO Figure out why this needs implementation while 1.12.2 can be runtimeOnly
+    implementation(project(':api'))
+    implementation(shared)
+    implementation(project(':forge'))
+
     implementation(fg.deobf("mods.thecomputerizer:theimpossiblelibrary:${til_version}"))
 
     //mod support dependencies

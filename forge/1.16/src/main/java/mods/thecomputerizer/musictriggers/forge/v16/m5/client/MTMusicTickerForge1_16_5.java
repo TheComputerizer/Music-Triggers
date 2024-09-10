@@ -11,20 +11,18 @@ import java.util.Objects;
 /**
  Replaces the vanilla MusicTicker with a noninvasive override that can be turned off when a channel is playing audio
  */
-public class MTMusicTicker1_16_5 extends MusicTicker {
+public class MTMusicTickerForge1_16_5 extends MusicTicker {
     
-    public MTMusicTicker1_16_5(Minecraft mc) {
+    public MTMusicTickerForge1_16_5(Minecraft mc) {
         super(mc);
     }
     
-    @Override
-    public void tick() {
+    @Override public void tick() {
         ChannelHelper helper = ChannelHelper.getClientHelper();
         if(Objects.isNull(helper) || helper.canVanillaMusicPlay()) super.tick();
     }
     
-    @Override
-    public void startPlaying(@Nonnull BackgroundMusicSelector selector) {
+    @Override public void startPlaying(@Nonnull BackgroundMusicSelector selector) {
         ChannelHelper helper = ChannelHelper.getClientHelper();
         if(Objects.isNull(helper) || helper.canVanillaMusicPlay()) super.startPlaying(selector);
     }

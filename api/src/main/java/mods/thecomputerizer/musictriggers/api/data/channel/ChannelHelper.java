@@ -142,7 +142,7 @@ public class ChannelHelper implements NBTLoadable {
         return PLAYER_MAP.get(uuid);
     }
     
-    public static List<PlayerAPI<?,?>> getPlayers(boolean client) {
+    public static List<? extends PlayerAPI<?,?>> getPlayers(boolean client) {
         if(client) {
             MinecraftAPI mc = TILRef.getClientSubAPI(ClientAPI::getMinecraft);
             if(Objects.nonNull(mc)) {
@@ -448,6 +448,12 @@ public class ChannelHelper implements NBTLoadable {
     public WrapperLink getTogglesLink() {
         return new WrapperLink(this.toggles);
     }
+    
+    @Override public boolean hasDataToSave() {
+        for(ChannelAPI channel : this.channels.values())
+            if(channel.hasDataToSave()) return true;
+        return false;
+    }
 
     private void initChannel(String name, Toml info) {
         synchronized(this.channels) {
@@ -502,24 +508,14 @@ public class ChannelHelper implements NBTLoadable {
         if(this.client) {
             globalData.logInfo("Attempting to load stored audio references");
             this.debugInfo.initChannelElements();
+            queryCategoryVolume();
         }
         forEachChannel(this::loadTracks);
     }
     
     public void loadTracks(ChannelAPI channel) {
-        if(this.client) {
-            channel.loadTracks(loader.areResourcesLoaded());
-            channel.setMasterVolume(SoundHelper.getCategoryVolume("master"));
-            String category = channel.getInfo().getCategory();
-            if(category.equalsIgnoreCase("master")) channel.setCategoryVolume(1f);
-            else channel.setCategoryVolume(SoundHelper.getCategoryVolume(category));
-        } else channel.getData().getAudio().forEach(ref -> ref.setItem(null));
-    }
-    
-    @Override public boolean hasDataToSave() {
-        for(ChannelAPI channel : this.channels.values())
-            if(channel.hasDataToSave()) return true;
-        return false;
+        if(this.client) channel.loadTracks(loader.areResourcesLoaded());
+        else channel.getData().getAudio().forEach(ref -> ref.setItem(null));
     }
     
     @Override public void onConnected(CompoundTagAPI<?> worldData) {
@@ -555,6 +551,16 @@ public class ChannelHelper implements NBTLoadable {
             if(Objects.nonNull(playThis)) getJukeboxChannel().playReference(playThis,pos.getPosVec());
             else channel.logError("Unable to find audio with name {} to play for the jukebox channel!",audioRef);
         } else globalData.logError("Unable to find channel reference {}",channelName);
+    }
+    
+    public void queryCategoryVolume() {
+        float masterVolume = SoundHelper.getCategoryVolume("master");
+        for(ChannelAPI channel : this.channels.values()) {
+            channel.setMasterVolume(masterVolume);
+            String category = channel.getInfo().getCategory();
+            if(category.equalsIgnoreCase("master")) channel.setCategoryVolume(1f);
+            else channel.setCategoryVolume(SoundHelper.getCategoryVolume(category));
+        }
     }
     
     @Override public void saveGlobalTo(CompoundTagAPI<?> globalData) {

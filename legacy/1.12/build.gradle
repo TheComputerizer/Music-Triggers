@@ -57,8 +57,8 @@ minecraft {
     accessTransformer = file("src\\main\\resources\\META-INF\\${mod_accesstransformer}")
     runs {
         def args = [
-                '-DtilDev=true',
-                '-DtilClassPathMods=mods.thecomputerizer.theimpossiblelibrary.api.common.TILCommonEntryPoint;'+mod_entrypoint
+                '-Dtil.dev=true',
+                '-Dtil.classpath.mods=mods.thecomputerizer.theimpossiblelibrary.api.common.TILCommonEntryPoint;'+mod_entrypoint
         ]
         client {
             workingDirectory file('run_client')

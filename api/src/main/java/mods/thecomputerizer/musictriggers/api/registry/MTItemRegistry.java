@@ -28,8 +28,7 @@ public class MTItemRegistry {
                 if(Objects.nonNull(tag) && tag.contains("audio"))
                     return MTClient.getTranslated("item","record.tooltip",tag.getString("audio"));
                 return MTClient.getTranslated("item","record.desc");
-            })
-            .setTootltipFunction((stack,world) -> {
+            }).setTooltipFunction((stack,world) -> {
                 CompoundTagAPI<?> tag = stack.getTag();
                 if(Objects.nonNull(tag)) {
                     String audio = null;
@@ -73,7 +72,7 @@ public class MTItemRegistry {
             .setBlock(() -> MTBlockRegistry.MUSIC_RECORDER)
             .setRegistryName(MTRef.res("music_recorder"))
             .setStackSize(1)
-            .setTootltipFunction((stack,world) -> Collections.singleton(
+            .setTooltipFunction((stack,world) -> Collections.singleton(
                     MTClient.getTranslated("tile","music_recorder.tooltip"))).build();
     
     public static DiscBuilderAPI discBuilder(String name, int stackSize) {

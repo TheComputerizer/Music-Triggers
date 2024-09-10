@@ -21,11 +21,11 @@ import java.util.Collection;
 import java.util.Objects;
 
 @MethodsReturnNonnullByDefault @ParametersAreNonnullByDefault
-public class MTSoundHandler1_16_5 extends SoundHandler {
+public class MTSoundHandlerForge1_16_5 extends SoundHandler {
     
     private final SoundHandler wrapped;
     
-    public MTSoundHandler1_16_5(SoundHandler wrapper, IResourceManager manager, GameSettings options) {
+    public MTSoundHandlerForge1_16_5(SoundHandler wrapper, IResourceManager manager, GameSettings options) {
         super(manager,options);
         this.wrapped = wrapper;
     }

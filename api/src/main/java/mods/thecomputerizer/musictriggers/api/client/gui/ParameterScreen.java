@@ -49,11 +49,11 @@ public class ParameterScreen extends MTGUIScreen {
         });
     }
     
-    public float defaultBackgroundDarkness() {
+    @Override public float defaultBackgroundDarkness() {
         return 0.6f;
     }
     
-    public void draw(RenderContext ctx, Vector3d center, double mouseX, double mouseY) {
+    @Override public void draw(RenderContext ctx, Vector3d center, double mouseX, double mouseY) {
         if(Objects.nonNull(this.parentScreen))
             this.parentScreen.draw(ctx,center,mouseX+9999d,mouseY+9999d); //Add a large offset to prevent hover behavior
         super.draw(ctx,center,mouseX,mouseY);

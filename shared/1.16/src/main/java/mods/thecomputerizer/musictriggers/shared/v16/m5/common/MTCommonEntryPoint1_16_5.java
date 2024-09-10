@@ -1,7 +1,7 @@
-package mods.thecomputerizer.musictriggers.forge.v16.m5.common;
+package mods.thecomputerizer.musictriggers.shared.v16.m5.common;
 
 import mods.thecomputerizer.musictriggers.api.MTRef;
-import mods.thecomputerizer.musictriggers.forge.v16.m5.client.MTClientEntryPoint1_16_5;
+import mods.thecomputerizer.musictriggers.shared.v16.m5.client.MTClientEntryPoint1_16_5;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientEntryPoint;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.CommonEntryPoint;
 

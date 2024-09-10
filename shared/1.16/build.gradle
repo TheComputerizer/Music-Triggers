@@ -1,0 +1,112 @@
+/**
+ * Shared implementations for anything based in 1.16. Compiles against Forge
+ */
+//file:noinspection GroovyAssignabilityCheck
+
+buildscript {
+    repositories {
+        gradlePluginPortal() {
+            content {
+                [ 'com.fasterxml', 'com.fasterxml.jackson', 'com.fasterxml.woodstox', 'com.google.code.findbugs',
+                  'com.google.code.gson', 'com.google.errorprone', 'com.google.guava', 'com.google.j2objc',
+                  'com.machinezoo.noexception', 'commons-codec', 'commons-io', 'commons-logging', 'de.siegmar',
+                  'io.fabric8', 'io.github.goooler.shadow', 'io.netty', 'it.unimi.dsi', 'jakarta.platform',
+                  'net.sf.jopt-simple', 'org.apache', 'org.apache.ant', 'org.apache.commons',
+                  'org.apache.httpcomponents', 'org.apache.logging', 'org.apache.logging.log4j', 'org.apache.maven',
+                  'org.checkerframework', 'org.codehaus.groovy', 'org.codehaus.plexus', 'org.codehaus.woodstox',
+                  'org.eclipse.ee4j', 'org.eclipse.jetty', 'org.jdom', 'org.junit', 'org.mockito', 'org.ow2',
+                  'org.ow2.asm', 'org.slf4j', 'org.sonatype.oss', 'org.springframework', 'org.tukaani',
+                  'org.vafer' ].forEach { includeGroup it }
+            }
+        }
+        maven {
+            name = 'Forge'
+            url = uri('https://maven.minecraftforge.net/')
+            content {
+                [ 'net.minecraftforge', 'net.minecraftforge.gradle' ].forEach{ includeGroup it }
+            }
+        }
+        maven {
+            name = 'ParchmentMC'
+            url = uri('https://maven.parchmentmc.org')
+            content {
+                [ 'org.parchmentmc', 'org.parchmentmc.feather',
+                  'org.parchmentmc.librarian.forgegradle' ].forEach { includeGroup it }
+            }
+        }
+    }
+    dependencies {
+        classpath('net.minecraftforge.gradle:net.minecraftforge.gradle.gradle.plugin:6.+')
+        classpath('org.parchmentmc.librarian.forgegradle:org.parchmentmc.librarian.forgegradle.gradle.plugin:1.+')
+    }
+}
+
+apply from: rootProject.file('gradle\\java8-module.gradle')
+//apply from: rootProject.file('gradle\\shadow-relocate.gradle')
+
+plugins.apply('net.minecraftforge.gradle')
+plugins.apply('org.parchmentmc.librarian.forgegradle')
+
+minecraft {
+    mappings channel: 'parchment', version: "${parchment_version}-${minecraft_version}"
+    runs {
+        def args = [ '-Dtil.dev=true' ]
+        configureEach {
+            def srgToMcpFile = project.tasks.createSrgToMcp.outputs.files[0].path
+            property 'net.minecraftforge.gradle.GradleStart.srg.srg-mcp', srgToMcpFile
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', srgToMcpFile
+        }
+
+        client {
+            workingDirectory file('run_client')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'trace'
+            jvmArgs args
+        }
+        server {
+            workingDirectory file('run_server')
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+            property 'forge.logging.console.level', 'debug'
+            jvmArgs args
+        }
+    }
+}
+
+configurations {
+    dev {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+}
+
+dependencies {
+    //noinspection VulnerableLibrariesLocal
+    minecraft("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
+    compileOnly(project(':api'))
+    compileOnly(project(':shared'))
+    implementation(fg.deobf("mods.thecomputerizer:theimpossiblelibrary:${til_version}"))
+}
+
+processResources {
+    from(project(':shared').processResources.outputs)
+}
+
+processTestResources {
+    from(project(':shared').processTestResources.outputs)
+}
+
+jar {
+    manifest {
+        attributes([
+                'Implementation-Title': name,
+                'Implementation-Version': version
+        ])
+    }
+}
+
+artifacts {
+    dev jar
+}
+
+tasks.jar.dependsOn(':shared:build')

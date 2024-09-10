@@ -140,7 +140,6 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
     
     public static int getTooltipSize(String type) {
         switch(type) {
-            default: return 0;
             case "channel_info":
             case "help":
             case "jukebox":
@@ -156,6 +155,7 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
             case "toggles": return 2;
             case "main":
             case "reload": return 3;
+            default: return 0;
         }
     }
     

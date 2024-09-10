@@ -33,7 +33,7 @@ public class MTBlockEntityRegistry {
                     boolean recording = state.getPropertyBool("recording");
                     boolean recordingSpecial = state.getPropertyBool("recording_special");
                     if((recording || recordingSpecial) && RandomHelper.randomDouble(1d)<=0.005d) {
-                        List<PlayerAPI<?,?>> players = ChannelHelper.getPlayers(false);
+                        List<? extends PlayerAPI<?,?>> players = ChannelHelper.getPlayers(false);
                         if(players.isEmpty()) {
                             MTRef.logError("Unable to record music when there are no players online!");
                             return;
@@ -54,12 +54,12 @@ public class MTBlockEntityRegistry {
     }
     
     public static @Nullable PlayerAPI<?,?> findClosestPlayerInWorld(
-            WorldAPI<?> world, BlockPosAPI<?> pos, Collection<PlayerAPI<?,?>> players) {
-        String dimName = String.valueOf(world.getDimension().getRegistryName().getInstance());
+            WorldAPI<?> world, BlockPosAPI<?> pos, Collection<? extends PlayerAPI<?,?>> players) {
+        String dimName = String.valueOf(world.getDimension().getRegistryName().unwrap());
         PlayerAPI<?,?> closest = null;
         double minDist = Double.MAX_VALUE;
         for(PlayerAPI<?,?> player : players) {
-            if(dimName.equals(String.valueOf(player.getDimension().getRegistryName().getInstance()))) {
+            if(dimName.equals(String.valueOf(player.getDimension().getRegistryName().unwrap()))) {
                 double distance = pos.distanceTo(player.getPosRounded());
                 if(distance<minDist) {
                     closest = player;

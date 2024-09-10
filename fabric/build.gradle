@@ -1,0 +1,84 @@
+/**
+ * Common builds and sources relevant to all Fabric modules
+ *
+ * Base is 1.16.5
+ */
+
+buildscript {
+    repositories {
+        gradlePluginPortal() {
+            content {
+                [ 'com.fasterxml.woodstox', 'com.fasterxml.jackson.core', 'com.fasterxml.jackson', 'com.fasterxml',
+                  'com.google.code.findbugs', 'com.google.code.gson', 'com.google.errorprone', 'com.google.guava',
+                  'com.google.j2objc', 'commons-io', 'io.fabric8', 'io.netty', 'jakarta.platform', 'me.jamiemansfield',
+                  'org.apache', 'org.apache.ant', 'org.apache.commons', 'org.apache.logging',
+                  'org.apache.logging.log4j', 'org.apache.maven', 'org.benf', 'org.cadixdev', 'org.checkerframework',
+                  'org.codehaus.groovy', 'org.codehaus.plexus', 'org.codehaus.woodstox', 'org.eclipse.ee4j',
+                  'org.eclipse.jdt', 'org.eclipse.jetty', 'org.eclipse.platform', 'org.jdom', 'org.jetbrains',
+                  'org.jetbrains.kotlinx', 'org.junit', 'org.mockito', 'org.ow2', 'org.ow2.asm', 'org.slf4j',
+                  'org.sonatype.oss', 'org.springframework', 'org.vafer',
+                  'org.zeroturnaround'].forEach { includeGroup it }
+            }
+        }
+        maven {
+            name = 'Fabric'
+            url = uri('https://maven.fabricmc.net/')
+            content {
+                [ 'fabric-loom', 'net.fabricmc', 'net.fabricmc.fabric-api' ].forEach { includeGroup it }
+            }
+        }
+    }
+    dependencies {
+        classpath('fabric-loom:fabric-loom.gradle.plugin:1.+')
+    }
+}
+
+apply from: rootProject.file('gradle\\java17-module.gradle')
+apply from: rootProject.file('gradle\\fabric.gradle')
+
+plugins.apply('fabric-loom')
+
+configurations {
+    dev {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+}
+
+dependencies {
+    def shared = project(':shared:shared.1_16')
+    minecraft("com.mojang:minecraft:${shared.minecraft_version}")
+    mappings loom.layered() {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-${shared.minecraft_version}:${shared.parchment_version}@zip")
+    }
+
+    compileOnly(project(':api'))
+
+    modImplementation("net.fabricmc:fabric-loader:${loader_version}")
+    modImplementation("net.fabricmc.fabric-api:fabric-api:${shared.fabric_version}+1.16")
+    modImplementation("mods.thecomputerizer:theimpossiblelibrary:${til_version}")
+}
+
+processResources {
+    from(project(':api').processResources.outputs)
+}
+
+processTestResources {
+    from(project(':api').processTestResources.outputs)
+}
+
+jar {
+    manifest {
+        attributes([
+                'Implementation-Title': name,
+                'Implementation-Version': version
+        ])
+    }
+}
+
+artifacts {
+    dev jar
+}
+
+tasks.jar.dependsOn(':api:build')

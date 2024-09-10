@@ -12,6 +12,13 @@ repositories {
     }
 }
 
+configurations {
+    dev {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+}
+
 dependencies {
     compileOnly("biz.aQute.bnd:annotation:${bnd_version}")
     compileOnly("com.google.code.findbugs:jsr305:${jsr_version}")
@@ -27,4 +34,8 @@ dependencies {
 
 processResources {
     from(sourceSets.main.resources.srcDirs)
+}
+
+artifacts {
+    dev jar
 }
