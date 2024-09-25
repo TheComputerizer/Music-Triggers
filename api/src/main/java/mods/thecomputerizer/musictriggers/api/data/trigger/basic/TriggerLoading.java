@@ -9,8 +9,7 @@ public class TriggerLoading extends BasicTrigger {
         super(channel,"loading");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveLoading();
     }
 }

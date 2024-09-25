@@ -9,8 +9,7 @@ public class TriggerGeneric extends BasicTrigger {
         super(channel,"generic");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveGeneric();
     }
 }

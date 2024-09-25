@@ -49,8 +49,7 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
         this.state = IDLE;
     }
 
-    @Override
-    public void activate() {
+    @Override public void activate() {
         setState(ACTIVE);
         setTimer("ticks_before_audio",ACTIVE);
     }
@@ -90,8 +89,7 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
         consumeTimers(timer -> timer.clear(state));
     }
 
-    @Override
-    public void close() {
+    @Override public void close() {
         if(TIMER_MAP.containsKey(this)) {
             TIMER_MAP.get(this).clear();
             TIMER_MAP.remove(this);
@@ -107,8 +105,7 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
         if(TIMER_MAP.containsKey(this)) TIMER_MAP.get(this).values().forEach(consumer);
     }
 
-    @Override
-    public void deactivate() {
+    @Override public void deactivate() {
         clearTimers(ACTIVE);
         setTimer("active_cooldown",PLAYABLE);
         this.tracksPlayed = 0;
@@ -120,8 +117,7 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
         NetworkHelper.writeString(buf,getIdentifier());
     }
 
-    @Override
-    public boolean equals(Object other) {
+    @Override public boolean equals(Object other) {
         return other instanceof TriggerAPI && ((TriggerAPI)other).getNameWithID().equals(getNameWithID());
     }
 
@@ -160,18 +156,15 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
         return Collections.emptyList();
     }
 
-    @Override
-    public Class<? extends ChannelElement> getTypeClass() {
+    @Override public Class<? extends ChannelElement> getTypeClass() {
         return TriggerAPI.class;
     }
 
-    @Override
-    protected String getSubTypeName() {
+    @Override protected String getSubTypeName() {
         return "Trigger";
     }
     
-    @Override
-    public boolean hasDataToSave() {
+    @Override public boolean hasDataToSave() {
         AudioPool pool = getAudioPool();
         return Objects.nonNull(pool) && pool.hasDataToSave();
     }
@@ -191,8 +184,7 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
         return verifyRequiredParameters();
     }
     
-    @Override
-    protected void initExtraParameters(Map<String,Parameter<?>> parameters) {
+    @Override protected void initExtraParameters(Map<String,Parameter<?>> parameters) {
         for(Entry<String,Parameter<?>> entry : parameters.entrySet()) {
             State timeState = getParameterTimeState(entry.getKey());
             if(timeState!=DISABLED) addTimedParameter(entry.getKey(),timeState,entry.getValue());
@@ -213,8 +205,7 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
 
     public abstract boolean isPlayableContext(TriggerContext context);
 
-    @Override
-    public boolean isResource() {
+    @Override public boolean isResource() {
         return false;
     }
 
@@ -235,8 +226,7 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
         return this.equals(trigger);
     }
 
-    @Override
-    public void onConnected(CompoundTagAPI<?> worldData) {
+    @Override public void onConnected(CompoundTagAPI<?> worldData) {
         AudioPool pool = getAudioPool();
         if(Objects.nonNull(pool)) pool.onConnected(worldData);
     }
@@ -247,14 +237,12 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
         if(Objects.nonNull(pool)) pool.onDisconnected();
     }
     
-    @Override
-    public void onLoaded(CompoundTagAPI<?> globalData) {
+    @Override public void onLoaded(CompoundTagAPI<?> globalData) {
         AudioPool pool = getAudioPool();
         if(Objects.nonNull(pool)) pool.onLoaded(globalData);
     }
 
-    @Override
-    public boolean parse(Toml table) {
+    @Override public boolean parse(Toml table) {
         if(super.parse(table)) {
             if(table.hasTable("link")) {
                 for(Toml linkTable : table.getTableArray("link")) {
@@ -272,13 +260,11 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
         return false;
     }
 
-    @Override
-    public void play(boolean unpaused) {
+    @Override public void play(boolean unpaused) {
         this.tracksPlayed++;
     }
 
-    @Override
-    public void playable() {
+    @Override public void playable() {
         setTimer("ticks_before_active",PLAYABLE);
     }
 
@@ -294,8 +280,7 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
         return canPersist();
     }
     
-    @Override
-    public void saveGlobalTo(CompoundTagAPI<?> globalData) {
+    @Override public void saveGlobalTo(CompoundTagAPI<?> globalData) {
         savePersistentData(globalData,true);
     }
     
@@ -312,8 +297,7 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
         }
     }
     
-    @Override
-    public void saveWorldTo(CompoundTagAPI<?> worldData) {
+    @Override public void saveWorldTo(CompoundTagAPI<?> worldData) {
         savePersistentData(worldData,false);
     }
     
@@ -367,8 +351,7 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
         else setState(DISABLED);
     }
 
-    @Override
-    public void stopped() {
+    @Override public void stopped() {
         setTimer("ticks_between_audio",ACTIVE);
     }
 
@@ -387,13 +370,11 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
         setState(getParameterAsBoolean("start_as_disabled") ? DISABLED : IDLE);
     }
 
-    @Override
-    public void tickActive(boolean unpaused) {
+    @Override public void tickActive(boolean unpaused) {
         tickTimers(ACTIVE);
     }
 
-    @Override
-    public void tickPlayable(boolean unpaused) {
+    @Override public void tickPlayable(boolean unpaused) {
         tickTimers(PLAYABLE);
     }
 
@@ -401,8 +382,7 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
         consumeTimers(timer -> timer.tick(state));
     }
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
         return getSubTypeName()+"["+getNameWithID()+"]";
     }
     
@@ -412,8 +392,7 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
         return toml;
     }
 
-    @Override
-    public void unplayable() {
+    @Override public void unplayable() {
         clearTimers(PLAYABLE);
     }
     
@@ -520,8 +499,6 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
         IDLE(true,false),
         PLAYABLE(true,true);
 
-        private static final Map<String,State> BY_NAME = new HashMap<>();
-
         private final boolean activatable;
         private final boolean playable;
 
@@ -530,11 +507,9 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
             this.playable = playable;
         }
         
-        @Override
-        public String toString() {
+        @Override public String toString() {
             return name();
         }
-
     }
 
     protected static class Timer {

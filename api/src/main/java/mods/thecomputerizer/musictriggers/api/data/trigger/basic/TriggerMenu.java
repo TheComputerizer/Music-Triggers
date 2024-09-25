@@ -9,8 +9,7 @@ public class TriggerMenu extends BasicTrigger {
         super(channel,"menu");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveMenu();
     }
 }

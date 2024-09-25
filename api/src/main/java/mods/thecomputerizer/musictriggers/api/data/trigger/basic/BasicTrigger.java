@@ -12,8 +12,7 @@ public abstract class BasicTrigger extends TriggerAPI {
         super(channel, name);
     }
 
-    @Override
-    protected @Nullable Parameter<?> initParameter(String parameter, Parameter<?> defaultParameter) {
+    @Override protected @Nullable Parameter<?> initParameter(String parameter, Parameter<?> defaultParameter) {
         return parameter.equals("priority") ? null : defaultParameter;
     }
 }
