@@ -20,7 +20,7 @@ public class MTMappingsHelperFabric1_16_5 implements MTMappingsHelper1_16_5 {
         RepositorySource source = new MTDevResourceFinderFabric1_16_5(resourceDir); //TODO Figure out how to apply this
     }
     
-    @Override public Field findField(Class<?> clazz, String srgName, String normalName, Class<?> type) {
+    @Override public <T> Field findField(Class<T> clazz, String srgName, String normalName, Class<?> type) {
         return FabricHelper.getObfField(normalName,clazz,type.getSuperclass());
     }
     

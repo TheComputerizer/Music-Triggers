@@ -9,7 +9,7 @@ import java.util.function.Function;
 public interface MTMappingsHelper1_16_5 {
     
     void addDevResources(Minecraft mc, File resourceDir);
-    Field findField(Class<?> clazz, String srgName, String normalName, Class<?> type);
+    <T> Field findField(Class<T> clazz, String srgName, String normalName, Class<?> type);
     Object makeMusicTicker(Minecraft mc);
     Object makeSoundHandler(Minecraft mc);
     Function<Minecraft,Object> musicTickerGetter();

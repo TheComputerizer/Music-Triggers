@@ -19,7 +19,7 @@ public class MTMappingsHelperForge1_16_5 implements MTMappingsHelper1_16_5 {
         mc.getResourcePackRepository().addPackFinder(new MTDevResourceFinderForge1_16_5(resourceDir));
     }
     
-    @Override public Field findField(Class<?> clazz, String srgName, String normalName, Class<?> type) {
+    @Override public <T> Field findField(Class<T> clazz, String srgName, String normalName, Class<?> type) {
         return ObfuscationReflectionHelper.findField(clazz,srgName);
     }
     
@@ -28,7 +28,7 @@ public class MTMappingsHelperForge1_16_5 implements MTMappingsHelper1_16_5 {
     }
     
     @Override public Object makeSoundHandler(Minecraft mc) {
-        return new MTSoundHandlerForge1_16_5(mc.getSoundManager(), mc.getResourceManager(), mc.options);
+        return new MTSoundHandlerForge1_16_5(mc.getSoundManager(),mc.getResourceManager(),mc.options);
     }
     
     @Override public Function<Minecraft,Object> musicTickerGetter() {

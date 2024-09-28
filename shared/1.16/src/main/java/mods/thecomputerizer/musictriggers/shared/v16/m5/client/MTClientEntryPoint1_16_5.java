@@ -49,14 +49,6 @@ public class MTClientEntryPoint1_16_5 extends ClientEntryPoint {
     }
     
     @Override public void onConstructed() {
-        if(DEV) {
-            MTRef.logInfo("Attmpting to manually define dev resources");
-            File resourceDir = new File("MTResources");
-            if(resourceDir.exists() && resourceDir.isDirectory()) {
-                FileHelper.writeLines(new File(resourceDir,"pack.mcmeta"),getMCMetaLines(),false);
-                this.reflector.addDevResources(Minecraft.getInstance(),resourceDir);
-            }
-        }
         CoreAPI core = CoreAPI.getInstance();
         String loader = core.getModLoader().toString();
         String reflectorPath = core.getVersion().getPackageName(BASE_PACKAGE+"."+loader.toLowerCase());
@@ -70,6 +62,14 @@ public class MTClientEntryPoint1_16_5 extends ClientEntryPoint {
             else MTRef.logError("Failed to find 1.16.5 reflector (null class)");
         } catch(InstantiationException | IllegalAccessException ex) {
             MTRef.logError("Failed to find 1.16.5 reflector",ex);
+        }
+        if(Objects.nonNull(this.reflector) && DEV) {
+            MTRef.logInfo("Attmpting to manually define dev resources");
+            File resourceDir = new File("MTResources");
+            if(resourceDir.exists() && resourceDir.isDirectory()) {
+                FileHelper.writeLines(new File(resourceDir,"pack.mcmeta"),getMCMetaLines(),false);
+                this.reflector.addDevResources(Minecraft.getInstance(),resourceDir);
+            }
         }
     }
     

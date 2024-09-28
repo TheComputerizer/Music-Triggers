@@ -25,6 +25,7 @@ public class MTRegistryHandler {
     public static void onRegisterBlocks(RegisterBlocksEventWrapper<?> wrapper) {
         wrapper.register(MUSIC_RECORDER);
     }
+    
     public static void onRegisterBlockEntities(RegisterBlockEntitiesEventWrapper<?> wrapper) {
         wrapper.register(MUSIC_RECORDER_ENTITY);
     }

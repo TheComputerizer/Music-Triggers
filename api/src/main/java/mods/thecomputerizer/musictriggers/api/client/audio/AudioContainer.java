@@ -16,6 +16,7 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.Link;
 import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
 import mods.thecomputerizer.musictriggers.api.network.MessageCurrentSong;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -198,8 +199,9 @@ public class AudioContainer extends AudioRef {
         player.setFilterFactory(this::setFilters);
         player.playTrack(track);
         ChannelHelper helper = this.channel.getHelper();
-        if(!"jukebox".equals(getChannelName()) && !"preview".equals(getChannelName()) && helper.isSyncable())
-            MTNetwork.sendToServer(new MessageCurrentSong<>(helper,getChannelName(),this.name),false);
+        String channelName = getChannelName();
+        if(!Misc.equalsAny(channelName,"jukebox","preview") && helper.isSyncable())
+            MTNetwork.sendToServer(new MessageCurrentSong<>(helper,channelName,this.name),false);
     }
 
     @Override public void stop() {
@@ -225,6 +227,5 @@ public class AudioContainer extends AudioRef {
         }
         this.channel.getPlayer().stopCurrentTrack();
         this.looping = false;
-        this.queued = false;
     }
 }

@@ -537,6 +537,7 @@ public class ChannelHelper implements NBTLoadable {
             this.channels.put("preview",MTClient.getPreviewChannel(this));
             globalData.logInfo("Attempting to load stored audio references");
             this.debugInfo.initChannelElements();
+            queryCategoryVolume();
         }
         forEachChannel(this::loadTracks);
     }
