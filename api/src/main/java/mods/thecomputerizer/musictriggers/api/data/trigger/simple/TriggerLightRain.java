@@ -12,13 +12,11 @@ public class TriggerLightRain extends SimpleTrigger {
         super(channel,"lightrain");
     }
 
-    @Override
-    public List<String> getRequiredMods() {
+    @Override public List<String> getRequiredMods() {
         return Collections.singletonList("betterweather");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveLightRain();
     }
 }

@@ -9,8 +9,7 @@ public class TriggerVictory extends HolderTrigger {
         super(channel,"victory");
     }
     
-    @Override
-    public boolean imply(String id) {
+    @Override public boolean imply(String id) {
         try {
             int persistence = Integer.parseInt(id);
             if(persistence<=0) throw new NumberFormatException("Integer must be positive");
@@ -21,18 +20,15 @@ public class TriggerVictory extends HolderTrigger {
         return super.imply(id);
     }
     
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveVictory(getParameterAsInt("victory_timeout"));
     }
 
-    @Override
-    public boolean isServer() {
+    @Override public boolean isServer() {
         return true;
     }
 
-    @Override
-    public boolean verifyRequiredParameters() {
+    @Override public boolean verifyRequiredParameters() {
         String[] parameters = new String[]{"identifier","persistence"};
         if(hasAllNonDefaultParameter(parameters)) return true;
         logMissingParameters(parameters);

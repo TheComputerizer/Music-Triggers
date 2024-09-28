@@ -26,8 +26,7 @@ public class MTClientEntryPoint1_12_2 extends ClientEntryPoint {
             "{","\t\"pack\": {","\t\t\"pack_format\": 3,",
             "\t\t\"description\": \"Relocated Music Triggers resources\"", "\t}", "}");
     
-    @Nullable @Override
-    public ClientEntryPoint delegatedClientEntry() {
+    @Nullable @Override public ClientEntryPoint delegatedClientEntry() {
         return this;
     }
     

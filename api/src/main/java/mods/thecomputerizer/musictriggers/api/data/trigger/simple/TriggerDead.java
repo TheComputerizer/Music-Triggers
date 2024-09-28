@@ -9,8 +9,7 @@ public class TriggerDead extends SimpleTrigger {
         super(channel,"dead");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveDead();
     }
 }

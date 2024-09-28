@@ -9,8 +9,7 @@ public class TriggerElytra extends SimpleTrigger {
         super(channel,"elytra");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveElytra();
     }
 }

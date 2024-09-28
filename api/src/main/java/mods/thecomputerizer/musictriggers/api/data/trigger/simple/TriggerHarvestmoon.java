@@ -12,13 +12,11 @@ public class TriggerHarvestmoon extends SimpleTrigger {
         super(channel,"harvestmoon");
     }
 
-    @Override
-    public List<String> getRequiredMods() {
+    @Override public List<String> getRequiredMods() {
         return Arrays.asList("enhancedcelestials","nyx");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveHarvestMoon();
     }
 }

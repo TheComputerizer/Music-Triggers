@@ -9,8 +9,7 @@ public class TriggerCreative extends SimpleTrigger {
         super(channel,"creative");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveCreative();
     }
 }

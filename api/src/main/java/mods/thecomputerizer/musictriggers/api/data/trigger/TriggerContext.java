@@ -56,8 +56,7 @@ public abstract class TriggerContext extends ChannelElement {
         this.syncedTriggers.clear();
     }
 
-    @Override
-    public void close() {
+    @Override public void close() {
         this.player = null;
         this.world = null;
     }
@@ -188,8 +187,7 @@ public abstract class TriggerContext extends ChannelElement {
                 y2>=(y1-(range*yFactor)) && y2<=(y1+(range*yFactor));
     }
 
-    @Override
-    public boolean isResource() {
+    @Override public boolean isResource() {
         return false;
     }
 

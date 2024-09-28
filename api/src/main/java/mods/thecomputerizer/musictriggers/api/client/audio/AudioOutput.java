@@ -2,7 +2,7 @@ package mods.thecomputerizer.musictriggers.api.client.audio;
 
 import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat;
 import com.sedmelluq.discord.lavaplayer.format.AudioPlayerInputStream;
-import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import mods.thecomputerizer.musictriggers.api.client.MTClientEvents;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientAPI;
@@ -15,74 +15,78 @@ import javax.sound.sampled.DataLine;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.DataLine.Info;
 import java.util.Objects;
-import java.util.function.Supplier;
 
-@SuppressWarnings("BusyWait")
+import static com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats.DISCORD_PCM_S16_BE;
+import static mods.thecomputerizer.musictriggers.api.MTRef.NAME;
+
 public class AudioOutput extends Thread { //TODO Replace this
 
     protected final ChannelAPI channel;
-    protected final AudioDataFormat format;
     protected boolean runAudioLoop;
-    private Supplier<Void> onRun;
+    private Runnable onRun;
 
     public AudioOutput(@Nonnull ChannelAPI channel) {
-        super("LavaPlayer Audio Thread");
+        super(NAME+" Audio Output ["+channel.getName()+"]");
         this.channel = channel;
-        this.format = StandardAudioDataFormats.DISCORD_PCM_S16_BE;
         this.runAudioLoop = true;
         this.onRun = () -> {
-            try {
-                if(this.runAudioLoop) {
-                    AudioInputStream stream = AudioPlayerInputStream.createStream(this.channel.getPlayer(),this.format,
-                            this.format.frameDuration(),true);
-                    Info info = new DataLine.Info(SourceDataLine.class,stream.getFormat());
-                    SourceDataLine output = (SourceDataLine)AudioSystem.getLine(info);
-                    int buffersize = this.format.chunkSampleCount*this.format.channelCount*2;
-                    output.open(stream.getFormat(),buffersize*5);
-                    output.start();
-                    byte[] buffer = new byte[buffersize];
-                    int chunkSize;
-                    long frameDuration = this.format.frameDuration();
-                    while(this.runAudioLoop) {
-                        if(!this.channel.getPlayer().isPaused()) {
-                            if((chunkSize = stream.read(buffer))>=0) output.write(buffer,0,chunkSize);
-                            else throw new IllegalStateException("Audiostream ended for channel "+
-                                    this.channel.getName()+"! This should not happen.");
-                        } else {
-                            output.drain();
-                            sleep(frameDuration);
-                        }
-                    }
-                } else {
+            AudioDataFormat format = DISCORD_PCM_S16_BE;
+            if(this.runAudioLoop) loopRunner(this.channel.getPlayer(),format,format.frameDuration());
+            else {
+                try {
                     sleep(250);
                     this.runAudioLoop = true;
+                } catch(InterruptedException ex) {
+                    this.channel.logFatal("Unable to restart audio output!",ex);
+                    this.onRun = null;
                 }
-            } catch(Exception ex) {
-                this.channel.logError("An unkown error occured in the audio output thread!",ex);
             }
-            return null;
         };
     }
 
     /**
-     * Note: I'm not sure what the best way of "closing" a thread that isn't needed anymore is or if I can just ignore
-     * it but this basically does the same thing.
+     * Note: I'm not sure what the best way of "closing" a thread that isn't necessary anymore is or if I can just
+     * ignore it, but this basically does the same thing.
      */
     public void close() {
         this.onRun = null;
     }
 
+    private void loopRunner(AudioPlayer player, AudioDataFormat format, long frameDur) {
+        try(AudioInputStream stream = AudioPlayerInputStream.createStream(player,format,frameDur,true)) {
+            Info info = new DataLine.Info(SourceDataLine.class,stream.getFormat());
+            SourceDataLine output = (SourceDataLine)AudioSystem.getLine(info);
+            int buffersize = format.chunkSampleCount*format.channelCount*2;
+            output.open(stream.getFormat(),buffersize*5);
+            output.start();
+            byte[] buffer = new byte[buffersize];
+            int chunkSize;
+            while(this.runAudioLoop) {
+                if(!player.isPaused()) {
+                    if((chunkSize = stream.read(buffer))>=0) output.write(buffer,0,chunkSize);
+                    else {
+                        String msg = "Audiostream ended for channel "+this.channel+"! This should not happen!";
+                        throw new IllegalStateException(msg);
+                    }
+                } else {
+                    output.drain();
+                    //noinspection BusyWait
+                    sleep(frameDur);
+                }
+            }
+        } catch(Exception ex) {
+            this.channel.logError("An unkown error occured in the audio output thread!",ex);
+        }
+    }
 
     public void pauseAudioLoop() {
         this.runAudioLoop = false;
         MTClientEvents.handleError(TILRef.getClientSubAPI(ClientAPI::getMinecraft),this.channel.getName());
     }
 
-    @Override
-    public void run() {
-        if(Objects.nonNull(this.onRun)) this.onRun.get();
+    @Override public void run() {
+        if(Objects.nonNull(this.onRun)) this.onRun.run();
     }
-    
     
     public void unpauseAudioLoop() {
         this.runAudioLoop = true;

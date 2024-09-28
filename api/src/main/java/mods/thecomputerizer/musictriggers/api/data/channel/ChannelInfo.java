@@ -100,11 +100,9 @@ public class ChannelInfo extends ChannelElement {
         return this.hasPausedMusic;
     }
     
-    @Override
-    public boolean isResource() {
+    @Override public boolean isResource() {
         return false;
     }
 
-    @Override
-    public void close() {}
+    @Override public void close() {}
 }

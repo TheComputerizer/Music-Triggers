@@ -12,18 +12,15 @@ public class TriggerRainIntensity extends HolderTrigger {
         super(channel,"rainintensity");
     }
 
-    @Override
-    public List<String> getRequiredMods() {
+    @Override public List<String> getRequiredMods() {
         return Collections.singletonList("dsurround");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveRainIntensity(getParameterAsFloat("level"));
     }
 
-    @Override
-    public boolean verifyRequiredParameters() {
+    @Override public boolean verifyRequiredParameters() {
         return hasValidIdentifier();
     }
 }

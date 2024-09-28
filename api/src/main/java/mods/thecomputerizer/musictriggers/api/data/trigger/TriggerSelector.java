@@ -41,8 +41,7 @@ public class TriggerSelector extends ChannelElement {
         this.crashHelper = "cleared";
     }
 
-    @Override
-    public void close() {
+    @Override public void close() {
         clear();
     }
 
@@ -121,8 +120,7 @@ public class TriggerSelector extends ChannelElement {
         return this.channel.isClientChannel();
     }
     
-    @Override
-    public boolean isResource() {
+    @Override public boolean isResource() {
         return false;
     }
     
@@ -199,8 +197,7 @@ public class TriggerSelector extends ChannelElement {
         this.crashHelper = Objects.nonNull(status) ? status : "";
     }
 
-    @Override
-    public String toString() {
+    @Override public String toString() {
         return (isClient() ? "Client" : "Server")+" Trigger Selector ["+this.crashHelper+"]";
     }
 }

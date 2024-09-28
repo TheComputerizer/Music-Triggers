@@ -37,8 +37,7 @@ public class AudioContainer extends AudioRef {
         this.channel.setTrackVolume(getVolume(unpaused));
     }
 
-    @Override
-    public void close() {
+    @Override public void close() {
         super.close();
         this.fade = 0;
         this.fadeFactor = 0f;
@@ -66,8 +65,7 @@ public class AudioContainer extends AudioRef {
         return null;
     }
 
-    @Override
-    public float getVolume(boolean unpaused) {
+    @Override public float getVolume(boolean unpaused) {
         return super.getVolume(unpaused)*(this.fade<=0 ? 1f : (this.fadeFactor<=0 ? 1f+getFade() : getFade()));
     }
     
@@ -78,20 +76,17 @@ public class AudioContainer extends AudioRef {
         }
     }
 
-    @Override
-    public void loadLocal(String location) {
+    @Override public void loadLocal(String location) {
         this.location = this.channel.loadLocalTrack(this,location);
         this.file = true;
     }
 
-    @Override
-    public void loadRemote(String location) {
+    @Override public void loadRemote(String location) {
         this.location = this.channel.loadRemoteTrack(this,location);
         this.file = false;
     }
 
-    @Override
-    public void playing(boolean unpaused) {
+    @Override public void playing(boolean unpaused) {
         if(this.queued) {
             if(this.loaded) start(this.channel.getActiveTrigger(),unpaused);
             return;
@@ -116,8 +111,7 @@ public class AudioContainer extends AudioRef {
         } else handlePaused(unpaused);
     }
 
-    @Override
-    public void queryInterrupt(@Nullable TriggerAPI next, AudioPlayer player) {
+    @Override public void queryInterrupt(@Nullable TriggerAPI next, AudioPlayer player) {
         if(this.fadeFactor>0f) return;
         InterruptHandler handler = getInterruptHandler();
         if(Objects.isNull(handler) || handler.isInterrputedBy(next)) this.channel.stop();
@@ -126,8 +120,7 @@ public class AudioContainer extends AudioRef {
     /**
      * Set the max of the new fade value to the progress of the interrupted value if there is one present
      */
-    @Override
-    public void setFade(int fade) {
+    @Override public void setFade(int fade) {
         if(fade!=0 && this.fadeFactor!=0f)
             fade = (int)((float)fade*((float)this.fade/(this.fadeFactor<0f ? -1f/this.fadeFactor : 1f/this.fadeFactor)));
         this.fadeFactor = 1f/(float)fade;
@@ -147,8 +140,7 @@ public class AudioContainer extends AudioRef {
         return filters;
     }
 
-    @Override
-    public void setItem(AudioItem item) {
+    @Override public void setItem(AudioItem item) {
         this.item = item;
         super.setItem(item);
     }
@@ -186,8 +178,7 @@ public class AudioContainer extends AudioRef {
         }
     }
 
-    @Override
-    public void start(TriggerAPI trigger, boolean unpaused) {
+    @Override public void start(TriggerAPI trigger, boolean unpaused) {
         if(!this.loaded || this.loading) {
             logInfo("Queued track will play once it is finished loading");
             this.queued = true;
@@ -211,8 +202,7 @@ public class AudioContainer extends AudioRef {
             MTNetwork.sendToServer(new MessageCurrentSong<>(helper,getChannelName(),this.name),false);
     }
 
-    @Override
-    public void stop() {
+    @Override public void stop() {
         logDebug("Stopping track");
         TriggerAPI trigger = this.channel.getActiveTrigger();
         if(Objects.nonNull(trigger)) {
@@ -223,8 +213,7 @@ public class AudioContainer extends AudioRef {
         else stopTrackImmediately();
     }
     
-    @Override
-    public void stopped() {
+    @Override public void stopped() {
         this.loops.forEach(Loop::reset);
     }
 
@@ -236,5 +225,6 @@ public class AudioContainer extends AudioRef {
         }
         this.channel.getPlayer().stopCurrentTrack();
         this.looping = false;
+        this.queued = false;
     }
 }

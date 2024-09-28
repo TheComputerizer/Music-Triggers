@@ -26,20 +26,17 @@ public class MTSoundHandler1_12_2 extends SoundHandler {
         this.wrapped = wrapped;
     }
     
-    @Override
-    public void onResourceManagerReload(IResourceManager manager) {
+    @Override public void onResourceManagerReload(IResourceManager manager) {
         this.wrapped.onResourceManagerReload(manager);
     }
     
-    @Override
-    public void setSoundLevel(@Nonnull SoundCategory category, float volume) {
+    @Override public void setSoundLevel(@Nonnull SoundCategory category, float volume) {
         ChannelHelper helper = ChannelHelper.getClientHelper();
         if(Objects.nonNull(helper)) helper.setCategoryVolume(category.getName(),volume);
         this.wrapped.setSoundLevel(category,volume);
     }
     
-    @Override
-    public SoundEventAccessor getAccessor(ResourceLocation location) {
+    @Override public SoundEventAccessor getAccessor(ResourceLocation location) {
         return this.wrapped.getAccessor(location);
     }
     

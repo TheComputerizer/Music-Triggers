@@ -9,8 +9,7 @@ public class TriggerDrowning extends SimpleTrigger {
         super(channel,"drowning");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveDrowning(getParameterAsInt("level"));
     }
 }

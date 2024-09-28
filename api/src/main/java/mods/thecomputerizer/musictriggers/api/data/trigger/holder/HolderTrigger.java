@@ -9,8 +9,7 @@ public abstract class HolderTrigger extends TriggerAPI {
         super(channel,name);
     }
 
-    @Override
-    public String getNameWithID() {
+    @Override public String getNameWithID() {
         return getName()+"-"+getIdentifier();
     }
 

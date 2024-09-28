@@ -9,8 +9,7 @@ public class TriggerUnderwater extends SimpleTrigger {
         super(channel,"underwater");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveUnderwater();
     }
 }

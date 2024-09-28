@@ -12,13 +12,11 @@ public class TriggerBloodmoon extends SimpleTrigger {
         super(channel,"bloodmoon");
     }
 
-    @Override
-    public List<String> getRequiredMods() {
+    @Override public List<String> getRequiredMods() {
         return Arrays.asList("bloodmoon","enhancedcelestials","nyx");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveBloodMoon();
     }
 }

@@ -16,14 +16,12 @@ public class MTMusicTicker1_12_2 extends MusicTicker {
         super(mc);
     }
     
-    @Override
-    public void update() {
+    @Override public void update() {
         ChannelHelper helper = ChannelHelper.getClientHelper();
         if(Objects.isNull(helper) || helper.canVanillaMusicPlay()) super.update();
     }
     
-    @Override
-    public void playMusic(@Nonnull MusicType requestedType) {
+    @Override public void playMusic(@Nonnull MusicType requestedType) {
         ChannelHelper helper = ChannelHelper.getClientHelper();
         if(Objects.isNull(helper) || helper.canVanillaMusicPlay()) super.playMusic(requestedType);
     }

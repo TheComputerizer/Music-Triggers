@@ -36,8 +36,7 @@ public class TriggerContextClient extends TriggerContext {
         super(channel,"client_context");
     }
 
-    @Override
-    public void cache() {
+    @Override public void cache() {
         this.minecraft = TILRef.getClientSubAPI(ClientAPI::getMinecraft);
         this.player = Objects.nonNull(this.minecraft) ? this.minecraft.getPlayer() : null;
         this.world = Objects.nonNull(this.minecraft) ? this.minecraft.getWorld() : null;
@@ -49,14 +48,12 @@ public class TriggerContextClient extends TriggerContext {
         return Objects.nonNull(mod) && checker.apply(mod);
     }
 
-    @Override
-    public void close() {
+    @Override public void close() {
         super.close();
         this.minecraft = null;
     }
     
-    @Override
-    public PlayerAPI<?,?> getPlayer() {
+    @Override public PlayerAPI<?,?> getPlayer() {
         return Objects.nonNull(this.minecraft) ? this.minecraft.getPlayer() : null;
     }
 
@@ -82,33 +79,27 @@ public class TriggerContextClient extends TriggerContext {
         }
     }
 
-    @Override
-    public boolean isActiveAcidRain() {
+    @Override public boolean isActiveAcidRain() {
         return hasWorld() && checkMod(ModHelper::betterWeather,mod -> mod.isAcidRaining(this.world));
     }
 
-    @Override
-    public boolean isActiveAdvancement(ResourceContext ctx) { //TODO
+    @Override public boolean isActiveAdvancement(ResourceContext ctx) { //TODO
         return false;
     }
 
-    @Override
-    public boolean isActiveAdventure() {
+    @Override public boolean isActiveAdventure() {
         return hasPlayer() && this.player.isGamemodeAdventure();
     }
 
-    @Override
-    public boolean isActiveBiome(TriggerBiome trigger) {
+    @Override public boolean isActiveBiome(TriggerBiome trigger) {
         return false;
     }
 
-    @Override
-    public boolean isActiveBlizzard() {
+    @Override public boolean isActiveBlizzard() {
         return hasWorld() && checkMod(ModHelper::betterWeather,mod -> mod.isBlizzard(this.world));
     }
 
-    @Override
-    public boolean isActiveBlockEntity(ResourceContext ctx, int range, float yRatio) {
+    @Override public boolean isActiveBlockEntity(ResourceContext ctx, int range, float yRatio) {
         for(BlockEntityAPI<?,?> block : getBlockEntitiesAround(getBox(range,yRatio))) {
             ResourceLocationAPI<?> registryName = block.getRegistryName();
             if(Objects.nonNull(registryName) && ctx.checkMatch(registryName.toString(),null))
@@ -117,77 +108,63 @@ public class TriggerContextClient extends TriggerContext {
         return false;
     }
 
-    @Override
-    public boolean isActiveBloodMoon() {
+    @Override public boolean isActiveBloodMoon() {
         return hasWorld() && (checkMod(ModHelper::bloodmoon,BloodmoonAPI::isBloodMoon) ||
                 checkMod(ModHelper::nyx,mod -> mod.isBloodMoon(this.world)) ||
                 checkMod(ModHelper::enhancedCelestials,mod -> mod.isBloodMoon(this.world)));
     }
 
-    @Override
-    public boolean isActiveBlueMoon() {
+    @Override public boolean isActiveBlueMoon() {
         return hasWorld() && checkMod(ModHelper::enhancedCelestials,mod -> mod.isBlueMoon(this.world));
     }
 
-    @Override
-    public boolean isActiveCloudy() {
+    @Override public boolean isActiveCloudy() {
         return hasWorld() && checkMod(ModHelper::betterWeather,mod -> mod.isCloudy(this.world));
     }
 
-    @Override
-    public boolean isActiveCommand() { //TODO
+    @Override public boolean isActiveCommand() { //TODO
         return false;
     }
 
-    @Override
-    public boolean isActiveCreative() {
+    @Override public boolean isActiveCreative() {
         return hasPlayer() && this.player.isGamemodeCreative();
     }
 
-    @Override
-    public boolean isActiveDead() {
+    @Override public boolean isActiveDead() {
         return hasPlayer() && !this.player.isAlive();
     }
 
-    @Override
-    public boolean isActiveDifficulty(int level) {
+    @Override public boolean isActiveDifficulty(int level) {
         return hasWorld() && this.world.getDifficultyOrdinal()==level;
     }
 
-    @Override
-    public boolean isActiveDimension(ResourceContext ctx) {
+    @Override public boolean isActiveDimension(ResourceContext ctx) {
         if(!hasBoth()) return false;
         DimensionAPI<?> dimension = this.player.getDimension();
         return ctx.checkMatch(dimension.getRegistryName().toString(),dimension.getName());
     }
 
-    @Override
-    public boolean isActiveDrowning(int level) {
+    @Override public boolean isActiveDrowning(int level) {
         return hasPlayer() && this.player.getAir()<level;
     }
 
-    @Override
-    public boolean isActiveEffect(ResourceContext ctx) { //TODO
+    @Override public boolean isActiveEffect(ResourceContext ctx) { //TODO
         return false;
     }
 
-    @Override
-    public boolean isActiveElytra() {
+    @Override public boolean isActiveElytra() {
         return hasPlayer() && this.player.isFlying();
     }
 
-    @Override
-    public boolean isActiveStarShower() {
+    @Override public boolean isActiveStarShower() {
         return hasWorld() && checkMod(ModHelper::nyx,mod -> mod.isStarShower(this.world));
     }
 
-    @Override
-    public boolean isActiveFishing() {
+    @Override public boolean isActiveFishing() {
         return hasPlayer() && this.player.isFishing();
     }
 
-    @Override
-    public boolean isActiveGamestage(ResourceContext ctx, boolean whitelist) {
+    @Override public boolean isActiveGamestage(ResourceContext ctx, boolean whitelist) {
         return hasPlayer() && checkMod(ModHelper::gameStages,mod -> {
             for(String stage : mod.getStages(this.player))
                 if(ctx.checkMatch(stage,null)) return true;
@@ -195,42 +172,35 @@ public class TriggerContextClient extends TriggerContext {
         });
     }
 
-    @Override
-    public boolean isActiveGeneric() {
+    @Override public boolean isActiveGeneric() {
         return true;
     }
 
-    @Override
-    public boolean isActiveGUI(ResourceContext ctx) { //TODO
+    @Override public boolean isActiveGUI(ResourceContext ctx) { //TODO
         return false;
     }
 
-    @Override
-    public boolean isActiveHarvestMoon() {
+    @Override public boolean isActiveHarvestMoon() {
         return hasWorld() && (checkMod(ModHelper::nyx,mod -> mod.isHarvestMoon(this.world)) ||
                 checkMod(ModHelper::enhancedCelestials,mod -> mod.isHarvestMoon(this.world)));
     }
 
-    @Override
-    public boolean isActiveHeight(int level, boolean checkSky, boolean checkAbove) {
+    @Override public boolean isActiveHeight(int level, boolean checkSky, boolean checkAbove) {
         BlockPosAPI<?> pos = hasBoth() ? this.player.getPosRounded() : null;
         return Objects.nonNull(pos) && (checkAbove ? pos.y()>level : pos.y()<level &&
                 (!checkSky || this.world.isSkyVisible(pos)));
     }
 
-    @Override
-    public boolean isActiveHome(int range, float yRatio) {
+    @Override public boolean isActiveHome(int range, float yRatio) {
         return false;
     }
 
-    @Override
-    public boolean isActiveHurricane(int range) {
+    @Override public boolean isActiveHurricane(int range) {
         return Objects.nonNull(this.pos) && checkMod(ModHelper::weather2,mod ->
                 Objects.nonNull(mod.getClosestHurricane(this.world,this.pos,range)));
     }
 
-    @Override
-    public boolean isActiveInventory(List<String> items, List<String> slots) {
+    @Override public boolean isActiveInventory(List<String> items, List<String> slots) {
         if(items.isEmpty() || slots.isEmpty() || !hasPlayer()) return false;
         for(String slot : slots)
             for(ItemStackAPI<?> stack : getStacksFromSlotMatcher(slot))
@@ -252,8 +222,7 @@ public class TriggerContextClient extends TriggerContext {
         return false;
     }
 
-    @Override
-    public boolean isActiveLight(int level, String type) {
+    @Override public boolean isActiveLight(int level, String type) {
         if(!hasBoth()) return false;
         switch(type.toLowerCase()) {
             case "block": return this.world.getLightBlock(this.pos)<=level;
@@ -262,78 +231,64 @@ public class TriggerContextClient extends TriggerContext {
         }
     }
 
-    @Override
-    public boolean isActiveLightRain() {
+    @Override public boolean isActiveLightRain() {
         return hasWorld() && checkMod(ModHelper::betterWeather,mod -> mod.isRaining(this.world));
     }
 
-    @Override
-    public boolean isActiveLoading() {
+    @Override public boolean isActiveLoading() {
         return Objects.nonNull(this.minecraft) && this.minecraft.isLoading();
     }
 
-    @Override
-    public boolean isActiveLowHP(float percent) {
+    @Override public boolean isActiveLowHP(float percent) {
         return hasPlayer() && (percent/100f)<this.player.getHealthPercent();
     }
 
-    @Override
-    public boolean isActiveMenu() {
+    @Override public boolean isActiveMenu() {
         return Objects.nonNull(this.minecraft) && this.minecraft.isFinishedLoading() && !hasBoth();
     }
 
-    @Override
-    public boolean isActiveMob(TriggerMob trigger) {
+    @Override public boolean isActiveMob(TriggerMob trigger) {
         return false;
     }
 
-    @Override
-    public boolean isActiveMoon(ResourceContext ctx) {
+    @Override public boolean isActiveMoon(ResourceContext ctx) {
         return hasWorld() && checkMod(ModHelper::enhancedCelestials,mod -> mod.isMoon(this.world));
     }
 
-    @Override
-    public boolean isActivePet(int range, float yRatio) {
+    @Override public boolean isActivePet(int range, float yRatio) {
         for(EntityAPI<?,?> entity : getEntitiesAround(getBox(range,yRatio)))
             if(entity.isOwnedBy(this.player)) return true;
         return false;
     }
 
-    @Override
-    public boolean isActivePVP() {
+    @Override public boolean isActivePVP() {
         return false;
     }
 
-    @Override
-    public boolean isActiveRaid(int wave) {
+    @Override public boolean isActiveRaid(int wave) {
         return false;
     }
 
-    @Override
-    public boolean isActiveRaining() {
+    @Override public boolean isActiveRaining() {
         return hasWorld() && this.world.isRaining();
     }
 
-    @Override
-    public boolean isActiveRainIntensity(float level) {
+    @Override public boolean isActiveRainIntensity(float level) {
         return hasWorld() && checkMod(ModHelper::dynamicSurroundings,mod -> mod.getRainStrength(this.world)>level);
     }
 
-    @Override
-    public boolean isActiveRiding(ResourceContext ctx) {
+    @Override public boolean isActiveRiding(ResourceContext ctx) {
         if(!hasPlayer()) return false;
         EntityAPI<?,?> entity = this.player.getVehicle();
         return Objects.nonNull(entity) && ctx.checkMatch(entity.getRegistryName().toString(),entity.getName());
     }
 
-    @Override
-    public boolean isActiveSandstorm(int range) {
+    @Override public boolean isActiveSandstorm(int range) {
         return Objects.nonNull(this.pos) && hasWorld() && checkMod(ModHelper::weather2,mod ->
                 Objects.nonNull(mod.getClosestSandStorm(this.world,this.pos,range)));
     }
 
-    @Override
-    public boolean isActiveSeason(int level) {
+    @Override public boolean isActiveSeason(int level) {
         return hasWorld() && checkMod(ModHelper::sereneSeasons,mod -> {
             switch(level) {
                 case 0: return mod.isSpring(this.world);
@@ -345,33 +300,27 @@ public class TriggerContextClient extends TriggerContext {
         });
     }
 
-    @Override
-    public boolean isActiveSnowing() {
+    @Override public boolean isActiveSnowing() {
         return false;
     }
 
-    @Override
-    public boolean isActiveSpectator() {
+    @Override public boolean isActiveSpectator() {
         return hasPlayer() && this.player.isGamemodeSpectator();
     }
 
-    @Override
-    public boolean isActiveStatistic(ResourceContext ctx, int level) { //TODO
+    @Override public boolean isActiveStatistic(ResourceContext ctx, int level) { //TODO
         return false;
     }
 
-    @Override
-    public boolean isActiveStorming() {
+    @Override public boolean isActiveStorming() {
         return hasWorld() && this.world.isStorming();
     }
 
-    @Override
-    public boolean isActiveStructure(ResourceContext ctx) {
+    @Override public boolean isActiveStructure(ResourceContext ctx) {
         return false;
     }
 
-    @Override
-    public boolean isActiveTime(String bundle, float startHour, float endHour, int startDay, int endDay, int moonPhase) {
+    @Override public boolean isActiveTime(String bundle, float startHour, float endHour, int startDay, int endDay, int moonPhase) {
         if(!hasWorld() || !isActiveTimeExtras(startDay,endDay,moonPhase)) return false;
         switch(bundle.toLowerCase()) {
             case "day": return this.world.isDaytime();
@@ -391,31 +340,26 @@ public class TriggerContextClient extends TriggerContext {
         return day>=startDay && day<=endDay && (moonPhase==0 || moonPhase==this.world.getMoonPhase()+1);
     }
 
-    @Override
-    public boolean isActiveTornado(int range, int level) {
+    @Override public boolean isActiveTornado(int range, int level) {
         return Objects.nonNull(this.pos) && hasWorld() && checkMod(ModHelper::weather2,mod -> {
             WeatherData data = mod.getClosestTornado(this.world,this.pos,range);
             return Objects.nonNull(data) && data.getLevel()>=level;
         });
     }
 
-    @Override
-    public boolean isActiveUnderwater() {
+    @Override public boolean isActiveUnderwater() {
         return Objects.nonNull(this.pos) && hasWorld() && this.world.isUnderwater(this.pos);
     }
 
-    @Override
-    public boolean isActiveVictory(int timeout) {
+    @Override public boolean isActiveVictory(int timeout) {
         return false;
     }
 
-    @Override
-    public boolean isActiveZones(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+    @Override public boolean isActiveZones(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
         return hasPlayer() && new Box(minX,minY,minZ,maxX,maxY,maxZ).isInside(this.player.getPosRounded());
     }
 
-    @Override
-    public boolean isClient() {
+    @Override public boolean isClient() {
         return true;
     }
 }

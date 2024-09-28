@@ -12,13 +12,11 @@ public class TriggerSandstorm extends SimpleTrigger {
         super(channel,"sandstorm");
     }
 
-    @Override
-    public List<String> getRequiredMods() {
+    @Override public List<String> getRequiredMods() {
         return Collections.singletonList("weather2");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveSandstorm(getParameterAsInt("detection_range"));
     }
 }

@@ -12,8 +12,7 @@ public class TriggerSeason extends HolderTrigger {
         super(channel,"season");
     }
     
-    @Override
-    public boolean imply(String id) {
+    @Override public boolean imply(String id) {
         int season = -1;
         switch(id) {
             case "0":
@@ -49,18 +48,15 @@ public class TriggerSeason extends HolderTrigger {
         return false;
     }
 
-    @Override
-    public List<String> getRequiredMods() {
+    @Override public List<String> getRequiredMods() {
         return Collections.singletonList("sereneseasons");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveSeason(getParameterAsInt("season"));
     }
 
-    @Override
-    public boolean verifyRequiredParameters() {
+    @Override public boolean verifyRequiredParameters() {
         String[] parameters = new String[]{"identifier","season"};
         if(hasAllNonDefaultParameter(parameters)) return true;
         logMissingParameters(parameters);

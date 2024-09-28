@@ -17,8 +17,7 @@ public class TriggerMob extends HolderTrigger {
         this.validEntities = new HashSet<>();
     }
     
-    @Override
-    public boolean imply(String id) {
+    @Override public boolean imply(String id) {
         setExistingParameterValue("resource_name",Collections.singletonList(id));
         return super.imply(id);
     }
@@ -28,13 +27,11 @@ public class TriggerMob extends HolderTrigger {
         return size>=min && size<=max;
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveMob(this);
     }
 
-    @Override
-    public boolean isServer() {
+    @Override public boolean isServer() {
         return true;
     }
 
@@ -48,8 +45,7 @@ public class TriggerMob extends HolderTrigger {
         return set;
     }
 
-    @Override
-    public boolean verifyRequiredParameters() {
+    @Override public boolean verifyRequiredParameters() {
         if(hasValidIdentifier()) {
             String[] parameters = new String[]{"display_name","resource_name"};
             if(hasAnyNonDefaultParameter(parameters)) return true;

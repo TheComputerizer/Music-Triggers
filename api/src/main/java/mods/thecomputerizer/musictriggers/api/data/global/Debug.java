@@ -47,8 +47,7 @@ public class Debug extends GlobalElement { //TODO Implement log_level and max_ho
         }
     }
     
-    @Override
-    public boolean parse(Toml table) {
+    @Override public boolean parse(Toml table) {
         if(super.parse(table)) {
             this.formattedBlockedMods.clear();
             for(Object element : getParameterAsList("blocked_sound_categories")) {

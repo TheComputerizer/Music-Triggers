@@ -67,8 +67,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
         logInfo("Successfully registered");
     }
 
-    @Override
-    public void activate() {
+    @Override public void activate() {
         handleActiveEvent(ChannelEventHandler::activate);
     }
     
@@ -88,8 +87,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
         this.selector.close();
     }
 
-    @Override
-    public void deactivate() {
+    @Override public void deactivate() {
         TriggerAPI activeTrigger = getActiveTrigger();
         if(Objects.nonNull(activeTrigger)) logDebug("Deactivated {}",activeTrigger);
         handleActiveEvent(ChannelEventHandler::deactivate);
@@ -114,8 +112,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
         this.enabled = true;
     }
     
-    @Override
-    public boolean equals(Object other) {
+    @Override public boolean equals(Object other) {
         if(other instanceof ChannelAPI) {
             ChannelAPI channel = (ChannelAPI)other;
             return isClientChannel()==channel.isClientChannel() && this.name.equals(channel.name);
@@ -241,8 +238,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
         this.data.getPlayableEventHandlers().forEach(event);
     }
     
-    @Override
-    public boolean hasDataToSave() {
+    @Override public boolean hasDataToSave() {
         for(TriggerAPI trigger : this.data.getTriggerEventMap().keySet())
             if(trigger.hasDataToSave()) return true;
         return false;
@@ -265,33 +261,27 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
         this.data.loadTracks(loadResources);
     }
 
-    @Override
-    public void logDebug(String msg, Object ... args) {
+    @Override public void logDebug(String msg, Object ... args) {
         MTLogger.logDebug(getLogPrefix(),getName(),msg,args);
     }
 
-    @Override
-    public void logError(String msg, Object ... args) {
+    @Override public void logError(String msg, Object ... args) {
         MTLogger.logError(getLogPrefix(), getName(), msg, args);
     }
 
-    @Override
-    public void logFatal(String msg, Object ... args) {
+    @Override public void logFatal(String msg, Object ... args) {
         MTLogger.logFatal(getLogPrefix(), getName(), msg, args);
     }
 
-    @Override
-    public void logInfo(String msg, Object ... args) {
+    @Override public void logInfo(String msg, Object ... args) {
         MTLogger.logInfo(getLogPrefix(), getName(), msg, args);
     }
 
-    @Override
-    public void logTrace(String msg, Object ... args) {
+    @Override public void logTrace(String msg, Object ... args) {
         MTLogger.logTrace("Channel",getName(),msg,args);
     }
 
-    @Override
-    public void logWarn(String msg, Object ... args) {
+    @Override public void logWarn(String msg, Object ... args) {
         MTLogger.logWarn(getLogPrefix(), getName(), msg, args);
     }
 
@@ -315,31 +305,25 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
         this.data.parse();
     }
 
-    @Override
-    public void play(boolean unpaused) {
+    @Override public void play(boolean unpaused) {
         handleActiveEvent(handler -> handler.play(unpaused));
     }
 
-    @Override
-    public void playable() {}
+    @Override public void playable() {}
 
-    @Override
-    public void playing(boolean unpaused) {
+    @Override public void playing(boolean unpaused) {
         handleActiveEvent(handler -> handler.playing(unpaused));
     }
 
-    @Override
-    public void queue() {
+    @Override public void queue() {
         handleActiveEvent(ChannelEventHandler::queue);
     }
     
-    @Override
-    public void saveGlobalTo(CompoundTagAPI<?> globalData) {
+    @Override public void saveGlobalTo(CompoundTagAPI<?> globalData) {
     
     }
     
-    @Override
-    public void saveWorldTo(CompoundTagAPI<?> worldData) {
+    @Override public void saveWorldTo(CompoundTagAPI<?> worldData) {
         ListTagAPI<?> triggersTag = TagHelper.makeListTag();
         for(TriggerAPI trigger : this.data.getTriggerEventMap().keySet()) {
             if(trigger.hasDataToSave()) {
@@ -364,13 +348,11 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
         return ChannelHelper.getDebugBool("show_channel_info") && ChannelHelper.getDebugBool("show_trigger_info");
     }
 
-    @Override
-    public void stop() {
+    @Override public void stop() {
         handleActiveEvent(ChannelEventHandler::stop);
     }
 
-    @Override
-    public void stopped() {
+    @Override public void stopped() {
         logInfo("Stopped track");
         handleActiveEvent(ChannelEventHandler::stopped);
     }
@@ -381,13 +363,11 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
         return unpaused;
     }
 
-    @Override
-    public void tickActive(boolean unpaused) {
+    @Override public void tickActive(boolean unpaused) {
         handleActiveEvent(handler -> handler.tickActive(unpaused));
     }
 
-    @Override
-    public void tickPlayable(boolean unpaused) {
+    @Override public void tickPlayable(boolean unpaused) {
         handlePlayableEvent(handler -> handler.tickPlayable(unpaused));
     }
 
@@ -395,13 +375,11 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
         this.selector.select(unpaused);
     }
     
-    @Override
-    public String toString() {
+    @Override public String toString() {
         return getLogPrefix()+"["+this.name+"]";
     }
 
-    @Override
-    public void unplayable() {}
+    @Override public void unplayable() {}
     
     public void updateSyncedState(Map<TriggerAPI,State> stateMap) {
         TriggerContext ctx = this.selector.getContext();

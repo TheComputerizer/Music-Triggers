@@ -60,8 +60,7 @@ public abstract class NBTModeComparison extends NBTMode {
         return Integer.parseInt(this.comparison);
     }
 
-    @Override
-    public void setSplit(String[] split) {
+    @Override public void setSplit(String[] split) {
         this.comparison = hasValidSplit() ? split[split.length-1] : null;
         this.split = Arrays.copyOfRange(split,0,split.length-1);
     }

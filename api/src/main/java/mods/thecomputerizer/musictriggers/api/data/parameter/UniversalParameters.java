@@ -17,25 +17,21 @@ public class UniversalParameters extends ChannelElement {
         this.ref = ref;
     }
     
-    @Override
-    public void close() {}
+    @Override public void close() {}
     
     @Override public TableRef getReferenceData() {
         return this.ref;
     }
     
-    @Override
-    public Class<? extends ChannelElement> getTypeClass() {
+    @Override public Class<? extends ChannelElement> getTypeClass() {
         return UniversalParameters.class;
     }
 
-    @Override
-    protected String getSubTypeName() {
+    @Override protected String getSubTypeName() {
         return "Universal";
     }
 
-    @Override
-    public boolean isResource() {
+    @Override public boolean isResource() {
         return false;
     }
 }

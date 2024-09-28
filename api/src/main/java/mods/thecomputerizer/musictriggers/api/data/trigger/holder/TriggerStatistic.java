@@ -11,19 +11,16 @@ public class TriggerStatistic extends HolderTrigger {
         super(channel,"statistic");
     }
     
-    @Override
-    public boolean imply(String id) {
+    @Override public boolean imply(String id) {
         setExistingParameterValue("resource_name", Collections.singletonList(id));
         return super.imply(id);
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveStatistic(getResourceCtx(),getParameterAsInt("level"));
     }
 
-    @Override
-    public boolean verifyRequiredParameters() {
+    @Override public boolean verifyRequiredParameters() {
         if(hasValidIdentifier()) {
             String[] parameters = new String[]{"display_name","resource_name"};
             if(hasAnyNonDefaultParameter(parameters)) return true;

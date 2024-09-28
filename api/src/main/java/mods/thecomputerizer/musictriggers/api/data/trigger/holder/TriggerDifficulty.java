@@ -9,8 +9,7 @@ public class TriggerDifficulty extends HolderTrigger {
         super(channel,"difficulty");
     }
     
-    @Override
-    public boolean imply(String id) {
+    @Override public boolean imply(String id) {
         int level = -1;
         switch(id) {
             case "0":
@@ -50,13 +49,11 @@ public class TriggerDifficulty extends HolderTrigger {
         return false;
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveDifficulty(getParameterAsInt("level"));
     }
 
-    @Override
-    public boolean verifyRequiredParameters() {
+    @Override public boolean verifyRequiredParameters() {
         String[] parameters = new String[]{"identifier","level"};
         if(hasAllNonDefaultParameter(parameters)) return true;
         logMissingParameters(parameters);

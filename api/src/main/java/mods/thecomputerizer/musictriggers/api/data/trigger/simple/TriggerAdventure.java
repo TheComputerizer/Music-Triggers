@@ -9,8 +9,7 @@ public class TriggerAdventure extends SimpleTrigger {
         super(channel,"adventure");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveAdventure();
     }
 }

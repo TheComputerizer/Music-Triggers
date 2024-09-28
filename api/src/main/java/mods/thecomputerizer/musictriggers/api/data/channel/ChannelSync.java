@@ -23,8 +23,7 @@ public class ChannelSync extends ChannelElement {
         return "Sync";
     }
     
-    @Override
-    public boolean isResource() {
+    @Override public boolean isResource() {
         return false;
     }
 
@@ -40,8 +39,7 @@ public class ChannelSync extends ChannelElement {
         }
     }
 
-    @Override
-    public void close() {
+    @Override public void close() {
         this.triggersToSync.clear();
     }
     

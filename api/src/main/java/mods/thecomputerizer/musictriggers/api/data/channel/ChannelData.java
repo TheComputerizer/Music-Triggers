@@ -3,7 +3,6 @@ package mods.thecomputerizer.musictriggers.api.data.channel;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.audio.AudioContainer;
-import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioHelper;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
@@ -145,8 +144,7 @@ public class ChannelData extends ChannelElement {
         }
     }
 
-    @Override
-    public void close() {
+    @Override public void close() {
         closeHandlers(this.audio);
         closeHandlers(this.cards);
         closeHandlers(this.commands);
@@ -256,8 +254,7 @@ public class ChannelData extends ChannelElement {
         return map;
     }
     
-    @Override
-    public boolean isResource() {
+    @Override public boolean isResource() {
         return false;
     }
     

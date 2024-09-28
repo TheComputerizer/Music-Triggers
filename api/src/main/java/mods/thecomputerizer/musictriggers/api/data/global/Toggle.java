@@ -57,8 +57,7 @@ public class Toggle extends GlobalElement {
         return this.toThese.size();
     }
     
-    @Override
-    public Class<? extends ParameterWrapper> getTypeClass() {
+    @Override public Class<? extends ParameterWrapper> getTypeClass() {
         return Toggle.class;
     }
     
@@ -93,8 +92,7 @@ public class Toggle extends GlobalElement {
         return toml;
     }
 
-    @Override
-    public boolean verifyRequiredParameters() {
+    @Override public boolean verifyRequiredParameters() {
         int errors = 0;
         for(From from : this.fromThese) if(!from.verifyRequiredParameters()) errors++;
         if(errors==this.fromThese.size()) {
@@ -161,8 +159,7 @@ public class Toggle extends GlobalElement {
             return false;
         }
         
-        @Override
-        public boolean parse(Toml table) {
+        @Override     public boolean parse(Toml table) {
             return super.parse(table) && parseTriggers(this.channel,this.triggers);
         }
         
@@ -170,8 +167,7 @@ public class Toggle extends GlobalElement {
             this.parent.run();
         }
         
-        @Override
-        public boolean verifyRequiredParameters() {
+        @Override     public boolean verifyRequiredParameters() {
             this.channel = this.parent.helper.findChannel(this,getParameterAsString("channel"));
             return Objects.nonNull(this.channel);
         }
@@ -218,8 +214,7 @@ public class Toggle extends GlobalElement {
             return "Toggle";
         }
 
-        @Override
-        public boolean parse(Toml table) {
+        @Override     public boolean parse(Toml table) {
             return super.parse(table) && parseTriggers(false,this.channel,this.triggers);
         }
         
@@ -235,8 +230,7 @@ public class Toggle extends GlobalElement {
             }
         }
 
-        @Override
-        public boolean verifyRequiredParameters() {
+        @Override     public boolean verifyRequiredParameters() {
             this.channel = this.parent.helper.findChannel(this,getParameterAsString("channel"));
             if(Objects.isNull(this.channel)) return false;
             String condition = getParameterAsString("condition");

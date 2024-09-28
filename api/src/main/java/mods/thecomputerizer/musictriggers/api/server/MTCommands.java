@@ -29,8 +29,7 @@ public class MTCommands extends CommandAPI {
         super(name,parent,type,executionNode);
     }
 
-    @Override
-    public void execute(MinecraftServerAPI<?> server, CommandSenderAPI<?> sender, String ... args) {
+    @Override public void execute(MinecraftServerAPI<?> server, CommandSenderAPI<?> sender, String ... args) {
         if(ArrayHelper.isEmpty(args)) throw new IllegalArgumentException("too few arguments");
         ChannelHelper.logGlobalInfo("Executing command on server with args {}",(Object)args);
         String type = args[0];
@@ -70,8 +69,7 @@ public class MTCommands extends CommandAPI {
         return Collections.emptyList();
     }
     
-    @Override
-    public void prepareExceptionInfo() {
+    @Override public void prepareExceptionInfo() {
         this.exceptionKey = "commands."+MTRef.MODID+".usage";
     }
 }

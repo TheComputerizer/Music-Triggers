@@ -18,13 +18,11 @@ public class MessageReload<CTX> extends MessageAPI<CTX> {
         this.ticks = buf.readInt();
     }
 
-    @Override
-    public void encode(ByteBuf buf) {
+    @Override public void encode(ByteBuf buf) {
         buf.writeInt(this.ticks);
     }
 
-    @Override
-    public MessageAPI<CTX> handle(CTX ctx) {
+    @Override public MessageAPI<CTX> handle(CTX ctx) {
         MTClientEvents.queueReload(TILRef.getClientSubAPI(ClientAPI::getMinecraft),this.ticks);
         return null;
     }

@@ -9,18 +9,15 @@ public class TriggerRaid extends HolderTrigger {
         super(channel,"raid");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveRaid(getParameterAsInt("wave"));
     }
 
-    @Override
-    public boolean isServer() {
+    @Override public boolean isServer() {
         return true;
     }
 
-    @Override
-    public boolean verifyRequiredParameters() {
+    @Override public boolean verifyRequiredParameters() {
         return hasValidIdentifier();
     }
 }

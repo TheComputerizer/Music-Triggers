@@ -67,21 +67,18 @@ public class ParameterBool extends Parameter<Boolean> {
         return false;
     }
     
-    @Override
-    protected Boolean read(ByteBuf buf) {
+    @Override protected Boolean read(ByteBuf buf) {
         return buf.readBoolean();
     }
     
-    @Override
-    public void setValue(@Nullable Object value) {
+    @Override public void setValue(@Nullable Object value) {
         if(Objects.isNull(value)) this.value = false;
         else if(value instanceof Boolean) this.value = (Boolean)value;
         else if(value instanceof Number) this.value = ((Number)value).intValue()==1;
         else this.value = Boolean.parseBoolean(value.toString());
     }
     
-    @Override
-    protected void write(ByteBuf buf, Boolean val) {
+    @Override protected void write(ByteBuf buf, Boolean val) {
         buf.writeBoolean(val);
     }
 }

@@ -15,13 +15,11 @@ public class ImageElement extends CardAPI {
         super(channel,"image_card");
     }
     
-    @Override
-    public String getName() {
+    @Override public String getName() {
         return getParameterAsString("name");
     }
 
-    @Override
-    protected String getSubTypeName() {
+    @Override protected String getSubTypeName() {
         return "Image_Card";
     }
     
@@ -29,15 +27,13 @@ public class ImageElement extends CardAPI {
         return IMAGE_CARD;
     }
     
-    @Override
-    public void run() {
+    @Override public void run() {
         super.run();
         ResourceAPI api = TILRef.getCommonSubAPI(CommonAPI::getResource);
         RenderHelper.addRenderable(RenderHelper.initPNG(api.getLocation(getParameterAsString("name")),asValueMap()));
     }
     
-    @Override
-    public boolean verifyRequiredParameters() {
+    @Override public boolean verifyRequiredParameters() {
         return hasParameter("name");
     }
 }

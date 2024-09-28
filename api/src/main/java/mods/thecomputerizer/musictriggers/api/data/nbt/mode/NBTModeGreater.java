@@ -17,13 +17,11 @@ public class NBTModeGreater extends NBTModeComparison {
         super(name);
     }
 
-    @Override
-    protected boolean checkMatchChild(ChannelAPI channel, CompoundTagAPI<?> tag, boolean parentResult) {
+    @Override protected boolean checkMatchChild(ChannelAPI channel, CompoundTagAPI<?> tag, boolean parentResult) {
         return parentResult && checkMatchInner(channel,tag);
     }
 
-    @Override
-    protected boolean checkMatchInner(ChannelAPI channel, CompoundTagAPI<?> tag) {
+    @Override protected boolean checkMatchInner(ChannelAPI channel, CompoundTagAPI<?> tag) {
         BaseTagAPI<?> val = stepToTag(tag,this.split.length);
         if(Objects.isNull(val)) return false;
         if(val.isPrimitive()) return comparePrimitive(val.asPrimitiveTag())>0;
@@ -31,8 +29,7 @@ public class NBTModeGreater extends NBTModeComparison {
         return false;
     }
 
-    @Override
-    public @Nonnull Collection<Supplier<NBTMode>> getPotentialChildren() {
+    @Override public @Nonnull Collection<Supplier<NBTMode>> getPotentialChildren() {
         return Arrays.asList(() -> NBTHelper.getMode("EQUAL"),() -> NBTHelper.getMode("INVERT"));
     }
 }

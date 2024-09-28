@@ -9,8 +9,7 @@ public class TriggerCommand extends HolderTrigger {
         super(channel,"command");
     }
     
-    @Override
-    public boolean imply(String id) {
+    @Override public boolean imply(String id) {
         try {
             int persistence = Integer.parseInt(id);
             if(persistence<=0) throw new NumberFormatException("Integer must be positive");
@@ -21,13 +20,11 @@ public class TriggerCommand extends HolderTrigger {
         return super.imply(id);
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveCommand();
     }
 
-    @Override
-    public boolean verifyRequiredParameters() {
+    @Override public boolean verifyRequiredParameters() {
         String[] parameters = new String[]{"identifier","persistence"};
         if(hasAllNonDefaultParameter(parameters)) return true;
         logMissingParameters(parameters);

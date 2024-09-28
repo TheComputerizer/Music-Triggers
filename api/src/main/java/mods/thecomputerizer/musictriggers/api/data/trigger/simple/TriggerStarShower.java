@@ -12,13 +12,11 @@ public class TriggerStarShower extends SimpleTrigger {
         super(channel,"starshower");
     }
 
-    @Override
-    public List<String> getRequiredMods() {
+    @Override public List<String> getRequiredMods() {
         return Collections.singletonList("nyx");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveStarShower();
     }
 }

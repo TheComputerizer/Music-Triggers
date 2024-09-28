@@ -316,8 +316,7 @@ public abstract class ConfigVersion implements LoggableAPI {
             this.qualifier = qualifier;
         }
         
-        @Override
-        public boolean equals(Object other) {
+        @Override     public boolean equals(Object other) {
             if(other instanceof Version) {
                 Version version = (Version)other;
                 return this.release==version.release && this.major==version.major && this.minor==version.minor &&
@@ -334,8 +333,7 @@ public abstract class ConfigVersion implements LoggableAPI {
             return this.qualifier.isCloserThan(qualifierName,qualiferBuild,closest);
         }
         
-        @Override
-        public String toString() {
+        @Override     public String toString() {
             String str = this.release+"."+this.major+"."+this.minor;
             return Objects.nonNull(this.qualifier) ? str+this.qualifier : str;
         }
@@ -352,8 +350,7 @@ public abstract class ConfigVersion implements LoggableAPI {
             this.build = build;
         }
         
-        @Override
-        public boolean equals(Object other) {
+        @Override     public boolean equals(Object other) {
             if(other instanceof Qualifier) {
                 Qualifier qual = (Qualifier)other;
                 return this.name.equals(qual.name) && this.build==qual.build;
@@ -365,8 +362,7 @@ public abstract class ConfigVersion implements LoggableAPI {
             return this.name.equals(name) && this.build<=build && build-this.build<closest;
         }
         
-        @Override
-        public String toString() {
+        @Override     public String toString() {
             return "+"+this.name+"-"+this.build;
         }
     }

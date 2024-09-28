@@ -9,13 +9,11 @@ public class TriggerSnowing extends SimpleTrigger {
         super(channel,"snowing");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveSnowing();
     }
 
-    @Override
-    public boolean isServer() {
+    @Override public boolean isServer() {
         return true;
     }
 }

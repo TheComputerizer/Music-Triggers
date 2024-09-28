@@ -29,28 +29,24 @@ public class TriggerMerged extends TriggerAPI {
         this.triggers = triggers;
     }
     
-    @Override
-    public void activate() {
+    @Override public void activate() {
         super.activate();
         this.triggers.forEach(TriggerAPI::activate);
     }
 
-    @Override
-    public void close() {
+    @Override public void close() {
         super.close();
         this.triggers.forEach(TriggerAPI::close);
         this.triggers.clear();
         this.playing = null;
     }
     
-    @Override
-    public void deactivate() {
+    @Override public void deactivate() {
         super.deactivate();
         this.triggers.forEach(TriggerAPI::deactivate);
     }
 
-    @Override
-    public void encode(ByteBuf buf) {
+    @Override public void encode(ByteBuf buf) {
         super.encode(buf);
         NetworkHelper.writeCollection(buf,this.triggers,trigger -> trigger.encode(buf));
     }
@@ -61,20 +57,17 @@ public class TriggerMerged extends TriggerAPI {
         else superExecutor.accept(null);
     }
 
-    @Override
-    public @Nullable AudioPool getAudioPool() {
+    @Override public @Nullable AudioPool getAudioPool() {
         return returnPlaying(TriggerAPI::getAudioPool,super::getAudioPool);
     }
     
-    @Override
-    public String getName() {
+    @Override public String getName() {
         StringJoiner joiner = new StringJoiner("+");
         for(TriggerAPI trigger : this.triggers) joiner.add(trigger.getNameWithID());
         return this.triggers.size()==1 ? joiner.toString() : "merged = "+joiner;
     }
     
-    @Override
-    public String getNameWithID() {
+    @Override public String getNameWithID() {
         return getName();
     }
     
@@ -93,18 +86,15 @@ public class TriggerMerged extends TriggerAPI {
         return trigger instanceof TriggerMerged ? ((TriggerMerged)trigger).getRandomTrigger() : trigger;
     }
 
-    @Override
-    protected void initExtraParameters(Map<String,Parameter<?>> map) {}
+    @Override protected void initExtraParameters(Map<String,Parameter<?>> map) {}
 
-    @Override
-    public boolean isPlayableContext(TriggerContext context) {
+    @Override public boolean isPlayableContext(TriggerContext context) {
         for(TriggerAPI trigger : this.triggers)
             if(trigger.isPlayableContext(context)) return true;
         return false;
     }
 
-    @Override
-    public boolean isContained(Collection<TriggerAPI> triggers) {
+    @Override public boolean isContained(Collection<TriggerAPI> triggers) {
         for(TriggerAPI trigger : this.triggers)
             if(trigger.isContained(triggers)) return true;
         return false;
@@ -114,8 +104,7 @@ public class TriggerMerged extends TriggerAPI {
         return TriggerHelper.matchesAll(this.triggers,triggers);
     }
 
-    @Override
-    public boolean matches(TriggerAPI other) {
+    @Override public boolean matches(TriggerAPI other) {
         if(other instanceof TriggerMerged) return TriggerHelper.matchesAny(this.triggers,((TriggerMerged)other).triggers);
         if(other instanceof TriggerCombination) return other.isContained(this.triggers);
         for(TriggerAPI trigger : this.triggers)
@@ -123,8 +112,7 @@ public class TriggerMerged extends TriggerAPI {
         return false;
     }
 
-    @Override
-    public void queue() {
+    @Override public void queue() {
         executePlaying(TriggerAPI::queue,v -> super.queue());
     }
     
@@ -133,14 +121,12 @@ public class TriggerMerged extends TriggerAPI {
         return Objects.nonNull(playing) ? func.apply(playing) : superReturn.get();
     }
     
-    @Override
-    public void setUniversals(UniversalParameters universals) {
+    @Override public void setUniversals(UniversalParameters universals) {
         super.setUniversals(universals);
         this.triggers.forEach(trigger -> trigger.setUniversals(universals));
     }
 
-    @Override
-    public void stopped() {
+    @Override public void stopped() {
         executePlaying(playing -> {
             playing.stopped();
             this.playing = null;

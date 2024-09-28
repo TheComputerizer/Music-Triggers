@@ -46,8 +46,7 @@ public class ParameterByte extends ParameterNumber<Byte> {
         return false;
     }
     
-    @Override
-    protected Byte read(ByteBuf buf) {
+    @Override protected Byte read(ByteBuf buf) {
         return buf.readByte();
     }
     
@@ -62,8 +61,7 @@ public class ParameterByte extends ParameterNumber<Byte> {
         }
     }
     
-    @Override
-    protected void write(ByteBuf buf, Byte val) {
+    @Override protected void write(ByteBuf buf, Byte val) {
         buf.writeByte(val);
     }
 }

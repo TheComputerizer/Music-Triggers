@@ -16,19 +16,16 @@ public class NBTModeInvert extends NBTMode {
         super(name);
     }
 
-    @Override
-    protected boolean checkMatchChild(ChannelAPI channel, CompoundTagAPI<?> tag, boolean parentResult) {
+    @Override protected boolean checkMatchChild(ChannelAPI channel, CompoundTagAPI<?> tag, boolean parentResult) {
         return !parentResult;
     }
 
-    @Override
-    protected boolean checkMatchInner(ChannelAPI channel, CompoundTagAPI<?> tag) {
+    @Override protected boolean checkMatchInner(ChannelAPI channel, CompoundTagAPI<?> tag) {
         BaseTagAPI<?> val = stepToTag(tag,this.split.length);
         return Objects.isNull(val) || (val.isPrimitive() && !val.asPrimitiveTag().asBoolean());
     }
 
-    @Override
-    public @Nonnull Collection<Supplier<NBTMode>> getPotentialChildren() {
+    @Override public @Nonnull Collection<Supplier<NBTMode>> getPotentialChildren() {
         return Collections.emptyList();
     }
 }

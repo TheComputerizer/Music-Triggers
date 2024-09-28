@@ -20,13 +20,11 @@ public class TriggerSynced extends TriggerAPI {
         this.syncedState = Objects.nonNull(reference.getState()) ? reference.getState() : IDLE;
     }
 
-    @Override
-    public String getNameWithID() {
+    @Override public String getNameWithID() {
         return this.reference.getNameWithID();
     }
     
-    @Override
-    public Parameter<?> getParameter(String name) {
+    @Override public Parameter<?> getParameter(String name) {
         return this.reference.getParameter(name);
     }
     
@@ -34,28 +32,23 @@ public class TriggerSynced extends TriggerAPI {
         return this.syncedState;
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext context) {
+    @Override public boolean isPlayableContext(TriggerContext context) {
         return this.syncedState==PLAYABLE || this.syncedState==ACTIVE;
     }
 
-    @Override
-    public boolean isSynced() {
+    @Override public boolean isSynced() {
         return true;
     }
     
-    @Override
-    public void setState(State state) {
+    @Override public void setState(State state) {
         if(this.syncedState.isPlayable() && state.isPlayable()) this.syncedState=state;
     }
 
-    @Override
-    public boolean matches(TriggerAPI trigger) {
+    @Override public boolean matches(TriggerAPI trigger) {
         return this.reference.matches(trigger);
     }
     
-    @Override
-    public void setUniversals(UniversalParameters universals) {
+    @Override public void setUniversals(UniversalParameters universals) {
         super.setUniversals(universals);
         this.reference.setUniversals(universals);
     }

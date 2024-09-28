@@ -91,8 +91,7 @@ public class MTConfigV6 extends ConfigVersion {
         return toggles;
     }
     
-    @Override
-    public ConfigVersion getVersionTarget() {
+    @Override public ConfigVersion getVersionTarget() {
         return ConfigVersionManager.findLatestQualified(7,0,0);
     }
     

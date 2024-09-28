@@ -9,8 +9,7 @@ public class TriggerLight extends HolderTrigger {
         super(channel,"light");
     }
     
-    @Override
-    public boolean imply(String id) {
+    @Override public boolean imply(String id) {
         try {
             int level = Integer.parseInt(id);
             if(level<0 || level>15) throw new NumberFormatException("Integer must be in the bounds [0,15]");
@@ -21,13 +20,11 @@ public class TriggerLight extends HolderTrigger {
         return super.imply(id);
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveLight(getParameterAsInt("level"),getParameterAsString("light_type").toLowerCase());
     }
 
-    @Override
-    public boolean verifyRequiredParameters() {
+    @Override public boolean verifyRequiredParameters() {
         if(hasValidIdentifier()) return true;
         logMissingParameter("identifier");
         return false;

@@ -46,8 +46,7 @@ public class ParameterShort extends ParameterNumber<Short> {
         return true;
     }
 
-    @Override
-    protected Short read(ByteBuf buf) {
+    @Override protected Short read(ByteBuf buf) {
         return buf.readShort();
     }
     
@@ -62,8 +61,7 @@ public class ParameterShort extends ParameterNumber<Short> {
         }
     }
     
-    @Override
-    protected void write(ByteBuf buf, Short val) {
+    @Override protected void write(ByteBuf buf, Short val) {
         buf.writeLong(val);
     }
 }

@@ -12,13 +12,11 @@ public class TriggerHurricane extends SimpleTrigger {
         super(channel,"hurricane");
     }
 
-    @Override
-    public List<String> getRequiredMods() {
+    @Override public List<String> getRequiredMods() {
         return Collections.singletonList("weather2");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveHurricane(getParameterAsInt("detection_range"));
     }
 }

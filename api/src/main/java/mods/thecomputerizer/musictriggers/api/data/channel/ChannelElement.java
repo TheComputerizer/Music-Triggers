@@ -25,15 +25,13 @@ public abstract class ChannelElement extends ParameterWrapper implements Channel
         this.channel = channel;
     }
 
-    @Override
-    public void activate() {}
+    @Override public void activate() {}
 
     public boolean checkResource() {
         return !isResource() || (this.channel.isClientChannel() && ChannelHelper.getLoader().areResourcesLoaded());
     }
 
-    @Override
-    public void deactivate() {}
+    @Override public void deactivate() {}
 
     public String getChannelName() {
         return Objects.nonNull(this.channel) ? this.channel.getName() : "unknown";
@@ -51,35 +49,25 @@ public abstract class ChannelElement extends ParameterWrapper implements Channel
 
     public abstract boolean isResource();
 
-    @Override
-    public void play(boolean unpaused) {}
+    @Override public void play(boolean unpaused) {}
 
-    @Override
-    public void playable() {}
+    @Override public void playable() {}
 
-    @Override
-    public void playing(boolean unpaused) {}
+    @Override public void playing(boolean unpaused) {}
 
-    @Override
-    public void queue() {}
+    @Override public void queue() {}
 
-    @Override
-    public void stop() {}
+    @Override public void stop() {}
 
-    @Override
-    public void stopped() {}
+    @Override public void stopped() {}
 
-    @Override
-    public void tickActive(boolean unpaused) {}
+    @Override public void tickActive(boolean unpaused) {}
 
-    @Override
-    public void tickPlayable(boolean unpaused) {}
+    @Override public void tickPlayable(boolean unpaused) {}
     
-    @Override
-    public String toString() {
+    @Override public String toString() {
         return getSubTypeName()+"["+getName()+"]";
     }
 
-    @Override
-    public void unplayable() {}
+    @Override public void unplayable() {}
 }

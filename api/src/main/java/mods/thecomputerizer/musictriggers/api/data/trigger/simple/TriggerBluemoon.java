@@ -12,13 +12,11 @@ public class TriggerBluemoon extends SimpleTrigger {
         super(channel,"bluemoon");
     }
 
-    @Override
-    public List<String> getRequiredMods() {
+    @Override public List<String> getRequiredMods() {
         return Collections.singletonList("enhancedcelestials");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveBlueMoon();
     }
 }

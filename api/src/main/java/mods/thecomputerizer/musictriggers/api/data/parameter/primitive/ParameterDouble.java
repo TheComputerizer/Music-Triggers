@@ -46,8 +46,7 @@ public class ParameterDouble extends ParameterNumber<Double> {
         return false;
     }
 
-    @Override
-    protected Double read(ByteBuf buf) {
+    @Override protected Double read(ByteBuf buf) {
         return buf.readDouble();
     }
     
@@ -62,8 +61,7 @@ public class ParameterDouble extends ParameterNumber<Double> {
         }
     }
     
-    @Override
-    protected void write(ByteBuf buf, Double val) {
+    @Override protected void write(ByteBuf buf, Double val) {
         buf.writeDouble(val);
     }
 }

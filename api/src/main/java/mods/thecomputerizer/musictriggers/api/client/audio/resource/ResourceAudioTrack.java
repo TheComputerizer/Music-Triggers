@@ -25,18 +25,15 @@ public class ResourceAudioTrack extends DelegatedAudioTrack {
         this.manager = manager;
     }
 
-    @Override
-    public AudioSourceManager getSourceManager() {
+    @Override public AudioSourceManager getSourceManager() {
         return manager;
     }
 
-    @Override
-    protected AudioTrack makeShallowClone() {
+    @Override protected AudioTrack makeShallowClone() {
         return new ResourceAudioTrack(this.trackInfo,this.trackFactory,this.manager);
     }
 
-    @Override
-    public void process(LocalAudioTrackExecutor executor) throws Exception {
+    @Override public void process(LocalAudioTrackExecutor executor) throws Exception {
         try(ResourceSeekableInputStream stream = ResourceSeekableInputStream.get(this.manager.getChannel(),this.location)) {
             processDelegate((InternalAudioTrack)this.trackFactory.createTrack(this.trackInfo,stream),executor);
         }

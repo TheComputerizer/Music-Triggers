@@ -45,8 +45,7 @@ public class MessageInitChannels<CTX> extends PlayerMessage<CTX> {
         ChannelHelper.logGlobalInfo("Decodeded init message on the {} side",this.client ? "client" : "server");
     }
     
-    @Override
-    public void encode(ByteBuf buf) {
+    @Override public void encode(ByteBuf buf) {
         super.encode(buf);
         buf.writeBoolean(this.client);
         this.global.write(buf);
@@ -63,8 +62,7 @@ public class MessageInitChannels<CTX> extends PlayerMessage<CTX> {
         return map;
     }
     
-    @SuppressWarnings("unchecked") @Override
-    public MessageAPI<CTX> handle(CTX ctx) {
+    @SuppressWarnings("unchecked") @Override public MessageAPI<CTX> handle(CTX ctx) {
         return (MessageAPI<CTX>)ChannelHelper.loadMessage(this);
     }
     

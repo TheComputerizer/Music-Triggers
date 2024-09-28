@@ -16,18 +16,15 @@ public class NBTModeValPresent extends NBTModeComparison {
         super(name);
     }
 
-    @Override
-    protected boolean checkMatchChild(ChannelAPI channel, CompoundTagAPI<?> tag, boolean parentResult) {
+    @Override protected boolean checkMatchChild(ChannelAPI channel, CompoundTagAPI<?> tag, boolean parentResult) {
         return parentResult && checkMatchInner(channel,tag);
     }
 
-    @Override
-    protected boolean checkMatchInner(ChannelAPI channel, CompoundTagAPI<?> tag) {
+    @Override protected boolean checkMatchInner(ChannelAPI channel, CompoundTagAPI<?> tag) {
         return Objects.nonNull(stepToTag(tag,this.split.length));
     }
 
-    @Override
-    public @Nonnull Collection<Supplier<NBTMode>> getPotentialChildren() {
+    @Override public @Nonnull Collection<Supplier<NBTMode>> getPotentialChildren() {
         return Collections.singletonList(() -> NBTHelper.getMode("INVERT"));
     }
 }

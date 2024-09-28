@@ -12,21 +12,18 @@ public class TriggerInventory extends HolderTrigger {
         super(channel,"inventory");
     }
     
-    @Override
-    public boolean imply(String id) {
+    @Override public boolean imply(String id) {
         setExistingParameterValue("items",Collections.singletonList(id));
         return super.imply(id);
     }
 
     @SuppressWarnings("unchecked")
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveInventory((List<String>)getParameterAsList("items"),
                 (List<String>)getParameterAsList("slots"));
     }
 
-    @Override
-    public boolean verifyRequiredParameters() {
+    @Override public boolean verifyRequiredParameters() {
         String[] parameters = new String[]{"identifier","items"};
         if(hasAllNonDefaultParameter(parameters)) return true;
         logMissingParameters(parameters);

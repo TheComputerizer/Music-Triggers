@@ -20,18 +20,15 @@ public abstract class CardAPI extends ChannelElementRunner {
         this.triggers = new ArrayList<>();
     }
 
-    @Override
-    public void close() {
+    @Override public void close() {
         this.triggers.clear();
     }
 
-    @Override
-    public Class<? extends ChannelElement> getTypeClass() {
+    @Override public Class<? extends ChannelElement> getTypeClass() {
         return CardAPI.class;
     }
     
-    @Override
-    public boolean isClient() {
+    @Override public boolean isClient() {
         return true;
     }
     
@@ -39,8 +36,7 @@ public abstract class CardAPI extends ChannelElementRunner {
         return true;
     }
 
-    @Override
-    public boolean isResource() {
+    @Override public boolean isResource() {
         return true;
     }
 

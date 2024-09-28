@@ -25,8 +25,7 @@ public abstract class Parameter<T> {
     
     public abstract Parameter<T> copy();
     
-    @Override
-    public boolean equals(Object other) {
+    @Override public boolean equals(Object other) {
         return other instanceof Parameter<?> && GenericUtils.matches(this.value,((Parameter<?>)other).value);
     }
     
@@ -50,8 +49,7 @@ public abstract class Parameter<T> {
     protected abstract T read(ByteBuf buf);
     public abstract void setValue(@Nullable Object value);
     
-    @Override
-    public String toString() {
+    @Override public String toString() {
         return String.valueOf(this.value);
     }
 

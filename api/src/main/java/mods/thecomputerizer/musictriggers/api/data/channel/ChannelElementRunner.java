@@ -39,8 +39,7 @@ public abstract class ChannelElementRunner extends ChannelElement implements Cha
         return super.getLogPrefix();
     }
     
-    @Override
-    public boolean parse(Toml table) {
+    @Override public boolean parse(Toml table) {
         if(super.parse(table)) {
             if(table.hasTable("event")) {
                 EventInstance instance = new EventInstance(this.channel,this);
@@ -68,8 +67,7 @@ public abstract class ChannelElementRunner extends ChannelElement implements Cha
         if(checkRun("queue")) run();
     }
     
-    @Override
-    public void run() {
+    @Override public void run() {
         this.instance.resetTimer();
     }
     
@@ -81,8 +79,7 @@ public abstract class ChannelElementRunner extends ChannelElement implements Cha
         if(checkRun("stopped")) run();
     }
     
-    @Override
-    public boolean tick() {
+    @Override public boolean tick() {
         return this.instance.tick();
     }
     

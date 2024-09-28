@@ -30,14 +30,12 @@ public class RedirectElement extends ChannelElement {
         this.valid = parse(line);
     }
 
-    @Override
-    public void close() {
+    @Override public void close() {
         this.key = null;
         this.value = null;
     }
     
-    @Override
-    public String getName() {
+    @Override public String getName() {
         return this.key+" "+(this.remote ? "=" : "==")+" "+this.value;
     }
     
@@ -49,13 +47,11 @@ public class RedirectElement extends ChannelElement {
         return "Redirect";
     }
     
-    @Override
-    public Class<? extends ChannelElement> getTypeClass() {
+    @Override public Class<? extends ChannelElement> getTypeClass() {
         return RedirectElement.class;
     }
 
-    @Override
-    public boolean isResource() {
+    @Override public boolean isResource() {
         return !this.remote;
     }
 

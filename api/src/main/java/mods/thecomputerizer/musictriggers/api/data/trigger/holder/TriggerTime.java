@@ -16,16 +16,14 @@ public class TriggerTime extends HolderTrigger {
         super(channel,"time");
     }
     
-    @Override
-    public boolean imply(String id) {
+    @Override public boolean imply(String id) {
         if(Misc.equalsAny(id,"day","night","sunrise","sunset"))
             setExistingParameterValue("time_bundle",id);
         else logError("Unable to imply time_bundle from identifier {} (accepts day,night,sunrise,sunset)",id);
         return super.imply(id);
     }
 
-    @Override
-    protected void initExtraParameters(Map<String,Parameter<?>> map) {
+    @Override protected void initExtraParameters(Map<String,Parameter<?>> map) {
         super.initExtraParameters(map);
         addParameter(map,"end_hour",new ParameterFloat(0f));
         addParameter(map,"highest_day_number",new ParameterInt(Integer.MAX_VALUE));
@@ -35,15 +33,13 @@ public class TriggerTime extends HolderTrigger {
         addParameter(map,"time_bundle",new ParameterString("any"));
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveTime(getParameterAsString("time_bundle"),getParameterAsFloat("start_hour"),
                 getParameterAsFloat("end_hour"),getParameterAsInt("lowest_day_number"),
                 getParameterAsInt("highest_day_number"),getParameterAsInt("moon_phase"));
     }
 
-    @Override
-    public boolean verifyRequiredParameters() {
+    @Override public boolean verifyRequiredParameters() {
         if(hasValidIdentifier()) {
             String[] parameters = new String[]{"time_bundle","start_hour"};
             if(hasAnyNonDefaultParameter(parameters)) return true;

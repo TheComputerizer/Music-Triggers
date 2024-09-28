@@ -6,7 +6,7 @@
  */
 
 apply from: rootProject.file('buildSrc\\shared.gradle')
-java.toolchain.languageVersion = JavaLanguageVersion.of(22)
+java.toolchain.languageVersion = JavaLanguageVersion.of(23)
 
 jar {
     project(':legacy:legacy.1_12').afterEvaluate { from(it.jar.archiveFile.collect { zipTree(it) }) }

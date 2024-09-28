@@ -24,15 +24,13 @@ public class MessageToggleDebugParameter<CTX> extends MessageAPI<CTX> {
         this.value = buf.readBoolean();
     }
     
-    @Override
-    public void encode(ByteBuf buf) {
+    @Override public void encode(ByteBuf buf) {
         buf.writeBoolean(this.client);
         NetworkHelper.writeString(buf,this.name);
         buf.writeBoolean(this.value);
     }
     
-    @Override
-    public MessageAPI<CTX> handle(CTX ctx) {
+    @Override public MessageAPI<CTX> handle(CTX ctx) {
         ChannelHelper.setDebugParameter(this.client,this.name,this.value);
         return null;
     }

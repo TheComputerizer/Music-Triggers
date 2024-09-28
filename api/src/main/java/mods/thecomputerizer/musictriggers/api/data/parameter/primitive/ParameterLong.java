@@ -46,8 +46,7 @@ public class ParameterLong extends ParameterNumber<Long> {
         return false;
     }
 
-    @Override
-    protected Long read(ByteBuf buf) {
+    @Override protected Long read(ByteBuf buf) {
         return buf.readLong();
     }
     
@@ -62,8 +61,7 @@ public class ParameterLong extends ParameterNumber<Long> {
         }
     }
     
-    @Override
-    protected void write(ByteBuf buf, Long val) {
+    @Override protected void write(ByteBuf buf, Long val) {
         buf.writeLong(val);
     }
 }

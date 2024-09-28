@@ -17,25 +17,21 @@ public class TriggerBiome extends HolderTrigger {
         super(channel,"biome");
     }
     
-    @Override
-    public boolean imply(String id) {
+    @Override public boolean imply(String id) {
         setExistingParameterValue("resource_name", Collections.singletonList(id));
         return super.imply(id);
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveBiome(this);
     }
 
-    @Override
-    public boolean isServer() {
+    @Override public boolean isServer() {
         return true;
     }
 
     @SuppressWarnings("unchecked")
-    @Override
-    public void successfullyParsed() {
+    @Override public void successfullyParsed() {
         super.successfullyParsed();
         List<String> resourceName = (List<String>)getParameterAsList("biome_tag");
         List<String> displayeName = Collections.emptyList();
@@ -44,8 +40,7 @@ public class TriggerBiome extends HolderTrigger {
         this.tagCtx = new ResourceContext(resourceName,displayeName,resourceMatcher,displayMatcher);
     }
 
-    @Override
-    public boolean verifyRequiredParameters() {
+    @Override public boolean verifyRequiredParameters() {
         if(hasValidIdentifier()) {
             String[] parameters = new String[]{"biome_rainfall","biome_tag","biome_temperature","display_name",
                     "rain_type","resource_name"};

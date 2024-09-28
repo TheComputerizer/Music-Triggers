@@ -75,13 +75,11 @@ public class ParameterList<E> extends Parameter<List<E>> { //TODO Does not curre
         return false;
     }
     
-    @SuppressWarnings("unchecked") @Override
-    protected List<E> read(ByteBuf buf) {
+    @SuppressWarnings("unchecked") @Override protected List<E> read(ByteBuf buf) {
         return (List<E>)NetworkHelper.readList(buf,() -> GenericUtils.parseGenericType(NetworkHelper.readString(buf),this.type));
     }
     
-    @SuppressWarnings("unchecked") @Override
-    public void setValue(@Nullable Object value) {
+    @SuppressWarnings("unchecked") @Override public void setValue(@Nullable Object value) {
         if(Objects.isNull(value)) return;
         List<E> list = new ArrayList<>();
         if(value instanceof List<?>) list.addAll((List<E>)value);
@@ -89,8 +87,7 @@ public class ParameterList<E> extends Parameter<List<E>> { //TODO Does not curre
         this.value = list;
     }
 
-    @Override
-    protected void write(ByteBuf buf, List<E> val) {
+    @Override protected void write(ByteBuf buf, List<E> val) {
         NetworkHelper.writeString(buf,this.type.getName());
         NetworkHelper.writeList(buf,val,e -> NetworkHelper.writeString(buf,e.toString()));
     }

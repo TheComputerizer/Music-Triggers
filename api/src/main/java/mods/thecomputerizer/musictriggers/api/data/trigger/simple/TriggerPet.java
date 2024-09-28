@@ -9,8 +9,7 @@ public class TriggerPet extends SimpleTrigger {
         super(channel,"pet");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActivePet(getParameterAsInt("detection_range"),getParameterAsFloat("detection_y_ratio"));
     }
 }

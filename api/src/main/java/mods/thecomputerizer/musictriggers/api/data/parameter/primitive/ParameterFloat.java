@@ -46,8 +46,7 @@ public class ParameterFloat extends ParameterNumber<Float> {
         return false;
     }
 
-    @Override
-    protected Float read(ByteBuf buf) {
+    @Override protected Float read(ByteBuf buf) {
         return buf.readFloat();
     }
     
@@ -62,8 +61,7 @@ public class ParameterFloat extends ParameterNumber<Float> {
         }
     }
     
-    @Override
-    protected void write(ByteBuf buf, Float val) {
+    @Override protected void write(ByteBuf buf, Float val) {
         buf.writeFloat(val);
     }
 }

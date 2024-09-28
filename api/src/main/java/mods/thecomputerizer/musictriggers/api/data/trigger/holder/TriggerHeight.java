@@ -9,8 +9,7 @@ public class TriggerHeight extends HolderTrigger {
         super(channel,"height");
     }
     
-    @Override
-    public boolean imply(String id) {
+    @Override public boolean imply(String id) {
         try {
             int level = Integer.parseInt(id);
             setExistingParameterValue("level",level);
@@ -20,14 +19,12 @@ public class TriggerHeight extends HolderTrigger {
         return super.imply(id);
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveHeight(getParameterAsInt("level"),getParameterAsBoolean("check_for_sky"),
                 getParameterAsBoolean("check_above_level"));
     }
 
-    @Override
-    public boolean verifyRequiredParameters() {
+    @Override public boolean verifyRequiredParameters() {
         String[] parameters = new String[]{"identifier","level"};
         if(hasAllNonDefaultParameter(parameters)) return true;
         logMissingParameters(parameters);

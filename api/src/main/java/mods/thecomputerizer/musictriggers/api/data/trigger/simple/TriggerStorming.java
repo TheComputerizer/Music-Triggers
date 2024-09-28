@@ -9,8 +9,7 @@ public class TriggerStorming extends SimpleTrigger {
         super(channel,"storming");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveStorming();
     }
 }

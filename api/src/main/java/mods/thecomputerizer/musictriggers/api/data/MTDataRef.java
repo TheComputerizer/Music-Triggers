@@ -469,11 +469,6 @@ public final class MTDataRef {
             case "victory": return 4200;
             case "drowning": return 4300;
             case "dead": return 4400;
-            case "adventure":
-            case "creative":
-            case "difficulty":
-            case "gamestage":
-            case "spectator":
             default: return 0;
         }
     }

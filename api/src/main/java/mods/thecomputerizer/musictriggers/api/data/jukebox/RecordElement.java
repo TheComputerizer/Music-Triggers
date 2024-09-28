@@ -32,19 +32,16 @@ public class RecordElement extends ChannelElement {
         this.valid = parse(line);
     }
 
-    @Override
-    public void close() {
+    @Override public void close() {
         this.key = null;
         this.value = null;
     }
     
-    @Override
-    public String getName() {
+    @Override public String getName() {
         return this.key+" = "+this.value;
     }
 
-    @Override
-    public boolean isResource() {
+    @Override public boolean isResource() {
         return true;
     }
 

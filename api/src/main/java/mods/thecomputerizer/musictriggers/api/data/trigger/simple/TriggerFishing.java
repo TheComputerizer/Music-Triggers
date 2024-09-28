@@ -9,8 +9,7 @@ public class TriggerFishing extends SimpleTrigger {
         super(channel,"fishing");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveFishing();
     }
 }

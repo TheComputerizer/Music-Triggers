@@ -212,8 +212,7 @@ public class ChannelClient extends ChannelAPI {
         stopped();
     }
 
-    @Override
-    public void play(boolean unpaused) {
+    @Override public void play(boolean unpaused) {
         super.play(unpaused);
         this.queued = false;
         TriggerAPI trigger = getActiveTrigger();

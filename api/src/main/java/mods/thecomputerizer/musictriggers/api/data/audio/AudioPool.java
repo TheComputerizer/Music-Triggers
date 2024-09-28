@@ -35,16 +35,14 @@ public class AudioPool extends AudioRef implements NBTLoadable {
         this.trigger = trigger;
     }
 
-    @Override
-    public void close() {
+    @Override public void close() {
         super.close();
         this.audio.clear();
         this.playableAudio.clear();
         this.queuedAudio = null;
     }
 
-    @Override
-    public void encode(ByteBuf buf) {
+    @Override public void encode(ByteBuf buf) {
         NetworkHelper.writeString(buf,"pool");
         buf.writeInt(this.audio.size());
         for(AudioRef ref : this.audio) ref.encode(buf);
@@ -69,20 +67,17 @@ public class AudioPool extends AudioRef implements NBTLoadable {
         }
     }
 
-    @Override
-    public @Nullable InterruptHandler getInterruptHandler() {
+    @Override public @Nullable InterruptHandler getInterruptHandler() {
         return Objects.nonNull(this.queuedAudio) ? this.queuedAudio.getInterruptHandler() : null;
     }
     
-    @Override
-    public String getName() {
+    @Override public String getName() {
         StringJoiner refJoinfer = new StringJoiner("+");
         for(AudioRef ref : this.audio) refJoinfer.add(ref.getName());
         return this.audio.size()==1 ? refJoinfer.toString() : "pool = "+refJoinfer;
     }
     
-    @Override
-    public @Nullable Parameter<?> getParameter(String name) {
+    @Override public @Nullable Parameter<?> getParameter(String name) {
         return Objects.nonNull(this.queuedAudio) ? this.queuedAudio.getParameter(name) : super.getParameter(name);
     }
     
@@ -90,8 +85,7 @@ public class AudioPool extends AudioRef implements NBTLoadable {
         return Objects.nonNull(this.queuedAudio) ? this.queuedAudio.getSpeed() : 1d;
     }
 
-    @Override
-    public float getVolume(boolean unpaused) {
+    @Override public float getVolume(boolean unpaused) {
         return Objects.nonNull(this.queuedAudio) ? this.queuedAudio.getVolume(unpaused) : 0f;
     }
 
@@ -100,8 +94,7 @@ public class AudioPool extends AudioRef implements NBTLoadable {
         return !this.playableAudio.isEmpty();
     }
     
-    @Override
-    public boolean hasDataToSave() {
+    @Override public boolean hasDataToSave() {
         for(AudioRef ref : this.audio)
             if(!this.playableAudio.contains(ref) && ref.getPlayState()==4) return true;
         return false;
@@ -114,8 +107,7 @@ public class AudioPool extends AudioRef implements NBTLoadable {
         handlers.addAll(ref.loops);
     }
     
-    @Override
-    public boolean isLoaded() {
+    @Override public boolean isLoaded() {
         return Objects.nonNull(this.queuedAudio) && !this.queuedAudio.isLoading() && this.queuedAudio.isLoaded();
     }
     
@@ -123,8 +115,7 @@ public class AudioPool extends AudioRef implements NBTLoadable {
         return Objects.nonNull(this.queuedAudio) && this.queuedAudio.looping;
     }
     
-    @Override
-    public boolean isQueued() {
+    @Override public boolean isQueued() {
         return hasQueue() && this.queuedAudio.isQueued();
     }
     
@@ -132,14 +123,12 @@ public class AudioPool extends AudioRef implements NBTLoadable {
         return Objects.nonNull(this.queuedAudio);
     }
 
-    @Override
-    public void queryInterrupt(@Nullable TriggerAPI next, AudioPlayer player) {
+    @Override public void queryInterrupt(@Nullable TriggerAPI next, AudioPlayer player) {
         if(Objects.isNull(this.queuedAudio)) this.channel.getPlayer().stopCurrentTrack();
         else this.queuedAudio.queryInterrupt(trigger,player);
     }
     
-    @Override
-    public void onConnected(CompoundTagAPI<?> worldData) {
+    @Override public void onConnected(CompoundTagAPI<?> worldData) {
         if(worldData.contains("audio")) {
             for(BaseTagAPI<?> audio : worldData.getListTag("audio")) {
                 CompoundTagAPI<?> audioTag = audio.asCompoundTag();
@@ -154,26 +143,21 @@ public class AudioPool extends AudioRef implements NBTLoadable {
         recalculatePlayable(i -> i==3);
     }
     
-    @Override
-    public void onLoaded(CompoundTagAPI<?> globalData) {}
+    @Override public void onLoaded(CompoundTagAPI<?> globalData) {}
 
-    @Override
-    public void play(boolean unpaused) {
+    @Override public void play(boolean unpaused) {
         if(Objects.nonNull(this.queuedAudio)) this.queuedAudio.play(unpaused);
     }
     
-    @Override
-    public void playable() {
+    @Override public void playable() {
         recalculatePlayable(i -> i<=2);
     }
 
-    @Override
-    public void playing(boolean unpaused) {
+    @Override public void playing(boolean unpaused) {
         if(Objects.nonNull(this.queuedAudio)) this.queuedAudio.playing(unpaused);
     }
 
-    @Override
-    public void queue() {
+    @Override public void queue() {
         if(this.playableAudio.isEmpty()) return;
         AudioRef nextQueue = RandomHelper.getWeightedEntry(ThreadLocalRandom.current(),this.playableAudio);
         if(Objects.isNull(nextQueue)) return;
@@ -186,11 +170,9 @@ public class AudioPool extends AudioRef implements NBTLoadable {
             if(func.apply(ref.getPlayState())) this.playableAudio.add(ref);
     }
     
-    @Override
-    public void saveGlobalTo(CompoundTagAPI<?> globalData) {}
+    @Override public void saveGlobalTo(CompoundTagAPI<?> globalData) {}
     
-    @Override
-    public void saveWorldTo(CompoundTagAPI<?> worldData) {
+    @Override public void saveWorldTo(CompoundTagAPI<?> worldData) {
         List<AudioRef> played = this.audio.stream()
                 .filter(ref -> !this.playableAudio.contains(ref) && ref.getPlayState()==4)
                 .collect(Collectors.toList());
@@ -205,25 +187,21 @@ public class AudioPool extends AudioRef implements NBTLoadable {
         worldData.putTag("audio",tag);
     }
     
-    @Override
-    public void setUniversals(UniversalParameters universals) {
+    @Override public void setUniversals(UniversalParameters universals) {
         super.setUniversals(universals);
         for(AudioRef ref : this.audio) ref.setUniversals(universals);
     }
 
-    @Override
-    public void start(TriggerAPI trigger, boolean unpaused) {
+    @Override public void start(TriggerAPI trigger, boolean unpaused) {
         if(Objects.nonNull(this.queuedAudio)) this.queuedAudio.start(trigger,unpaused);
         else logWarn("Tried to start empty queue from {}",trigger);
     }
 
-    @Override
-    public void stop() {
+    @Override public void stop() {
         if(Objects.nonNull(this.queuedAudio)) this.queuedAudio.stop();
     }
 
-    @Override
-    public void stopped() {
+    @Override public void stopped() {
         if(Objects.nonNull(this.queuedAudio)) {
             this.queuedAudio.stopped();
             this.playableAudio.remove(this.queuedAudio);

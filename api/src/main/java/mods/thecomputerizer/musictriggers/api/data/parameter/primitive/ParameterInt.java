@@ -46,8 +46,7 @@ public class ParameterInt extends ParameterNumber<Integer> {
         return false;
     }
 
-    @Override
-    protected Integer read(ByteBuf buf) {
+    @Override protected Integer read(ByteBuf buf) {
         return buf.readInt();
     }
     
@@ -62,8 +61,7 @@ public class ParameterInt extends ParameterNumber<Integer> {
         }
     }
     
-    @Override
-    protected void write(ByteBuf buf, Integer val) {
+    @Override protected void write(ByteBuf buf, Integer val) {
         buf.writeInt(val);
     }
 }

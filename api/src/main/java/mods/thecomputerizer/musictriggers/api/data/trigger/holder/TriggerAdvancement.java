@@ -9,19 +9,16 @@ public class TriggerAdvancement extends HolderTrigger {
         super(channel,"advancement");
     }
     
-    @Override
-    public boolean imply(String id) {
+    @Override public boolean imply(String id) {
         logError("Trigger must be explicitly defined");
         return false;
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveAdvancement(getResourceCtx());
     }
 
-    @Override
-    public boolean verifyRequiredParameters() {
+    @Override public boolean verifyRequiredParameters() {
         String[] parameters = new String[]{"identifier","persistence"};
         if(hasAllNonDefaultParameter(parameters)) {
             parameters = new String[]{"display_name","resource_name"};

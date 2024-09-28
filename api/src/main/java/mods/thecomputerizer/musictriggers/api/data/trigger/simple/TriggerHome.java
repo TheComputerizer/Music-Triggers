@@ -9,13 +9,11 @@ public class TriggerHome extends SimpleTrigger {
         super(channel,"home");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveHome(getParameterAsInt("detection_range"),getParameterAsFloat("detection_y_ratio"));
     }
 
-    @Override
-    public boolean isServer() {
+    @Override public boolean isServer() {
         return true;
     }
 }

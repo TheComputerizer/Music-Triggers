@@ -44,8 +44,7 @@ public abstract class GlobalEventRunner extends GlobalElement implements Channel
         return super.getLogPrefix();
     }
     
-    @Override
-    public boolean parse(Toml table) {
+    @Override public boolean parse(Toml table) {
         if(super.parse(table)) {
             if(table.hasTable("event")) {
                 EventInstance instance = new EventInstance(getChannelReference(),this);
@@ -73,8 +72,7 @@ public abstract class GlobalEventRunner extends GlobalElement implements Channel
         if(checkRun("queue")) run();
     }
     
-    @Override
-    public void run() {
+    @Override public void run() {
         this.instance.resetTimer();
     }
     
@@ -86,8 +84,7 @@ public abstract class GlobalEventRunner extends GlobalElement implements Channel
         if(checkRun("stopped")) run();
     }
     
-    @Override
-    public boolean tick() {
+    @Override public boolean tick() {
         return this.instance.tick();
     }
     

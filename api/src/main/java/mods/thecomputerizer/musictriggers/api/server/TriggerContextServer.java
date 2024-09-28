@@ -34,8 +34,7 @@ public class TriggerContextServer extends TriggerContext {
         super(channel,"server_context");
     }
 
-    @Override
-    public void cache() {
+    @Override public void cache() {
         MinecraftServerAPI<?> server = ServerHelper.getAPI();
         if(Objects.nonNull(server)) {
             try {
@@ -138,171 +137,138 @@ public class TriggerContextServer extends TriggerContext {
         return trigger.removeDuplicates(getEntitiesAround(getBox(range,rangeRatioY)));
     }
 
-    @Override
-    public boolean isActiveAcidRain() {
+    @Override public boolean isActiveAcidRain() {
         return false;
     }
 
-    @Override
-    public boolean isActiveAdvancement(ResourceContext ctx) {
+    @Override public boolean isActiveAdvancement(ResourceContext ctx) {
         return false;
     }
 
-    @Override
-    public boolean isActiveAdventure() {
+    @Override public boolean isActiveAdventure() {
         return false;
     }
 
-    @Override
-    public boolean isActiveBiome(TriggerBiome trigger) { //TODO Better caching
+    @Override public boolean isActiveBiome(TriggerBiome trigger) { //TODO Better caching
         return Objects.nonNull(this.biome) && checkBiomeNameAndType(trigger) && checkBiomeExtras(trigger);
     }
 
-    @Override
-    public boolean isActiveBlizzard() {
+    @Override public boolean isActiveBlizzard() {
         return false;
     }
 
-    @Override
-    public boolean isActiveBlockEntity(ResourceContext ctx, int range, float yRatio) {
+    @Override public boolean isActiveBlockEntity(ResourceContext ctx, int range, float yRatio) {
         return false;
     }
 
-    @Override
-    public boolean isActiveBloodMoon() {
+    @Override public boolean isActiveBloodMoon() {
         return false;
     }
 
-    @Override
-    public boolean isActiveBlueMoon() {
+    @Override public boolean isActiveBlueMoon() {
         return false;
     }
 
-    @Override
-    public boolean isActiveCloudy() {
+    @Override public boolean isActiveCloudy() {
         return false;
     }
 
-    @Override
-    public boolean isActiveCommand() {
+    @Override public boolean isActiveCommand() {
         return false;
     }
 
-    @Override
-    public boolean isActiveCreative() {
+    @Override public boolean isActiveCreative() {
         return false;
     }
 
-    @Override
-    public boolean isActiveDead() {
+    @Override public boolean isActiveDead() {
         return false;
     }
 
-    @Override
-    public boolean isActiveDifficulty(int level) {
+    @Override public boolean isActiveDifficulty(int level) {
         return false;
     }
 
-    @Override
-    public boolean isActiveDimension(ResourceContext ctx) {
+    @Override public boolean isActiveDimension(ResourceContext ctx) {
         return false;
     }
 
-    @Override
-    public boolean isActiveDrowning(int level) {
+    @Override public boolean isActiveDrowning(int level) {
         return false;
     }
 
-    @Override
-    public boolean isActiveEffect(ResourceContext ctx) {
+    @Override public boolean isActiveEffect(ResourceContext ctx) {
         return false;
     }
 
-    @Override
-    public boolean isActiveElytra() {
+    @Override public boolean isActiveElytra() {
         return false;
     }
 
-    @Override
-    public boolean isActiveStarShower() {
+    @Override public boolean isActiveStarShower() {
         return false;
     }
 
-    @Override
-    public boolean isActiveFishing() {
+    @Override public boolean isActiveFishing() {
         return false;
     }
 
-    @Override
-    public boolean isActiveGamestage(ResourceContext ctx, boolean whitelist) {
+    @Override public boolean isActiveGamestage(ResourceContext ctx, boolean whitelist) {
         return false;
     }
 
-    @Override
-    public boolean isActiveGeneric() {
+    @Override public boolean isActiveGeneric() {
         return false;
     }
 
-    @Override
-    public boolean isActiveGUI(ResourceContext ctx) {
+    @Override public boolean isActiveGUI(ResourceContext ctx) {
         return false;
     }
 
-    @Override
-    public boolean isActiveHarvestMoon() {
+    @Override public boolean isActiveHarvestMoon() {
         return false;
     }
 
-    @Override
-    public boolean isActiveHeight(int level, boolean checkSky, boolean checkAbove) {
+    @Override public boolean isActiveHeight(int level, boolean checkSky, boolean checkAbove) {
         return false;
     }
 
-    @Override
-    public boolean isActiveHome(int range, float yRatio) {
+    @Override public boolean isActiveHome(int range, float yRatio) {
         if(Objects.isNull(this.pos)) return false;
         BlockPosAPI<?> bed = this.player.getBedPos(this.player.getDimension());
         return Objects.nonNull(bed) && isCloseEnough(bed.x(),bed.y(),bed.z(),range,yRatio,
                 this.pos.x(),this.pos.y(),this.pos.z());
     }
 
-    @Override
-    public boolean isActiveHurricane(int range) {
+    @Override public boolean isActiveHurricane(int range) {
         return false;
     }
 
-    @Override
-    public boolean isActiveInventory(List<String> items, List<String> slots) {
+    @Override public boolean isActiveInventory(List<String> items, List<String> slots) {
         return false;
     }
 
-    @Override
-    public boolean isActiveLight(int level, String type) {
+    @Override public boolean isActiveLight(int level, String type) {
         return false;
     }
 
-    @Override
-    public boolean isActiveLightRain() {
+    @Override public boolean isActiveLightRain() {
         return false;
     }
 
-    @Override
-    public boolean isActiveLoading() {
+    @Override public boolean isActiveLoading() {
         return false;
     }
 
-    @Override
-    public boolean isActiveLowHP(float percent) {
+    @Override public boolean isActiveLowHP(float percent) {
         return false;
     }
 
-    @Override
-    public boolean isActiveMenu() {
+    @Override public boolean isActiveMenu() {
         return false;
     }
 
-    @Override
-    public boolean isActiveMob(TriggerMob trigger) { //TODO Finish this
+    @Override public boolean isActiveMob(TriggerMob trigger) { //TODO Finish this
         if(Objects.isNull(this.pos)) return false;
         validateEntities(trigger,getEntitiesAround(trigger));
         int min = trigger.getParameterAsInt("min_entities");
@@ -310,104 +276,84 @@ public class TriggerContextServer extends TriggerContext {
         return trigger.hasCorrectSize(min,max);
     }
 
-    @Override
-    public boolean isActiveMoon(ResourceContext ctx) {
+    @Override public boolean isActiveMoon(ResourceContext ctx) {
         return false;
     }
 
-    @Override
-    public boolean isActivePet(int range, float yRatio) {
+    @Override public boolean isActivePet(int range, float yRatio) {
         return false;
     }
 
-    @Override
-    public boolean isActivePVP() { //TODO
+    @Override public boolean isActivePVP() { //TODO
         return false;
     }
 
-    @Override
-    public boolean isActiveRaid(int wave) { //TODO
+    @Override public boolean isActiveRaid(int wave) { //TODO
         return false;
     }
 
-    @Override
-    public boolean isActiveRaining() {
+    @Override public boolean isActiveRaining() {
         return false;
     }
 
-    @Override
-    public boolean isActiveRainIntensity(float level) {
+    @Override public boolean isActiveRainIntensity(float level) {
         return false;
     }
 
-    @Override
-    public boolean isActiveRiding(ResourceContext ctx) {
+    @Override public boolean isActiveRiding(ResourceContext ctx) {
         return false;
     }
 
-    @Override
-    public boolean isActiveSandstorm(int range) {
+    @Override public boolean isActiveSandstorm(int range) {
         return false;
     }
 
-    @Override
-    public boolean isActiveSeason(int level) {
+    @Override public boolean isActiveSeason(int level) {
         return false;
     }
 
-    @Override
-    public boolean isActiveSnowing() { //TODO
+    @Override public boolean isActiveSnowing() { //TODO
         return Objects.nonNull(this.pos) && this.world.canSnowAt(this.pos);
     }
 
-    @Override
-    public boolean isActiveSpectator() {
+    @Override public boolean isActiveSpectator() {
         return false;
     }
 
-    @Override
-    public boolean isActiveStatistic(ResourceContext ctx, int level) {
+    @Override public boolean isActiveStatistic(ResourceContext ctx, int level) {
         return false;
     }
 
-    @Override
-    public boolean isActiveStorming() {
+    @Override public boolean isActiveStorming() {
         return false;
     }
 
-    @Override
-    public boolean isActiveStructure(ResourceContext ctx) {
+    @Override public boolean isActiveStructure(ResourceContext ctx) {
         return Objects.nonNull(this.structure) && ctx.checkMatch(
                 this.structure.getRegistryName().toString(),this.structure.getName());
     }
 
-    @Override
-    public boolean isActiveTime(String bundle, float startHour, float endHour, int startDay, int endDay, int moonPhase) {
+    @Override public boolean isActiveTime(String bundle, float startHour, float endHour, int startDay, int endDay, int moonPhase) {
         return false;
     }
 
-    @Override
-    public boolean isActiveTornado(int range, int level) {
+    @Override public boolean isActiveTornado(int range, int level) {
         return false;
     }
 
-    @Override
-    public boolean isActiveUnderwater() {
+    @Override public boolean isActiveUnderwater() {
         return false;
     }
 
-    @Override
-    public boolean isActiveVictory(int timeout) { //TODO
+    @Override public boolean isActiveVictory(int timeout) { //TODO
         return false;
     }
 
-    @Override
-    public boolean isActiveZones(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+    @Override public boolean isActiveZones(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
         return false;
     }
 
-    @Override
-    public boolean isClient() {
+    @Override public boolean isClient() {
         return false;
     }
 

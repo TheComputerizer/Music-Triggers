@@ -12,24 +12,20 @@ public class TriggerTornado extends HolderTrigger {
         super(channel,"tornado");
     }
     
-    @Override
-    public boolean imply(String id) {
+    @Override public boolean imply(String id) {
         setExistingParameterValue("level",1);
         return super.imply(id);
     }
 
-    @Override
-    public List<String> getRequiredMods() {
+    @Override public List<String> getRequiredMods() {
         return Collections.singletonList("weather2");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveTornado(getParameterAsInt("detection_range"),getParameterAsInt("level"));
     }
 
-    @Override
-    public boolean verifyRequiredParameters() {
+    @Override public boolean verifyRequiredParameters() {
         String[] parameters = new String[]{"identifier","level"};
         if(hasAllNonDefaultParameter(parameters)) return true;
         logMissingParameters(parameters);

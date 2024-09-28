@@ -33,34 +33,29 @@ public class TriggerCombination extends TriggerAPI {
         recalculateParameters();
     }
     
-    @Override
-    public boolean checkSidedContext(TriggerContext context) {
+    @Override public boolean checkSidedContext(TriggerContext context) {
         for(TriggerAPI trigger : this.triggers)
             if(!trigger.checkSidedContext(context)) return false;
         return true;
     }
 
-    @Override
-    public void close() {
+    @Override public void close() {
         super.close();
         this.triggers.clear();
     }
 
-    @Override
-    public void encode(ByteBuf buf) {
+    @Override public void encode(ByteBuf buf) {
         super.encode(buf);
         NetworkHelper.writeCollection(buf,this.triggers,trigger -> trigger.encode(buf));
     }
     
-    @Override
-    public String getName() {
+    @Override public String getName() {
         StringJoiner joiner = new StringJoiner("+");
         for(TriggerAPI trigger : this.triggers) joiner.add(trigger.getNameWithID());
         return this.triggers.size()==1 ? joiner.toString() : "Combination = "+joiner;
     }
     
-    @Override
-    public Parameter<?> getParameter(String name) {
+    @Override public Parameter<?> getParameter(String name) {
         TriggerAPI priority = TriggerHelper.getPriorityTrigger(this.triggers);
         return Objects.nonNull(priority) ? priority.getParameter(name) : super.getParameter(name);
     }
@@ -69,33 +64,27 @@ public class TriggerCombination extends TriggerAPI {
         return trigger.matches(this.triggers);
     }
     
-    @Override
-    public boolean isDisabled() {
+    @Override public boolean isDisabled() {
         for(TriggerAPI trigger : this.triggers)
             if(trigger.isDisabled()) return true;
         return false;
     }
 
-    @Override
-    protected void initExtraParameters(Map<String,Parameter<?>> map) {}
+    @Override protected void initExtraParameters(Map<String,Parameter<?>> map) {}
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return false;
     }
 
-    @Override
-    public boolean isContained(Collection<TriggerAPI> triggers) {
+    @Override public boolean isContained(Collection<TriggerAPI> triggers) {
         return TriggerHelper.matchesAny(this.triggers,triggers);
     }
 
-    @Override
-    public boolean matches(Collection<TriggerAPI> triggers) {
+    @Override public boolean matches(Collection<TriggerAPI> triggers) {
         return TriggerHelper.matchesAll(this.triggers,triggers);
     }
 
-    @Override
-    public boolean matches(TriggerAPI trigger) {
+    @Override public boolean matches(TriggerAPI trigger) {
         return trigger instanceof TriggerCombination && matches(((TriggerCombination)trigger).triggers);
     }
     
@@ -110,19 +99,16 @@ public class TriggerCombination extends TriggerAPI {
         else parents.add(this);
     }
     
-    @Override
-    public void setUniversals(UniversalParameters universals) {
+    @Override public void setUniversals(UniversalParameters universals) {
         super.setUniversals(universals);
         for(TriggerAPI trigger : this.triggers) trigger.setUniversals(universals);
     }
     
-    @Override
-    public String toString() {
+    @Override public String toString() {
         return getSubTypeName()+"["+getName()+"]";
     }
 
-    @Override
-    public boolean verifyRequiredParameters() {
+    @Override public boolean verifyRequiredParameters() {
         for(TriggerAPI trigger : this.triggers) {
             if(!trigger.verifyRequiredParameters()) {
                 logError("Unable to construct trigger combination due to 1 or more triggers failing verification!");
@@ -133,8 +119,7 @@ public class TriggerCombination extends TriggerAPI {
         return true;
     }
     
-    @Override
-    public void write(CompoundTagAPI<?> tag) {
+    @Override public void write(CompoundTagAPI<?> tag) {
         tag.putString("name","combination");
         ListTagAPI<?> triggersTag = TagHelper.makeListTag();
         for(TriggerAPI trigger : this.triggers) {

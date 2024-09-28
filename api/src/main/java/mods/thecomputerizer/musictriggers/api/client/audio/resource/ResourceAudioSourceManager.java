@@ -34,13 +34,11 @@ public class ResourceAudioSourceManager extends ProbingAudioSourceManager {
         this.channel = channel;
     }
 
-    @Override
-    protected AudioTrack createTrack(AudioTrackInfo info, MediaContainerDescriptor trackFactory) {
+    @Override protected AudioTrack createTrack(AudioTrackInfo info, MediaContainerDescriptor trackFactory) {
         return new ResourceAudioTrack(info,trackFactory,this);
     }
 
-    @Override
-    public AudioTrack decodeTrack(AudioTrackInfo info, DataInput input) throws IOException {
+    @Override public AudioTrack decodeTrack(AudioTrackInfo info, DataInput input) throws IOException {
         MediaContainerDescriptor trackFactory = decodeTrackFactory(input);
         return Objects.nonNull(trackFactory) ? new ResourceAudioTrack(info,trackFactory,this) : null;
     }
@@ -57,27 +55,22 @@ public class ResourceAudioSourceManager extends ProbingAudioSourceManager {
         }
     }
 
-    @Override
-    public void encodeTrack(AudioTrack track, DataOutput output) throws IOException {
+    @Override public void encodeTrack(AudioTrack track, DataOutput output) throws IOException {
         encodeTrackFactory(((ResourceAudioTrack)track).getTrackFactory(),output);
     }
 
-    @Override
-    public String getSourceName() {
+    @Override public String getSourceName() {
         return "resource";
     }
 
-    @Override
-    public boolean isTrackEncodable(AudioTrack track) {
+    @Override public boolean isTrackEncodable(AudioTrack track) {
         return true;
     }
 
-    @Override
-    public AudioItem loadItem(AudioPlayerManager manager, AudioReference reference) {
+    @Override public AudioItem loadItem(AudioPlayerManager manager, AudioReference reference) {
         ResourceLocationAPI<?> location = ResourceHelper.getResource(reference.identifier);
         return Objects.nonNull(location) ? handleLoadResult(detectContainerForResource(reference,location)) : null;
     }
 
-    @Override
-    public void shutdown() {}
+    @Override public void shutdown() {}
 }

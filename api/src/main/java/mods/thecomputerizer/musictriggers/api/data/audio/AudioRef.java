@@ -54,13 +54,11 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
         this.loops = new ArrayList<>();
     }
 
-    @Override
-    public void close() {
+    @Override public void close() {
         this.triggers.clear();
     }
     
-    @Override
-    public void deactivate() {
+    @Override public void deactivate() {
         this.queued = false;
     }
 
@@ -91,13 +89,11 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
         return getParameterAsDouble("speed");
     }
     
-    @Override
-    protected String getSubTypeName() {
+    @Override protected String getSubTypeName() {
         return "Audio";
     }
     
-    @Override
-    public Class<? extends ChannelElement> getTypeClass() {
+    @Override public Class<? extends ChannelElement> getTypeClass() {
         return AudioRef.class;
     }
     
@@ -113,8 +109,7 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
         return count>=getParameterAsInt("play_x");
     }
 
-    @Override
-    public boolean isResource() {
+    @Override public boolean isResource() {
         return false;
     }
 
@@ -194,13 +189,11 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
                     priority<=this.priority : priority>=this.priority) || trigger.isContained(this.triggers);
         }
 
-        @Override
-        public boolean isResource() {
+        @Override     public boolean isResource() {
             return false;
         }
 
-        @Override
-        public void close() {
+        @Override     public void close() {
             this.triggers.clear();
         }
         

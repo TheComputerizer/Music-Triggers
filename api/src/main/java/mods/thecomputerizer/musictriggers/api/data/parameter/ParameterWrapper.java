@@ -223,23 +223,19 @@ public abstract class ParameterWrapper implements LoggableAPI {
     
     protected void initExtraParameters(Map<String,Parameter<?>> map) {}
     
-    @Override
-    public void logDebug(String message, Object ... args) {
+    @Override public void logDebug(String message, Object ... args) {
         MTLogger.logDebug(getLogPrefix(), getName(), message, args);
     }
     
-    @Override
-    public void logError(String message, Object ... args) {
+    @Override public void logError(String message, Object ... args) {
         MTLogger.logError(getLogPrefix(), getName(), message, args);
     }
     
-    @Override
-    public void logFatal(String message, Object ... args) {
+    @Override public void logFatal(String message, Object ... args) {
         MTLogger.logFatal(getLogPrefix(), getName(), message, args);
     }
     
-    @Override
-    public void logInfo(String message, Object ... args) {
+    @Override public void logInfo(String message, Object ... args) {
         MTLogger.logInfo(getLogPrefix(), getName(), message, args);
     }
 
@@ -255,13 +251,11 @@ public abstract class ParameterWrapper implements LoggableAPI {
         logError("Missing a required parameter from [{}]! (Only 1 of these is required)",TextHelper.arrayToString(", ",(Object[])names));
     }
     
-    @Override
-    public void logTrace(String message, Object ... args) {
+    @Override public void logTrace(String message, Object ... args) {
         MTLogger.logTrace(getLogPrefix(), getName(), message, args);
     }
     
-    @Override
-    public void logWarn(String message, Object ... args) {
+    @Override public void logWarn(String message, Object ... args) {
         MTLogger.logWarn(getLogPrefix(), getName(), message, args);
     }
 
@@ -336,8 +330,7 @@ public abstract class ParameterWrapper implements LoggableAPI {
         else logWarn("Cannot set value for paramenter `{}` that does not exist in {}!", name, getLogPrefix());
     }
     
-    @Override
-    public String toString() {
+    @Override public String toString() {
         return getLogPrefix()+"["+getName()+"]";
     }
     

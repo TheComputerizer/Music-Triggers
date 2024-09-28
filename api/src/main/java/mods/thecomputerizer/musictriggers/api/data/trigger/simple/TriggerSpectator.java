@@ -9,8 +9,7 @@ public class TriggerSpectator extends SimpleTrigger {
         super(channel,"spectator");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveSpectator();
     }
 }

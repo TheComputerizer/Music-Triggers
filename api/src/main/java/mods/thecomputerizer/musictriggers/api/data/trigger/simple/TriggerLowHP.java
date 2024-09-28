@@ -9,8 +9,7 @@ public class TriggerLowHP extends SimpleTrigger {
         super(channel,"lowhp");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveLowHP(getParameterAsFloat("health_percentage"));
     }
 }

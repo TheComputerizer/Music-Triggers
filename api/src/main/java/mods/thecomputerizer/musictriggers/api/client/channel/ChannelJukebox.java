@@ -13,13 +13,11 @@ public final class ChannelJukebox extends ChannelClientSpecial {
         this.setTrackVolume(1f);
     }
     
-    @Override
-    public boolean checkJukebox(boolean jukebox) {
+    @Override public boolean checkJukebox(boolean jukebox) {
         return true;
     }
     
-    @Override
-    public void checkStop(Vector3i pos) {
+    @Override public void checkStop(Vector3i pos) {
         if(this.playingPos==pos || this.playingPos.distance(pos)<=2)
             stop(); //In case the position moves or there is a rounding error?
     }

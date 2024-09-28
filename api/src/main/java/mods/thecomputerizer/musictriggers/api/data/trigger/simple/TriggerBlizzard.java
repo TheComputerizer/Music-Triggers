@@ -12,13 +12,11 @@ public class TriggerBlizzard extends SimpleTrigger {
         super(channel,"blizzard");
     }
 
-    @Override
-    public List<String> getRequiredMods() {
+    @Override public List<String> getRequiredMods() {
         return Collections.singletonList("betterweather");
     }
 
-    @Override
-    public boolean isPlayableContext(TriggerContext ctx) {
+    @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveBlizzard();
     }
 }

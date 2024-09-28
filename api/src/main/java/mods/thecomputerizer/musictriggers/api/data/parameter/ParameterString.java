@@ -67,18 +67,15 @@ public class ParameterString extends Parameter<String> {
         return true;
     }
     
-    @Override
-    protected String read(ByteBuf buf) {
+    @Override protected String read(ByteBuf buf) {
         return NetworkHelper.readString(buf);
     }
     
-    @Override
-    public void setValue(@Nullable Object value) {
+    @Override public void setValue(@Nullable Object value) {
         this.value = Objects.nonNull(value) ? value.toString() : null;
     }
     
-    @Override
-    protected void write(ByteBuf buf, String val) {
+    @Override protected void write(ByteBuf buf, String val) {
         NetworkHelper.writeString(buf,val);
     }
 }

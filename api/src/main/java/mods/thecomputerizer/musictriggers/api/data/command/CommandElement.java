@@ -49,14 +49,12 @@ public class CommandElement extends ChannelElementRunner {
         return true;
     }
     
-    @Override
-    public void close() {
+    @Override public void close() {
         this.literal = null;
         this.triggers.clear();
     }
 
-    @Override
-    public boolean isResource() {
+    @Override public boolean isResource() {
         return false;
     }
 
@@ -68,8 +66,7 @@ public class CommandElement extends ChannelElementRunner {
         return COMMAND;
     }
     
-    @Override
-    public Class<? extends ChannelElement> getTypeClass() {
+    @Override public Class<? extends ChannelElement> getTypeClass() {
         return CommandElement.class;
     }
     
@@ -77,8 +74,7 @@ public class CommandElement extends ChannelElementRunner {
         return "Command";
     }
 
-    @Override
-    public boolean verifyRequiredParameters() {
+    @Override public boolean verifyRequiredParameters() {
         if(hasParameter("literal")) {
             this.literal = getParameterAsString("literal");
             return true;
@@ -87,8 +83,7 @@ public class CommandElement extends ChannelElementRunner {
         return false;
     }
 
-    @Override
-    public void run() {
+    @Override public void run() {
         super.run();
         ServerHelper.executeCommandLiteral(this.literal);
     }
