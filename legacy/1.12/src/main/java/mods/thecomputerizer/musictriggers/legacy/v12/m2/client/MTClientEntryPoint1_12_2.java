@@ -4,8 +4,6 @@ import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientEntryPoint;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.MusicTicker;
-import net.minecraft.client.audio.SoundHandler;
 import net.minecraft.client.resources.FolderResourcePack;
 import net.minecraft.client.resources.IResourcePack;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
@@ -62,27 +60,5 @@ public class MTClientEntryPoint1_12_2 extends ClientEntryPoint {
     @Override public void onClientSetup() {} //Undelegated
     
     @Override public void onLoadComplete() {
-        Minecraft mc = Minecraft.getMinecraft();
-        setMusicTicker(mc,new MTMusicTicker1_12_2(mc));
-        setSoundHandler(mc,new MTSoundHandler1_12_2(mc.getResourceManager(),mc.gameSettings,mc.getSoundHandler()));
-    }
-    
-    private void setMusicTicker(Minecraft mc, MusicTicker ticker) {
-        MTRef.logInfo("Fixing vanilla MusicTicker");
-        try {
-            ObfuscationReflectionHelper.setPrivateValue(Minecraft.class,mc,ticker,"field_147126_aw");
-        } catch(Exception ex) {
-            MTRef.logError("Failed to replace MusicTicker",ex);
-        }
-    }
-    
-    private void setSoundHandler(Minecraft mc, SoundHandler handler) {
-        MTRef.logInfo("Fixing vanilla SoundHandler");
-        try {
-            ObfuscationReflectionHelper.setPrivateValue(Minecraft.class,mc,handler,"field_147127_av");
-            MTRef.logInfo("SoundHandler class is now {}",mc.getSoundHandler().getClass());
-        } catch(Exception ex) {
-            MTRef.logError("Failed to replace SoundHandler",ex);
-        }
     }
 }

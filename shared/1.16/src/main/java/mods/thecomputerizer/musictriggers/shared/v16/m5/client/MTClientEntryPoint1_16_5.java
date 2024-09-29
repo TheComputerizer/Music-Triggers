@@ -6,17 +6,14 @@ import mods.thecomputerizer.musictriggers.shared.v16.m5.common.MTMappingsHelper1
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientEntryPoint;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.ClassHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.CoreAPI;
-import mods.thecomputerizer.theimpossiblelibrary.api.core.ReflectionHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 import net.minecraft.client.Minecraft;
 
 import javax.annotation.Nullable;
 import java.io.File;
-import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
 
 import static mods.thecomputerizer.musictriggers.api.MTRef.BASE_PACKAGE;
 import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
@@ -74,33 +71,6 @@ public class MTClientEntryPoint1_16_5 extends ClientEntryPoint {
     }
     
     @Override public void onLoadComplete() {
-        Minecraft.getInstance().submit(() -> {
-            Minecraft mc = Minecraft.getInstance();
-            setMusicTicker(mc);
-            //setSoundHandler(mc);
-            ChannelHelper.getClientHelper().queryCategoryVolume();
-        });
-    }
-    
-    private <T> void setFinalField(Minecraft mc, T instance, String srgName, String normalName, String className,
-            Function<Minecraft,T> getter) {
-        MTRef.logInfo("Fixing vanilla {}",className);
-        try {
-            Field field = this.reflector.findField(mc.getClass(),srgName,normalName,instance.getClass());
-            ReflectionHelper.setFieldInstance(field,mc,instance);
-            MTRef.logInfo("{} class is now {}",className,getter.apply(mc).getClass());
-        } catch(Exception ex) {
-            MTRef.logError("Failed to replace {}",className,ex);
-        }
-    }
-    
-    private void setMusicTicker(Minecraft mc) {
-        Object ticker = this.reflector.makeMusicTicker(mc);
-        setFinalField(mc,ticker,"field_147126_aw","musicManager","MusicTicker",this.reflector.musicTickerGetter());
-    }
-    
-    private void setSoundHandler(Minecraft mc) {
-        Object handler = this.reflector.makeSoundHandler(mc);
-        setFinalField(mc,handler,"field_147127_av","soundManager","SoundHandler",this.reflector.soundHandlerGetter());
+        Minecraft.getInstance().submit(() -> ChannelHelper.getClientHelper().queryCategoryVolume());
     }
 }

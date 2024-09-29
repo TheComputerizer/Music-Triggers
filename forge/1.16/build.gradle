@@ -58,7 +58,8 @@ minecraft {
         def args = [
             '-Dtil.dev=true',
             '-Dtil.classpath.file=theimpossiblelibrary-0.4.0_mapped_parchment_2022.03.06-1.16.5.jar', //Only needed in dev
-            '-Dtil.classpath.mods='+mod_entrypoint
+            '-Dtil.classpath.mods='+mod_entrypoint,
+            '-Dtil.classpath.coremods=mods.thecomputerizer.musictriggers.api.core.MTCoreEntryPoint'
         ]
         client {
             workingDirectory file('run_client')

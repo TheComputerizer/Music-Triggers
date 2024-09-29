@@ -45,6 +45,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.common.blockentity.BlockEnt
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.item.ItemStackAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
+import mods.thecomputerizer.theimpossiblelibrary.api.core.annotation.IndirectCallers;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.MinecraftServerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.ServerHelper;
@@ -329,9 +330,21 @@ public class ChannelHelper implements NBTLoadable {
             if(!helper.client) helper.setDebugParameter(name,value);
     }
     
+    @IndirectCallers
+    public static boolean stopVanillaMusicTicker() {
+        ChannelHelper clientHelper = getClientHelper();
+        return Objects.isNull(clientHelper) || clientHelper.canVanillaMusicPlay();
+    }
+    
     public static void tick(@Nullable CustomTick ticker) {
         if(!loader.isLoading() && Objects.nonNull(ticker) && ticker.isEquivalentTPS(getTickRate()))
             for(ChannelHelper helper : PLAYER_MAP.values()) helper.tickChannels();
+    }
+    
+    @IndirectCallers
+    public static void updateVolumeSources() {
+        ChannelHelper clientHelper = getClientHelper();
+        if(Objects.nonNull(clientHelper)) clientHelper.queryCategoryVolume();
     }
 
     @Getter private final Map<String,ChannelAPI> channels;

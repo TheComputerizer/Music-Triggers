@@ -58,7 +58,8 @@ minecraft {
     runs {
         def args = [
                 '-Dtil.dev=true',
-                '-Dtil.classpath.mods=mods.thecomputerizer.theimpossiblelibrary.api.common.TILCommonEntryPoint;'+mod_entrypoint
+                '-Dtil.classpath.mods=mods.thecomputerizer.theimpossiblelibrary.api.common.TILCommonEntryPoint;'+mod_entrypoint,
+                '-Dtil.classpath.coremods=mods.thecomputerizer.musictriggers.api.core.MTCoreEntryPoint'
         ]
         client {
             workingDirectory file('run_client')
