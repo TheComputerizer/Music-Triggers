@@ -187,8 +187,14 @@ public class TriggerContextClient extends TriggerContext {
 
     @Override public boolean isActiveHeight(int level, boolean checkSky, boolean checkAbove) {
         BlockPosAPI<?> pos = hasBoth() ? this.player.getPosRounded() : null;
-        return Objects.nonNull(pos) && (checkAbove ? pos.y()>level : pos.y()<level &&
-                (!checkSky || this.world.isSkyVisible(pos)));
+        if(Objects.nonNull(pos)) {
+            if(checkAbove) return pos.y()>level;
+            else if(pos.y()<level) {
+                if(this.world.isSkyVisible(pos)) return !checkSky;
+                else return true;
+            }
+        }
+        return false;
     }
 
     @Override public boolean isActiveHome(int range, float yRatio) {
@@ -216,7 +222,7 @@ public class TriggerContextClient extends TriggerContext {
         ResourceLocationAPI<?> itemName = stack.getItem().getRegistryName();
         if(parts[0].equals(itemName.getNamespace()) && parts[1].equals(itemName.getPath())) {
             if(parts.length==2) return true;
-            if(stack.getCount()==RandomHelper.randomInt("parsed_item_count",parts[2],-1))
+            if(stack.getCount()<=RandomHelper.randomInt("parsed_item_count",parts[2],-1))
                 return parts.length==3 || checkNBT(stack.getTag(),itemString);
         }
         return false;

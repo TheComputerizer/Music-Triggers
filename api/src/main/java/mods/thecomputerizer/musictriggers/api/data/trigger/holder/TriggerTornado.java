@@ -26,9 +26,6 @@ public class TriggerTornado extends HolderTrigger {
     }
 
     @Override public boolean verifyRequiredParameters() {
-        String[] parameters = new String[]{"identifier","level"};
-        if(hasAllNonDefaultParameter(parameters)) return true;
-        logMissingParameters(parameters);
-        return false;
+        return hasValidIdentifier();
     }
 }

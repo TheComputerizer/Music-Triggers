@@ -238,9 +238,9 @@ public final class MTDataRef {
                          buildParameter("detection_y_ratio",0.5f),
                          buildString("display_matcher","exact",matcher()),
                          buildParameter("display_name",Collections.singletonList("any")),
+                         buildParameter("health",100f),
                          buildParameter("horde_health_percentage",50f),
                          buildParameter("horde_targeting_percentage",50f),
-                         buildParameter("health",100f),
                          buildParameter("infernal",Collections.singletonList("any")),
                          buildParameter("max_entities",MAX_VALUE),
                          buildParameter("min_entities",1),
@@ -302,12 +302,12 @@ public final class MTDataRef {
             buildTrigger("victory",true,
                          buildParameter("victory_timeout",20)),
             buildTrigger("zones",true,
-                         buildParameter("zone_min_x",MIN_VALUE),
-                         buildParameter("zone_min_y",MIN_VALUE),
-                         buildParameter("zone_min_z",MIN_VALUE),
                          buildParameter("zone_max_x",MAX_VALUE),
                          buildParameter("zone_max_y",MAX_VALUE),
-                         buildParameter("zone_max_z",MAX_VALUE)),
+                         buildParameter("zone_max_z",MAX_VALUE),
+                         buildParameter("zone_min_x",MIN_VALUE),
+                         buildParameter("zone_min_y",MIN_VALUE),
+                         buildParameter("zone_min_z",MIN_VALUE)),
             UNIVERSAL_TRIGGERS);
     
     /*-------------------------------------------Files-------------------------------------------*/
