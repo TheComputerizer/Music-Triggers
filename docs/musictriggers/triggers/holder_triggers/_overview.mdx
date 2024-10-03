@@ -1,0 +1,16 @@
+A holder trigger is a type of trigger that can have sub-triggers. These sub-triggers are denoted by the use of the
+`identifier` parameter. What that essentially means is that these types of triggers cover a wide variety of use cases
+and as such are allowed to have multiple parameter sets within the same channel. Using 2 different identifiers on the
+same holder trigger is like using 2 different triggers that have similar effects. On the other hand, using the same
+identifier for the same holder trigger is like reusing a simple trigger. Identifier are unique both triggers and
+channels. This means that something like `dimension-battle` will always be different from something like `mob-battle`.
+It also means that adding `dimension-battle` on 2 different channels will still define 2 separate triggers.
+
+Outside of the implied trigger system, iddentifiers do not have an effect on whether a triggers can activate and as
+such can be any string value. For example, a `time` trigger with an identifier of `night` (`time-night`) will not
+necessarily be active during the night as that is determined from the `time_bundle` or `start_hour` & `end_hour`
+parameters
+
+The **25** trigger holders are `advancement`, `biome`, `blockentity`, `command`, `difficulty`, `dimension`, `effect`,
+ `gamestage`, `gui`, `height`, `inventory`, `light`, `mob`, `moon`, `pvp`, `raid`, `rainintensity`, `riding`, `season`,
+ `statistic`, `structure`, `time`, `tornado`, `victory`, and `zones`

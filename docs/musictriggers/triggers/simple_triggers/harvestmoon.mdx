@@ -1,0 +1,84 @@
+Playable during a harvestmoon.
+Requires [Nyx](https://www.curseforge.com/minecraft/mc-mods/nyx) (1.12.2) or
+[Enhanced Celestials](https://www.curseforge.com/minecraft/mc-mods/enhanced-celestials) (1.16.5)
+
+Accepts `active_cooldown`, `fade_in`, `fade_out`, `max_tracks`, `not`, `passive_persistence`, `persistence`,
+ `play_when_paused`, `priority`, `start_as_disabled`, `ticks_before_active`, `ticks_before_audio`,
+ `ticks_between_audio`, `toggle_inactive_playable`, and `toggle_save_status`
+
+```
+active_cooldown <default: 0>
+    Determines the number of ticks that the trigger will not be able to
+    activate for after being active and deactivating.
+
+fade_in <default: 0>
+    The number of ticks it will take the trigger to fade in after the trigger
+    activates.
+
+fade_out <default: 0>
+    The number of ticks it will take the trigger to fade out when the trigger
+    is no longer active.
+
+max_tracks <default: 0>
+    Determines the maximum number of audio tracks that will be able to play
+    while the trigger is active. The counter is reset once the trigger is no
+    longer active. Any value less than 1 will be treated as infinite.
+
+not <default: false>
+    Enabling this inverts the activation requirements meaning that the trigger
+    will NOT be active when its parameters are met. Ignored by most time-based
+    parameters.
+
+passive_persistence <default: true>
+    Determines whether the persistence parameter should be applied when the
+    trigger is not active. When disabled, the trigger will ignore its
+    persistence parameter if there is a higher priority trigger active.
+
+persistence <default: 0>
+    Determines the number of ticks after its parameters are no longer met that
+    the trigger will be playable for.
+
+play_when_paused <default: false>
+    Determines whether the trigger is playable while the game is paused.
+    Requires has_paused_music to be active for the channel.
+
+priority <default: 2100>
+    The priority value of the trigger in regards to other triggers that are
+    playable at the same time. By default the highest priority trigger always
+    wins and will be active, but that can be changed via the debug config. See
+    the independent_audio_pools and reverse_priority debug paremters for more
+    info. For trigger combinations, nonspecific parameters like fade_out are
+    taken from the highest priority trigger.
+
+start_as_disabled <default: false>
+    If this is true the trigger will be toggled off by default and must be
+    toggled on by something else to be usable. Unless you know how toggles
+    work it is recommended to leave this at its default value.
+
+ticks_before_active <default: 0>
+    The number of ticks after the parameters are met before the trigger is
+    active (or playable if not the highest priority).
+
+ticks_before_audio <default: 0>
+    The number of ticks after the trigger is active before audio can start
+    playing.
+
+ticks_between_audio <default: 0>
+    The number of ticks after the audio finishes before the next entry in the
+    pool can play.
+
+toggle_inactive_playable <default: false>
+    Determines whether the trigger should be toggled off when it is playable
+    (all of its parameters and timers are met) but it is not the active
+    (highest priority or in combination with the highest priority) trigger.
+    Unless you have a good understanding of how toggles and trigger states
+    work it is recommended to leave this at its default value.
+
+toggle_save_status <default: false>
+    Determines if and how the toggle status for the trigger is saved and set.
+    Accepts integers from 0-2.
+    0 = Nothing is saved or set. Toggle status will reset after a restart.
+    1 = Toggle status will reset after the player logs out.
+    2 = Toggle status will reset after the player logs out and be set when
+        the player logs back in.
+```
