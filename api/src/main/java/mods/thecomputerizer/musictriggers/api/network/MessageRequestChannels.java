@@ -1,12 +1,12 @@
 package mods.thecomputerizer.musictriggers.api.network;
 
 import io.netty.buffer.ByteBuf;
+import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.message.MessageAPI;
 
-import java.util.Objects;
-
+@Getter
 public class MessageRequestChannels<CTX> extends PlayerMessage<CTX> {
     
     //final CompoundTagAPI<?> tag;
@@ -33,12 +33,6 @@ public class MessageRequestChannels<CTX> extends PlayerMessage<CTX> {
     @SuppressWarnings("unchecked")
     @Override public MessageAPI<CTX> handle(CTX ctx) {
         MTRef.logInfo("Handling incoming channels request for UUID {}",this.uuid);
-        ChannelHelper helper = ChannelHelper.getHelper(this.uuid,this.client);
-        MTRef.logInfo("Is helper null? {}",Objects.isNull(helper));
-        if(Objects.nonNull(helper)) {
-            //helper.onConnected(this.tag);
-            return (MessageAPI<CTX>)helper.getInitMessage();
-        }
-        return null;
+        return (MessageAPI<CTX>)ChannelHelper.processChannelsRequest(this);
     }
 }

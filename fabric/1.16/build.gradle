@@ -28,7 +28,7 @@ buildscript {
     }
 }
 
-apply from: rootProject.file('gradle\\java17-module.gradle')
+apply from: rootProject.file('gradle\\java8-module.gradle')
 apply from: rootProject.file('gradle\\fabric.gradle')
 apply from: rootProject.file('gradle\\shadow-relocate.gradle')
 
@@ -37,7 +37,8 @@ plugins.apply('fabric-loom')
 def args = [
         '-Dfabric.log.level=debug',
         '-Dtil.dev=true',
-        '-Dtil.classpath.mods=mods.thecomputerizer.theimpossiblelibrary.api.common.TILCommonEntryPoint;'+mod_entrypoint
+        '-Dtil.classpath.mods=mods.thecomputerizer.theimpossiblelibrary.api.common.TILCommonEntryPoint;'+mod_entrypoint,
+        '-Dtil.classpath.coremods=mods.thecomputerizer.musictriggers.api.core.MTCoreEntryPoint'
 ]
 
 [ runClient, runServer ].forEach { it.jvmArgs args}
@@ -63,7 +64,7 @@ dependencies {
     implementation(project(path: ':api', configuration: 'dev'))
     implementation(project(path: ':fabric', configuration: 'dev'))
     //The shared module builds with forge but since it only touches vanilla code this is fine
-    implementation(project(path: ':shared:shared.1_16', configuration: 'dev'))
+    implementation(project(path: ':shared:shared.1_16',configuration: 'dev'))
 
     modImplementation("net.fabricmc:fabric-loader:${loader_version}")
     modImplementation("net.fabricmc.fabric-api:fabric-api:${shared.fabric_version}+1.16")
@@ -85,20 +86,15 @@ processTestResources {
 }
 
 compileJava {
-    source(project(':api').sourceSets.main.allJava,
-            //shared.sourceSets.main.allJava,
-            project(':fabric').sourceSets.main.allJava)
+    source(project(':fabric').sourceSets.main.allJava)
 }
 
 compileTestJava {
-    source(project(':api').sourceSets.test.allJava,
-            //shared.sourceSets.test.allJava,
-            project(':fabric').sourceSets.test.allJava)
+    source(project(':fabric').sourceSets.test.allJava)
 }
 
 jar {
     from(project(':fabric').jar.archiveFile.collect { zipTree(it) })
-    //from(shared.jar.archiveFile.collect { zipTree(it) })
     manifest {
         attributes([
                 'Implementation-Title': name,
@@ -107,7 +103,13 @@ jar {
     }
 }
 
-tasks.remapJar.dependsOn('shadowJar')
-tasks.jar.finalizedBy('remapJar')
-tasks.jar.dependsOn(':shared:shared.1_16:build')
+shadowJar {
+    shared.afterEvaluate {
+        from(shared.jar.archiveFile.collect { zipTree(it) })
+    }
+}
+
+tasks.assemble.dependsOn(shadowJar)
+tasks.shadowJar.finalizedBy('remapJar')
+tasks.jar.finalizedBy('shadowJar')
 tasks.jar.dependsOn(':fabric:build')

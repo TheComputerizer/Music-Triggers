@@ -12,7 +12,7 @@ import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.FROM;
 
 public class MTConfigV7 extends ConfigVersion {
     
-    public static final MTConfigV7 LATEST = new MTConfigV7(0,0,"beta",6){};
+    public static final MTConfigV7 LATEST = new MTConfigV7(0,0,"beta",9){};
     public static final MTConfigV7 V7_0_0_BETA_4 = new MTConfigV7(0,0,"beta",4){
         @Override public ConfigVersion getVersionTarget() {
             return LATEST;

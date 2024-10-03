@@ -13,6 +13,7 @@ import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.MTClient;
 import mods.thecomputerizer.musictriggers.api.client.channel.ChannelClient;
 import mods.thecomputerizer.musictriggers.api.client.MTDebugInfo;
@@ -35,6 +36,7 @@ import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
 import mods.thecomputerizer.musictriggers.api.network.MessageFinishedInit;
 import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels;
 import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels.ChannelMessage;
+import mods.thecomputerizer.musictriggers.api.network.MessageRequestChannels;
 import mods.thecomputerizer.musictriggers.api.network.MessageTriggerStates;
 import mods.thecomputerizer.musictriggers.api.server.ChannelServer;
 import mods.thecomputerizer.shadow.org.joml.Vector3d;
@@ -47,6 +49,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.common.item.ItemStackAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.annotation.IndirectCallers;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.network.message.MessageAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.MinecraftServerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.ServerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.Box;
@@ -80,6 +83,7 @@ public class ChannelHelper implements NBTLoadable {
     private static final Map<String,ChannelHelper> PLAYER_MAP = new HashMap<>();
     @Getter private static final GlobalData globalData = new GlobalData();
     @Getter private static final LoadTracker loader = new LoadTracker();
+    private static MessageRequestChannels<?> pendingRequest;
     
     public static void closePlayerChannel(String playerID) {
         ChannelHelper helper = PLAYER_MAP.get(playerID);
@@ -175,6 +179,7 @@ public class ChannelHelper implements NBTLoadable {
         loader.setClient(client);
         loader.setLoading(false);
         if(loader.isConnected() || !client) {
+            logGlobalInfo("SENDING INIT MESSAGE");
             if(client) MTNetwork.sendToServer(helper.getInitMessage(),false);
             else MTNetwork.sendToClient(helper.getInitMessage(),playerID);
         }
@@ -185,6 +190,7 @@ public class ChannelHelper implements NBTLoadable {
         PLAYER_MAP.put(init.getUuid(),helper);
         helper.setSyncable(true);
         loader.setLoading(false);
+        logGlobalInfo("SENDING FINISHED INIT MESSAGE");
         return new MessageFinishedInit<>(helper);
     }
     
@@ -213,16 +219,23 @@ public class ChannelHelper implements NBTLoadable {
     }
 
     public static void onClientConnected() {
+        MTRef.logInfo("CLIENT CONNECTED");
         loader.setConnected(true);
         ChannelHelper helper = getClientHelper();
         if(Objects.nonNull(helper)) {
             for(ChannelAPI channel : helper.channels.values()) {
                 //TODO persistent data
             }
-        }
+            if(Objects.nonNull(pendingRequest)) {
+                MTRef.logInfo("Answering pending channels request");
+                MTNetwork.sendToServer(helper.getInitMessage(),false);
+                pendingRequest = null;
+            }
+        } else MTRef.logError("The client helper is missing on the client side??");
     }
 
     public static void onClientDisconnected() {
+        MTRef.logInfo("CLIENT DISCONNECTED");
         loader.setConnected(false);
         ChannelHelper helper = getClientHelper();
         if(Objects.nonNull(helper)) {
@@ -288,7 +301,17 @@ public class ChannelHelper implements NBTLoadable {
         }
     }
     
+    public static MessageAPI<?> processChannelsRequest(MessageRequestChannels<?> message) {
+        ChannelHelper helper = getHelper(message.getUuid(),message.isClient());
+        MTRef.logInfo("Is helper null? {}",Objects.isNull(helper));
+        if(Objects.nonNull(helper)) return helper.getInitMessage();
+        MTRef.logInfo("Adding pending message for client that is not ready to respond yet");
+        pendingRequest = message;
+        return null;
+    }
+    
     public static void reload() {
+        logGlobalInfo("RELOADING");
         try {
             if(loader.isClient()) {
                 loadConfig("CLIENT",true);

@@ -40,6 +40,7 @@ public class MTServerEvents {
     }
     
     public static void onPlayerJoin(PlayerLoggedInEventWrapper<?> wrapper) {
+        MTRef.logInfo("SERVER PLAYER JOIN");
         PlayerAPI<?,?> player = wrapper.getPlayer();
         String uuid = player.getUUID().toString();
         MTRef.logInfo("Found joining player with UUID {}",uuid);
@@ -47,6 +48,7 @@ public class MTServerEvents {
     }
     
     public static void onPlayerLeave(PlayerLoggedOutEventWrapper<?> wrapper) {
+        MTRef.logInfo("SERVER PLAYER LEAVE");
         PlayerAPI<?,?> player = wrapper.getPlayer();
         String uuid = player.getUUID().toString();
         MTRef.logInfo("Found leaving player with UUID {}",uuid);
