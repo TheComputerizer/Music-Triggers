@@ -2,8 +2,17 @@ pluginManagement {
     repositories {
         gradlePluginPortal() {
             content {
-                [ 'com.google.code.gson', 'org.gradle.toolchains',
-                  'org.gradle.toolchains.foojay-resolver-convention' ].forEach { includeGroup it }
+                [ 'com.google.code.gson', 'com.googlecode.javaewah', 'commons-codec', 'org.apache',
+                  'org.apache.commons', 'org.eclipse.jgit', 'org.gradle.toolchains',
+                  'org.gradle.toolchains.foojay-resolver-convention', 'org.junit', 'org.slf4j', 'org.sonatype.oss',
+                  'org.zeroturnaround' ].forEach { includeGroup it }
+            }
+        }
+        maven {
+            name = 'Sinytra'
+            url = uri('https://maven.sinytra.org/')
+            content {
+                [ 'org.sinytra.wiki', 'org.sinytra.wiki.toolkit' ].forEach { includeGroup(it) }
             }
         }
     }

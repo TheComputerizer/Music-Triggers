@@ -5,6 +5,10 @@
  * Any necessary reobfuscations must happen in the version the deobfuscations happened in.
  */
 
+plugins {
+    id 'org.sinytra.wiki.toolkit' version '0.+'
+}
+
 apply from: rootProject.file('buildSrc\\shared.gradle')
 java.toolchain.languageVersion = JavaLanguageVersion.of(23)
 
@@ -39,3 +43,11 @@ jar {
 [ ':legacy:legacy.1_12:build',
   ':fabric:fabric.1_16:build',
   ':forge:forge.1_16:build' ].forEach { tasks.jar.dependsOn(it) }
+
+wiki {
+    docs {
+        mod_id {
+            root = file("docs/${mod_id}")
+        }
+    }
+}
