@@ -1,9 +1,9 @@
 {
+  "introduction.mdx": "Introduction",
+  "important_concepts": "Important Concepts",
   "file_structure": "File Structure",
   "gui": "GUI",
-  "important_concepts": "Important Concepts",
-  "introduction.mdx": "Introduction",
-  "issues.mdx": "Issues & Support",
+  "triggers": "Triggers",
   "misc": "Miscellaneous Features",
-  "triggers": "Triggers"
+  "issues.mdx": "Issues & Support"
 }
