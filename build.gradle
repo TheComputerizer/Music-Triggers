@@ -12,6 +12,8 @@ plugins {
 apply from: rootProject.file('buildSrc\\shared.gradle')
 java.toolchain.languageVersion = JavaLanguageVersion.of(23)
 
+def tokens = rootProject.file('tokens.txt').readLines()
+
 //noinspection GroovyUnusedAssignment
 def api = project(':api')
 def fabric = project(':fabric')
@@ -45,7 +47,7 @@ jar {
   ':forge:forge.1_16:build' ].forEach { tasks.jar.dependsOn(it) }
 
 wiki {
-    //wikiAccessToken =
+    wikiAccessToken = tokens.get(0)
     docs {
         mod_id {
             root = file("docs/${mod_id}")
