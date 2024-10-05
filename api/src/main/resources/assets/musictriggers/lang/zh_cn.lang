@@ -11,7 +11,7 @@ debug.musictriggers.status.effects=状态效果：[ %1$s ]
 debug.musictriggers.status.effect=名称 = %1$s | ID = %2$s
 debug.musictriggers.target.block_entity=方块实体：名称 = %1$s | ID = %2$s
 debug.musictriggers.target.entity=实体：名称 = %1$s | ID = %2$s
-
+  
 gui.musictriggers.button.add_entry.name=+
 gui.musictriggers.button.apply.name=应用
 gui.musictriggers.button.back.name=返回
@@ -59,7 +59,7 @@ gui.musictriggers.button.skip_song.tooltip.2=不会跳过设定的延迟参数
 gui.musictriggers.button.toggles.name=动态切换
 gui.musictriggers.button.toggles.tooltip.1=新建、编辑或移除动态切换
 gui.musictriggers.button.toggles.tooltip.2=动态切换可用于设定频道或触发器的状态
-
+  
 gui.musictriggers.screen.channel_info=频道信息
 gui.musictriggers.screen.channels=频道
 gui.musictriggers.screen.command_element=命令条目
@@ -100,22 +100,22 @@ gui.musictriggers.screen.toggles=动态切换
 gui.musictriggers.screen.triggers=触发器
 gui.musictriggers.screen.universal_audio=全局音频参数
 gui.musictriggers.screen.universal_triggers=全局触发器参数
-
+  
 help.musictriggers.implied_triggers.desc=指意触发器系统，是一种自动注册未明确指定的触发器的方式，适用于大部分具有`triggers`（触发器）参数的对象（音乐，命令，动态切换等）。这里的明确指定是说，将触发器添加到频道主配置的触发器部分。如果触发器需要一个标识符，那么系统会尝试使用这个标识符来“指意”该触发器所需的条件。部分带有多个条件的触发器可能不受支持。如果没有用全局触发器设定，未指意的参数（渐入，淡出，保持时间等）将应用默认值。如果有非全局或非标准的条件，触发器必须明确指定。
 help.musictriggers.implied_triggers.name=指意触发器
-
+  
 item.musictriggers.record.blank=未储存音频
 item.musictriggers.record.desc=增强的音乐唱片
 item.musictriggers.record.name=增强的音乐唱片
 item.musictriggers.record.tooltip=对象：%1$s
-
+  
 key.categories.musictriggers=音乐触发器
 key.musictriggers.gui=打开音乐触发器界面
-
+  
 message.musictriggers.reload.error=在 %1$s 频道发现了未知错误
 message.musictriggers.reload.finished=成功重载音乐触发器！
 message.musictriggers.reload.queue=重载用时：%1$s 刻…
-
+  
 parameter.musictriggers.active_cooldown.desc=触发器再次激活的冷却时间。\n\n<默认：0>
 parameter.musictriggers.active_cooldown.name=激活冷却（刻）
 parameter.musictriggers.allow_timestamps.desc=允许调试信息显示来自所有频道的，当前音乐的时间戳。\n\n<默认：否>
@@ -124,7 +124,7 @@ parameter.musictriggers.animated.desc=是否图片版面将尝试作为动画播
 parameter.musictriggers.animated.name=动画
 parameter.musictriggers.biome_rainfall.desc=降雨强度需大于或小于（由“降雨强度是最大值”参数决定）此值。\n\n<默认：1.4e-45f>
 parameter.musictriggers.biome_rainfall.name=降雨强度
-parameter.musictriggers.biome_tag.desc=群系的类别或标签（取决于游戏版本）必须满足这里的任一条目，匹配策略由“群系标签匹配策略”决定。\n\n<默认：[ "any" ]>
+parameter.musictriggers.biome_tag.desc=群系的类别或标签（取决于游戏版本）必须满足这里的任一条目，匹配策略由“群系标签匹配策略”决定。\n\n<默认：[ \"any\" ]>
 parameter.musictriggers.biome_tag.name=群系标签
 parameter.musictriggers.biome_tag_matcher.desc=匹配群系标签的策略。接受 exact（精确），partial（模糊），或 regex（正则）。\n\nexact = 群系标签需完全匹配\n\npartial = 允许部分匹配群系标签\n\nregex = 用正则表达式匹配群系标签\n\n<默认：exact>
 parameter.musictriggers.biome_tag_matcher.name=群系标签匹配策略
@@ -132,14 +132,16 @@ parameter.musictriggers.biome_temperature.desc=群系温度需大于或小于（
 parameter.musictriggers.biome_temperature.name=群系温度
 parameter.musictriggers.block_sound_effects.desc=是否除音乐文件外，还应屏蔽被“阻断声音类别”参数屏蔽的类别中的音效（非流式音频）。\n\n<默认：否>
 parameter.musictriggers.block_sound_effects.name=阻断音效
-parameter.musictriggers.blocked_sound_categories.desc=是否指定模组的声音类别（只要是通过原版声音引擎的）被阻断。\n\n<默认：[ "minecraft;music" ]>
+parameter.musictriggers.blocked_sound_categories.desc=是否指定模组的声音类别（只要是通过原版声音引擎的）被阻断。\n\n<默认：[ \"minecraft;music\" ]>
 parameter.musictriggers.blocked_sound_categories.name=阻断声音类别
-parameter.musictriggers.champion.desc=生物必须有至少一个下列的能力。将 `any` 列入其中将省略检查，将 `all` 列入将接受所有冠军能力。\n\n需要安装 champions（冠军模组）。\n\n<默认：[ "any" ]>
+parameter.musictriggers.champion.desc=生物必须有至少一个下列的能力。将 `any` 列入其中将省略检查，将 `all` 列入将接受所有冠军能力。\n\n需要安装 champions（冠军模组）。\n\n<默认：[ \"any\" ]>
 parameter.musictriggers.champion.name=冠军能力
 parameter.musictriggers.chance.desc=在音乐池中，选中这一音乐的加权概率。注意，除非只能播放它，并且被“单次播放”禁用的音乐不计入总权重，一个音乐不会连着播放两次。值的总和不必要等于 100，因为这是加权概率，而非百分比概率。公式：此值/总概率，总概率是音乐池中，所有概率的和。\n\n<默认：100>
 parameter.musictriggers.chance.name=加权概率
 parameter.musictriggers.channel.desc=频道绑定的触发器。\n\n<默认：父对象的频道（如果可用）>
 parameter.musictriggers.channel.name=频道
+parameter.musictriggers.check_above_level.desc=反转 y 轴检测，玩家需要在设定的 y 轴高度之下。\n\n<默认：否>
+parameter.musictriggers.check_above_level.name=向下检测
 parameter.musictriggers.client_only.desc=需要重启\n\n尝试只从客户端载入本模组。一些需要服务器上下文的触发器和功能将失效。\n\n<默认：否>
 parameter.musictriggers.client_only.name=仅客户端
 parameter.musictriggers.commands.desc=命令配置文件的路径，相对于 `config/MusicTriggers/<频道名>/`。 <频道名> 就是频道的名字。不需要指定文件后缀名。\n\n<默认：commands>
@@ -152,7 +154,7 @@ parameter.musictriggers.detection_y_ratio.desc=垂直与水平检测半径的比
 parameter.musictriggers.detection_y_ratio.name=垂直检测半径比例
 parameter.musictriggers.display_matcher.desc=匹配外显名称的策略。接受 exact（精确），partial（模糊），或 regex（正则）。\n\nexact = 外显名称需完全匹配\n\npartial = 允许部分匹配外显名称\n\nregex = 用正则表达式匹配外显名称\n\n<默认：exact>
 parameter.musictriggers.display_matcher.name=外显名称匹配策略
-parameter.musictriggers.display_name.desc=外显名称必须匹配这里的任一条目，匹配策略由“外显名称匹配策略”决定。\n\n<默认：[ "any" ]>
+parameter.musictriggers.display_name.desc=外显名称必须匹配这里的任一条目，匹配策略由“外显名称匹配策略”决定。\n\n<默认：[ \"any\" ]>
 parameter.musictriggers.display_name.name=外显名称
 parameter.musictriggers.enable_debug_info.desc=在屏幕左上角显示音乐触发器调试信息文本。在设置触发器时很有用。\n\n<默认：否>
 parameter.musictriggers.enable_debug_info.name=启用调试信息
@@ -186,6 +188,8 @@ parameter.musictriggers.has_paused_music.desc=允许频道在游戏暂停时继�
 parameter.musictriggers.has_paused_music.name=暂停时播放
 parameter.musictriggers.health.desc=生物所需大于等于的生命值百分比。\n\n<默认：100.0>
 parameter.musictriggers.health.name=生命值
+parameter.musictriggers.health_percentage.desc=当前的生命值百分比需要达到此值。\n\n<默认：100.0>
+parameter.musictriggers.health_percentage.name=生命值百分比
 parameter.musictriggers.highest_day_number.desc=可激活的最高游戏内日期。\n\n<默认：2147483647>
 parameter.musictriggers.highest_day_number.name=最高日期
 parameter.musictriggers.horde_health_percentage.desc=为激活触发器，至少要有百分之多少的生物（受“最小生物数量”影响）满足“生命值”参数。\n\n<默认：50.0>
@@ -198,23 +202,27 @@ parameter.musictriggers.identifier.desc=用于区别同一触发器的多个实�
 parameter.musictriggers.identifier.name=标识符
 parameter.musictriggers.independent_audio_pools.desc=若禁用，多个音频池的同优先级可播放音乐将被加入到同个音频池中。\n\n<默认：是>
 parameter.musictriggers.independent_audio_pools.name=独立音乐池
-parameter.musictriggers.infernal.desc=生物必须至少有一个下列的精英能力。列入 `any` 将省略检查，列入 `all` 则接受所有精英能力。\n\n需要安装 infernal mobs（稀有精英怪）模组。\n\n<默认：[ "any" ]>
+parameter.musictriggers.infernal.desc=生物必须至少有一个下列的精英能力。列入 `any` 将省略检查，列入 `all` 则接受所有精英能力。\n\n需要安装 infernal mobs（稀有精英怪）模组。\n\n<默认：[ \"any\" ]>
 parameter.musictriggers.infernal.name=精英怪
 parameter.musictriggers.inherit_time.desc=链接激活时，是否被链接的音频将从上次的位置继续播放。\n\n<默认：是>
 parameter.musictriggers.inherit_time.name=继承时间
 parameter.musictriggers.interrupt_priority.desc=音乐播放中，能被打断的最小（“反转优先级”开了就是最大）优先级。\n\n<默认：1>
 parameter.musictriggers.interrupt_priority.name=打断优先级
-parameter.musictriggers.interrupted_sound_categories.desc=原版声音引擎中，哪些声音类别的音频将在音乐触发器播放时被终止或暂停。\n\n<默认：[ "music" ]>
+parameter.musictriggers.interrupted_sound_categories.desc=原版声音引擎中，哪些声音类别的音频将在音乐触发器播放时被终止或暂停。\n\n<默认：[ \"music\" ]>
 parameter.musictriggers.interrupted_sound_categories.name=打断声音类别
+parameter.musictriggers.is_whitelist.desc=为激活触发器，玩家是否需要有（或没有）相应的游戏阶段。\n\n<默认：是>
+parameter.musictriggers.is_whitelist.name=白名单
+parameter.musictriggers.items.desc=槽位中的物品应满足什么条件。条件的格式是 namespace:id:count:nbt，其中，只有 namespace:id 是必要的。比如 minecraft:iron:3 指 3 个铁锭。\n\nNBT 匹配非常复杂，只适合非常熟悉 NBT 数据的人使用。\n\nNBT 数据和 mob_nbt（实体 nbt）的句法相同。这个参数需要用一个，或多个键值（有时会跟随一个值）来指定前缀。每个前缀，键值，和值都必须用分号来分隔，比如 `prefix;key;key;value`。只要有一个条目通过，这个参数就算通过。\n\n前缀需要完全大写，并且只能在条目开头。一共有六种不同的前缀用于检测特定的数据值。\n\nEQUAL（等于）= 标签值必须等于指定值。可以让 LESSER（小于）变成“小于等于”，GREATER（大于）变成“大于等于”。\n\nGREATER（大于）= 标签值必须大于指定值。\n\nINVERT（反转）= 让所有非“反转”前缀反转其条件。单独使用将检测是否标签值等于 false（否）。\n\nKEY_PRESENT（存在键值）= 是否指定标签存在于复合标签中。\n\nLESSER = LESSER（小于）= 标签值必须小于指定值。\n\nVAL_PRESENT（存在变量）= 是否指定标签作为标签，存在于非标签值中。\n\n<默认：[ \"empty\" ]>
+parameter.musictriggers.items.name=物品
 parameter.musictriggers.jukebox.desc=唱片机配置文件的路径和文件名，相对于 `config/MusicTriggers/<频道名>/`。<频道名> 就是频道的名字。不需要指定文件后缀名。\n\n<默认：jukebox>
 parameter.musictriggers.jukebox.name=唱片路径
 parameter.musictriggers.jukebox_key.desc=录音条目的语言键。
 parameter.musictriggers.jukebox_key.name=键值
 parameter.musictriggers.jukebox_value.desc=录音条目对应的音频。只要频道能载入，它可以是本地文件，也可以是重定向条目。
 parameter.musictriggers.jukebox_value.name=参考
-parameter.musictriggers.level.desc=触发器检测数据 (氧气值，光照，高度等) 的参考值。\n\n<默认：difficulty（难度）=0，drowning（溺水）=100，height（高度）=0，light（光照）=7，rainintensity（降雨强度）=50，statistic（数据）=0，tornado（龙卷风）=0>
+parameter.musictriggers.level.desc=触发器检测数据 (氧气值，光照，高度等) 的参考值。\n\n<默认：difficulty（难度）= 0，drowning（溺水）= 100，height（高度）= 0，light（光照）= 7，rainintensity（降雨强度）= 50，statistic（数据）= 0，tornado（龙卷风）= 0>
 parameter.musictriggers.level.name=参考数据
-parameter.musictriggers.light_type.desc=将检测的光照类型。接受 block（方块），sky（天空），或 any（任意）。\n\n<默认：any>
+parameter.musictriggers.light_type.desc=将检测的光照类型。接受 block（方块），sky（天空），或 any（方块或天空）。\n\n<默认：any>
 parameter.musictriggers.light_type.name=光照类型
 parameter.musictriggers.literal.desc=“/”后的内容。\n\n<默认：literally>
 parameter.musictriggers.literal.name=命令内容
@@ -236,7 +244,7 @@ parameter.musictriggers.max_tracks.desc=触发器激活时，最多能播放多�
 parameter.musictriggers.max_tracks.name=音乐播放上限
 parameter.musictriggers.min_entities.desc=激活此触发器所需的最小生物数量。\n\n<默认：1>
 parameter.musictriggers.min_entities.name=最小生物数量
-parameter.musictriggers.mob_nbt.desc=这个参数非常复杂，只适合非常熟悉实体数据的人使用。\n\n这个参数需要用一个，或多个键值（有时会跟随一个值）来指定前缀。每个前缀，键值，和值都必须用分号来分隔，比如 `prefix;key;key;value`。只要有一个条目通过，这个参数就算通过。\n\n前缀需要完全大写，并且只能在条目开头。一共有六种不同的前缀用于检测特定的数据值。\n\nEQUAL（等于）= 标签值必须等于指定值。可以让 LESSER（小于）变成“小于等于”，GREATER（大于）变成“大于等于”。\n\nGREATER（大于）= 标签值必须大于指定值。\n\nINVERT（反转）= 让所有非“反转”前缀反转其条件。单独使用将检测是否标签值等于 false（否）。\n\nKEY_PRESENT（存在键值）= 是否指定标签存在于复合标签中。\n\nLESSER = LESSER（小于）= 标签值必须小于指定值。\n\nVAL_PRESENT（存在变量）= 是否指定标签作为标签，存在于非标签值中。\n\n<默认：[ "any" ]>
+parameter.musictriggers.mob_nbt.desc=这个参数非常复杂，只适合非常熟悉实体数据的人使用。\n\n这个参数需要用一个，或多个键值（有时会跟随一个值）来指定前缀。每个前缀，键值，和值都必须用分号来分隔，比如 `prefix;key;key;value`。只要有一个条目通过，这个参数就算通过。\n\n前缀需要完全大写，并且只能在条目开头。一共有六种不同的前缀用于检测特定的数据值。\n\nEQUAL（等于）= 标签值必须等于指定值。可以让 LESSER（小于）变成“小于等于”，GREATER（大于）变成“大于等于”。\n\nGREATER（大于）= 标签值必须大于指定值。\n\nINVERT（反转）= 让所有非“反转”前缀反转其条件。单独使用将检测是否标签值等于 false（否）。\n\nKEY_PRESENT（存在键值）= 是否指定标签存在于复合标签中。\n\nLESSER = LESSER（小于）= 标签值必须小于指定值。\n\nVAL_PRESENT（存在变量）= 是否指定标签作为标签，存在于非标签值中。\n\n<默认：[ \"any\" ]>
 parameter.musictriggers.mob_nbt.name=生物数据
 parameter.musictriggers.mob_targeting.desc=为激活触发器，生物是否需要以玩家为目标。注意，生物无法将创造模式或旁观者模式的玩家视为目标。\n\n<默认：是>
 parameter.musictriggers.mob_targeting.name=以玩家为目标
@@ -290,7 +298,7 @@ parameter.musictriggers.resampling_quality.desc=决定所有频道的重采样�
 parameter.musictriggers.resampling_quality.name=重采样质量
 parameter.musictriggers.resource_matcher.desc=匹配资源名称的策略。接受 exact（精确），partial（模糊），或 regex（正则）。\n\nexact = resource_name（资源名称）需完全匹配\n\npartial = 允许部分匹配资源名称\n\nregex = 用正则表达式匹配资源名称\n\n<默认：partial>
 parameter.musictriggers.resource_matcher.name=资源匹配策略
-parameter.musictriggers.resource_name.desc=对象的资源名或 ID 必须匹配这里的任一条目，匹配策略由“资源匹配策略”决定。\n\n<默认：[ "any" ]>
+parameter.musictriggers.resource_name.desc=对象的资源名或 ID 必须匹配这里的任一条目，匹配策略由“资源匹配策略”决定。\n\n<默认：[ \"any\" ]>
 parameter.musictriggers.resource_name.name=资源名
 parameter.musictriggers.resume_on_play.desc=是否音乐将在它被中断的地方，重新开始播放。\n\n<默认：否>
 parameter.musictriggers.resume_on_play.name=断点续播
@@ -304,6 +312,8 @@ parameter.musictriggers.scale_x.desc=版面在水平方向上的拉伸或压缩�
 parameter.musictriggers.scale_x.name=水平尺寸
 parameter.musictriggers.scale_y.desc=版面在垂直方向上的拉伸或压缩。\n\n<默认：1.0>
 parameter.musictriggers.scale_y.name=垂直尺寸
+parameter.musictriggers.season.desc=当前需所处的季节。\n\n0 = 春\n\n1 = 夏\n\n2 = 秋\n\n3 = 冬\n\n<默认：0>
+parameter.musictriggers.season.name=季节
 parameter.musictriggers.show_channel_info.desc=允许调试信息显示频道相关信息。\n\n<默认：是>
 parameter.musictriggers.show_channel_info.name=显示频道信息
 parameter.musictriggers.show_position_info.desc=允许调试信息显示玩家当前坐标的信息。\n\n<默认：是>
@@ -316,6 +326,8 @@ parameter.musictriggers.show_target_info.desc=允许调试界面显示当前指�
 parameter.musictriggers.show_target_info.name=显示目标信息
 parameter.musictriggers.show_trigger_info.desc=允许调试信息与当前触发器有关的，来自所有频道的信息。\n\n<默认：是>
 parameter.musictriggers.show_trigger_info.name=显示触发器信息
+parameter.musictriggers.slots.desc=物品栏指定槽位中需要有相应物品。\n\n接受列表中，有对应槽位的元素值。\n\n有效元素包括 mainhand（主手），offhand（副手），hotbar（快捷栏），armor（护甲）, any（任意），或任意槽位数值。\n\nmainhand = 主手。\n\noffhand = 副手。\n\nhotbar = 快捷栏中。\n\narmor = any of the 4 armor slots,\n\nany = 任意物品栏槽位。\n\n<默认：[ \"any\" ]>
+parameter.musictriggers.slots.name=槽位
 parameter.musictriggers.slow_tick_factor.desc=执行缓慢刻所需的刻的数量。缓慢刻可能带来更大的性能开销，比如触发器的计算和网络同步。\n\n<默认：5>
 parameter.musictriggers.slow_tick_factor.name=缓慢刻因数
 parameter.musictriggers.sound_category.desc=此类别将决定频道的音量。原版的声音类别包括：master（主音量），music（音乐），weather（天气），hostile（敌对生物），player（玩家），voice（语音），record（唱片机），block（方块），neutral（友好生物），和 ambient（环境）。应该能使用模组的自定义声音类别，但本模组自身无法创建新的声音类别。\n\n<默认：music>
@@ -348,7 +360,7 @@ parameter.musictriggers.ticks_between_audio.desc=两首音乐间的延迟。\n\n
 parameter.musictriggers.ticks_between_audio.name=曲间延迟
 parameter.musictriggers.time.desc=这个版面会展示多少刻。\n\n<默认：100>
 parameter.musictriggers.time.name=显示时间
-parameter.musictriggers.time_bundle.desc=内置的时间预设，无视“起始时间”和“结束时间”参数。接受 night（夜晚），day（白天），sunrise（日出），或 sunset（日落）。非法值将禁用此项。\n\n<默认：night>
+parameter.musictriggers.time_bundle.desc=内置的时间预设，无视“起始时间”和“结束时间”参数。接受 night（夜晚），day（白天），sunrise（日出），或 sunset（日落）。非法值（如 any）将禁用此项。\n\n<默认：any>
 parameter.musictriggers.time_bundle.name=时间预设
 parameter.musictriggers.title_color.desc=标题的颜色。\n\n接受 aqua（湖绿），black（黑），blue（蓝），dark_aqua（深湖绿），dark_blue（深蓝），dark_gray（深灰），dark_green（深绿），dark_purple（深紫），dark_red（深红），gold（金），gray（灰），green（绿），light_purple（淡紫），red（红），white（白），或 yellow（黄）。\n\n<默认：red>
 parameter.musictriggers.title_color.name=标题颜色
@@ -370,20 +382,36 @@ parameter.musictriggers.victory_id.desc=指向具体的胜利触发器。击杀�
 parameter.musictriggers.victory_id.name=胜利标识符
 parameter.musictriggers.victory_percentage.desc=为激活胜利触发器，至少击杀的敌人数量百分比。\n\n<默认：100.0>
 parameter.musictriggers.victory_percentage.name=击杀百分比
+parameter.musictriggers.victory_timeout.desc=链接的触发器不再处于激活状态后，这个触发器多久（刻）后才能激活。/n/n比如，对于一个胜利超时为 20，链接生物触发器的胜利触发器：胜利触发器不处于激活状态 20 刻后，生物触发器才能被激活。/n/n只有击杀激活了链接中触发器的实体才有效。/n/n<默认：20>
+parameter.musictriggers.victory_timeout.name=胜利超时
 parameter.musictriggers.volume.desc=小数型的音量，1 代表 100。在计算完声音类别音量和主音量后，低于 0.01 的值可能被估算为 0。支持 0-10 的值，但不推荐大于 1。\n\n<默认：1>
 parameter.musictriggers.volume.name=音量
 parameter.musictriggers.volume_when_paused.desc=如果频道启用了“暂停时播放”，并且触发器在“暂停可播放”内，此项决定暂停时播放播放的音量。\n\n<默认：0.25>
 parameter.musictriggers.volume_when_paused.name=暂停时音量
-parameter.musictriggers.write_default_values.desc=指定要写入默认值的配置文件类型或表格。这意味着，写入或加载配置文件时，如果它们的父表或文件也在这里，那么将写出它们接受的所有参数。不在这里的表格会被写入与默认值不同的参数。调试配置无论是否在这里列出，都会写入所有参数。\n\n<默认：[ "channel"（频道）, "from"（从）, "image"（图片版面）, "interrupt_handler"（阻断处理）, "main"（主配置）, "songs"（音乐）, "title"（标题版面）, "toggle"（动态切换）, "triggers"（触发器）, "universal_audio"（通用音频）, "universal_triggers"（通用触发器） ]>
+parameter.musictriggers.wave.desc=当前袭击波次数的最小值。\n\n<默认：0>
+parameter.musictriggers.wave.name=波次
+parameter.musictriggers.write_default_values.desc=指定要写入默认值的配置文件类型或表格。这意味着，写入或加载配置文件时，如果它们的父表或文件也在这里，那么将写出它们接受的所有参数。不在这里的表格会被写入与默认值不同的参数。调试配置无论是否在这里列出，都会写入所有参数。\n\n<默认：[ \"channel\"（频道）, \"from\"（从）, \"image\"（图片版面）, \"interrupt_handler\"（阻断处理）, \"main\"（主配置）, \"songs\"（音乐）, \"title\"（标题版面）, \"toggle\"（动态切换）, \"triggers\"（触发器）, \"universal_audio\"（通用音频）, \"universal_triggers\"（通用触发器） ]>
 parameter.musictriggers.write_default_values.name=写入默认值
 parameter.musictriggers.x.desc=其他所有位置参数应用后，最终的水平方向偏移。0 指中心，-1 指左边，1 指右边。\n\n<默认：0>
 parameter.musictriggers.x.name=水平偏移
 parameter.musictriggers.y.desc=其他所有位置参数应用后，最终的垂直方向偏移。0 指中心，-1 指底部，1 指顶部。\n\n<默认：0>
 parameter.musictriggers.y.name=垂直偏移
-
+parameter.musictriggers.zone_max_x.desc=玩家 X 轴坐标需要小于此值。\n\n<默认：2147483647>
+parameter.musictriggers.zone_max_x.name=区域最大X值
+parameter.musictriggers.zone_max_y.desc=玩家 Y 轴坐标需要小于此值。\n\n<默认：2147483647>
+parameter.musictriggers.zone_max_y.name=区域最大Y值
+parameter.musictriggers.zone_max_z.desc=玩家 Z 轴坐标需要小于此值。\n\n<默认：2147483647>
+parameter.musictriggers.zone_max_z.name=区域最大Z值
+parameter.musictriggers.zone_min_x.desc=玩家 X 轴坐标需要大于此值。\n\n<默认：2147483647>
+parameter.musictriggers.zone_min_x.name=区域最小X值
+parameter.musictriggers.zone_min_y.desc=玩家 Y 轴坐标需要大于此值。\n\n<默认：2147483647>
+parameter.musictriggers.zone_min_y.name=区域最小Y值
+parameter.musictriggers.zone_min_z.desc=玩家 Z 轴坐标需要大于此值。\n\n<默认：2147483647>
+parameter.musictriggers.zone_min_z.name=区域最小Z值
+  
 record.musictriggers.test_dragon=测试成功
 record.musictriggers.test_math=数学？？？
-
+  
 selection.musictriggers.audio.desc=%2$s 对应 %1$s
 selection.musictriggers.command_element.desc=内容：/%1$s
 selection.musictriggers.command_element.name=命令条目
@@ -419,10 +447,10 @@ selection.musictriggers.universal_audio.desc=对所有音频的，替代默认�
 selection.musictriggers.universal_audio.name= 全局音频参数
 selection.musictriggers.universal_triggers.desc=对所有触发器的，替代默认值的备用参数
 selection.musictriggers.universal_triggers.name= 全局触发器参数
-
+  
 tile.musictriggers.music_recorder.name=音乐录制器
 tile.musictriggers.music_recorder.tooltip=能将音频录入到增强的音乐唱片中
-
+  
 trigger.musictriggers.acidrain=酸雨
 trigger.musictriggers.acidrain.desc=酸雨期间触发。依赖 Better Weather（更好的天气）。
 trigger.musictriggers.advancement=成就
@@ -552,7 +580,7 @@ trigger.musictriggers.victory.id=胜利-%1$s
 trigger.musictriggers.zones=区域
 trigger.musictriggers.zones.desc=玩家位置在指定区间内的期间触发。
 trigger.musictriggers.zones.id=区间-%1$s
-
+  
 types.musictriggers.combination=组合
 types.musictriggers.file=本地文件
 types.musictriggers.parameter=参数
