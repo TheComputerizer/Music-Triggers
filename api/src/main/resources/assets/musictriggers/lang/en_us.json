@@ -1,5 +1,14 @@
 {
-    "debug.musictriggers.channel.song": "Channel[%1$s] Song: Name = %2$s | Time = %3$s",
+  "commands.mt.debug.success": "Successfully flipped debug parameter `enable_debug_info`",
+  "commands.mt.debug.parameter.success": "Successfully flipped debug parameter `%1$s`",
+  "commands.mt.skip.success": "Skipping current song",
+  "commands.mt.usage": "Usages for `/mt`\n/mt debug\n/mt debug parameter\n/mt skip\n/mt reload\n/mt reload ticks",
+  "commands.musictriggers.debug.success": "Successfully flipped debug parameter `enable_debug_info`",
+  "commands.musictriggers.debug.parameter.success": "Successfully flipped debug parameter `%1$s`",
+  "commands.musictriggers.skip.success": "Skipping current song",
+  "commands.musictriggers.usage": "Usages for `/musictriggers`\n/musictriggers debug\n/musictriggers debug parameter\n/musictriggers skip\n/musictriggers reload\n/musictriggers reload ticks",
+
+  "debug.musictriggers.channel.song": "Channel[%1$s] Song: Name = %2$s | Time = %3$s",
   "debug.musictriggers.channel.trigger": "Channel[%1$s] Triggers: Active = %2$s | Playable = %3$s",
   "debug.musictriggers.header": "Music Triggers Debug Information",
   "debug.musictriggers.other.blocked.mods": "Blocked Mods: [ %1$s ]",

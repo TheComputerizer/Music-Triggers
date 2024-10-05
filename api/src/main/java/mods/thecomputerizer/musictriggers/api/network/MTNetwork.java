@@ -36,6 +36,7 @@ public class MTNetwork {
         NetworkHandler.registerMsgToClient(MessageInitChannels.class,MessageInitChannels::new);
         NetworkHandler.registerMsgToClient(MessageReload.class,MessageReload::new);
         NetworkHandler.registerMsgToClient(MessageRequestChannels.class,MessageRequestChannels::new);
+        NetworkHandler.registerMsgToClient(MessageSkipSong.class,MessageSkipSong::new);
         NetworkHandler.registerMsgToClient(MessageToggleDebugParameter.class,MessageToggleDebugParameter::new);
         NetworkHandler.registerMsgToClient(MessageTriggerStates.class,MessageTriggerStates::new);
         

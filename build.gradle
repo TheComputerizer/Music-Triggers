@@ -45,6 +45,7 @@ jar {
   ':forge:forge.1_16:build' ].forEach { tasks.jar.dependsOn(it) }
 
 wiki {
+    //wikiAccessToken =
     docs {
         mod_id {
             root = file("docs/${mod_id}")

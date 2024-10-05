@@ -10,9 +10,13 @@ public class MessageSkipSong<CTX> extends MessageAPI<CTX> {
     
     public MessageSkipSong() {}
     
-    public MessageSkipSong(ByteBuf ignored) {}
+    public MessageSkipSong(ByteBuf buf) {
+        buf.readBoolean();
+    }
     
-    @Override public void encode(ByteBuf buf) {}
+    @Override public void encode(ByteBuf buf) {
+        buf.writeBoolean(true);
+    }
     
     @Override public MessageAPI<CTX> handle(CTX ctx) {
         ChannelHelper helper = ChannelHelper.getClientHelper();
