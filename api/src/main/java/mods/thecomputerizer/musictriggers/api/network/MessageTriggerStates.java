@@ -27,11 +27,9 @@ public class MessageTriggerStates<CTX> extends ChannelHelperMessage<CTX> {
         super(buf);
         this.triggerMap = NetworkHelper.readMapEntries(buf,() -> {
             ChannelAPI channel = this.helper.findChannel(ChannelHelper.getGlobalData(),NetworkHelper.readString(buf));
-            Map<TriggerAPI,State> stateMap = NetworkHelper.readMap(buf,() -> {
-                String name = NetworkHelper.readString(buf);
-                String id = NetworkHelper.readString(buf);
-                return TriggerHelper.decodeTrigger(channel,name,id);
-            },() -> State.valueOf(NetworkHelper.readString(buf)));
+            Map<TriggerAPI,State> stateMap = NetworkHelper.readMap(buf,
+                    () -> TriggerHelper.decodeTrigger(channel,buf),
+                    () -> State.valueOf(NetworkHelper.readString(buf)));
             return IterableHelper.getMapEntry(channel,stateMap);
         });
     }

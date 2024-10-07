@@ -13,6 +13,7 @@ import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventHandler;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelSyncable;
 import mods.thecomputerizer.musictriggers.api.data.nbt.NBTLoadable;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
@@ -31,7 +32,7 @@ import java.util.function.Consumer;
 import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.*;
 
 @Getter
-public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
+public abstract class TriggerAPI extends ChannelElement implements ChannelSyncable, NBTLoadable {
 
     private static final Map<TriggerAPI,Map<String,Timer>> TIMER_MAP = new HashMap<>(); // This needs to be static due to super stuff
 
@@ -230,7 +231,6 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
         AudioPool pool = getAudioPool();
         if(Objects.nonNull(pool)) pool.onConnected(worldData);
     }
-    
    
     public void onDisconnected() {
         AudioPool pool = getAudioPool();
@@ -291,10 +291,7 @@ public abstract class TriggerAPI extends ChannelElement implements NBTLoadable {
             pool.saveWorldTo(data);
             written = true;
         }
-        if(written) {
-            data.putString("name",getName());
-            data.putString("id",getIdentifier());
-        }
+        if(written) write(data);
     }
     
     @Override public void saveWorldTo(CompoundTagAPI<?> worldData) {

@@ -11,6 +11,7 @@ import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceM
 import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
+import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import mods.thecomputerizer.musictriggers.api.MTRef;
@@ -29,6 +30,7 @@ import mods.thecomputerizer.musictriggers.api.data.global.Toggle;
 import mods.thecomputerizer.musictriggers.api.data.jukebox.RecordElement;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
+import mods.thecomputerizer.musictriggers.api.data.nbt.NBTHelper;
 import mods.thecomputerizer.musictriggers.api.data.nbt.NBTLoadable;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
@@ -49,6 +51,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.common.item.ItemStackAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.annotation.IndirectCallers;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.message.MessageAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.MinecraftServerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.ServerHelper;
@@ -191,7 +194,7 @@ public class ChannelHelper implements NBTLoadable {
         helper.setSyncable(true);
         loader.setLoading(false);
         logGlobalInfo("SENDING FINISHED INIT MESSAGE");
-        return new MessageFinishedInit<>(helper);
+        return new MessageFinishedInit<>(helper,NBTHelper.readWorldData(helper));
     }
     
     public static void logGlobalDebug(String msg, Object ... args) {
@@ -407,6 +410,7 @@ public class ChannelHelper implements NBTLoadable {
     }
 
     public void close() {
+        NBTHelper.saveWorldData(this);
         this.stateMsg = null;
         synchronized(this.channels) {
             for(ChannelAPI channel : this.channels.values()) channel.close();
@@ -414,6 +418,10 @@ public class ChannelHelper implements NBTLoadable {
         this.channels.clear();
         for(Toggle toggle : this.toggles) toggle.close();
         this.toggles.clear();
+    }
+    
+    public @Nullable ChannelAPI decodeChannel(ByteBuf buf) {
+        return findChannel(globalData,NetworkHelper.readString(buf));
     }
 
     public @Nullable ChannelAPI findChannel(LoggableAPI logger, String channelName) {
@@ -555,6 +563,8 @@ public class ChannelHelper implements NBTLoadable {
     }
     
     @Override public void onConnected(CompoundTagAPI<?> worldData) {
+        ChannelHelper.logGlobalInfo("Connected on the {} side",this.client ? "CLIENT" : "SERVER");
+        ChannelHelper.logGlobalInfo("onConnected world data for {} is {}",getPlayerID(),worldData);
         for(ChannelAPI channel : this.channels.values())
             if(worldData.contains(channel.getName())) channel.onConnected(worldData.getCompoundTag(channel.getName()));
     }
@@ -619,10 +629,6 @@ public class ChannelHelper implements NBTLoadable {
             if(category.equals("master")) channel.setMasterVolume(volume);
             else if(category.equals(channel.getInfo().getCategory())) channel.setCategoryVolume(volume);
         });
-    }
-    
-    public void setCurrentSong(String channel, String song) {
-        if(!this.client) ((ChannelServer)this.channels.get(channel)).setCurrentSong(song);
     }
     
     public void setDebugParameter(String name, Object value) {

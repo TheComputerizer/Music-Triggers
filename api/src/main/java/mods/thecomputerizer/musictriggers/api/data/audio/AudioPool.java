@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.api.data.audio;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventHandler;
 import mods.thecomputerizer.musictriggers.api.data.nbt.NBTLoadable;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
@@ -44,8 +45,30 @@ public class AudioPool extends AudioRef implements NBTLoadable {
 
     @Override public void encode(ByteBuf buf) {
         NetworkHelper.writeString(buf,"pool");
-        buf.writeInt(this.audio.size());
-        for(AudioRef ref : this.audio) ref.encode(buf);
+        NetworkHelper.writeSet(buf,this.audio,ref -> ref.encode(buf));
+    }
+    
+    @Override public boolean equals(Object other) {
+        if(other instanceof AudioPool) {
+            AudioPool pool = (AudioPool)other;
+            return equivalent(pool.channel,pool.audio);
+        }
+        return false;
+    }
+    
+    public boolean equivalent(ChannelAPI channel, Collection<AudioRef> otherAudio) {
+        if(this.channel!=channel) return false;
+        for(AudioRef ref : this.audio) {
+            boolean matched = false;
+            for(AudioRef otherRef : otherAudio) {
+                if(ref.equals(otherRef)) {
+                    matched = true;
+                    break;
+                }
+            }
+            if(!matched) return false;
+        }
+        return true;
     }
     
     public @Nullable AudioRef getAudioForName(String name) {
@@ -122,10 +145,13 @@ public class AudioPool extends AudioRef implements NBTLoadable {
     public boolean hasQueue() {
         return Objects.nonNull(this.queuedAudio);
     }
-
-    @Override public void queryInterrupt(@Nullable TriggerAPI next, AudioPlayer player) {
-        if(Objects.isNull(this.queuedAudio)) this.channel.getPlayer().stopCurrentTrack();
-        else this.queuedAudio.queryInterrupt(trigger,player);
+    
+    /**
+     * Only accessible from the server side since audio is only played on the client
+     */
+    public void markPlayed(AudioRef ref) {
+        if(!this.channel.isClientChannel()) this.playableAudio.remove(ref);
+        else logError("Tried to manually mark {} as played which should only be done on the server side!");
     }
     
     @Override public void onConnected(CompoundTagAPI<?> worldData) {
@@ -155,6 +181,11 @@ public class AudioPool extends AudioRef implements NBTLoadable {
 
     @Override public void playing(boolean unpaused) {
         if(Objects.nonNull(this.queuedAudio)) this.queuedAudio.playing(unpaused);
+    }
+    
+    @Override public void queryInterrupt(@Nullable TriggerAPI next, AudioPlayer player) {
+        if(Objects.isNull(this.queuedAudio)) this.channel.getPlayer().stopCurrentTrack();
+        else this.queuedAudio.queryInterrupt(trigger,player);
     }
 
     @Override public void queue() {
@@ -204,7 +235,7 @@ public class AudioPool extends AudioRef implements NBTLoadable {
     @Override public void stopped() {
         if(Objects.nonNull(this.queuedAudio)) {
             this.queuedAudio.stopped();
-            this.playableAudio.remove(this.queuedAudio);
+            if(this.queuedAudio.getPlayState()>0) this.playableAudio.remove(this.queuedAudio);
             if(this.playableAudio.isEmpty()) recalculatePlayable(i -> i<=1);
             this.queuedAudio = null;
         }

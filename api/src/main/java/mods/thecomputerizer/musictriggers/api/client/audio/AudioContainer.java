@@ -201,7 +201,7 @@ public class AudioContainer extends AudioRef {
         ChannelHelper helper = this.channel.getHelper();
         String channelName = getChannelName();
         if(!Misc.equalsAny(channelName,"jukebox","preview") && helper.isSyncable())
-            MTNetwork.sendToServer(new MessageCurrentSong<>(helper,channelName,this.name),false);
+            MTNetwork.sendToServer(new MessageCurrentSong<>(helper,this.channel,this),false);
     }
 
     @Override public void stop() {

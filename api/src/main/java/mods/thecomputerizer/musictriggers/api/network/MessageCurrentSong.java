@@ -1,16 +1,20 @@
 package mods.thecomputerizer.musictriggers.api.network;
 
 import io.netty.buffer.ByteBuf;
+import mods.thecomputerizer.musictriggers.api.MTRef;
+import mods.thecomputerizer.musictriggers.api.data.audio.AudioHelper;
+import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
-import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
+import mods.thecomputerizer.musictriggers.api.server.ChannelServer;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.message.MessageAPI;
 
 public class MessageCurrentSong<CTX> extends ChannelHelperMessage<CTX> {
     
-    private final String channel;
-    private final String song;
+    private final ChannelAPI channel;
+    private final AudioRef song;
     
-    public MessageCurrentSong(ChannelHelper helper, String channel, String song) {
+    public MessageCurrentSong(ChannelHelper helper, ChannelAPI channel, AudioRef song) {
         super(helper);
         this.channel = channel;
         this.song = song;
@@ -18,18 +22,20 @@ public class MessageCurrentSong<CTX> extends ChannelHelperMessage<CTX> {
     
     public MessageCurrentSong(ByteBuf buf) {
         super(buf);
-        this.channel = NetworkHelper.readString(buf);
-        this.song = NetworkHelper.readString(buf);
+        this.channel = this.helper.decodeChannel(buf);
+        this.song = AudioHelper.decodeAudio(this.channel,buf);
     }
     
     @Override public void encode(ByteBuf buf) {
         super.encode(buf);
-        NetworkHelper.writeString(buf,this.channel);
-        NetworkHelper.writeString(buf,this.song);
+        this.channel.encode(buf);
+        this.song.encode(buf);
     }
     
     @Override public MessageAPI<CTX> handle(CTX ctx) {
-        this.helper.setCurrentSong(this.channel,this.song);
+        if(this.channel instanceof ChannelServer) {
+            ((ChannelServer)this.channel).setCurrentSong(this.song);
+        } else MTRef.logError("Tried to handle MessageCurrentSong on the client side which shouldn't be possible??");
         return null;
     }
 }

@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.global;
 
 import lombok.Getter;
-import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
@@ -13,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import javax.annotation.Nullable;
 import java.util.Objects;
 
+import static mods.thecomputerizer.musictriggers.api.MTRef.CONFIG_PATH;
 import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.GLOBAL;
 import static org.apache.logging.log4j.Level.*;
 
@@ -84,8 +84,7 @@ public class GlobalData extends ParameterWrapper {
             logInfo("Parsing global data");
             if(!global.hasTable("debug")) logError("Missing debug table!");
             else if(!this.debug.parse(global.getTable("debug"))) logError("Failed to parse debug parameters");
-            this.togglesPath = MTRef.CONFIG_PATH+"/"+(
-                    super.parse(global) ? getParameterAsString("toggles_path") : "toggles");
+            this.togglesPath = CONFIG_PATH+"/"+(super.parse(global) ? getParameterAsString("toggles_path") : "toggles");
             return true;
         }
         logError("Tried to parse missing globals file");

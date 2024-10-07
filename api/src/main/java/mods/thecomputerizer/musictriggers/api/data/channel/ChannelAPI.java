@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.api.data.channel;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
+import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import lombok.Setter;
 import mods.thecomputerizer.musictriggers.api.MTRef;
@@ -27,6 +28,7 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerSelector;
 import mods.thecomputerizer.musictriggers.api.server.TriggerContextServer;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.BaseTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.ListTagAPI;
@@ -45,7 +47,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 @Getter
-public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NBTLoadable {
+public abstract class ChannelAPI implements ChannelEventHandler, ChannelSyncable, LoggableAPI, NBTLoadable {
 
     private final ChannelHelper helper;
     private final ChannelInfo info;
@@ -110,6 +112,10 @@ public abstract class ChannelAPI implements ChannelEventHandler, LoggableAPI, NB
     
     public void enable() {
         this.enabled = true;
+    }
+    
+    @Override public void encode(ByteBuf buf) {
+        NetworkHelper.writeString(buf,getName());
     }
     
     @Override public boolean equals(Object other) {

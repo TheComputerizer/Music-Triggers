@@ -127,5 +127,6 @@ public class TriggerCombination extends TriggerAPI {
             trigger.write(triggerTag);
             triggersTag.addTag(triggerTag);
         }
+        tag.putTag("triggers",triggersTag);
     }
 }

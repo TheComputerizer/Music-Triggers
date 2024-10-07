@@ -1,9 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.data.nbt;
 
-import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.nbt.mode.*;
-import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.TagHelper;
 
@@ -13,6 +11,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
+import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
 
 public class NBTHelper {
 
@@ -43,22 +43,28 @@ public class NBTHelper {
         map.put(mode.getName(),mode);
     }
     
-    public static CompoundTagAPI<?> readGlobalData() {
+    public static CompoundTagAPI<?> readGlobalData(ChannelHelper helper) {
+        CompoundTagAPI<?> globalData = null;
+        String uuid = helper.getPlayerID();
         try {
-            return TagHelper.getGlobalData(MTRef.MODID,true);
+            globalData = TagHelper.getOrCreateCompound(TagHelper.getGlobalData(MODID,true),uuid);
+            helper.onLoaded(TagHelper.getOrCreateCompound(TagHelper.getGlobalData(MODID,true),uuid));
         } catch(IOException ex) {
             ChannelHelper.logGlobalError("Failed to read persistent global data!",ex);
         }
-        return TagHelper.makeCompoundTag();
+        return Objects.nonNull(globalData) ? globalData : TagHelper.makeCompoundTag();
     }
     
-    public static CompoundTagAPI<?> readWorldData(String uuid) {
+    public static CompoundTagAPI<?> readWorldData(ChannelHelper helper) {
+        CompoundTagAPI<?> worldData = null;
+        String uuid = helper.getPlayerID();
         try {
-            return TagHelper.getOrCreateCompound(TagHelper.getWorldData(TILRef.MODID),uuid);
+            worldData = TagHelper.getOrCreateCompound(TagHelper.getWorldData(MODID),uuid);
+            helper.onConnected(worldData);
         } catch(IOException ex) {
             ChannelHelper.logGlobalError("Failed to read data for uuid {}",uuid);
         }
-        return TagHelper.makeCompoundTag();
+        return Objects.nonNull(worldData) ? worldData : TagHelper.makeCompoundTag();
     }
 
     public static <M extends NBTMode> void registerMode(M mode, boolean overrideDefault) {
@@ -71,17 +77,29 @@ public class NBTHelper {
         } else REGISTERED_MODES.put(name,mode);
     }
     
-    public static void saveGlobalData(CompoundTagAPI<?> tag) {
+    public static void saveGlobalData(ChannelHelper helper) {
+        String uuid = helper.getPlayerID();
+        CompoundTagAPI<?> globalData = TagHelper.getWorldData(MODID);
+        if(Objects.isNull(globalData)) return;
         try {
-            TagHelper.writeGlobalData(tag,MTRef.MODID);
+            CompoundTagAPI<?> playerData = TagHelper.getOrCreateCompound(globalData,uuid);
+            helper.saveWorldTo(playerData);
+            if(!globalData.isEmpty()) TagHelper.writeGlobalData(globalData,MODID);
         } catch(IOException ex) {
             ChannelHelper.logGlobalFatal("Failed to save persistent global data!",ex);
         }
     }
     
-    public static void saveWorldData(CompoundTagAPI<?> tag) {
+    public static void saveWorldData(ChannelHelper helper) {
+        String uuid = helper.getPlayerID();
+        CompoundTagAPI<?> worldData = TagHelper.getWorldData(MODID);
+        if(Objects.isNull(worldData)) return;
         try {
-            TagHelper.writeWorldData(tag,MTRef.MODID);
+            CompoundTagAPI<?> playerData = TagHelper.getOrCreateCompound(worldData,uuid);
+            ChannelHelper.logGlobalInfo("Player data for uuid {} is {}",uuid,playerData);
+            helper.saveWorldTo(playerData);
+            ChannelHelper.logGlobalInfo("Player data for uuid {} is now {}",uuid,playerData);
+            if(!worldData.isEmpty()) TagHelper.writeWorldData(worldData,MODID);
         } catch(IOException ex) {
             ChannelHelper.logGlobalFatal("Failed to save persistent world data!",ex);
         }

@@ -23,6 +23,7 @@ import java.util.Objects;
 import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
 import static mods.thecomputerizer.musictriggers.api.MTRef.NAME;
 import static mods.thecomputerizer.musictriggers.api.MTRef.VERSION;
+import static mods.thecomputerizer.theimpossiblelibrary.api.core.TILDev.DEV;
 import static mods.thecomputerizer.theimpossiblelibrary.api.core.asm.ASMRef.*;
 import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 
@@ -38,6 +39,7 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
     static final String TICKER_DESC = TypeHelper.method(BOOLEAN_TYPE,new Type[]{}).getDescriptor();
     
     static String getHandlerBinary() {
+        if(DEV) return "net.minecraft.client.audio.SoundHandler";
         CoreAPI core = CoreAPI.getInstance();
         boolean fabric = core.getModLoader().isFabric();
         switch(core.getVersion()) {
@@ -52,6 +54,7 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
     }
     
     static String getTickerBinary() {
+        if(DEV) return "net.minecraft.client.audio.MusicTicker";
         CoreAPI core = CoreAPI.getInstance();
         boolean fabric = core.getModLoader().isFabric();
         switch(core.getVersion()) {

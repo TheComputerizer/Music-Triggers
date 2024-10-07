@@ -1,9 +1,11 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger;
 
+import io.netty.buffer.ByteBuf;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelData;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.parameter.UniversalParameters;
+import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
@@ -21,6 +23,10 @@ public class TriggerHelper {
      */
     private static boolean checkVersion(@Nullable TriggerAPI trigger) {
         return Objects.nonNull(trigger);
+    }
+    
+    public static TriggerAPI decodeTrigger(ChannelAPI channel, ByteBuf buf) {
+        return decodeTrigger(channel,NetworkHelper.readString(buf),NetworkHelper.readString(buf));
     }
 
     public static TriggerAPI decodeTrigger(@Nullable ChannelAPI channel, String name, String id) {

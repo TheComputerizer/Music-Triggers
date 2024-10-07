@@ -9,14 +9,13 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
 
 public class ChannelServer extends ChannelAPI {
     
-    protected String currentSong;
+    protected AudioRef currentSong;
 
     public ChannelServer(ChannelHelper helper, Toml table) {
         super(helper,table);
@@ -46,7 +45,7 @@ public class ChannelServer extends ChannelAPI {
     }
     
     @Nullable @Override public String getPlayingSongName() {
-        return this.currentSong;
+        return Objects.nonNull(this.currentSong) ? this.currentSong.getName() : "null";
     }
     
     @Override public long getPlayingSongTime() {
@@ -87,8 +86,17 @@ public class ChannelServer extends ChannelAPI {
     @Override public void setCategoryVolume(float volume) {
         logError("Tried to set category volume on the server!");
     }
-    public void setCurrentSong(String name) {
-        this.currentSong = StringUtils.isNotBlank(name) ? name : null;
+    
+    public void setCurrentSong(AudioRef ref) {
+        this.currentSong = ref;
+        if(ref.getPlayState()==4) {
+            TriggerAPI trigger = getActiveTrigger();
+            if(Objects.nonNull(trigger)) {
+                AudioPool pool = trigger.getAudioPool();
+                if(Objects.nonNull(pool)) pool.markPlayed(ref);
+                else trigger.logError("Failed to save play state of for {} (play_once = 4)",ref);
+            } else logError("Failed to save play state of for {} (play_once = 4)",ref);
+        }
     }
     
     @Override public void setMasterVolume(float volume) {

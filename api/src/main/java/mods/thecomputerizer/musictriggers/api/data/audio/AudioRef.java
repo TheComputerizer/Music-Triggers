@@ -13,8 +13,10 @@ import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelSyncable;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.RandomHelper.WeightedEntry;
@@ -28,7 +30,7 @@ import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.AUDIO;
 import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.LOOP;
 
 @Getter
-public class AudioRef extends ChannelElement implements WeightedEntry {
+public class AudioRef extends ChannelElement implements ChannelSyncable, WeightedEntry {
     
     public static AudioRef addToGui(MTScreenInfo info, String name, String location, boolean file) {
         AudioRef ref = new AudioRef(info.getChannel(),name);
@@ -65,6 +67,15 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
     public void encode(ByteBuf buf) {
         NetworkHelper.writeString(buf,this.name);
         NetworkHelper.writeList(buf,this.triggers,trigger -> trigger.encode(buf));
+    }
+    
+    @Override public boolean equals(Object other) {
+        if(other instanceof AudioRef) {
+            AudioRef ref = (AudioRef)other;
+            return this.channel.equals(ref.channel) && this.name.equals(ref.name) &&
+                   TriggerHelper.matchesAll(this.triggers,ref.triggers);
+        }
+        return false;
     }
     
     @Override public Collection<DataLink> getChildWrappers(MTScreenInfo parent) {
@@ -189,11 +200,11 @@ public class AudioRef extends ChannelElement implements WeightedEntry {
                     priority<=this.priority : priority>=this.priority) || trigger.isContained(this.triggers);
         }
 
-        @Override     public boolean isResource() {
+        @Override public boolean isResource() {
             return false;
         }
 
-        @Override     public void close() {
+        @Override public void close() {
             this.triggers.clear();
         }
         
