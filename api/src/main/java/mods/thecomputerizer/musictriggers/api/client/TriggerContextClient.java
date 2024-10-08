@@ -29,7 +29,7 @@ import java.util.function.Supplier;
 
 public class TriggerContextClient extends TriggerContext {
 
-    private MinecraftAPI minecraft;
+    private MinecraftAPI<?> minecraft;
     private BlockPosAPI<?> pos;
 
     public TriggerContextClient(ChannelAPI channel) {
@@ -83,8 +83,8 @@ public class TriggerContextClient extends TriggerContext {
         return hasWorld() && checkMod(ModHelper::betterWeather,mod -> mod.isAcidRaining(this.world));
     }
 
-    @Override public boolean isActiveAdvancement(ResourceContext ctx) { //TODO
-        return false;
+    @Override public boolean isActiveAdvancement(ResourceContext ctx) {
+        return MTClientEvents.checkAdvancement(ctx);
     }
 
     @Override public boolean isActiveAdventure() {
