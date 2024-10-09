@@ -54,7 +54,7 @@ public class TriggerContextServer extends TriggerContext {
     }
 
     private boolean checkBiomeNameAndType(TriggerBiome trigger) {
-        ResourceLocationAPI<?> regName = this.biome.getRegistryName();
+        ResourceLocationAPI<?> regName = this.biome.getRegistryName(this.world);
         if(Objects.isNull(regName)) return false;
         ResourceContext ctx = trigger.getResourceCtx();
         if(ctx.checkMatch(regName.toString(),null)) return true; //TODO Sync biome names or check biomes on the client
