@@ -1,4 +1,13 @@
 {
+  "commands.mt.debug.success": "成功更新调试参数 `enable_debug_info`",
+  "commands.mt.debug.parameter.success": "成功更新调试参数 `%1$s`",
+  "commands.mt.skip.success": "正在跳过当前音乐",
+  "commands.mt.usage": "`/mt` 用法\n/mt debug\n/mt debug parameter\n/mt skip\n/mt reload\n/mt reload ticks",
+  "commands.musictriggers.debug.success": "成功更新调试参数 `enable_debug_info`",
+  "commands.musictriggers.debug.parameter.success": "成功更新调试参数 `%1$s`",
+  "commands.musictriggers.skip.success": "正在跳过当前音乐",
+  "commands.musictriggers.usage": "`/musictriggers` 用法\n/musictriggers debug\n/musictriggers debug parameter\n/musictriggers skip\n/musictriggers reload\n/musictriggers reload ticks",
+
   "debug.musictriggers.channel.song": "频道[%1$s] 音乐：名称 = %2$s | 时间 = %3$s",
   "debug.musictriggers.channel.trigger": "频道[%1$s] 触发器：激活中 = %2$s | 可激活 = %3$s",
   "debug.musictriggers.header": "音乐触发器调试信息",
