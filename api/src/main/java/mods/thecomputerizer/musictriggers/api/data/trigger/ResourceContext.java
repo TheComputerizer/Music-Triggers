@@ -1,5 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger;
 
+import lombok.Setter;
+
 import javax.annotation.Nullable;
 import java.util.Collections;
 import java.util.List;
@@ -12,6 +14,7 @@ public class ResourceContext {
     private final List<String> resourcesMatchers;
     private final BiFunction<String,List<String>,Boolean> displayMatchFunc;
     private final BiFunction<String,List<String>,Boolean> resourceMatchFunc;
+    @Setter boolean anyReturns = true;
 
     public ResourceContext(List<String> resourcesMatchers, List<String> displayMatchers,
                            String resourceMatchType, String displayMatchType) {
@@ -25,21 +28,21 @@ public class ResourceContext {
         switch(matcherType.toUpperCase()) {
             case "EXACT": return (id,matchThese) -> {
                 if(Objects.isNull(id)) return false;
-                if(matchThese.get(0).equals("any")) return true;
+                if(matchThese.get(0).equals("any")) return this.anyReturns;
                 for(String matchThis : matchThese)
                     if(id.equals(matchThis)) return true;
                 return false;
             };
             case "PARTIAL": return (id,matchThese) -> {
                 if(Objects.isNull(id)) return false;
-                if(matchThese.get(0).equals("any")) return true;
+                if(matchThese.get(0).equals("any")) return this.anyReturns;
                 for(String matchThis : matchThese)
                     if(id.contains(matchThis)) return true;
                 return false;
             };
             case "REGEX": return (id,matchThese) -> {
                 if(Objects.isNull(id)) return false;
-                if(matchThese.get(0).equals("any")) return true;
+                if(matchThese.get(0).equals("any")) return this.anyReturns;
                 for(String matchThis : matchThese)
                     if(id.matches(matchThis)) return true;
                 return false;

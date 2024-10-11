@@ -57,7 +57,7 @@ public class TriggerContextServer extends TriggerContext {
         ResourceLocationAPI<?> regName = this.biome.getRegistryName(this.world);
         if(Objects.isNull(regName)) return false;
         ResourceContext ctx = trigger.getResourceCtx();
-        if(ctx.checkMatch(regName.toString(),null)) return true; //TODO Sync biome names or check biomes on the client
+        if(ctx.checkMatch(regName.toString(),regName.getPath())) return true; //TODO Sync biome names or check biomes on the client
         ctx = trigger.getTagCtx();
         for(String tag : this.biome.getTagNames(this.world))
             if(ctx.checkMatch(tag,null)) return true;
@@ -288,8 +288,8 @@ public class TriggerContextServer extends TriggerContext {
         return false;
     }
 
-    @Override public boolean isActiveRaid(int wave) { //TODO
-        return false;
+    @Override public boolean isActiveRaid(int wave) {
+        return Objects.nonNull(this.pos) && this.world.getRaidWave(this.pos)>=wave;
     }
 
     @Override public boolean isActiveRaining() {
@@ -312,7 +312,7 @@ public class TriggerContextServer extends TriggerContext {
         return false;
     }
 
-    @Override public boolean isActiveSnowing() { //TODO
+    @Override public boolean isActiveSnowing() {
         return Objects.nonNull(this.pos) && this.world.canSnowAt(this.pos);
     }
 

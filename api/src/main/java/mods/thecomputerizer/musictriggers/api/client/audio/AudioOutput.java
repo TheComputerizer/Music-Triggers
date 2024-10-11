@@ -3,10 +3,7 @@ package mods.thecomputerizer.musictriggers.api.client.audio;
 import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat;
 import com.sedmelluq.discord.lavaplayer.format.AudioPlayerInputStream;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
-import mods.thecomputerizer.musictriggers.api.client.MTClientEvents;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
-import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientAPI;
-import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
 
 import javax.annotation.Nonnull;
 import javax.sound.sampled.AudioInputStream;
@@ -81,7 +78,6 @@ public class AudioOutput extends Thread { //TODO Replace this
 
     public void pauseAudioLoop() {
         this.runAudioLoop = false;
-        MTClientEvents.handleError(TILRef.getClientSubAPI(ClientAPI::getMinecraft),this.channel.getName());
     }
 
     @Override public void run() {

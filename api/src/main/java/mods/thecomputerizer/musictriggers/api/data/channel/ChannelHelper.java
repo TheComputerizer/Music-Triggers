@@ -91,6 +91,7 @@ public class ChannelHelper implements NBTLoadable {
     public static void closePlayerChannel(String playerID) {
         ChannelHelper helper = PLAYER_MAP.get(playerID);
         if(Objects.nonNull(helper)) {
+            helper.save();
             helper.close();
             PLAYER_MAP.remove(playerID);
         }
@@ -152,7 +153,7 @@ public class ChannelHelper implements NBTLoadable {
     
     public static List<? extends PlayerAPI<?,?>> getPlayers(boolean client) {
         if(client) {
-            MinecraftAPI mc = TILRef.getClientSubAPI(ClientAPI::getMinecraft);
+            MinecraftAPI<?> mc = TILRef.getClientSubAPI(ClientAPI::getMinecraft);
             if(Objects.nonNull(mc)) {
                 PlayerAPI<?,?> player = mc.getPlayer();
                 if(Objects.nonNull(player)) return Collections.singletonList(player);
@@ -410,7 +411,6 @@ public class ChannelHelper implements NBTLoadable {
     }
 
     public void close() {
-        NBTHelper.saveWorldData(this);
         this.stateMsg = null;
         synchronized(this.channels) {
             for(ChannelAPI channel : this.channels.values()) channel.close();
@@ -464,7 +464,7 @@ public class ChannelHelper implements NBTLoadable {
     
     public @Nullable PlayerAPI<?,?> getPlayer() {
         if(this.client) {
-            MinecraftAPI mc = TILRef.getClientSubAPI(ClientAPI::getMinecraft);
+            MinecraftAPI<?> mc = TILRef.getClientSubAPI(ClientAPI::getMinecraft);
             return Objects.nonNull(mc) ? mc.getPlayer() : null;
         }
         for(ChannelAPI channel : this.channels.values()) {
@@ -608,6 +608,10 @@ public class ChannelHelper implements NBTLoadable {
             if(category.equalsIgnoreCase("master")) channel.setCategoryVolume(1f);
             else channel.setCategoryVolume(SoundHelper.getCategoryVolume(category));
         }
+    }
+    
+    public void save() {
+        NBTHelper.saveWorldData(this);
     }
     
     @Override public void saveGlobalTo(CompoundTagAPI<?> globalData) {

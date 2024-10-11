@@ -38,6 +38,7 @@ public class TriggerBiome extends HolderTrigger {
         String resourceMatcher = getParameterAsString("biome_tag_matcher");
         String displayMatcher = "EXACT";
         this.tagCtx = new ResourceContext(resourceName,displayeName,resourceMatcher,displayMatcher);
+        this.tagCtx.setAnyReturns(false);
     }
 
     @Override public boolean verifyRequiredParameters() {

@@ -5,6 +5,7 @@ import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
+import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.client.audio.AudioOutput;
 
 import java.util.Objects;
@@ -16,6 +17,7 @@ public class ChannelListener extends AudioEventAdapter {
     private final AudioOutput audioOutputThread;
     private final ChannelAPI channel;
     private boolean closing;
+    @Getter private boolean broken;
 
     public ChannelListener(ChannelAPI channel) {
         if(Objects.isNull(channel))
@@ -36,21 +38,22 @@ public class ChannelListener extends AudioEventAdapter {
     }
     
     public void enable() {
-        this.audioOutputThread.unpauseAudioLoop();
+        if(!this.broken) this.audioOutputThread.unpauseAudioLoop();
     }
 
     @Override public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
-        if(!this.closing) this.channel.onTrackStop(endReason);
+        if(!this.closing && !this.broken) this.channel.onTrackStop(endReason);
     }
 
     @Override public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException ex) {
-        if(!this.closing) {
-            this.channel.logError("Track exception caught! Restarting audio output...",ex);
+        if(!this.closing && !this.broken) {
             this.audioOutputThread.pauseAudioLoop();
+            this.broken = true;
+            this.channel.logError("Track exception caught! Restarting audio output...",ex);
         }
     }
 
     @Override public void onTrackStart(AudioPlayer player, AudioTrack track) {
-        if(!this.closing) this.channel.onTrackStart(track);
+        if(!this.closing && !this.broken) this.channel.onTrackStart(track);
     }
 }

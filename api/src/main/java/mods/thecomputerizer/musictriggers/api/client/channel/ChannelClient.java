@@ -9,6 +9,7 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import mods.thecomputerizer.musictriggers.api.client.MTClient;
+import mods.thecomputerizer.musictriggers.api.client.MTClientEvents;
 import mods.thecomputerizer.musictriggers.api.client.audio.TrackLoader;
 import mods.thecomputerizer.musictriggers.api.client.audio.resource.ResourceAudioSourceManager;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioPool;
@@ -18,6 +19,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelListener;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.Link;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.EnumHelper;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -274,6 +276,10 @@ public class ChannelClient extends ChannelAPI {
     }
     
     @Override public boolean tick(boolean jukebox, boolean unpaused) {
+        if(this.listener.isBroken()) {
+            MTClientEvents.handleError(ClientHelper.getMinecraft(),getName());
+            return false;
+        }
         if(this.enabled) {
             unpaused = MTClient.isUnpaused();
             if(checkPaused(unpaused) && checkFocus() && checkJukebox(jukebox)) {
