@@ -9,8 +9,8 @@ buildscript {
                   'org.apache.logging', 'org.apache.logging.log4j', 'org.apache.maven', 'org.benf', 'org.cadixdev',
                   'org.checkerframework', 'org.codehaus.groovy', 'org.codehaus.plexus', 'org.codehaus.woodstox',
                   'org.eclipse.ee4j', 'org.eclipse.jdt', 'org.eclipse.jetty', 'org.eclipse.platform', 'org.jdom',
-                  'org.jetbrains', 'org.jetbrains.kotlinx', 'org.junit', 'org.mockito', 'org.ow2', 'org.ow2.asm',
-                  'org.slf4j', 'org.sonatype.oss', 'org.springframework', 'org.vafer',
+                  'org.jetbrains', 'org.jetbrains.kotlin', 'org.jetbrains.kotlinx', 'org.junit', 'org.mockito',
+                  'org.ow2', 'org.ow2.asm', 'org.slf4j', 'org.sonatype.oss', 'org.springframework', 'org.vafer',
                   'org.zeroturnaround'].forEach { includeGroup it }
             }
         }

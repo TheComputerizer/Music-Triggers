@@ -45,7 +45,7 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
         switch(core.getVersion()) {
             case V12_2: return "net.minecraft.client.audio.SoundHandler";
             case V16_5: return fabric ? "net.minecraft.class_1144" : "net.minecraft.client.audio.SoundHandler";
-            default: return "";
+            default: return fabric ? "net.minecraft.class_1144" : "net.minecraft.client.sounds.SoundManager";
         }
     }
     
@@ -60,7 +60,7 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
         switch(core.getVersion()) {
             case V12_2: return "net.minecraft.client.audio.MusicTicker";
             case V16_5: return fabric ? "net.minecraft.class_1142" : "net.minecraft.client.audio.MusicTicker";
-            default: return "";
+            default: return fabric ? "net.minecraft.class_1142" : "net.minecraft.client.sounds.MusicManager";
         }
     }
     
@@ -75,29 +75,28 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
         return this.targets;
     }
     
-    String[] collectTickerNames() {
+    String collectTickerNames() {
         CoreAPI core = CoreAPI.getInstance();
         switch(core.getVersion()) {
-            case V12_2: return new String[]{"update","func_73660_a"};
-            case V16_5: return new String[]{"tick","func_73660_a","method_18669"};
+            case V12_2: return "update func_73660_a";
+            case V16_5: return "tick func_73660_a method_18669";
+            default: return "tick m_120183_ method_18669"; //The rest of the versions are the same
         }
-        return new String[]{};
     }
     
-    String[] collectVolumeNames() {
+    String collectVolumeNames() {
         CoreAPI core = CoreAPI.getInstance();
         switch(core.getVersion()) {
-            case V12_2: return new String[]{"setSoundLevel","func_184399_a"};
-            case V16_5: return new String[]{"updateSourceVolume","func_184399_a","method_4865"};
+            case V12_2: return "setSoundLevel func_184399_a";
+            case V16_5: return "updateSourceVolume func_184399_a method_18669";
+            default: return "updateSourceVolume m_120358_ method_18669"; //The rest of the versions are the same
         }
-        return new String[]{};
     }
     
     @Override public ClassNode editClass(ClassNode classNode) {
-        for(MethodNode method : classNode.methods) {
-            if(!volumeQuery(classNode,method,collectVolumeNames()))
-                fixMusicTicker(classNode,method,collectTickerNames());
-        }
+        for(MethodNode method : classNode.methods)
+            if(!volumeQuery(classNode,method,collectVolumeNames().split(" ")))
+                fixMusicTicker(classNode,method,collectTickerNames().split(" "));
         return classNode;
     }
     
