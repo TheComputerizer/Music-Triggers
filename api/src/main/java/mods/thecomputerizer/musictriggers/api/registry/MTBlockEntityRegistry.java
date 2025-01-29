@@ -21,6 +21,7 @@ import java.util.Objects;
 
 import static mods.thecomputerizer.musictriggers.api.registry.MTBlockRegistry.MUSIC_RECORDER;
 import static mods.thecomputerizer.musictriggers.api.registry.MTItemRegistry.ENHANCED_MUSIC_DISC;
+import static mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI.ZERO;
 
 public class MTBlockEntityRegistry {
     
@@ -49,8 +50,8 @@ public class MTBlockEntityRegistry {
                 }
             }).build();
     
-    public static BlockEntityAPI<?,?> createRecorderEntity(WorldAPI<?> ignored1, BlockStateAPI<?> ignored2) {
-        return MUSIC_RECORDER_ENTITY.createFromReference();
+    public static BlockEntityAPI<?,?> createRecorderEntity(WorldAPI<?> world, BlockStateAPI<?> state) {
+        return MUSIC_RECORDER_ENTITY.createFromReference(world,ZERO,state);
     }
     
     public static @Nullable PlayerAPI<?,?> findClosestPlayerInWorld(

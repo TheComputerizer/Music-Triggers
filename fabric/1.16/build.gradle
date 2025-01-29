@@ -23,7 +23,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath('fabric-loom:fabric-loom.gradle.plugin:1.+')
+        classpath("fabric-loom:fabric-loom.gradle.plugin:${loom_version}")
         classpath('io.github.goooler.shadow:shadow-gradle-plugin:8.+')
     }
 }

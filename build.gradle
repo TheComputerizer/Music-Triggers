@@ -1,3 +1,17 @@
+buildscript {
+    repositories {
+        gradlePluginPortal() {
+            content {
+                [ 'commons-codec', 'com.googlecode.javaewah', 'org.eclipse.jgit', 'org.moddedmc.wiki',
+                  'org.moddedmc.wiki.toolkit', 'org.slf4j', 'org.zeroturnaround' ].forEach { includeGroup it }
+            }
+        }
+    }
+    dependencies {
+        classpath('org.moddedmc.wiki.toolkit:org.moddedmc.wiki.toolkit.gradle.plugin:0.+')
+    }
+}
+
 /**
  * Build workflow guidelines
  * api -> (fabric, forge, legacy, neoforge) -> (1.12, 1.16, 1.18, 1.19, 1.20, 1.21) -> (minor versions) -> main
@@ -5,12 +19,11 @@
  * Any necessary reobfuscations must happen in the version the deobfuscations happened in.
  */
 
-plugins {
-    id 'org.sinytra.wiki.toolkit' version '0.+'
-}
-
 apply from: rootProject.file('buildSrc\\shared.gradle')
 java.toolchain.languageVersion = JavaLanguageVersion.of(23)
+
+
+plugins.apply('org.moddedmc.wiki.toolkit')
 
 def tokens = rootProject.file('tokens.txt').readLines()
 
