@@ -2,8 +2,9 @@ buildscript {
     repositories {
         gradlePluginPortal() {
             content {
-                [ 'commons-codec', 'com.googlecode.javaewah', 'org.eclipse.jgit', 'org.moddedmc.wiki',
-                  'org.moddedmc.wiki.toolkit', 'org.slf4j', 'org.zeroturnaround' ].forEach { includeGroup it }
+                [ 'commons-codec', 'com.googlecode.javaewah', 'org.apache', 'org.apache.commons', 'org.eclipse.jgit',
+                  'org.junit', 'org.moddedmc.wiki', 'org.moddedmc.wiki.toolkit', 'org.slf4j', 'org.sonatype.oss',
+                  'org.zeroturnaround' ].forEach { includeGroup it }
             }
         }
     }
@@ -19,20 +20,17 @@ buildscript {
  * Any necessary reobfuscations must happen in the version the deobfuscations happened in.
  */
 
-apply from: rootProject.file('buildSrc\\shared.gradle')
-java.toolchain.languageVersion = JavaLanguageVersion.of(23)
-
-
+apply from: rootProject.file('buildSrc\\java23.gradle')
 plugins.apply('org.moddedmc.wiki.toolkit')
 
 def tokens = rootProject.file('tokens.txt').readLines()
 
 //noinspection GroovyUnusedAssignment
-def api = project(':api')
+def base = project(':api')
 def fabric = project(':fabric')
-def legacy_1_12_2 = project(':legacy:legacy.1_12')
-def fabric_1_16_5 = project(':fabric:fabric.1_16')
-def forge_1_16_5 = project(':forge:forge.1_16')
+def legacy_1_12_2 = project(':legacy:1.12')
+def fabric_1_16_5 = project(':fabric:fabric_1.16')
+def forge_1_16_5 = project(':forge:forge_1.16')
 
 processResources {
     fabric.afterEvaluate { from(it.processResources.outputs) }
@@ -55,9 +53,9 @@ jar {
     }
 }
 
-[ ':legacy:legacy.1_12:build',
-  ':fabric:fabric.1_16:build',
-  ':forge:forge.1_16:build' ].forEach { tasks.jar.dependsOn(it) }
+[ ':legacy:1.12:build',
+  ':fabric:fabric_1.16:build',
+  ':forge:forge_1.16:build' ].forEach { tasks.jar.dependsOn(it) }
 
 wiki {
     wikiAccessToken = tokens.get(0)

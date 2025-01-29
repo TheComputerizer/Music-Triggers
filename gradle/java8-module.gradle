@@ -1,2 +1,2 @@
-apply from: rootProject.file('buildSrc\\shared.gradle')
+apply from: rootProject.file('buildSrc\\java8.gradle')
 apply from: rootProject.file('gradle\\runtime-module.gradle')

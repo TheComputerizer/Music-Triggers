@@ -39,6 +39,7 @@ buildscript {
 }
 
 apply from: rootProject.file('gradle\\java8-module.gradle')
+apply from: rootProject.file('gradle\\til.gradle')
 apply from: rootProject.file('gradle\\shadow-relocate.gradle')
 
 plugins.apply('net.minecraftforge.gradle')
@@ -49,7 +50,9 @@ sourceSets {
     main.output.resourcesDir = rootProject.file('forge\\1.16\\run_client\\MTResources')
 }
 
-def shared = project(':shared:shared.1_16')
+def base = project(':api')
+def forge = project(':forge')
+def shared = project(':shared:1.16')
 
 minecraft {
     mappings channel: 'parchment', version: "${shared.parchment_version}-${shared.minecraft_version}"
@@ -105,11 +108,9 @@ dependencies {
     //noinspection VulnerableLibrariesLocal
     minecraft("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
 
-    implementation(project(':api'))
-    implementation(shared)
-    implementation(project(':forge'))
-
-    implementation(fg.deobf("mods.thecomputerizer:theimpossiblelibrary:${til_version}"))
+    api(base)
+    api(shared)
+    api(forge)
 
     //mod support dependencies
     runtimeOnly(fg.deobf("curse.maven:betterweather-400714:${betterweather_version}"))
@@ -137,19 +138,11 @@ reobf {
 }
 
 processResources {
-    from(project(':forge').processResources.outputs)
+    from(forge.processResources.outputs)
 }
 
 processTestResources {
-    from(project(':forge').processTestResources.outputs)
-}
-
-compileJava {
-    source(project(':api').sourceSets.main.allJava)
-}
-
-compileTestJava {
-    source(project(':api').sourceSets.test.allJava)
+    from(forge.processTestResources.outputs)
 }
 
 jar {
@@ -166,7 +159,7 @@ jar {
 }
 
 shadowJar {
-    from(project(':forge').jar.archiveFile.collect { zipTree(it) })
+    from(forge.jar.archiveFile.collect { zipTree(it) })
 }
 
 tasks.assemble.dependsOn(shadowJar)

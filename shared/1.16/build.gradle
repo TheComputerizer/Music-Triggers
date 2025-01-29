@@ -42,7 +42,7 @@ buildscript {
 }
 
 apply from: rootProject.file('gradle\\java8-module.gradle')
-//apply from: rootProject.file('gradle\\shadow-relocate.gradle')
+apply from: rootProject.file('gradle\\til-compile.gradle')
 
 plugins.apply('net.minecraftforge.gradle')
 plugins.apply('org.parchmentmc.librarian.forgegradle')
@@ -73,27 +73,22 @@ minecraft {
     }
 }
 
-configurations {
-    dev {
-        canBeResolved = false
-        canBeConsumed = true
-    }
-}
+def base = project(':api')
+def shared = project(':shared')
 
 dependencies {
     //noinspection VulnerableLibrariesLocal
     minecraft("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
-    compileOnly(project(':api'))
-    compileOnly(project(':shared'))
-    implementation(fg.deobf("mods.thecomputerizer:theimpossiblelibrary:${til_version}"))
+    api(base)
+    api(shared)
 }
 
 processResources {
-    from(project(':shared').processResources.outputs)
+    from(shared.processResources.outputs)
 }
 
 processTestResources {
-    from(project(':shared').processTestResources.outputs)
+    from(shared.processTestResources.outputs)
 }
 
 jar {
@@ -103,10 +98,6 @@ jar {
                 'Implementation-Version': version
         ])
     }
-}
-
-artifacts {
-    dev jar
 }
 
 tasks.jar.dependsOn(':shared:build')

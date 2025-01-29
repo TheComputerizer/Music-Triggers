@@ -38,34 +38,29 @@ apply from: rootProject.file('gradle\\fabric.gradle')
 
 plugins.apply('fabric-loom')
 
-configurations {
-    dev {
-        canBeResolved = false
-        canBeConsumed = true
-    }
-}
+def base = project(':api')
+def shared = project(':shared:1.16')
 
 dependencies {
-    def shared = project(':shared:shared.1_16')
     minecraft("com.mojang:minecraft:${shared.minecraft_version}")
     mappings loom.layered() {
         officialMojangMappings()
         parchment("org.parchmentmc.data:parchment-${shared.minecraft_version}:${shared.parchment_version}@zip")
     }
 
-    compileOnly(project(':api'))
+    compileOnlyApi(base)
 
     modImplementation("net.fabricmc:fabric-loader:${loader_version}")
     modImplementation("net.fabricmc.fabric-api:fabric-api:${shared.fabric_version}+1.16")
-    modImplementation("mods.thecomputerizer:theimpossiblelibrary:${til_version}")
+    modImplementation("mods.thecomputerizer.theimpossiblelibrary:theimpossiblelibrary:${til_version}")
 }
 
 processResources {
-    from(project(':api').processResources.outputs)
+    from(base.processResources.outputs)
 }
 
 processTestResources {
-    from(project(':api').processTestResources.outputs)
+    from(base.processTestResources.outputs)
 }
 
 jar {
@@ -75,8 +70,4 @@ jar {
                 'Implementation-Version': version
         ])
     }
-}
-
-artifacts {
-    dev jar
 }

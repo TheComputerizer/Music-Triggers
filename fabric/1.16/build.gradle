@@ -53,7 +53,9 @@ repositories {
     }
 }
 
-def shared = project(':shared:shared.1_16')
+def base = project(':api')
+def fabric = project(':fabric')
+def shared = project(':shared:1.16')
 
 dependencies {
     minecraft("com.mojang:minecraft:${shared.minecraft_version}")
@@ -61,14 +63,14 @@ dependencies {
         officialMojangMappings()
         parchment("org.parchmentmc.data:parchment-${shared.minecraft_version}:${shared.parchment_version}@zip")
     }
-    implementation(project(path: ':api', configuration: 'dev'))
-    implementation(project(path: ':fabric', configuration: 'dev'))
+    api(base)
+    api(fabric)
     //The shared module builds with forge but since it only touches vanilla code this is fine
-    implementation(project(path: ':shared:shared.1_16',configuration: 'dev'))
+    compileOnlyApi(shared)
 
     modImplementation("net.fabricmc:fabric-loader:${loader_version}")
     modImplementation("net.fabricmc.fabric-api:fabric-api:${shared.fabric_version}+1.16")
-    modImplementation("mods.thecomputerizer:theimpossiblelibrary:${til_version}")
+    modImplementation("mods.thecomputerizer.theimpossiblelibrary:theimpossiblelibrary:${til_version}")
     modImplementation("maven.modrinth:cloth-config:${cloth_version}")
     modImplementation("maven.modrinth:modmenu:${modmenu_version}")
 }
@@ -78,23 +80,15 @@ remapJar {
 }
 
 processResources {
-    from(project(':api').processResources.outputs)
+    from(base.processResources.outputs)
 }
 
 processTestResources {
-    from(project(':api').processTestResources.outputs)
-}
-
-compileJava {
-    source(project(':fabric').sourceSets.main.allJava)
-}
-
-compileTestJava {
-    source(project(':fabric').sourceSets.test.allJava)
+    from(base.processTestResources.outputs)
 }
 
 jar {
-    from(project(':fabric').jar.archiveFile.collect { zipTree(it) })
+    from(fabric.jar.archiveFile.collect { zipTree(it) })
     manifest {
         attributes([
                 'Implementation-Title': name,

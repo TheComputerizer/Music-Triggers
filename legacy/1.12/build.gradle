@@ -94,11 +94,14 @@ repositories {
     }
 }
 
+def base = project(':api')
+def legacy = project(':legacy')
+
 dependencies {
     //noinspection VulnerableLibrariesLocal
     minecraft("net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}")
 
-    implementation(project(':api'))
+    api(base)
 
     //mod support & utility
     runtimeOnly(fg.deobf("net.darkhax.bookshelf:Bookshelf-${minecraft_version}:${bookshelf_version}"))
@@ -122,19 +125,11 @@ reobf {
 }
 
 processResources {
-    from(project(':legacy').processResources.outputs)
+    from(legacy.processResources.outputs)
 }
 
 processTestResources {
-    from(project(':legacy').processTestResources.outputs)
-}
-
-compileJava {
-    source(project(':api').sourceSets.main.allJava)
-}
-
-compileTestJava {
-    source(project(':api').sourceSets.test.allJava)
+    from(legacy.processTestResources.outputs)
 }
 
 jar {
@@ -148,7 +143,7 @@ jar {
 }
 
 shadowJar {
-    from(project(':legacy').jar.archiveFile.collect { zipTree(it) })
+    from(legacy.jar.archiveFile.collect { zipTree(it) })
 }
 
 tasks.withType(JavaExec).configureEach {

@@ -1,0 +1,30 @@
+plugins.apply('idea')
+plugins.apply('java-library')
+
+group = base_package
+version = mod_version
+
+compileJava {
+    options.encoding = 'UTF-8'
+}
+
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+        inheritOutputDirs = true
+    }
+}
+
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    setArchiveBaseName(mod_id)
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
+}
+
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
