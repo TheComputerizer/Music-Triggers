@@ -39,7 +39,6 @@ buildscript {
 }
 
 apply from: rootProject.file('gradle\\java8-module.gradle')
-apply from: rootProject.file('gradle\\til.gradle')
 apply from: rootProject.file('gradle\\shadow-relocate.gradle')
 
 plugins.apply('net.minecraftforge.gradle')
@@ -111,6 +110,8 @@ dependencies {
     api(base)
     api(shared)
     api(forge)
+
+    implementation(fg.deobf("mods.thecomputerizer.theimpossiblelibrary:theimpossiblelibrary:${til_version}"))
 
     //mod support dependencies
     runtimeOnly(fg.deobf("curse.maven:betterweather-400714:${betterweather_version}"))

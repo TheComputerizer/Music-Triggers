@@ -5,6 +5,7 @@ group = base_package
 version = mod_version
 
 compileJava {
+    options.deprecation = false //We don't need to log all of the deprecated stuff when compiling
     options.encoding = 'UTF-8'
 }
 
