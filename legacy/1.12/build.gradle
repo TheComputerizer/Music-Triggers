@@ -1,51 +1,16 @@
-buildscript {
-    repositories {
-        gradlePluginPortal() {
-            content {
-                [ 'com.fasterxml.woodstox', 'com.google.code.findbugs', 'com.google.code.gson', 'com.google.errorprone',
-                  'com.google.guava', 'com.google.j2objc', 'com.machinezoo', 'com.machinezoo.noexception',
-                  'commons-codec', 'commons-io', 'commons-logging', 'de.siegmar', 'io.github.goooler.shadow',
-                  'it.unimi.dsi', 'net.sf.jopt-simple', 'org.apache.ant', 'org.apache.commons',
-                  'org.apache.httpcomponents', 'org.apache.logging.log4j', 'org.apache.maven', 'org.checkerframework',
-                  'org.codehaus.plexus', 'org.codehaus.woodstox','org.jdom', 'org.jetbrains', 'org.jetbrains.kotlin',
-                  'org.ow2.asm', 'org.slf4j', 'org.tukaani', 'org.vafer' ].forEach { includeGroup it }
-            }
-        }
-        maven {
-            name = 'Forge'
-            url = uri('https://maven.minecraftforge.net/')
-            content {
-                [ 'net.minecraftforge', 'net.minecraftforge.gradle' ].forEach{ includeGroup it }
-            }
-        }
-        maven {
-            name = 'Garden of Fancy'
-            url = uri('https://maven.gofancy.wtf/releases')
-            content {
-                includeGroup 'wtf.gofancy.fancygradle'
-            }
-        }
-    }
-    dependencies {
-        classpath('io.github.goooler.shadow:shadow-gradle-plugin:8.+')
-        classpath('net.minecraftforge.gradle:net.minecraftforge.gradle.gradle.plugin:6.+')
-        classpath('wtf.gofancy.fancygradle:wtf.gofancy.fancygradle.gradle.plugin:1.+')
-    }
-}
+import mods.thecomputerizer.plugin.forge.MTForgePlugin
+import mods.thecomputerizer.plugin.forge.MTForgePluginConfig
 
-apply from: rootProject.file('gradle\\java8-module.gradle')
-apply from: rootProject.file('gradle\\til.gradle')
-apply from: rootProject.file('gradle\\shadow-relocate.gradle')
+plugins.apply('mods.thecomputerizer.plugin.forge')
 
-plugins.apply('net.minecraftforge.gradle')
-plugins.apply('wtf.gofancy.fancygradle')
-
-fancyGradle {
-    patches {
-        coremods
-        asm
-        mergetool
-    }
+musictriggers {
+    entrypoint = mod_entrypoint
+    fancy_gradle = true
+    lib = true
+    mappings_channel = 'stable'
+    mixin = false
+    parchment = false
+    setVersions 12
 }
 
 sourceSets {
@@ -53,27 +18,7 @@ sourceSets {
 }
 
 minecraft {
-    mappings channel: 'stable', version: mappings_version
-    accessTransformer = file("src\\main\\resources\\META-INF\\${mod_accesstransformer}")
-    runs {
-        def args = [
-                '-Dtil.dev=true',
-                '-Dtil.classpath.mods=mods.thecomputerizer.theimpossiblelibrary.api.common.TILCommonEntryPoint;'+mod_entrypoint,
-                '-Dtil.classpath.coremods=mods.thecomputerizer.musictriggers.api.core.MTCoreEntryPoint'
-        ]
-        client {
-            workingDirectory file('run_client')
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-            property 'forge.logging.console.level', 'debug'
-            jvmArgs args
-        }
-        server {
-            workingDirectory file('run_server')
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-            property 'forge.logging.console.level', 'debug'
-            jvmArgs args
-        }
-    }
+    (project.plugins.getPlugin(MTForgePlugin) as MTForgePlugin).setMinecraft(project,it)
 }
 
 repositories {

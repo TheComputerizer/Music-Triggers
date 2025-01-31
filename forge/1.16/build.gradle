@@ -1,82 +1,23 @@
-buildscript {
-    repositories {
-        gradlePluginPortal() {
-            content {
-                [ 'com.fasterxml', 'com.fasterxml.jackson', 'com.fasterxml.woodstox', 'com.google.code.findbugs',
-                  'com.google.code.gson', 'com.google.errorprone', 'com.google.guava', 'com.google.j2objc',
-                  'com.machinezoo.noexception', 'commons-codec', 'commons-io', 'commons-logging', 'de.siegmar',
-                  'io.fabric8', 'io.github.goooler.shadow', 'io.netty', 'it.unimi.dsi', 'jakarta.platform',
-                  'net.sf.jopt-simple', 'org.apache', 'org.apache.ant', 'org.apache.commons',
-                  'org.apache.httpcomponents', 'org.apache.logging', 'org.apache.logging.log4j', 'org.apache.maven',
-                  'org.checkerframework', 'org.codehaus.groovy', 'org.codehaus.plexus', 'org.codehaus.woodstox',
-                  'org.eclipse.ee4j', 'org.eclipse.jetty', 'org.jdom', 'org.junit', 'org.mockito', 'org.ow2',
-                  'org.ow2.asm', 'org.slf4j', 'org.sonatype.oss', 'org.springframework', 'org.tukaani',
-                  'org.vafer' ].forEach { includeGroup it }
-            }
-        }
-        maven {
-            name = 'Forge'
-            url = uri('https://maven.minecraftforge.net/')
-            content {
-                [ 'net.minecraftforge', 'net.minecraftforge.gradle', 'org.spongepowered' ].forEach{ includeGroup it }
-            }
-        }
-        maven {
-            name = 'ParchmentMC'
-            url = uri('https://maven.parchmentmc.org')
-            content {
-                [ 'org.parchmentmc', 'org.parchmentmc.feather',
-                  'org.parchmentmc.librarian.forgegradle' ].forEach { includeGroup it }
-            }
-        }
-    }
-    dependencies {
-        classpath('io.github.goooler.shadow:shadow-gradle-plugin:8.+')
-        classpath('net.minecraftforge.gradle:net.minecraftforge.gradle.gradle.plugin:6.+')
-        classpath('org.spongepowered:mixingradle:0.+')
-        classpath('org.parchmentmc.librarian.forgegradle:org.parchmentmc.librarian.forgegradle.gradle.plugin:1.+')
-    }
+import mods.thecomputerizer.plugin.forge.MTForgePlugin
+
+plugins.apply('mods.thecomputerizer.plugin.forge')
+
+musictriggers {
+    entrypoint = mod_entrypoint
+    setVersions 16
 }
-
-apply from: rootProject.file('gradle\\java8-module.gradle')
-apply from: rootProject.file('gradle\\shadow-relocate.gradle')
-
-plugins.apply('net.minecraftforge.gradle')
-plugins.apply('org.spongepowered.mixin')
-plugins.apply('org.parchmentmc.librarian.forgegradle')
 
 sourceSets {
     main.output.resourcesDir = rootProject.file('forge\\1.16\\run_client\\MTResources')
 }
 
+minecraft {
+    (project.plugins.getPlugin(MTForgePlugin) as MTForgePlugin).setMinecraft(project,it)
+}
+
 def base = project(':api')
 def forge = project(':forge')
 def shared = project(':shared:1.16')
-
-minecraft {
-    mappings channel: 'parchment', version: "${shared.parchment_version}-${shared.minecraft_version}"
-    accessTransformer = file("src/main/resources/META-INF/${mod_accesstransformer}")
-    runs {
-        def args = [
-            '-Dtil.dev=true',
-            '-Dtil.classpath.file=theimpossiblelibrary-0.4.0_mapped_parchment_2022.03.06-1.16.5.jar', //Only needed in dev
-            '-Dtil.classpath.mods='+mod_entrypoint,
-            '-Dtil.classpath.coremods=mods.thecomputerizer.musictriggers.api.core.MTCoreEntryPoint'
-        ]
-        client {
-            workingDirectory file('run_client')
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-            property 'forge.logging.console.level', 'debug'
-            jvmArgs args
-        }
-        server {
-            workingDirectory file('run_server')
-            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
-            property 'forge.logging.console.level', 'debug'
-            jvmArgs args
-        }
-    }
-}
 
 repositories {
     maven {
