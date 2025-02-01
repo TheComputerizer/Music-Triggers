@@ -21,17 +21,17 @@ abstract class MTPluginCommon implements Plugin<Project> {
 
     static void applyLib(Project project) {
         if(project.extensions.findByType(MTPluginCommonConfig).lib)
-            applyFrom(project,'til')
+            applyFrom project,'til'
     }
 
     static void applyRuntime(Project project) {
         if(project.extensions.findByType(MTPluginCommonConfig).runtime)
-            applyFrom(project,'runtime-module')
+            applyFrom project,'runtime-module'
     }
 
     static void applyShadow(Project project) {
         if(project.extensions.findByType(MTPluginCommonConfig).shadow)
-            applyFrom(project,'shadow-relocate')
+            applyFrom project,'shadow-relocate'
     }
 
     static void configureTasks(Project project) {
@@ -67,9 +67,9 @@ abstract class MTPluginCommon implements Plugin<Project> {
     }
 
     static void java(ExtensionContainer extensions) {
-        def config = extensions.findByType(MTPluginCommonConfig)
-        def version = JavaLanguageVersion.of(config.versions.java)
-        extensions.findByType(JavaPluginExtension).toolchain.languageVersion.set(version)
+        def config = extensions.findByType MTPluginCommonConfig
+        def version = JavaLanguageVersion.of config.versions.java
+        extensions.findByType(JavaPluginExtension).toolchain.languageVersion.set version
     }
 
     static File rootFile(Project project, String path) {

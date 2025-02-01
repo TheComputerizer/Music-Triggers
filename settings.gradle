@@ -1,50 +1,51 @@
 pluginManagement {
     repositories {
-        gradlePluginPortal() {
+        gradlePluginPortal()
+        maven {
+            name = 'Fabric'
+            url = uri('https://maven.fabricmc.net/')
             content {
-                [ 'com.google.code.gson', 'com.googlecode.javaewah', 'com.gradle', 'commons-codec', 'org.apache',
-                  'org.apache.commons', 'org.eclipse.jgit', 'org.gradle.toolchains',
-                  'org.gradle.toolchains.foojay-resolver-convention', 'org.junit', 'org.slf4j', 'org.sonatype.oss',
-                  'org.zeroturnaround' ].forEach { includeGroup it }
+                [ 'fabric-loom', 'net.fabricmc', 'net.fabricmc.fabric-api' ].forEach { includeGroup it }
             }
         }
         maven {
-            name = 'Sinytra'
-            url = uri('https://maven.sinytra.org/')
+            name = 'Forge'
+            url = uri('https://maven.minecraftforge.net/')
             content {
-                [ 'org.sinytra.wiki', 'org.sinytra.wiki.toolkit' ].forEach { includeGroup(it) }
+                [ 'net.minecraftforge', 'net.minecraftforge.gradle',
+                  'org.spongepowered' ].forEach{ includeGroup it }
+            }
+        }
+        maven {
+            name = 'Garden of Fancy'
+            url = uri('https://maven.gofancy.wtf/releases')
+            content {
+                includeGroup 'wtf.gofancy.fancygradle'
+            }
+        }
+        maven {
+            name = 'ParchmentMC'
+            url = uri('https://maven.parchmentmc.org')
+            content {
+                [ 'org.parchmentmc', 'org.parchmentmc.feather',
+                  'org.parchmentmc.librarian.forgegradle' ].forEach { includeGroup it }
             }
         }
     }
+    includeBuild("${default_directory}\\Multiversion-Project-Helper")
 }
 
 plugins {
-    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.+'
+    id 'multiversionhelper.settings'
 }
 
-rootProject.name = 'Music Triggers'
+rootProject.name = 'Music-Triggers'
 
-[                                   'api', 'legacy', 'forge', 'fabric', 'neoforge', 'shared',
-    ':legacy:1.12',
-    ':fabric:1.16',        ':forge:1.16',                                                        ':shared:1.16',
-    ':fabric:1.18',        ':forge:1.18',                                                        ':shared:1.18',
-    //':fabric:1.19',        ':forge:1.19',                                                        ':shared:1.19',
-    //':fabric:1.20',        ':forge:1.20',                               ':neoforge:1.20',        ':shared:1.20',
-    //':fabric:1.21',        ':forge:1.21',                               ':neoforge:1.21',        ':shared:1.21',
-    ':fabric:1.19:1.19.2', ':forge:1.19:1.19.2',                                          ':shared:1.19:1.19.2',
-    ':fabric:1.19:1.19.4', ':forge:1.19:1.19.4',                                          ':shared:1.19:1.19.4',
-    ':fabric:1.20:1.20.1', ':forge:1.20:1.20.1',                 ':neoforge:1.20:1.20.1', ':shared:1.20:1.20.1',
-    ':fabric:1.20:1.20.4', ':forge:1.20:1.20.4',                 ':neoforge:1.20:1.20.4', ':shared:1.20:1.20.4',
-    ':fabric:1.20:1.20.6', ':forge:1.20:1.20.6',                 ':neoforge:1.20:1.20.6', ':shared:1.20:1.20.6',
-    ':fabric:1.21:1.21.1', ':forge:1.21:1.21.1',                 ':neoforge:1.21:1.21.1', ':shared:1.21:1.21.1'
-].forEach {
-    include it
-    String[] split = (it.startsWith(':') ? it.substring(1) : it).split(':')
-    String name = split.first()
-    if(split.length>1) {
-        String last = split.last()
-        if(name=='legacy' || name=='shared') name = last
-        else name = name+"_"+last
-    }
-    findProject(it)?.name = name
+musictriggers {
+    name = 'Music-Triggers'
+    defineProject settings, 'api'
+    defineVersion settings, 'legacy', '12'
+    defineVersions settings, 'shared', '16', '18'
+    defineVersions settings, 'forge', '16', '18'
+    defineVersions settings, 'fabric', '16', '18'
 }

@@ -55,7 +55,7 @@ repositories {
 
 def base = project(':api')
 def fabric = project(':fabric')
-def shared = project(':shared:1.16')
+def shared = project(':shared:shared_1.16')
 
 dependencies {
     minecraft("com.mojang:minecraft:${shared.minecraft_version}")

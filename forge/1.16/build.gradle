@@ -17,7 +17,7 @@ minecraft {
 
 def base = project(':api')
 def forge = project(':forge')
-def shared = project(':shared:1.16')
+def shared = project(':shared:shared_1.16')
 
 repositories {
     maven {

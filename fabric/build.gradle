@@ -39,7 +39,7 @@ apply from: rootProject.file('gradle\\fabric.gradle')
 plugins.apply('fabric-loom')
 
 def base = project(':api')
-def shared = project(':shared:1.16')
+def shared = project(':shared:shared_1.16')
 
 dependencies {
     minecraft("com.mojang:minecraft:${shared.minecraft_version}")

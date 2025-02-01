@@ -29,10 +29,10 @@ repositories {
               'it.unimi.dsi', 'jakarta.platform', 'net.sf.jopt-simple', 'org.apache', 'org.apache.ant',
               'org.apache.commons', 'org.apache.httpcomponents', 'org.apache.logging', 'org.apache.logging.log4j',
               'org.apache.maven', 'org.cadixdev', 'org.checkerframework', 'org.codehaus.groovy', 'org.codehaus.plexus',
-              'org.codehaus.woodstox', 'org.eclipse.ee4j', 'org.eclipse.jetty', 'org.jdom', 'org.jetbrains',
-              'org.jetbrains.kotlin', 'org.junit', 'org.mockito', 'org.ow2', 'org.ow2.asm', 'org.slf4j',
-              'org.sonatype.oss', 'org.springframework', 'org.tukaani',
-              'org.vafer' ].forEach { includeGroup it }
+              'org.codehaus.woodstox', 'org.eclipse.ee4j', 'org.eclipse.jetty', 'org.gradle.toolchains',
+              'org.gradle.toolchains.foojay-resolver-convention', 'org.jdom', 'org.jetbrains', 'org.jetbrains.kotlin',
+              'org.junit', 'org.mockito', 'org.ow2', 'org.ow2.asm', 'org.slf4j', 'org.sonatype.oss',
+              'org.springframework', 'org.tukaani', 'org.vafer' ].forEach { includeGroup it }
         }
     }
     maven {
@@ -75,6 +75,7 @@ dependencies {
     implementation("fabric-loom:fabric-loom.gradle.plugin:${loom_version}")
     implementation('io.github.goooler.shadow:shadow-gradle-plugin:8.+')
     implementation('net.minecraftforge.gradle:net.minecraftforge.gradle.gradle.plugin:6.+')
+    implementation('org.gradle.toolchains.foojay-resolver-convention:org.gradle.toolchains.foojay-resolver-convention.gradle.plugin:0.+')
     implementation('org.parchmentmc.librarian.forgegradle:org.parchmentmc.librarian.forgegradle.gradle.plugin:1.+')
     implementation('org.spongepowered:mixingradle:0.+')
     implementation('wtf.gofancy.fancygradle:wtf.gofancy.fancygradle.gradle.plugin:1.+')

@@ -1,5 +1,4 @@
 import mods.thecomputerizer.plugin.forge.MTForgePlugin
-import mods.thecomputerizer.plugin.forge.MTForgePluginConfig
 
 plugins.apply('mods.thecomputerizer.plugin.forge')
 

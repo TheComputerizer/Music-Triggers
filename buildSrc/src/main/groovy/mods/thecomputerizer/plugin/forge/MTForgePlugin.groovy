@@ -47,7 +47,6 @@ class MTForgePlugin extends MTPluginCommon {
         def config = project.extensions.getByType(MTForgePluginConfig)
         if(config.mixin) manager.apply 'org.spongepowered.mixin'
         if(config.parchment) manager.apply 'org.parchmentmc.librarian.forgegradle'
-        //if(config.fancy_gradle) manager.apply FancyGradle
     }
 
     @Override
