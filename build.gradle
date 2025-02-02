@@ -41,7 +41,7 @@ processTestResources {
 jar {
     legacy_1_12_2.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree(it) }) }
     fabric_1_16_5.afterEvaluate { from(it.remapJar.archiveFile.collect { zipTree(it) }) }
-    //forge_1_16_5.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree(it) }) }
+    forge_1_16_5.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree(it) }) }
     manifest {
         attributes([
                 'Implementation-Title': project.name,
