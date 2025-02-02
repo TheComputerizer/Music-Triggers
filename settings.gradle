@@ -41,7 +41,7 @@ plugins {
 
 rootProject.name = 'Music-Triggers'
 
-musictriggers {
+multiversion {
     name = 'Music-Triggers'
     defineProject settings, 'api'
     defineVersion settings, 'legacy', '12'

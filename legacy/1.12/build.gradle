@@ -1,5 +1,3 @@
-import mods.thecomputerizer.plugin.forge.MTForgePlugin
-
 plugins.apply('mods.thecomputerizer.plugin.forge')
 
 musictriggers {
@@ -17,7 +15,7 @@ sourceSets {
 }
 
 minecraft {
-    (project.plugins.getPlugin(MTForgePlugin) as MTForgePlugin).setMinecraft(project,it)
+    project.plugins.getPlugin('mods.thecomputerizer.plugin.forge').setMinecraft(project,it)
 }
 
 repositories {

@@ -1,8 +1,6 @@
-import mods.thecomputerizer.plugin.forge.MTForgePlugin
-
 plugins.apply('mods.thecomputerizer.plugin.forge')
 
-musictriggers {
+multiversion {
     entrypoint = mod_entrypoint
     setVersions 16
 }
@@ -12,7 +10,7 @@ sourceSets {
 }
 
 minecraft {
-    (project.plugins.getPlugin(MTForgePlugin) as MTForgePlugin).setMinecraft(project,it)
+    project.plugins.getPlugin('mods.thecomputerizer.plugin.forge').setMinecraft(project,it)
 }
 
 def base = project(':api')
@@ -46,7 +44,7 @@ repositories {
 
 dependencies {
     //noinspection VulnerableLibrariesLocal
-    minecraft("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
+    //minecraft("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
 
     api(base)
     api(shared)

@@ -1,0 +1,14 @@
+plugins.apply('mods.thecomputerizer.plugin.forge')
+
+multiversion {
+    entrypoint = mod_entrypoint
+    setVersions 18
+}
+
+sourceSets {
+    main.output.resourcesDir = rootProject.file('forge\\1.18\\run_client\\MTResources')
+}
+
+minecraft {
+    project.plugins.getPlugin('mods.thecomputerizer.plugin.forge').setMinecraft(project,it)
+}
