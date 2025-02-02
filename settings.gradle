@@ -43,6 +43,8 @@ rootProject.name = 'Music-Triggers'
 
 multiversion {
     name = 'Music-Triggers'
+    default_preprocessor = 'gradle\\\\\\\\lavaplayer'
+    default_resource_output = 'run_client\\\\\\\\MTResources'
     defineProject settings, 'api'
     defineVersion settings, 'legacy', '12'
     defineVersions settings, 'shared', '16', '18'

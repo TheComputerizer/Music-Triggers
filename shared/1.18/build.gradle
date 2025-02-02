@@ -1,14 +1,13 @@
 plugins.apply('mods.thecomputerizer.plugin.forge')
 
 multiversion {
+    api = [ 'api', 'shared' ]
     entrypoint = mod_entrypoint
+    local_lib = true
+    parent = 'shared'
+    preprocessor = 'gradle\\lavaplayer'
+    resource_output = 'run_client\\MTResources'
     setVersions 18
-}
-
-sourceSets {
-    main.output.resourcesDir = rootProject.file('forge\\1.18\\run_client\\MTResources')
-}
-
-minecraft {
-    project.plugins.getPlugin('mods.thecomputerizer.plugin.forge').setMinecraft(project,it)
+    shadow_relocations = [ shadow_package: relocate_these.split(',').toList()]
+    onEvaluateFinished project
 }

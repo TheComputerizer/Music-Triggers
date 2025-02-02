@@ -1,57 +1,18 @@
 plugins.apply('mods.thecomputerizer.plugin.forge')
 
 multiversion {
+    api = [ 'api', 'forge', 'shared:shared_1.16' ]
     entrypoint = mod_entrypoint
+    local_lib = true
+    parent = 'forge'
+    preprocessor = 'gradle\\lavaplayer'
+    resource_output = 'run_client\\MTResources'
     setVersions 16
-}
-
-sourceSets {
-    main.output.resourcesDir = rootProject.file('forge\\1.16\\run_client\\MTResources')
-}
-
-minecraft {
-    project.plugins.getPlugin('mods.thecomputerizer.plugin.forge').setMinecraft(project,it)
-}
-
-def base = project(':api')
-def forge = project(':forge')
-def shared = project(':shared:shared_1.16')
-
-repositories {
-    maven {
-        name = 'CurseMaven'
-        url = uri('https://www.cursemaven.com')
-        content {
-            includeGroup 'curse.maven'
-        }
-    }
-    maven {
-        name = 'BlameJared'
-        url = uri('https://maven.blamejared.com')
-        content {
-            includeGroup 'net.darkhax.bookshelf'
-            includeGroup 'net.darkhax.gamestages'
-        }
-    }
-    maven {
-        name = 'Progwml6 Maven'
-        url = uri('https://dvs1.progwml6.com/files/maven/')
-        content {
-            includeGroup 'mezz.jei'
-        }
-    }
+    shadow_relocations = [ shadow_package: relocate_these.split(',').toList()]
+    onEvaluateFinished project
 }
 
 dependencies {
-    //noinspection VulnerableLibrariesLocal
-    //minecraft("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
-
-    api(base)
-    api(shared)
-    api(forge)
-
-    implementation(fg.deobf("mods.thecomputerizer.theimpossiblelibrary:theimpossiblelibrary:${til_version}"))
-
     //mod support dependencies
     runtimeOnly(fg.deobf("curse.maven:betterweather-400714:${betterweather_version}"))
     runtimeOnly(fg.deobf("curse.maven:blueskies-312918:${blueskies_version}"))
@@ -66,25 +27,6 @@ dependencies {
     runtimeOnly(fg.deobf("net.darkhax.gamestages:GameStages-Forge-${minecraft_version}:${gamestages_version}"))
 }
 
-mixin {
-    add sourceSets.main, mod_refmap
-}
-
-reobf {
-    shadowJar {
-        dependsOn createMcpToSrg
-        mappings = createMcpToSrg.output
-    }
-}
-
-processResources {
-    from(forge.processResources.outputs)
-}
-
-processTestResources {
-    from(forge.processTestResources.outputs)
-}
-
 jar {
     manifest {
         attributes([
@@ -97,12 +39,3 @@ jar {
         ])
     }
 }
-
-shadowJar {
-    from(forge.jar.archiveFile.collect { zipTree(it) })
-}
-
-tasks.assemble.dependsOn(shadowJar)
-tasks.shadowJar.dependsOn('reobfJar')
-tasks.jar.finalizedBy('reobfJar')
-tasks.jar.dependsOn(':forge:build')

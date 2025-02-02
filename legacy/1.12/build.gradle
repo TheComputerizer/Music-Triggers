@@ -1,50 +1,22 @@
 plugins.apply('mods.thecomputerizer.plugin.forge')
 
-musictriggers {
+multiversion {
+    api = [ 'api', 'legacy' ]
     entrypoint = mod_entrypoint
     fancy_gradle = true
-    lib = true
+    local_lib = true
     mappings_channel = 'stable'
     mixin = false
     parchment = false
+    parent = 'legacy'
+    preprocessor = 'gradle\\lavaplayer'
+    resource_output = 'run_client\\MTResources'
     setVersions 12
+    shadow_relocations = [ shadow_package: relocate_these.split(',').toList()]
+    onEvaluateFinished project
 }
-
-sourceSets {
-    main.output.resourcesDir = rootProject.file('legacy\\1.12\\run_client\\MTResources')
-}
-
-minecraft {
-    project.plugins.getPlugin('mods.thecomputerizer.plugin.forge').setMinecraft(project,it)
-}
-
-repositories {
-    maven {
-        name = 'CurseMaven'
-        url = uri('https://www.cursemaven.com')
-        content {
-            includeGroup 'curse.maven'
-        }
-    }
-    maven {
-        name = 'BlameJared'
-        url = uri('https://maven.blamejared.com')
-        content {
-            includeGroup 'net.darkhax.bookshelf'
-            includeGroup 'net.darkhax.gamestages'
-        }
-    }
-}
-
-def base = project(':api')
-def legacy = project(':legacy')
 
 dependencies {
-    //noinspection VulnerableLibrariesLocal
-    minecraft("net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}")
-
-    api(base)
-
     //mod support & utility
     runtimeOnly(fg.deobf("net.darkhax.bookshelf:Bookshelf-${minecraft_version}:${bookshelf_version}"))
     runtimeOnly(fg.deobf("curse.maven:champions-307152:${champions_version}"))
@@ -59,21 +31,6 @@ dependencies {
     //runtimeOnly(fg.deobf("curse.maven:weather2-695602:${weather_version}"))
 }
 
-reobf {
-    shadowJar {
-        dependsOn createMcpToSrg
-        mappings = createMcpToSrg.output
-    }
-}
-
-processResources {
-    from(legacy.processResources.outputs)
-}
-
-processTestResources {
-    from(legacy.processTestResources.outputs)
-}
-
 jar {
     manifest {
         attributes([
@@ -84,16 +41,7 @@ jar {
     }
 }
 
-shadowJar {
-    from(legacy.jar.archiveFile.collect { zipTree(it) })
-}
-
 tasks.withType(JavaExec).configureEach {
     dependsOn(shadowJar)
     classpath(project.configurations.runtimeClasspath,shadowJar.archiveFile.get().asFile)
 }
-
-tasks.assemble.dependsOn(shadowJar)
-tasks.shadowJar.dependsOn('reobfJar')
-tasks.jar.finalizedBy('reobfJar')
-tasks.jar.dependsOn(':legacy:build')
