@@ -54,7 +54,6 @@ public class MTClientEntryPoint1_16_5 extends ClientEntryPoint {
         try {
             String reflectorClass = reflectorPath+".common."+reflectorName;
             ClassLoader currentLoader = getClass().getClassLoader();
-            ClassHelper.syncSourcesAndLoadClass(ClassLoader.getSystemClassLoader(),currentLoader,reflectorClass);
             Class<?> cls = ClassHelper.findClass(reflectorClass,currentLoader);
             if(Objects.nonNull(cls)) this.reflector = (MTMappingsHelper1_16_5)cls.newInstance();
             else MTRef.logError("Failed to find 1.16.5 reflector (null class)");

@@ -14,12 +14,17 @@ import mods.thecomputerizer.theimpossiblelibrary.api.core.annotation.MultiVersio
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import static mods.thecomputerizer.musictriggers.api.MTRef.*;
 import static mods.thecomputerizer.theimpossiblelibrary.api.core.CoreAPI.ModLoader.LEGACY;
 import static mods.thecomputerizer.theimpossiblelibrary.api.core.TILDev.DEV;
+import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 
 @MultiVersionMod(modDescription = DESCRIPTION, modid = MODID, modName = NAME, modVersion = VERSION)
 public class MTCommonEntryPoint extends CommonEntryPoint {
@@ -29,10 +34,10 @@ public class MTCommonEntryPoint extends CommonEntryPoint {
     public MTCommonEntryPoint() {
         MTRef.logDebug("Constructing MTCommonEntryPoint on ClassLoader {}",getClass().getClassLoader());
         CommonEntryPoint instance = null;
-        Class<? extends CommonEntryPoint> versionClass = findVersionEntryClass(CoreAPI.getInstance());
+        Class<?> versionClass = findVersionEntryClass(CoreAPI.getInstance());
         if(Objects.nonNull(versionClass)) {
             try {
-                instance = versionClass.newInstance();
+                instance = (CommonEntryPoint)versionClass.newInstance();
             } catch(ReflectiveOperationException ex) {
                 MTRef.logFatal("Unable to instantiate versioned instance!",ex);
             }
@@ -54,23 +59,37 @@ public class MTCommonEntryPoint extends CommonEntryPoint {
         return LEGACY.toString().equals(loaderName) ? loaderName.toLowerCase() : "shared";
     }
     
-    @SuppressWarnings("unchecked")
-    private Class<? extends CommonEntryPoint> findVersionEntryClass(CoreAPI instance) {
+    private Class<?> findVersionEntryClass(CoreAPI instance) {
         MTRef.logDebug("Finding version entrypoint on ClassLoader {}",instance.getClass().getClassLoader());
         GameVersion version = instance.getVersion();
-        String className = BASE_PACKAGE+"."+getLoader(instance)+"."+version.getPkg()+".common.MTCommonEntryPoint";
+        String loader = getLoader(instance);
+        String className = BASE_PACKAGE+"."+loader+"."+version.getPkg()+".common.MTCommonEntryPoint";
         className+=version.getName().replace('.','_');
         ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
-        if(instance.getVersion().isCompatibleModernForge() && DEV) {
-            //Sync the version entry class to the context class loader
-            ClassHelper.syncSourcesAndLoadClass(ClassLoader.getSystemClassLoader(),contextLoader,className);
+        if(DEV && instance.getModLoader().isForge() && (version.isV12() || version.isV16())) {
+            String versionStr = version.isV16() ? "/forge/1.16/" : "/legacy/1.12/";
+            Set<String> contains = new HashSet<>(Arrays.asList("/api/","/"+loader+"/",versionStr));
+            ClassHelper.checkBurningWaveInit();
+            for(URL url : ClassLoaders.getURLs(ClassLoader.getSystemClassLoader())) {
+                for(String contain : contains) {
+                    if(!url.toString().contains(contain)) continue;
+                    try {
+                        instance.addURLToClassLoader(contextLoader,url);
+                    } catch(Exception ex) {
+                        MTRef.logError("ok",ex);
+                    }
+                    break;
+                }
+            }
         }
         try {
-            Class<CommonEntryPoint> clazz = (Class<CommonEntryPoint>)ClassHelper.findClass(className,contextLoader);
-            MTRef.logInfo("Successfully located versioned entrypoint {} using loader {}",clazz,contextLoader);
+            Class<?> clazz = ClassHelper.findClass(className,true,contextLoader);
+            if(Objects.nonNull(clazz))
+                MTRef.logInfo("Successfully located versioned entrypoint {} to {}",clazz,clazz.getClassLoader());
+            else MTRef.logError("Why is the class null {}",className);
             return clazz;
-        } catch(ClassCastException ex) {
-            MTRef.logError("Classpath `{}` is not an entrypoint!",className,ex);
+        } catch(Exception ex) {
+            MTRef.logError("Caught exception getting version entrypoint class {}",className,ex);
             return null;
         }
     }

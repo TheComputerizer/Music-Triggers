@@ -50,16 +50,15 @@ public class MTClientEntryPoint1_18_2 extends ClientEntryPoint {
         CoreAPI core = CoreAPI.getInstance();
         String loader = core.getModLoader().toString();
         String reflectorPath = core.getVersion().getPackageName(BASE_PACKAGE+"."+loader.toLowerCase());
-        String reflectorName = String.format("MTMappingsHelper%s1_16_5",loader);
+        String reflectorName = String.format("MTMappingsHelper%s1_18_2",loader);
         try {
             String reflectorClass = reflectorPath+".common."+reflectorName;
             ClassLoader currentLoader = getClass().getClassLoader();
-            ClassHelper.syncSourcesAndLoadClass(ClassLoader.getSystemClassLoader(),currentLoader,reflectorClass);
             Class<?> cls = ClassHelper.findClass(reflectorClass,currentLoader);
             if(Objects.nonNull(cls)) this.reflector = (MTMappingsHelper1_18_2)cls.newInstance();
-            else MTRef.logError("Failed to find 1.16.5 reflector (null class)");
+            else MTRef.logError("Failed to find 1.18.2 reflector (null class)");
         } catch(InstantiationException | IllegalAccessException ex) {
-            MTRef.logError("Failed to find 1.16.5 reflector",ex);
+            MTRef.logError("Failed to find 1.18.2 reflector",ex);
         }
         if(Objects.nonNull(this.reflector)) {
             MTRef.logInfo("Attmpting to manually define dev resources");

@@ -1,8 +1,8 @@
 package mods.thecomputerizer.musictriggers.api.core;
 
-import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.CoreAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.CoreEntryPoint;
+import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.annotation.MultiVersionCoreMod;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.asm.TypeHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
@@ -23,10 +23,10 @@ import java.util.Objects;
 import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
 import static mods.thecomputerizer.musictriggers.api.MTRef.NAME;
 import static mods.thecomputerizer.musictriggers.api.MTRef.VERSION;
-import static mods.thecomputerizer.theimpossiblelibrary.api.core.TILDev.DEV;
 import static mods.thecomputerizer.theimpossiblelibrary.api.core.asm.ASMRef.*;
 import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 
+@SuppressWarnings("LoggingSimilarMessage")
 @MultiVersionCoreMod(modid = MODID, modName = NAME, modVersion = VERSION)
 public class MTCoreEntryPoint extends CoreEntryPoint {
     
@@ -39,14 +39,11 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
     static final String TICKER_DESC = TypeHelper.method(BOOLEAN_TYPE,new Type[]{}).getDescriptor();
     
     static String getHandlerBinary() {
-        if(DEV) return "net.minecraft.client.audio.SoundHandler";
         CoreAPI core = CoreAPI.getInstance();
         boolean fabric = core.getModLoader().isFabric();
-        switch(core.getVersion()) {
-            case V12_2: return "net.minecraft.client.audio.SoundHandler";
-            case V16_5: return fabric ? "net.minecraft.class_1144" : "net.minecraft.client.audio.SoundHandler";
-            default: return fabric ? "net.minecraft.class_1144" : "net.minecraft.client.sounds.SoundManager";
-        }
+        if(core.getVersion().isV12()) return "net.minecraft.client.audio.SoundHandler";
+        if(core.getVersion().isV16()) return fabric ? "net.minecraft.class_1144" : "net.minecraft.client.audio.SoundHandler";
+        return fabric ? "net.minecraft.class_1144" : "net.minecraft.client.sounds.SoundManager";
     }
     
     static MethodInsnNode getInvoker(String name, String desc) {
@@ -54,20 +51,17 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
     }
     
     static String getTickerBinary() {
-        if(DEV) return "net.minecraft.client.audio.MusicTicker";
         CoreAPI core = CoreAPI.getInstance();
         boolean fabric = core.getModLoader().isFabric();
-        switch(core.getVersion()) {
-            case V12_2: return "net.minecraft.client.audio.MusicTicker";
-            case V16_5: return fabric ? "net.minecraft.class_1142" : "net.minecraft.client.audio.MusicTicker";
-            default: return fabric ? "net.minecraft.class_1142" : "net.minecraft.client.sounds.MusicManager";
-        }
+        if(core.getVersion().isV12()) return "net.minecraft.client.audio.MusicTicker";
+        if(core.getVersion().isV16()) return fabric ? "net.minecraft.class_1142" : "net.minecraft.client.audio.MusicTicker";
+        return fabric ? "net.minecraft.class_1142" : "net.minecraft.client.sounds.MusicManager";
     }
     
     List<String> targets;
     
     public MTCoreEntryPoint() {
-        MTRef.logDebug("Constructing MTCoreEntryPoint on ClassLoader {}",getClass().getClassLoader());
+        TILRef.logInfo("Constructing MTCoreEntryPoint on ClassLoader {}", getClass().getClassLoader());
     }
     
     @Override public List<String> classTargets() {
@@ -77,20 +71,16 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
     
     String collectTickerNames() {
         CoreAPI core = CoreAPI.getInstance();
-        switch(core.getVersion()) {
-            case V12_2: return "update func_73660_a";
-            case V16_5: return "tick func_73660_a method_18669";
-            default: return "tick m_120183_ method_18669"; //The rest of the versions are the same
-        }
+        if(core.getVersion().isV12()) return "func_73660_a";
+        if(core.getVersion().isV16()) return "func_73660_a method_18669";
+        return "m_120183_ method_18669"; //The rest of the versions are the same
     }
     
     String collectVolumeNames() {
         CoreAPI core = CoreAPI.getInstance();
-        switch(core.getVersion()) {
-            case V12_2: return "setSoundLevel func_184399_a";
-            case V16_5: return "updateSourceVolume func_184399_a method_18669";
-            default: return "updateSourceVolume m_120358_ method_18669"; //The rest of the versions are the same
-        }
+        if(core.getVersion().isV12()) return "func_184399_a";
+        if(core.getVersion().isV16()) return "func_184399_a method_4865";
+        return "m_120358_ method_4865"; //The rest of the versions are the same
     }
     
     @Override public ClassNode editClass(ClassNode classNode) {
@@ -102,11 +92,8 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
     
     public void fixMusicTicker(ClassNode classNode, MethodNode node, String ... names) {
         String className = getClassName(classNode);
-        MTRef.logInfo("Music ticker query for {}",className);
-        if(!TICKER_NAME.equals(getClassName(classNode))) return;
-        String name = getMethodName(classNode,node);
-        MTRef.logInfo("Method name is {}",name);
-        if(Misc.equalsAny(getMethodName(classNode,node),names)) {
+        if(!TICKER_NAME.equals(className)) return;
+        if(Misc.equalsAny(CoreAPI.getInstance().mapMethodName(classNode.name,node.name,node.desc),names)) {
             InsnList ifIns = new InsnList();
             LabelNode skip = new LabelNode(new Label());
             ifIns.insert(getInvoker("stopVanillaMusicTicker",TICKER_DESC));
@@ -114,7 +101,7 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
             ifIns.insert(new InsnNode(RETURN));
             ifIns.insert(skip);
             node.instructions.insertBefore(node.instructions.getFirst(),ifIns);
-            MTRef.logInfo("Injected music ticker override to {}",name);
+            TILRef.logInfo("Injected music ticker override to {}",node.name);
         }
     }
     
@@ -126,15 +113,15 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
         return NAME+" Core";
     }
     
+    private boolean matchMethodName(String className, String method, String desc, String ... matchThese) {
+        return Misc.equalsAny(CoreAPI.getInstance().mapMethodName(className,method,desc),matchThese);
+    }
+    
     public boolean volumeQuery(ClassNode classNode, MethodNode node, String ... names) {
-        String className = getClassName(classNode);
-        MTRef.logInfo("Volume query for {}",className);
         if(!HANDLER_NAME.equals(getClassName(classNode))) return false;
-        String name = getMethodName(classNode,node);
-        MTRef.logInfo("Method name is {}",name);
-        if(Misc.equalsAny(name,names)) {
+        if(Misc.equalsAny(CoreAPI.getInstance().mapMethodName(classNode.name,node.name,node.desc),names)) {
             node.instructions.insertBefore(node.instructions.getFirst(),getInvoker("updateVolumeSources",EMPTY_DESC));
-            MTRef.logInfo("Injected channel volume query to {}",name);
+            TILRef.logInfo("Injected channel volume query to {}",node.name);
             return true;
         }
         return false;

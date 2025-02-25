@@ -8,7 +8,7 @@ multiversion {
     preprocessor = 'gradle\\lavaplayer'
     resource_output = 'run_client\\MTResources'
     setVersions 16
-    shadow_relocations = [ shadow_package: relocate_these.split(',').toList()]
+    shadow_relocations = [ "$shadow_package": relocate_these.split(',').toList()]
     onEvaluateFinished project
 }
 
