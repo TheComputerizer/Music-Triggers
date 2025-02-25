@@ -1,0 +1,109 @@
+buildscript {
+    repositories {
+        gradlePluginPortal() {
+            content {
+                [ 'com.fasterxml.woodstox', 'com.fasterxml.jackson.core', 'com.fasterxml.jackson', 'com.fasterxml',
+                  'com.google.code.findbugs', 'com.google.code.gson', 'com.google.errorprone', 'com.google.guava',
+                  'com.google.j2objc', 'commons-io', 'io.fabric8', 'io.github.goooler.shadow', 'io.netty',
+                  'jakarta.platform', 'me.jamiemansfield', 'org.apache', 'org.apache.ant', 'org.apache.commons',
+                  'org.apache.logging', 'org.apache.logging.log4j', 'org.apache.maven', 'org.benf', 'org.cadixdev',
+                  'org.checkerframework', 'org.codehaus.groovy', 'org.codehaus.plexus', 'org.codehaus.woodstox',
+                  'org.eclipse.ee4j', 'org.eclipse.jdt', 'org.eclipse.jetty', 'org.eclipse.platform', 'org.jdom',
+                  'org.jetbrains', 'org.jetbrains.kotlin', 'org.jetbrains.kotlinx', 'org.junit', 'org.mockito',
+                  'org.ow2', 'org.ow2.asm', 'org.slf4j', 'org.sonatype.oss', 'org.springframework', 'org.vafer',
+                  'org.zeroturnaround'].forEach { includeGroup it }
+            }
+        }
+        maven {
+            name = 'Fabric'
+            url = uri('https://maven.fabricmc.net/')
+            content {
+                [ 'fabric-loom', 'net.fabricmc', 'net.fabricmc.fabric-api' ].forEach { includeGroup it }
+            }
+        }
+    }
+    dependencies {
+        classpath("fabric-loom:fabric-loom.gradle.plugin:${loom_version}")
+        classpath('io.github.goooler.shadow:shadow-gradle-plugin:8.+')
+    }
+}
+
+apply from: rootProject.file('gradle\\java17-module.gradle')
+apply from: rootProject.file('gradle\\fabric.gradle')
+apply from: rootProject.file('gradle\\shadow-relocate.gradle')
+
+plugins.apply('fabric-loom')
+
+def args = [
+        '-Dfabric.log.level=debug',
+        '-Dtil.dev=true',
+        '-Dtil.classpath.mods=mods.thecomputerizer.theimpossiblelibrary.api.common.TILCommonEntryPoint;'+mod_entrypoint,
+        '-Dtil.classpath.coremods=mods.thecomputerizer.musictriggers.api.core.MTCoreEntryPoint'
+]
+
+[ runClient, runServer ].forEach { it.jvmArgs args}
+
+repositories {
+    maven {
+        name 'Modrinth'
+        url = uri('https://api.modrinth.com/maven')
+        content {
+            includeGroup 'maven.modrinth'
+        }
+    }
+}
+
+def base = project(':api')
+def fabric = project(':fabric')
+def shared = project(':shared:shared_1.18')
+
+dependencies {
+    minecraft("com.mojang:minecraft:${shared.minecraft_version}")
+    mappings loom.layered() {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-${shared.minecraft_version}:${shared.parchment_version}@zip")
+    }
+    api(base)
+    api(fabric)
+    //The shared module builds with forge but since it only touches vanilla code this is fine
+    compileOnlyApi(shared)
+
+    modImplementation("net.fabricmc:fabric-loader:${loader_version}")
+    modImplementation("net.fabricmc.fabric-api:fabric-api:${shared.fabric_version}+1.18.2")
+    modImplementation("mods.thecomputerizer.theimpossiblelibrary:theimpossiblelibrary:${til_version}")
+    modImplementation("maven.modrinth:cloth-config:${cloth_version}")
+    modImplementation("maven.modrinth:modmenu:${modmenu_version}")
+}
+
+remapJar {
+    inputFile = tasks.shadowJar.archiveFile
+}
+
+processResources {
+    from(base.processResources.outputs)
+}
+
+processTestResources {
+    from(base.processTestResources.outputs)
+}
+
+jar {
+    from(fabric.jar.archiveFile.collect { zipTree(it) })
+    manifest {
+        attributes([
+                'Implementation-Title': name,
+                'Implementation-Version': version
+        ])
+    }
+}
+
+shadowJar {
+    shared.afterEvaluate {
+        from(shared.jar.archiveFile.collect { zipTree(it) })
+    }
+}
+
+tasks.assemble.dependsOn(shadowJar)
+tasks.shadowJar.finalizedBy('remapJar')
+tasks.jar.finalizedBy('shadowJar')
+tasks.jar.dependsOn(':fabric:build')

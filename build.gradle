@@ -29,6 +29,8 @@ def fabric = project(':fabric')
 def legacy_1_12_2 = project(':legacy:legacy_1.12')
 def fabric_1_16_5 = project(':fabric:fabric_1.16')
 def forge_1_16_5 = project(':forge:forge_1.16')
+def fabric_1_18_2 = project(':fabric:fabric_1.18')
+def forge_1_18_2 = project(':forge:forge_1.18')
 
 processResources {
     fabric.afterEvaluate { from(it.processResources.outputs) }
@@ -42,6 +44,8 @@ jar {
     legacy_1_12_2.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree(it) }) }
     fabric_1_16_5.afterEvaluate { from(it.remapJar.archiveFile.collect { zipTree(it) }) }
     forge_1_16_5.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree(it) }) }
+    fabric_1_18_2.afterEvaluate { from(it.remapJar.archiveFile.collect { zipTree(it) }) }
+    forge_1_18_2.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree(it) }) }
     manifest {
         attributes([
                 'Implementation-Title': project.name,
@@ -52,8 +56,9 @@ jar {
 }
 
 [ ':legacy:legacy_1.12:build',
-  ':fabric:fabric_1.16:build',
-  ':forge:forge_1.16:build' ].forEach { tasks.jar.dependsOn(it) }
+  ':fabric:fabric_1.16:build', ':forge:forge_1.16:build',
+  ':fabric:fabric_1.18:build', ':forge:forge_1.18:build'
+].forEach { tasks.jar.dependsOn(it) }
 
 wiki {
     wikiAccessToken = wiki_token
