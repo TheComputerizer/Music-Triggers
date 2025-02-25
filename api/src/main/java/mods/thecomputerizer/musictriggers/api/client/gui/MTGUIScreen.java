@@ -525,6 +525,12 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
         MTLogger.logWarn("GUI",this.typeInfo.getType(),msg,args);
     }
     
+    @Override public boolean onCloseRequested(boolean pressedEsc) {
+        boolean willClose = super.onCloseRequested(pressedEsc);
+        if(willClose && pressedEsc) isActive = false;
+        return willClose;
+    }
+    
     @Override public void onScreenClosed() {
         if(Objects.isNull(this.parentScreen)) isActive = false;
     }
