@@ -62,10 +62,13 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
     
     public MTCoreEntryPoint() {
         TILRef.logInfo("Constructing MTCoreEntryPoint on ClassLoader {}", getClass().getClassLoader());
+        TILRef.logInfo("SoundHandler name is {}",HANDLER_NAME);
+        TILRef.logInfo("MusicTicker name is {}",TICKER_NAME);
     }
     
     @Override public List<String> classTargets() {
         if(Objects.isNull(this.targets)) this.targets = Arrays.asList(HANDLER_BINARY,TICKER_BINARY);
+        TILRef.logInfo("Collecting class targets as {}",this.targets);
         return this.targets;
     }
     
@@ -92,7 +95,11 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
     
     public void fixMusicTicker(ClassNode classNode, MethodNode node, String ... names) {
         String className = getClassName(classNode);
+        TILRef.logInfo("Checking music ticker: node = {} | name = {}",classNode.name,className);
         if(!TICKER_NAME.equals(className)) return;
+        TILRef.logInfo("Checking music ticker inject (class = {} | method = {} | desc = {})",classNode.name,
+                       node.name,node.desc);
+        TILRef.logInfo("Potential method names are {}",Arrays.toString(names));
         if(Misc.equalsAny(CoreAPI.getInstance().mapMethodName(classNode.name,node.name,node.desc),names)) {
             InsnList ifIns = new InsnList();
             LabelNode skip = new LabelNode(new Label());
@@ -113,12 +120,13 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
         return NAME+" Core";
     }
     
-    private boolean matchMethodName(String className, String method, String desc, String ... matchThese) {
-        return Misc.equalsAny(CoreAPI.getInstance().mapMethodName(className,method,desc),matchThese);
-    }
-    
     public boolean volumeQuery(ClassNode classNode, MethodNode node, String ... names) {
-        if(!HANDLER_NAME.equals(getClassName(classNode))) return false;
+        String className = getClassName(classNode);
+        TILRef.logInfo("Checking volume inject: node = {} | name = {}",classNode.name,className);
+        if(!HANDLER_NAME.equals(className)) return false;
+        TILRef.logInfo("Checking volume inject (class = {} | method = {} | desc = {})",classNode.name,
+                       node.name,node.desc);
+        TILRef.logInfo("Potential method names are {}",Arrays.toString(names));
         if(Misc.equalsAny(CoreAPI.getInstance().mapMethodName(classNode.name,node.name,node.desc),names)) {
             node.instructions.insertBefore(node.instructions.getFirst(),getInvoker("updateVolumeSources",EMPTY_DESC));
             TILRef.logInfo("Injected channel volume query to {}",node.name);

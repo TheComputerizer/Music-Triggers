@@ -31,6 +31,7 @@ import java.util.Objects;
 import static com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats.DISCORD_PCM_S16_BE;
 import static com.sedmelluq.discord.lavaplayer.player.AudioConfiguration.ResamplingQuality.HIGH;
 import static java.lang.Long.MAX_VALUE;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class ChannelClient extends ChannelAPI {
 
@@ -105,6 +106,7 @@ public class ChannelClient extends ChannelAPI {
         AudioPlayerManager manager = new DefaultAudioPlayerManager();
         ChannelHelper.registerRemoteSources(this,manager);
         AudioSourceManagers.registerLocalSource(manager);
+        manager.setFrameBufferDuration((int)SECONDS.toMillis(15));
         return manager;
     }
 
