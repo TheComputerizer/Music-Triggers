@@ -31,10 +31,12 @@ def fabric_1_16_5 = project ':fabric:fabric_1.16'
 def forge_1_16_5 = project ':forge:forge_1.16'
 def fabric_1_18_2 = project ':fabric:fabric_1.18'
 def forge_1_18_2 = project ':forge:forge_1.18'
-def fabric_1_19_2 = project ':fabric:fabric_1.19:fabric_1.19.2'
 def forge_1_19_2 = project ':forge:forge_1.19:forge_1.19.2'
-def fabric_1_19_4 = project ':fabric:fabric_1.19:fabric_1.19.4'
 def forge_1_19_4 = project ':forge:forge_1.19:forge_1.19.4'
+def forge_1_20_1 = project ':forge:forge_1.20:forge_1.20.1'
+def forge_1_20_4 = project ':forge:forge_1.20:forge_1.20.4'
+def forge_1_20_6 = project ':forge:forge_1.20:forge_1.20.6'
+def forge_1_21_1 = project ':forge:forge_1.21:forge_1.21.1'
 
 processResources {
     fabric.afterEvaluate { from(it.processResources.outputs) }
@@ -50,10 +52,12 @@ jar {
     forge_1_16_5.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree it }) }
     fabric_1_18_2.afterEvaluate { from(it.remapJar.archiveFile.collect { zipTree it }) }
     forge_1_18_2.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree it }) }
-    fabric_1_19_2.afterEvaluate { from(it.remapJar.archiveFile.collect { zipTree it }) }
     forge_1_19_2.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree it }) }
-    fabric_1_19_4.afterEvaluate { from(it.remapJar.archiveFile.collect { zipTree it }) }
     forge_1_19_4.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree it }) }
+    forge_1_20_1.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree it }) }
+    forge_1_20_4.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree it }) }
+    forge_1_20_6.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree it }) }
+    forge_1_21_1.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree it }) }
     manifest {
         attributes([
                 'Implementation-Title': project.name,
@@ -66,8 +70,12 @@ jar {
 [ ':legacy:1.12:build',
   ':fabric:fabric_1.16:build', ':forge:forge_1.16:build',
   ':fabric:fabric_1.18:build', ':forge:forge_1.18:build',
-  ':fabric:fabric_1.19:fabric_1.19.2:build', ':forge:forge_1.19:forge_1.19.2:build',
-  ':fabric:fabric_1.19:fabric_1.19.4:build', ':forge:forge_1.19:forge_1.19.4:build'
+  ':forge:forge_1.19:forge_1.19.2:build',
+  ':forge:forge_1.19:forge_1.19.4:build',
+  ':forge:forge_1.20:forge_1.20.1:build',
+  ':forge:forge_1.20:forge_1.20.4:build',
+  ':forge:forge_1.20:forge_1.20.6:build',
+  ':forge:forge_1.21:forge_1.21.1:build'
 ].forEach { tasks.jar.mustRunAfter it }
 
 wiki {

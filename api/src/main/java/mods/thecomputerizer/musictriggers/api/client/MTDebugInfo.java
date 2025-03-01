@@ -189,14 +189,14 @@ public class MTDebugInfo extends GlobalElement {
         this.maxWidth = width<=1 ? 0 : (int)((double)width*MAX_WIDTH_PERCENT);
     }
 
-    public void toLines(FontAPI font, Collection<String> lines) {
+    public void toLines(FontAPI<?> font, Collection<String> lines) {
         compute();
         if(this.visibleElements.isEmpty() || this.maxWidth<=0) return;
         this.visibleElements.sort(elementSorter);
         for(Element element : this.visibleElements) element.toLines(font,this.maxWidth,lines);
     }
 
-    public void toLines(FontAPI font, int width, Collection<String> lines) {
+    public void toLines(FontAPI<?> font, int width, Collection<String> lines) {
         setWidth(width);
         toLines(font,lines);
     }
@@ -248,7 +248,7 @@ public class MTDebugInfo extends GlobalElement {
             return this;
         }
 
-        public void toLines(FontAPI font, int maxWidth, Collection<String> lines) {
+        public void toLines(FontAPI<?> font, int maxWidth, Collection<String> lines) {
             if(Objects.isNull(font)) return;
             String applied = getNotBlankLine();
             if(Objects.nonNull(applied)) lines.addAll(FontHelper.splitLines(font,applied,maxWidth));

@@ -52,15 +52,15 @@ multiversion {
 def paths = [                                ':api',     ':legacy:1.12',
   ':fabric:1.16',        ':forge:1.16',                                                        ':shared:1.16',
   ':fabric:1.18',        ':forge:1.18',                                                        ':shared:1.18',
-  ':fabric:1.19',        ':forge:1.19',                                                        ':shared:1.19',
-  ':fabric:1.20',        ':forge:1.20',                               ':neoforge:1.20',        ':shared:1.20',
-  ':fabric:1.21',        ':forge:1.21',                               ':neoforge:1.21',        ':shared:1.21',
-  ':fabric:1.19:1.19.2', ':forge:1.19:1.19.2',                                          ':shared:1.19:1.19.2',
-  ':fabric:1.19:1.19.4', ':forge:1.19:1.19.4',                                          ':shared:1.19:1.19.4',
-  ':fabric:1.20:1.20.1', ':forge:1.20:1.20.1',                 ':neoforge:1.20:1.20.1', ':shared:1.20:1.20.1',
-  ':fabric:1.20:1.20.4', ':forge:1.20:1.20.4',                 ':neoforge:1.20:1.20.4', ':shared:1.20:1.20.4',
-  ':fabric:1.20:1.20.6', ':forge:1.20:1.20.6',                 ':neoforge:1.20:1.20.6', ':shared:1.20:1.20.6',
-  ':fabric:1.21:1.21.1', ':forge:1.21:1.21.1',                 ':neoforge:1.21:1.21.1', ':shared:1.21:1.21.1'
+                         ':forge:1.19',                                                        ':shared:1.19',
+                         ':forge:1.20',                               ':neoforge:1.20',        ':shared:1.20',
+                         ':forge:1.21',                               ':neoforge:1.21',        ':shared:1.21',
+                         ':forge:1.19:1.19.2',                                          ':shared:1.19:1.19.2',
+                         ':forge:1.19:1.19.4',                                          ':shared:1.19:1.19.4',
+                         ':forge:1.20:1.20.1',                 ':neoforge:1.20:1.20.1', ':shared:1.20:1.20.1',
+                         ':forge:1.20:1.20.4',                 ':neoforge:1.20:1.20.4', ':shared:1.20:1.20.4',
+                         ':forge:1.20:1.20.6',                 ':neoforge:1.20:1.20.6', ':shared:1.20:1.20.6',
+                         ':forge:1.21:1.21.1',                 ':neoforge:1.21:1.21.1', ':shared:1.21:1.21.1'
 ]
 
 paths.forEach {
