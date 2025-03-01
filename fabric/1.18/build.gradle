@@ -16,15 +16,15 @@ buildscript {
         }
         maven {
             name = 'Fabric'
-            url = uri('https://maven.fabricmc.net/')
+            url = uri 'https://maven.fabricmc.net/'
             content {
                 [ 'fabric-loom', 'net.fabricmc', 'net.fabricmc.fabric-api' ].forEach { includeGroup it }
             }
         }
     }
     dependencies {
-        classpath("fabric-loom:fabric-loom.gradle.plugin:${loom_version}")
-        classpath('io.github.goooler.shadow:shadow-gradle-plugin:8.+')
+        classpath "$loom_plugin:$loom_version"
+        classpath "$shadow_plugin:$shadow_version"
     }
 }
 
@@ -32,7 +32,11 @@ apply from: rootProject.file('gradle\\java17-module.gradle')
 apply from: rootProject.file('gradle\\fabric.gradle')
 apply from: rootProject.file('gradle\\shadow-relocate.gradle')
 
-plugins.apply('fabric-loom')
+plugins.apply 'fabric-loom'
+
+def base = project ':api'
+def fabric = project ':fabric'
+def shared = project ':shared:shared_1.18'
 
 def args = [
         '-Dfabric.log.level=debug',
@@ -41,69 +45,86 @@ def args = [
         '-Dtil.classpath.coremods=mods.thecomputerizer.musictriggers.api.core.MTCoreEntryPoint'
 ]
 
-[ runClient, runServer ].forEach { it.jvmArgs args}
+[ runClient, runServer ].forEach { it.jvmArgs args }
 
 repositories {
     maven {
+        name = 'CurseMaven'
+        url = uri 'https://www.cursemaven.com'
+        content {
+            includeGroup 'curse.maven'
+        }
+    }
+    maven {
         name 'Modrinth'
-        url = uri('https://api.modrinth.com/maven')
+        url = uri 'https://api.modrinth.com/maven'
         content {
             includeGroup 'maven.modrinth'
         }
     }
+    maven {
+        name = 'ModMaven'
+        url = uri 'https://modmaven.dev'
+        content {
+            includeGroup 'mezz.jei'
+        }
+    }
 }
 
-def base = project(':api')
-def fabric = project(':fabric')
-def shared = project(':shared:shared_1.18')
-
 dependencies {
-    minecraft("com.mojang:minecraft:${shared.minecraft_version}")
+    minecraft "$fabric_mc:$minecraft_1_18_2"
     mappings loom.layered() {
         officialMojangMappings()
-        parchment("org.parchmentmc.data:parchment-${shared.minecraft_version}:${shared.parchment_version}@zip")
+        parchment "$parchment_data-$minecraft_1_18_2:$parchment_1_18_2@zip"
     }
-    api(base)
-    api(fabric)
-    //The shared module builds with forge but since it only touches vanilla code this is fine
-    compileOnlyApi(shared)
 
-    modImplementation("net.fabricmc:fabric-loader:${loader_version}")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:${shared.fabric_version}+1.18.2")
-    modImplementation("mods.thecomputerizer.theimpossiblelibrary:theimpossiblelibrary:${til_version}")
-    modImplementation("maven.modrinth:cloth-config:${cloth_version}")
-    modImplementation("maven.modrinth:modmenu:${modmenu_version}")
+    compileOnlyApi base
+    compileOnlyApi fabric
+    compileOnlyApi shared
+
+    modImplementation "$fabric_loader_artifact:$fabric_loader"
+    modImplementation "$fabric_api_artifact:$fabric_1_18_2"
+    modImplementation "$cloth_artifact:$cloth_1_18_2"
+    modImplementation "$modmenu_artifact:$modmenu_1_18_2"
+    modImplementation "mods.thecomputerizer.theimpossiblelibrary:theimpossiblelibrary:$til_version"
+
+    modRuntimeOnly "$jei_artifact:$jei_fabric_1_18_2"
 }
 
 remapJar {
+    setArchiveBaseName "${mod_id}_remapped"
     inputFile = tasks.shadowJar.archiveFile
 }
 
 processResources {
-    from(base.processResources.outputs)
+    from base.processResources.outputs
 }
 
 processTestResources {
-    from(base.processTestResources.outputs)
+    from base.processTestResources.outputs
+}
+
+compileJava {
+    source fabric.sourceSets.main.allJava
+}
+
+compileTestJava {
+    source fabric.sourceSets.test.allJava
 }
 
 jar {
-    from(fabric.jar.archiveFile.collect { zipTree(it) })
-    manifest {
-        attributes([
-                'Implementation-Title': name,
-                'Implementation-Version': version
-        ])
-    }
+    setArchiveBaseName mod_id
+    from(fabric.jar.archiveFile.collect { zipTree it })
 }
 
 shadowJar {
     shared.afterEvaluate {
-        from(shared.jar.archiveFile.collect { zipTree(it) })
+        from it.sourceSets.main.output.classesDirs.asFileTree
     }
 }
 
-tasks.assemble.dependsOn(shadowJar)
-tasks.shadowJar.finalizedBy('remapJar')
-tasks.jar.finalizedBy('shadowJar')
-tasks.jar.dependsOn(':fabric:build')
+tasks.assemble.dependsOn shadowJar
+tasks.shadowJar.finalizedBy 'remapJar'
+tasks.jar.finalizedBy 'shadowJar'
+tasks.compileJava.mustRunAfter ':fabric:build'
+tasks.compileJava.mustRunAfter ':shared:shared_1.18:build'

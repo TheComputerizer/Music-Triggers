@@ -22,52 +22,60 @@ buildscript {
         }
         maven {
             name = 'Fabric'
-            url = uri('https://maven.fabricmc.net/')
+            url = uri 'https://maven.fabricmc.net/'
             content {
                 [ 'fabric-loom', 'net.fabricmc', 'net.fabricmc.fabric-api' ].forEach { includeGroup it }
             }
         }
     }
     dependencies {
-        classpath("fabric-loom:fabric-loom.gradle.plugin:${loom_version}")
+        classpath "$loom_plugin:$loom_version"
     }
 }
 
 apply from: rootProject.file('gradle\\java8-module.gradle')
 apply from: rootProject.file('gradle\\fabric.gradle')
 
-plugins.apply('fabric-loom')
+plugins.apply 'fabric-loom'
 
-def base = project(':api')
-def shared = project(':shared:shared_1.16')
+def base = project ':api'
+
+configurations {
+    dev {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+}
 
 dependencies {
-    minecraft("com.mojang:minecraft:${shared.minecraft_version}")
+    minecraft "$fabric_mc:$minecraft_1_16_5"
     mappings loom.layered() {
         officialMojangMappings()
-        parchment("org.parchmentmc.data:parchment-${shared.minecraft_version}:${shared.parchment_version}@zip")
+        parchment "$parchment_data-$minecraft_1_16_5:$parchment_1_16_5@zip"
     }
 
-    compileOnlyApi(base)
+    compileOnlyApi base
 
-    modImplementation("net.fabricmc:fabric-loader:${loader_version}")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:${shared.fabric_version}+1.16")
-    modImplementation("mods.thecomputerizer.theimpossiblelibrary:theimpossiblelibrary:${til_version}")
+    modImplementation "$fabric_loader_artifact:$fabric_loader"
+    modImplementation "$fabric_api_artifact:$fabric_1_16_5"
+    modImplementation "mods.thecomputerizer.theimpossiblelibrary:theimpossiblelibrary:$til_version"
 }
 
 processResources {
-    from(base.processResources.outputs)
+    from base.processResources.outputs
 }
 
 processTestResources {
-    from(base.processTestResources.outputs)
+    from base.processTestResources.outputs
 }
 
 jar {
-    manifest {
-        attributes([
-                'Implementation-Title': name,
-                'Implementation-Version': version
-        ])
-    }
+    setArchiveBaseName mod_id
+    from(base.jar.archiveFile.collect { zipTree it })
 }
+
+artifacts {
+    dev jar
+}
+
+tasks.compileJava.mustRunAfter ':api:build'

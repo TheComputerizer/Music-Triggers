@@ -1,4 +1,4 @@
-plugins.apply('mods.thecomputerizer.plugin.forge')
+plugins.apply 'mods.thecomputerizer.plugin.forge'
 
 multiversion {
     api = [ 'api', 'legacy' ]

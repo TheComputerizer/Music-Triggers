@@ -1,13 +1,13 @@
 plugins.apply 'mods.thecomputerizer.plugin.forge'
 
 multiversion {
-    api = [ 'api', 'shared' ]
+    api = [ 'api', 'shared:shared_1.20' ]
     entrypoint = mod_entrypoint
     local_lib = true
-    parent = 'shared'
+    parent = 'shared:shared_1.20'
     preprocessor = 'gradle\\lavaplayer'
     resource_output = 'run_client\\MTResources'
-    setVersions 18
-    shadow_relocations = [ "$shadow_package": relocate_these.split(',').toList()]
+    setVersions 20, 4
+    shadow_relocations = [ shadow_package: relocate_these.split(',').toList()]
     onEvaluateFinished project
 }

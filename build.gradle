@@ -9,7 +9,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath('org.moddedmc.wiki.toolkit:org.moddedmc.wiki.toolkit.gradle.plugin:0.+')
+        classpath 'org.moddedmc.wiki.toolkit:org.moddedmc.wiki.toolkit.gradle.plugin:0.+'
     }
 }
 
@@ -21,16 +21,20 @@ buildscript {
  */
 
 apply from: rootProject.file('buildSrc\\java23.gradle')
-plugins.apply('org.moddedmc.wiki.toolkit')
+plugins.apply 'org.moddedmc.wiki.toolkit'
 
 //noinspection GroovyUnusedAssignment
-def base = project(':api')
-def fabric = project(':fabric')
-def legacy_1_12_2 = project(':legacy:legacy_1.12')
-def fabric_1_16_5 = project(':fabric:fabric_1.16')
-def forge_1_16_5 = project(':forge:forge_1.16')
-def fabric_1_18_2 = project(':fabric:fabric_1.18')
-def forge_1_18_2 = project(':forge:forge_1.18')
+def base = project ':api'
+def fabric = project ':fabric'
+def legacy_1_12_2 = project ':legacy:1.12'
+def fabric_1_16_5 = project ':fabric:fabric_1.16'
+def forge_1_16_5 = project ':forge:forge_1.16'
+def fabric_1_18_2 = project ':fabric:fabric_1.18'
+def forge_1_18_2 = project ':forge:forge_1.18'
+def fabric_1_19_2 = project ':fabric:fabric_1.19:fabric_1.19.2'
+def forge_1_19_2 = project ':forge:forge_1.19:forge_1.19.2'
+def fabric_1_19_4 = project ':fabric:fabric_1.19:fabric_1.19.4'
+def forge_1_19_4 = project ':forge:forge_1.19:forge_1.19.4'
 
 processResources {
     fabric.afterEvaluate { from(it.processResources.outputs) }
@@ -41,11 +45,15 @@ processTestResources {
 }
 
 jar {
-    legacy_1_12_2.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree(it) }) }
-    fabric_1_16_5.afterEvaluate { from(it.remapJar.archiveFile.collect { zipTree(it) }) }
-    forge_1_16_5.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree(it) }) }
-    fabric_1_18_2.afterEvaluate { from(it.remapJar.archiveFile.collect { zipTree(it) }) }
-    forge_1_18_2.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree(it) }) }
+    legacy_1_12_2.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree it }) }
+    fabric_1_16_5.afterEvaluate { from(it.remapJar.archiveFile.collect { zipTree it }) }
+    forge_1_16_5.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree it }) }
+    fabric_1_18_2.afterEvaluate { from(it.remapJar.archiveFile.collect { zipTree it }) }
+    forge_1_18_2.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree it }) }
+    fabric_1_19_2.afterEvaluate { from(it.remapJar.archiveFile.collect { zipTree it }) }
+    forge_1_19_2.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree it }) }
+    fabric_1_19_4.afterEvaluate { from(it.remapJar.archiveFile.collect { zipTree it }) }
+    forge_1_19_4.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree it }) }
     manifest {
         attributes([
                 'Implementation-Title': project.name,
@@ -55,16 +63,18 @@ jar {
     }
 }
 
-[ ':legacy:legacy_1.12:build',
+[ ':legacy:1.12:build',
   ':fabric:fabric_1.16:build', ':forge:forge_1.16:build',
-  ':fabric:fabric_1.18:build', ':forge:forge_1.18:build'
-].forEach { tasks.jar.dependsOn(it) }
+  ':fabric:fabric_1.18:build', ':forge:forge_1.18:build',
+  ':fabric:fabric_1.19:fabric_1.19.2:build', ':forge:forge_1.19:forge_1.19.2:build',
+  ':fabric:fabric_1.19:fabric_1.19.4:build', ':forge:forge_1.19:forge_1.19.4:build'
+].forEach { tasks.jar.mustRunAfter it }
 
 wiki {
     wikiAccessToken = wiki_token
     docs {
         mod_id {
-            root = file("docs/${mod_id}")
+            root = file "docs/$mod_id"
         }
     }
 }

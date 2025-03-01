@@ -16,36 +16,32 @@ buildscript {
         }
         maven {
             name = 'Fabric'
-            url = uri('https://maven.fabricmc.net/')
+            url = uri 'https://maven.fabricmc.net/'
             content {
                 [ 'fabric-loom', 'net.fabricmc', 'net.fabricmc.fabric-api' ].forEach { includeGroup it }
             }
         }
     }
     dependencies {
-        classpath("fabric-loom:fabric-loom.gradle.plugin:${loom_version}")
-        classpath('io.github.goooler.shadow:shadow-gradle-plugin:8.+')
+        classpath "$loom_plugin:$loom_version"
     }
 }
 
-apply from: rootProject.file('gradle\\java8-module.gradle')
+apply from: rootProject.file('gradle\\java17-module.gradle')
 apply from: rootProject.file('gradle\\fabric.gradle')
-apply from: rootProject.file('gradle\\shadow-relocate.gradle')
 
 plugins.apply 'fabric-loom'
 
 def base = project ':api'
 def fabric = project ':fabric'
-def shared = project ':shared:shared_1.16'
+def shared = project ':shared:shared_1.19'
 
-def args = [
-        '-Dfabric.log.level=debug',
-        '-Dtil.dev=true',
-        '-Dtil.classpath.mods=mods.thecomputerizer.theimpossiblelibrary.api.common.TILCommonEntryPoint;'+mod_entrypoint,
-        '-Dtil.classpath.coremods=mods.thecomputerizer.musictriggers.api.core.MTCoreEntryPoint'
-]
-
-[ runClient, runServer ].forEach { it.jvmArgs args }
+configurations {
+    dev {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+}
 
 repositories {
     maven {
@@ -58,34 +54,26 @@ repositories {
 }
 
 dependencies {
-    minecraft "com.mojang:minecraft:$minecraft_1_16_5"
+    minecraft "$fabric_mc:$minecraft_1_19_2"
     mappings loom.layered() {
         officialMojangMappings()
-        parchment "$parchment_data-$minecraft_1_16_5:$parchment_1_16_5@zip"
+        parchment "$parchment_data-$minecraft_1_19_2:$parchment_1_19_2@zip"
     }
 
     compileOnlyApi base
-    compileOnlyApi fabric
-    compileOnlyApi shared
+    api project(path: ':fabric', configuration: 'dev')
+    compileOnlyApi project(path: ':shared:shared_1.19', configuration: 'dev')
 
     modImplementation "$fabric_loader_artifact:$fabric_loader"
-    modImplementation "$fabric_api_artifact:$fabric_1_16_5"
-    modImplementation "$cloth_artifact:$cloth_1_16_5"
-    modImplementation "$modmenu_artifact:$modmenu_1_16_5"
-    modImplementation "mods.thecomputerizer.theimpossiblelibrary:theimpossiblelibrary:$til_version"
-}
-
-remapJar {
-    setArchiveBaseName "${mod_id}_remapped"
-    inputFile = tasks.shadowJar.archiveFile
+    modImplementation "$fabric_api_artifact:$fabric_1_19_2"
 }
 
 processResources {
-    from base.processResources.outputs
+    from fabric.processResources.outputs
 }
 
 processTestResources {
-    from base.processTestResources.outputs
+    from fabric.processTestResources.outputs
 }
 
 compileJava {
@@ -101,14 +89,9 @@ jar {
     from(fabric.jar.archiveFile.collect { zipTree it })
 }
 
-shadowJar {
-    shared.afterEvaluate {
-        from it.sourceSets.main.output.classesDirs.asFileTree
-    }
+artifacts {
+    dev jar
 }
 
-tasks.assemble.dependsOn shadowJar
-tasks.shadowJar.finalizedBy remapJar
-tasks.jar.finalizedBy shadowJar
 tasks.compileJava.mustRunAfter ':fabric:build'
-tasks.compileJava.mustRunAfter ':shared:shared_1.16:build'
+tasks.compileJava.mustRunAfter ':shared:shared_1.19:build'
