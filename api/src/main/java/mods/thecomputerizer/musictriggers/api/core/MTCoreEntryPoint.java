@@ -95,11 +95,7 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
     
     public void fixMusicTicker(ClassNode classNode, MethodNode node, String ... names) {
         String className = getClassName(classNode);
-        TILRef.logInfo("Checking music ticker: node = {} | name = {}",classNode.name,className);
         if(!TICKER_NAME.equals(className)) return;
-        TILRef.logInfo("Checking music ticker inject (class = {} | method = {} | desc = {})",classNode.name,
-                       node.name,node.desc);
-        TILRef.logInfo("Potential method names are {}",Arrays.toString(names));
         if(Misc.equalsAny(CoreAPI.getInstance().mapMethodName(classNode.name,node.name,node.desc),names)) {
             InsnList ifIns = new InsnList();
             LabelNode skip = new LabelNode(new Label());
@@ -122,11 +118,7 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
     
     public boolean volumeQuery(ClassNode classNode, MethodNode node, String ... names) {
         String className = getClassName(classNode);
-        TILRef.logInfo("Checking volume inject: node = {} | name = {}",classNode.name,className);
         if(!HANDLER_NAME.equals(className)) return false;
-        TILRef.logInfo("Checking volume inject (class = {} | method = {} | desc = {})",classNode.name,
-                       node.name,node.desc);
-        TILRef.logInfo("Potential method names are {}",Arrays.toString(names));
         if(Misc.equalsAny(CoreAPI.getInstance().mapMethodName(classNode.name,node.name,node.desc),names)) {
             node.instructions.insertBefore(node.instructions.getFirst(),getInvoker("updateVolumeSources",EMPTY_DESC));
             TILRef.logInfo("Injected channel volume query to {}",node.name);
