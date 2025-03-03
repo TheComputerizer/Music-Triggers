@@ -2,7 +2,6 @@ package mods.thecomputerizer.musictriggers.api.client;
 
 import lombok.Getter;
 import lombok.Setter;
-import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
@@ -15,6 +14,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.common.biome.BiomeAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.effect.EffectAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.effect.EffectInstanceAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextTranslationAPI;
@@ -28,12 +28,14 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.Function;
 
+import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
 import static mods.thecomputerizer.musictriggers.api.client.MTDebugInfo.ElementType.*;
 
 public class MTDebugInfo extends GlobalElement {
 
     private static final double MAX_WIDTH_PERCENT = 2d/3d;
-    private static final Comparator<Element> elementSorter = Collections.reverseOrder(Comparator.comparingInt(Element::getPriority));
+    private static final Comparator<Element> elementComparator = Comparator.comparingInt(Element::getPriority);
+    private static final Comparator<Element> elementSorter = Collections.reverseOrder(elementComparator);
 
     private final List<Element> elements;
     private final List<Element> visibleElements;
@@ -115,7 +117,10 @@ public class MTDebugInfo extends GlobalElement {
                         WorldAPI<?> world = player.getWorld();
                         if(Objects.nonNull(world)) {
                             BlockPosAPI<?> pos = player.getPosRounded();
-                            return new Object[]{world.getLightBlock(pos),world.getLightSky(pos),world.getLightTotal(pos)};
+                            int blockLight = world.getLightBlock(pos);
+                            int skyLight = world.getLightSky(pos);
+                            int totalLight = world.getLightTotal(pos);
+                            return new Object[]{blockLight,skyLight,totalLight};
                         }
                     }
                     return new Object[]{"?","?","?"};
@@ -128,7 +133,8 @@ public class MTDebugInfo extends GlobalElement {
                         StringJoiner joiner = new StringJoiner(", ");
                         for(EffectInstanceAPI<?> instance : player.getActiveEffects()) {
                             EffectAPI<?> effect = instance.getEffect();
-                            TextAPI<?> text = getTranslated("status","effect","?",effect.getRegistryName());
+                            ResourceLocationAPI<?> registryName = effect.getRegistryName();
+                            TextAPI<?> text = getTranslated("status","effect","?",registryName);
                             if(Objects.nonNull(text)) joiner.add(text.getApplied());
                         }
                         return new Object[]{joiner.toString()};
@@ -147,7 +153,8 @@ public class MTDebugInfo extends GlobalElement {
                     Debug debug = ChannelHelper.getDebug();
                     if(Objects.isNull(debug)) return new Object[]{"Unknown"};
                     StringJoiner joiner = new StringJoiner(", ");
-                    for(Entry<String,List<String>> mod : ChannelHelper.getDebug().getFormattedBlockedMods().entrySet()) {
+                    Map<String,List<String>> blockedMods = ChannelHelper.getDebug().getFormattedBlockedMods();
+                    for(Entry<String,List<String>> mod : blockedMods.entrySet()) {
                         TextAPI<?> text = getTranslated("other","blocked.mod",mod.getKey(),mod.getValue());
                         if(Objects.nonNull(text)) joiner.add(text.getApplied());
                     }
@@ -180,7 +187,7 @@ public class MTDebugInfo extends GlobalElement {
     }
     
     public TextTranslationAPI<?> getTranslated(String type, String key, Object ... args) {
-        String built = "debug."+MTRef.MODID+"."+type;
+        String built = "debug."+MODID+"."+type;
         if(StringUtils.isNotEmpty(key)) built+=("."+key);
         return TextHelper.getTranslated(built,args);
     }
@@ -238,7 +245,7 @@ public class MTDebugInfo extends GlobalElement {
         }
         
         private TextTranslationAPI<?> getTranslated(String key, Object ... args) {
-            String built = "debug."+MTRef.MODID+"."+this.type.getId();
+            String built = "debug."+MODID+"."+this.type.getId();
             if(StringUtils.isNotEmpty(key)) built+=("."+key);
             return TextHelper.getTranslated(built,args);
         }
