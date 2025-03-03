@@ -137,7 +137,7 @@ public class TriggerContextServer extends TriggerContext {
     }
 
     private boolean checkEntityName(ResourceContext ctx, EntityAPI<?,?> entity) {
-        ResourceLocationAPI<?> regName = entity.getRegistryName();
+        ResourceLocationAPI<?> regName = entity.getRegistryName(this.world);
         if(Objects.isNull(regName)) return false;
         String name = entity.getName();
         return ctx.checkMatch(regName.toString(),StringUtils.isNotBlank(name) ? name : null);
@@ -358,7 +358,7 @@ public class TriggerContextServer extends TriggerContext {
 
     @Override public boolean isActiveStructure(ResourceContext ctx) {
         return Objects.nonNull(this.structure) && ctx.checkMatch(
-                this.structure.getRegistryName().toString(),this.structure.getName());
+                this.structure.getRegistryName(this.world).toString(),this.structure.getName(this.world));
     }
 
     @Override public boolean isActiveTime(String bundle, float startHour, float endHour, int startDay, int endDay, int moonPhase) {
