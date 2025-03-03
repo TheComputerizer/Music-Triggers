@@ -62,7 +62,7 @@ public class TriggerContextServer extends TriggerContext {
             if(Objects.isNull(name) || name.isEmpty()) name = "?";
             ResourceLocationAPI<?> registryName = this.structure.getRegistryName();
             checkStructureSync(name,Objects.nonNull(registryName) ? registryName.toString() : "?");
-        }
+        } else if(Objects.nonNull(this.player)) checkStructureSync("?","?");
     }
 
     private boolean checkBiomeNameAndType(TriggerBiome trigger) {
