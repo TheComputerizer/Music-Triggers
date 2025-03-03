@@ -41,6 +41,8 @@ public class MTDebugInfo extends GlobalElement {
     private final List<Element> visibleElements;
     @Setter private ChannelHelper helper;
     private int maxWidth;
+    private String structureID = "?";
+    private String structureName = "?";
 
     public MTDebugInfo(ChannelHelper helper) {
         super("Debug_Info");
@@ -97,15 +99,24 @@ public class MTDebugInfo extends GlobalElement {
                 });
         addElement(POSITION,"structure",true,1002)
                 .setVisibility(helper -> ChannelHelper.getDebugBool("show_position_info"))
-                .setArgSetter(helper -> new Object[]{"?","?"});
+                .setArgSetter(helper -> {
+                    String name = Objects.nonNull(this.structureName) ? this.structureName : "?";
+                    String id = Objects.nonNull(this.structureID) ? this.structureID : "?";
+                    return new Object[]{name,id};
+                });
         addElement(POSITION,"biome",true,1001)
                 .setVisibility(helper -> ChannelHelper.getDebugBool("show_position_info"))
                 .setArgSetter(helper -> {
                     PlayerAPI<?,?> player = helper.getPlayer();
                     if(Objects.nonNull(player)) {
-                        BiomeAPI<?> biome = player.getWorld().getBiomeAt(player.getPosRounded());
-                        if(Objects.nonNull(biome))
-                            return new Object[]{"?",biome.getRegistryName(),biome.getTagNames(player.getWorld())};
+                        WorldAPI<?> world = player.getWorld();
+                        BiomeAPI<?> biome = world.getBiomeAt(player.getPosRounded());
+                        if(Objects.nonNull(biome)) {
+                            String name = biome.getName(world);
+                            ResourceLocationAPI<?> registryName = biome.getRegistryName(world);
+                            Set<String> tags = biome.getTagNames(world);
+                            return new Object[]{name,registryName,tags};
+                        }
                     }
                     return new Object[]{"?","?","?"};
                 });
@@ -125,7 +136,7 @@ public class MTDebugInfo extends GlobalElement {
                     }
                     return new Object[]{"?","?","?"};
                 });
-        addElement(STATUS, "effects")
+        addElement(STATUS,"effects")
                 .setVisibility(helper -> ChannelHelper.getDebugBool("show_status_info"))
                 .setArgSetter(helper -> {
                     PlayerAPI<?,?> player = helper.getPlayer();
@@ -206,6 +217,11 @@ public class MTDebugInfo extends GlobalElement {
     public void toLines(FontAPI<?> font, int width, Collection<String> lines) {
         setWidth(width);
         toLines(font,lines);
+    }
+    
+    public void updateStructure(String name, String id) {
+        this.structureName = name;
+        this.structureID = id;
     }
     
     public static class Element {

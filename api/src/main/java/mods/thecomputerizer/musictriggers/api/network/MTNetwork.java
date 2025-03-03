@@ -32,6 +32,7 @@ public class MTNetwork {
     
     public static void initCommon() {
         MTRef.logInfo("Initializing common network");
+        NetworkHandler.registerMsgToClient(MessageCurrentStructure.class,MessageCurrentStructure::new);
         NetworkHandler.registerMsgToClient(MessageFinishedInit.class,MessageFinishedInit::new);
         NetworkHandler.registerMsgToClient(MessageInitChannels.class,MessageInitChannels::new);
         NetworkHandler.registerMsgToClient(MessageReload.class,MessageReload::new);

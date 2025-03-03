@@ -1,10 +1,14 @@
 package mods.thecomputerizer.musictriggers.api.server;
 
+import lombok.Setter;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.ResourceContext;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerBiome;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerMob;
+import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
+import mods.thecomputerizer.musictriggers.api.network.MessageCurrentStructure;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.biome.BiomeAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.EntityAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.structure.StructureAPI;
@@ -29,6 +33,8 @@ public class TriggerContextServer extends TriggerContext {
     private BlockPosAPI<?> pos;
     private StructureAPI<?> structure;
     private BiomeAPI<?> biome;
+    @Setter private String getPreviousStructureID = "?";
+    @Setter private String previousStructureName = "?";
 
     public TriggerContextServer(ChannelAPI channel) {
         super(channel,"server_context");
@@ -51,6 +57,12 @@ public class TriggerContextServer extends TriggerContext {
         this.pos = hasBoth() ? this.player.getPosRounded() : null;
         this.biome = Objects.nonNull(this.pos) ? this.world.getBiomeAt(this.pos) : null;
         this.structure = Objects.nonNull(this.pos) ? this.world.getStructureAt(this.pos) : null;
+        if(Objects.nonNull(this.structure)) {
+            String name = this.structure.getName();
+            if(Objects.isNull(name) || name.isEmpty()) name = "?";
+            ResourceLocationAPI<?> registryName = this.structure.getRegistryName();
+            checkStructureSync(name,Objects.nonNull(registryName) ? registryName.toString() : "?");
+        }
     }
 
     private boolean checkBiomeNameAndType(TriggerBiome trigger) {
@@ -135,6 +147,22 @@ public class TriggerContextServer extends TriggerContext {
         int range = trigger.getParameterAsInt("detection_range");
         float rangeRatioY = trigger.getParameterAsFloat("detection_y_ratio");
         return trigger.removeDuplicates(getEntitiesAround(getBox(range,rangeRatioY)));
+    }
+    
+    private void checkStructureSync(String name, String id) {
+        if(this.previousStructureName.equals(name) && this.getPreviousStructureID.equals(id)) return;
+        //In the case of multiple server channels, this ensures only 1 will send a structure update to the client
+        ChannelHelper helper = this.channel.getHelper();
+        for(ChannelAPI channel : helper.getChannels().values()) {
+            TriggerContext ctx = channel.getSelector().getContext();
+            if(ctx instanceof TriggerContextServer) {
+                TriggerContextServer serverCtx = (TriggerContextServer)ctx;
+                serverCtx.previousStructureName = name;
+                serverCtx.getPreviousStructureID = id;
+            }
+        }
+        MessageCurrentStructure<?> message = new MessageCurrentStructure<>(helper,name,id);
+        MTNetwork.sendToClient(message,message.getUuid());
     }
 
     @Override public boolean isActiveAcidRain() {

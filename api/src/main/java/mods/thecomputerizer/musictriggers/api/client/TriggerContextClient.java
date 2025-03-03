@@ -242,7 +242,7 @@ public class TriggerContextClient extends TriggerContext {
     }
 
     @Override public boolean isActiveLoading() {
-        return Objects.nonNull(this.minecraft) && this.minecraft.isLoading();
+        return Objects.isNull(this.minecraft) || this.minecraft.isLoading();
     }
 
     @Override public boolean isActiveLowHP(float percent) {
