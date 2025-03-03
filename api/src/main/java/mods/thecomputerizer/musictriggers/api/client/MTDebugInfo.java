@@ -8,11 +8,15 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.global.Debug;
 import mods.thecomputerizer.musictriggers.api.data.global.GlobalElement;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.font.FontAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.font.FontHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.biome.BiomeAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.blockentity.BlockEntityAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.effect.EffectAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.effect.EffectInstanceAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.EntityAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextAPI;
@@ -141,23 +145,64 @@ public class MTDebugInfo extends GlobalElement {
                 .setArgSetter(helper -> {
                     PlayerAPI<?,?> player = helper.getPlayer();
                     if(Objects.nonNull(player)) {
-                        StringJoiner joiner = new StringJoiner(", ");
-                        for(EffectInstanceAPI<?> instance : player.getActiveEffects()) {
-                            EffectAPI<?> effect = instance.getEffect();
-                            ResourceLocationAPI<?> registryName = effect.getRegistryName();
-                            TextAPI<?> text = getTranslated("status","effect","?",registryName);
-                            if(Objects.nonNull(text)) joiner.add(text.getApplied());
+                        WorldAPI<?> world = player.getWorld();
+                        if(Objects.nonNull(world)) {
+                            StringJoiner joiner = new StringJoiner(", ");
+                            for(EffectInstanceAPI<?> instance : player.getActiveEffects()) {
+                                EffectAPI<?> effect = instance.getEffect();
+                                ResourceLocationAPI<?> registryLoc = effect.getRegistryName(world);
+                                String name = Objects.nonNull(registryLoc) ? effect.getName(world) : "?";
+                                String registryName = Objects.nonNull(registryLoc) ? registryLoc.toString() : "?";
+                                TextAPI<?> text = getTranslated("status","effect",name,registryName);
+                                if(Objects.nonNull(text)) joiner.add(text.getApplied());
+                            }
+                            return new Object[]{joiner.toString()};
                         }
-                        return new Object[]{joiner.toString()};
                     }
                     return new Object[]{"?"};
                 });
         addElement(TARGET,"block_entity")
                 .setVisibility(helper -> ChannelHelper.getDebugBool("show_target_info"))
-                .setArgSetter(helper -> new Object[]{"?","?"});
+                .setArgSetter(helper -> {
+                    String name = "?";
+                    String id = "?";
+                    MinecraftAPI<?> mc = ClientHelper.getMinecraft();
+                    if(Objects.nonNull(mc)) {
+                        WorldAPI<?> world = mc.getWorld();
+                        if(Objects.nonNull(world)) {
+                            BlockEntityAPI<?,?> target = mc.getTargetBlockEntity();
+                            if(Objects.nonNull(target)) {
+                                ResourceLocationAPI<?> registryName = target.getRegistryName(world);
+                                if(Objects.nonNull(registryName)) {
+                                    name = target.getName(world);
+                                    id = registryName.toString();
+                                }
+                            }
+                        }
+                    }
+                    return new Object[]{name,id};
+                });
         addElement(TARGET,"entity")
                 .setVisibility(helper -> ChannelHelper.getDebugBool("show_target_info"))
-                .setArgSetter(helper -> new Object[]{"?","?"});
+                .setArgSetter(helper -> {
+                    String name = "?";
+                    String id = "?";
+                    MinecraftAPI<?> mc = ClientHelper.getMinecraft();
+                    if(Objects.nonNull(mc)) {
+                        WorldAPI<?> world = mc.getWorld();
+                        if(Objects.nonNull(world)) {
+                            EntityAPI<?,?> target = mc.getTargetEntity();
+                            if(Objects.nonNull(target)) {
+                                ResourceLocationAPI<?> registryName = target.getRegistryName(world);
+                                if(Objects.nonNull(registryName)) {
+                                    name = target.getName(world);
+                                    id = registryName.toString();
+                                }
+                            }
+                        }
+                    }
+                    return new Object[]{name,id};
+                });
         addElement(OTHER,"blocked.mods",true,5000)
                 .setVisibility(helper -> true)
                 .setArgSetter(helper -> {

@@ -58,9 +58,9 @@ public class TriggerContextServer extends TriggerContext {
         this.biome = Objects.nonNull(this.pos) ? this.world.getBiomeAt(this.pos) : null;
         this.structure = Objects.nonNull(this.pos) ? this.world.getStructureAt(this.pos) : null;
         if(Objects.nonNull(this.structure)) {
-            String name = this.structure.getName();
+            String name = this.structure.getName(this.world);
             if(Objects.isNull(name) || name.isEmpty()) name = "?";
-            ResourceLocationAPI<?> registryName = this.structure.getRegistryName();
+            ResourceLocationAPI<?> registryName = this.structure.getRegistryName(this.world);
             checkStructureSync(name,Objects.nonNull(registryName) ? registryName.toString() : "?");
         } else if(Objects.nonNull(this.player)) checkStructureSync("?","?");
     }
