@@ -341,6 +341,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, ChannelSyncable
         worldData.putTag("triggers",triggersTag);
     }
 
+    public abstract void seek(long ms);
     public abstract void setCategoryVolume(float volume);
     public abstract void setMasterVolume(float volume);
     public abstract void setTrackVolume(float volume);

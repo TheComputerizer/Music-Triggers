@@ -18,16 +18,12 @@ public class TriggerBiome extends HolderTrigger {
     }
     
     @Override public boolean imply(String id) {
-        setExistingParameterValue("resource_name", Collections.singletonList(id));
+        setExistingParameterValue("resource_name",Collections.singletonList(id));
         return super.imply(id);
     }
 
     @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveBiome(this);
-    }
-
-    @Override public boolean isServer() {
-        return true;
     }
 
     @SuppressWarnings("unchecked")

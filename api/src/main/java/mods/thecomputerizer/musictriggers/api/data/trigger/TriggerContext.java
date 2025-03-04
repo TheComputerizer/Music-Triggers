@@ -11,12 +11,14 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerBiome;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerMob;
 import mods.thecomputerizer.shadow.org.joml.Vector3i;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.biome.BiomeAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.blockentity.BlockEntityAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.EntityAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.Box;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.ShapeHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.WorldAPI;
 import org.apache.commons.lang3.StringUtils;
 
@@ -28,7 +30,9 @@ import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.Sta
 public abstract class TriggerContext extends ChannelElement {
 
     protected final Set<TriggerSynced> syncedTriggers;
+    protected BiomeAPI<?> biome;
     @Getter protected PlayerAPI<?,?> player;
+    protected BlockPosAPI<?> pos;
     protected WorldAPI<?> world;
 
     protected TriggerContext(ChannelAPI channel, String name) {

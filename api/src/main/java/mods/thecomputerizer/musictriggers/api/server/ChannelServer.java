@@ -82,7 +82,11 @@ public class ChannelServer extends ChannelAPI {
     @Override public void onTrackStop(AudioTrackEndReason endReason) {
         logError("onTrackStop called on the server! {}",endReason);
     }
-
+    
+    @Override public void seek(long ms) {
+        logError("Tried to seek on the server!");
+    }
+    
     @Override public void setCategoryVolume(float volume) {
         logError("Tried to set category volume on the server!");
     }

@@ -55,11 +55,11 @@ public class MTBlockEntityRegistry {
     
     public static @Nullable PlayerAPI<?,?> findClosestPlayerInWorld(
             WorldAPI<?> world, BlockPosAPI<?> pos, Collection<? extends PlayerAPI<?,?>> players) {
-        String dimName = String.valueOf(world.getDimension().getRegistryName().unwrap());
+        String dimName = String.valueOf(world.getDimension().getRegistryName().getWrapped());
         PlayerAPI<?,?> closest = null;
         double minDist = Double.MAX_VALUE;
         for(PlayerAPI<?,?> player : players) {
-            if(dimName.equals(String.valueOf(player.getDimension().getRegistryName().unwrap()))) {
+            if(dimName.equals(String.valueOf(player.getDimension().getRegistryName().getWrapped()))) {
                 double distance = pos.distanceTo(player.getPosRounded());
                 if(distance<minDist) {
                     closest = player;

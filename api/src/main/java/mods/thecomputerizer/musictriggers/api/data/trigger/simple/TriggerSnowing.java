@@ -12,8 +12,4 @@ public class TriggerSnowing extends SimpleTrigger {
     @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveSnowing();
     }
-
-    @Override public boolean isServer() {
-        return true;
-    }
 }

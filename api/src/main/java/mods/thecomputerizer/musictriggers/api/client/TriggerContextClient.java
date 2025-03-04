@@ -30,7 +30,6 @@ import java.util.function.Supplier;
 public class TriggerContextClient extends TriggerContext {
 
     private MinecraftAPI<?> minecraft;
-    private BlockPosAPI<?> pos;
 
     public TriggerContextClient(ChannelAPI channel) {
         super(channel,"client_context");
@@ -41,6 +40,37 @@ public class TriggerContextClient extends TriggerContext {
         this.player = Objects.nonNull(this.minecraft) ? this.minecraft.getPlayer() : null;
         this.world = Objects.nonNull(this.minecraft) ? this.minecraft.getWorld() : null;
         this.pos = hasPlayer() ? this.player.getPosRounded() : null;
+        this.biome = hasBoth() ? this.world.getBiomeAt(this.pos) : null;
+    }
+    
+    private boolean checkBiomeNameAndType(TriggerBiome trigger) {
+        ResourceLocationAPI<?> regName = this.biome.getRegistryName(this.world);
+        if(Objects.isNull(regName)) return false;
+        ResourceContext ctx = trigger.getResourceCtx();
+        if(ctx.checkMatch(regName.toString(),regName.getPath())) return true; //TODO Sync biome names or check biomes on the client
+        ctx = trigger.getTagCtx();
+        for(String tag : this.biome.getTagNames(this.world))
+            if(ctx.checkMatch(tag,null)) return true;
+        return false;
+    }
+    
+    private boolean checkBiomeRain(TriggerBiome trigger) {
+        String rainType = trigger.getParameterAsString("rain_type").toLowerCase();
+        if(!this.biome.canRain(this.world,this.pos)) return rainType.equals("any") || rainType.equals("none");
+        if(this.biome.canSnow(this.world,this.pos) && !rainType.equals("snow") && !rainType.equals("any")) return false;
+        float rainfall = trigger.getParameterAsFloat("biome_rainfall");
+        return trigger.getParameterAsBoolean("rainfall_greater_than") ?
+                this.biome.getRainfall()>=rainfall : this.biome.getRainfall()<=rainfall;
+    }
+    
+    private boolean checkBiomeExtras(TriggerBiome trigger) {
+        if(checkBiomeRain(trigger)) {
+            float temperature = trigger.getParameterAsFloat("biome_temperature");
+            return trigger.getParameterAsBoolean("temperature_greater_than") ?
+                    this.biome.getTemperatureAt(this.pos)>=temperature :
+                    this.biome.getTemperatureAt(this.pos)<=temperature;
+        }
+        return false;
     }
 
     private <M extends ModAPI> boolean checkMod(Supplier<M> modSupplier, Function<M,Boolean> checker) {
@@ -90,9 +120,9 @@ public class TriggerContextClient extends TriggerContext {
     @Override public boolean isActiveAdventure() {
         return hasPlayer() && this.player.isGamemodeAdventure();
     }
-
-    @Override public boolean isActiveBiome(TriggerBiome trigger) {
-        return false;
+    
+    @Override public boolean isActiveBiome(TriggerBiome trigger) { //TODO Better caching
+        return Objects.nonNull(this.biome) && checkBiomeNameAndType(trigger) && checkBiomeExtras(trigger);
     }
 
     @Override public boolean isActiveBlizzard() {
@@ -198,7 +228,10 @@ public class TriggerContextClient extends TriggerContext {
     }
 
     @Override public boolean isActiveHome(int range, float yRatio) {
-        return false;
+        if(Objects.isNull(this.pos) || Objects.isNull(this.player)) return false;
+        BlockPosAPI<?> bed = this.player.getBedPos(this.player.getDimension());
+        return Objects.nonNull(bed) && isCloseEnough(bed.x(),bed.y(),bed.z(),range,yRatio,
+                                                     this.pos.x(),this.pos.y(),this.pos.z());
     }
 
     @Override public boolean isActiveHurricane(int range) {
@@ -307,7 +340,7 @@ public class TriggerContextClient extends TriggerContext {
     }
 
     @Override public boolean isActiveSnowing() {
-        return false;
+        return Objects.nonNull(this.pos) && Objects.nonNull(this.world) && this.world.isSnowingAt(this.pos);
     }
 
     @Override public boolean isActiveSpectator() {

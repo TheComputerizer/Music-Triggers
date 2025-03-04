@@ -239,7 +239,15 @@ public class ChannelClient extends ChannelAPI {
         super.queue();
         this.queued = true;
     }
-
+    
+    @Override public void seek(long ms) {
+        AudioTrack curTrack = this.player.getPlayingTrack();
+        if(Objects.nonNull(curTrack)) {
+            double speed = this.playingPool.getSpeed();
+            curTrack.setPosition((long)(((double)ms)/speed));
+        }
+    }
+    
     @Override public void setCategoryVolume(float volume) {
         if(volume!=this.categoryVolume) {
             logDebug("Setting category volume to {}%",volume*100f);

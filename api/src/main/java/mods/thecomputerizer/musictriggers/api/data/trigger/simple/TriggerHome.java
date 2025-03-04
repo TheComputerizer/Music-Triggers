@@ -12,8 +12,4 @@ public class TriggerHome extends SimpleTrigger {
     @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveHome(getParameterAsInt("detection_range"),getParameterAsFloat("detection_y_ratio"));
     }
-
-    @Override public boolean isServer() {
-        return true;
-    }
 }

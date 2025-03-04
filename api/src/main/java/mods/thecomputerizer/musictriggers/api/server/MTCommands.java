@@ -4,6 +4,7 @@ import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
 import mods.thecomputerizer.musictriggers.api.network.MessageReload;
+import mods.thecomputerizer.musictriggers.api.network.MessageSeekSong;
 import mods.thecomputerizer.musictriggers.api.network.MessageSkipSong;
 import mods.thecomputerizer.musictriggers.api.network.MessageToggleDebugParameter;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.CommandAPI;
@@ -33,14 +34,15 @@ public class MTCommands extends CommandAPI {
 
     public MTCommands(String name, CommandAPI parent, ArgType type, boolean executionNode) {
         super(name,parent,type,executionNode);
-        for(String typeName : new String[]{"debug","reload","skip"}) addSubCommand(typeName,this,LITERAL);
+        for(String typeName : new String[]{"debug","reload","seek","skip"}) addSubCommand(typeName,this,LITERAL);
     }
     
     void addSubCommand(String typeName, CommandAPI parent, ArgType type) {
-        MTSubCommand sub = new MTSubCommand(typeName,parent,type,true);
-        if(Misc.equalsAny(typeName,"debug","reload","skip")) {
+        MTSubCommand sub = new MTSubCommand(typeName,parent,type,!"seek".equals(typeName));
+        if(Misc.equalsAny(typeName,"debug","reload","seek","skip")) {
             if("debug".equals(typeName)) addSubCommand("parameter",sub,STRING);
             else if("reload".equals(typeName)) addSubCommand("ticks",sub,INTEGER);
+            else if("seek".equals(typeName)) addSubCommand("seconds",sub,INTEGER);
         }
         addSubCommand(sub);
     }
@@ -85,9 +87,18 @@ public class MTCommands extends CommandAPI {
                     MTNetwork.sendToClient(new MessageReload<>(5),false,entity);
                     break;
                 }
+                case "seconds": {
+                    ChannelHelper.logGlobalInfo("Sending seek packet");
+                    String[] splitRemaining = remaining.split(" ");
+                    long seconds = Long.parseLong(splitRemaining.length==1 ? splitRemaining[0] : splitRemaining[1]);
+                    String channel = splitRemaining.length>1 ? splitRemaining[0] : "-";
+                    MTNetwork.sendToClient(new MessageSeekSong<>(channel,seconds),false,entity);
+                    sender.sendMessage(TextHelper.getTranslated(getMessageKey("success"),seconds));
+                    break;
+                }
                 case "skip": {
                     ChannelHelper.logGlobalInfo("Sending skip packet");
-                    MTNetwork.sendToClient(new MessageSkipSong<>(),false,(Object)unwrapEntity(sender));
+                    MTNetwork.sendToClient(new MessageSkipSong<>(),false,entity);
                     sender.sendMessage(TextHelper.getTranslated(getMessageKey("success")));
                     break;
                 }
@@ -105,7 +116,7 @@ public class MTCommands extends CommandAPI {
         
         @Override public List<String> getTabCompletions(MinecraftServerAPI<?> server, CommandSenderAPI<?> sender,
                 String input, String remaining) {
-            List<String> suggestions = new ArrayList<>(Arrays.asList("debug","reload","skip"));
+            List<String> suggestions = new ArrayList<>(Arrays.asList("debug","reload","seek","skip"));
             if(this.parent instanceof MTSubCommand) {
                 if(input.contains(this.parent.getName()) && "parameter".equals(getName())) {
                     suggestions = ChannelHelper.getGlobalData().getDebug().getBooleanParameterNames();

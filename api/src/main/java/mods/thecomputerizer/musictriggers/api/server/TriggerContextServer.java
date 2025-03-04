@@ -9,7 +9,6 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerBiome;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerMob;
 import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
 import mods.thecomputerizer.musictriggers.api.network.MessageCurrentStructure;
-import mods.thecomputerizer.theimpossiblelibrary.api.common.biome.BiomeAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.EntityAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.structure.StructureAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.integration.ChampionsAPI;
@@ -20,7 +19,6 @@ import mods.thecomputerizer.theimpossiblelibrary.api.integration.ModHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.MinecraftServerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.ServerHelper;
-import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collection;
@@ -30,9 +28,7 @@ import java.util.Set;
 
 public class TriggerContextServer extends TriggerContext {
     
-    private BlockPosAPI<?> pos;
     private StructureAPI<?> structure;
-    private BiomeAPI<?> biome;
     @Setter private String getPreviousStructureID = "?";
     @Setter private String previousStructureName = "?";
 
@@ -55,7 +51,6 @@ public class TriggerContextServer extends TriggerContext {
             this.world = null;
         }
         this.pos = hasBoth() ? this.player.getPosRounded() : null;
-        this.biome = Objects.nonNull(this.pos) ? this.world.getBiomeAt(this.pos) : null;
         this.structure = Objects.nonNull(this.pos) ? this.world.getStructureAt(this.pos) : null;
         if(Objects.nonNull(this.structure)) {
             String name = this.structure.getName(this.world);
@@ -63,36 +58,6 @@ public class TriggerContextServer extends TriggerContext {
             ResourceLocationAPI<?> registryName = this.structure.getRegistryName(this.world);
             checkStructureSync(name,Objects.nonNull(registryName) ? registryName.toString() : "?");
         } else if(Objects.nonNull(this.player)) checkStructureSync("?","?");
-    }
-
-    private boolean checkBiomeNameAndType(TriggerBiome trigger) {
-        ResourceLocationAPI<?> regName = this.biome.getRegistryName(this.world);
-        if(Objects.isNull(regName)) return false;
-        ResourceContext ctx = trigger.getResourceCtx();
-        if(ctx.checkMatch(regName.toString(),regName.getPath())) return true; //TODO Sync biome names or check biomes on the client
-        ctx = trigger.getTagCtx();
-        for(String tag : this.biome.getTagNames(this.world))
-            if(ctx.checkMatch(tag,null)) return true;
-        return false;
-    }
-
-    private boolean checkBiomeRain(TriggerBiome trigger) {
-        String rainType = trigger.getParameterAsString("rain_type").toLowerCase();
-        if(!this.biome.canRain()) return rainType.equals("any") || rainType.equals("none");
-        if(this.biome.canSnow() && !rainType.equals("snow") && !rainType.equals("any")) return false;
-        float rainfall = trigger.getParameterAsFloat("biome_rainfall");
-        return trigger.getParameterAsBoolean("rainfall_greater_than") ?
-                this.biome.getRainfall()>=rainfall : this.biome.getRainfall()<=rainfall;
-    }
-
-    private boolean checkBiomeExtras(TriggerBiome trigger) {
-        if(checkBiomeRain(trigger)) {
-            float temperature = trigger.getParameterAsFloat("biome_temperature");
-            return trigger.getParameterAsBoolean("temperature_greater_than") ?
-                    this.biome.getTemperatureAt(this.pos)>=temperature :
-                    this.biome.getTemperatureAt(this.pos)<=temperature;
-        }
-        return false;
     }
 
     private boolean checkEntity(TriggerMob trigger, EntityAPI<?,?> entity) {
@@ -177,8 +142,8 @@ public class TriggerContextServer extends TriggerContext {
         return false;
     }
 
-    @Override public boolean isActiveBiome(TriggerBiome trigger) { //TODO Better caching
-        return Objects.nonNull(this.biome) && checkBiomeNameAndType(trigger) && checkBiomeExtras(trigger);
+    @Override public boolean isActiveBiome(TriggerBiome trigger) {
+        return false;
     }
 
     @Override public boolean isActiveBlizzard() {
@@ -262,10 +227,7 @@ public class TriggerContextServer extends TriggerContext {
     }
 
     @Override public boolean isActiveHome(int range, float yRatio) {
-        if(Objects.isNull(this.pos)) return false;
-        BlockPosAPI<?> bed = this.player.getBedPos(this.player.getDimension());
-        return Objects.nonNull(bed) && isCloseEnough(bed.x(),bed.y(),bed.z(),range,yRatio,
-                this.pos.x(),this.pos.y(),this.pos.z());
+        return false;
     }
 
     @Override public boolean isActiveHurricane(int range) {
@@ -341,7 +303,7 @@ public class TriggerContextServer extends TriggerContext {
     }
 
     @Override public boolean isActiveSnowing() {
-        return Objects.nonNull(this.pos) && this.world.canSnowAt(this.pos);
+        return false;//Objects.nonNull(this.pos) && this.world.canSnowAt(this.pos);
     }
 
     @Override public boolean isActiveSpectator() {

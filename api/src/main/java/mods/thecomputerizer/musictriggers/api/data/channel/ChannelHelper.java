@@ -641,6 +641,19 @@ public class ChannelHelper implements NBTLoadable {
         }
     }
     
+    public void seek(String channelName, long seconds) {
+        long ms = seconds*1000L;
+        if("-".equals(channelName)) {
+            forEachChannel(channel -> {
+                if(Objects.nonNull(channel.getPlayer().getPlayingTrack())) channel.seek(ms);
+            });
+        } else {
+            ChannelAPI channel = this.channels.get(channelName);
+            if(Objects.nonNull(channel)) channel.seek(ms);
+            else logGlobalError("Tried to seek to {} in nonexistant channel {}!",seconds,channelName);
+        }
+    }
+    
     public void setCategoryVolume(String category, float volume) {
         forEachChannel(channel -> {
             if(category.equals("master")) channel.setMasterVolume(volume);
