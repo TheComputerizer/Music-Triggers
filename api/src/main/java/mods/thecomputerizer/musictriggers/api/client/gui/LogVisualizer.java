@@ -8,6 +8,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.ScreenAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.TextWidget;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Widget;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.WidgetList;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.render.RenderAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.render.RenderContext;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.render.TextBuffer;
 
@@ -41,8 +42,11 @@ public class LogVisualizer extends MTGUIScreen {
     }
     
     public void draw(RenderContext ctx, Vector3d center, double mouseX, double mouseY) {
+        RenderAPI renderer = ctx.getRenderer();
+        renderer.translate(0d,0d,-200d);
         if(Objects.nonNull(this.parentScreen))
             this.parentScreen.draw(ctx,center,mouseX+9999d,mouseY+9999d); //Add a large offset to prevent hover behavior
+        renderer.translate(0d,0d,200d);
         super.draw(ctx,center,mouseX,mouseY);
     }
     

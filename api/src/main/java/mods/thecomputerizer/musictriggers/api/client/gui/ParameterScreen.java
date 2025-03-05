@@ -12,6 +12,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Button;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Widget;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.WidgetHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.WidgetList;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.render.RenderAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.render.RenderContext;
 
 import java.util.ArrayList;
@@ -54,8 +55,11 @@ public class ParameterScreen extends MTGUIScreen {
     }
     
     @Override public void draw(RenderContext ctx, Vector3d center, double mouseX, double mouseY) {
+        RenderAPI renderer = ctx.getRenderer();
+        renderer.translate(0d,0d,-200d);
         if(Objects.nonNull(this.parentScreen))
             this.parentScreen.draw(ctx,center,mouseX+9999d,mouseY+9999d); //Add a large offset to prevent hover behavior
+        renderer.translate(0d,0d,200d);
         super.draw(ctx,center,mouseX,mouseY);
     }
     
