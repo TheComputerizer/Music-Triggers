@@ -79,12 +79,12 @@ public class MTClient {
     }
     
     public static boolean isFocused() {
-        MinecraftAPI mc = TILRef.getClientSubAPI(ClientAPI::getMinecraft);
+        MinecraftAPI<?> mc = TILRef.getClientSubAPI(ClientAPI::getMinecraft);
         return Objects.isNull(mc) || mc.isLoading()|| mc.isDisplayFocused();
     }
     
     public static boolean isUnpaused() {
-        MinecraftAPI mc = TILRef.getClientSubAPI(ClientAPI::getMinecraft);
+        MinecraftAPI<?> mc = TILRef.getClientSubAPI(ClientAPI::getMinecraft);
         return Objects.isNull(mc) || mc.isLoading() || !mc.isPaused();
     }
 }

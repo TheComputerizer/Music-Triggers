@@ -45,7 +45,6 @@ import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels.Channe
 import mods.thecomputerizer.musictriggers.api.network.MessageRequestChannels;
 import mods.thecomputerizer.musictriggers.api.network.MessageTriggerStates;
 import mods.thecomputerizer.musictriggers.api.server.ChannelServer;
-import mods.thecomputerizer.shadow.org.joml.Vector3d;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.sound.SoundHelper;
@@ -61,6 +60,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.server.MinecraftServerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.ServerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.Box;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.ShapeHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.shapes.vectors.Vector3;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.TagHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
@@ -414,7 +414,7 @@ public class ChannelHelper implements NBTLoadable {
     public boolean checkForJukebox() {
         PlayerAPI<?,?> player = getPlayer();
         if(Objects.nonNull(player)) {
-            Vector3d pos = player.getPosExact();
+            Vector3 pos = player.getPosExact();
             Box box = ShapeHelper.box(pos,126d);
             for(BlockEntityAPI<?,?> entity : player.getWorld().getBlockEntitiesInBox(box))
                 if(entity.getRegistryName().getPath().contains("jukebox") &&

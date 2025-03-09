@@ -6,11 +6,11 @@ import mods.thecomputerizer.musictriggers.api.client.channel.ChannelClient;
 import mods.thecomputerizer.musictriggers.api.client.channel.ChannelClientSpecial;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
-import mods.thecomputerizer.shadow.org.joml.Vector3d;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.MinecraftWindow;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.ScreenAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.render.RenderAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.render.RenderContext;
+import mods.thecomputerizer.theimpossiblelibrary.api.shapes.vectors.Vector3;
 
 import java.util.Objects;
 
@@ -31,7 +31,7 @@ public class PlaybackScreen extends MTGUIScreen {
         }
     }
     
-    @Override public void draw(RenderContext ctx, Vector3d center, double mouseX, double mouseY) {
+    @Override public void draw(RenderContext ctx, Vector3 center, double mouseX, double mouseY) {
         super.draw(ctx,center,mouseX,mouseY);
         if(Objects.nonNull(this.channel)) {
             RenderAPI renderer = ctx.getRenderer();

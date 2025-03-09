@@ -2,13 +2,13 @@ package mods.thecomputerizer.musictriggers.api.registry;
 
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
-import mods.thecomputerizer.shadow.org.joml.Vector3d;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.block.BlockStateAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.blockentity.BlockEntityAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.registry.RegistryHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.MinecraftServerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.ServerHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.shapes.vectors.Vector3;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.RandomHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.WorldAPI;
@@ -87,9 +87,9 @@ public class MTBlockEntityRegistry {
                 MTRef.logError("Unable to find ChannelHelper for player with UUID {}",closestPlayer.getUUID());
                 return false;
             }
-            Vector3d spawnPos = new Vector3d(RandomHelper.randomDouble(pos.x()+0.7d,pos.x()+0.85d),
-                                             RandomHelper.randomDouble(pos.y()+0.7d,pos.y()+1.36d),
-                                             RandomHelper.randomDouble(pos.z()+0.7d,pos.z()+0.85d));
+            Vector3 spawnPos = new Vector3(RandomHelper.randomDouble(pos.x()+0.7d, pos.x()+0.85d),
+                                            RandomHelper.randomDouble(pos.y()+0.7d,pos.y()+1.36d),
+                                            RandomHelper.randomDouble(pos.z()+0.7d,pos.z()+0.85d));
             world.spawnItem(ENHANCED_MUSIC_DISC,spawnPos,stack -> helper.writeDisc(stack, special),
                             entity -> entity.setPosition(pos.x(),pos.y()+0.5d,pos.z()));
             return true;

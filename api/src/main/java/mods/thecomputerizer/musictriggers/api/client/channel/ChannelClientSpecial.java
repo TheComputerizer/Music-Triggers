@@ -5,7 +5,7 @@ import lombok.Setter;
 import mods.thecomputerizer.musictriggers.api.client.audio.AudioContainer;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
-import mods.thecomputerizer.shadow.org.joml.Vector3i;
+import mods.thecomputerizer.theimpossiblelibrary.api.shapes.vectors.Vector3;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.vectors.VectorHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import org.apache.logging.log4j.Level;
@@ -18,7 +18,7 @@ public abstract class ChannelClientSpecial extends ChannelClient {
     
     @Setter protected Level logLevel;
     protected String playingName;
-    protected Vector3i playingPos = VectorHelper.max3I();
+    protected Vector3 playingPos = VectorHelper.max3I();
     protected AudioTrack playingTrack;
     
     public ChannelClientSpecial(ChannelHelper helper, Toml info) {
@@ -30,7 +30,7 @@ public abstract class ChannelClientSpecial extends ChannelClient {
         this.logLevel = logLevel;
     }
     
-    public abstract void checkStop(Vector3i pos);
+    public abstract void checkStop(Vector3 pos);
     
     @Override public String getPlayingSongName() {
         return this.playingName;
@@ -68,7 +68,7 @@ public abstract class ChannelClientSpecial extends ChannelClient {
     
     @Override public void parseData() {}
     
-    public void playReference(AudioRef ref, Vector3i pos) {
+    public void playReference(AudioRef ref, Vector3 pos) {
         if(ref instanceof AudioContainer) {
             AudioContainer container = (AudioContainer)ref;
             AudioTrack track = container.getTrack();

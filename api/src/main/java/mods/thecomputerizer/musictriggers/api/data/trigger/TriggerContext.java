@@ -10,13 +10,13 @@ import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerBiome;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerMob;
-import mods.thecomputerizer.shadow.org.joml.Vector3i;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.biome.BiomeAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.blockentity.BlockEntityAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.EntityAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.Box;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.ShapeHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.shapes.vectors.Vector3;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.WorldAPI;
@@ -70,10 +70,10 @@ public abstract class TriggerContext extends ChannelElement {
     }
 
     protected Box getBox(double hRange, double vRange) {
-        Vector3i pos = this.player.getPosRounded().getPosVec();
-        double x = pos.x;
-        double y = pos.y;
-        double z = pos.z;
+        Vector3 pos = this.player.getPosRounded().getPosVec();
+        double x = pos.dX();
+        double y = pos.dY();
+        double z = pos.dZ();
         return ShapeHelper.box(x-hRange,y-vRange,z-hRange,x+hRange,y+vRange,z+hRange);
     }
 

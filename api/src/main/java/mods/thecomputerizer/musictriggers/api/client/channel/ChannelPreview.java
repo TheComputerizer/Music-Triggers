@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.client.channel;
 
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
-import mods.thecomputerizer.shadow.org.joml.Vector3i;
+import mods.thecomputerizer.theimpossiblelibrary.api.shapes.vectors.Vector3;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 public final class ChannelPreview extends ChannelClientSpecial {
@@ -10,7 +10,7 @@ public final class ChannelPreview extends ChannelClientSpecial {
         super(helper,table);
     }
     
-    @Override public void checkStop(Vector3i pos) {
+    @Override public void checkStop(Vector3 pos) {
         stop();
     }
     

@@ -2,7 +2,6 @@ package mods.thecomputerizer.musictriggers.api.client.gui.parameters;
 
 import lombok.Setter;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.ParameterLink.ParameterElement;
-import mods.thecomputerizer.shadow.org.joml.Vector3d;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.ScreenHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Selectable;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.ShapeWidget;
@@ -12,6 +11,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.client.render.RenderHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.render.TextureWrapper;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.Shape;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.ShapeHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.shapes.vectors.Vector3;
 
 import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
 import static mods.thecomputerizer.theimpossiblelibrary.api.client.render.ColorHelper.WHITE;
@@ -59,7 +59,7 @@ public class CheckBox extends WidgetGroup implements Selectable {
         return copy;
     }
     
-    @Override public void draw(RenderContext ctx, Vector3d center, double mouseX, double mouseY) {
+    @Override public void draw(RenderContext ctx, Vector3 center, double mouseX, double mouseY) {
         if(canDraw()) {
             if(this.selected) {
                 if(isHovering(mouseX,mouseY)) {
@@ -85,7 +85,7 @@ public class CheckBox extends WidgetGroup implements Selectable {
         return this.selected;
     }
     
-    @Override public void drawSelected(RenderContext ctx, Vector3d center, double mouseX, double mouseY) {
+    @Override public void drawSelected(RenderContext ctx, Vector3 center, double mouseX, double mouseY) {
         draw(ctx,center,mouseX,mouseY);
     }
     

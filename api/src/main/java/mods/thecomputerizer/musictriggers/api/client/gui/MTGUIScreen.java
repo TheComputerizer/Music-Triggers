@@ -11,8 +11,6 @@ import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.HolderTrigger;
-import mods.thecomputerizer.shadow.org.joml.Vector2d;
-import mods.thecomputerizer.shadow.org.joml.Vector3d;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.MinecraftWindow;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.ScreenAPI;
@@ -34,6 +32,8 @@ import mods.thecomputerizer.theimpossiblelibrary.api.shapes.Plane;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.Shape;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.ShapeHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.Square;
+import mods.thecomputerizer.theimpossiblelibrary.api.shapes.vectors.Vector2;
+import mods.thecomputerizer.theimpossiblelibrary.api.shapes.vectors.Vector3;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.vectors.VectorHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
@@ -187,11 +187,11 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
             Square square = ShapeHelper.square(Y,0.25d,heightRatio);
             Widget texture = ShapeWidget.from(square,info.getIconTexture(type,false));
             Widget hoverTexture = ShapeWidget.from(square.getScaled(0.95d),info.getIconTexture(type,true));
-            Vector3d pos = button.getShape().getCenterForGroup(VectorHelper.zero3D());
-            texture.setX(pos.x);
-            texture.setY(pos.y);
-            hoverTexture.setX(pos.x);
-            hoverTexture.setY(pos.y);
+            Vector3 pos = button.getShape().getCenterForGroup(VectorHelper.zero3D());
+            texture.setX(pos.dX());
+            texture.setY(pos.dY());
+            hoverTexture.setX(pos.dX());
+            hoverTexture.setY(pos.dY());
             button.addWidget(texture);
             button.setHoverLines(getTooltip("button",type));
             button.setHover(BasicWidgetGroup.from(ShapeWidget.of(RenderShape.from(
@@ -366,7 +366,7 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
     }
     
     protected void addTextBackground(Consumer<Void> doThisBetween) {
-        Plane back = ShapeHelper.plane(Y,new Vector2d(-1d,-0.9d),new Vector2d(1d,0.9d));
+        Plane back = ShapeHelper.plane(Y, new Vector2(-1d, -0.9d), new Vector2(1d, 0.9d));
         addWidget(ShapeWidget.from(back,BLACK.withAlpha(0.65f)));
         doThisBetween.accept(null);
         addWidget(ShapeWidget.outlineFrom(back,5f));
@@ -399,7 +399,7 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
         text.setX(1d-width+offsetX);
         text.setY(0.9d-textHeight+offsetY);
         widget.setX(1d-width+offsetX);
-        Shape total = ShapeHelper.plane(Y,new Vector2d(-width,0.9d-height),new Vector2d(width,0.9d));
+        Shape total = ShapeHelper.plane(Y,new Vector2(-width,0.9d-height),new Vector2(width,0.9d));
         ShapeWidget back = ShapeWidget.from(total,BLACK,1d-width+offsetX,offsetY);
         addWidget(back);
         addWidget(text);

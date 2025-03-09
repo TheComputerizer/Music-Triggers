@@ -5,7 +5,6 @@ import mods.thecomputerizer.musictriggers.api.client.gui.parameters.DataList;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.ParameterLink;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.ParameterLink.ParameterElement;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.ParameterRef;
-import mods.thecomputerizer.shadow.org.joml.Vector3d;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.MinecraftWindow;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.ScreenAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Button;
@@ -14,6 +13,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.WidgetHel
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.WidgetList;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.render.RenderAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.render.RenderContext;
+import mods.thecomputerizer.theimpossiblelibrary.api.shapes.vectors.Vector3;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -54,7 +54,7 @@ public class ParameterScreen extends MTGUIScreen {
         return 0.6f;
     }
     
-    @Override public void draw(RenderContext ctx, Vector3d center, double mouseX, double mouseY) {
+    @Override public void draw(RenderContext ctx, Vector3 center, double mouseX, double mouseY) {
         RenderAPI renderer = ctx.getRenderer();
         renderer.translate(0d,0d,-200d);
         if(Objects.nonNull(this.parentScreen))

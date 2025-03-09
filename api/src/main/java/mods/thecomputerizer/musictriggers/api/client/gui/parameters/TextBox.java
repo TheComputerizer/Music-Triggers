@@ -1,7 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.client.gui.parameters;
 
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.ParameterLink.ParameterElement;
-import mods.thecomputerizer.shadow.org.joml.Vector3d;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.BasicTypeableWidget;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.ShapeWidget;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Widget;
@@ -10,6 +9,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.client.render.RenderHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.render.TextBuffer;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.Shape;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.ShapeHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.shapes.vectors.Vector3;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static mods.thecomputerizer.theimpossiblelibrary.api.client.render.ColorHelper.AQUA;
-import static mods.thecomputerizer.theimpossiblelibrary.api.client.render.ColorHelper.RED;
 import static mods.thecomputerizer.theimpossiblelibrary.api.client.render.ColorHelper.WHITE;
 import static mods.thecomputerizer.theimpossiblelibrary.api.common.block.Facing.Axis.Y;
 
@@ -44,8 +43,8 @@ public class TextBox extends BasicTypeableWidget {
         return copy;
     }
     
-    @Override public void draw(RenderContext ctx, Vector3d center, double mouseX, double mouseY) {
-        if(this.backgroundShape.isInside(mouseX-getX(),mouseY-getY()-center.y,0d)) {
+    @Override public void draw(RenderContext ctx, Vector3 center, double mouseX, double mouseY) {
+        if(this.backgroundShape.isInside(mouseX-getX(),mouseY-getY()-center.dY(),0d)) {
             this.backgroundHover.draw(ctx,center,mouseX,mouseY);
             this.colorOverride = AQUA;
         } else this.colorOverride = WHITE;
@@ -75,10 +74,10 @@ public class TextBox extends BasicTypeableWidget {
             double width = getWidth();
             double parentWidth = Objects.nonNull(this.parent) ? this.parent.getWidth() : 0d;
             double height = getHeight();
-            Vector3d center = getCenter(0d);
+            Vector3 center = getCenter(0d);
             int pos = this.text.getCharPos(RenderHelper.getContext(),x,y,getCenter(0d),
-                                           getMinX(center.x,width,parentWidth),getMinY(center.y,height),getMaxX(center.x,width,parentWidth),
-                                           getMaxY(center.y,height));
+                                           getMinX(center.dX(),width,parentWidth),getMinY(center.dY(),height),getMaxX(center.dX(),width,parentWidth),
+                                           getMaxY(center.dY(),height));
             if(pos!=-1) {
                 this.text.setBlinkerPos(pos);
                 return true;
