@@ -3,13 +3,12 @@ package mods.thecomputerizer.musictriggers.shared.v18.m2.client;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.shared.v18.m2.common.MTMappingsHelper1_18_2;
-import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientEntryPoint;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.DelegatingClientEntryPoint;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.ClassHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.CoreAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 import net.minecraft.client.Minecraft;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -20,12 +19,18 @@ import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
 import static mods.thecomputerizer.musictriggers.api.MTRef.NAME;
 import static mods.thecomputerizer.theimpossiblelibrary.api.core.TILDev.DEV;
 
-public class MTClientEntryPoint1_18_2 extends ClientEntryPoint {
+public class MTClientEntryPoint1_18_2 extends DelegatingClientEntryPoint {
+    
+    private static MTClientEntryPoint1_18_2 INSTANCE;
+    
+    public static MTClientEntryPoint1_18_2 getInstance() {
+        return Objects.nonNull(INSTANCE) ? INSTANCE : new MTClientEntryPoint1_18_2();
+    }
     
     MTMappingsHelper1_18_2 reflector;
     
-    @Nullable @Override public ClientEntryPoint delegatedClientEntry() {
-        return this;
+    private MTClientEntryPoint1_18_2() {
+        INSTANCE = this;
     }
     
     @Override protected String getModID() {
@@ -42,8 +47,7 @@ public class MTClientEntryPoint1_18_2 extends ClientEntryPoint {
                 "\t\t\"description\": \"Relocated Music Triggers resources\"", "\t}", "}");
     }
     
-    @Override public void onClientSetup() {
-    }
+    @Override public void onClientSetup() {}
     
     @SuppressWarnings("deprecation") @Override public void onConstructed() {
         if(!DEV) return;
@@ -68,9 +72,11 @@ public class MTClientEntryPoint1_18_2 extends ClientEntryPoint {
                 this.reflector.addDevResources(Minecraft.getInstance(),resourceDir);
             }
         }
+        super.onConstructed();
     }
     
     @Override public void onLoadComplete() {
         ChannelHelper.getClientHelper().queryCategoryVolume();
+        super.onLoadComplete();
     }
 }

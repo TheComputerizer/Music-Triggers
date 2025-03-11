@@ -7,6 +7,7 @@ import mods.thecomputerizer.musictriggers.api.registry.MTRegistryHandler;
 import mods.thecomputerizer.musictriggers.api.server.MTServerEvents;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientEntryPoint;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.CommonEntryPoint;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.DelegatingCommonEntryPoint;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.ClassHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.CoreAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.CoreAPI.GameVersion;
@@ -19,39 +20,19 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import static mods.thecomputerizer.musictriggers.api.MTRef.*;
 import static mods.thecomputerizer.theimpossiblelibrary.api.core.CoreAPI.ModLoader.LEGACY;
 import static mods.thecomputerizer.theimpossiblelibrary.api.core.TILDev.DEV;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
+import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
 @MultiVersionMod(modDescription = DESCRIPTION, modid = MODID, modName = NAME, modVersion = VERSION)
-public class MTCommonEntryPoint extends CommonEntryPoint {
+public class MTCommonEntryPoint extends DelegatingCommonEntryPoint {
     
-    final CommonEntryPoint versionInstance;
     
     public MTCommonEntryPoint() {
         MTRef.logDebug("Constructing MTCommonEntryPoint on ClassLoader {}",getClass().getClassLoader());
-        CommonEntryPoint instance = null;
-        Class<?> versionClass = findVersionEntryClass(CoreAPI.getInstance());
-        if(Objects.nonNull(versionClass)) {
-            try {
-                instance = (CommonEntryPoint)versionClass.newInstance();
-            } catch(ReflectiveOperationException ex) {
-                MTRef.logFatal("Unable to instantiate versioned instance!",ex);
-            }
-        } else MTRef.logError("Versioned entrypoint not found! Things might not work properly");
-        this.versionInstance = instance;
-    }
-
-    @Override public @Nullable ClientEntryPoint delegatedClientEntry() {
-        return new MTClientEntryPoint();
-    }
-    
-    private void distributeHook(Consumer<CommonEntryPoint> hook) {
-        if(Objects.nonNull(this.versionInstance)) hook.accept(this.versionInstance);
-        if(Objects.nonNull(this.delegatedClient)) hook.accept(this.delegatedClient);
     }
     
     private String getLoader(CoreAPI instance) {
@@ -108,16 +89,30 @@ public class MTCommonEntryPoint extends CommonEntryPoint {
             throw new RuntimeException("Unable to create file directory at "+CONFIG_PATH+"! Music Triggers "+
                     "is unable to load any further.");
         MTNetwork.initCommon();
-        distributeHook(CommonEntryPoint::onConstructed);
+        super.onConstructed();
     }
 
     @Override public void onPreRegistration() {
         MTRegistryHandler.init();
         MTServerEvents.init();
-        distributeHook(CommonEntryPoint::onPreRegistration);
+        super.onPreRegistration();
     }
     
-    @Override public void onLoadComplete() {
-        distributeHook(CommonEntryPoint::onLoadComplete);
+    @Override public @Nullable ClientEntryPoint setDelegatedClientHandle() {
+        return MTClientEntryPoint.getInstance();
+    }
+    
+    @Override public CommonEntryPoint setDelegatedCustomHandle() {
+        CommonEntryPoint instance = null;
+        Class<?> versionClass = findVersionEntryClass(CoreAPI.getInstance());
+        if(Objects.nonNull(versionClass)) {
+            try {
+                ClassHelper.checkBurningWaveInit();
+                instance = Methods.invokeStatic(versionClass,"getInstance");
+            } catch(Throwable t) {
+                MTRef.logFatal("Unable to instantiate versioned instance!",t);
+            }
+        } else MTRef.logError("Versioned entrypoint not found! Things might not work properly");
+        return instance;
     }
 }

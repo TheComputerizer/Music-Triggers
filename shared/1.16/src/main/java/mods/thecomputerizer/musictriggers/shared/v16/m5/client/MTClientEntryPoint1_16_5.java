@@ -3,13 +3,12 @@ package mods.thecomputerizer.musictriggers.shared.v16.m5.client;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.shared.v16.m5.common.MTMappingsHelper1_16_5;
-import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientEntryPoint;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.DelegatingClientEntryPoint;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.ClassHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.CoreAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 import net.minecraft.client.Minecraft;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -20,12 +19,18 @@ import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
 import static mods.thecomputerizer.musictriggers.api.MTRef.NAME;
 import static mods.thecomputerizer.theimpossiblelibrary.api.core.TILDev.DEV;
 
-public class MTClientEntryPoint1_16_5 extends ClientEntryPoint {
+public class MTClientEntryPoint1_16_5 extends DelegatingClientEntryPoint {
+    
+    private static MTClientEntryPoint1_16_5 INSTANCE;
+    
+    public static MTClientEntryPoint1_16_5 getInstance() {
+        return Objects.nonNull(INSTANCE) ? INSTANCE : new MTClientEntryPoint1_16_5();
+    }
     
     MTMappingsHelper1_16_5 reflector;
     
-    @Nullable @Override public ClientEntryPoint delegatedClientEntry() {
-        return this;
+    private MTClientEntryPoint1_16_5() {
+        INSTANCE = this;
     }
     
     @Override protected String getModID() {
@@ -68,9 +73,11 @@ public class MTClientEntryPoint1_16_5 extends ClientEntryPoint {
                 this.reflector.addDevResources(Minecraft.getInstance(),resourceDir);
             }
         }
+        super.onConstructed();
     }
     
     @Override public void onLoadComplete() {
         ChannelHelper.getClientHelper().queryCategoryVolume();
+        super.onLoadComplete();
     }
 }

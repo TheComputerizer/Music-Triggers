@@ -1,17 +1,23 @@
 package mods.thecomputerizer.musictriggers.shared.v19.m4.client;
 
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
-import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientEntryPoint;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.DelegatingClientEntryPoint;
 
-import javax.annotation.Nullable;
+import java.util.Objects;
 
 import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
 import static mods.thecomputerizer.musictriggers.api.MTRef.NAME;
 
-public class MTClientEntryPoint1_19_4 extends ClientEntryPoint {
+public class MTClientEntryPoint1_19_4 extends DelegatingClientEntryPoint {
     
-    @Nullable @Override public ClientEntryPoint delegatedClientEntry() {
-        return this;
+    private static MTClientEntryPoint1_19_4 INSTANCE;
+    
+    public static MTClientEntryPoint1_19_4 getInstance() {
+        return Objects.nonNull(INSTANCE) ? INSTANCE : new MTClientEntryPoint1_19_4();
+    }
+    
+    private MTClientEntryPoint1_19_4() {
+        INSTANCE = this;
     }
     
     @Override protected String getModID() {
@@ -22,10 +28,10 @@ public class MTClientEntryPoint1_19_4 extends ClientEntryPoint {
         return NAME;
     }
     
-    @Override public void onClientSetup() {
-    }
+    @Override public void onClientSetup() {}
     
     @Override public void onLoadComplete() {
         ChannelHelper.getClientHelper().queryCategoryVolume();
+        super.onLoadComplete();
     }
 }

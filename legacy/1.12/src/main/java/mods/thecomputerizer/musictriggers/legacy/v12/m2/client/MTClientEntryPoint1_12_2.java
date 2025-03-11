@@ -1,7 +1,7 @@
 package mods.thecomputerizer.musictriggers.legacy.v12.m2.client;
 
 import mods.thecomputerizer.musictriggers.api.MTRef;
-import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientEntryPoint;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.DelegatingClientEntryPoint;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.FolderResourcePack;
@@ -18,14 +18,19 @@ import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
 import static mods.thecomputerizer.musictriggers.api.MTRef.NAME;
 import static mods.thecomputerizer.theimpossiblelibrary.api.core.TILDev.DEV;
 
-public class MTClientEntryPoint1_12_2 extends ClientEntryPoint {
+public class MTClientEntryPoint1_12_2 extends DelegatingClientEntryPoint {
     
+    private static MTClientEntryPoint1_12_2 INSTANCE;
     private static final List<String> MCMETA_LINES = Arrays.asList(
             "{","\t\"pack\": {","\t\t\"pack_format\": 3,",
             "\t\t\"description\": \"Relocated Music Triggers resources\"", "\t}", "}");
     
-    @Nullable @Override public ClientEntryPoint delegatedClientEntry() {
-        return this;
+    public static MTClientEntryPoint1_12_2 getInstance() {
+        return Objects.nonNull(INSTANCE) ? INSTANCE : new MTClientEntryPoint1_12_2();
+    }
+    
+    private MTClientEntryPoint1_12_2() {
+        INSTANCE = this;
     }
     
     @Override protected String getModID() {

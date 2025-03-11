@@ -3,19 +3,24 @@ package mods.thecomputerizer.musictriggers.shared.v19.m4.common;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.shared.v19.m4.client.MTClientEntryPoint1_19_4;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientEntryPoint;
-import mods.thecomputerizer.theimpossiblelibrary.api.common.CommonEntryPoint;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.DelegatingCommonEntryPoint;
 
-import javax.annotation.Nullable;
 import java.util.Objects;
 
 import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
 import static mods.thecomputerizer.musictriggers.api.MTRef.NAME;
 
 @SuppressWarnings("unused")
-public class MTCommonEntryPoint1_19_4 extends CommonEntryPoint {
+public class MTCommonEntryPoint1_19_4 extends DelegatingCommonEntryPoint {
     
-    @Nullable @Override public ClientEntryPoint delegatedClientEntry() {
-        return new MTClientEntryPoint1_19_4();
+    private static MTCommonEntryPoint1_19_4 INSTANCE;
+    
+    public static MTCommonEntryPoint1_19_4 getInstance() {
+        return Objects.nonNull(INSTANCE) ? INSTANCE : new MTCommonEntryPoint1_19_4();
+    }
+    
+    private MTCommonEntryPoint1_19_4() {
+        INSTANCE = this;
     }
     
     @Override protected String getModID() {
@@ -28,11 +33,15 @@ public class MTCommonEntryPoint1_19_4 extends CommonEntryPoint {
     
     @Override public void onConstructed() {
         MTRef.logInfo("Running version specific onConstructed for 1.19.4");
-        if(Objects.nonNull(this.delegatedClient)) this.delegatedClient.onConstructed();
+        super.onConstructed();
     }
     
     @Override public void onLoadComplete() {
         MTRef.logInfo("Running version onLoadComplete for 1.19.4");
-        if(Objects.nonNull(this.delegatedClient)) this.delegatedClient.onLoadComplete();
+        super.onLoadComplete();
+    }
+    
+    @Override public ClientEntryPoint setDelegatedClientHandle() {
+        return MTClientEntryPoint1_19_4.getInstance();
     }
 }
