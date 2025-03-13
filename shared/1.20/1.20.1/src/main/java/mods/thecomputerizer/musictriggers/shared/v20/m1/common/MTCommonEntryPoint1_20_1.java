@@ -32,12 +32,12 @@ public class MTCommonEntryPoint1_20_1 extends DelegatingCommonEntryPoint {
     }
     
     @Override public void onConstructed() {
-        MTRef.logInfo("Running version specific onConstructed for 1.19.4");
+        MTRef.logInfo("Running version specific onConstructed for 1.20.1");
         super.onConstructed();
     }
     
     @Override public void onLoadComplete() {
-        MTRef.logInfo("Running version onLoadComplete for 1.19.4");
+        MTRef.logInfo("Running version onLoadComplete for 1.20.1");
         super.onLoadComplete();
     }
     
