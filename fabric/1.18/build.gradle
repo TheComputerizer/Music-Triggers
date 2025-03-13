@@ -2,23 +2,18 @@ buildscript {
     repositories {
         gradlePluginPortal() {
             content {
-                [ 'com.fasterxml.woodstox', 'com.fasterxml.jackson.core', 'com.fasterxml.jackson', 'com.fasterxml',
-                  'com.google.code.findbugs', 'com.google.code.gson', 'com.google.errorprone', 'com.google.guava',
-                  'com.google.j2objc', 'commons-io', 'io.fabric8', 'io.github.goooler.shadow', 'io.netty',
-                  'jakarta.platform', 'me.jamiemansfield', 'org.apache', 'org.apache.ant', 'org.apache.commons',
-                  'org.apache.logging', 'org.apache.logging.log4j', 'org.apache.maven', 'org.benf', 'org.cadixdev',
-                  'org.checkerframework', 'org.codehaus.groovy', 'org.codehaus.plexus', 'org.codehaus.woodstox',
-                  'org.eclipse.ee4j', 'org.eclipse.jdt', 'org.eclipse.jetty', 'org.eclipse.platform', 'org.jdom',
-                  'org.jetbrains', 'org.jetbrains.kotlin', 'org.jetbrains.kotlinx', 'org.junit', 'org.mockito',
-                  'org.ow2', 'org.ow2.asm', 'org.slf4j', 'org.sonatype.oss', 'org.springframework', 'org.vafer',
-                  'org.zeroturnaround'].forEach { includeGroup it }
+                plugin_portal_content.split(';').each {grp ->
+                    includeGroup grp
+                }
             }
         }
         maven {
             name = 'Fabric'
             url = uri 'https://maven.fabricmc.net/'
             content {
-                [ 'fabric-loom', 'net.fabricmc', 'net.fabricmc.fabric-api' ].forEach { includeGroup it }
+                fabric_content.split(';').each {grp ->
+                    includeGroup grp
+                }
             }
         }
     }
@@ -86,7 +81,7 @@ dependencies {
     modImplementation "$fabric_api_artifact:$fabric_1_18_2"
     modImplementation "$cloth_artifact:$cloth_1_18_2"
     modImplementation "$modmenu_artifact:$modmenu_1_18_2"
-    modImplementation "mods.thecomputerizer.theimpossiblelibrary:theimpossiblelibrary:$til_version"
+    modImplementation "$til_artifact:$til_version"
 
     modRuntimeOnly "$jei_artifact:$jei_fabric_1_18_2"
 }
@@ -125,6 +120,6 @@ shadowJar {
 
 tasks.assemble.dependsOn shadowJar
 tasks.shadowJar.finalizedBy 'remapJar'
-tasks.jar.finalizedBy 'shadowJar'
+tasks.jar.finalizedBy shadowJar
 tasks.compileJava.mustRunAfter ':fabric:build'
 tasks.compileJava.mustRunAfter ':shared:shared_1.18:build'

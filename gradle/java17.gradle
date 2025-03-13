@@ -1,5 +1,7 @@
-plugins.apply('idea')
-plugins.apply('java-library')
+import static org.gradle.api.file.DuplicatesStrategy.EXCLUDE
+
+plugins.apply 'idea'
+plugins.apply 'java-library'
 
 group = base_package
 version = mod_version
@@ -18,14 +20,14 @@ idea {
 }
 
 jar {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    setArchiveBaseName(mod_id)
+    duplicatesStrategy = EXCLUDE
+    setArchiveBaseName mod_id
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(23)
+    toolchain.languageVersion = JavaLanguageVersion.of 17
 }
 
 processResources {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    duplicatesStrategy = EXCLUDE
 }

@@ -1,26 +1,25 @@
-buildscript {
-    repositories {
-        gradlePluginPortal() {
-            content {
-                [ 'commons-codec', 'com.googlecode.javaewah', 'org.apache', 'org.apache.commons', 'org.eclipse.jgit',
-                  'org.junit', 'org.moddedmc.wiki', 'org.moddedmc.wiki.toolkit', 'org.slf4j', 'org.sonatype.oss',
-                  'org.zeroturnaround' ].forEach { includeGroup it }
-            }
-        }
-    }
-    dependencies {
-        classpath 'org.moddedmc.wiki.toolkit:org.moddedmc.wiki.toolkit.gradle.plugin:0.+'
-    }
-}
-
 /**
  * Build workflow guidelines
  * api -> (fabric, forge, legacy, neoforge) -> (1.12, 1.16, 1.18, 1.19, 1.20, 1.21) -> (minor versions) -> main
  * Shading and relocation must happen within each module to properly respect reobfuscation.
  * Any necessary reobfuscations must happen in the version the deobfuscations happened in.
  */
+buildscript {
+    repositories {
+        gradlePluginPortal() {
+            content {
+                plugin_portal_content_short.split(';').each {grp ->
+                    includeGroup grp
+                }
+            }
+        }
+    }
+    dependencies {
+        classpath "$wiki_plugin:$wiki_version"
+    }
+}
 
-apply from: rootProject.file('buildSrc\\java23.gradle')
+apply from: rootProject.file('gradle\\java23.gradle')
 plugins.apply 'org.moddedmc.wiki.toolkit'
 
 //noinspection GroovyUnusedAssignment
@@ -39,11 +38,15 @@ def shared_1_20_6 = project ':shared:shared_1.20:shared_1.20.6'
 def shared_1_21_1 = project ':shared:shared_1.21:shared_1.21.1'
 
 processResources {
-    fabric.afterEvaluate { from(it.processResources.outputs) }
+    fabric.afterEvaluate {
+        from it.processResources.outputs
+    }
 }
 
 processTestResources {
-    fabric.afterEvaluate { from(it.processTestResources.outputs) }
+    fabric.afterEvaluate {
+        from it.processTestResources.outputs
+    }
 }
 
 jar {

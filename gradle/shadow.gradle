@@ -1,4 +1,4 @@
-plugins.apply('io.github.goooler.shadow')
+plugins.apply('com.gradleup.shadow')
 
 configurations {
     shadow.extendsFrom(shaded)

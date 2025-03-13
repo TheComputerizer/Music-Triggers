@@ -1,6 +1,6 @@
-apply from: rootProject.file('buildSrc\\java8.gradle')
+apply from: rootProject.file('gradle\\java8.gradle')
 
-def base = project(':api')
+def base = project ':api'
 
 jar {
     from(base.jar.archiveFile.collect {
@@ -24,7 +24,7 @@ processResources {
 }
 
 processTestResources {
-    from(base.processTestResources.outputs)
+    from base.processTestResources.outputs
 }
 
-tasks.jar.dependsOn(':api:build')
+tasks.jar.dependsOn ':api:build'
