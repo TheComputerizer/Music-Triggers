@@ -9,7 +9,11 @@ import mods.thecomputerizer.theimpossiblelibrary.api.common.event.EventHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.event.events.PlayerLoggedInEventWrapper;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.event.events.PlayerLoggedOutEventWrapper;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.event.events.RegisterCommandsEventWrapper;
+import mods.thecomputerizer.theimpossiblelibrary.api.server.MinecraftServerAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.server.ServerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.event.events.ServerTickEventWrapper;
+
+import java.util.Objects;
 
 import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
 import static mods.thecomputerizer.theimpossiblelibrary.api.common.event.CommonEventWrapper.CommonType.PLAYER_LOGGED_OUT;
@@ -20,7 +24,7 @@ import static mods.thecomputerizer.theimpossiblelibrary.api.common.event.CommonE
 
 public class MTServerEvents {
     
-    static int ticksUntilReload;
+    static int ticksUntilReload = -1;
 
     public static void init() {
         MTRef.logInfo("Initializing server event invokers");
@@ -31,11 +35,10 @@ public class MTServerEvents {
     }
     
     public static void onServerTick(ServerTickEventWrapper<?> wrapper) {
+        if(ticksUntilReload<0) return;
         if(wrapper.isPhase(END)) {
-            if(ticksUntilReload>=0) {
-                if(ticksUntilReload==0) ChannelHelper.reload();
-                ticksUntilReload--;
-            }
+            if(ticksUntilReload==0) ChannelHelper.reload(false);
+            ticksUntilReload--;
         }
     }
     
@@ -63,6 +66,9 @@ public class MTServerEvents {
     
     public static void queueServerReload(int ticks) {
         ChannelHelper.onReloadQueued(false);
+        MinecraftServerAPI<?> server = ServerHelper.getAPI();
+        if(ticks>0 && Objects.nonNull(server)) //Assume 0 tick queues are delegated from the client
+            server.executeCommandLiteral("say Music Triggers will reload in "+ticks+" ticks");
         ticksUntilReload = ticks;
     }
 }

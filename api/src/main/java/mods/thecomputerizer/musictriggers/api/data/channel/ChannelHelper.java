@@ -42,6 +42,7 @@ import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
 import mods.thecomputerizer.musictriggers.api.network.MessageFinishedInit;
 import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels;
 import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels.ChannelMessage;
+import mods.thecomputerizer.musictriggers.api.network.MessageReload;
 import mods.thecomputerizer.musictriggers.api.network.MessageRequestChannels;
 import mods.thecomputerizer.musictriggers.api.network.MessageTriggerStates;
 import mods.thecomputerizer.musictriggers.api.server.ChannelServer;
@@ -188,7 +189,7 @@ public class ChannelHelper implements NBTLoadable {
         loader.setLoading(false);
         if(loader.isConnected() || !client) {
             logGlobalInfo("SENDING INIT MESSAGE");
-            if(client) MTNetwork.sendToServer(helper.getInitMessage(),false);
+            if(client) MTNetwork.sendToServer(helper.getInitMessage());
             else MTNetwork.sendToClient(helper.getInitMessage(),playerID);
         }
     }
@@ -236,7 +237,7 @@ public class ChannelHelper implements NBTLoadable {
             }
             if(Objects.nonNull(pendingRequest)) {
                 MTRef.logInfo("Answering pending channels request");
-                MTNetwork.sendToServer(helper.getInitMessage(),false);
+                MTNetwork.sendToServer(helper.getInitMessage());
                 pendingRequest = null;
             }
         } else MTRef.logError("The client helper is missing on the client side??");
@@ -254,9 +255,11 @@ public class ChannelHelper implements NBTLoadable {
     }
 
     public static void onReloadQueued(boolean client) {
+        String contextSide = client ? "client" : "server";
+        String loaderSide = loader.isClient() ? "client" : "server";
         loader.setLoading(true);
         loader.setClient(client);
-        globalData.logInfo("Queued reload on the {} side",loader.isClient() ? "client" : "server");
+        globalData.logInfo("Queued reload on the {} side for a {} loader",contextSide,loaderSide);
         synchronized(PLAYER_MAP) {
             for(ChannelHelper helper : PLAYER_MAP.values()) helper.close();
             PLAYER_MAP.clear();
@@ -318,15 +321,20 @@ public class ChannelHelper implements NBTLoadable {
         return null;
     }
     
-    public static void reload() {
+    public static void reload(boolean clientConext) {
         logGlobalInfo("RELOADING");
         try {
-            if(loader.isClient()) {
-                loadConfig("CLIENT",true);
-                MTNetwork.sendToServer(PLAYER_MAP.get("CLIENT").getInitMessage(),false);
-            } else
-                for(PlayerAPI<?,?> player : getPlayers(false))
-                    loadConfig(player.getUUID().toString(),false);
+            boolean clientLoader = loader.isClient();
+            if(clientConext) {
+                if(clientLoader) loadConfig("CLIENT",true);
+                else MTNetwork.sendToServer(new MessageReload<>(0));
+            } else {
+                for(PlayerAPI<?,?> player : getPlayers(false)) {
+                    String uuid = player.getUUID().toString();
+                    if(clientLoader) loadConfig(uuid,false);
+                    else MTNetwork.sendToClient(new MessageReload<>(0),uuid);
+                }
+            }
         } catch(TomlWritingException ex) {
             logGlobalFatal("Failed to reload config files!",ex);
         }

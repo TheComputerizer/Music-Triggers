@@ -83,8 +83,13 @@ public class MTCommands extends CommandAPI {
                     break;
                 }
                 case "reload": {
-                    ChannelHelper.logGlobalInfo("Sending reload packet");
-                    MTNetwork.sendToClient(new MessageReload<>(5),false,entity);
+                    if(Objects.nonNull(entity)) {
+                        ChannelHelper.logGlobalInfo("Sending reload packet");
+                        MTNetwork.sendToClient(new MessageReload<>(5),false,entity);
+                    } else {
+                        ChannelHelper.logGlobalInfo("Reloading from the server");
+                        MTServerEvents.queueServerReload(5);
+                    }
                     break;
                 }
                 case "seconds": {
@@ -104,7 +109,13 @@ public class MTCommands extends CommandAPI {
                 }
                 case "ticks": {
                     int ticks = RandomHelper.randomInt("reload_ticks",remaining,5);
-                    MTNetwork.sendToClient(new MessageReload<>(ticks),false,entity);
+                    if(Objects.nonNull(entity)) {
+                        ChannelHelper.logGlobalInfo("Sending reload packet");
+                        MTNetwork.sendToClient(new MessageReload<>(ticks),false,entity);
+                    } else {
+                        ChannelHelper.logGlobalInfo("Reloading from the server");
+                        MTServerEvents.queueServerReload(ticks);
+                    }
                     break;
                 }
                 default: {

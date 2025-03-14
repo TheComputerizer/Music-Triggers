@@ -47,13 +47,22 @@ public class MTNetwork {
         NetworkHandler.registerMsgToClientLogin(MessageRequestChannels.class,MessageRequestChannels::new);
     }
     
-    public static <D> void sendToServer(MessageAPI<?> msg, boolean login) {
-        ChannelHelper helper = ChannelHelper.getClientHelper();
-        finalizePlayerMsg(msg,login,Objects.nonNull(helper) ? helper.getPlayerID() : null);
-        D direction = login ? NetworkHelper.getDirToServerLogin() : NetworkHelper.getDirToServer();
-        MessageWrapperAPI<?,?> wrapper = NetworkHelper.wrapMessage(direction,msg);
-        if(Objects.nonNull(wrapper)) wrapper.send();
-        else MTRef.logError("Cannot null message to the server!");
+    private static void finalizePlayerMsg(MessageAPI<?> msg, boolean login, @Nullable String uuid) {
+        if(msg instanceof PlayerMessage<?>) {
+            PlayerMessage<?> playerMsg = (PlayerMessage<?>)msg;
+            playerMsg.setLogin(login);
+            if(Objects.nonNull(uuid)) playerMsg.setUuid(uuid);
+        }
+    }
+    
+    public static boolean send(MessageAPI<?> msg, ChannelHelper helper, boolean login) {
+        if(helper.isClient()) sendToServer(msg,login);
+        else {
+            String uuid = helper.getPlayerID();
+            if(Objects.isNull(uuid)) return false;
+            sendToClient(msg,login,uuid);
+        }
+        return true;
     }
     
     public static void sendToClient(MessageAPI<?> msg, String uuid) {
@@ -85,21 +94,16 @@ public class MTNetwork {
         } else MTRef.logError("Cannot null message to a player!");
     }
     
-    public static boolean send(MessageAPI<?> msg, ChannelHelper helper, boolean login) {
-        if(helper.isClient()) sendToServer(msg,login);
-        else {
-            String uuid = helper.getPlayerID();
-            if(Objects.isNull(uuid)) return false;
-            sendToClient(msg,login,uuid);
-        }
-        return true;
+    public static void sendToServer(MessageAPI<?> msg) {
+        sendToServer(msg,false);
     }
     
-    private static void finalizePlayerMsg(MessageAPI<?> msg, boolean login, @Nullable String uuid) {
-        if(msg instanceof PlayerMessage<?>) {
-            PlayerMessage<?> playerMsg = (PlayerMessage<?>)msg;
-            playerMsg.setLogin(login);
-            if(Objects.nonNull(uuid)) playerMsg.setUuid(uuid);
-        }
+    public static <D> void sendToServer(MessageAPI<?> msg, boolean login) {
+        ChannelHelper helper = ChannelHelper.getClientHelper();
+        finalizePlayerMsg(msg,login,Objects.nonNull(helper) ? helper.getPlayerID() : null);
+        D direction = login ? NetworkHelper.getDirToServerLogin() : NetworkHelper.getDirToServer();
+        MessageWrapperAPI<?,?> wrapper = NetworkHelper.wrapMessage(direction,msg);
+        if(Objects.nonNull(wrapper)) wrapper.send();
+        else MTRef.logError("Cannot null message to the server!");
     }
 }

@@ -19,6 +19,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAP
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextStyleAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.CustomTick;
+import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.WorldAPI;
 
 import javax.annotation.Nullable;
@@ -83,16 +84,15 @@ public class MTClientEvents {
     }
 
     private static void onClientTick(ClientTickEventWrapper<?> wrapper) {
+        if(ticksUntilReload<0) return;
         if(wrapper.isPhase(END)) {
             MinecraftAPI<?> mc = wrapper.getMinecraft();
-            if(ticksUntilReload>=0) {
-                if(ticksUntilReload==0) {
-                    ChannelHelper.reload();
-                    mc.sendMessageToPlayer(getReloadMessage("finished",null,
-                            TextStyleAPI::italics,TextStyleAPI::green));
-                }
-                ticksUntilReload--;
+            if(ticksUntilReload==0) {
+                ChannelHelper.reload(false);
+                mc.sendMessageToPlayer(getReloadMessage(
+                        "finished",null,TextStyleAPI::italics,TextStyleAPI::green));
             }
+            ticksUntilReload--;
         }
     }
 
@@ -123,9 +123,11 @@ public class MTClientEvents {
     private static void onRightClickBlock(PlayerInteractBlockEventWrapper<?> wrapper) {
         WorldAPI<?> world = wrapper.getPlayer().getWorld();
         if(world.isClient()) {
-            BlockStateAPI<?> state = world.getStateAt(wrapper.getPos());
-            if("jukebox".equals(state.getBlock().getRegistryName().getPath()) && state.getPropertyBool("has_record"))
-                ChannelHelper.getClientHelper().stopJukeboxAt(wrapper.getPos());
+            BlockPosAPI<?> pos = wrapper.getPos();
+            BlockStateAPI<?> state = world.getStateAt(pos);
+            ResourceLocationAPI<?> registryName = state.getBlock().getRegistryName();
+            if("jukebox".equals(registryName.getPath()) && state.getPropertyBool("has_record"))
+                ChannelHelper.getClientHelper().stopJukeboxAt(pos);
         }
     }
 
@@ -135,7 +137,7 @@ public class MTClientEvents {
             ChannelHelper.logGlobalWarn("Tried to reload channels while they were already being reloaded");
             return;
         }
-        if(Objects.nonNull(mc))
+        if(Objects.nonNull(mc) && ticks>0) //Assume 0 tick queues are delegated from the server
             mc.sendMessageToPlayer(getReloadMessage("queue",new Object[]{ticks},
                     TextStyleAPI::italics,TextStyleAPI::red));
         ChannelHelper.onReloadQueued(true);
