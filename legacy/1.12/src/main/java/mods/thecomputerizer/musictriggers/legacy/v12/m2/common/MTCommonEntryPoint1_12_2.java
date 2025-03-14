@@ -5,11 +5,23 @@ import mods.thecomputerizer.musictriggers.legacy.v12.m2.client.MTClientEntryPoin
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientEntryPoint;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.DelegatingCommonEntryPoint;
 
+import java.util.Objects;
+
 import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
 import static mods.thecomputerizer.musictriggers.api.MTRef.NAME;
 
 @SuppressWarnings("unused")
 public class MTCommonEntryPoint1_12_2 extends DelegatingCommonEntryPoint {
+    
+    private static MTCommonEntryPoint1_12_2 INSTANCE;
+    
+    public static MTCommonEntryPoint1_12_2 getInstance() {
+        return Objects.nonNull(INSTANCE) ? INSTANCE : new MTCommonEntryPoint1_12_2();
+    }
+    
+    public MTCommonEntryPoint1_12_2() {
+        INSTANCE = this;
+    }
     
     @Override protected String getModID() {
         return MODID;
