@@ -10,16 +10,22 @@ import mods.thecomputerizer.theimpossiblelibrary.api.common.item.ActionResult;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.item.ItemAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.registry.RegistryHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.registry.item.DiscBuilderAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.registry.tab.CreativeTabAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.registry.tab.CreativeTabBuilderAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collections;
 import java.util.Objects;
 
+import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
 import static mods.thecomputerizer.theimpossiblelibrary.api.common.item.ActionResult.SUCCESS;
 import static mods.thecomputerizer.theimpossiblelibrary.api.registry.item.ItemBuilderAPI.ItemType.DISC;
 
 public class MTItemRegistry {
+    
+    public static CreativeTabAPI<?> CREATIVE_TAB = MTItemRegistry.makeCreativeTab();
     
     public static final ItemAPI<?> ENHANCED_MUSIC_DISC = discBuilder("record", 1)
             .setSoundNameSupplier(stack -> {
@@ -66,18 +72,27 @@ public class MTItemRegistry {
                     }
                 }
                 return superResult;
-            }).build();
+            }).setCreativeTab(CREATIVE_TAB).build();
     
     public static final ItemAPI<?> MUSIC_RECORDER = RegistryHelper.makeItemBlockBuilder()
             .setBlock(() -> MTBlockRegistry.MUSIC_RECORDER)
             .setRegistryName(MTRef.res("music_recorder"))
             .setStackSize(1)
             .setTooltipFunction((stack,world) -> Collections.singleton(
-                    MTClient.getTranslated("tile","music_recorder.tooltip"))).build();
+                    MTClient.getTranslated("tile","music_recorder.tooltip")))
+            .setCreativeTab(CREATIVE_TAB).build();
     
     public static DiscBuilderAPI discBuilder(String name, int stackSize) {
         return TriggerRegistry.buildProperties(
                 RegistryHelper.makeDiscBuilder(null).setRegistryName(MTRef.res(name))
                         .setItemType(DISC).setStackSize(stackSize));
+    }
+    
+    static CreativeTabAPI<?> makeCreativeTab() {
+        ResourceLocationAPI<?> registryName = MTRef.res(MODID);
+        CreativeTabBuilderAPI<?> builder = RegistryHelper.makeCreativeTabBuilder();
+        builder.setRegistryName(registryName);
+        builder.setIconItem(() -> ENHANCED_MUSIC_DISC);
+        return builder.build();
     }
 }
