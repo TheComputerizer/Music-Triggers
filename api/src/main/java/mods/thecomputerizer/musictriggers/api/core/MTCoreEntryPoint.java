@@ -23,6 +23,7 @@ import java.util.Objects;
 import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
 import static mods.thecomputerizer.musictriggers.api.MTRef.NAME;
 import static mods.thecomputerizer.musictriggers.api.MTRef.VERSION;
+import static mods.thecomputerizer.theimpossiblelibrary.api.core.TILDev.DEV;
 import static mods.thecomputerizer.theimpossiblelibrary.api.core.asm.ASMRef.*;
 import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 
@@ -73,6 +74,7 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
     }
     
     String collectTickerNames() {
+        if(DEV || CoreAPI.isNeoforge()) return "tick";
         CoreAPI core = CoreAPI.getInstance();
         if(core.getVersion().isV12()) return "func_73660_a";
         if(core.getVersion().isV16()) return "func_73660_a method_18669";
@@ -80,6 +82,7 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
     }
     
     String collectVolumeNames() {
+        if(DEV || CoreAPI.isNeoforge()) return "updateSourceVolume";
         CoreAPI core = CoreAPI.getInstance();
         if(core.getVersion().isV12()) return "func_184399_a";
         if(core.getVersion().isV16()) return "func_184399_a method_4865";
