@@ -116,7 +116,6 @@ gui.musictriggers.screen.universal_triggers=Universal Trigger Parameters
 help.musictriggers.implied_triggers.desc=The implied trigger system is a way for most objects that have a `triggers` parameter (audio, commands, toggles, etc) to automatically register any of their triggers that have not been explicitly defined. Explicitly defined in this case means being added to the triggers section in the main config of the channel. If the trigger requires an identifier the system will try to use the identifier to "imply" the required parameters for that trigger. Some triggers with multiple required parameters may not be supported by the implied trigger system. Parameters that are not implied (fade_in, fade_out, persistence, etc) will be default unless otherwise specified via the universal trigger. Triggers must be explicitly defined if any non-universal or non-standard parameters are required.
 help.musictriggers.implied_triggers.name=Implied Triggers
 
-item.musictriggers.record=Enhanced Music Disc
 item.musictriggers.record.blank=Nothing has been recorded yet
 item.musictriggers.record.desc=Enhanced Music Disc
 item.musictriggers.record.name=Enhanced Music Disc
