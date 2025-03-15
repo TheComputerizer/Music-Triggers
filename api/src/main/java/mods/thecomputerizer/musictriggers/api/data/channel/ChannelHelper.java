@@ -219,10 +219,6 @@ public class ChannelHelper implements NBTLoadable {
         globalData.logInfo(msg,args);
     }
     
-    public static void logGlobalTrace(String msg, Object ... args) {
-        globalData.logTrace(msg,args);
-    }
-    
     public static void logGlobalWarn(String msg, Object ... args) {
         globalData.logWarn(msg,args);
     }
@@ -324,17 +320,15 @@ public class ChannelHelper implements NBTLoadable {
     public static void reload(boolean clientConext) {
         logGlobalInfo("RELOADING");
         try {
-            boolean clientLoader = loader.isClient();
-            if(clientConext) {
-                if(clientLoader) loadConfig("CLIENT",true);
+            if(loader.isClient()) {
+                if(clientConext) loadConfig("CLIENT",true);
                 else MTNetwork.sendToServer(new MessageReload<>(0));
-            } else {
-                for(PlayerAPI<?,?> player : getPlayers(false)) {
-                    String uuid = player.getUUID().toString();
-                    if(clientLoader) loadConfig(uuid,false);
-                    else MTNetwork.sendToClient(new MessageReload<>(0),uuid);
-                }
+            } else for(PlayerAPI<?,?> player : getPlayers(false)) {
+                String uuid = player.getUUID().toString();
+                if(clientConext) MTNetwork.sendToClient(new MessageReload<>(0),uuid);
+                else loadConfig(uuid,false);
             }
+            
         } catch(TomlWritingException ex) {
             logGlobalFatal("Failed to reload config files!",ex);
         }

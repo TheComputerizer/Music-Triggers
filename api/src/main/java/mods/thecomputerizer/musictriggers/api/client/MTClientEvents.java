@@ -88,7 +88,7 @@ public class MTClientEvents {
         if(wrapper.isPhase(END)) {
             MinecraftAPI<?> mc = wrapper.getMinecraft();
             if(ticksUntilReload==0) {
-                ChannelHelper.reload(false);
+                ChannelHelper.reload(true);
                 mc.sendMessageToPlayer(getReloadMessage(
                         "finished",null,TextStyleAPI::italics,TextStyleAPI::green));
             }
