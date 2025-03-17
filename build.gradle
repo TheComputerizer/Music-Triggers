@@ -62,8 +62,12 @@ jar {
     shared_1_20_6.afterEvaluate { from(it.sourceSets.main.output.classesDirs.asFileTree) }
     shared_1_21_1.afterEvaluate { from(it.sourceSets.main.output.classesDirs.asFileTree) }
     manifest {
+        def versionStr = project.version.toString()
+        def manifest_version = versionStr.contains('+') ?
+                versionStr.substring(0,versionStr.indexOf('+')) : versionStr
         attributes([
                 'Implementation-Title': project.name,
+                'Implementation-Version': manifest_version,
                 'TILMultiversionCoreMods': coremod_entrypoint,
                 'TILMultiversionMods': mod_entrypoint
         ])
