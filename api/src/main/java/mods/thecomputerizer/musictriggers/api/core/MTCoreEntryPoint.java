@@ -5,7 +5,6 @@ import mods.thecomputerizer.theimpossiblelibrary.api.core.CoreEntryPoint;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.annotation.MultiVersionCoreMod;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.asm.TypeHelper;
-import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
@@ -23,7 +22,6 @@ import java.util.Objects;
 import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
 import static mods.thecomputerizer.musictriggers.api.MTRef.NAME;
 import static mods.thecomputerizer.musictriggers.api.MTRef.VERSION;
-import static mods.thecomputerizer.theimpossiblelibrary.api.core.TILDev.DEV;
 import static mods.thecomputerizer.theimpossiblelibrary.api.core.asm.ASMRef.*;
 import static org.objectweb.asm.Type.BOOLEAN_TYPE;
 
@@ -74,7 +72,7 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
     }
     
     String collectTickerNames() {
-        if(DEV || CoreAPI.isNeoforge()) return "tick";
+        if(CoreAPI.isNamedEnv()) return "tick";
         CoreAPI core = CoreAPI.getInstance();
         if(core.getVersion().isV12()) return "func_73660_a";
         if(core.getVersion().isV16()) return "func_73660_a method_18669";
@@ -82,7 +80,7 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
     }
     
     String collectVolumeNames() {
-        if(DEV || CoreAPI.isNeoforge()) return "updateSourceVolume";
+        if(CoreAPI.isNamedEnv()) return "updateSourceVolume";
         CoreAPI core = CoreAPI.getInstance();
         if(core.getVersion().isV12()) return "func_184399_a";
         if(core.getVersion().isV16()) return "func_184399_a method_4865";
@@ -96,10 +94,20 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
         return classNode;
     }
     
+    /**
+     * Simple check to see if the input name matches any of the other input string.
+     * This is the same as Misc#equalsAny but since Misc isn't in the core package, we can't use it here.
+     */
+    boolean equalsAny(String name, String ... others) {
+        for(String other : others)
+            if(other.equals(name)) return true;
+        return false;
+    }
+    
     public void fixMusicTicker(ClassNode classNode, MethodNode node, String ... names) {
         String className = getClassName(classNode);
         if(!TICKER_NAME.equals(className)) return;
-        if(Misc.equalsAny(CoreAPI.getInstance().mapMethodName(classNode.name,node.name,node.desc),names)) {
+        if(equalsAny(CoreAPI.getInstance().mapMethodName(classNode.name,node.name,node.desc),names)) {
             InsnList ifIns = new InsnList();
             LabelNode skip = new LabelNode(new Label());
             ifIns.insert(getInvoker("stopVanillaMusicTicker",TICKER_DESC));
@@ -112,17 +120,17 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
     }
     
     @Override public String getCoreID() {
-        return MODID+"_core";
+        return "musictriggers_core";
     }
     
     @Override public String getCoreName() {
-        return NAME+" Core";
+        return "Music Triggers Core";
     }
     
     public boolean volumeQuery(ClassNode classNode, MethodNode node, String ... names) {
         String className = getClassName(classNode);
         if(!HANDLER_NAME.equals(className)) return false;
-        if(Misc.equalsAny(CoreAPI.getInstance().mapMethodName(classNode.name,node.name,node.desc),names)) {
+        if(equalsAny(CoreAPI.getInstance().mapMethodName(classNode.name,node.name,node.desc),names)) {
             node.instructions.insertBefore(node.instructions.getFirst(),getInvoker("updateVolumeSources",EMPTY_DESC));
             TILRef.logInfo("Injected channel volume query to {}",node.name);
             return true;
