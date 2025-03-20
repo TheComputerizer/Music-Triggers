@@ -21,6 +21,10 @@ public class TriggerMob extends HolderTrigger {
         setExistingParameterValue("resource_name",Collections.singletonList(id));
         return super.imply(id);
     }
+    
+    public String getNBTParameter() {
+        return getParameterAsString("mob_nbt");
+    }
 
     public boolean hasCorrectSize(int min, int max) {
         int size = this.validEntities.size();
@@ -35,6 +39,7 @@ public class TriggerMob extends HolderTrigger {
         return true;
     }
 
+    //TODO
     public void markEntityValid(EntityAPI<?,?> entity) {
         this.validEntities.add(entity);
     }

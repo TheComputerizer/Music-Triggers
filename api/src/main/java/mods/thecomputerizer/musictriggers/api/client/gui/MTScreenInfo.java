@@ -135,6 +135,7 @@ public class MTScreenInfo {
     }
     
     private Toml buildChannelFile(ChannelAPI channel, DataLink link) {
+        MTRef.logDebug("Building channel file from GUI for {}",link.getTypeName());
         link.getType().setChannel(channel,true);
         Toml toml = Toml.getEmpty();
         link.populateToml(toml);

@@ -74,15 +74,12 @@ import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import static mods.thecomputerizer.musictriggers.api.MTRef.GLOBAL_CONFIG;
 
@@ -296,16 +293,14 @@ public class ChannelHelper implements NBTLoadable {
      * Assumes the file extension is not present
      */
     public static List<String> openTxt(String path, @Nullable LoggableAPI logger) {
-        path+=".txt";
-        File file = FileHelper.get(path,false);
-        try(BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            return reader.lines().collect(Collectors.toList());
-        } catch(IOException ex) {
-            String msg = "Unable to read txt file at `{}`!";
-            if(Objects.nonNull(logger)) logger.logError(msg,ex);
-            else logGlobalError(msg,ex);
-            return Collections.emptyList();
+        if(!path.endsWith(".txt")) path+=".txt";
+        List<String> lines = FileHelper.toLines(FileHelper.get(path,false));
+        if(lines.isEmpty()) {
+            String msg = "No lines were read in from {}";
+            if(Objects.nonNull(logger)) logger.logWarn(msg,path);
+            else logGlobalWarn(msg,path);
         }
+        return lines;
     }
     
     public static MessageAPI<?> processChannelsRequest(MessageRequestChannels<?> message) {
