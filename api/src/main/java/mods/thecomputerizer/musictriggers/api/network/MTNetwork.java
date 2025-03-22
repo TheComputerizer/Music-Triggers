@@ -35,6 +35,7 @@ public class MTNetwork {
         NetworkHandler.registerMsgToClient(MessageCurrentStructure.class,MessageCurrentStructure::new);
         NetworkHandler.registerMsgToClient(MessageFinishedInit.class,MessageFinishedInit::new);
         NetworkHandler.registerMsgToClient(MessageInitChannels.class,MessageInitChannels::new);
+        NetworkHandler.registerMsgToClient(MessageNBTCheck.class,MessageNBTCheck::new);
         NetworkHandler.registerMsgToClient(MessageReload.class,MessageReload::new);
         NetworkHandler.registerMsgToClient(MessageRequestChannels.class,MessageRequestChannels::new);
         NetworkHandler.registerMsgToClient(MessageSeekSong.class,MessageSeekSong::new);

@@ -2,11 +2,14 @@ block.musictriggers.music_recorder=Music Recorder
 
 commands.mt.debug.success=Successfully flipped debug parameter `enable_debug_info`
 commands.mt.debug.parameter.success=Successfully flipped debug parameter `%1$s`
+commands.mt.query.query_type.unknown=Unknown query type `%1$s`
 commands.mt.seek.seconds.success=Setting current song position to %1$s seconds
 commands.mt.skip.success=Skipping current song
 commands.mt.usage=Usages for `/mt`\n/mt debug\n/mt debug parameter\n/mt skip\n/mt reload\n/mt reload ticks
 commands.musictriggers.debug.success=Successfully debug parameter `enable_debug_info`
 commands.musictriggers.debug.parameter.success=Successfully debug parameter `%1$s`
+commands.musictriggers.query.query_type.unknown=Unknown query type `%1$s`
+commands.musictriggers.seek.seconds.success=Setting current song position to %1$s seconds
 commands.musictriggers.skip.success=Skipping current song
 commands.musictriggers.usage=Usages for `/musictriggers`\n/musictriggers debug\n/musictriggers debug parameter\n/musictriggers skip\n/musictriggers reload\n/musictriggers reload ticks
 
@@ -296,6 +299,8 @@ parameter.musictriggers.play_x.desc=Determines the number of times the audio mus
 parameter.musictriggers.play_x.name=Play X
 parameter.musictriggers.priority.desc=The priority value of the trigger in regards to other triggers that are playable at the same time. By default the highest priority trigger always wins and will be active, but that can be changed via the debug config. See the independent_audio_pools and reverse_priority debug paremters for more info. For trigger combinations, nonspecific parameters like fade_out are taken from the highest priority trigger.\n\n<default: See the help page or wiki for default priority values>
 parameter.musictriggers.priority.name=Priority
+parameter.musictriggers.raid_status.desc=The status of the current raid must be one of the values in this parameter. A value of `any` means this parameter will be ignored.\n\nAccepted values are LOSS, ONGOING, STOPPED, or VICTORY\n\n<default: [ "any" ]>
+parameter.musictriggers.raid_status.name=Raid Status
 parameter.musictriggers.rain_type.desc=The type of percipitation a biome must have where "any" means any type including none. Accepts any, none, rain, or snow.\n\n<default: any>
 parameter.musictriggers.rain_type.name=Rain Type
 parameter.musictriggers.rainfall_greater_than.desc=Determines whether biome_rainfall will be the (inclusive) minimum or maximum value.\n\n<default: true>

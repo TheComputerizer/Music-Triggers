@@ -7,6 +7,8 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.CommonAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.EntityAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.*;
@@ -41,6 +43,10 @@ public class MTClient {
     
     public static ResourceLocationAPI<?> getLogoTexture() {
         return MTRef.res("textures/logo.png");
+    }
+    
+    public static MinecraftAPI<?> getMinecraft() {
+        return TILRef.getClientSubAPI(ClientAPI::getMinecraft);
     }
     
     public static ChannelPreview getPreviewChannel(ChannelHelper helper) {
@@ -79,12 +85,32 @@ public class MTClient {
     }
     
     public static boolean isFocused() {
-        MinecraftAPI<?> mc = TILRef.getClientSubAPI(ClientAPI::getMinecraft);
+        MinecraftAPI<?> mc = getMinecraft();
         return Objects.isNull(mc) || mc.isLoading()|| mc.isDisplayFocused();
     }
     
     public static boolean isUnpaused() {
-        MinecraftAPI<?> mc = TILRef.getClientSubAPI(ClientAPI::getMinecraft);
+        MinecraftAPI<?> mc = getMinecraft();
         return Objects.isNull(mc) || mc.isLoading() || !mc.isPaused();
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static void runNBTCheck() { //TODO Add translation keys for the messages
+        MinecraftAPI<?> mc = getMinecraft();
+        if(Objects.isNull(mc)) {
+            ChannelHelper.logGlobalError("Cannot run NBT check with null Minecraft instance!");
+            return;
+        }
+        PlayerAPI<?,?> player = mc.getPlayer();
+        if(Objects.isNull(player)) {
+            ChannelHelper.logGlobalError("Cannot run NBT check with null Player instance!");
+            return;
+        }
+        EntityAPI<?,?> target = mc.getTargetEntity();
+        if(Objects.isNull(target)) {
+            player.sendMessage(getStyledLiteral("No targeted entity to get NBT data for",TextStyleAPI::gray));
+            return;
+        }
+        player.sendMessage(getStyledLiteral("Target NBT data => "+target.getData().toPrettyString()));
     }
 }

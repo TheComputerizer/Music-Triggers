@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.api.server;
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
+import mods.thecomputerizer.musictriggers.api.network.MessageNBTCheck;
 import mods.thecomputerizer.musictriggers.api.network.MessageReload;
 import mods.thecomputerizer.musictriggers.api.network.MessageSeekSong;
 import mods.thecomputerizer.musictriggers.api.network.MessageSkipSong;
@@ -27,6 +28,10 @@ import static mods.thecomputerizer.theimpossiblelibrary.api.server.CommandAPI.Ar
 import static mods.thecomputerizer.theimpossiblelibrary.api.server.CommandAPI.ArgType.STRING;
 
 public class MTCommands extends CommandAPI {
+    
+    static final String[] NON_EXECUTABLE_SUBTYPES = new String[]{"query","seek"};
+    static final String[] QUERY_TYPES = new String[]{"nbt"};
+    static final String[] SUBTYPES = new String[]{"debug","query","reload","seek","skip"};
 
     public static MTCommands root(String name) {
         return new MTCommands(name,null,ROOT,false);
@@ -34,17 +39,18 @@ public class MTCommands extends CommandAPI {
 
     public MTCommands(String name, CommandAPI parent, ArgType type, boolean executionNode) {
         super(name,parent,type,executionNode);
-        for(String typeName : new String[]{"debug","reload","seek","skip"}) addSubCommand(typeName,this,LITERAL);
+        for(String typeName : SUBTYPES) addSubCommand(typeName,this,LITERAL);
     }
     
     void addSubCommand(String typeName, CommandAPI parent, ArgType type) {
-        MTSubCommand sub = new MTSubCommand(typeName,parent,type,!"seek".equals(typeName));
-        if(Misc.equalsAny(typeName,"debug","reload","seek","skip")) {
-            if("debug".equals(typeName)) addSubCommand("parameter",sub,STRING);
-            else if("reload".equals(typeName)) addSubCommand("ticks",sub,INTEGER);
-            else if("seek".equals(typeName)) addSubCommand("seconds",sub,INTEGER);
+        MTSubCommand sub = new MTSubCommand(typeName,parent,type,!Misc.equalsAny(typeName,NON_EXECUTABLE_SUBTYPES));
+        switch(typeName) {
+            case "debug": addSubCommand("parameter",sub,STRING);
+            case "query": addSubCommand("query_type",sub,STRING);
+            case "reload": addSubCommand("ticks",sub,INTEGER);
+            case "seek": addSubCommand("seconds",sub,INTEGER);
+            default: addSubCommand(sub);
         }
-        addSubCommand(sub);
     }
     
     @Override public void execute(MinecraftServerAPI<?> server, CommandSenderAPI<?> sender, String input, String remaining) {
@@ -80,6 +86,11 @@ public class MTCommands extends CommandAPI {
                     ChannelHelper.logGlobalInfo("Sending debug packet");
                     MTNetwork.sendToClient(new MessageToggleDebugParameter<>(false,remaining),false,entity);
                     sender.sendMessage(TextHelper.getTranslated(getMessageKey("success"),remaining));
+                    break;
+                }
+                case "query_type": {
+                    if("nbt".equals(remaining)) MTNetwork.sendToClient(new MessageNBTCheck<>(),false,entity);
+                    else sender.sendMessage(TextHelper.getTranslated(getMessageKey("unknown"),remaining));
                     break;
                 }
                 case "reload": {
@@ -127,11 +138,25 @@ public class MTCommands extends CommandAPI {
         
         @Override public List<String> getTabCompletions(MinecraftServerAPI<?> server, CommandSenderAPI<?> sender,
                 String input, String remaining) {
-            List<String> suggestions = new ArrayList<>(Arrays.asList("debug","reload","seek","skip"));
+            List<String> suggestions = new ArrayList<>(Arrays.asList(SUBTYPES));
             if(this.parent instanceof MTSubCommand) {
-                if(input.contains(this.parent.getName()) && "parameter".equals(getName())) {
-                    suggestions = ChannelHelper.getGlobalData().getDebug().getBooleanParameterNames();
-                    if(!remaining.isEmpty()) suggestions.removeIf(s -> !s.startsWith(remaining));
+                if(input.contains(this.parent.getName())) {
+                    switch(getName()) {
+                        case "parameter": {
+                            suggestions = ChannelHelper.getGlobalData().getDebug().getBooleanParameterNames();
+                            if(!remaining.isEmpty()) suggestions.removeIf(s -> !s.startsWith(remaining));
+                            break;
+                        }
+                        case "query_type": {
+                            suggestions = new ArrayList<>(Arrays.asList(QUERY_TYPES));
+                            suggestions.removeIf(s -> !s.startsWith(remaining));
+                            break;
+                        }
+                        default: {
+                            suggestions.clear();
+                            break;
+                        }
+                    }
                 } else suggestions.clear();
             } else suggestions.removeIf(s -> !s.startsWith(remaining));
             MTRef.logInfo("Returning suggestions {}",suggestions);
