@@ -8,6 +8,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.util.Patterns;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public abstract class NBTModeComparison extends NBTMode {
 
@@ -61,7 +62,7 @@ public abstract class NBTModeComparison extends NBTMode {
     }
 
     @Override public void setSplit(String[] split) {
-        this.comparison = hasValidSplit() ? split[split.length-1] : null;
-        this.split = Arrays.copyOfRange(split,0,split.length-1);
+        this.comparison = Objects.nonNull(split) && split.length>=1 ? split[split.length-1] : null;
+        this.split = split.length>0 ? Arrays.copyOfRange(split,0,split.length-1) : new String[]{};
     }
 }

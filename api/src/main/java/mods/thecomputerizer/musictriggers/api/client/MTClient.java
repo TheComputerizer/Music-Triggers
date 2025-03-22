@@ -18,6 +18,8 @@ import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.function.Function;
 
+import static mods.thecomputerizer.musictriggers.api.MTRef.MODID;
+
 public class MTClient {
     
     private static final Toml SPECIAL_CHANNELS = buildSpecialChannels();
@@ -81,7 +83,7 @@ public class MTClient {
     }
 
     public static TextTranslationAPI<?> getTranslated(String category, String extra, Object ... args) {
-        return TextHelper.getTranslated(category+"."+MTRef.MODID+"."+extra,args);
+        return TextHelper.getTranslated(category+"."+MODID+"."+extra,args);
     }
     
     public static boolean isFocused() {
@@ -111,6 +113,6 @@ public class MTClient {
             player.sendMessage(getStyledLiteral("No targeted entity to get NBT data for",TextStyleAPI::gray));
             return;
         }
-        player.sendMessage(getStyledLiteral("Target NBT data => "+target.getData().toPrettyString()));
+        player.sendMessage(getStyledLiteral("Target NBT data => \n"+target.getData().toPrettyString(),TextStyleAPI::aqua));
     }
 }

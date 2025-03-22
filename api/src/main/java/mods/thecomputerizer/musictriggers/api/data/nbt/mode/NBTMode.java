@@ -94,7 +94,10 @@ public abstract class NBTMode {
 
     protected @Nullable String stepSplit() {
         String next = hasValidSplit() ? this.split[0] : null;
-        if(Objects.nonNull(next)) setSplit(Arrays.copyOfRange(this.split,1,this.split.length));
+        if(Objects.nonNull(next)) {
+            int count = this.split.length;
+            setSplit(count==1 ? new String[]{} : Arrays.copyOfRange(this.split,1,count));
+        }
         return next;
     }
 
