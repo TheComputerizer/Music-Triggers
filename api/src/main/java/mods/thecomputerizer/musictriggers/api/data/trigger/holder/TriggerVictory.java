@@ -27,6 +27,13 @@ public class TriggerVictory extends HolderTrigger {
     @Override public boolean isServer() {
         return true;
     }
+    
+    /**
+     * Input is millis since this the last tick cycle
+     */
+    public void tick(long millis) {
+    
+    }
 
     @Override public boolean verifyRequiredParameters() {
         String[] parameters = new String[]{"identifier","persistence"};

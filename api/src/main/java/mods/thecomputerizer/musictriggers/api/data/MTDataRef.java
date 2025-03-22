@@ -260,6 +260,7 @@ public final class MTDataRef {
                          buildParameter("detection_y_ratio",0.5f)),
             buildTrigger("pvp",true),
             buildTrigger("raid",true,
+                         buildParameter("raid_status",Collections.singletonList("any")),
                          buildInt("wave",0,ArrayHelper.intRange(0,8))),
             buildTrigger("raining",false),
             buildTrigger("rainintensity",true,

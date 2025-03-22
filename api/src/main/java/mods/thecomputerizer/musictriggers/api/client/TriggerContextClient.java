@@ -304,7 +304,7 @@ public class TriggerContextClient extends TriggerContext {
         return false;
     }
 
-    @Override public boolean isActiveRaid(int wave) {
+    @Override public boolean isActiveRaid(List<?> statusChecks, int wave) {
         return false;
     }
 

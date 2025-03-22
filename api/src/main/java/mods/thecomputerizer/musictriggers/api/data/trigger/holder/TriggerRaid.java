@@ -10,7 +10,7 @@ public class TriggerRaid extends HolderTrigger {
     }
 
     @Override public boolean isPlayableContext(TriggerContext ctx) {
-        return ctx.isActiveRaid(getParameterAsInt("wave"));
+        return ctx.isActiveRaid(getParameterAsList("raid_status"),getParameterAsInt("wave"));
     }
 
     @Override public boolean isServer() {

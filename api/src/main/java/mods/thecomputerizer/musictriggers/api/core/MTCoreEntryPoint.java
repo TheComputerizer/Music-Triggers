@@ -6,12 +6,9 @@ import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.annotation.MultiVersionCoreMod;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.asm.TypeHelper;
 import org.objectweb.asm.Label;
-import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FrameNode;
 import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.InsnNode;
-import org.objectweb.asm.tree.JumpInsnNode;
-import org.objectweb.asm.tree.LabelNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
@@ -35,7 +32,7 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
     static final String HELPER_NAME = "mods/thecomputerizer/musictriggers/api/data/channel/ChannelHelper";
     static final String TICKER_BINARY = getTickerBinary();
     static final String TICKER_NAME = TICKER_BINARY.replace('.','/');
-    static final String TICKER_DESC = TypeHelper.method(BOOLEAN_TYPE,new Type[]{}).getDescriptor();
+    static final String TICKER_DESC = TypeHelper.methodDesc(BOOLEAN_TYPE);
     
     static String getHandlerBinary() {
         CoreAPI core = CoreAPI.getInstance();
@@ -43,10 +40,6 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
         if(core.getVersion().isV12()) return "net.minecraft.client.audio.SoundHandler";
         if(core.getVersion().isV16()) return fabric ? "net.minecraft.class_1144" : "net.minecraft.client.audio.SoundHandler";
         return fabric ? "net.minecraft.class_1144" : "net.minecraft.client.sounds.SoundManager";
-    }
-    
-    static MethodInsnNode getInvoker(String name, String desc) {
-        return new MethodInsnNode(INVOKESTATIC,HELPER_NAME,name,desc);
     }
     
     static String getTickerBinary() {
@@ -108,12 +101,10 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
         String className = getClassName(classNode);
         if(!TICKER_NAME.equals(className)) return;
         if(equalsAny(CoreAPI.getInstance().mapMethodName(classNode.name,node.name,node.desc),names)) {
-            InsnList ifIns = new InsnList();
-            LabelNode skip = new LabelNode(new Label());
-            ifIns.insert(getInvoker("stopVanillaMusicTicker",TICKER_DESC));
-            ifIns.insert(new JumpInsnNode(NOT_EQUAL,skip));
-            ifIns.insert(new InsnNode(RETURN));
-            ifIns.insert(skip);
+            InsnList ifIns = beginList(new InsnList())
+                    .insInvokeStatic(HELPER_NAME,"stopVanillaMusicTicker",TICKER_DESC)
+                    .insIf(NOT_EQUAL,new Label()).insBasic(RETURN).insLabel().endList();
+            ifIns.add(new FrameNode(FRAME_SAME,0,null,0,null));
             node.instructions.insertBefore(node.instructions.getFirst(),ifIns);
             TILRef.logInfo("Injected music ticker override to {}",node.name);
         }
@@ -131,7 +122,8 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
         String className = getClassName(classNode);
         if(!HANDLER_NAME.equals(className)) return false;
         if(equalsAny(CoreAPI.getInstance().mapMethodName(classNode.name,node.name,node.desc),names)) {
-            node.instructions.insertBefore(node.instructions.getFirst(),getInvoker("updateVolumeSources",EMPTY_DESC));
+            node.instructions.insertBefore(node.instructions.getFirst(),new MethodInsnNode(INVOKESTATIC,HELPER_NAME,
+                    "updateVolumeSources",EMPTY_DESC));
             TILRef.logInfo("Injected channel volume query to {}",node.name);
             return true;
         }

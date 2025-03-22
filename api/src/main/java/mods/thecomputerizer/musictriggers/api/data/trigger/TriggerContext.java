@@ -46,7 +46,7 @@ public abstract class TriggerContext extends ChannelElement {
         if(Objects.isNull(tag) || StringUtils.isBlank(tagStr) || tagStr.equalsIgnoreCase("any")) return true;
         NBTMode mode = NBTHelper.getAndInitMode(tagStr.split(";"));
         try {
-            if(Objects.nonNull(mode)) mode.checkMatch(this.channel,tag);
+            return Objects.nonNull(mode) && mode.checkMatch(this.channel,tag);
         } catch(NumberFormatException ex) {
             logError("Tried to check numerical value of NBT data against a non numerical value in `{}`",tagStr,ex);
         } catch(Exception ex) {
@@ -167,7 +167,7 @@ public abstract class TriggerContext extends ChannelElement {
     public abstract boolean isActiveMoon(ResourceContext ctx);
     public abstract boolean isActivePet(int range, float yRatio);
     public abstract boolean isActivePVP();
-    public abstract boolean isActiveRaid(int wave);
+    public abstract boolean isActiveRaid(List<?> statusChecks, int wave);
     public abstract boolean isActiveRaining();
     public abstract boolean isActiveRainIntensity(float level);
     public abstract boolean isActiveRiding(ResourceContext ctx);

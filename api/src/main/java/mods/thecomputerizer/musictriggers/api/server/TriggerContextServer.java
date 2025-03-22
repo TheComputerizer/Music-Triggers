@@ -19,9 +19,10 @@ import mods.thecomputerizer.theimpossiblelibrary.api.integration.ModHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.MinecraftServerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.ServerHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -71,7 +72,7 @@ public class TriggerContextServer extends TriggerContext {
         ChampionsAPI champions = ModHelper.champions();
         if(Objects.nonNull(champions)) {
             List<String> championNames = (List<String>)trigger.getParameterAsList("champion");
-            if(championNames.isEmpty() || (championNames.size()==1 && championNames.get(0).equals("any"))) return true;
+            if(championNames.isEmpty() || (championNames.contains("any"))) return true;
             ChampionData data = champions.getChampionData(entity);
             if(Objects.nonNull(data))
                 for(String name : championNames)
@@ -87,7 +88,7 @@ public class TriggerContextServer extends TriggerContext {
         InfernalMobsAPI infernalMobs = ModHelper.infernalMobs();
         if(Objects.nonNull(infernalMobs)) {
             List<String> infernalNames = (List<String>)trigger.getParameterAsList("infernal");
-            if(infernalNames.isEmpty() || (infernalNames.size()==1 && infernalNames.get(0).equals("any"))) return true;
+            if(infernalNames.isEmpty() || infernalNames.contains("any")) return true;
             InfernalData<?> data = infernalMobs.getInfernalData(entity);
             if(Objects.nonNull(data))
                 for(String name : infernalNames)
@@ -110,13 +111,18 @@ public class TriggerContextServer extends TriggerContext {
     }
     
     private boolean checkEntityNBT(TriggerMob trigger, EntityAPI<?,?> entity) {
-        return checkNBT(entity.getData(),trigger.getNBTParameter());
+        List<?> nbtCheckers = trigger.getNBTParameter();
+        if(nbtCheckers.contains("any")) return true;
+        CompoundTagAPI<?> entityData = entity.getData();
+        for(Object checkThis : nbtCheckers)
+            if(checkNBT(entityData,String.valueOf(checkThis))) return true;
+        return false;
     }
 
     private Set<EntityAPI<?,?>> getEntitiesAround(TriggerMob trigger) {
         int range = trigger.getParameterAsInt("detection_range");
         float rangeRatioY = trigger.getParameterAsFloat("detection_y_ratio");
-        return trigger.removeDuplicates(getEntitiesAround(getBox(range,rangeRatioY)));
+        return new HashSet<>(getEntitiesAround(getBox(range,rangeRatioY)));
     }
     
     private void checkStructureSync(String name, String id) {
@@ -263,12 +269,14 @@ public class TriggerContextServer extends TriggerContext {
         return false;
     }
 
-    @Override public boolean isActiveMob(TriggerMob trigger) { //TODO Finish this
+    @Override public boolean isActiveMob(TriggerMob trigger) {
         if(Objects.isNull(this.pos)) return false;
-        validateEntities(trigger,getEntitiesAround(trigger));
-        int min = trigger.getParameterAsInt("min_entities");
-        int max = trigger.getParameterAsInt("max_entities");
-        return trigger.hasCorrectSize(min,max);
+        Set<EntityAPI<?,?>> entitiesAround = getEntitiesAround(trigger);
+        trigger.deduplicate(entitiesAround);
+        trigger.revalidateCache(this.pos);
+        for(EntityAPI<?,?> entity : entitiesAround)
+            if(checkEntity(trigger,entity)) trigger.cacheValidEntity(entity);
+        return trigger.checkCacheSize();
     }
 
     @Override public boolean isActiveMoon(ResourceContext ctx) {
@@ -283,8 +291,13 @@ public class TriggerContextServer extends TriggerContext {
         return false;
     }
 
-    @Override public boolean isActiveRaid(int wave) {
-        return Objects.nonNull(this.pos) && this.world.getRaidWave(this.pos)>=wave;
+    @Override public boolean isActiveRaid(List<?> statusChecks, int wave) {
+        if(Objects.isNull(this.pos) || this.world.getRaidWave(this.pos)<wave) return false;
+        if(statusChecks.contains("any")) return true;
+        String status = this.world.getRaidStatus(this.pos);
+        if(Objects.isNull(status)) return false;
+        for(Object check : statusChecks) if(status.equalsIgnoreCase(String.valueOf(check))) return true;
+        return false;
     }
 
     @Override public boolean isActiveRaining() {
@@ -350,11 +363,5 @@ public class TriggerContextServer extends TriggerContext {
 
     @Override public boolean isClient() {
         return false;
-    }
-
-    private void validateEntities(TriggerMob trigger, Collection<EntityAPI<?,?>> entitiesAround) {
-        Set<EntityAPI<?,?>> entities = trigger.getValidEntities();
-        entities.addAll(entitiesAround);
-        trigger.getValidEntities().removeIf(entity -> !checkEntity(trigger,entity));
     }
 }
