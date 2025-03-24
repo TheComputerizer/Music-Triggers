@@ -24,11 +24,6 @@ public class MTClientEntryPoint extends DelegatingClientEntryPoint {
     private MTClientEntryPoint() {
         INSTANCE = this;
     }
-    
-    @Override public void onClientSetup() {
-        KeyHelper.register(GUI_KEY);
-        ChannelHelper.onResourcesLoaded();
-    }
 
     @Override protected String getModID() {
         return MODID;
@@ -37,8 +32,13 @@ public class MTClientEntryPoint extends DelegatingClientEntryPoint {
     @Override protected String getModName() {
         return NAME;
     }
+    
+    @Override public void onClientSetup() {
+        ChannelHelper.onResourcesLoaded();
+    }
 
     @Override public void onConstructed() {
+        KeyHelper.register(GUI_KEY);
         ChannelHelper.initClient();
         MTNetwork.initClient();
         super.onConstructed();

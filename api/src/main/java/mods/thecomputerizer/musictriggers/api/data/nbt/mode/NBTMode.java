@@ -64,8 +64,9 @@ public abstract class NBTMode {
     }
 
     protected @Nullable BaseTagAPI<?> getNextTag(@Nullable CompoundTagAPI<?> tag) {
+        if(Objects.isNull(tag)) return null;
         String name = stepSplit();
-        return Objects.nonNull(name) && Objects.nonNull(tag) ? tag.getTag(name) : null;
+        return Objects.nonNull(name) ? tag.getTag(name) : null;
     }
 
     public abstract @Nonnull Collection<Supplier<NBTMode>> getPotentialChildren();
