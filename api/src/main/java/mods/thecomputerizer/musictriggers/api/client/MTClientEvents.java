@@ -12,13 +12,11 @@ import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.ScreenHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.advancement.AdvancementAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.block.BlockStateAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.event.EventHelper;
-import mods.thecomputerizer.theimpossiblelibrary.api.common.event.events.CustomTickEventWrapper;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.event.events.PlayerAdvancementEventWrapper;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.event.events.PlayerInteractBlockEventWrapper;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextStyleAPI;
-import mods.thecomputerizer.theimpossiblelibrary.api.util.CustomTick;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.WorldAPI;
 
@@ -50,8 +48,8 @@ public class MTClientEvents {
     
     public static void handleError(@Nullable MinecraftAPI<?> mc, String channel) {
         if(Objects.nonNull(mc)) {
-            mc.sendMessageToPlayer(getReloadMessage(
-                    "error",new Object[]{channel},TextStyleAPI::italics,TextStyleAPI::darkRed));
+            ClientHelper.sendMessage(getReloadMessage("error",new Object[]{channel},
+                    TextStyleAPI::italics,TextStyleAPI::darkRed));
             queueReload(mc,100);
         }
     }
@@ -60,7 +58,6 @@ public class MTClientEvents {
         MTRef.logInfo("Initializing client event invokers {}",ClientHelper.getMinecraft());
         EventHelper.addListener(CLIENT_CONNECTED,MTClientEvents::onClientConnected);
         EventHelper.addListener(CLIENT_DISCONNECTED,MTClientEvents::onClientDisconnected);
-        EventHelper.addListener(CUSTOM_TICK,MTClientEvents::onCustomTick);
         EventHelper.addListener(KEY_INPUT,MTClientEvents::onKeyPress);
         EventHelper.addListener(PLAYER_ADVANCEMENT,MTClientEvents::onAdvancement);
         EventHelper.addListener(PLAYER_INTERACT_BLOCK,MTClientEvents::onRightClickBlock);
@@ -68,7 +65,6 @@ public class MTClientEvents {
         EventHelper.addListener(RENDER_OVERLAY_TEXT,MTClientEvents::onRenderOverlayText);
         EventHelper.addListener(SOUND_PLAY,MTClientEvents::onPlaySound);
         EventHelper.addListener(TICK_CLIENT,MTClientEvents::onClientTick);
-        CustomTick.addCustomTickTPS(ChannelHelper.getTickRate());
     }
 
     private static void onAdvancement(PlayerAdvancementEventWrapper<?> wrapper) {
@@ -94,10 +90,6 @@ public class MTClientEvents {
             }
             ticksUntilReload--;
         }
-    }
-
-    private static void onCustomTick(CustomTickEventWrapper<?> wrapper) {
-        ChannelHelper.tick(wrapper.getTicker());
     }
     
     public static void onKeyPress(InputKeyEventWrapper<?> wrapper) {
@@ -138,7 +130,7 @@ public class MTClientEvents {
             return;
         }
         if(Objects.nonNull(mc) && ticks>0) //Assume 0 tick queues are delegated from the server
-            mc.sendMessageToPlayer(getReloadMessage("queue",new Object[]{ticks},
+            ClientHelper.sendMessage(getReloadMessage("queue",new Object[]{ticks},
                     TextStyleAPI::italics,TextStyleAPI::red));
         ChannelHelper.onReloadQueued(true);
         ticksUntilReload = ticks;

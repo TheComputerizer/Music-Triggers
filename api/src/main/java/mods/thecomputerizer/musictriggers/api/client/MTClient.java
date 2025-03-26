@@ -4,12 +4,8 @@ import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.channel.ChannelJukebox;
 import mods.thecomputerizer.musictriggers.api.client.channel.ChannelPreview;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
-import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientAPI;
-import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
-import mods.thecomputerizer.theimpossiblelibrary.api.common.CommonAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.EntityAPI;
-import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
-import mods.thecomputerizer.theimpossiblelibrary.api.core.TILRef;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.*;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
@@ -47,72 +43,55 @@ public class MTClient {
         return MTRef.res("textures/logo.png");
     }
     
-    public static MinecraftAPI<?> getMinecraft() {
-        return TILRef.getClientSubAPI(ClientAPI::getMinecraft);
-    }
-    
     public static ChannelPreview getPreviewChannel(ChannelHelper helper) {
         return new ChannelPreview(helper,SPECIAL_CHANNELS.getTable("preview"));
     }
-
-    public static @Nullable TextStyleAPI<?> getStyleAPI() {
-        TextHelperAPI<?> api = TILRef.getCommonSubAPI(CommonAPI::getTextHelper);
-        return Objects.nonNull(api) ? api.getStyle() : null;
-    }
-
+    
     @SuppressWarnings("unchecked")
-    public static <S> TextAPI<?> getStyledLiteral(String text, Function<TextStyleAPI<S>,S> ... styleFuncs) {
-        return getStyledText((TextStringAPI<S>)TextHelper.getLiteral(text),styleFuncs);
+    public static <S> @Nullable TextStyleAPI<S> getStyleAPI() {
+        TextHelperAPI<?> api = TextHelper.getHelper();
+        return Objects.nonNull(api) ? (TextStyleAPI<S>)api.getStyle() : null;
     }
-
-    @SuppressWarnings("unchecked")
+    
     @SafeVarargs
-    public static <S> TextAPI<?> getStyledText(TextAPI<S> text, Function<TextStyleAPI<S>,S>... styleFuncs) {
-        TextStyleAPI<S> styler = (TextStyleAPI<S>)getStyleAPI();
+    public static <S> TextAPI<S> getStyledLiteral(String text, Function<TextStyleAPI<S>,S> ... styleFuncs) {
+        return getStyledText(TextHelper.getLiteral(text),styleFuncs);
+    }
+
+    @SafeVarargs
+    public static <S> TextAPI<S> getStyledText(TextAPI<S> text, Function<TextStyleAPI<S>,S>... styleFuncs) {
+        TextStyleAPI<S> styler = getStyleAPI();
         if(Objects.nonNull(styler))
             for(Function<TextStyleAPI<S>,S> styleFunc : styleFuncs)
                 text = text.withStyle(styleFunc.apply(styler));
         return text;
     }
 
-    @SuppressWarnings("unchecked")
-    public static <S> TextAPI<?> getStyledTranslated(
-            String category, String extra, @Nullable Object[] args, Function<TextStyleAPI<S>,S> ... styleFuncs) {
+    @SafeVarargs
+    public static <S> TextAPI<?> getStyledTranslated(String category, String extra, @Nullable Object[] args,
+            Function<TextStyleAPI<S>,S> ... styleFuncs) {
         if(Objects.isNull(args)) args = new Object[]{};
-        return getStyledText((TextTranslationAPI<S>)getTranslated(category,extra,args),styleFuncs);
+        return getStyledText(getTranslated(category,extra,args),styleFuncs);
     }
-
-    public static TextTranslationAPI<?> getTranslated(String category, String extra, Object ... args) {
+    
+    public static <S> TextTranslationAPI<S> getTranslated(String category, String extra, Object ... args) {
         return TextHelper.getTranslated(category+"."+MODID+"."+extra,args);
     }
     
     public static boolean isFocused() {
-        MinecraftAPI<?> mc = getMinecraft();
-        return Objects.isNull(mc) || mc.isLoading()|| mc.isDisplayFocused();
+        return ClientHelper.isLoading() || ClientHelper.isDisplayFocused();
     }
     
     public static boolean isUnpaused() {
-        MinecraftAPI<?> mc = getMinecraft();
-        return Objects.isNull(mc) || mc.isLoading() || !mc.isPaused();
+        return ClientHelper.isLoading() || !ClientHelper.isPaused();
     }
     
-    @SuppressWarnings("unchecked")
     public static void runNBTCheck() { //TODO Add translation keys for the messages
-        MinecraftAPI<?> mc = getMinecraft();
-        if(Objects.isNull(mc)) {
-            ChannelHelper.logGlobalError("Cannot run NBT check with null Minecraft instance!");
-            return;
-        }
-        PlayerAPI<?,?> player = mc.getPlayer();
-        if(Objects.isNull(player)) {
-            ChannelHelper.logGlobalError("Cannot run NBT check with null Player instance!");
-            return;
-        }
-        EntityAPI<?,?> target = mc.getTargetEntity();
+        EntityAPI<?,?> target = ClientHelper.getTargetEntity();
         if(Objects.isNull(target)) {
-            player.sendMessage(getStyledLiteral("No targeted entity to get NBT data for",TextStyleAPI::gray));
+            ClientHelper.sendMessage(getStyledLiteral("No targeted entity to get NBT data for",TextStyleAPI::gray));
             return;
         }
-        player.sendMessage(getStyledLiteral("Target NBT data => \n"+target.getData().toPrettyString(),TextStyleAPI::aqua));
+        ClientHelper.sendMessage(getStyledLiteral("Target NBT data => \n"+target.getData().toPrettyString(),TextStyleAPI::aqua));
     }
 }

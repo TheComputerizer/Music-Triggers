@@ -94,6 +94,7 @@ public class MTCommonEntryPoint extends DelegatingCommonEntryPoint {
 
     @Override public void onPreRegistration() {
         MTRegistryHandler.init();
+        MTCommonEvents.init();
         MTServerEvents.init();
         super.onPreRegistration();
     }

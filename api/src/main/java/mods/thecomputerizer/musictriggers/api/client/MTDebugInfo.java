@@ -9,7 +9,6 @@ import mods.thecomputerizer.musictriggers.api.data.global.Debug;
 import mods.thecomputerizer.musictriggers.api.data.global.GlobalElement;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientHelper;
-import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.font.FontAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.font.FontHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.biome.BiomeAPI;
@@ -130,13 +129,11 @@ public class MTDebugInfo extends GlobalElement {
                     PlayerAPI<?,?> player = helper.getPlayer();
                     if(Objects.nonNull(player)) {
                         WorldAPI<?> world = player.getWorld();
-                        if(Objects.nonNull(world)) {
-                            BlockPosAPI<?> pos = player.getPosRounded();
-                            int blockLight = world.getLightBlock(pos);
-                            int skyLight = world.getLightSky(pos);
-                            int totalLight = world.getLightTotal(pos);
-                            return new Object[]{blockLight,skyLight,totalLight};
-                        }
+                        BlockPosAPI<?> pos = player.getPosRounded();
+                        int blockLight = world.getLightBlock(pos);
+                        int skyLight = world.getLightSky(pos);
+                        int totalLight = world.getLightTotal(pos);
+                        return new Object[]{blockLight,skyLight,totalLight};
                     }
                     return new Object[]{"?","?","?"};
                 });
@@ -146,18 +143,16 @@ public class MTDebugInfo extends GlobalElement {
                     PlayerAPI<?,?> player = helper.getPlayer();
                     if(Objects.nonNull(player)) {
                         WorldAPI<?> world = player.getWorld();
-                        if(Objects.nonNull(world)) {
-                            StringJoiner joiner = new StringJoiner(", ");
-                            for(EffectInstanceAPI<?> instance : player.getActiveEffects()) {
-                                EffectAPI<?> effect = instance.getEffect();
-                                ResourceLocationAPI<?> registryLoc = effect.getRegistryName(world);
-                                String name = Objects.nonNull(registryLoc) ? effect.getName(world) : "?";
-                                String registryName = Objects.nonNull(registryLoc) ? registryLoc.toString() : "?";
-                                TextAPI<?> text = getTranslated("status","effect",name,registryName);
-                                if(Objects.nonNull(text)) joiner.add(text.getApplied());
-                            }
-                            return new Object[]{joiner.toString()};
+                        StringJoiner joiner = new StringJoiner(", ");
+                        for(EffectInstanceAPI<?> instance : player.getActiveEffects()) {
+                            EffectAPI<?> effect = instance.getEffect();
+                            ResourceLocationAPI<?> registryLoc = effect.getRegistryName(world);
+                            String name = Objects.nonNull(registryLoc) ? effect.getName(world) : "?";
+                            String registryName = Objects.nonNull(registryLoc) ? registryLoc.toString() : "?";
+                            TextAPI<?> text = getTranslated("status","effect",name,registryName);
+                            if(Objects.nonNull(text)) joiner.add(text.getApplied());
                         }
+                        return new Object[]{joiner.toString()};
                     }
                     return new Object[]{"?"};
                 });
@@ -166,18 +161,13 @@ public class MTDebugInfo extends GlobalElement {
                 .setArgSetter(helper -> {
                     String name = "?";
                     String id = "?";
-                    MinecraftAPI<?> mc = ClientHelper.getMinecraft();
-                    if(Objects.nonNull(mc)) {
-                        WorldAPI<?> world = mc.getWorld();
-                        if(Objects.nonNull(world)) {
-                            BlockEntityAPI<?,?> target = mc.getTargetBlockEntity();
-                            if(Objects.nonNull(target)) {
-                                ResourceLocationAPI<?> registryName = target.getRegistryName(world);
-                                if(Objects.nonNull(registryName)) {
-                                    name = target.getName(world);
-                                    id = registryName.toString();
-                                }
-                            }
+                    BlockEntityAPI<?,?> target = ClientHelper.getTargetBlockEntity();
+                    if(Objects.nonNull(target)) {
+                        WorldAPI<?> world = target.getWorld();
+                        ResourceLocationAPI<?> registryName = target.getRegistryName(world);
+                        if(Objects.nonNull(registryName)) {
+                            name = target.getName(world);
+                            id = registryName.toString();
                         }
                     }
                     return new Object[]{name,id};
@@ -187,18 +177,13 @@ public class MTDebugInfo extends GlobalElement {
                 .setArgSetter(helper -> {
                     String name = "?";
                     String id = "?";
-                    MinecraftAPI<?> mc = ClientHelper.getMinecraft();
-                    if(Objects.nonNull(mc)) {
-                        WorldAPI<?> world = mc.getWorld();
-                        if(Objects.nonNull(world)) {
-                            EntityAPI<?,?> target = mc.getTargetEntity();
-                            if(Objects.nonNull(target)) {
-                                ResourceLocationAPI<?> registryName = target.getRegistryName(world);
-                                if(Objects.nonNull(registryName)) {
-                                    name = target.getName(world);
-                                    id = registryName.toString();
-                                }
-                            }
+                    EntityAPI<?,?> target = ClientHelper.getTargetEntity();
+                    if(Objects.nonNull(target)) {
+                        WorldAPI<?> world = target.getWorld();
+                        ResourceLocationAPI<?> registryName = target.getRegistryName(world);
+                        if(Objects.nonNull(registryName)) {
+                            name = target.getName(world);
+                            id = registryName.toString();
                         }
                     }
                     return new Object[]{name,id};

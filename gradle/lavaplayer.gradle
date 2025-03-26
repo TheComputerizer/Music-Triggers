@@ -3,7 +3,7 @@ apply from: rootProject.file('gradle\\lavaplayer-libs.gradle')
 repositories {
     maven {
         name = 'JitPack'
-        url = uri('https://jitpack.io')
+        url = uri 'https://jitpack.io'
         content {
             [ 'com.github.devoxin', 'com.github.devoxin.lavaplayer', 'com.github.JustRed23','com.github.natanbc',
               'com.github.walkyst', 'com.github.walkyst.JAADec-fork' ].forEach { includeGroup it }
@@ -11,16 +11,22 @@ repositories {
     }
     maven {
         name = 'LavaLink'
-        url = uri('https://maven.lavalink.dev/releases')
+        url = uri 'https://maven.lavalink.dev/releases'
         content {
-            [ 'dev.lavalink.youtube' ].forEach { includeGroup it }
+            includeGroup 'dev.lavalink.youtube'
+        }
+    }
+    maven {
+        name = 'LavaLink Snapshots'
+        url = uri 'https://maven.lavalink.dev/snapshots'
+        content {
+            includeGroup 'dev.lavalink.youtube'
         }
     }
 }
 
 dependencies {
     //lavaplayer base
-    //shaded("com.github.devoxin:lavaplayer:${lava_version}") { transitive = false }
 
     //lavaplayer dependencies
     shaded("com.github.devoxin:lavaplayer-natives-fork:${lava_natives_version}") { transitive = false }
