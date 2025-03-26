@@ -46,7 +46,7 @@ public class TriggerMob extends HolderTrigger {
      * Returns true is the entity is outside the required distance
      */
     public boolean checkEntityFarAway(EntityAPI<?,?> entity, BlockPosAPI<?> pos) {
-        if(Objects.isNull(entity) || Objects.isNull(pos)) return true;
+        if(Objects.isNull(entity) || Objects.isNull(pos) || !entity.isAlive()) return true;
         int horizontalRange = getParameterAsInt("detection_range");
         float rangeRatioY = getParameterAsFloat("detection_y_ratio");
         int verticalRange = (int)((float)horizontalRange*rangeRatioY);
