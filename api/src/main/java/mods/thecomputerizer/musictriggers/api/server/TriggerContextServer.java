@@ -122,7 +122,11 @@ public class TriggerContextServer extends TriggerContext {
     private Set<EntityAPI<?,?>> getEntitiesAround(TriggerMob trigger) {
         int range = trigger.getParameterAsInt("detection_range");
         float rangeRatioY = trigger.getParameterAsFloat("detection_y_ratio");
-        return new HashSet<>(getEntitiesAround(getBox(range,rangeRatioY)));
+        List<EntityAPI<?,?>> entities = getEntitiesAround(getBox(range,rangeRatioY));
+        Set<EntityAPI<?,?>> aliveEntities = new HashSet<>();
+        for(EntityAPI<?,?> entity : entities)
+            if(entity.isAlive()) aliveEntities.add(entity);
+        return aliveEntities;
     }
     
     private void checkStructureSync(String name, String id) {
