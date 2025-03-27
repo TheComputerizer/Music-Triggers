@@ -4,7 +4,7 @@ import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
-import org.apache.commons.lang3.StringUtils;
+import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 
 import java.util.Arrays;
 import java.util.List;
@@ -63,11 +63,11 @@ public class RedirectElement extends ChannelElement {
             this.remote = true;
             this.value = line.substring(line.indexOf('=')+1).trim();
         }
-        if(StringUtils.isBlank(this.key)) {
+        if(TextHelper.isBlank(this.key)) {
             logWarn("Skipping blank redirect name from line `{}`",line);
             return false;
         }
-        if(StringUtils.isBlank(this.value)) {
+        if(TextHelper.isBlank(this.value)) {
             logWarn("Skipping blank redirect value from line `{}`",line);
             return false;
         }

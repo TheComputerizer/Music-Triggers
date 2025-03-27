@@ -24,7 +24,6 @@ import mods.thecomputerizer.theimpossiblelibrary.api.text.TextTranslationAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.DimensionAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.WorldAPI;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -229,7 +228,7 @@ public class MTDebugInfo extends GlobalElement {
     
     public TextTranslationAPI<?> getTranslated(String type, String key, Object ... args) {
         String built = "debug."+MODID+"."+type;
-        if(StringUtils.isNotEmpty(key)) built+=("."+key);
+        if(TextHelper.isNotEmpty(key)) built+=("."+key);
         return TextHelper.getTranslated(built,args);
     }
 
@@ -287,12 +286,12 @@ public class MTDebugInfo extends GlobalElement {
                     TextHelper.getLiteral(this.text);
             if(Objects.isNull(line)) return null;
             String applied = line.getApplied();
-            return StringUtils.isNotBlank(applied) ? applied : null;
+            return TextHelper.isNotBlank(applied) ? applied : null;
         }
         
         private TextTranslationAPI<?> getTranslated(String key, Object ... args) {
             String built = "debug."+MODID+"."+this.type.getId();
-            if(StringUtils.isNotEmpty(key)) built+=("."+key);
+            if(TextHelper.isNotEmpty(key)) built+=("."+key);
             return TextHelper.getTranslated(built,args);
         }
         

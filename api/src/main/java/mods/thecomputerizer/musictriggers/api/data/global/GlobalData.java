@@ -6,8 +6,8 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels;
+import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -74,7 +74,7 @@ public class GlobalData extends ParameterWrapper {
     }
 
     public @Nullable Toml openToggles() {
-        return StringUtils.isNotBlank(this.togglesPath) ?
+        return TextHelper.isNotBlank(this.togglesPath) ?
                 ChannelHelper.openToml(this.togglesPath,true,this) : null;
     }
 

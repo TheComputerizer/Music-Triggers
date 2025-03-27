@@ -4,9 +4,9 @@ import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml.TomlEntry;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -207,7 +207,7 @@ public class MTConfigV6 extends ConfigVersion {
     @Override public void verifyJukebox(Toml channel) {
         String path = CONFIG_PATH+"/"+channel.getOrSetValue("jukebox",channel.getName()+"/jukebox");
         List<String> oldLines = ChannelHelper.openTxt(path,this);
-        oldLines.removeIf(str -> StringUtils.isEmpty(str) ||
+        oldLines.removeIf(str -> TextHelper.isEmpty(str) ||
                                  str.startsWith("Format this like name") ||
                                  str.startsWith("The key refers to a lang key") ||
                                  str.startsWith("determines the description of the") ||
@@ -222,7 +222,7 @@ public class MTConfigV6 extends ConfigVersion {
     @Override public void verifyRedirct(Toml channel) {
         String path = CONFIG_PATH+"/"+channel.getOrSetValue("redirect",channel.getName()+"/redirect");
         List<String> oldLines = ChannelHelper.openTxt(path,this);
-        oldLines.removeIf(str -> StringUtils.isEmpty(str) ||
+        oldLines.removeIf(str -> TextHelper.isEmpty(str) ||
                               str.startsWith("Format this like name") ||
                               str.startsWith("If you are trying to redirect to an already") ||
                               str.startsWith("Any lines with Format in the name") ||

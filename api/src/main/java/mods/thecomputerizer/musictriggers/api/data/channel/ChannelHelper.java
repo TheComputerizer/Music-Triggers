@@ -64,6 +64,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.shapes.ShapeHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.vectors.Vector3;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.TagHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlParsingException;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlWritingException;
@@ -71,7 +72,6 @@ import mods.thecomputerizer.theimpossiblelibrary.api.util.CustomTick;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.RandomHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -725,7 +725,7 @@ public class ChannelHelper implements NBTLoadable {
         if(activeTriggers.isEmpty()) return false;
         Entry<String,TriggerAPI> selected = RandomHelper.getBasicRandomEntry(activeTriggers.entrySet());
         String songName = this.channels.get(selected.getKey()).getPlayingSongName();
-        if(StringUtils.isBlank(songName)) return false;
+        if(TextHelper.isBlank(songName)) return false;
         setDiscTag(stack,selected.getKey(),selected.getValue().getName(),songName,false);
         return true;
     }
@@ -768,7 +768,7 @@ public class ChannelHelper implements NBTLoadable {
             songName = ((RecordElement)handler).getKey();
             custom = true;
         } else return false;
-        if(StringUtils.isBlank(songName) || StringUtils.isBlank(triggerName)) return false;
+        if(TextHelper.isBlank(songName) || TextHelper.isBlank(triggerName)) return false;
         setDiscTag(stack,channel.getName(),triggerName,songName,custom);
         return true;
     }

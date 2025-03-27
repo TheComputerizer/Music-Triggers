@@ -14,7 +14,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.registry.tab.CreativeTabAPI
 import mods.thecomputerizer.theimpossiblelibrary.api.registry.tab.CreativeTabBuilderAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
-import org.apache.commons.lang3.StringUtils;
+import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 
 import java.util.Collections;
 import java.util.Objects;
@@ -67,7 +67,7 @@ public class MTItemRegistry {
                     if(Objects.nonNull(tag)) {
                         String channel = tag.getString("channel");
                         String audio = tag.contains("custom") ? tag.getString("custom") : tag.getString("audio");
-                        if(StringUtils.isNotBlank(channel) && StringUtils.isNotBlank(audio))
+                        if(TextHelper.isNotBlank(channel) && TextHelper.isNotBlank(audio))
                             ChannelHelper.getClientHelper().playToJukebox(ctx.getPos(),channel,audio);
                     }
                 }

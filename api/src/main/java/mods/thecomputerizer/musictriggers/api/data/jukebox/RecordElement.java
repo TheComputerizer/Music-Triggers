@@ -6,7 +6,7 @@ import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
-import org.apache.commons.lang3.StringUtils;
+import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 
 import java.util.Arrays;
 import java.util.List;
@@ -49,11 +49,11 @@ public class RecordElement extends ChannelElement {
         if(line.startsWith("#") || !line.contains("=") || line.contains("==")) return false;
         this.key = line.substring(0, line.indexOf('=')-1).trim();
         this.value = line.substring(line.indexOf('=')+1).trim();
-        if(StringUtils.isBlank(this.key)) {
+        if(TextHelper.isBlank(this.key)) {
             logWarn("Skipping blank redirect name from line `{}`",line);
             return false;
         }
-        if(StringUtils.isBlank(this.value)) {
+        if(TextHelper.isBlank(this.value)) {
             logWarn("Skipping blank redirect key from line `{}`",line);
             return false;
         }

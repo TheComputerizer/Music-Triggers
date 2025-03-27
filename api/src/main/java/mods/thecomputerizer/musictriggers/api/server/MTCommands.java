@@ -14,7 +14,6 @@ import mods.thecomputerizer.theimpossiblelibrary.api.server.MinecraftServerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.RandomHelper;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -164,7 +163,7 @@ public class MTCommands extends CommandAPI {
         }
         
         @Override protected boolean isValidString(String input) {
-            return !StringUtils.isBlank(input);
+            return TextHelper.isNotBlank(input);
         }
         
         @Override public void prepareExceptionInfo() {

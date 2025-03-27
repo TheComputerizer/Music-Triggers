@@ -10,7 +10,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.client.render.TextBuffer;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.Shape;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.ShapeHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.vectors.Vector3;
-import org.apache.commons.lang3.StringUtils;
+import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -96,7 +96,7 @@ public class TextBox extends BasicTypeableWidget {
     
     @Override protected String onTextRemoved() {
         String removed = super.onTextRemoved();
-        if(StringUtils.isNotEmpty(removed)) trySaving();
+        if(TextHelper.isNotEmpty(removed)) trySaving();
         return removed;
     }
     

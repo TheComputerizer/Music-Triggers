@@ -4,7 +4,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.nbt.NBTHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.BaseTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
-import org.apache.commons.lang3.StringUtils;
+import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
@@ -24,7 +24,7 @@ public class NBTModeEqual extends NBTModeComparison {
 
     @Override protected boolean checkMatchInner(ChannelAPI channel, CompoundTagAPI<?> tag) {
         BaseTagAPI<?> val = stepToTag(tag,this.split.length);
-        if(Objects.isNull(val)) return StringUtils.isBlank(this.comparison);
+        if(Objects.isNull(val)) return TextHelper.isBlank(this.comparison);
         if(val.isPrimitive()) return comparePrimitive(val.asPrimitiveTag())==0;
         if(val.isString()) return compareString(val.asStringTag())==0;
         return false;

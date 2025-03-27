@@ -4,8 +4,8 @@ import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.ListTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.PrimitiveTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.StringTagAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.Patterns;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -47,15 +47,15 @@ public abstract class NBTModeComparison extends NBTMode {
     protected Object parseAsPrimitive() {
         if(Patterns.matchesAny(this.comparison,false,"true","false"))
             return Boolean.parseBoolean(this.comparison);
-        if(StringUtils.endsWithAny(this.comparison,"b","B"))
+        if(TextHelper.endsWithAny(this.comparison,"b","B"))
             return Byte.parseByte(this.comparison.substring(0,this.comparison.length()-1));
-        if(StringUtils.endsWithAny(this.comparison,"d","D"))
+        if(TextHelper.endsWithAny(this.comparison,"d","D"))
             return Double.parseDouble(this.comparison.substring(0,this.comparison.length()-1));
-        if(StringUtils.endsWithAny(this.comparison,"f","F"))
+        if(TextHelper.endsWithAny(this.comparison,"f","F"))
             return Float.parseFloat(this.comparison.substring(0,this.comparison.length()-1));
-        if(StringUtils.endsWithAny(this.comparison,"l","L"))
+        if(TextHelper.endsWithAny(this.comparison,"l","L"))
             return Long.parseLong(this.comparison.substring(0,this.comparison.length()-1));
-        if(StringUtils.endsWithAny(this.comparison,"s","S"))
+        if(TextHelper.endsWithAny(this.comparison,"s","S"))
             return Short.parseShort(this.comparison.substring(0,this.comparison.length()-1));
         if(this.comparison.contains(".")) return Double.parseDouble(this.comparison);
         return Integer.parseInt(this.comparison);

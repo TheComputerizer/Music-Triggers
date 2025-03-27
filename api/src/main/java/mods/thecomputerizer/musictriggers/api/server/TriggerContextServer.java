@@ -20,7 +20,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAP
 import mods.thecomputerizer.theimpossiblelibrary.api.server.MinecraftServerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.ServerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
-import org.apache.commons.lang3.StringUtils;
+import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 
 import java.util.HashSet;
 import java.util.List;
@@ -107,7 +107,7 @@ public class TriggerContextServer extends TriggerContext {
         ResourceLocationAPI<?> regName = entity.getRegistryName(this.world);
         if(Objects.isNull(regName)) return false;
         String name = entity.getName();
-        return ctx.checkMatch(regName.toString(),StringUtils.isNotBlank(name) ? name : null);
+        return ctx.checkMatch(regName.toString(),TextHelper.isNotBlank(name) ? name : null);
     }
     
     private boolean checkEntityNBT(TriggerMob trigger, EntityAPI<?,?> entity) {

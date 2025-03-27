@@ -22,8 +22,8 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerMerged;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerRegistry;
 import mods.thecomputerizer.musictriggers.api.data.trigger.basic.BasicTrigger;
 import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels.ChannelMessage;
+import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -284,7 +284,7 @@ public class ChannelData extends ChannelElement {
             }
             if(!found) {
                 String file = ref.getParameterAsString("location");
-                ref.loadLocal(StringUtils.isNotBlank(file) && !"_".equals(file) ? file : ref.getName());
+                ref.loadLocal(TextHelper.isNotBlank(file) && !"_".equals(file) ? file : ref.getName());
             }
         });
     }

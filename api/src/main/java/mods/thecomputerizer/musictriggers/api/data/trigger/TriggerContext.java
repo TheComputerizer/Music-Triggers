@@ -18,9 +18,9 @@ import mods.thecomputerizer.theimpossiblelibrary.api.shapes.Box;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.ShapeHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.vectors.Vector3;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.WorldAPI;
-import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -43,7 +43,7 @@ public abstract class TriggerContext extends ChannelElement {
     public abstract void cache();
 
     protected boolean checkNBT(@Nullable CompoundTagAPI<?> tag, String tagStr) {
-        if(Objects.isNull(tag) || StringUtils.isBlank(tagStr) || tagStr.equalsIgnoreCase("any")) return true;
+        if(Objects.isNull(tag) || TextHelper.isBlank(tagStr) || tagStr.equalsIgnoreCase("any")) return true;
         NBTMode mode = NBTHelper.getAndInitMode(tagStr.split(";"));
         try {
             return Objects.nonNull(mode) && mode.checkMatch(this.channel,tag);

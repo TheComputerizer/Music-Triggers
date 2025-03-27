@@ -22,11 +22,11 @@ import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
-import org.apache.commons.lang3.mutable.MutableInt;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.*;
@@ -514,29 +514,29 @@ public abstract class TriggerAPI extends ChannelElement implements ChannelSyncab
         private final TriggerAPI parent;
         private final String name;
         private final State state;
-        private final MutableInt counter;
+        private final AtomicInteger counter;
 
         protected Timer(TriggerAPI parent, String name, State state) {
             this.parent = parent;
             this.name = name;
             this.state = state;
-            this.counter = new MutableInt();
+            this.counter = new AtomicInteger();
         }
 
         protected void clear(State state) {
-            if(this.state==state) this.counter.setValue(0);
+            if(this.state==state) this.counter.set(0);
         }
 
         protected boolean hasTime() {
-            return this.counter.getValue()>0;
+            return this.counter.get()>0;
         }
 
         protected void set(State state) {
-            if(this.state==state) this.counter.setValue(this.parent.getParameterAsInt(this.name));
+            if(this.state==state) this.counter.set(this.parent.getParameterAsInt(this.name));
         }
 
         protected void tick(State state) {
-            if(this.state==state && this.counter.getValue()>0) this.counter.decrement();
+            if(this.state==state && this.counter.get()>0) this.counter.decrementAndGet();
         }
     }
 }
