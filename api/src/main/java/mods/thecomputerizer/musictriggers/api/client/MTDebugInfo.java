@@ -303,7 +303,8 @@ public class MTDebugInfo extends GlobalElement {
         public void toLines(FontAPI<?> font, int maxWidth, Collection<String> lines) {
             if(Objects.isNull(font)) return;
             String applied = getNotBlankLine();
-            if(Objects.nonNull(applied)) lines.addAll(FontHelper.splitLines(font,applied,maxWidth));
+            if(Objects.nonNull(applied))
+                lines.addAll(TextHelper.hangingIndent(FontHelper.splitLines(font,applied,maxWidth)));
         }
     }
 

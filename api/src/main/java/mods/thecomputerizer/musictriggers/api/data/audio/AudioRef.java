@@ -166,6 +166,10 @@ public class AudioRef extends ChannelElement implements ChannelSyncable, Weighte
     }
     
     @Override public void setWeight(int i) {}
+    
+    public boolean shouldSavePosition() {
+        return getParameterAsBoolean("resume_on_play");
+    }
 
     public void start(TriggerAPI trigger, boolean unpaused) {}
     

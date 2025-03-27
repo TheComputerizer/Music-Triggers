@@ -72,17 +72,17 @@ public class MTCommands extends CommandAPI {
         }
         
         @Override public void execute(MinecraftServerAPI<?> server, CommandSenderAPI<?> sender, String input, String remaining) {
-            ChannelHelper.logGlobalInfo("Executing command on server with args {} {}",input,remaining);
+            ChannelHelper.logGlobalDebug("Executing command on server with args {} {}",input,remaining);
             Object entity = unwrapEntity(sender);
             switch(getName()) {
                 case "debug": {
-                    ChannelHelper.logGlobalInfo("Sending debug packet");
+                    ChannelHelper.logGlobalDebug("Sending debug packet");
                     MTNetwork.sendToClient(new MessageToggleDebugParameter<>(false,"enable_debug_info"),false,entity);
                     sender.sendMessage(TextHelper.getTranslated(getMessageKey("success")));
                     break;
                 }
                 case "parameter": {
-                    ChannelHelper.logGlobalInfo("Sending debug packet");
+                    ChannelHelper.logGlobalDebug("Sending debug packet");
                     MTNetwork.sendToClient(new MessageToggleDebugParameter<>(false,remaining),false,entity);
                     sender.sendMessage(TextHelper.getTranslated(getMessageKey("success"),remaining));
                     break;
@@ -94,7 +94,7 @@ public class MTCommands extends CommandAPI {
                 }
                 case "reload": {
                     if(Objects.nonNull(entity)) {
-                        ChannelHelper.logGlobalInfo("Sending reload packet");
+                        ChannelHelper.logGlobalDebug("Sending reload packet");
                         MTNetwork.sendToClient(new MessageReload<>(5),false,entity);
                     } else {
                         ChannelHelper.logGlobalInfo("Reloading from the server");
@@ -103,7 +103,7 @@ public class MTCommands extends CommandAPI {
                     break;
                 }
                 case "seconds": {
-                    ChannelHelper.logGlobalInfo("Sending seek packet");
+                    ChannelHelper.logGlobalDebug("Sending seek packet");
                     String[] splitRemaining = remaining.split(" ");
                     long seconds = Long.parseLong(splitRemaining.length==1 ? splitRemaining[0] : splitRemaining[1]);
                     String channel = splitRemaining.length>1 ? splitRemaining[0] : "-";
@@ -112,7 +112,7 @@ public class MTCommands extends CommandAPI {
                     break;
                 }
                 case "skip": {
-                    ChannelHelper.logGlobalInfo("Sending skip packet");
+                    ChannelHelper.logGlobalDebug("Sending skip packet");
                     MTNetwork.sendToClient(new MessageSkipSong<>(),false,entity);
                     sender.sendMessage(TextHelper.getTranslated(getMessageKey("success")));
                     break;
@@ -120,7 +120,7 @@ public class MTCommands extends CommandAPI {
                 case "ticks": {
                     int ticks = RandomHelper.randomInt("reload_ticks",remaining,5);
                     if(Objects.nonNull(entity)) {
-                        ChannelHelper.logGlobalInfo("Sending reload packet");
+                        ChannelHelper.logGlobalDebug("Sending reload packet");
                         MTNetwork.sendToClient(new MessageReload<>(ticks),false,entity);
                     } else {
                         ChannelHelper.logGlobalInfo("Reloading from the server");
@@ -158,7 +158,7 @@ public class MTCommands extends CommandAPI {
                     }
                 } else suggestions.clear();
             } else suggestions.removeIf(s -> !s.startsWith(remaining));
-            MTRef.logInfo("Returning suggestions {}",suggestions);
+            MTRef.logDebug("Returning suggestions {}",suggestions);
             return suggestions;
         }
         

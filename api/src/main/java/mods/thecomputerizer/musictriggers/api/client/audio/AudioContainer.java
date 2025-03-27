@@ -28,6 +28,7 @@ public class AudioContainer extends AudioRef {
     private AudioItem item;
     private int playlistIndex;
     private boolean previousPauseStatus;
+    private long resumeTime;
 
     public AudioContainer(ChannelAPI channel, String name) {
         super(channel,name);
@@ -172,6 +173,7 @@ public class AudioContainer extends AudioRef {
 
     private void setPosition(AudioTrack track) {
         long position = this.channel.getStartTime();
+        if(position==0L) position = this.resumeTime;
         if(position==0L) position = getParameterAsLong("start_at");
         if(position>0L)  {
             track.setPosition(position);
@@ -211,8 +213,7 @@ public class AudioContainer extends AudioRef {
             int fade = trigger.getParameterAsInt("fade_out");
             if(fade>0) setFade(fade);
             else stopTrackImmediately();
-        }
-        else stopTrackImmediately();
+        } else stopTrackImmediately();
     }
     
     @Override public void stopped() {
@@ -220,10 +221,12 @@ public class AudioContainer extends AudioRef {
     }
 
     private void stopTrackImmediately() {
+        long time = this.channel.getPlayingSongTime();
+        if(shouldSavePosition()) this.resumeTime = time;
         TriggerAPI trigger = this.channel.getActiveTrigger();
         if(Objects.nonNull(trigger)) {
             Link link = trigger.getActiveLink();
-            if(Objects.nonNull(link)) link.setSnapshotInherit(this.channel.getPlayingSongTime());
+            if(Objects.nonNull(link)) link.setSnapshotInherit(time);
         }
         this.channel.getPlayer().stopCurrentTrack();
         this.looping = false;
