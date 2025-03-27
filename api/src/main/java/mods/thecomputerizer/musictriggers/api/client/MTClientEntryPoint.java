@@ -36,10 +36,14 @@ public class MTClientEntryPoint extends DelegatingClientEntryPoint {
     @Override public void onClientSetup() {
         ChannelHelper.onResourcesLoaded();
     }
+    
+    @Override public void onCommonSetup() {
+        ChannelHelper.initClient();
+        super.onCommonSetup();
+    }
 
     @Override public void onConstructed() {
         KeyHelper.register(GUI_KEY);
-        ChannelHelper.initClient();
         MTNetwork.initClient();
         super.onConstructed();
     }
