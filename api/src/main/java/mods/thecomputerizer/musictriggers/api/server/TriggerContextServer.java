@@ -63,8 +63,8 @@ public class TriggerContextServer extends TriggerContext {
 
     private boolean checkEntity(TriggerMob trigger, EntityAPI<?,?> entity) {
         ResourceContext ctx = trigger.getResourceCtx();
-        return Objects.nonNull(ctx) && checkEntityName(ctx,entity) && checkEntityNBT(trigger,entity) &&
-               checkEntityMods(trigger,entity);
+        return Objects.nonNull(ctx) && checkEntityName(ctx,entity) && trigger.checkTarget(entity,this.player) &&
+               checkEntityNBT(trigger,entity) && checkEntityMods(trigger,entity);
     }
 
     @SuppressWarnings("unchecked")
@@ -277,7 +277,7 @@ public class TriggerContextServer extends TriggerContext {
         if(Objects.isNull(this.pos)) return false;
         Set<EntityAPI<?,?>> entitiesAround = getEntitiesAround(trigger);
         trigger.deduplicate(entitiesAround);
-        trigger.revalidateCache(this.pos);
+        trigger.revalidateCache(this.pos,this.player);
         for(EntityAPI<?,?> entity : entitiesAround)
             if(checkEntity(trigger,entity)) trigger.cacheValidEntity(entity);
         return trigger.checkCacheSize();

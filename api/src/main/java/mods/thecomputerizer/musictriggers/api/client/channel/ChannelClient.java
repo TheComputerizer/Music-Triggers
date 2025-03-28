@@ -20,6 +20,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelListener;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.Link;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.EnumHelper;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -132,8 +133,9 @@ public class ChannelClient extends ChannelAPI {
         return this.manager.getConfiguration();
     }
 
-    private @Nullable String findMatchingFile(String path) {
-        String[] matches = getInfo().getLocalFolder().list((dir,name) -> name.equals(path) || name.startsWith(path+"."));
+    private @Nullable String findMatchingFile(File folder, String path) {
+        if(Objects.isNull(folder) || TextHelper.isBlank(path)) return null;
+        String[] matches = folder.list((dir,name) -> name.equals(path) || name.startsWith(path+"."));
         return Objects.nonNull(matches) && matches.length>0 ? matches[0] : null;
     }
     
@@ -186,7 +188,7 @@ public class ChannelClient extends ChannelAPI {
     @Override public String loadLocalTrack(AudioRef ref, String location) {
         if(getInfo().canReadFiles()) {
             File folder = getInfo().getLocalFolder();
-            String match = findMatchingFile(location);
+            String match = findMatchingFile(folder,location);
             this.trackLoader.loadLocal(this.manager,ref,folder,match);
             return Objects.nonNull(match) ? match : location;
         }
@@ -242,10 +244,7 @@ public class ChannelClient extends ChannelAPI {
     
     @Override public void seek(long ms) {
         AudioTrack curTrack = this.player.getPlayingTrack();
-        if(Objects.nonNull(curTrack)) {
-            double speed = this.playingPool.getSpeed();
-            curTrack.setPosition((long)(((double)ms)/speed));
-        }
+        if(Objects.nonNull(curTrack)) curTrack.setPosition(ms);
     }
     
     @Override public void setCategoryVolume(float volume) {

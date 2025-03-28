@@ -48,9 +48,13 @@ public class MessageTriggerStates<CTX> extends ChannelHelperMessage<CTX> {
                                stateMap -> NetworkHelper.writeMap(buf,stateMap,trigger -> trigger.encode(buf),
                                        state -> NetworkHelper.writeString(buf,state.name())));
     }
+    
+    public void handle() {
+        this.triggerMap.forEach(ChannelAPI::updateSyncedState);
+    }
 
     @Override public MessageAPI<CTX> handle(CTX ctx) {
-        this.triggerMap.forEach(ChannelAPI::updateSyncedState);
+        this.helper.tryHandleTriggerStateSync(this);
         return null;
     }
     

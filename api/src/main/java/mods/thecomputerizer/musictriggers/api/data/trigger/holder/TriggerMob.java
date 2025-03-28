@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.api.data.trigger.holder;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.EntityAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
 
 import java.util.*;
@@ -18,6 +19,16 @@ public class TriggerMob extends HolderTrigger {
     
     public void cacheValidEntity(EntityAPI<?,?> entity) {
         this.cachedEntities.add(entity);
+    }
+    
+    /**
+     * Return true if the target check passes
+     */
+    public boolean checkTarget(EntityAPI<?,?> entity, PlayerAPI<?,?> player) {
+        if(!getParameterAsBoolean("mob_targeting") || !entity.canTarget()) return true;
+        EntityAPI<?,?> target = entity.getAttackTarget();
+        if(Objects.isNull(target) || !target.isPlayer() || Objects.isNull(player)) return false;
+        return getParameterAsBoolean("target_any_player") || target.getEntity()==player.getEntity();
     }
     
     public void deduplicate(Collection<EntityAPI<?,?>> entities) {
@@ -63,8 +74,9 @@ public class TriggerMob extends HolderTrigger {
         return true;
     }
     
-    public void revalidateCache(BlockPosAPI<?> pos) {
-        this.cachedEntities.removeIf(entity -> checkEntityFarAway(entity,pos));
+    public void revalidateCache(BlockPosAPI<?> pos, PlayerAPI<?,?> player) {
+        this.cachedEntities.removeIf(entity -> checkEntityFarAway(entity,pos) ||
+                                               !checkTarget(entity,player));
     }
 
     @Override public boolean verifyRequiredParameters() {

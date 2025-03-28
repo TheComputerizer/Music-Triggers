@@ -366,6 +366,8 @@
   "parameter.musictriggers.subtitle_scale.name": "Subtitle Scale",
   "parameter.musictriggers.subtitles.desc": "A list of subtitles from which one will be randomly chosen to render when the title card activates.\n\n<default: []>",
   "parameter.musictriggers.subtitles.name": "Subtitles",
+  "parameter.musictriggers.target_any_player.desc": "Determines whether the mob_targeting parameter will pass when any player is being targeted or only when the current user is being targeted.\n\n<default: true>",
+  "parameter.musictriggers.target_any_player.name": "Target Any Player",
   "parameter.musictriggers.target_channel.desc": "The channel that will be checked for the linked triggers.\n\n<default: The channel of the parent trigger>",
   "parameter.musictriggers.target_channel.name": "Target Channel",
   "parameter.musictriggers.temperature_greater_than.desc": "Determines whether biome_emperature will be the (inclusive) minimum or maximum value.\n\n<default: true>",

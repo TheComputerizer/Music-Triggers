@@ -86,7 +86,7 @@ public class MTScreenInfo {
         } else {
             for(ChannelAPI channel : ChannelHelper.getClientHelper().getChannels().values()) {
                 if(channel.isClientChannel() && !Misc.equalsAny(channel.getName(),"jukebox","preview")) {
-                    this.channelCache.put(channel, new HashSet<>());
+                    this.channelCache.put(channel,new HashSet<>());
                     if(Objects.isNull(this.channel)) this.channel = channel;
                 }
             }

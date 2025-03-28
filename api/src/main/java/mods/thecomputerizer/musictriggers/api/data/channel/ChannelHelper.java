@@ -391,6 +391,7 @@ public class ChannelHelper implements NBTLoadable {
     @Getter private boolean syncable;
     private final String playerID;
     private MessageTriggerStates<?> stateMsg;
+    private MessageTriggerStates<?> syncedStatesMsg;
     private int ticks;
 
     public ChannelHelper(String playerID, boolean client) {
@@ -689,6 +690,10 @@ public class ChannelHelper implements NBTLoadable {
     
     protected void sync() {
         if(this.syncable) {
+            if(Objects.nonNull(this.syncedStatesMsg)) {
+                this.syncedStatesMsg.handle();
+                this.syncedStatesMsg = null;
+            }
             if(Objects.isNull(this.stateMsg))
                 this.stateMsg = new MessageTriggerStates<>(this);
             for(ChannelAPI channel : this.channels.values()) channel.getSync().addSynced(this.stateMsg);
@@ -714,6 +719,11 @@ public class ChannelHelper implements NBTLoadable {
         Toml toml = Toml.getEmpty();
         for(Toggle toggle : this.toggles) toml.addTable("toggle",toggle.toToml());
         return toml;
+    }
+    
+    public void tryHandleTriggerStateSync(MessageTriggerStates<?> syncedStatesMsg) {
+        if(this.syncable) syncedStatesMsg.handle();
+        else this.syncedStatesMsg = syncedStatesMsg;
     }
     
     private boolean writeBasicDisc(ItemStackAPI<?> stack) {

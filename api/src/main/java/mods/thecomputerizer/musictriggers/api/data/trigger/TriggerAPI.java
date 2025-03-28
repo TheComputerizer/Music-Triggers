@@ -34,7 +34,7 @@ import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.Sta
 @Getter
 public abstract class TriggerAPI extends ChannelElement implements ChannelSyncable, NBTLoadable {
 
-    private static final Map<TriggerAPI,Map<String,Timer>> TIMER_MAP = new HashMap<>(); // This needs to be static due to super stuff
+    protected static final Map<TriggerAPI,Map<String,Timer>> TIMER_MAP = new HashMap<>(); // This needs to be static due to super stuff
 
     private final Set<TriggerCombination> parents;
     protected final Set<Link> links;
@@ -63,8 +63,13 @@ public abstract class TriggerAPI extends ChannelElement implements ChannelSyncab
     }
 
     public boolean canActivate() {
-        return getState().activatable && !hasTime("active_cooldown") && !hasTime("ticks_before_active") &&
-                hasNonEmptyAudioPool();
+        return canActivate(true);
+    }
+    
+    protected boolean canActivate(boolean checkAudioPool) {
+        State state = getSyncedState();
+        return (isSynced() ? state==ACTIVE : state.activatable) && !hasTime("active_cooldown") &&
+               !hasTime("ticks_before_active") && (!checkAudioPool || hasNonEmptyAudioPool());
     }
 
     protected boolean canPersist() {
@@ -155,6 +160,10 @@ public abstract class TriggerAPI extends ChannelElement implements ChannelSyncab
 
     public List<String> getRequiredMods() {
         return Collections.emptyList();
+    }
+    
+    public State getSyncedState() {
+        return isSynced() ? this.channel.getSelector().getContext().getSyncedState(this) : getState();
     }
 
     @Override public Class<? extends ChannelElement> getTypeClass() {
@@ -310,23 +319,32 @@ public abstract class TriggerAPI extends ChannelElement implements ChannelSyncab
                 switch(this.state) {
                     case ACTIVE:
                     case PLAYABLE: {
-                        if(state==DISABLED || state==IDLE)
-                            for(ChannelEventHandler handler : this.channel.getData().getEventHandlers(this))
-                                handler.unplayable();
+                        setStateWithHandle(state,ChannelEventHandler::unplayable,DISABLED,IDLE);
                         break;
                     }
                     case DISABLED:
                     case IDLE: {
-                        if(state==PLAYABLE || state==ACTIVE)
-                            for(ChannelEventHandler handler : this.channel.getData().getEventHandlers(this))
-                                handler.playable();
+                        setStateWithHandle(state,ChannelEventHandler::playable,PLAYABLE,ACTIVE);
                         break;
                     }
                 }
-                this.state = state;
-                this.channel.getSync().queueTriggerSync(this);
             }
         }
+    }
+    
+    private void setStateWithHandle(State state, Consumer<ChannelEventHandler> handle, State ... validStates) {
+        boolean shouldHandle = false;
+        for(State validState : validStates) {
+            if(state==validState) {
+                shouldHandle = true;
+                break;
+            }
+        }
+        if(shouldHandle)
+            for(ChannelEventHandler handler : this.channel.getData().getEventHandlers(this))
+                handle.accept(handler);
+        this.state = state;
+        this.channel.getSync().queueTriggerSync(this);
     }
 
     protected void setTimer(String name, State state) {

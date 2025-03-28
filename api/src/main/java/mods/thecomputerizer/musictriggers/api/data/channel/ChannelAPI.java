@@ -205,7 +205,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, ChannelSyncable
     }
     
     public void getSource(Map<String,Toml> map, String name, String path) {
-        Toml toml = ChannelHelper.openToml(MTRef.CONFIG_PATH+"/"+this.name+"/"+path, false, this);
+        Toml toml = ChannelHelper.openToml(MTRef.CONFIG_PATH+"/"+this.name+"/"+path,false,this);
         if(Objects.nonNull(toml)) map.put(name,toml);
     }
     

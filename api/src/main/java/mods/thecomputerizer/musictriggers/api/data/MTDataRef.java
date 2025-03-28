@@ -248,6 +248,7 @@ public final class MTDataRef {
                          buildParameter("mob_targeting",true),
                          buildString("resource_matcher","partial",matcher()),
                          buildParameter("resource_name",Collections.singletonList("any")),
+                         buildParameter("target_any_player",true),
                          buildParameter("victory_id","not_set"),
                          buildParameter("victory_percentage",100f)),
             buildTrigger("moon",true,

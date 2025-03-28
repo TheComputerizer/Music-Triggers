@@ -19,6 +19,10 @@ public class TriggerSynced extends TriggerAPI {
         this.reference = reference;
         this.syncedState = Objects.nonNull(reference.getState()) ? reference.getState() : IDLE;
     }
+    
+    @Override public boolean canActivate() { //Hopefully the timers are handled on the other side?
+        return getState()==ACTIVE && hasNonEmptyAudioPool();
+    }
 
     @Override public String getNameWithID() {
         return this.reference.getNameWithID();

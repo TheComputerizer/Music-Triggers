@@ -33,6 +33,13 @@ public class TriggerCombination extends TriggerAPI {
         recalculateParameters();
     }
     
+    @Override public boolean canActivate() {
+        if(!hasNonEmptyAudioPool()) return false;
+        for(TriggerAPI trigger : this.triggers)
+            if(!trigger.canActivate(false)) return false;
+        return true;
+    }
+    
     @Override public boolean checkSidedContext(TriggerContext context) {
         for(TriggerAPI trigger : this.triggers)
             if(!trigger.checkSidedContext(context)) return false;
