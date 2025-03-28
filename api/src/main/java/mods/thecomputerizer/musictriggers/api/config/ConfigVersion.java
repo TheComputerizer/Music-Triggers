@@ -215,6 +215,7 @@ public abstract class ConfigVersion implements LoggableAPI {
     }
     
     public boolean hasCloserQualiferThan(Version version, int closest) {
+        if(Objects.isNull(version.qualifier)) return false;
         return this.version.hasCloserQualiferThan(version.qualifier.name,version.qualifier.build,closest);
     }
     
@@ -331,6 +332,7 @@ public abstract class ConfigVersion implements LoggableAPI {
         }
         
         public boolean hasCloserQualiferThan(String qualifierName, int qualiferBuild, int closest) {
+            if(Objects.isNull(this.qualifier)) return true;
             return this.qualifier.isCloserThan(qualifierName,qualiferBuild,closest);
         }
         
