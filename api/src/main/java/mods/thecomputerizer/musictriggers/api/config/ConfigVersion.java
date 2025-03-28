@@ -319,8 +319,9 @@ public abstract class ConfigVersion implements LoggableAPI {
         @Override public boolean equals(Object other) {
             if(other instanceof Version) {
                 Version version = (Version)other;
-                return this.release==version.release && this.major==version.major && this.minor==version.minor &&
-                       this.qualifier.equals(version.qualifier);
+                if(this.release==version.release && this.major==version.major && this.minor==version.minor)
+                    return Objects.isNull(this.qualifier) ? Objects.isNull(version.qualifier) :
+                            (Objects.nonNull(version.qualifier) && this.qualifier.equals(version.qualifier));
             }
             return false;
         }
