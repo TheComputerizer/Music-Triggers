@@ -173,6 +173,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, ChannelSyncable
     public abstract @Nullable AudioPool getPlayingPool();
     public abstract @Nullable String getPlayingSongName();
     public abstract long getPlayingSongTime();
+    public abstract long getPlayingSongTotalTime();
     
     public Set<String> getRecordLines() {
         Set<String> lines = new HashSet<>();

@@ -177,6 +177,11 @@ public class ChannelClient extends ChannelAPI {
         return Objects.nonNull(track) ? (long)(track.getPosition()*speed) : 0L;
     }
     
+    @Override public long getPlayingSongTotalTime() {
+        AudioTrack track = this.player.getPlayingTrack();
+        return Objects.nonNull(track) ? track.getDuration() : 0L;
+    }
+    
     @Override public boolean isClientChannel() {
         return true;
     }
@@ -219,12 +224,12 @@ public class ChannelClient extends ChannelAPI {
     }
 
     @Override public void play(boolean unpaused) {
-        super.play(unpaused);
-        this.queued = false;
         TriggerAPI trigger = getActiveTrigger();
         if(trigger.canPlayAudio()) {
             AudioPool pool = trigger.getAudioPool();
             if(Objects.nonNull(pool)) {
+                super.play(unpaused);
+                this.queued = false;
                 if(pool.hasQueue()) {
                     pool.start(trigger,unpaused);
                     this.playingPool = pool;

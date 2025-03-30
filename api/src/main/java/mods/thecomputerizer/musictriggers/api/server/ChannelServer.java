@@ -53,6 +53,11 @@ public class ChannelServer extends ChannelAPI {
         return 0L;
     }
     
+    @Override public long getPlayingSongTotalTime() {
+        logError("Tried to get the total time of the playing song on the server!");
+        return 0L;
+    }
+    
     @Override public boolean isClientChannel() {
         return false;
     }

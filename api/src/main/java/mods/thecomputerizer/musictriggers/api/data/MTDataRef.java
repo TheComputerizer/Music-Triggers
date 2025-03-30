@@ -488,7 +488,13 @@ public final class MTDataRef {
     public static void writeToFile(Toml toml, String path) {
         List<String> lines = new ArrayList<>();
         toml.write(lines,0,true);
-        FileHelper.writeLines(path+".toml",lines,false);
+        if(path.contains("null")) {
+            try {
+                throw new RuntimeException("File path contains 'null'");
+            } catch(Throwable t) {
+                ChannelHelper.logGlobalWarn("Tried to write file path '{}.toml'",path,t);
+            }
+        } else FileHelper.writeLines(path+".toml",lines,false);
     }
     
     @Getter

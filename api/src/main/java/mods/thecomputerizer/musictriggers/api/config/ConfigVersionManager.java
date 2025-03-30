@@ -7,9 +7,11 @@ import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.global.GlobalData;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -18,6 +20,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import static mods.thecomputerizer.musictriggers.api.MTRef.CONFIG_PATH;
+import static mods.thecomputerizer.musictriggers.api.MTRef.CONFIG_PATH_BACKUP;
 import static mods.thecomputerizer.musictriggers.api.MTRef.VERSION;
 import static mods.thecomputerizer.musictriggers.api.config.MTConfigV6.V6_3_1;
 import static mods.thecomputerizer.musictriggers.api.config.MTConfigV7.*;
@@ -109,11 +112,54 @@ public class ConfigVersionManager {
         ConfigVersion fileVersion;
         if(versionLines.isEmpty()) {
             CURRENT.logWarn("No version info present! Attempting to remap from 6.3.1");
-            fileVersion = MTConfigV6.V6_3_1;
+            fileVersion = V6_3_1;
         } else fileVersion = findVersion(versionLines.get(0).trim());
         if(Objects.isNull(fileVersion)) CURRENT.logFatal("Unable to remap missing config version!");
-        else fileVersion.remap();
+        else {
+            if(fileVersion!=CURRENT) writeBackup();
+            fileVersion.remap();
+        }
         FileHelper.writeLine(version,VERSION,false);
+    }
+    
+    /**
+     * Write a backup of config/MusicTriggers to config/MusicTriggersBackup before remapping.
+     */
+    private static void writeBackup() {
+        File configDir = FileHelper.get(Paths.get(CONFIG_PATH));
+        if(!configDir.exists()) return; //Nothing to copy
+        File backupDir = FileHelper.get(Paths.get(CONFIG_PATH_BACKUP));
+        writeBackup(configDir,backupDir);
+        CURRENT.logWarn("Backed up all .toml & .txt in {} to {} before remapping",configDir,backupDir);
+    }
+    
+    /**
+     * Only include nonempty .toml files & .txt files to conserve time & resources
+     */
+    private static void writeBackup(File srcDir, File backupDir) {
+        File[] files = srcDir.listFiles();
+        if(Objects.isNull(files)) return;
+        for(File file : files) {
+            if(file.isDirectory()) writeBackup(file,FileHelper.get(backupDir,file.getName()));
+            else {
+                String fileName = file.getName();
+                if(TextHelper.endsWithAny(fileName,".toml",".txt")) {
+                    List<String> lines = FileHelper.toLines(file);
+                    if(lines.isEmpty()) return;
+                    boolean shouldWrite = false;
+                    for(String line : lines) {
+                        if(TextHelper.isNotBlank(line)) { //No need for backups of empty files
+                            shouldWrite = true;
+                            break;
+                        }
+                    }
+                    if(shouldWrite) {
+                        File backup = FileHelper.get(backupDir,fileName,true);
+                        FileHelper.writeLines(backup,lines,false);
+                    }
+                }
+            }
+        }
     }
     
     public static void writeDefaults(Toml toml, String name, String path) {

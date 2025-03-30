@@ -13,6 +13,7 @@ public class MTRef {
 
     public static final String BASE_PACKAGE = "mods.thecomputerizer.musictriggers";
     public static final String CONFIG_PATH = "config/MusicTriggers";
+    public static final String CONFIG_PATH_BACKUP = "config/MusicTriggersBackup";
     public static final String DESCRIPTION = "Multiversion mod for playing music and sounds based on in-game triggers.";
     public static final String GLOBAL_CONFIG = "config/MusicTriggers/global";
     public static final Logger LOGGER = LogManager.getLogger("Music Triggers");

@@ -222,7 +222,7 @@ public class AudioContainer extends AudioRef {
 
     private void stopTrackImmediately() {
         long time = this.channel.getPlayingSongTime();
-        if(shouldSavePosition()) this.resumeTime = time;
+        if(shouldSavePosition()) this.resumeTime = (time+50L)<this.channel.getPlayingSongTotalTime() ? time : 0L;
         TriggerAPI trigger = this.channel.getActiveTrigger();
         if(Objects.nonNull(trigger)) {
             Link link = trigger.getActiveLink();
