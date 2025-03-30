@@ -7,9 +7,11 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerRegistry;
+import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml.TomlEntry;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlRemapper;
+import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nullable;
@@ -40,6 +42,42 @@ public abstract class ConfigVersion implements LoggableAPI {
     
     protected ConfigVersion(Version version) {
         this.version = version;
+    }
+    
+    protected boolean addMissingRequiredParameters(Toml trigger) {
+        String name = trigger.getName();
+        switch(name) {
+            case "height": {
+                if(!trigger.hasEntry("level")) {
+                    trigger.addEntry("level",0);
+                    return true;
+                }
+                return false;
+            }
+            case "time": {
+                if(trigger.hasEntry("time_bundle") || trigger.hasEntry("start_hour")) return false;
+                if(trigger.hasEntry("end_hour")) {
+                    trigger.addEntry("start_hour",0f);
+                    return true;
+                }
+                if(trigger.hasEntry("identifier")) {
+                    String id = trigger.getEntryString("identifier").getValue();
+                    if(TextHelper.isNotBlank(id)) {
+                        id = id.toLowerCase().trim();
+                        if("morning".equals(id)) id = "sunrise";
+                        else if("evening".equals(id)) id = "sunset";
+                        else if(Misc.equalsAny(id,"afternoon","daytime","noon")) id = "day";
+                        else if("nighttime".equals(id)) id = "night";
+                        if(Misc.equalsAny(id,"day","night","sunrise","sunset")) {
+                            trigger.addEntry("time_bundle",id);
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+        }
+        return false;
     }
     
     public List<String> getHeaderLines(String name) {
@@ -192,6 +230,10 @@ public abstract class ConfigVersion implements LoggableAPI {
                     return new TomlRemapper() {
                         @Nullable @Override public TomlRemapper getNextRemapper(String name) {
                             return getRemapper(ref.findChild(name));
+                        }
+                        @Override public boolean remap(Toml toml) {
+                            boolean remapped = super.remap(toml);
+                            return addMissingRequiredParameters(toml) || remapped;
                         }
                         @Override public String remapTable(String name) {
                             return name;

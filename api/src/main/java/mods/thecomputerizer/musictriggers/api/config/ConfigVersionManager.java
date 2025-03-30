@@ -140,7 +140,8 @@ public class ConfigVersionManager {
         File[] files = srcDir.listFiles();
         if(Objects.isNull(files)) return;
         for(File file : files) {
-            if(file.isDirectory()) writeBackup(file,FileHelper.get(backupDir,file.getName()));
+            if(file.isDirectory())
+                writeBackup(file,FileHelper.get(new File(backupDir,file.getName()).toPath(),false));
             else {
                 String fileName = file.getName();
                 if(TextHelper.endsWithAny(fileName,".toml",".txt")) {

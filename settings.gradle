@@ -59,19 +59,7 @@ multiversion {
     default_resource_output = 'run_client\\\\\\\\MTResources'
 }
 
-def paths = [                                ':api',     ':legacy:1.12',
-  ':fabric:1.16',        ':forge:1.16',                                                        ':shared:1.16',
-  ':fabric:1.18',        ':forge:1.18',                                                        ':shared:1.18',
-                         ':forge:1.19',                                                        ':shared:1.19',
-                         ':forge:1.20',                                                        ':shared:1.20',
-                         ':forge:1.21',                                                        ':shared:1.21',
-                         ':forge:1.19:1.19.2',                                          ':shared:1.19:1.19.2',
-                         ':forge:1.19:1.19.4',                                          ':shared:1.19:1.19.4',
-                         ':forge:1.20:1.20.1',                                          ':shared:1.20:1.20.1',
-                         ':forge:1.20:1.20.4',                                          ':shared:1.20:1.20.4',
-                         ':forge:1.20:1.20.6',                                          ':shared:1.20:1.20.6',
-                         ':forge:1.21:1.21.1',                                          ':shared:1.21:1.21.1'
-]
+def paths = [ ':api', ':legacy:1.12' ]
 
 paths.forEach {
     include it

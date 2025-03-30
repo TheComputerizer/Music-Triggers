@@ -47,8 +47,8 @@ public class MTCommonEntryPoint extends DelegatingCommonEntryPoint {
         String className = BASE_PACKAGE+"."+loader+"."+version.getPkg()+".common.MTCommonEntryPoint";
         className+=version.getName().replace('.','_');
         ClassLoader contextLoader = Thread.currentThread().getContextClassLoader();
-        if(DEV && instance.getModLoader().isForge() && (version.isV12() || version.isV16())) {
-            String versionStr = version.isV16() ? "/forge/1.16/" : "/legacy/1.12/";
+        if(DEV && version.isV12()) {
+            String versionStr = "/legacy/1.12/";
             Set<String> contains = new HashSet<>(Arrays.asList("/api/","/"+loader+"/",versionStr));
             ClassHelper.checkBurningWaveInit();
             for(URL url : ClassLoaders.getURLs(ClassLoader.getSystemClassLoader())) {
@@ -104,6 +104,7 @@ public class MTCommonEntryPoint extends DelegatingCommonEntryPoint {
     }
     
     @Override public CommonEntryPoint setDelegatedCustomHandle() {
+        if(!CoreAPI.isV12()) return null;
         CommonEntryPoint instance = null;
         Class<?> versionClass = findVersionEntryClass(CoreAPI.getInstance());
         if(Objects.nonNull(versionClass)) {

@@ -94,11 +94,11 @@ public class ParameterLink extends DataLink {
     }
     
     @Override public TextAPI<?> getDescription() {
-        return MTGUIScreen.selectionDesc(this.type.getType());
+        return Objects.nonNull(this.type) ? MTGUIScreen.selectionDesc(this.type.getType()) : null;
     }
     
     @Override public TextAPI<?> getDisplayName() {
-        return MTGUIScreen.selectionName(this.type.getType());
+        return Objects.nonNull(this.type) ? MTGUIScreen.selectionName(this.type.getType()) : null;
     }
     
     public @Nullable Object getModifiedValue(String name) {
@@ -114,10 +114,16 @@ public class ParameterLink extends DataLink {
                !GenericUtils.matches(parameter.ref.getDefaultValue(),value))
                 toml.addEntry(parameter.name,value);
         }
-        this.type.populateNext(toml,true);
+        if(Objects.nonNull(this.type)) this.type.populateNext(toml,true);
+        else this.wrapper.logError("Cannot populate the next Toml instance with null screen type!",
+                                   new RuntimeException());
     }
     
     @Override public void setType(MTScreenInfo type) {
+        if(Objects.isNull(type)) {
+            this.wrapper.logError("Tried to set screen type for ParameterLink to null!",new RuntimeException());
+            return;
+        }
         this.type = type;
         if(this.children.isEmpty()) this.children.addAll(this.wrapper.getChildWrappers(this.type));
     }
