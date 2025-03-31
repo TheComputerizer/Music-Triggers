@@ -295,7 +295,9 @@ public abstract class TriggerAPI extends ChannelElement implements ChannelSyncab
      */
     public boolean query(TriggerContext context) {
         if(isDisabled()) return false;
-        if(checkSidedContext(context) || getParameterAsBoolean("not")) {
+        boolean playableCtx = checkSidedContext(context);
+        boolean not = getParameterAsBoolean("not");
+        if((playableCtx && !not) || (!playableCtx && not)) {
             setTimer("persistence",ACTIVE);
             return true;
         }
