@@ -15,10 +15,12 @@ import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 import org.apache.logging.log4j.Level;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static mods.thecomputerizer.musictriggers.api.MTRef.GLOBAL_CONFIG;
 import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.TABLE_MAP;
@@ -47,6 +49,25 @@ public abstract class ConfigVersion implements LoggableAPI {
     protected boolean addMissingRequiredParameters(Toml trigger) {
         String name = trigger.getName();
         switch(name) {
+            case "dimension": {
+                if(!trigger.hasEntry("resource_name")) {
+                    trigger.addEntry("resource_name",Collections.singletonList("overworld"));
+                    return true;
+                }
+                List<?> names = new ArrayList<>(trigger.getEntryArray("resource_name").getValue());
+                //Remap integer backed dimension IDs for vanilla dimensions
+                if(!names.contains("-1") && !names.contains("0") && !names.contains("1")) return false;
+                names = names.stream().map(dimName -> {
+                    switch(String.valueOf(dimName)) {
+                        case "-1": return "nether";
+                        case "0": return "overworld";
+                        case "1": return "end";
+                        default: return dimName;
+                    }
+                }).collect(Collectors.toList());
+                trigger.addEntry("resource_name",names);
+                return true;
+            }
             case "height": {
                 if(!trigger.hasEntry("level")) {
                     trigger.addEntry("level",0);

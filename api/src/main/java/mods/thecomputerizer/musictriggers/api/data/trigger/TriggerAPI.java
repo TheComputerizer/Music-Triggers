@@ -41,7 +41,7 @@ public abstract class TriggerAPI extends ChannelElement implements ChannelSyncab
     @Setter protected Link activeLink;
     private ResourceContext resourceCtx;
     private State state;
-    private int tracksPlayed;
+    protected int tracksPlayed;
 
     protected TriggerAPI(ChannelAPI channel, String name) {
         super(channel,name);
@@ -68,8 +68,8 @@ public abstract class TriggerAPI extends ChannelElement implements ChannelSyncab
     
     protected boolean canActivate(boolean checkAudioPool) {
         State state = getSyncedState();
-        return (isSynced() ? state==ACTIVE : state.activatable) && !hasTime("active_cooldown") &&
-               !hasTime("ticks_before_active") && (!checkAudioPool || hasNonEmptyAudioPool());
+        return (isSynced() ? state==ACTIVE : state.activatable) && hasNoTime("active_cooldown") &&
+               hasNoTime("ticks_before_active") && (!checkAudioPool || hasNonEmptyAudioPool());
     }
 
     protected boolean canPersist() {
@@ -78,9 +78,9 @@ public abstract class TriggerAPI extends ChannelElement implements ChannelSyncab
     }
 
     public boolean canPlayAudio() {
-        if(this.tracksPlayed==0) return hasTime("ticks_before_audio");
+        if(this.tracksPlayed==0) return hasNoTime("ticks_before_audio");
         int maxTracks = getParameterAsInt("max_tracks");
-        return (maxTracks<=0 || this.tracksPlayed<maxTracks) && !hasTime("ticks_between_audio");
+        return (maxTracks<=0 || this.tracksPlayed<maxTracks) && hasNoTime("ticks_between_audio");
     }
     
     public boolean checkPaused(boolean unpaused) {
@@ -165,6 +165,14 @@ public abstract class TriggerAPI extends ChannelElement implements ChannelSyncab
     public State getSyncedState() {
         return isSynced() ? this.channel.getSelector().getContext().getSyncedState(this) : getState();
     }
+    
+    protected Set<String> getTimedParameterNames() {
+        return TIMER_MAP.getOrDefault(this,Collections.emptyMap()).keySet();
+    }
+    
+    protected @Nullable Timer getTimer(String name) {
+        return TIMER_MAP.containsKey(this) ? TIMER_MAP.get(this).get(name) : null;
+    }
 
     @Override public Class<? extends ChannelElement> getTypeClass() {
         return TriggerAPI.class;
@@ -183,9 +191,14 @@ public abstract class TriggerAPI extends ChannelElement implements ChannelSyncab
         AudioPool pool = getAudioPool();
         return Objects.nonNull(pool) && pool.hasAudio();
     }
+    
+    public boolean hasNoTime(String name) {
+        Timer timer = getTimer(name);
+        return Objects.isNull(timer) || !timer.hasTime();
+    }
 
     public boolean hasTime(String name) {
-        Timer timer = TIMER_MAP.containsKey(this) ? TIMER_MAP.get(this).get(name) : null;
+        Timer timer = getTimer(name);
         return Objects.nonNull(timer) && timer.hasTime();
     }
     

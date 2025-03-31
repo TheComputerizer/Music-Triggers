@@ -279,7 +279,7 @@ public class TriggerContextClient extends TriggerContext {
     }
 
     @Override public boolean isActiveLowHP(float percent) {
-        return hasPlayer() && (percent/100f)<this.player.getHealthPercent();
+        return hasPlayer() && this.player.getHealthPercent()<(percent/100f);
     }
 
     @Override public boolean isActiveMenu() {

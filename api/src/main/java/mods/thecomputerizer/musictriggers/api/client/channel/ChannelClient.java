@@ -120,6 +120,7 @@ public class ChannelClient extends ChannelAPI {
     @Override public void deactivate() {
         super.deactivate();
         this.deactivating = false;
+        this.playingPool = null;
     }
     
     @Override public void disable(Link link) {
@@ -226,10 +227,10 @@ public class ChannelClient extends ChannelAPI {
     @Override public void play(boolean unpaused) {
         TriggerAPI trigger = getActiveTrigger();
         if(trigger.canPlayAudio()) {
+            super.play(unpaused);
+            this.queued = false;
             AudioPool pool = trigger.getAudioPool();
             if(Objects.nonNull(pool)) {
-                super.play(unpaused);
-                this.queued = false;
                 if(pool.hasQueue()) {
                     pool.start(trigger,unpaused);
                     this.playingPool = pool;

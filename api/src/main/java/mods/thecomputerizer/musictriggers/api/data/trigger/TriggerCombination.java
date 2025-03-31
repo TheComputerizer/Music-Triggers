@@ -11,6 +11,8 @@ import mods.thecomputerizer.theimpossiblelibrary.api.tag.TagHelper;
 
 import java.util.*;
 
+import static mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State.DISABLED;
+
 @SuppressWarnings("SameParameterValue") 
 public class TriggerCombination extends TriggerAPI {
 
@@ -97,7 +99,17 @@ public class TriggerCombination extends TriggerAPI {
     
     protected void recalculateParameters() {
         TriggerAPI reference = TriggerHelper.getPriorityTrigger(this.triggers);
-        if(Objects.nonNull(reference)) inheritParameters(reference);
+        if(Objects.nonNull(reference)) {
+            inheritParameters(reference);
+            recalculateTimers(reference);
+        }
+    }
+    
+    protected void recalculateTimers(TriggerAPI reference) {
+        for(String name : reference.getTimedParameterNames()) {
+            State timeState = getParameterTimeState(name);
+            if(timeState!=DISABLED) addTimedParameter(name,timeState,getParameter(name));
+        }
     }
 
     protected void setParentStatus(TriggerAPI trigger, boolean removal) {
