@@ -226,12 +226,9 @@ public class TriggerContextClient extends TriggerContext {
         }
         return false;
     }
-
+    
     @Override public boolean isActiveHome(int range, float yRatio) {
-        if(Objects.isNull(this.pos) || Objects.isNull(this.player)) return false;
-        BlockPosAPI<?> bed = this.player.getBedPos(this.player.getDimension());
-        return Objects.nonNull(bed) && isCloseEnough(bed.x(),bed.y(),bed.z(),range,yRatio,
-                                                     this.pos.x(),this.pos.y(),this.pos.z());
+        return false;
     }
 
     @Override public boolean isActiveHurricane(int range) {

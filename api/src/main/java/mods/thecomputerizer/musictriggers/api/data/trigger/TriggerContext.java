@@ -185,10 +185,15 @@ public abstract class TriggerContext extends ChannelElement {
     public abstract boolean isActiveZones(int minX, int minY, int minZ, int maxX, int maxY, int maxZ);
 
     public abstract boolean isClient();
+    
+    private boolean isCloseEnough(double v1, double v2, double range) {
+        double min = Math.min(v1,v2);
+        double max = Math.max(v1,v2);
+        return (max-min)<=range;
+    }
 
     protected boolean isCloseEnough(int x1, int y1, int z1, double range, double yFactor, int x2, int y2, int z2) {
-        return x2>=(x1-range) && x2<=(x1+range) && z2>=(z1-range) && z2<=z1+range &&
-                y2>=(y1-(range*yFactor)) && y2<=(y1+(range*yFactor));
+        return isCloseEnough(x1,x2,range) && isCloseEnough(y1,y2,range*yFactor) && isCloseEnough(z1,z2,range);
     }
 
     @Override public boolean isResource() {

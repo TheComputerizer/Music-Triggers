@@ -21,6 +21,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.server.MinecraftServerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.ServerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.world.BlockPosAPI;
 
 import java.util.HashSet;
 import java.util.List;
@@ -240,9 +241,12 @@ public class TriggerContextServer extends TriggerContext {
     @Override public boolean isActiveHeight(int level, boolean checkSky, boolean checkAbove) {
         return false;
     }
-
+    
     @Override public boolean isActiveHome(int range, float yRatio) {
-        return false;
+        if(Objects.isNull(this.pos) || Objects.isNull(this.player)) return false;
+        BlockPosAPI<?> bed = this.player.getBedPos(this.player.getDimension());
+        return Objects.nonNull(bed) && isCloseEnough(bed.x(),bed.y(),bed.z(),range,yRatio,
+                                                     this.pos.x(),this.pos.y(),this.pos.z());
     }
 
     @Override public boolean isActiveHurricane(int range) {
