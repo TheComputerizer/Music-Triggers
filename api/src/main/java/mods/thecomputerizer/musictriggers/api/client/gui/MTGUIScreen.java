@@ -60,6 +60,7 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
             String.format("key.categories.%1$s",MODID),R);
     
     public static boolean isActive;
+    private static boolean fuzzy;
     
     public static MTGUIScreen constructScreen(@Nullable ScreenAPI parent, MTScreenInfo typeInfo,
             MinecraftWindow window, int scale) {
@@ -170,6 +171,7 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
     }
     
     public static void open() {
+        fuzzy = ChannelHelper.getDebugBool("gui_fuzz");
         openRadial(null,MTScreenInfo.get("home"));
     }
     
@@ -270,6 +272,10 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
         });
     }
     
+    public static void toggleFuzz(boolean fuzz) {
+        fuzzy = fuzz;
+    }
+    
     public static TextAPI<?> triggerDesc(String name) {
         return TextHelper.getTranslated(String.format("trigger.%1$s.%2$s.desc",MODID,name));
     }
@@ -340,7 +346,7 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
         Circle smallRing = circle.getScaled(6d/13d);
         Circle bigRing = circle.getScaled(1.1d);
         WidgetGroup radialMenu = Button.radialGroup(circle,0d,0d,slices,getRadialOffset(slices),sliceSettings);
-        addFuzz(bigRing);
+        if(fuzzy) addFuzz(bigRing);
         addWidget(radialMenu);
         addWidget(ShapeWidget.from(ShapeHelper.circle(Y,0.25d,heightRatio),BLACK));
         addWidget(ShapeWidget.outlineFrom(smallRing,10f));

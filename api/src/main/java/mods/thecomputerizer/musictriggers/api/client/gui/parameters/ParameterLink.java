@@ -110,7 +110,8 @@ public class ParameterLink extends DataLink {
     @Override public void populateToml(Toml toml) {
         for(ParameterElement parameter : this.parameters) {
             Object value = parameter.getValue();
-            if(Misc.equalsAny(this.wrapper.getReferenceData().getName(),"channel","debug") ||
+            TableRef ref = this.wrapper.getReferenceData();
+            if(Objects.nonNull(ref) && Misc.equalsAny(ref.getName(),"channel","debug") ||
                !GenericUtils.matches(parameter.ref.getDefaultValue(),value))
                 toml.addEntry(parameter.name,value);
         }

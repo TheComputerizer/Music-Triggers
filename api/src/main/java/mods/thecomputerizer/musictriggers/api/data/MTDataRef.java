@@ -67,6 +67,7 @@ public final class MTDataRef {
             buildParameter("enable_debug_info",false),
             buildParameter("enable_discs",true),
             buildInt("encoding_quality",10,ArrayHelper.intRange(1,10)),
+            buildParameter("gui_fuzz",true),
             buildParameter("independent_audio_pools",true),
             buildParameter("interrupted_sound_categories",Collections.singletonList("music")),
             buildParameter("pause_unless_focused",true),

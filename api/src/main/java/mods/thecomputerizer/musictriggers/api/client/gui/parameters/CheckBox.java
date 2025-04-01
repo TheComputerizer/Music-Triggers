@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.client.gui.parameters;
 
 import lombok.Setter;
+import mods.thecomputerizer.musictriggers.api.client.gui.MTGUIScreen;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.ParameterLink.ParameterElement;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.ScreenHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Selectable;
@@ -93,6 +94,7 @@ public class CheckBox extends WidgetGroup implements Selectable {
         if(isHovering(mouseX,mouseY)) {
             this.selected = !this.selected;
             playLeftClickSound();
+            if("gui_fuzz".equals(this.link.name)) MTGUIScreen.toggleFuzz(this.selected);
             this.link.save(this.selected);
             return true;
         }
