@@ -10,6 +10,8 @@ public class TriggerLowHP extends SimpleTrigger {
     }
 
     @Override public boolean isPlayableContext(TriggerContext ctx) {
-        return ctx.isActiveLowHP(getParameterAsFloat("health_percentage"));
+        float min = getParameterAsFloat("min_health_percentage")/100f;
+        float max = getParameterAsFloat("max_health_percentage")/100f;
+        return ctx.isActiveLowHP(min,max);
     }
 }

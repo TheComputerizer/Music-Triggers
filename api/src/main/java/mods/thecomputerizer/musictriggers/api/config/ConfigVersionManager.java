@@ -33,7 +33,7 @@ public class ConfigVersionManager {
     
     private static Set<ConfigVersion> collectVersions() {
         return Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
-                LATEST,V6_3_1,V7_0_0_BETA_1,V7_0_0_BETA_3,V7_0_0_BETA_4,V7_0_0_BETA_10)));
+                LATEST,V6_3_1,V7_0_0_BETA_1,V7_0_0_BETA_3,V7_0_0_BETA_4,V7_0_0_BETA_10,V7_0_0)));
     }
     
     private static ConfigVersion findCurrent() {

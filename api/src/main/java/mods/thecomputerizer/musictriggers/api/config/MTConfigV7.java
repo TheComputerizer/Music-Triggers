@@ -8,11 +8,17 @@ import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml.TomlEntry;
 
 import javax.annotation.Nullable;
 
+import static mods.thecomputerizer.musictriggers.api.MTRef.CONFIG_PATH;
 import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.FROM;
 
 public class MTConfigV7 extends ConfigVersion {
     
-    public static final MTConfigV7 LATEST = new MTConfigV7(0,0){};
+    public static final MTConfigV7 LATEST = new MTConfigV7(0,1){};
+    public static final MTConfigV7 V7_0_0 = new MTConfigV7(0,0){
+        @Override public ConfigVersion getVersionTarget() {
+            return LATEST;
+        }
+    };
     public static final MTConfigV7 V7_0_0_BETA_10 = new MTConfigV7(0,0,"beta",10){
         @Override public ConfigVersion getVersionTarget() {
             return LATEST;
@@ -43,7 +49,7 @@ public class MTConfigV7 extends ConfigVersion {
     }
     
     @Override public String getPathMain(Toml channel) {
-        return MTRef.CONFIG_PATH+"/"+channel.getName()+"/"+channel.getOrSetValue("main","main");
+        return CONFIG_PATH+"/"+channel.getName()+"/"+channel.getOrSetValue("main","main");
     }
     
     @Override public Toml getGlobal() {
@@ -51,12 +57,12 @@ public class MTConfigV7 extends ConfigVersion {
     }
     
     @Override public Toml getRenders(Toml channel) {
-        String path = MTRef.CONFIG_PATH+"/"+channel.getName()+"/"+channel.getValueString("renders");
+        String path = CONFIG_PATH+"/"+channel.getName()+"/"+channel.getValueString("renders");
         return ChannelHelper.openToml(path,false,this);
     }
     
     @Override public Toml getToggles(Toml global) {
-        String path = MTRef.CONFIG_PATH+"/"+global.getValueString("toggles_path");
+        String path = CONFIG_PATH+"/"+global.getValueString("toggles_path");
         return ChannelHelper.openToml(path,false,this);
     }
     
@@ -89,7 +95,11 @@ public class MTConfigV7 extends ConfigVersion {
     }
     
     @Override public TomlEntry<?> remapTriggerEntry(String name, TomlEntry<?> entry) {
-        return entry;
+        switch(entry.getKey()) {
+            case "health": return new TomlEntry<>("max_health",entry.getValue());
+            case "health_percentage": return new TomlEntry<>("max_health_percentage",entry.getValue());
+            default: return entry;
+        }
     }
     
     @Override public String remapTriggerName(String name) {
@@ -115,11 +125,7 @@ public class MTConfigV7 extends ConfigVersion {
         return null;
     }
     
-    @Override public void verifyJukebox(Toml channel) {
+    @Override public void verifyJukebox(Toml channel) {}
     
-    }
-    
-    @Override public void verifyRedirct(Toml channel) {
-    
-    }
+    @Override public void verifyRedirct(Toml channel) {}
 }

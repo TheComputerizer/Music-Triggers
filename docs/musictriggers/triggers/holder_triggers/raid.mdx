@@ -6,7 +6,7 @@ hide_meta: true
 Playable when there is active raid at or above the specified wave near the player. Requires 1.16.5+
 
 Accepts `active_cooldown`, `fade_in`, `fade_out`, `max_tracks`, `not`, `passive_persistence`, `persistence`,
- `play_when_paused`, `priority`, `start_as_disabled`, `ticks_before_active`, `ticks_before_audio`,
+ `play_when_paused`, `priority`, `raid_status`, `start_as_disabled`, `ticks_before_active`, `ticks_before_audio`,
  `ticks_between_audio`, `toggle_inactive_playable`, `toggle_save_status`, and `wave`
 
 Requires Parameter `identifier`
@@ -54,6 +54,11 @@ priority <default: 1900>
     the independent_audio_pools and reverse_priority debug paremters for more
     info. For trigger combinations, nonspecific parameters like fade_out are
     taken from the highest priority trigger.
+
+raid_status <default: [ "any" ]>
+    The status of the current raid must be one of the values in this parameter.
+    A value of "any" means this parameter will be ignored.
+    Accepted values are "LOSS", "ONGOING", "STOPPED", or "VICTORY"
 
 start_as_disabled <default: false>
     If this is true the trigger will be toggled off by default and must be

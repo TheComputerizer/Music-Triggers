@@ -12,7 +12,7 @@ public class TriggerGUI extends HolderTrigger {
     }
     
     @Override public boolean imply(String id) {
-        setExistingParameterValue("resource_name", Collections.singletonList(id));
+        setExistingParameterValue("resource_name",Collections.singletonList(id));
         return super.imply(id);
     }
 

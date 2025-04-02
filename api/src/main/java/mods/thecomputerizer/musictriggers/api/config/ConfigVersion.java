@@ -312,7 +312,7 @@ public abstract class ConfigVersion implements LoggableAPI {
             logInfo("Config version is up to date");
             return;
         }
-        logInfo("Remapping from {} to target {}",this.version,getVersionTarget().version);
+        logInfo("Remapping from {} to target {}",this.version,target.version);
         Toml global = getGlobal();
         if(Objects.nonNull(global)) {
             getToggles(global); //Delete extra toggles files if needed

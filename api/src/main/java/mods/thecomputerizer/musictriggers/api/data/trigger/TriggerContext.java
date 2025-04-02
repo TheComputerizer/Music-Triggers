@@ -161,7 +161,7 @@ public abstract class TriggerContext extends ChannelElement {
     public abstract boolean isActiveLight(int level, String type);
     public abstract boolean isActiveLightRain();
     public abstract boolean isActiveLoading();
-    public abstract boolean isActiveLowHP(float percent);
+    public abstract boolean isActiveLowHP(float minPercent, float maxPercent);
     public abstract boolean isActiveMenu();
     public abstract boolean isActiveMob(TriggerMob trigger);
     public abstract boolean isActiveMoon(ResourceContext ctx);

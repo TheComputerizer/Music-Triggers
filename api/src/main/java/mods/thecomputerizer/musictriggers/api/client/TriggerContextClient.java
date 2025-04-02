@@ -206,7 +206,7 @@ public class TriggerContextClient extends TriggerContext {
         return true;
     }
 
-    @Override public boolean isActiveGUI(ResourceContext ctx) { //TODO
+    @Override public boolean isActiveGUI(ResourceContext ctx) {
         return false;
     }
 
@@ -275,8 +275,10 @@ public class TriggerContextClient extends TriggerContext {
         return Objects.isNull(this.minecraft) || this.minecraft.isLoading();
     }
 
-    @Override public boolean isActiveLowHP(float percent) {
-        return hasPlayer() && this.player.getHealthPercent()<(percent/100f);
+    @Override public boolean isActiveLowHP(float minPercent, float maxPercent) {
+        if(!hasPlayer()) return false;
+        float percent = this.player.getHealthPercent();
+        return percent>=minPercent && percent<maxPercent;
     }
 
     @Override public boolean isActiveMenu() {

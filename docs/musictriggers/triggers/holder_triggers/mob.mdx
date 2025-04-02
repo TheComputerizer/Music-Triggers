@@ -8,11 +8,11 @@ Playable when there are enough entities within the specified range to fulfill th
 [Champions](https://www.curseforge.com/minecraft/mc-mods/champions).
 
 Accepts `active_cooldown`, `champion`, `detection_range`, `detection_y_ratio`, `display_matcher`, `display_name`,
- `fade_in`, `fade_out`, `health`, `horde_health_percentage`, `horde_targeting_percentage`, `infernal`, `max_entities`,
- `max_tracks`, `min_entities`, `mob_nbt`, `mob_targeting`, `not`, `passive_persistence`, `persistence`,
- `play_when_paused`, `priority`, `resource_matcher`, `resource_name`, `start_as_disabled`, `ticks_before_active`,
- `ticks_before_audio`, `ticks_between_audio`, `toggle_inactive_playable`, `toggle_save_status`, `victory_id`, and
- `victory_percentage`
+ `fade_in`, `fade_out`, `horde_health_percentage`, `horde_targeting_percentage`, `infernal`, `max_health`,
+ `max_entities`, `max_tracks`, `min_entities`, `min_health`, `mob_nbt`, `mob_targeting`, `not`, `passive_persistence`,
+ `persistence`, `play_when_paused`, `priority`, `resource_matcher`, `resource_name`, `start_as_disabled`,
+ `ticks_before_active`, `ticks_before_audio`, `ticks_between_audio`, `toggle_inactive_playable`, `toggle_save_status`,
+ `victory_id`, and `victory_percentage`
 
 Requires Parameters `identifier` AND ( `display_name` OR `resource_name` )
 
@@ -57,10 +57,6 @@ fade_out <default: 0>
     The number of ticks it will take the trigger to fade out when the trigger
     is no longer active.
 
-health <default: 100>
-    Determines the (inclusive) maxiumum health percentage an entity can have
-    in order for the trigger to activate.
-
 horde_health_percentage <default 50>
     Determines the (inclusive) minimum percentage of entities in relation to
     the min_entities parameter that must fulfill the health parameter for the
@@ -81,6 +77,10 @@ max_entities <default: 2147483647>
     Determines the (inclusive) maxium number of entities that are allowed to
     meet the specified parameters in order for the trigger to be active.
 
+max_health <default: 100>
+    Determines the (inclusive) maxiumum health percentage an entity can have
+    in order for the trigger to activate.
+
 max_tracks <default: 0>
     Determines the maximum number of audio tracks that will be able to play
     while the trigger is active. The counter is reset once the trigger is no
@@ -89,6 +89,10 @@ max_tracks <default: 0>
 min_entities <default: 1>
     Determines the (inclusive) minimum number of entities that must meet the
     specified parameters in order for the trigger to be active.
+
+min_health <default: 0>
+    Determines the (inclusive) miniumum health percentage an entity can have
+        in order for the trigger to activate.
 
 mob_nbt <default: [ any ]>
     This parameter is very complex. Only use it if you already have a good

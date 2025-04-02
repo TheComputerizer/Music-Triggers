@@ -269,7 +269,7 @@ public class TriggerContextServer extends TriggerContext {
         return false;
     }
 
-    @Override public boolean isActiveLowHP(float percent) {
+    @Override public boolean isActiveLowHP(float minPercent, float maxPercent) {
         return false;
     }
 
@@ -279,11 +279,12 @@ public class TriggerContextServer extends TriggerContext {
 
     @Override public boolean isActiveMob(TriggerMob trigger) {
         if(Objects.isNull(this.pos)) return false;
+        trigger.cacheParameters();
         Set<EntityAPI<?,?>> entitiesAround = getEntitiesAround(trigger);
         trigger.deduplicate(entitiesAround);
         trigger.revalidateCache(this.pos,this.player);
         for(EntityAPI<?,?> entity : entitiesAround)
-            if(checkEntity(trigger,entity)) trigger.cacheValidEntity(entity);
+            if(checkEntity(trigger,entity)) trigger.cacheValidEntity(entity,this.player);
         return trigger.checkCacheSize();
     }
 

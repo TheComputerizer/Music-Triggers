@@ -5,9 +5,10 @@ hide_meta: true
 
 Playable when the percentage health percentage is below the specified threshold.
 
-Accepts `active_cooldown`, `fade_in`, `fade_out`, `health_percentage`, `level`, `max_tracks`, `not`,
- `passive_persistence`, `persistence`, `play_when_paused`, `priority`, `start_as_disabled`, `ticks_before_active`,
- `ticks_before_audio`, `ticks_between_audio`, `toggle_inactive_playable`, and `toggle_save_status`
+Accepts `active_cooldown`, `fade_in`, `fade_out`, `level`, `max_health_percentage`, `max_tracks`,
+ `min_health_percentage`, `not`, `passive_persistence`, `persistence`, `play_when_paused`, `priority`,
+ `start_as_disabled`, `ticks_before_active`, `ticks_before_audio`, `ticks_between_audio`,
+ `toggle_inactive_playable`, and `toggle_save_status`
 
 ```
 active_cooldown <default: 0>
@@ -18,18 +19,22 @@ fade_in <default: 0>
     The number of ticks it will take the trigger to fade in after the trigger
     activates.
 
-health_percentage <default: 30>
-    Determines the percentage of current health in relation to max health
-    the player must be at for the trigger to activate.
-
 fade_out <default: 0>
     The number of ticks it will take the trigger to fade out when the trigger
     is no longer active.
+
+max_health_percentage <default: 30.0>
+    Determines the (exclusive) maximum percentage of the player's health that
+    is allowed for this trigger to activate.
 
 max_tracks <default: 0>
     Determines the maximum number of audio tracks that will be able to play
     while the trigger is active. The counter is reset once the trigger is no
     longer active. Any value less than 1 will be treated as infinite.
+
+min_health_percentage <default: 0.0>
+    Determines the (exclusive) maximum percentage of the player's health that
+    is allowed for this trigger to activate.
 
 not <default: false>
     Enabling this inverts the activation requirements meaning that the trigger

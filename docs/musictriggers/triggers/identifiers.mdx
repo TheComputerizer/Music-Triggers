@@ -1,0 +1,207 @@
+---
+title: Identifiers & Implied Triggers
+hide_meta: true
+---
+
+## Identifiers
+
+The `identifier` parameter is a unique way to separate and identify multiple instances of a trigger holder. These have
+no bearing on parameter conditions and are strictly a way to group parameters together (unless the implied trigger
+system is used which you can read more on below). For instance, a time trigger with an identifier of "night" would not
+be active during the night (night would need to be set for the time_bundle parameter) but it would be referenced
+elsewhere like time-night. Identifiers are specific to each trigger (biome-thing would be different than
+dimension-thing). Identifiers are required for every trigger holder and not allowed for other types of triggers.
+Identifiers can be any string value but it is recommended to keep them relevant to the function of the trigger.
+
+The default value for all identifier parameters is `not_set`. You may also see `not_set` appearing in the context of
+simple or basic triggers that do not accept identifiers.
+
+## Implied Triggers
+
+Implied triggers refers to a helper system that was made to streamline the creation of simple trigger holder instances.
+It allows for certain triggers to be referenced without the need to explicitly them in the config file or GUI. This is
+where the "implied triggers" terminology comes from, as the system uses the identifier to "imply" what the required
+parameters should be. In the case of no identifier present such as for simple triggers, the implied trigger system is
+compatible with triggers that do not have any required parameters.
+
+Listed below are the "implied mappings" for what specific identifiers map to for specific triggers. Triggers that do
+not have any mappings will be listed as either `COMPATIBLE` or `INCOMPATIBLE`
+
+```
+acidrain
+    COMPATIBLE
+
+advancement
+    INCOMPATIBLE
+
+adventure
+    COMPATIBLE
+
+biome
+    identifier -> resource_name = [ identifier ]
+
+blizzard
+    COMPATIBLE
+
+blockentity
+    identifier -> resource_name = [ identifier ]
+
+bloodmoon
+    COMPATIBLE
+
+bluemoon
+    COMPATIBLE
+
+cloudy
+    COMPATIBLE
+
+command
+    identifier ->
+        must be parsable as a positive integer ->
+            persistence = identifier
+
+creative
+    COMPATIBLE
+
+dead
+    COMPATIBLE
+
+difficulty
+    identifier ->
+        "0" or "peaceful" -> level = 0
+        "1" or "easy" -> level = 1
+        "2" or "normal" -> level = 2
+        "3" or "hard" -> level = 3
+        "4" or "hardcore" -> level = 4
+
+dimension
+    identifier -> resource_name = [ identifier ]
+
+drowning
+    COMPATIBLE
+
+effect
+    identifier -> resource_name = [ identifier ]
+
+elytra
+    COMPATIBLE
+
+fishing
+    COMPATIBLE
+
+gamestage
+    identifier -> resource_name = [ identifier ]
+
+generic
+    COMPATIBLE
+
+gui
+    identifier -> resource_name = [ identifier ]
+
+harvestmoon
+    COMPATIBLE
+
+height
+    identifier ->
+        must be parsable as an integer ->
+            level = identifier
+
+home
+    COMPATIBLE
+
+hurricane
+    COMPATIBLE
+
+inventory
+    identifier -> items = [ identifier ]
+
+light
+    identifier ->
+        must be parsable as an integer between [0,15] ->
+            level = identifier
+
+lightrain
+    COMPATIBLE
+
+loading
+    COMPATIBLE
+
+lowhp
+    COMPATIBLE
+
+menu
+    COMPATIBLE
+
+mob
+    identifier -> resource_name = [ identifier ]
+
+moon
+    identifier -> resource_name = [ identifier ]
+
+pet
+    COMPATIBLE
+
+pvp
+    COMPATIBLE
+
+raid
+    COMPATIBLE
+
+raining
+    COMPATIBLE
+
+rainintensity
+    COMPATIBLE
+
+riding
+    identifier -> resource_name = [ identifier ]
+
+sandstorm
+    COMPATIBLE
+
+season
+    identifier ->
+        "0" or "spring" -> season = 0
+        "1" or "summer" -> season = 1
+        "2", "autumn", or "fall" -> season = 2
+        "3" or "winter" -> season = 3
+
+snowing
+    COMPATIBLE
+
+spectator
+    COMPATIBLE
+
+starshower
+    COMPATIBLE
+
+statistic
+    identifier -> resource_name = [ identifier ]
+
+storming
+    COMPATIBLE
+
+structure
+    identifier -> resource_name = [ identifier ]
+
+time
+    identifier ->
+        "day" -> time_bundle = "day"
+        "night" -> time_bundle = "night"
+        "sunrise" -> time_bundle = "sunrise"
+        "sunset" -> time_bundle = "sunset"
+
+tornado
+    identifier -> level = 1
+
+underwater
+    COMPATIBLE
+
+victory
+    identifier ->
+        must be parsable as a positive integer ->
+            persistence = identifier
+
+zones
+    INCOMPATIBLE
+```

@@ -30,10 +30,6 @@ public class MTConfigV6 extends ConfigVersion {
         super(6,major,minor);
     }
     
-    protected MTConfigV6(int major, int minor, String qualifierName, int qualifierBuild) {
-        super(6,major,minor,qualifierName,qualifierBuild);
-    }
-    
     @Override public Toml getGlobal() {
         Toml global = Toml.getEmpty();
         Toml debug = ChannelHelper.openToml(CONFIG_PATH+"/debug", false, this);
@@ -164,9 +160,10 @@ public class MTConfigV6 extends ConfigVersion {
             case "biome_category": return new TomlEntry<>("biome_tag",entry.getValue());
             case "check_higher_rainfall": return new TomlEntry<>("rainfall_greater_than",entry.getValue());
             case "check_lower_temp": return new TomlEntry<>("temperature_greater_than",entry.getValue());
+            case "health": return new TomlEntry<>("max_health",entry.getValue());
             case "level": {
                 switch(name) { //Double layer switch :|
-                    case "lowhp": return new TomlEntry<>("health_percentage",entry.getValue());
+                    case "lowhp": return new TomlEntry<>("max_health_percentage",entry.getValue());
                     case "raid": return new TomlEntry<>("wave",entry.getValue());
                     case "season": return new TomlEntry<>("season",entry.getValue());
                     default: return entry;
