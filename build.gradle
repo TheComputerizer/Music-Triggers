@@ -44,9 +44,9 @@ jar {
 [ ':legacy:1.12:build' ].forEach { tasks.jar.mustRunAfter it }
 
 wiki {
-    wikiAccessToken = wiki_token
+    wikiAccessToken = wiki_token.toString()
     docs {
-        mod_id {
+        musictriggers {
             root = file "docs/$mod_id"
         }
     }
