@@ -64,8 +64,8 @@ public class TriggerContextServer extends TriggerContext {
 
     private boolean checkEntity(TriggerMob trigger, EntityAPI<?,?> entity) {
         ResourceContext ctx = trigger.getResourceCtx();
-        return Objects.nonNull(ctx) && checkEntityName(ctx,entity) && trigger.checkTarget(entity,this.player) &&
-               checkEntityNBT(trigger,entity) && checkEntityMods(trigger,entity);
+        return Objects.nonNull(ctx) && checkEntityName(ctx,entity) && checkEntityNBT(trigger,entity) &&
+               checkEntityMods(trigger,entity);
     }
 
     @SuppressWarnings("unchecked")

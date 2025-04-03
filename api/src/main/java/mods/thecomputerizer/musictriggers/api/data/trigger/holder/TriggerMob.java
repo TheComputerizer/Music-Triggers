@@ -15,8 +15,6 @@ import static java.lang.Integer.MAX_VALUE;
 public class TriggerMob extends HolderTrigger {
 
     protected final Set<EntityAPI<?,?>> cachedEntities;
-    protected final Set<EntityAPI<?,?>> cachedEntitiesHealth;
-    protected final Set<EntityAPI<?,?>> cachedEntitiesTargeting;
     protected int cachedHordeHealthCount;
     protected int cachedHordeTargetingCount;
     protected int cachedMaxEntities;
@@ -29,8 +27,6 @@ public class TriggerMob extends HolderTrigger {
     public TriggerMob(ChannelAPI channel) {
         super(channel,"mob");
         this.cachedEntities = new HashSet<>();
-        this.cachedEntitiesHealth = new HashSet<>();
-        this.cachedEntitiesTargeting = new HashSet<>();
         this.cachedMaxEntities = MAX_VALUE;
         this.cachedMaxHealth = 1f;
     }
@@ -53,16 +49,13 @@ public class TriggerMob extends HolderTrigger {
     }
     
     public void cacheValidEntity(EntityAPI<?,?> entity, PlayerAPI<?,?> player) {
-        this.cachedEntities.add(entity);
-        if(checkHealth(entity)) this.cachedEntitiesHealth.add(entity);
-        if(checkTarget(entity,player)) this.cachedEntitiesTargeting.add(player);
+        if(checkHealth(entity) && checkTarget(entity,player)) this.cachedEntities.add(entity);
     }
     
     public boolean checkCacheSize() {
         int size = this.cachedEntities.size();
         return size>=this.cachedMinEntities && size<=this.cachedMaxEntities &&
-               this.cachedEntitiesHealth.size()>=this.cachedHordeHealthCount &&
-               this.cachedEntitiesTargeting.size()>=this.cachedHordeTargetingCount;
+               size>=this.cachedHordeHealthCount && size>=this.cachedHordeTargetingCount;
     }
     
     /**
@@ -127,16 +120,8 @@ public class TriggerMob extends HolderTrigger {
     }
     
     public void revalidateCache(BlockPosAPI<?> pos, PlayerAPI<?,?> player) {
-        this.cachedEntities.removeIf(entity -> {
-            if(checkEntityFarAway(entity,pos)) {
-                this.cachedEntitiesHealth.remove(entity);
-                this.cachedEntitiesTargeting.remove(entity);
-                return true;
-            }
-            if(!checkHealth(entity)) this.cachedEntitiesHealth.remove(entity);
-            if(!checkTarget(entity,player)) this.cachedEntitiesTargeting.remove(entity);
-            return false;
-        });
+        this.cachedEntities.removeIf(entity -> checkEntityFarAway(entity,pos) ||
+                                             !checkHealth(entity) || !checkTarget(entity,player));
     }
 
     @Override public boolean verifyRequiredParameters() {
