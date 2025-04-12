@@ -15,11 +15,13 @@ buildscript {
         }
     }
     dependencies {
+        classpath "$modrinth_plugin:$modrinth_version"
         classpath "$wiki_plugin:$wiki_version"
     }
 }
 
 apply from: rootProject.file('gradle\\java23.gradle')
+plugins.apply 'com.modrinth.minotaur'
 plugins.apply 'org.moddedmc.wiki.toolkit'
 
 //noinspection GroovyUnusedAssignment
@@ -42,6 +44,19 @@ jar {
 }
 
 [ ':legacy:1.12:build' ].forEach { tasks.jar.mustRunAfter it }
+
+modrinth { //TODO Figure out how to handle the changelog
+    token = modrinth_token
+    projectId = 'music-triggers'
+    versionNumber = mod_version
+    versionType = 'alpha'
+    uploadFile = jar
+    gameVersions = [ '1.12.2', '1.16.5', '1.18.2', '1.19.2', '1.19.4', '1.20.1', '1.20.4', '1.20.6', '1.21.1' ]
+    loaders = [ 'forge', 'neoforge' ]
+    dependencies {
+        required.version 'the-impossible-library', '0.4.2'
+    }
+}
 
 wiki {
     wikiAccessToken = wiki_token.toString()
