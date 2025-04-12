@@ -4,6 +4,7 @@ import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.client.MTClient;
 import mods.thecomputerizer.musictriggers.api.client.MTClientEvents;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.DataLink;
+import mods.thecomputerizer.musictriggers.api.client.gui.parameters.HelpLink;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.ParameterLink;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
@@ -85,6 +86,7 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
     public static @Nullable DataLink findLink(MTScreenInfo parent, String type, @Nullable ParameterWrapper wrapper) {
         switch(type) {
             case "debug": return ChannelHelper.getDebug().getLink();
+            case "help": return getHelpLink();
             case "toggles": return ChannelHelper.getClientHelper().getTogglesLink();
             default: return parent.findChannelLink(type,wrapper);
         }
@@ -129,6 +131,10 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
     
     protected static TextAPI<?> getDisplayName(String category, String name) {
         return TextHelper.getTranslated(lang(String.format("%1$s.%2$s.name",category,name)));
+    }
+    
+    protected static DataLink getHelpLink() {
+        return HelpLink.getInstance();
     }
     
     public static Collection<TextAPI<?>> getTooltip(String category, String type) {

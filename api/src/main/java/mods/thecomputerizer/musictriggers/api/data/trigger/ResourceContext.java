@@ -18,31 +18,31 @@ public class ResourceContext {
 
     public ResourceContext(List<String> resourcesMatchers, List<String> displayMatchers,
                            String resourceMatchType, String displayMatchType) {
-        this.displayMatchers = displayMatchers.isEmpty() ? Collections.singletonList("ANY") : displayMatchers;
-        this.resourcesMatchers = resourcesMatchers.isEmpty() ? Collections.singletonList("ANY") : resourcesMatchers;
+        this.displayMatchers = displayMatchers.isEmpty() ? Collections.singletonList("any") : displayMatchers;
+        this.resourcesMatchers = resourcesMatchers.isEmpty() ? Collections.singletonList("any") : resourcesMatchers;
         this.displayMatchFunc = getMatchFunc(displayMatchType);
         this.resourceMatchFunc = getMatchFunc(resourceMatchType);
     }
 
     protected BiFunction<String,List<String>,Boolean> getMatchFunc(String matcherType) {
-        switch(matcherType.toUpperCase()) {
-            case "EXACT": return (id,matchThese) -> {
-                if(Objects.isNull(id)) return false;
-                if(matchThese.get(0).equals("any")) return this.anyReturns;
+        switch(matcherType.toLowerCase()) {
+            case "exact": return (id,matchThese) -> {
+                if(Objects.isNull(id)) return matchThese.contains(null) || matchThese.contains("");
+                if(matchThese.contains("any")) return this.anyReturns;
                 for(String matchThis : matchThese)
                     if(id.equals(matchThis)) return true;
                 return false;
             };
-            case "PARTIAL": return (id,matchThese) -> {
-                if(Objects.isNull(id)) return false;
-                if(matchThese.get(0).equals("any")) return this.anyReturns;
+            case "partial": return (id,matchThese) -> {
+                if(Objects.isNull(id)) return matchThese.contains(null) || matchThese.contains("");
+                if(matchThese.contains("any")) return this.anyReturns;
                 for(String matchThis : matchThese)
                     if(id.contains(matchThis)) return true;
                 return false;
             };
-            case "REGEX": return (id,matchThese) -> {
-                if(Objects.isNull(id)) return false;
-                if(matchThese.get(0).equals("any")) return this.anyReturns;
+            case "regex": return (id,matchThese) -> {
+                if(Objects.isNull(id)) return matchThese.contains(null) || matchThese.contains("");
+                if(matchThese.contains("any")) return this.anyReturns;
                 for(String matchThis : matchThese)
                     if(id.matches(matchThis)) return true;
                 return false;
@@ -51,15 +51,23 @@ public class ResourceContext {
         }
     }
 
-    public boolean checkDisplayMatch(String display) {
+    public boolean checkDisplayMatch(@Nullable String display) {
         return this.displayMatchFunc.apply(display,this.displayMatchers);
     }
-
-    public boolean checkMatch(String id, @Nullable String display) {
-        return checkResourceMatch(id) && (Objects.isNull(display) || checkDisplayMatch(display));
+    
+    /**
+     * If both are null or both are not null, check both.
+     * If one is null while the other is not, check whichever is not null.
+     */
+    public boolean checkMatch(@Nullable String id, @Nullable String display) {
+        return Objects.isNull(id) ?
+                (Objects.isNull(display) ?
+                        checkResourceMatch(null) || checkDisplayMatch(null) : checkDisplayMatch(display)) :
+                (Objects.isNull(display) ?
+                        checkResourceMatch(id) : checkResourceMatch(id) || checkDisplayMatch(display));
     }
 
-    public boolean checkResourceMatch(String id) {
+    public boolean checkResourceMatch(@Nullable String id) {
         return this.resourceMatchFunc.apply(id,this.resourcesMatchers);
     }
 }

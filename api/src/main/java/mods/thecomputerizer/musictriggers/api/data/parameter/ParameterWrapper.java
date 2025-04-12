@@ -268,9 +268,19 @@ public abstract class ParameterWrapper implements LoggableAPI {
     public boolean parse(Toml table) {
         for(Entry<String,Parameter<?>> entry : this.parameters.entrySet()) {
             String name = entry.getKey();
-            if(name.equals("identifier") && !table.hasEntry("identifier") && table.hasEntry("id")) {
-                table.addEntry("identifier",table.getEntry("id").getValue());
-                table.removeEntry("id");
+            if("identifier".equals(name)) { //Filter out replace id with identifier & filter out "name-" from the value
+                boolean hasShort = table.hasEntry("id");
+                String value = table.hasEntry("identifier") ? table.getValueString("identifier") :
+                        (hasShort ? table.getValueString("id") : null);
+                if(Objects.nonNull(value)) {
+                    String filter = getName().toLowerCase()+"-";
+                    while(value.toLowerCase().contains(filter)) { //In case there are multiple "name-" substrings
+                        int index = value.indexOf(filter);
+                        value = value.substring(index,index+filter.length());
+                    }
+                    table.addEntry("identifier",value);
+                    if(hasShort) table.removeEntry("id");
+                }
             }
             if(table.hasEntry(name)) {
                 Parameter<?> parameter = entry.getValue();

@@ -154,8 +154,7 @@ public class TriggerHelper {
                 if(Objects.isNull(universal) || !universal.parse(triggerTable))
                     channel.logError("Failed to parse universal triggers");
                 else channel.logInfo("Intialized universal trigger data");
-            }
-            else {
+            } else {
                 TriggerAPI trigger = TriggerRegistry.getTriggerInstance(channel,triggerTable.getName());
                 if(checkVersion(trigger) && trigger.parse(triggerTable)) triggers.add(trigger);
             }

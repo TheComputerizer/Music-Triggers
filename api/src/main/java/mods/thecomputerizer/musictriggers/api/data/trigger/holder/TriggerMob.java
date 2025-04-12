@@ -89,7 +89,7 @@ public class TriggerMob extends HolderTrigger {
      * Return true if the target check passes
      */
     public boolean checkTarget(EntityAPI<?,?> entity, PlayerAPI<?,?> player) {
-        if(!getParameterAsBoolean("mob_targeting") || !entity.canTarget()) return true;
+        if(!getParameterAsBoolean("mob_targeting") || !entity.canTarget() || !entity.isHostile()) return true;
         EntityAPI<?,?> target = entity.getAttackTarget();
         if(Objects.isNull(target) || !target.isPlayer() || Objects.isNull(player)) return false;
         return getParameterAsBoolean("target_any_player") || target.getEntity()==player.getEntity();

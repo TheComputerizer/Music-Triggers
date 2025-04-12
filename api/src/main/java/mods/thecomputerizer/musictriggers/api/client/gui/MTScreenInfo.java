@@ -74,8 +74,8 @@ public class MTScreenInfo {
     public MTScreenInfo(@Nullable MTScreenInfo parent, String type) {
         this.parent = parent;
         this.type = type;
-        this.global = Misc.equalsAny(type,"debug","from","from_list","home","log","playback","to","to_list",
-                                     "toggles","toggle");
+        this.global = Misc.equalsAny(type,"debug","from","from_list","help","home","log","playback","to",
+                                     "to_list","toggles","toggle");
         this.globalCache = new HashSet<>();
         this.channelCache = new HashMap<>();
         this.channelLinks = new HashMap<>();

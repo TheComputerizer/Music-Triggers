@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import static java.lang.Integer.MAX_VALUE;
 import static mods.thecomputerizer.musictriggers.api.MTRef.CONFIG_PATH;
 import static mods.thecomputerizer.musictriggers.api.MTRef.CONFIG_PATH_BACKUP;
 import static mods.thecomputerizer.musictriggers.api.MTRef.VERSION;
@@ -79,7 +80,7 @@ public class ConfigVersionManager {
             for(ConfigVersion config : similarVersions) {
                 int build = version.getQualifier().getBuild();
                 int foundBuild = Objects.nonNull(found) ? found.getVersion().getQualifier().getBuild() : 0;
-                int closest = foundBuild>0 && foundBuild<=build ? build-foundBuild : Integer.MAX_VALUE;
+                int closest = foundBuild>0 && foundBuild<=build ? build-foundBuild : MAX_VALUE;
                 if(config.hasCloserQualiferThan(config,closest)) found = config;
             }
             if(Objects.isNull(found)) global.logError("Unable to find any config mappings similar to {}",version);

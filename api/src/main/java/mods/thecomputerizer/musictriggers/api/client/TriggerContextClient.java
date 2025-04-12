@@ -6,6 +6,7 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerBiome;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerMob;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.blockentity.BlockEntityAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.container.PlayerInventoryAPI;
@@ -30,6 +31,7 @@ import java.util.function.Supplier;
 public class TriggerContextClient extends TriggerContext {
 
     private MinecraftAPI<?> minecraft;
+    private Object screen;
 
     public TriggerContextClient(ChannelAPI channel) {
         super(channel,"client_context");
@@ -41,6 +43,7 @@ public class TriggerContextClient extends TriggerContext {
         this.world = Objects.nonNull(this.minecraft) ? this.minecraft.getWorld() : null;
         this.pos = hasPlayer() ? this.player.getPosRounded() : null;
         this.biome = hasBoth() ? this.world.getBiomeAt(this.pos) : null;
+        this.screen = Objects.nonNull(this.minecraft) ? ClientHelper.getCurrentScreen() : null;
     }
     
     private boolean checkBiomeNameAndType(TriggerBiome trigger) {
@@ -56,7 +59,8 @@ public class TriggerContextClient extends TriggerContext {
     
     private boolean checkBiomeRain(TriggerBiome trigger) {
         String rainType = trigger.getParameterAsString("rain_type").toLowerCase();
-        if(!this.biome.canRain(this.world,this.pos)) return rainType.equals("any") || rainType.equals("none");
+        if(!this.biome.canRain(this.world,this.pos))
+            return rainType.equals("any") || rainType.equals("none");
         if(this.biome.canSnow(this.world,this.pos) && !rainType.equals("snow") && !rainType.equals("any")) return false;
         float rainfall = trigger.getParameterAsFloat("biome_rainfall");
         return trigger.getParameterAsBoolean("rainfall_greater_than") ?
@@ -207,7 +211,9 @@ public class TriggerContextClient extends TriggerContext {
     }
 
     @Override public boolean isActiveGUI(ResourceContext ctx) {
-        return false;
+        if(Objects.isNull(this.screen)) return ctx.checkMatch(null,null);
+        Class<?> screenClass = this.screen.getClass();
+        return ctx.checkMatch(screenClass.getName(),screenClass.getSimpleName());
     }
 
     @Override public boolean isActiveHarvestMoon() {

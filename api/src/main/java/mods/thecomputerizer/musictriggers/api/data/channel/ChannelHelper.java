@@ -108,6 +108,15 @@ public class ChannelHelper implements NBTLoadable {
             if(!helper.client) helper.flipDebugParameter(name);
     }
     
+    public static void generateDedicatedServerFiles() {
+        try {
+            ConfigVersionManager.queryRemap();
+            globalData.parse(openToml(GLOBAL_CONFIG,true,globalData));
+        } catch(Exception ex) {
+            throw new RuntimeException("Error parsing global data!",ex);
+        }
+    }
+    
     public static Debug getDebug() {
         return globalData.getDebug();
     }

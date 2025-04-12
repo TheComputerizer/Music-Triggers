@@ -9,11 +9,12 @@ import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml.TomlEntry;
 import javax.annotation.Nullable;
 
 import static mods.thecomputerizer.musictriggers.api.MTRef.CONFIG_PATH;
+import static mods.thecomputerizer.musictriggers.api.MTRef.VERSION;
 import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.FROM;
 
 public class MTConfigV7 extends ConfigVersion {
     
-    public static final MTConfigV7 LATEST = new MTConfigV7(0,1){};
+    public static final MTConfigV7 LATEST = new MTConfigV7(VERSION.split("\\.")){};
     public static final MTConfigV7 V7_0_0 = new MTConfigV7(0,0){
         @Override public ConfigVersion getVersionTarget() {
             return LATEST;
@@ -40,10 +41,30 @@ public class MTConfigV7 extends ConfigVersion {
         }
     };
     
+    private static int minorVersion(String split) {
+        return Integer.parseInt(split.contains("+") ? split.substring(0,split.indexOf('+')) : split);
+    }
+    
+    /**
+     * Latest V7 build
+     */
+    protected MTConfigV7(String ... versionSplit) {
+        super(Integer.parseInt(versionSplit[0]),Integer.parseInt(versionSplit[1]),minorVersion(versionSplit[2]));
+        logInfo("Set latest config version to {}",getVersion());
+    }
+    
+    
+    /**
+     * Targeted V7 build
+     */
     protected MTConfigV7(int major, int minor) {
         super(7,major,minor);
     }
     
+    
+    /**
+     * Beta V7 build
+     */
     protected MTConfigV7(int major, int minor, String qualifierName, int qualifierBuild) {
         super(7,major,minor,qualifierName,qualifierBuild);
     }

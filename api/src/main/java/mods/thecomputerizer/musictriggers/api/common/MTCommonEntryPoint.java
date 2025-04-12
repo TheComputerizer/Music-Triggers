@@ -2,6 +2,7 @@ package mods.thecomputerizer.musictriggers.api.common;
 
 import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.MTClientEntryPoint;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
 import mods.thecomputerizer.musictriggers.api.registry.MTRegistryHandler;
 import mods.thecomputerizer.musictriggers.api.server.MTServerEvents;
@@ -29,7 +30,6 @@ import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
 
 @MultiVersionMod(modDescription = DESCRIPTION, modid = MODID, modName = NAME, modVersion = VERSION)
 public class MTCommonEntryPoint extends DelegatingCommonEntryPoint {
-    
     
     public MTCommonEntryPoint() {
         MTRef.logDebug("Constructing MTCommonEntryPoint on ClassLoader {}",getClass().getClassLoader());
@@ -90,6 +90,13 @@ public class MTCommonEntryPoint extends DelegatingCommonEntryPoint {
                     "is unable to load any further.");
         MTNetwork.initCommon();
         super.onConstructed();
+    }
+    
+    /**
+     * Generate default config files on dedicated servers
+     */
+    @Override public void onDedicatedServerSetup() {
+        ChannelHelper.generateDedicatedServerFiles();
     }
 
     @Override public void onPreRegistration() {

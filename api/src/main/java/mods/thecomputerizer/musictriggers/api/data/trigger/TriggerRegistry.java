@@ -34,7 +34,7 @@ public class TriggerRegistry {
     }
 
     public static @Nullable TriggerAPI getTriggerInstance(ChannelAPI channel, String name) {
-        Class<? extends TriggerAPI> clazz = REGISTERED_TRIGGERS.get(name);
+        Class<? extends TriggerAPI> clazz = REGISTERED_TRIGGERS.get(name.toLowerCase());
         if(Objects.nonNull(clazz)) {
             Constructor<?> constructor = ReflectionHelper.findConstructor(clazz,ChannelAPI.class);
             if(Objects.nonNull(constructor)) {
