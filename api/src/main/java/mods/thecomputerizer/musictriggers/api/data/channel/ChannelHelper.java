@@ -378,6 +378,7 @@ public class ChannelHelper implements NBTLoadable {
     
     @IndirectCallers
     public static boolean stopVanillaMusicTicker() {
+        if(loader.isLoading()) return true;
         ChannelHelper clientHelper = getClientHelper();
         return Objects.isNull(clientHelper) || clientHelper.canVanillaMusicPlay();
     }
