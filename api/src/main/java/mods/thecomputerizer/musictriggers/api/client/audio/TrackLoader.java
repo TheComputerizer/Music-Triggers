@@ -29,11 +29,9 @@ public class TrackLoader extends ChannelElement {
                 ex -> loadFailed(ex,ref,location));
     }
 
-    public void load(AudioPlayerManager manager, @Nullable AudioReference ref,
+    public synchronized void load(AudioPlayerManager manager, @Nullable AudioReference ref,
                         @Nullable AudioLoadResultHandler resultHandler, LoggableAPI logger) {
-        if(Objects.nonNull(ref) && Objects.nonNull(resultHandler)) {
-            manager.loadItem(ref,resultHandler);
-        }
+        if(Objects.nonNull(ref) && Objects.nonNull(resultHandler)) manager.loadItem(ref,resultHandler);
         else logger.logError("Unable to load missing reference or handler!");
     }
 

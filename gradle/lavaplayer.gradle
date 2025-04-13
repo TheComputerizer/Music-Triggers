@@ -35,7 +35,6 @@ dependencies { //TODO Do all of these need to have transitive dependencies disab
     shaded("com.github.devoxin.lavaplayer:lavaplayer-ext-format-xm:$lava_version") { transitive = false }
     shaded("com.github.devoxin.lavaplayer:lavaplayer-ext-youtube-rotator:$lava_version") { transitive = false }
     shaded("com.github.devoxin.lavaplayer:lavaplayer-stream-merger:$lava_version") { transitive = false }
-    shaded("com.github.devoxin.lavaplayer:lavaplayer-test-samples:$lava_version") { transitive = false }
     shaded("com.github.devoxin:LavaDSPX:$lava_dspx_version") { transitive = false }
     shaded("com.github.natanbc:native-loader:$native_loader_version") { transitive = false }
     shaded("com.github.walkyst:ibxm-fork:$ibxm_version") { transitive = false }
