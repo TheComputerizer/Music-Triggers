@@ -6,7 +6,6 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerBiome;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerMob;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientAPI;
-import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.blockentity.BlockEntityAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.container.PlayerInventoryAPI;
@@ -43,7 +42,12 @@ public class TriggerContextClient extends TriggerContext {
         this.world = Objects.nonNull(this.minecraft) ? this.minecraft.getWorld() : null;
         this.pos = hasPlayer() ? this.player.getPosRounded() : null;
         this.biome = hasBoth() ? this.world.getBiomeAt(this.pos) : null;
-        this.screen = Objects.nonNull(this.minecraft) ? ClientHelper.getCurrentScreen() : null;
+        try {
+            this.screen = Objects.nonNull(this.minecraft) ? this.minecraft.getCurrentScreen() : null;
+        } catch(Throwable t) {
+            logFatal("Failed to cache the current screen",t);
+            throw t;
+        }
     }
     
     private boolean checkBiomeNameAndType(TriggerBiome trigger) {

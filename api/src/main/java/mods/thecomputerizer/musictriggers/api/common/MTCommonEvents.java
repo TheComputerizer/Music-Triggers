@@ -17,6 +17,11 @@ public class MTCommonEvents {
     }
     
     private static void onCustomTick(CustomTickEventWrapper<?> wrapper) {
-        ChannelHelper.tick(wrapper.getTicker());
+        try {
+            ChannelHelper.tick(wrapper.getTicker());
+        } catch(Throwable t) {
+            ChannelHelper.logGlobalError("Failed to post custom tick!",t);
+            throw t;
+        }
     }
 }

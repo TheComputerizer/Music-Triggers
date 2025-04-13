@@ -22,12 +22,14 @@ shadowJar {
       'dev.lavalink.youtube',
       'ibxm',
       'mozilla',
+      'me.devoxin.lavadspx',
       'net.iharder',
       'net.sourceforge.jaad.aac',
       'org.apache.http',
       'org.json',
       'org.jsoup',
       'org.mozilla.classfile',
+      'org.mozilla.javascript.serialize',
       'org.slf4j'
     ].forEach {pkg ->
         relocate pkg, "${shadow_package}.$pkg"

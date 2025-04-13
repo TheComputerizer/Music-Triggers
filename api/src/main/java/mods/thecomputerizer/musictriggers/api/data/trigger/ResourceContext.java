@@ -10,6 +10,8 @@ import java.util.function.BiFunction;
 
 public class ResourceContext {
 
+    private final boolean defaultDisplay;
+    private final boolean defaultResource;
     private final List<String> displayMatchers;
     private final List<String> resourcesMatchers;
     private final BiFunction<String,List<String>,Boolean> displayMatchFunc;
@@ -19,7 +21,9 @@ public class ResourceContext {
     public ResourceContext(List<String> resourcesMatchers, List<String> displayMatchers,
                            String resourceMatchType, String displayMatchType) {
         this.displayMatchers = displayMatchers.isEmpty() ? Collections.singletonList("any") : displayMatchers;
+        this.defaultDisplay = displayMatchers.contains("any");
         this.resourcesMatchers = resourcesMatchers.isEmpty() ? Collections.singletonList("any") : resourcesMatchers;
+        this.defaultResource = resourcesMatchers.contains("any");
         this.displayMatchFunc = getMatchFunc(displayMatchType);
         this.resourceMatchFunc = getMatchFunc(resourceMatchType);
     }
@@ -60,14 +64,22 @@ public class ResourceContext {
      * If one is null while the other is not, check whichever is not null.
      */
     public boolean checkMatch(@Nullable String id, @Nullable String display) {
-        return Objects.isNull(id) ?
-                (Objects.isNull(display) ?
-                        checkResourceMatch(null) || checkDisplayMatch(null) : checkDisplayMatch(display)) :
-                (Objects.isNull(display) ?
-                        checkResourceMatch(id) : checkResourceMatch(id) || checkDisplayMatch(display));
+        boolean checkDisplay = shouldCheck(display,id,this.defaultDisplay,this.defaultResource);
+        boolean checkResource = shouldCheck(id,display,this.defaultResource,this.defaultDisplay);
+        return checkMatch(id,display,checkDisplay,checkResource);
+    }
+    
+    private boolean checkMatch(@Nullable String id, @Nullable String display, boolean checkDisplay,
+            boolean checkResource) {
+        return (checkDisplay && checkDisplayMatch(display)) || (checkResource && checkResourceMatch(id));
     }
 
     public boolean checkResourceMatch(@Nullable String id) {
         return this.resourceMatchFunc.apply(id,this.resourcesMatchers);
+    }
+    
+    private boolean shouldCheck(@Nullable String main, @Nullable String other, boolean defaultMain,
+            boolean defaultOther) {
+        return Objects.isNull(other) || defaultOther || (Objects.nonNull(main) && !defaultMain);
     }
 }
