@@ -1,15 +1,17 @@
-plugins.apply('com.gradleup.shadow')
+import static org.gradle.api.file.DuplicatesStrategy.EXCLUDE
+
+plugins.apply 'com.gradleup.shadow'
 
 configurations {
-    shadow.extendsFrom(shaded)
+    shadow.extendsFrom shaded
 }
 
 shadowJar {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    configurations = [project.configurations.shadow]
-    setArchiveBaseName(mod_id)
-    setArchiveClassifier('')
+    duplicatesStrategy = EXCLUDE
+    configurations = [ project.configurations.shadow ]
+    setArchiveBaseName mod_id
+    setArchiveClassifier ''
     mergeServiceFiles()
-    exclude '**/LICENSE', '**/LICENSE.txt', 'META-INF/MANIFSET.MF', 'META-INF/maven/**', 'META-INF/*.RSA',
-            'META-INF/*.SF', 'META-INF/services/*.Processor', 'META-INF/**/*.class', 'module-info.*'
+    exclude '**/LICENSE', '**/LICENSE.txt', 'META-INF/**/*.class', 'META-INF/*.RSA', 'META-INF/*.SF',
+            'META-INF/MANIFSET.MF', 'META-INF/maven/**', 'META-INF/services/*.Processor', 'module-info.*'
 }

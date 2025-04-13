@@ -1,8 +1,6 @@
 /**
- * Build workflow guidelines
- * api -> (fabric, forge, legacy, neoforge) -> (1.12, 1.16, 1.18, 1.19, 1.20, 1.21) -> (minor versions) -> main
- * Shading and relocation must happen within each module to properly respect reobfuscation.
- * Any necessary reobfuscations must happen in the version the deobfuscations happened in.
+ * All of the code is in the api project.
+ * The legacy & 1.12.2 projects are only used for testing purposes
  */
 buildscript {
     repositories {
@@ -29,13 +27,16 @@ def base = project ':api'
 def legacy_1_12_2 = project ':legacy:1.12'
 
 jar {
-    legacy_1_12_2.afterEvaluate { from(it.shadowJar.archiveFile.collect { zipTree it }) }
+    legacy_1_12_2.afterEvaluate {
+        from(it.shadowJar.archiveFile.collect {
+            zipTree it
+        })
+    }
     manifest {
-        def versionStr = project.version.toString()
-        def manifest_version = versionStr.contains('+') ?
-                versionStr.substring(0,versionStr.indexOf('+')) : versionStr
+        def ver_str = mod_version.toString()
+        def manifest_version = ver_str.contains('+') ? ver_str.substring(0,ver_str.indexOf('+')) : ver_str
         attributes([
-                'Implementation-Title': project.name,
+                'Implementation-Title': mod_name,
                 'Implementation-Version': manifest_version,
                 'TILMultiversionCoreMods': coremod_entrypoint,
                 'TILMultiversionMods': mod_entrypoint
@@ -43,18 +44,36 @@ jar {
     }
 }
 
-[ ':legacy:1.12:build' ].forEach { tasks.jar.mustRunAfter it }
+tasks.jar.mustRunAfter ':legacy:1.12:build'
 
-modrinth { //TODO Figure out how to handle the changelog
-    token = modrinth_token
+String readChangelog() {
+    def changelogFile = file "changelogs/${mod_version}.txt"
+    try {
+        def lines = changelogFile.readLines()
+        def builder = new StringBuilder()
+        for(def line : lines) builder.append(line).append '\n'
+        return builder.toString()
+    } catch(Exception ex) {
+        getLogger().error "Failed to read lines from $changelogFile", ex
+    }
+    return ""
+}
+
+List<String> readVersions() {
+    return List.of(supported_versions.split(';')).stream().map(it -> "1.$it".toString()).toList()
+}
+
+modrinth {
+    changelog = readChangelog()
+    gameVersions = readVersions()
+    loaders = [ 'forge', 'neoforge' ]
     projectId = 'music-triggers'
+    token = modrinth_token
+    uploadFile = jar
     versionNumber = mod_version
     versionType = 'alpha'
-    uploadFile = jar
-    gameVersions = [ '1.12.2', '1.16.5', '1.18.2', '1.19.2', '1.19.4', '1.20.1', '1.20.4', '1.20.6', '1.21.1' ]
-    loaders = [ 'forge', 'neoforge' ]
     dependencies {
-        required.version 'the-impossible-library', '0.4.2'
+        required.version 'the-impossible-library', til_version
     }
 }
 

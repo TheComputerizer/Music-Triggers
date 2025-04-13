@@ -1,0 +1,18 @@
+- Added a gui_fuzz debug parameter to disable the line generator in the GUI in case it is annoying and/or not rendering correctly
+- Added a min_health parameter to the mob trigger
+- Added a min_health_percentage parameter to the lowhp trigger
+- Added caching for some frequently checked mob trigger parameters
+- Renamed the health parameter for the mob trigger to max_health
+- Renamed the health_percentage parameter for the lowhp trigger to max_health_percentage
+- Fixed the health (now max_health/min_health), horde_health_percentage, horde_targeting_percentage parameters not being applied for the mob trigger
+- Fixed the not parameter being implemented incorrectly
+- Fixed an uncommon crash when GUI changes were applied
+- Updated the config remapper to account for the parameter name changes:
+    + (6.3.1) [lowhp] level -> max_health_percentage
+    + (6.3.1) [mob] health -> max_health
+    + (7.0.0) [lowhp] health_percentage -> max_health_percentage
+    + (7.0.0) [mob] health -> max_health
+- Updated the wiki:
+    + Added an Identifiers & Implied Triggers page to the Triggers section
+    + Added any new parameters that needed to be added
+    + Updated some parameter descriptions that got changed

@@ -10,16 +10,7 @@ jar {
 }
 
 processResources {
-    def replacements = [ 'minecraft_version': minecraft_version, 'mod_author': mod_authors,
-                         'mod_description': mod_description, 'mod_license': mod_license, 'mod_id': mod_id,
-                         'mod_name': mod_name, 'mod_version': version ]
-    inputs.properties replacements
-    def parentResources = base.processResources.outputs
-    from(parentResources) { exclude 'mcmod.info', 'META-INF/mods.toml' }
-    from(parentResources) {
-        include 'mcmod.info'
-        expand replacements
-    }
+    from base.processResources.outputs
 }
 
 processTestResources {

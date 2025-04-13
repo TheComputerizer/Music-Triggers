@@ -42,7 +42,7 @@ pluginManagement {
             }
         }
     }
-    includeBuild("${default_directory}\\Multiversion-Project-Helper")
+    includeBuild "$default_directory\\Multiversion-Project-Helper"
 }
 
 plugins {

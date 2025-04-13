@@ -1,0 +1,18 @@
+- The Impossible Library 0.4.2+ is now required
+- Trigger names are no longer case sensitive. This applies to both the table name and referenced triggers. Lowercase names are still used internally and will be written by the GUI
+- To avoid potential confusion, identifiers will now filter out the trigger name followed by "-". This means "name-" (where name is the name of the trigger) is now automatically removed from identifiers
+- Dedicated servers now generate the global config files when starting up
+- The mob_targeting paremeter of the mob trigger is now automatically passed for non hostile mobs
+- Reimplemented the gui trigger where the ID is the name of the current screen class and the display name is simple name of the current screen class. Both are passed in as null if there is no current screen
+- Fixed some issues with triggers that use display_name & resource_name parameters
+- Reworked how null resource IDs & display names are handled:
+    + If both the ID & display name are null, check both
+    + If both the ID & display name are not null, check both
+    + If either the ID or the the display name is null while the other is not, check whichever is not null
+    + A null ID or display name is now allowed to match empty entries (such as resource_name = [ "" ] ) for all matching strategies
+- Added elements to the Help screen
+    + alpha_warning
+    + channel_interaction
+    + channels
+    + identifiers
+    + removing_triggers

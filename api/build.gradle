@@ -13,16 +13,15 @@ repositories {
 }
 
 dependencies {
-    compileOnly "biz.aQute.bnd:annotation:$bnd_version"
-    compileOnly "com.google.code.findbugs:jsr305:$jsr_version"
-    compileOnly "commons-io:commons-io:$io_version"
-    //noinspection VulnerableLibrariesLocal
-    compileOnly "io.netty:netty-all:$netty_version" //Not shaded so vulnerable dependecies aren't an issue
-    compileOnly "it.unimi.dsi:fastutil:$fast_version"
-    compileOnly "org.apache.commons:commons-lang3:$lang3_version"
-    compileOnly "org.apache.logging.log4j:log4j-core:$log4j_version"
-    compileOnly "org.ow2.asm:asm-commons:$asm_version"
-    compileOnly "org.ow2.asm:asm-util:$asm_version"
+    compileOnly "$bnd_artifact:$bnd_version"
+    compileOnly "$jsr_artifact:$jsr_version"
+    compileOnly "$commons_io_artifact:$commons_io_version"
+    compileOnly "$netty_artifact:$netty_version"
+    compileOnly "$fastutil_artifact:$fastutil_version"
+    compileOnly "$commons_lang3_artifact:$commons_lang3_version"
+    compileOnly "$log4j_artifact:$log4j_version"
+    compileOnly "$asm_commons_artifact:$asm_version"
+    compileOnly "$asm_util_artifact:$asm_version"
 }
 
 

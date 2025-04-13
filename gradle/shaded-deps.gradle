@@ -1,5 +1,5 @@
 configurations {
-    implementation.extendsFrom(shaded)
+    implementation.extendsFrom shaded
 }
 
 repositories {
@@ -12,5 +12,5 @@ repositories {
 
 dependencies {
     //other shaded
-    shaded("io.github.kostaskougios:cloning:${cloning_version}") { transitive = false }
+    shaded("io.github.kostaskougios:cloning:$cloning_version") { transitive = false }
 }

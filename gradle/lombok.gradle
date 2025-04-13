@@ -8,6 +8,6 @@ repositories {
 
 dependencies {
     //lombok
-    annotationProcessor('org.projectlombok:lombok:1.+')
-    compileOnly('org.projectlombok:lombok:1.+')
+    annotationProcessor 'org.projectlombok:lombok:1.+'
+    compileOnly 'org.projectlombok:lombok:1.+'
 }

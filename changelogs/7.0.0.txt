@@ -1,0 +1,126 @@
+- The entire mod has been rewritten from scratch:
+	+ Switched to a multiversion/multiloader build for support of additional versions as well as easier and more consistent updates. Currently supported versions are as follows:
+		* 1.12.2 Forge
+		* 1.16.5 Fabric/Forge
+		* 1.18.2 Fabric/Forge
+		* 1.19.2 Fabric/Forge
+		* 1.19.4 Fabric/Forge
+		* 1.20.1 Fabric/Forge/NeoForge
+		* 1.20.4 Fabric/Forge/NeoForge
+		* 1.20.6 Fabric/Forge/NeoForge
+		* 1.21.1 Fabric/Forge/NeoForge
+	+ Refactored most of the important core stuff into an api package
+	+ Most of the important data instances are now backed by APIs to make it a lot easier for other mods to hook into, change, and add stuff
+	+ Rewrote the GUI from scratch
+		* Improved rendering & formatting across all screens
+		* Consolidated & reorganized things so that less clicks are needed to navigate the GUI
+		* Added layered rendering so that the previous screen is rendered behind the current screen
+		* Fixed positioning issues when scrolling
+		* Text fields now support a majority of the commonly used keyboard shortcuts
+		* Upgraded most hover text to provide actually useful information
+		* Rewrote the description for every parameter to provide more in depth information, give more examples, & add the default values
+- Massively improved upon the information that gets logged and how logged messages are formatted
+- Updated all included libraries & some additional libraries for audio effects/filters
+- Switched to a more robust YouTube source with more fallbacks, generally faster response times, and LTS to keep fixing issues as they come up
+- Parameter objects are no longer shared across triggers so that trigger-specific parameter defaults work better
+- Extended the new parameter API to other places where it made sense like image/title cards & songs
+- Songs can now be loaded and played from any in game audio resource instead of just vanilla music
+- Added an implied trigger system that can load undefined triggers with default parameters from the triggers of a song, render card, command, or toggle
+- The mob_nbt parameter is now a list parameter and can accept multiple conditions
+- Added a display_name parameter to separate the resource_name parameter for triggers like the mob trigger that can also utilize display names.
+- Added resource_matcher and display_matcher parameters for resource_names and display names respectively to determine their matching rules. Currently accepted conditions are EXACT, PARTIAL, or REGEX
+- The toggles file is now a universal config file instead of being needlessly channel specific
+- The name of the current structure will now always be shown and updated in the debug info regardless of the version or whether a structure trigger is registered
+- Merged the registration config into the debug config
+- Merged the debug config and channels config into a global config respectively under debug and channels tables
+- Any parameters that used uppercase default values (like "ANY") are now lowercase ("any") for consistency
+- With the exception of the resampling_quality debug parameter, any string constants that are checked for will be lowercase
+- Renamed the channel parameter for trigger links to target_channel
+- Combined the Blank Music Disc (musictriggers:blank_record), Enhanced Music Disc (musictriggers:music_triggers_record), & Custom Music Disc (musictriggers:custom_record) items into a single Enhanced Music Disc (musictriggers:record) item
+- The following has been changed regarding triggers:
+	+ Renamed the fallingstars trigger to starshower
+	+ Added an adventure trigger for adventure mode
+	+ Moved the biome trigger to the client side
+	+ Moved the snowing trigger to the client side
+	+ Readded default priority values for all triggers
+- Changed the following regarding the debug info
+	+ All debug info lines are now translateable
+	+ Elements that span across multiple lines are now given a hanging indent
+	+ Combined "Current Song: x" and "Current Song Time: y" into "Song: `Name = x | Time = y`"
+	+ Converted "Playable Events: x" into "Triggers: `Active = x | Playable = y`"
+	+ Expanded "Blocked Mods: x[y], x[y]" into "Blocked Mods: [ `ID = x | Categories = y`, `ID = x | Categories = y` ]"
+	+ Combined "Current Biome Name: x" and "Current Biome Category: y" into "Biome: `Name = z | ID = x |  Tags = y`"
+	+ Expanded "Current Dimension: x" into "Dimension: `Name = y | ID = x`"
+	+ Combined "Current Total Light: x" and "Current Block Light: y" into "Light: `Block = y | Sky = z | Total = x`"
+	+ Current structure info will now show for all versions and has been expanded from "Current Structure: x" to "Structure: `Name = y | ID = x`"
+	+ Expanded "Current Tile Name: x" into "Block Entity: Name = %1$s | ID = %2$s`"
+	+ Combined "Current Entity Name: x" and "Current Entity ID: y" into "Entity: Name = x | ID = y`"
+	+ Converted "Effect List: x, x" into "Active Effects: [ `Name = y | ID = x`, `Name = y | ID = x` ]"
+- The following debug parameters have been changed:
+	+ ALLOW_TIMESTAMPS -> allow_timestamps
+	+ BLOCK_STREAMING_ONLY -> block_sound_effects
+	+ BLOCKED_MOD_CATEGORIES -> blocked_sound_categories
+	+ COMBINE_EQUAL_PRIORITY -> independent_audio_pools
+	+ CURRENT_SONG_ONLY -> show_song_info
+	+ ENCODING_QUALITY -> encoding_quality
+	+ INTERRUPTED_AUDIO_CATEGORIES -> interrupted_sound_categories
+	+ LOG_LEVEL -> (removed)
+	+ MAX_HOVER_ELEMENTS -> (removed)
+	+ PAUSE_WHEN_TABBED -> pause_unless_focused
+	+ PLAY_NORMAL_MUSIC -> play_normal_music
+	+ RESAMPLING_QUALITY -> resampling_quality
+	+ REVERSE_PRIORITY -> reverse_priority
+	+ SHOW_DEBUG -> enable_debug_info
+	+ (added) -> client_only
+	+ (added) -> enable_discs
+	+ (added) -> show_channel_info
+	+ (added) -> show_position_info
+	+ (added) -> show_song_info
+	+ (added) -> show_status_info
+	+ (added) -> show_target_info
+	+ (added) -> show_trigger_info
+	+ (added) -> slow_tick_factor
+	+ (added) -> tick_rate
+	+ (added) -> write_default_values
+- The following channel info parameters have been changed:
+	+ explicit_overrides -> explicitly_overrides
+	+ overrides_normal_music -> overrides_music
+	+ pause_overrides -> pauses_overrides
+	+ songs_folder -> local_folder
+	+ transitions -> renders
+	+ (added) -> has_paused_music
+- Changed the following regarding audio parameters
+	+ must_finish has been renamed to interrupt_handler and expanded into a table that accepts priority and trigger_whitelist parameters
+	+ Reimplemented the pitch parameter in a way that shouldn't have any specific restrictions beyond being a positive number
+	+ (added) -> location
+	+ (added) -> speed
+	+ (added) -> rotation_speed
+	+ (added) -> volume_when_paused
+- The following trigger parameters have been renamed [brackets indicate the parameter was only changed for that trigger]:
+	+ biome_category -> biome_tag
+	+ check_higher_rainfall -> rainfall_greater_than
+	+ check_lower_temp -> temperature_greater_than
+	+ song_delay -> ticks_between_audio
+	+ start_delay -> ticks_before_active
+	+ start_toggled -> start_as_disabled
+	+ stop_delay -> active_cooldown
+	+ trigger_delay -> ticks_before_audio
+	+ [lowhp] level -> health_percentage
+	+ [raid] level -> wave
+	+ [season] level -> season
+	+ (added) -> play_when_paused
+	+ [raid] (added) -> raid_status
+	+ [mob] (added) -> target_any_player
+- Added an internal event system for channels allowing for all data types (triggers, songs, title/image cards, commands, etc):
+	+ Commands, & render cards can now be activated when a song starts playing
+	+ Toggles, commands, & render cards can now be activated when a song stops playing, when the trigger deactivates, or at specified intervals while the trigger is active or a song is playing
+	+ Added an event parameter for all data types that support the channel event system
+	+ Added an event_interval parameter for specifying event intervals during the playing or active events
+- Changed the following regarding commands (/musictriggers | /mt)
+	+ The reload command (reload | reload ticks) can now accept an integer parameter to specify the number of ticks after the command is run that Music Triggers will begin to reload
+	+ Added a debug command (debug | debug parameter_name) for flipping boolean debug config parameter from [true -> false] or [false -> true] where enable_debug_info is the default parameter name if not specified
+	+ Added a skip command (skip) for skipping the current song (if there is a song playing)
+	+ Added a query command (query type) for querying some additional debug information. Only the nbt type is implemented so far (query nbt) which prints the NBT data of the entity being targeted to the chat in a (mostly) readable format
+	+ Added a seek command (seek seconds) which will attempt to set the specified second in the current song (if there is a song playing)
+
+ I may have forgotten to keep up with writing it during development, but this should be almost fully comprehensive.
