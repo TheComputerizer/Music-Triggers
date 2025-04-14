@@ -376,9 +376,13 @@ public class ChannelHelper implements NBTLoadable {
             if(!helper.client) helper.setDebugParameter(name,value);
     }
     
+    /**
+     * The method name is confusing since it actually does the opposite.
+     * If FALSE is returned the vanilla music will be stopped
+     */
     @IndirectCallers
     public static boolean stopVanillaMusicTicker() {
-        if(loader.isLoading()) return true;
+        if(loader.isLoading()) return false;
         ChannelHelper clientHelper = getClientHelper();
         return Objects.isNull(clientHelper) || clientHelper.canVanillaMusicPlay();
     }

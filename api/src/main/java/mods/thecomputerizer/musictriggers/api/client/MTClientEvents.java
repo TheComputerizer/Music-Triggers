@@ -95,8 +95,10 @@ public class MTClientEvents {
     public static void onKeyPress(InputKeyEventWrapper<?> wrapper) {
         if(GUI_KEY.isDown()) MTGUIScreen.open();
     }
-
-    private static void onPlaySound(PlaySoundEventWrapper<?> wrapper) {}
+    
+    //TODO The library needs more interaction with SoundAPI instances for this to work
+    private static void onPlaySound(PlaySoundEventWrapper<?> wrapper) {
+    }
 
     private static void onRenderOverlayPre(RenderOverlayPreEventWrapper<?> wrapper) {
         if(wrapper.isType(ALL) && isActive) wrapper.setCanceled(true);
