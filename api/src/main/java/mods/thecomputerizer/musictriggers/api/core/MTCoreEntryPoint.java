@@ -37,6 +37,11 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
             TICKER_BINARY.replace('.','/') : null;
     static final String TICKER_DESC = TypeHelper.methodDesc(BOOLEAN_TYPE);
     
+    //Mods that have their own music tickers need to be fixed as well
+    static final String TICKER_GC_BINARY = getTickerGCBinary();
+    static final String TICKER_GC_NAME = Objects.nonNull(TICKER_GC_BINARY) ?
+            TICKER_GC_BINARY.replace('.','/') : null;
+    
     static String getHandlerBinary() {
         CoreAPI core = CoreAPI.getInstance();
         if(!core.isClientSide()) return null;
@@ -55,6 +60,12 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
         return fabric ? "net.minecraft.class_1142" : "net.minecraft.client.sounds.MusicManager";
     }
     
+    static String getTickerGCBinary() {
+        CoreAPI core = CoreAPI.getInstance();
+        if(!core.isClientSide() || !core.getVersion().isV12()) return null;
+        return "micdoodle8.mods.galacticraft.core.client.sounds.MusicTickerGC";
+    }
+    
     final CoreAPI core;
     List<String> targets;
     
@@ -69,8 +80,9 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
     
     @Override public List<String> classTargets() {
         if(Objects.isNull(this.targets))
-            this.targets = this.core.isClientSide() ? Arrays.asList(HANDLER_BINARY,TICKER_BINARY) :
-                    Collections.emptyList();
+            this.targets = this.core.isClientSide() ? (Objects.nonNull(TICKER_GC_BINARY) ?
+                    Arrays.asList(HANDLER_BINARY,TICKER_BINARY,TICKER_GC_BINARY) :
+                    Arrays.asList(HANDLER_BINARY,TICKER_BINARY)) : Collections.emptyList();
         TILRef.logInfo("Collecting class targets as {}",this.targets);
         return this.targets;
     }
@@ -108,7 +120,8 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
     
     public void fixMusicTicker(ClassNode classNode, MethodNode node, String ... names) {
         String className = getClassName(classNode);
-        if(!TICKER_NAME.equals(className)) return;
+        if(!TICKER_NAME.equals(className) &&
+           (!this.core.getVersion().isV12() || !TICKER_GC_NAME.equals(className))) return;
         if(equalsAny(this.core.mapMethodName(classNode.name,node.name,node.desc),names)) {
             InsnList ifIns = beginList(new InsnList())
                     .insInvokeStatic(HELPER_NAME,"stopVanillaMusicTicker",TICKER_DESC)
