@@ -1,1 +1,6 @@
-TODO
+- Updated any of the included libraries that could be updated
+- Vanilla & blocked music is now stopped while loading & reloading
+- Fixed a rare concurrency issue that could randomly make audio tracks fail to load
+- Fixed issues with default display_name & resource_name parameters always getting passed when only 1 is set
+- Fixed an issue with the current gui screen not being retrieved properly
+- Fixed vanilla music not being blocked in 1.12.2 when galacticraft is loaded
