@@ -24,7 +24,6 @@ dependencies {
     compileOnly "$asm_util_artifact:$asm_version"
 }
 
-
 processResources {
     from(sourceSets.main.resources.srcDirs)
 }

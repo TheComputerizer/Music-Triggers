@@ -2,6 +2,9 @@ apply from: rootProject.file('gradle\\shadow.gradle')
 
 shadowJar {
     //relocate shaded dependencies to the shadow package to prevent library conflicts
+    def shadow_internal = shadow_package.replace '.', '/'
+    relocate 'org.mozilla.javascript', "${shadow_package}.org.mozilla.javascript"
+    relocate '()Lorg/mozilla/javascript', "L${shadow_internal}/org/mozilla/javascript"
     [ 'certificates',
       'com.fasterxml.jackson',
       'com.grack.nanojson',
@@ -29,7 +32,6 @@ shadowJar {
       'org.json',
       'org.jsoup',
       'org.mozilla.classfile',
-      'org.mozilla.javascript',
       'org.slf4j'
     ].forEach {pkg ->
         relocate pkg, "${shadow_package}.$pkg"

@@ -17,21 +17,18 @@ multiversion {
     onEvaluateFinished project
 }
 
+String buildModDependency(String mod) {
+    String mod_dependency_group_with_name = property "${mod}_artifact"
+    String mod_dependency_version = property "${mod}_1_12_2"
+    String separator = 'bookshelf'==mod || 'gamestages'==mod ? '-' : ':'
+    return "$mod_dependency_group_with_name$separator$mod_dependency_version"
+}
+
 dependencies {
     //mod support & utility
-    runtimeOnly "$bookshelf_artifact-$bookshelf_1_12_2"
-    runtimeOnly "$champions_artifact:$champions_1_12_2"
-    runtimeOnly "$coroutil_artifact:$coroutil_1_12_2"
-    runtimeOnly "$dsurround_artifact:$dsurround_1_12_2"
-    runtimeOnly "$dsurround_lib_artifact:$dsurround_lib_1_12_2"
-    runtimeOnly "$gamestages_artifact-$gamestages_1_12_2"
-    runtimeOnly "$hei_artifact:$hei_1_12_2"
-    runtimeOnly "$infernal_mobs_artifact:$infernal_mobs_1_12_2"
-    runtimeOnly "$nyx_artifact:$nyx_1_12_2"
-    runtimeOnly "$resloader_artifact:$resloader_1_12_2"
-    runtimeOnly "$seasons_artifact:$seasons_1_12_2"
-    runtimeOnly "$top_artifact:$top_1_12_2"
-    runtimeOnly "$weather2_artifact:$weather2_1_12_2"
+    runtime_mods_1_12_2.split(';').each {mod ->
+        runtimeOnly buildModDependency(mod)
+    }
 }
 
 jar {

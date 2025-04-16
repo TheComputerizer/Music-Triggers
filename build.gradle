@@ -18,7 +18,7 @@ buildscript {
     }
 }
 
-apply from: rootProject.file('gradle\\java23.gradle')
+apply from: rootProject.file('gradle\\java24.gradle')
 plugins.apply 'com.modrinth.minotaur'
 plugins.apply 'org.moddedmc.wiki.toolkit'
 
