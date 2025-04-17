@@ -9,6 +9,7 @@ import mods.thecomputerizer.musictriggers.api.data.nbt.mode.NBTMode;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerBiome;
+import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerCommand;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerMob;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.biome.BiomeAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.blockentity.BlockEntityAPI;
@@ -140,7 +141,7 @@ public abstract class TriggerContext extends ChannelElement {
     public abstract boolean isActiveBloodMoon();
     public abstract boolean isActiveBlueMoon();
     public abstract boolean isActiveCloudy();
-    public abstract boolean isActiveCommand();
+    public abstract boolean isActiveCommand(TriggerCommand trigger);
     public abstract boolean isActiveCreative();
     public abstract boolean isActiveDead();
     public abstract boolean isActiveDifficulty(int level);

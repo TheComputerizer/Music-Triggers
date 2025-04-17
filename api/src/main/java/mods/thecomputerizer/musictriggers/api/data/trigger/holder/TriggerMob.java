@@ -75,7 +75,7 @@ public class TriggerMob extends HolderTrigger {
      * Nonliving entities will only return true if they are null.
      */
     public boolean checkHealth(EntityAPI<?,?> entity) {
-        if(Objects.isNull(entity)) return false;
+        if(Objects.isNull(entity) || !entity.isAlive()) return false;
         if(entity.isLiving()) {
             LivingEntityAPI<?,?> living = WrapperHelper.wrapLivingEntity(entity.getEntity());
             if(Objects.isNull(living) || !living.isAlive()) return false;

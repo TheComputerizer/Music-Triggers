@@ -6,6 +6,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.ResourceContext;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerBiome;
+import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerCommand;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerMob;
 import mods.thecomputerizer.musictriggers.api.network.MTNetwork;
 import mods.thecomputerizer.musictriggers.api.network.MessageCurrentStructure;
@@ -182,8 +183,8 @@ public class TriggerContextServer extends TriggerContext {
         return false;
     }
 
-    @Override public boolean isActiveCommand() {
-        return false;
+    @Override public boolean isActiveCommand(TriggerCommand trigger) {
+        return trigger.hasCount();
     }
 
     @Override public boolean isActiveCreative() {

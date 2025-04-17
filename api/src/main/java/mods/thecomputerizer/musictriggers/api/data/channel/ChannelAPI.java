@@ -99,6 +99,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, ChannelSyncable
      * Stops any audio that is playing & clears all data
      */
     public void close() {
+        this.commandTriggerCache = null;
         this.data.close();
         this.sync.close();
         this.selector.close();
@@ -144,9 +145,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, ChannelSyncable
     void executeCommandTrigger(String id) {
         if(Objects.isNull(this.commandTriggerCache)) cacheCommandTriggers();
         TriggerCommand trigger = this.commandTriggerCache.get(id);
-        if(Objects.nonNull(trigger)) {
-        
-        }
+        if(Objects.nonNull(trigger)) trigger.onCommandExecuted();
     }
 
     public TriggerAPI getActiveTrigger() {
@@ -409,6 +408,8 @@ public abstract class ChannelAPI implements ChannelEventHandler, ChannelSyncable
 
     public void tickSlow(boolean unpaused) {
         this.selector.select(unpaused);
+        if(Objects.nonNull(this.commandTriggerCache))
+            this.commandTriggerCache.values().forEach(TriggerCommand::decrement);
     }
     
     @Override public String toString() {

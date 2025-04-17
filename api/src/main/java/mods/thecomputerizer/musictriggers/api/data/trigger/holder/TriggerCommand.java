@@ -4,9 +4,22 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
 
 public class TriggerCommand extends HolderTrigger {
+    
+    /**
+     * The number of active slow ticks this trigger has left
+     */
+    private int activeCount;
 
     public TriggerCommand(ChannelAPI channel) {
         super(channel,"command");
+    }
+    
+    public void decrement() {
+        if(hasCount()) this.activeCount--;
+    }
+    
+    public boolean hasCount() {
+        return this.activeCount>0;
     }
     
     @Override public boolean imply(String id) {
@@ -21,11 +34,15 @@ public class TriggerCommand extends HolderTrigger {
     }
 
     @Override public boolean isPlayableContext(TriggerContext ctx) {
-        return ctx.isActiveCommand();
+        return ctx.isActiveCommand(this);
     }
     
     @Override public boolean isServer() {
         return true;
+    }
+    
+    public void onCommandExecuted() {
+        this.activeCount = 2;
     }
 
     @Override public boolean verifyRequiredParameters() {

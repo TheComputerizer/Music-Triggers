@@ -4,6 +4,7 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.ResourceContext;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerBiome;
+import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerCommand;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerMob;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.ClientAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.MinecraftAPI;
@@ -160,7 +161,7 @@ public class TriggerContextClient extends TriggerContext {
         return hasWorld() && checkMod(ModHelper::betterWeather,mod -> mod.isCloudy(this.world));
     }
 
-    @Override public boolean isActiveCommand() {
+    @Override public boolean isActiveCommand(TriggerCommand trigger) {
         return false;
     }
 
