@@ -1,6 +1,8 @@
 apply from: rootProject.file('gradle\\java8-module.gradle')
 apply from: rootProject.file('gradle\\til-compile.gradle')
 
+injectConstants()
+
 repositories {
     mavenCentral()
     maven {
@@ -26,4 +28,28 @@ dependencies {
 
 processResources {
     from(sourceSets.main.resources.srcDirs)
+}
+
+def injectConstants() {
+    def target = file "src/main/java/${ "${base_package}.api.MTRef".replace '.', '/'}.java"
+    logger.info "Injecting constants into target file ${target.absolutePath}"
+    def replacements = [ 'MODID = "': "MODID = \"$mod_id\";",
+                         'NAME ="': "NAME = \"$mod_name\";",
+                         'VERSION = "': "VERSION = \"$mod_version\";" ]
+    List<String> lines = new ArrayList<>()
+    target.eachLine { line ->
+        replacements.each {entry ->
+            String key = entry.key
+            if(line.contains(key)) {
+                int index = line.indexOf key
+                line = "${line.substring(0,index)}${entry.value}"
+            }
+        }
+        lines.add line
+    }
+    target.withWriter {writer ->
+        lines.forEach {line ->
+            writer.writeLine line
+        }
+    }
 }

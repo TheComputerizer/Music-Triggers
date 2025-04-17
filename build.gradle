@@ -22,6 +22,8 @@ apply from: rootProject.file('gradle\\java24.gradle')
 plugins.apply 'com.modrinth.minotaur'
 plugins.apply 'org.moddedmc.wiki.toolkit'
 
+makeChangelogFile()
+
 //noinspection GroovyUnusedAssignment
 def base = project ':api'
 def legacy_1_12_2 = project ':legacy:1.12'
@@ -45,6 +47,18 @@ jar {
 }
 
 tasks.jar.mustRunAfter ':legacy:1.12:build'
+
+def makeChangelogFile() {
+    def changelogFile = file "changelogs/${mod_version}.txt"
+    if(!changelogFile.exists()) {
+        def parent = changelogFile.parentFile
+        if(!parent.exists()) parent.mkdirs()
+        if(changelogFile.createNewFile()) {
+            changelogFile.write '- WIP'
+            logger.info "Created changelog file for new version at ${changelogFile.absolutePath}"
+        } else logger.error "Failed to create changelog file for new version at ${changelogFile.absolutePath}"
+    }
+}
 
 String readChangelog() {
     def changelogFile = file "changelogs/${mod_version}.txt"
