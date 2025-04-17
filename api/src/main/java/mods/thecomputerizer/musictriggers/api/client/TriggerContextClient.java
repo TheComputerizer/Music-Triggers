@@ -160,7 +160,7 @@ public class TriggerContextClient extends TriggerContext {
         return hasWorld() && checkMod(ModHelper::betterWeather,mod -> mod.isCloudy(this.world));
     }
 
-    @Override public boolean isActiveCommand() { //TODO
+    @Override public boolean isActiveCommand() {
         return false;
     }
 

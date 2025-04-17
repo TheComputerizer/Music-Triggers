@@ -26,6 +26,7 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI.State;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerContext;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerSelector;
+import mods.thecomputerizer.musictriggers.api.data.trigger.holder.TriggerCommand;
 import mods.thecomputerizer.musictriggers.api.server.TriggerContextServer;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
@@ -33,11 +34,13 @@ import mods.thecomputerizer.theimpossiblelibrary.api.tag.BaseTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.ListTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.TagHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -56,6 +59,7 @@ public abstract class ChannelAPI implements ChannelEventHandler, ChannelSyncable
     private final TriggerSelector selector;
     private final String name;
     @Setter protected boolean enabled = true;
+    private Map<String,TriggerCommand> commandTriggerCache;
     protected Link disabledBy;
 
     protected ChannelAPI(ChannelHelper helper, Toml table) {
@@ -76,6 +80,17 @@ public abstract class ChannelAPI implements ChannelEventHandler, ChannelSyncable
     public boolean areTheseActive(Collection<TriggerAPI> triggers) {
         TriggerAPI trigger = getActiveTrigger();
         return Objects.nonNull(trigger) && trigger.matches(triggers);
+    }
+    
+    private void cacheCommandTriggers() {
+        Map<String,TriggerCommand> cache = new HashMap<>();
+        for(TriggerAPI trigger : this.data.getTriggers()) {
+            if(trigger instanceof TriggerCommand) {
+                String id = trigger.getIdentifier();
+                if(TextHelper.isNotBlank(id) && !"not_set".equals(id)) cache.put(id,(TriggerCommand)trigger);
+            }
+        }
+        this.commandTriggerCache = Collections.unmodifiableMap(cache);
     }
 
     public abstract boolean checkDeactivate(TriggerAPI current, TriggerAPI next);
@@ -125,9 +140,22 @@ public abstract class ChannelAPI implements ChannelEventHandler, ChannelSyncable
         }
         return false;
     }
+    
+    void executeCommandTrigger(String id) {
+        if(Objects.isNull(this.commandTriggerCache)) cacheCommandTriggers();
+        TriggerCommand trigger = this.commandTriggerCache.get(id);
+        if(Objects.nonNull(trigger)) {
+        
+        }
+    }
 
     public TriggerAPI getActiveTrigger() {
         return this.selector.getActiveTrigger();
+    }
+    
+    public Set<String> getCommandIds() {
+        if(Objects.isNull(this.commandTriggerCache)) cacheCommandTriggers();
+        return this.commandTriggerCache.keySet();
     }
     
     public WrapperLink getCommandsLink() {

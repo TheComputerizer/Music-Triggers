@@ -8,12 +8,16 @@ import mods.thecomputerizer.musictriggers.api.network.MessageReload;
 import mods.thecomputerizer.musictriggers.api.network.MessageSeekSong;
 import mods.thecomputerizer.musictriggers.api.network.MessageSkipSong;
 import mods.thecomputerizer.musictriggers.api.network.MessageToggleDebugParameter;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.EntityAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.CommandAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.CommandSenderAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.MinecraftServerAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.text.TextAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.RandomHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.wrappers.WrapperHelper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,7 +32,7 @@ import static mods.thecomputerizer.theimpossiblelibrary.api.server.CommandAPI.Ar
 
 public class MTCommands extends CommandAPI {
     
-    static final String[] NON_EXECUTABLE_SUBTYPES = new String[]{"query","seek"};
+    static final String[] NON_EXECUTABLE_SUBTYPES = new String[]{"query","seek","trigger"};
     static final String[] QUERY_TYPES = new String[]{"nbt"};
     static final String[] SUBTYPES = new String[]{"debug","query","reload","seek","skip"};
 
@@ -48,6 +52,7 @@ public class MTCommands extends CommandAPI {
             case "query": addSubCommand("query_type",sub,STRING);
             case "reload": addSubCommand("ticks",sub,INTEGER);
             case "seek": addSubCommand("seconds",sub,INTEGER);
+            case "trigger": addSubCommand("identifier",sub,STRING);
             default: addSubCommand(sub);
         }
     }
@@ -79,6 +84,17 @@ public class MTCommands extends CommandAPI {
                     ChannelHelper.logGlobalDebug("Sending debug packet");
                     MTNetwork.sendToClient(new MessageToggleDebugParameter<>(false,"enable_debug_info"),false,entity);
                     sender.sendMessage(TextHelper.getTranslated(getMessageKey("success")));
+                    break;
+                }
+                case "identifier": {
+                    TextAPI<?> msg;
+                    if(Objects.nonNull(entity)) {
+                        PlayerAPI<?,?> player = WrapperHelper.wrapPlayer(entity);
+                        String error = ChannelHelper.executeCommandTrigger(player,remaining);
+                        String msgType = Objects.nonNull(error) ? "error" : "success";
+                        msg = TextHelper.getTranslated(getMessageKey(msgType),error,remaining);
+                    } else msg = TextHelper.getTranslated(getMessageKey("player"),remaining);
+                    if(Objects.nonNull(msg)) sender.sendMessage(msg);
                     break;
                 }
                 case "parameter": {
@@ -141,9 +157,22 @@ public class MTCommands extends CommandAPI {
             if(this.parent instanceof MTSubCommand) {
                 if(input.contains(this.parent.getName())) {
                     switch(getName()) {
+                        case "identifier:": {
+                            EntityAPI<?,?> entity = sender.getEntity();
+                            if(Objects.isNull(entity) || !entity.isPlayer() || remaining.isEmpty()) suggestions.clear();
+                            else {
+                                PlayerAPI<?,?> player = WrapperHelper.wrapPlayer(entity.getEntity());
+                                suggestions = ChannelHelper.getCommandIdentifiers(player);
+                                suggestions.removeIf(s -> !s.startsWith(remaining));
+                            }
+                            break;
+                        }
                         case "parameter": {
-                            suggestions = ChannelHelper.getGlobalData().getDebug().getBooleanParameterNames();
-                            if(!remaining.isEmpty()) suggestions.removeIf(s -> !s.startsWith(remaining));
+                            if(remaining.isEmpty()) suggestions.clear();
+                            else {
+                                suggestions = ChannelHelper.getGlobalData().getDebug().getBooleanParameterNames();
+                                suggestions.removeIf(s -> !s.startsWith(remaining));
+                            }
                             break;
                         }
                         case "query_type": {

@@ -22,6 +22,7 @@ import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.MTClient;
 import mods.thecomputerizer.musictriggers.api.client.channel.ChannelClient;
 import mods.thecomputerizer.musictriggers.api.client.MTDebugInfo;
+import mods.thecomputerizer.musictriggers.api.client.channel.ChannelClientSpecial;
 import mods.thecomputerizer.musictriggers.api.client.channel.ChannelJukebox;
 import mods.thecomputerizer.musictriggers.api.client.channel.ChannelPreview;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.WrapperLink;
@@ -100,6 +101,16 @@ public class ChannelHelper implements NBTLoadable {
         globalData.close();
     }
     
+    /**
+     * Returns a string message conaining the error or null if there was no error
+     */
+    public static String executeCommandTrigger(PlayerAPI<?,?> player, String id) {
+        String uuid = player.getUUID().toString();
+        ChannelHelper helper = getServerHelper(uuid);
+        return Objects.nonNull(helper) ? helper.executeCommandTriggers(id) :
+                "Failed to find ChannelHelper for UUID "+uuid;
+    }
+    
     public static void flipDebugParameter(boolean client, String name) {
         if(client) {
             ChannelHelper helper = getClientHelper();
@@ -115,6 +126,11 @@ public class ChannelHelper implements NBTLoadable {
         } catch(Exception ex) {
             throw new RuntimeException("Error parsing global data!",ex);
         }
+    }
+    
+    public static List<String> getCommandIdentifiers(PlayerAPI<?,?> player) {
+        ChannelHelper helper = getServerHelper(player.getUUID().toString());
+        return new ArrayList<>(Objects.nonNull(helper) ? helper.getCommandIDCache() : new HashSet<>());
     }
     
     public static Debug getDebug() {
@@ -406,6 +422,7 @@ public class ChannelHelper implements NBTLoadable {
     private final String playerID;
     private MessageTriggerStates<?> stateMsg;
     private MessageTriggerStates<?> syncedStatesMsg;
+    private Map<String,Collection<ChannelAPI>> commandIDCache;
     private int ticks;
 
     public ChannelHelper(String playerID, boolean client) {
@@ -415,6 +432,18 @@ public class ChannelHelper implements NBTLoadable {
         this.playerID = playerID;
         this.debugInfo = client ? new MTDebugInfo(this) : null; //Don't initialize the debug info on the server
         loader.setClient(client);
+    }
+    
+    private void cacheCommandIDs() {
+        Map<String,Collection<ChannelAPI>> cache = new HashMap<>();
+        for(ChannelAPI channel : this.channels.values()) {
+            if(channel instanceof ChannelClientSpecial) continue;
+            for(String id : channel.getCommandIds()) {
+                if(!cache.containsKey(id)) cache.put(id,new ArrayList<>());
+                cache.get(id).add(channel);
+            }
+        }
+        this.commandIDCache = Collections.unmodifiableMap(cache);
     }
     
     public boolean canVanillaMusicPlay() {
@@ -441,12 +470,23 @@ public class ChannelHelper implements NBTLoadable {
             for(ChannelAPI channel : this.channels.values()) channel.close();
         }
         this.channels.clear();
+        this.commandIDCache = null;
         for(Toggle toggle : this.toggles) toggle.close();
         this.toggles.clear();
     }
     
     public @Nullable ChannelAPI decodeChannel(ByteBuf buf) {
         return findChannel(globalData,NetworkHelper.readString(buf));
+    }
+    
+    private String executeCommandTriggers(String id) {
+        if(Objects.isNull(this.commandIDCache)) cacheCommandIDs();
+        Collection<ChannelAPI> channels = this.commandIDCache.get(id);
+        if(Objects.nonNull(channels)) {
+            channels.forEach(channel -> channel.executeCommandTrigger(id));
+            return null;
+        }
+        return "No channels found for command trigger with identifier '"+id+"'";
     }
 
     public @Nullable ChannelAPI findChannel(LoggableAPI logger, String channelName) {
@@ -472,6 +512,15 @@ public class ChannelHelper implements NBTLoadable {
         synchronized(this.channels) {
             this.channels.values().forEach(consumer);
         }
+    }
+    
+    /**
+     * Does not care about which channel the IDs come from
+     */
+    public Set<String> getCommandIDCache() {
+        if(Objects.nonNull(this.commandIDCache)) return this.commandIDCache.keySet();
+        cacheCommandIDs();
+        return this.commandIDCache.keySet();
     }
     
     public MessageInitChannels<?> getInitMessage() {

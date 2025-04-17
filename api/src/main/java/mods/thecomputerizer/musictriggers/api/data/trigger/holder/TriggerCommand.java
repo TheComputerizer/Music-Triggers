@@ -23,6 +23,10 @@ public class TriggerCommand extends HolderTrigger {
     @Override public boolean isPlayableContext(TriggerContext ctx) {
         return ctx.isActiveCommand();
     }
+    
+    @Override public boolean isServer() {
+        return true;
+    }
 
     @Override public boolean verifyRequiredParameters() {
         String[] parameters = new String[]{"identifier","persistence"};
