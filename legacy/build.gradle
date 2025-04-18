@@ -3,7 +3,7 @@ apply from: rootProject.file('gradle\\java8.gradle')
 def base = project ':api'
 
 jar {
-    from(base.jar.archiveFile.collect {
+    from(base.shadowJar.archiveFile.collect {
         include 'mods/**'
         zipTree it
     })

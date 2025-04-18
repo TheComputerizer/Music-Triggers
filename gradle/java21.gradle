@@ -1,0 +1,34 @@
+import static org.gradle.api.file.DuplicatesStrategy.EXCLUDE
+
+plugins.apply 'idea'
+plugins.apply 'java-library'
+
+group = base_package
+version = mod_version
+
+compileJava {
+    options.deprecation = false //We don't need to log all of the deprecated stuff when compiling
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+        inheritOutputDirs = true
+    }
+}
+
+jar {
+    duplicatesStrategy = EXCLUDE
+    setArchiveBaseName mod_id
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of 21
+}
+
+processResources {
+    duplicatesStrategy = EXCLUDE
+}

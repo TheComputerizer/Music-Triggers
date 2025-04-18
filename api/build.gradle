@@ -1,4 +1,20 @@
+buildscript {
+    repositories {
+        gradlePluginPortal() {
+            content {
+                unimined_plugin_portal.split(';').each {grp ->
+                    includeGroup grp
+                }
+            }
+        }
+    }
+    dependencies {
+        classpath "$shadow_plugin:$shadow_version"
+    }
+}
+
 apply from: rootProject.file('gradle\\java8-module.gradle')
+apply from: rootProject.file('gradle\\lavaplayer.gradle')
 apply from: rootProject.file('gradle\\til-compile.gradle')
 
 injectConstants()
@@ -53,3 +69,6 @@ def injectConstants() {
         }
     }
 }
+
+tasks.assemble.dependsOn shadowJar
+tasks.jar.finalizedBy shadowJar

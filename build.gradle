@@ -26,10 +26,9 @@ makeChangelogFile()
 
 //noinspection GroovyUnusedAssignment
 def base = project ':api'
-def legacy_1_12_2 = project ':legacy:1.12'
 
 jar {
-    legacy_1_12_2.afterEvaluate {
+    base.afterEvaluate {
         from(it.shadowJar.archiveFile.collect {
             zipTree it
         })
@@ -44,9 +43,8 @@ jar {
                 'TILMultiversionMods': mod_entrypoint
         ])
     }
+    mustRunAfter ':api:build'
 }
-
-tasks.jar.mustRunAfter ':legacy:1.12:build'
 
 def makeChangelogFile() {
     def changelogFile = file "changelogs/${mod_version}.txt"

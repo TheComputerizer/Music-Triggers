@@ -2,64 +2,21 @@ pluginManagement {
     repositories {
         gradlePluginPortal() {
             content {
-                plugin_portal_content.split(';').each {grp ->
-                    includeGroup grp
-                }
-            }
-        }
-        maven {
-            name = 'Fabric'
-            url = uri 'https://maven.fabricmc.net/'
-            content {
-                fabric_content.split(';').each {grp ->
-                    includeGroup grp
-                }
-            }
-        }
-        maven {
-            name = 'Forge'
-            url = uri 'https://maven.minecraftforge.net/'
-            content {
-                forge_content.split(';').each {grp ->
-                    includeGroup grp
-                }
-            }
-        }
-        maven {
-            name = 'Garden of Fancy'
-            url = uri 'https://maven.gofancy.wtf/releases'
-            content {
-                includeGroup 'wtf.gofancy.fancygradle'
-            }
-        }
-        maven {
-            name = 'ParchmentMC'
-            url = uri 'https://maven.parchmentmc.org'
-            content {
-                parchment_content.split(';').each {grp ->
+                settings_plugin_content.split(';').each {grp ->
                     includeGroup grp
                 }
             }
         }
     }
-    includeBuild "$modding_directory\\Multiversion-Project-Helper"
 }
 
 plugins {
-    id 'multiversionhelper.settings'
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '+'
 }
 
 rootProject.name = 'Music-Triggers'
 
-multiversion {
-    name = 'Music-Triggers'
-    group = base_package
-    default_classes = [ 'client', 'common' ]
-    default_preprocessor = 'gradle\\\\\\\\lavaplayer'
-    default_resource_output = 'run_client\\\\\\\\MTResources'
-}
-
-def paths = [ ':api', ':legacy:1.12' ]
+def paths = [ ':api', ':legacy:cleanroom' ]
 
 paths.forEach {
     include it
@@ -67,11 +24,5 @@ paths.forEach {
 
 paths.forEach {
     String[] split = (it.startsWith(':') ? it.substring(1) : it).split(':')
-    String name = split.first()
-    if(split.length>1) {
-        String last = split.last()
-        if(name=='api' || name=='legacy') name = last
-        else name = name+"_"+last
-    }
-    findProject(it)?.name = name
+    findProject(it)?.name = split.length>1 ? split.last() : split.first()
 }

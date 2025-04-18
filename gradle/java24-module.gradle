@@ -1,0 +1,2 @@
+apply from: rootProject.file('gradle\\java24.gradle')
+apply from: rootProject.file('gradle\\runtime-module.gradle')

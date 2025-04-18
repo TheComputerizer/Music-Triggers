@@ -8,6 +8,14 @@ repositories {
     }
 }
 
+configurations {
+    implementation.resolutionStrategy {
+
+    }
+}
+
 dependencies {
     implementation "maven.modrinth:the-impossible-library:$til_version"
+    //implementation "maven.modrinth:the-impossible-library:${til_version}:javadoc"
+    //implementation "maven.modrinth:the-impossible-library:${til_version}:sources"
 }

@@ -1,0 +1,144 @@
+import static org.gradle.api.logging.LogLevel.INFO
+import static org.gradle.api.logging.LogLevel.QUIET
+
+buildscript {
+    repositories {
+        gradlePluginPortal() {
+            content {
+                unimined_plugin_portal.split(';').each {grp ->
+                    includeGroup grp
+                }
+            }
+        }
+        maven {
+            name = 'WagYourMaven Releases'
+            url = uri 'https://maven.wagyourtail.xyz/releases'
+            content {
+                unimined_releases.split(';').each {grp ->
+                    includeGroup grp
+                }
+            }
+        }
+        maven {
+            name = 'WagYourMaven Snapshots'
+            url = uri 'https://maven.wagyourtail.xyz/snapshots'
+            content {
+                unimined_snapshots.split(';').each {grp ->
+                    includeGroup grp
+                }
+            }
+        }
+    }
+    dependencies {
+        classpath "$unimined_plugin:$unimined_version"
+    }
+}
+
+apply from: rootProject.file('gradle\\java21-module.gradle')
+apply from: rootProject.file('gradle\\til.gradle')
+
+plugins.apply 'xyz.wagyourtail.unimined'
+
+def base = project ':api'
+
+configurations.configureEach {
+    resolutionStrategy {
+        [ 'jline', 'jline-native' ].forEach {name ->
+            force "$jline_group:$name:$jline_forced"
+        }
+    }
+}
+
+//noinspection GroovyAssignabilityCheck
+unimined.minecraft {
+    version minecraft_1_12_2
+    def args = [ dev_arg, common_entrypoint_arg, core_entrypoint_arg ]
+    mappings {
+        mcp 'stable', legacy_mappings_1_12_2
+    }
+    cleanroom {
+        loader cleanroom_loader_version
+        runs.auth.username = minecraft_username
+        runs.all {
+            systemProperty 'foundation.verbose', 'true'
+            jvmArgs args
+            return
+        }
+    }
+}
+
+repositories {
+    maven {
+        name = 'CleanroomMC'
+        url = uri 'https://maven.cleanroommc.com'
+        content {
+            [ 'com.cleanroommc', 'mezz' ].forEach {grp ->
+                includeGroup grp
+            }
+        }
+    }
+    maven {
+        name = 'CurseMaven'
+        url = uri 'https://curse.cleanroommc.com/'
+        content {
+            includeGroup 'curse.maven'
+        }
+    }
+    maven {
+        name = 'BlameJared'
+        url = uri 'https://maven.blamejared.com'
+        content {
+            [ 'bookshelf', 'gamestages' ].forEach {grp ->
+                includeGroup "net.darkhax.$grp"
+            }
+        }
+    }
+}
+
+String buildModDependency(String mod) {
+    String mod_dependency_group_with_name = property "${mod}_artifact"
+    String mod_dependency_version = property "${mod}_1_12_2"
+    String separator = 'bookshelf'==mod || 'gamestages'==mod ? '-' : ':'
+    return "$mod_dependency_group_with_name$separator$mod_dependency_version"
+}
+
+dependencies {
+    compileOnlyApi base
+
+    annotationProcessor "$gson_artifact:$gson_annotation"
+    annotationProcessor "$guava_artifact:$guava_annotation"
+
+    compileOnly "$cleanroom_mixin_artifact:$cleanroom_mixin_version"
+    compileOnly "$lwjglx_artifact:$lwjglx_version"
+
+    //mod support & utility
+    runtime_mods_1_12_2.split(';').each {mod ->
+        runtimeOnly buildModDependency(mod)
+    }
+}
+
+processResources {
+    from base.processResources.outputs
+}
+
+processTestResources {
+    from base.processTestResources.outputs
+}
+
+jar {
+    manifest {
+        attributes([
+                'Implementation-Title': project.name,
+                'TILMultiversionMods': mod_entrypoint
+        ])
+    }
+}
+
+tasks.remapJar {
+    doFirst {
+        logging.captureStandardOutput INFO
+    }
+    doLast {
+        logging.captureStandardOutput QUIET
+    }
+}

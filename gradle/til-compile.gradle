@@ -10,4 +10,6 @@ repositories {
 
 dependencies {
     compileOnly "maven.modrinth:the-impossible-library:$til_version"
+    //compileOnly "maven.modrinth:the-impossible-library:${til_version}:javadoc"
+    //compileOnly "maven.modrinth:the-impossible-library:${til_version}:sources"
 }

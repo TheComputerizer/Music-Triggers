@@ -111,7 +111,7 @@ public class MTCommonEntryPoint extends DelegatingCommonEntryPoint {
     }
     
     @Override public CommonEntryPoint setDelegatedCustomHandle() {
-        if(!CoreAPI.isV12()) return null;
+        if(!DEV || !CoreAPI.isV12()) return null;
         CommonEntryPoint instance = null;
         Class<?> versionClass = findVersionEntryClass(CoreAPI.getInstance());
         if(Objects.nonNull(versionClass)) {
