@@ -35,6 +35,10 @@ public class TriggerSynced extends TriggerAPI {
     public State getState() {
         return this.syncedState;
     }
+    
+    @Override public State getSyncedState() {
+        return getState();
+    }
 
     @Override public boolean isPlayableContext(TriggerContext context) {
         return this.syncedState==PLAYABLE || this.syncedState==ACTIVE;

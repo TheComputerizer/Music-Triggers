@@ -255,11 +255,7 @@ public class ChannelHelper implements NBTLoadable {
             for(ChannelAPI channel : helper.channels.values()) {
                 //TODO persistent data
             }
-            if(Objects.nonNull(pendingRequest)) {
-                MTRef.logInfo("Answering pending channels request");
-                MTNetwork.sendToServer(helper.getInitMessage());
-                pendingRequest = null;
-            }
+            processPendingRequest(helper);
         } else MTRef.logError("The client helper is missing on the client side??");
     }
 
@@ -337,6 +333,21 @@ public class ChannelHelper implements NBTLoadable {
         MTRef.logInfo("Adding pending message for client that is not ready to respond yet");
         pendingRequest = message;
         return null;
+    }
+    
+    private static void processPendingRequest(ChannelHelper helper) {
+        if(Objects.nonNull(pendingRequest)) {
+            if(helper.client!=pendingRequest.isClient()) {
+                String requestSide = pendingRequest.isClient() ? "CLIENT" : "SERVER";
+                String helperSide = helper.client ? "CLIENT" : "SERVER";
+                MTRef.logError("Tried to answer pending channels request on the wrong side! Expected {} but"+
+                               "instead got {}",requestSide,helperSide);
+            } else {
+                MTRef.logInfo("Answering pending channels request");
+                MTNetwork.sendToServer(helper.getInitMessage());
+            }
+            pendingRequest = null;
+        }
     }
     
     public static void reload(boolean clientConext) {
@@ -755,6 +766,7 @@ public class ChannelHelper implements NBTLoadable {
     
     protected void sync() {
         if(this.syncable) {
+            processPendingRequest(this);
             if(Objects.nonNull(this.syncedStatesMsg)) {
                 this.syncedStatesMsg.handle();
                 this.syncedStatesMsg = null;

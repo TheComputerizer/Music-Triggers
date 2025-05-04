@@ -20,6 +20,7 @@ import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerCombination;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerMerged;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerRegistry;
+import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerSynced;
 import mods.thecomputerizer.musictriggers.api.data.trigger.basic.BasicTrigger;
 import mods.thecomputerizer.musictriggers.api.network.MessageInitChannels.ChannelMessage;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
@@ -128,6 +129,10 @@ public class ChannelData extends ChannelElement {
     protected void addUniversals(Map<Class<? extends ChannelElement>,UniversalParameters> map) {
         map.put(AudioRef.class,UniversalParameters.get(this.channel,UNIVERSAL_AUDIO));
         map.put(TriggerAPI.class,UniversalParameters.get(this.channel,UNIVERSAL_TRIGGERS));
+    }
+    
+    public void afterTriggerSync(Map<TriggerAPI,TriggerSynced> syncedMap) {
+        for(TriggerAPI trigger : this.triggerEventMap.keySet()) trigger.afterSync(syncedMap);
     }
     
     protected void appendUniversals() {

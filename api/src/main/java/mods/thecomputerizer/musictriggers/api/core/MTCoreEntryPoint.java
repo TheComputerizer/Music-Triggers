@@ -133,14 +133,9 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
         String className = getClassName(classNode);
         if(!this.core.getVersion().isV12() || !equalsAny(className,TICKER_NAME,TICKER_GC_NAME,TICKER_SA_NAME)) return;
         if(equalsAny(this.core.mapMethodName(classNode.name,node.name,node.desc),names)) {
-            boolean gc = TICKER_GC_NAME.equals(className);
-            boolean sa = TICKER_SA_NAME.equals(className);
-            String logName = "stopVanillaMusicTickerLog"+(gc ? "GC" : (sa ? "SA" : ""));
             InsnList ifIns = beginList(new InsnList())
                     .insInvokeStatic(HELPER_NAME,"stopVanillaMusicTicker",TICKER_DESC)
-                    .insIf(NOT_EQUAL,new Label())
-                    //.insInvokeStatic(HELPER_NAME,logName,TICKER_DESC)
-                    .insBasic(RETURN).insLabel().endList();
+                    .insIf(NOT_EQUAL,new Label()).insBasic(RETURN).insLabel().endList();
             ifIns.add(new FrameNode(FRAME_SAME,0,null,0,null));
             node.instructions.insertBefore(node.instructions.getFirst(),ifIns);
             TILRef.logInfo("Injected music ticker override to {}",node.name);

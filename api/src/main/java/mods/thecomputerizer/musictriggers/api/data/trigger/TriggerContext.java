@@ -3,6 +3,7 @@ package mods.thecomputerizer.musictriggers.api.data.trigger;
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
+import mods.thecomputerizer.musictriggers.api.data.channel.ChannelData;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.nbt.NBTHelper;
 import mods.thecomputerizer.musictriggers.api.data.nbt.mode.NBTMode;
@@ -128,8 +129,13 @@ public abstract class TriggerContext extends ChannelElement {
 
     public void initSync() {
         logInfo("Initializing syncable {} side data",isClient() ? "client" : "server");
-        for(TriggerAPI trigger : this.channel.getData().getTriggers())
+        ChannelData data = this.channel.getData();
+        for(TriggerAPI trigger : data.getTriggers())
             if(trigger.isSynced()) this.syncedTriggers.add(new TriggerSynced(this.channel,trigger));
+        Map<TriggerAPI,TriggerSynced> syncedMap = new HashMap<>();
+        if(this.syncedTriggers.isEmpty()) syncedMap = Collections.emptyMap();
+        else for(TriggerSynced synced : this.syncedTriggers) syncedMap.put(synced.getReference(),synced);
+        data.afterTriggerSync(syncedMap);
     }
 
     public abstract boolean isActiveAcidRain();

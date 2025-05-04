@@ -35,6 +35,21 @@ public class TriggerCombination extends TriggerAPI {
         recalculateParameters();
     }
     
+    /**
+     * Called from TriggerContext#initSync.
+     * Recalculate triggers with synced wrappers if necessary
+     */
+    @Override public void afterSync(Map<TriggerAPI,TriggerSynced> syncedMap) {
+        Set<TriggerAPI> replaceThese = new HashSet<>();
+        for(TriggerAPI trigger : this.triggers)
+            if(syncedMap.containsKey(trigger)) replaceThese.add(trigger);
+        if(!replaceThese.isEmpty()) {
+            this.triggers.removeIf(replaceThese::contains);
+            for(TriggerAPI trigger : replaceThese) this.triggers.add(syncedMap.get(trigger));
+            logInfo("Replaced synced triggers {}",replaceThese);
+        }
+    }
+    
     @Override public boolean canActivate() {
         if(!hasNonEmptyAudioPool()) return false;
         for(TriggerAPI trigger : this.triggers)
@@ -44,7 +59,7 @@ public class TriggerCombination extends TriggerAPI {
     
     @Override public boolean checkSidedContext(TriggerContext context) {
         for(TriggerAPI trigger : this.triggers)
-            if(!trigger.checkSidedContext(context)) return false;
+            if(!trigger.isPlayableContext(context)) return false;
         return true;
     }
 

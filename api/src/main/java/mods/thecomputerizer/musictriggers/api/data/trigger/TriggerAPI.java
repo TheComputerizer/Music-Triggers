@@ -42,6 +42,7 @@ public abstract class TriggerAPI extends ChannelElement implements ChannelSyncab
     private ResourceContext resourceCtx;
     private State state;
     protected int tracksPlayed;
+    protected TriggerSynced syncedWrapper;
 
     protected TriggerAPI(ChannelAPI channel, String name) {
         super(channel,name);
@@ -68,8 +69,16 @@ public abstract class TriggerAPI extends ChannelElement implements ChannelSyncab
     
     protected boolean canActivate(boolean checkAudioPool) {
         State state = getSyncedState();
-        return (isSynced() ? state==ACTIVE : state.activatable) && hasNoTime("active_cooldown") &&
+        return state.activatable && hasNoTime("active_cooldown") &&
                hasNoTime("ticks_before_active") && (!checkAudioPool || hasNonEmptyAudioPool());
+    }
+    
+    /**
+     * Called from TriggerContext#initSync.
+     * Used to reassign trigger extensions like combinations that need access to synced states
+     */
+    public void afterSync(Map<TriggerAPI,TriggerSynced> syncedMap) {
+        if(syncedMap.containsKey(this)) setSyncedWrapper(syncedMap.get(this));
     }
 
     protected boolean canPersist() {
@@ -163,7 +172,7 @@ public abstract class TriggerAPI extends ChannelElement implements ChannelSyncab
     }
     
     public State getSyncedState() {
-        return isSynced() ? this.channel.getSelector().getContext().getSyncedState(this) : getState();
+        return Objects.nonNull(this.syncedWrapper) ? this.syncedWrapper.getState() : getState();
     }
     
     protected Set<String> getTimedParameterNames() {
@@ -360,6 +369,12 @@ public abstract class TriggerAPI extends ChannelElement implements ChannelSyncab
                 handle.accept(handler);
         this.state = state;
         this.channel.getSync().queueTriggerSync(this);
+    }
+    
+    protected void setSyncedWrapper(TriggerSynced synced) {
+        if(this instanceof TriggerCombination || this instanceof TriggerMerged || this instanceof TriggerSynced)
+            return;
+        this.syncedWrapper = synced;
     }
 
     protected void setTimer(String name, State state) {

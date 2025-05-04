@@ -54,8 +54,7 @@ public class TriggerSelector extends ChannelElement {
             if(trigger.query(this.context)) {
                 if(trigger.getState()!=ACTIVE) trigger.setState(PLAYABLE);
                 playable.add(trigger);
-            }
-            else trigger.setState(IDLE);
+            } else trigger.setState(IDLE);
         }
         playable.removeIf(trigger -> !trigger.canActivate());
         return playable;
