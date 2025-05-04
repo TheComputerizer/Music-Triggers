@@ -111,6 +111,10 @@ public class TriggerMerged extends TriggerAPI {
             if(trigger.matches(other)) return true;
         return false;
     }
+    
+    @Override public boolean query(TriggerContext context) {
+        return !this.triggers.isEmpty() && super.query(context);
+    }
 
     @Override public void queue() {
         executePlaying(TriggerAPI::queue,v -> super.queue());

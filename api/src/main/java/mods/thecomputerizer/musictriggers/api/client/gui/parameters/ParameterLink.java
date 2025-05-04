@@ -112,7 +112,11 @@ public class ParameterLink extends DataLink {
             Object value = parameter.getValue();
             TableRef ref = this.wrapper.getReferenceData();
             if(Objects.nonNull(ref) && Misc.equalsAny(ref.getName(),"channel","debug") ||
-               !GenericUtils.matches(parameter.ref.getDefaultValue(),value))
+               "triggers".equals(parameter.name)) toml.addEntry(parameter.name,value);
+            else if(Objects.isNull(parameter.ref))
+                this.wrapper.logError("Null ParameterRef for ParameterElement! (name = {} | value = {}",
+                                      parameter.name,parameter.getLiteralValue());
+            else if(!GenericUtils.matches(parameter.ref.getDefaultValue(),value))
                 toml.addEntry(parameter.name,value);
         }
         if(Objects.nonNull(this.type)) this.type.populateNext(toml,true);

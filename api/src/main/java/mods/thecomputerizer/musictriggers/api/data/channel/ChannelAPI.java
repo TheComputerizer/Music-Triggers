@@ -147,9 +147,19 @@ public abstract class ChannelAPI implements ChannelEventHandler, ChannelSyncable
         TriggerCommand trigger = this.commandTriggerCache.get(id);
         if(Objects.nonNull(trigger)) trigger.onCommandExecuted();
     }
-
+    
+    /**
+     * Get the current active trigger regardless of whether it is fading out
+     */
     public TriggerAPI getActiveTrigger() {
         return this.selector.getActiveTrigger();
+    }
+    
+    /**
+     * Get the current trigger that should be active if nothing is fading out
+     */
+    public TriggerAPI getActiveNonFadingTrigger() {
+        return this.selector.getActiveNonFadingTrigger();
     }
     
     public Set<String> getCommandIds() {

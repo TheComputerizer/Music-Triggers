@@ -51,7 +51,7 @@ public class TriggerCombination extends TriggerAPI {
     }
     
     @Override public boolean canActivate() {
-        if(!hasNonEmptyAudioPool()) return false;
+        if(!hasNonEmptyAudioPool() || this.triggers.isEmpty()) return false;
         for(TriggerAPI trigger : this.triggers)
             if(!trigger.canActivate(false)) return false;
         return true;
@@ -110,6 +110,10 @@ public class TriggerCombination extends TriggerAPI {
 
     @Override public boolean matches(TriggerAPI trigger) {
         return trigger instanceof TriggerCombination && matches(((TriggerCombination)trigger).triggers);
+    }
+    
+    @Override public boolean query(TriggerContext context) {
+        return !this.triggers.isEmpty() && super.query(context);
     }
     
     protected void recalculateParameters() {

@@ -22,6 +22,7 @@ public class TriggerSelector extends ChannelElement {
 
     protected final TriggerContext context;
     protected TriggerAPI activeTrigger;
+    protected TriggerAPI activeNonFadingTrigger;
     protected TriggerAPI previousTrigger;
     protected AudioPool activePool;
     protected AudioPool previousPool;
@@ -167,6 +168,7 @@ public class TriggerSelector extends ChannelElement {
                 this.channel.activate();
             }
         }
+        this.activeNonFadingTrigger = trigger;
         return Objects.nonNull(this.activeTrigger) ? this.activeTrigger.getAudioPool() : null;
     }
 

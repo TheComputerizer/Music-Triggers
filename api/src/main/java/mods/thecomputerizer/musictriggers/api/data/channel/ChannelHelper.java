@@ -337,10 +337,11 @@ public class ChannelHelper implements NBTLoadable {
     
     private static void processPendingRequest(ChannelHelper helper) {
         if(Objects.nonNull(pendingRequest)) {
+            if(Objects.isNull(helper.getPlayer())) return;
             if(helper.client!=pendingRequest.isClient()) {
                 String requestSide = pendingRequest.isClient() ? "CLIENT" : "SERVER";
                 String helperSide = helper.client ? "CLIENT" : "SERVER";
-                MTRef.logError("Tried to answer pending channels request on the wrong side! Expected {} but"+
+                MTRef.logError("Tried to answer pending channels request on the wrong side! Expected {} but "+
                                "instead got {}",requestSide,helperSide);
             } else {
                 MTRef.logInfo("Answering pending channels request");
@@ -765,8 +766,8 @@ public class ChannelHelper implements NBTLoadable {
     }
     
     protected void sync() {
+        processPendingRequest(this);
         if(this.syncable) {
-            processPendingRequest(this);
             if(Objects.nonNull(this.syncedStatesMsg)) {
                 this.syncedStatesMsg.handle();
                 this.syncedStatesMsg = null;

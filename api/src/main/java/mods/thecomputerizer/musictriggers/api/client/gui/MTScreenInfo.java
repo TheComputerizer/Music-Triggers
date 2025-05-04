@@ -127,8 +127,14 @@ public class MTScreenInfo {
             if(link.getTypeName().equals("channel_info")) continue;
             String type = link.getTypeName();
             switch(type) {
-                case "jukebox": info.writeChannelTxt(toml,buildRecords(info.channel,link),type);
-                case "redirect": info.writeChannelTxt(toml,buildRedirect(info.channel,link),type);
+                case "jukebox": {
+                    info.writeChannelTxt(toml,buildRecords(info.channel,link),type);
+                    continue;
+                }
+                case "redirect": {
+                    info.writeChannelTxt(toml,buildRedirect(info.channel,link),type);
+                    continue;
+                }
                 default: info.writeChannelToml(toml,buildChannelFile(info.channel,link),type);
             }
         }
@@ -529,7 +535,7 @@ public class MTScreenInfo {
     private void writeChannelToml(Toml info, @Nullable Toml toml, String type) {
         if(Objects.nonNull(toml)) {
             String path = CONFIG_PATH+"/"+this.channel.getName()+"/"+info.getValueString(type);
-            MTRef.logInfo("{} is being written to",path);
+            MTRef.logInfo("{}.toml is being written to",path);
             MTDataRef.writeToFile(toml,path);
         }
     }
@@ -537,7 +543,7 @@ public class MTScreenInfo {
     private void writeChannelTxt(Toml info, List<String> lines, String type) {
         if(Objects.nonNull(lines)) {
             String path = CONFIG_PATH+"/"+this.channel.getName()+"/"+info.getValueString(type);
-            MTRef.logInfo("{} is being written to",path);
+            MTRef.logInfo("{}.txt is being written to",path);
             FileHelper.writeLines(path+".txt",lines,false);
         }
     }

@@ -29,9 +29,14 @@ public class AudioContainer extends AudioRef {
     private int playlistIndex;
     private boolean previousPauseStatus;
     private long resumeTime;
+    private TriggerAPI fadingTrigger;
 
     public AudioContainer(ChannelAPI channel, String name) {
         super(channel,name);
+    }
+    
+    @Override public void activate() {
+        if(this.fade==0) this.fadingTrigger = null;
     }
 
     private void checkFade(int fade, boolean unpaused) {
@@ -103,10 +108,15 @@ public class AudioContainer extends AudioRef {
             }
         }
         if(this.fade>0) {
+            boolean out = this.fadeFactor>0f;
             if(this.fadeFactor==0f) this.fade = 0;
             else this.fade--;
-            if(this.fade==0) {
-                if(this.fadeFactor>0f) stopTrackImmediately();
+            if(out && Objects.nonNull(this.fadingTrigger) &&
+               this.fadingTrigger.equals(this.channel.getActiveNonFadingTrigger())) {
+                int fade = this.fadingTrigger.getParameterAsInt("fade_in");
+                setFade(-fade);
+            } else if(this.fade==0) {
+                if(out) stopTrackImmediately();
                 this.fadeFactor = 0f;
             }
             this.channel.setTrackVolume(getVolume(unpaused));
@@ -211,8 +221,10 @@ public class AudioContainer extends AudioRef {
         TriggerAPI trigger = this.channel.getActiveTrigger();
         if(Objects.nonNull(trigger)) {
             int fade = trigger.getParameterAsInt("fade_out");
-            if(fade>0) setFade(fade);
-            else stopTrackImmediately();
+            if(fade>0) {
+                setFade(fade);
+                this.fadingTrigger = trigger;
+            } else stopTrackImmediately();
         } else stopTrackImmediately();
     }
     
@@ -221,6 +233,7 @@ public class AudioContainer extends AudioRef {
     }
 
     private void stopTrackImmediately() {
+        this.fadingTrigger = null;
         long time = this.channel.getPlayingSongTime();
         if(shouldSavePosition()) this.resumeTime = (time+50L)<this.channel.getPlayingSongTotalTime() ? time : 0L;
         TriggerAPI trigger = this.channel.getActiveTrigger();
