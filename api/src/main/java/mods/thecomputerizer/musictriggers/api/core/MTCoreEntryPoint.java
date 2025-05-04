@@ -41,6 +41,9 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
     static final String TICKER_GC_BINARY = getTickerGCBinary();
     static final String TICKER_GC_NAME = Objects.nonNull(TICKER_GC_BINARY) ?
             TICKER_GC_BINARY.replace('.','/') : null;
+    static final String TICKER_SA_BINARY = getTickerSABinary();
+    static final String TICKER_SA_NAME = Objects.nonNull(TICKER_SA_BINARY) ?
+            TICKER_SA_BINARY.replace('.','/') : null;
     
     static String getHandlerBinary() {
         CoreAPI core = CoreAPI.getInstance();
@@ -66,6 +69,12 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
         return "micdoodle8.mods.galacticraft.core.client.sounds.MusicTickerGC";
     }
     
+    static String getTickerSABinary() {
+        CoreAPI core = CoreAPI.getInstance();
+        if(!core.isClientSide() || !core.getVersion().isV12()) return null;
+        return "spaceambient.core.sounds.Ambient_MusicTicker";
+    }
+    
     final CoreAPI core;
     List<String> targets;
     
@@ -81,7 +90,9 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
     @Override public List<String> classTargets() {
         if(Objects.isNull(this.targets))
             this.targets = this.core.isClientSide() ? (Objects.nonNull(TICKER_GC_BINARY) ?
-                    Arrays.asList(HANDLER_BINARY,TICKER_BINARY,TICKER_GC_BINARY) :
+                    (Objects.nonNull(TICKER_SA_BINARY) ?
+                            Arrays.asList(HANDLER_BINARY,TICKER_BINARY,TICKER_GC_BINARY,TICKER_SA_BINARY) :
+                            Arrays.asList(HANDLER_BINARY,TICKER_BINARY,TICKER_GC_BINARY)) :
                     Arrays.asList(HANDLER_BINARY,TICKER_BINARY)) : Collections.emptyList();
         TILRef.logInfo("Collecting class targets as {}",this.targets);
         return this.targets;
@@ -120,12 +131,16 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
     
     public void fixMusicTicker(ClassNode classNode, MethodNode node, String ... names) {
         String className = getClassName(classNode);
-        if(!TICKER_NAME.equals(className) &&
-           (!this.core.getVersion().isV12() || !TICKER_GC_NAME.equals(className))) return;
+        if(!this.core.getVersion().isV12() || !equalsAny(className,TICKER_NAME,TICKER_GC_NAME,TICKER_SA_NAME)) return;
         if(equalsAny(this.core.mapMethodName(classNode.name,node.name,node.desc),names)) {
+            boolean gc = TICKER_GC_NAME.equals(className);
+            boolean sa = TICKER_SA_NAME.equals(className);
+            String logName = "stopVanillaMusicTickerLog"+(gc ? "GC" : (sa ? "SA" : ""));
             InsnList ifIns = beginList(new InsnList())
                     .insInvokeStatic(HELPER_NAME,"stopVanillaMusicTicker",TICKER_DESC)
-                    .insIf(NOT_EQUAL,new Label()).insBasic(RETURN).insLabel().endList();
+                    .insIf(NOT_EQUAL,new Label())
+                    //.insInvokeStatic(HELPER_NAME,logName,TICKER_DESC)
+                    .insBasic(RETURN).insLabel().endList();
             ifIns.add(new FrameNode(FRAME_SAME,0,null,0,null));
             node.instructions.insertBefore(node.instructions.getFirst(),ifIns);
             TILRef.logInfo("Injected music ticker override to {}",node.name);

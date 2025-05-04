@@ -12,6 +12,8 @@ import com.sedmelluq.discord.lavaplayer.source.twitch.TwitchStreamAudioSourceMan
 import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import dev.lavalink.youtube.YoutubeAudioSourceManager;
 import dev.lavalink.youtube.clients.Music;
+import dev.lavalink.youtube.clients.Tv;
+import dev.lavalink.youtube.clients.TvHtml5Embedded;
 import dev.lavalink.youtube.clients.Web;
 import dev.lavalink.youtube.clients.WebEmbedded;
 import dev.lavalink.youtube.clients.skeleton.Client;
@@ -378,7 +380,7 @@ public class ChannelHelper implements NBTLoadable {
     //TODO Maybe there are more options to make playback smoother?
     private static void registerYouTubeSource(ChannelAPI channel, AudioPlayerManager manager) {
         Supplier<AudioSourceManager> supplier = () -> {
-            Client[] clients = new Client[]{new Music(),new Web(),new WebEmbedded()};
+            Client[] clients = new Client[]{new Tv(),new TvHtml5Embedded(),new Music(),new Web(),new WebEmbedded()};
             return new YoutubeAudioSourceManager(clients);
         };
         registerRemoteSource(channel,manager,"YouTube",supplier);
