@@ -1,1 +1,22 @@
-- WIP
+- Reimplemented the command trigger as a server trigger <usage: /musictriggers trigger identifier or /mt trigger identifier>
+- Updated the youtube source & reordered its clients so that it breaks less often
+- Temporarily disable the mob trigger cache to fix persistance issues
+- Removed the unused health_reversal parameter from the mob trigger
+- The min_health parameter for the mob trigger is now exclusive rather than inclusive
+- Reimplemented the MOB case of the mob trigger ('resource_name = [ "MOB" ]' will check for any hostile mob)
+- Fixed trigger names still being case-sensitive in some places
+- Fixed trigger combinations not working with synced triggers
+- Fixed empty trigger combinations being able to get registered
+- Fixed reverse fading not working (when a fading out trigger is reactivated)
+- Fixed an issue with the music ticker injection that would sometimes cause vanilla music blocking to fail
+- Fixed server channels sometimes not being initialized for joining players
+- Fixed the default value for the passive_persistence parameter being '0' (which gets parsed as 'false') instead of 'true'
+- Fixed the defaults for the biome_rainfall & biome_temperature parameters being set to the wrong minimum values
+- Fixed an uncommon crash when teleporting or moving too quickly
+- Fixed vanilla music not being blocked in 1.12.2 when Space Ambient is loaded
+- Fixed incorrect remapping of the dimension trigger in 1.12.2
+- Fixed some issues with the GUI:
+	+ Empty trigger lists will no longer be filtered out when writing to the config (leading to songs, toggles, & other elements seeming to disappear for no reason)
+	+ Fixed a crash when applying changes after adding a new song
+	+ Fixed trigger removals from songs not being written to the config
+	+ Fixed removing elements from a parameter list not playing the button click sound
