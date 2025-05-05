@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.client.gui.parameters;
 
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.ParameterLink.ParameterElement;
+import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.ScreenHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.BasicTypeableWidget;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.ShapeWidget;
 import mods.thecomputerizer.theimpossiblelibrary.api.client.gui.widget.Widget;
@@ -66,7 +67,8 @@ public class TextBox extends BasicTypeableWidget {
                 if(remove) {
                     widgets.remove(this);
                     list.setWidgets(widgets);
-                    this.link.parent.setModified(true);
+                    this.link.removeFromSelf(toString());
+                    ScreenHelper.playVanillaClickSound();
                     return true;
                 }
             }

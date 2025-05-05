@@ -148,6 +148,13 @@ public class AudioRef extends ChannelElement implements ChannelSyncable, Weighte
     }
     
     public void queryInterrupt(@Nullable TriggerAPI next, AudioPlayer player) {}
+    
+    /**
+     * Should only be called from the GUI
+     */
+    public void removeTrigger(String name) {
+        this.triggers.removeIf(trigger -> trigger.getNameWithID().equals(name));
+    }
 
     /**
      * fade<0 = fade in

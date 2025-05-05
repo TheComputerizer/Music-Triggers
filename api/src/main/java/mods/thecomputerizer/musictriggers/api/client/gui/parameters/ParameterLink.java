@@ -8,10 +8,12 @@ import mods.thecomputerizer.musictriggers.api.client.gui.ParameterScreen;
 import mods.thecomputerizer.musictriggers.api.client.gui.WrapperScreen;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.ParameterRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
+import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef;
 import mods.thecomputerizer.musictriggers.api.data.audio.AudioRef.InterruptHandler;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventRunner.EventInstance;
 import mods.thecomputerizer.musictriggers.api.data.jukebox.RecordElement;
 import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
+import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterList;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterString;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.redirect.RedirectElement;
@@ -200,6 +202,17 @@ public class ParameterLink extends DataLink {
                     } else if(widget instanceof TextBox) ((TextBox)widget).setText(getLiteralValue());
                 }
             }
+        }
+        
+        public void removeFromSelf(String value) {
+            if(this.modifiable.isList()) ((ParameterList<?>)this.modifiable).getValue().remove(value);
+            if("triggers".equals(this.name)) {
+                ParameterWrapper wrapper = this.parent.wrapper;
+                if(wrapper instanceof AudioRef)
+                    ((AudioRef)wrapper).removeTrigger(value);
+                //TODO Recalculate hover text
+            }
+            this.parent.setModified(true);
         }
         
         public void save(Object value) {

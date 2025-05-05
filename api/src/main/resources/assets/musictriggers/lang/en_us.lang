@@ -5,12 +5,14 @@ commands.mt.debug.parameter.success=Successfully flipped debug parameter `%1$s`
 commands.mt.query.query_type.unknown=Unknown query type `%1$s`
 commands.mt.seek.seconds.success=Setting current song position to %1$s seconds
 commands.mt.skip.success=Skipping current song
+commands.mt.trigger.identifier.success=Activating trigger [command-%1$s]
 commands.mt.usage=Usages for `/mt`\n/mt debug\n/mt debug parameter\n/mt skip\n/mt reload\n/mt reload ticks
 commands.musictriggers.debug.success=Successfully debug parameter `enable_debug_info`
 commands.musictriggers.debug.parameter.success=Successfully debug parameter `%1$s`
 commands.musictriggers.query.query_type.unknown=Unknown query type `%1$s`
 commands.musictriggers.seek.seconds.success=Setting current song position to %1$s seconds
 commands.musictriggers.skip.success=Skipping current song
+commands.musictriggers.trigger.identifier.success=Activating trigger [command-%1$s]
 commands.musictriggers.usage=Usages for `/musictriggers`\n/musictriggers debug\n/musictriggers debug parameter\n/musictriggers skip\n/musictriggers reload\n/musictriggers reload ticks
 
 debug.musictriggers.channel.song=Channel[%1$s] Song: Name = %2$s | Time = %3$s

@@ -34,7 +34,7 @@ public class MTCommands extends CommandAPI {
     
     static final String[] NON_EXECUTABLE_SUBTYPES = new String[]{"query","seek","trigger"};
     static final String[] QUERY_TYPES = new String[]{"nbt"};
-    static final String[] SUBTYPES = new String[]{"debug","query","reload","seek","skip"};
+    static final String[] SUBTYPES = new String[]{"debug","query","reload","seek","skip","trigger"};
 
     public static MTCommands root(String name) {
         return new MTCommands(name,null,ROOT,false);
@@ -92,7 +92,7 @@ public class MTCommands extends CommandAPI {
                         PlayerAPI<?,?> player = WrapperHelper.wrapPlayer(entity);
                         String error = ChannelHelper.executeCommandTrigger(player,remaining);
                         String msgType = Objects.nonNull(error) ? "error" : "success";
-                        msg = TextHelper.getTranslated(getMessageKey(msgType),error,remaining);
+                        msg = TextHelper.getTranslated(getMessageKey(msgType),remaining);
                     } else msg = TextHelper.getTranslated(getMessageKey("player"),remaining);
                     if(Objects.nonNull(msg)) sender.sendMessage(msg);
                     break;

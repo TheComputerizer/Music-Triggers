@@ -103,6 +103,9 @@ public class TriggerHelper {
         if(Objects.isNull(names) || names.isEmpty()) return true;
         for(Object name : names) {
             String nameStr = name.toString();
+            int index = nameStr.indexOf('-');
+            nameStr = index<=0 ? nameStr.toLowerCase() :
+                    nameStr.substring(0,index).toLowerCase()+nameStr.substring(index);
             TriggerAPI trigger = findTrigger(channel.getHelper(),channel,nameStr);
             if(Objects.isNull(trigger) && implyMissing && channel.implyTrigger(nameStr))
                 trigger = findTrigger(channel.getHelper(),channel,nameStr);

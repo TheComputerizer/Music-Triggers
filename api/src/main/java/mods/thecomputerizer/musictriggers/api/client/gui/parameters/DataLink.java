@@ -26,6 +26,10 @@ public abstract class DataLink {
     
     public abstract void populateToml(Toml toml);
     
+    public void recalculateHoverText() {
+    
+    }
+    
     public void setModified(boolean modified) {
         if(modified) this.type.enableApplyButton();
         this.modified = modified;

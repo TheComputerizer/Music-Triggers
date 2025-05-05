@@ -240,6 +240,10 @@ public class WrapperLink extends DataLink {
         return false;
     }
     
+    @Override public void recalculateHoverText() {
+    
+    }
+    
     public void setElementDisplayName(ParameterLink link, TextAPI<?> name) {
         for(WrapperElement element : this.wrappers) {
             if(element.link==link) {

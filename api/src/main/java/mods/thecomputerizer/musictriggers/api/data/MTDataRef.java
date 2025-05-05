@@ -403,7 +403,7 @@ public final class MTDataRef {
                 buildParameter("fade_out",0),
                 buildParameter("max_tracks",0),
                 buildParameter("not",false),
-                buildParameter("passive_persistence",0),
+                buildParameter("passive_persistence",true),
                 buildParameter("persistence",0),
                 buildParameter("play_when_paused",false),
                 buildParameter("priority",defaultPriority(name)),
