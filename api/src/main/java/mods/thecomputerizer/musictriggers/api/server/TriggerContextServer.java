@@ -106,6 +106,7 @@ public class TriggerContextServer extends TriggerContext {
     }
 
     private boolean checkEntityName(ResourceContext ctx, EntityAPI<?,?> entity) {
+        if(ctx.getResourcesMatchers().contains("MOB")) return entity.isHostile();
         ResourceLocationAPI<?> regName = entity.getRegistryName(this.world);
         if(Objects.isNull(regName)) return false;
         String name = entity.getName();

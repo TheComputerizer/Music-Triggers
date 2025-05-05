@@ -131,7 +131,9 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
     
     public void fixMusicTicker(ClassNode classNode, MethodNode node, String ... names) {
         String className = getClassName(classNode);
-        if(!this.core.getVersion().isV12() || !equalsAny(className,TICKER_NAME,TICKER_GC_NAME,TICKER_SA_NAME)) return;
+        if(this.core.getVersion().isV12()) {
+            if(!equalsAny(className,TICKER_NAME,TICKER_GC_NAME,TICKER_SA_NAME)) return;
+        } else if(!TICKER_NAME.equals(className)) return;
         if(equalsAny(this.core.mapMethodName(classNode.name,node.name,node.desc),names)) {
             InsnList ifIns = beginList(new InsnList())
                     .insInvokeStatic(HELPER_NAME,"stopVanillaMusicTicker",TICKER_DESC)

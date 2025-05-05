@@ -34,14 +34,14 @@ public class TriggerMob extends HolderTrigger {
     protected int cacheHordeParameter(String name) {
         float percent = Math.min(1f,getParameterAsFloat(name)/100f);
         if(this.cachedMaxEntities==MAX_VALUE) return percent<=0f ? 0 : this.cachedMinEntities;
-        return (int)(((float)this.cachedMaxEntities)*percent);
+        return Math.max(this.cachedMinEntities,(int)(((float)this.cachedMaxEntities)*percent));
     }
     
     public void cacheParameters() {
         this.cachedMaxEntities = getParameterAsInt("max_entities");
         this.cachedMinEntities = getParameterAsInt("min_entities");
         this.cachedHordeHealthCount = cacheHordeParameter("horde_health_percentage");
-        this.cachedHordeTargetingCount= cacheHordeParameter("horde_targeting_percentage");
+        this.cachedHordeTargetingCount = cacheHordeParameter("horde_targeting_percentage");
         this.cachedMinHealth = getParameterAsFloat("min_health")/100f;
         this.cachedMaxHealth = getParameterAsFloat("max_health")/100f;
         this.cachedRangeXZ = getParameterAsInt("detection_range");
@@ -54,6 +54,7 @@ public class TriggerMob extends HolderTrigger {
     
     public boolean checkCacheSize() {
         int size = this.cachedEntities.size();
+        this.cachedEntities.clear(); //Temporary (hopefully) until the cache actually works properly
         return size>=this.cachedMinEntities && size<=this.cachedMaxEntities &&
                size>=this.cachedHordeHealthCount && size>=this.cachedHordeTargetingCount;
     }
@@ -80,7 +81,7 @@ public class TriggerMob extends HolderTrigger {
             LivingEntityAPI<?,?> living = WrapperHelper.wrapLivingEntity(entity.getEntity());
             if(Objects.isNull(living) || !living.isAlive()) return false;
             float percent = living.getHealthPercent();
-            return this.cachedMinHealth<=percent && this.cachedMaxHealth>=percent;
+            return this.cachedMinHealth<percent && this.cachedMaxHealth>=percent;
         }
         return true;
     }
@@ -98,7 +99,7 @@ public class TriggerMob extends HolderTrigger {
     public void deduplicate(Collection<EntityAPI<?,?>> entities) {
         for(EntityAPI<?,?> entity : this.cachedEntities) {
             final Object unwrapped = entity.getEntity();
-            entities.removeIf(e -> e.getEntity()==unwrapped);
+            entities.removeIf(e -> e.getEntity().equals(unwrapped));
         }
     }
     

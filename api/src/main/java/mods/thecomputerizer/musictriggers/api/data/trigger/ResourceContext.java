@@ -1,5 +1,6 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger;
 
+import lombok.Getter;
 import lombok.Setter;
 
 import javax.annotation.Nullable;
@@ -12,8 +13,8 @@ public class ResourceContext {
 
     private final boolean defaultDisplay;
     private final boolean defaultResource;
-    private final List<String> displayMatchers;
-    private final List<String> resourcesMatchers;
+    @Getter private final List<String> displayMatchers;
+    @Getter private final List<String> resourcesMatchers;
     private final BiFunction<String,List<String>,Boolean> displayMatchFunc;
     private final BiFunction<String,List<String>,Boolean> resourceMatchFunc;
     @Setter boolean anyReturns = true;
