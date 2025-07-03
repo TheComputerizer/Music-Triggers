@@ -1,37 +1,8 @@
 import static org.gradle.api.logging.LogLevel.INFO
 import static org.gradle.api.logging.LogLevel.QUIET
 
-buildscript {
-    repositories {
-        gradlePluginPortal() {
-            content {
-                unimined_plugin_portal.split(';').each {grp ->
-                    includeGroup grp
-                }
-            }
-        }
-        maven {
-            name = 'WagYourMaven Releases'
-            url = uri 'https://maven.wagyourtail.xyz/releases'
-            content {
-                unimined_releases.split(';').each {grp ->
-                    includeGroup grp
-                }
-            }
-        }
-        maven {
-            name = 'WagYourMaven Snapshots'
-            url = uri 'https://maven.wagyourtail.xyz/snapshots'
-            content {
-                unimined_snapshots.split(';').each {grp ->
-                    includeGroup grp
-                }
-            }
-        }
-    }
-    dependencies {
-        classpath "$unimined_plugin:$unimined_version"
-    }
+plugins {
+    alias libs.plugins.unimined
 }
 
 apply from: rootProject.file('gradle\\java21-module.gradle')

@@ -1,16 +1,5 @@
-buildscript {
-    repositories {
-        gradlePluginPortal() {
-            content {
-                unimined_plugin_portal.split(';').each {grp ->
-                    includeGroup grp
-                }
-            }
-        }
-    }
-    dependencies {
-        classpath "$shadow_plugin:$shadow_version"
-    }
+plugins {
+    alias libs.plugins.shadow
 }
 
 apply from: rootProject.file('gradle\\java8-module.gradle')
@@ -31,15 +20,10 @@ repositories {
 }
 
 dependencies {
-    compileOnly "$bnd_artifact:$bnd_version"
-    compileOnly "$jsr_artifact:$jsr_version"
-    compileOnly "$commons_io_artifact:$commons_io_version"
-    compileOnly "$netty_artifact:$netty_version"
-    compileOnly "$fastutil_artifact:$fastutil_version"
-    compileOnly "$commons_lang3_artifact:$commons_lang3_version"
-    compileOnly "$log4j_artifact:$log4j_version"
-    compileOnly "$asm_commons_artifact:$asm_version"
-    compileOnly "$asm_util_artifact:$asm_version"
+    compileOnly(libs.bundles.api.compile) {
+        exclude group: 'com.github.spotbugs'
+    }
+    compileOnly libs.spotbugs.annotations
 }
 
 processResources {

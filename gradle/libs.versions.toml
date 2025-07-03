@@ -1,0 +1,32 @@
+[bundles]
+    api-compile = [ 'asm-commons', 'asm-util', 'bnd-annotation', 'commons-io', 'commons-lang', 'fastutil',
+        'google-jsr', 'log4j-core', 'netty-all' ]
+
+[libraries]
+    asm-commons = { group = 'org.ow2.asm', name = 'asm-commons', version.ref = 'asm' }
+    asm-util = { group = 'org.ow2.asm', name = 'asm-util', version.ref = 'asm' }
+    bnd-annotation = { group = 'biz.aQute.bnd', name = 'annotation', version.ref = 'bnd' }
+    commons-io = { group = 'commons-io', name = 'commons-io', version.ref = 'commons-io' }
+    commons-lang = { group = 'org.apache.commons', name = 'commons-lang3', version.ref = 'commons-lang3' }
+    fastutil = { group = 'it.unimi.dsi', name = 'fastutil', version.ref = 'fastutil' }
+    google-jsr = { group = 'com.google.code.findbugs', name = 'jsr305', version.ref = 'jsr' }
+    log4j-core = { group = 'org.apache.logging.log4j', name = 'log4j-core', version.ref = 'log4j' }
+    netty-all = { group = 'io.netty', name = 'netty-all', version.ref = 'netty-all' }
+    spotbugs-annotations = { group = 'com.github.spotbugs', name = 'spotbugs-annotations', version.ref = 'spotbugs' }
+
+[plugins]
+    shadow = { id = 'com.gradleup.shadow', version.ref = 'shadow' }
+    unimined = { id = 'xyz.wagyourtail.unimined', version.ref = 'unimined' }
+
+[versions]
+    asm = '9.7'
+    bnd = '2.+'
+    commons-io = '2.+'
+    commons-lang3 = '3.+'
+    fastutil = '7.1.0'
+    jsr = '3.0.+'
+    log4j = '2.+'
+    netty-all = '4.1.114.Final'
+    shadow = '9.+'
+    spotbugs = '4.8.6'
+    unimined = '1.+'

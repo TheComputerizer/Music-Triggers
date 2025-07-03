@@ -7,6 +7,24 @@ pluginManagement {
                 }
             }
         }
+        maven {
+            name = 'WagYourMaven Releases'
+            url = uri 'https://maven.wagyourtail.xyz/releases'
+            content {
+                unimined_releases.split(';').each {grp ->
+                    includeGroup grp
+                }
+            }
+        }
+        maven {
+            name = 'WagYourMaven Snapshots'
+            url = uri 'https://maven.wagyourtail.xyz/snapshots'
+            content {
+                unimined_snapshots.split(';').each {grp ->
+                    includeGroup grp
+                }
+            }
+        }
     }
 }
 
