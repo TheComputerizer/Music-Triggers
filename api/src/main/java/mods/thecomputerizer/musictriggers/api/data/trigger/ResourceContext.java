@@ -56,30 +56,30 @@ public class ResourceContext {
         }
     }
 
-    public boolean checkDisplayMatch(@Nullable String display) {
-        return this.displayMatchFunc.apply(display,this.displayMatchers);
+    public boolean checkDisplayMatch(@Nullable Object display) {
+        return this.displayMatchFunc.apply(Objects.nonNull(display) ? display.toString() : null,this.displayMatchers);
     }
     
     /**
      * If both are null or both are not null, check both.
      * If one is null while the other is not, check whichever is not null.
      */
-    public boolean checkMatch(@Nullable String id, @Nullable String display) {
+    public boolean checkMatch(@Nullable Object id, @Nullable Object display) {
         boolean checkDisplay = shouldCheck(display,id,this.defaultDisplay,this.defaultResource);
         boolean checkResource = shouldCheck(id,display,this.defaultResource,this.defaultDisplay);
         return checkMatch(id,display,checkDisplay,checkResource);
     }
     
-    private boolean checkMatch(@Nullable String id, @Nullable String display, boolean checkDisplay,
+    private boolean checkMatch(@Nullable Object id, @Nullable Object display, boolean checkDisplay,
             boolean checkResource) {
         return (checkDisplay && checkDisplayMatch(display)) || (checkResource && checkResourceMatch(id));
     }
 
-    public boolean checkResourceMatch(@Nullable String id) {
-        return this.resourceMatchFunc.apply(id,this.resourcesMatchers);
+    public boolean checkResourceMatch(@Nullable Object id) {
+        return this.resourceMatchFunc.apply(Objects.nonNull(id) ? id.toString() : null,this.resourcesMatchers);
     }
     
-    private boolean shouldCheck(@Nullable String main, @Nullable String other, boolean defaultMain,
+    private boolean shouldCheck(@Nullable Object main, @Nullable Object other, boolean defaultMain,
             boolean defaultOther) {
         return Objects.isNull(other) || defaultOther || (Objects.nonNull(main) && !defaultMain);
     }

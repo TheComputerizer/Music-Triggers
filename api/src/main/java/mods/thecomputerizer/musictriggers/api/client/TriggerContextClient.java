@@ -141,7 +141,7 @@ public class TriggerContextClient extends TriggerContext {
     @Override public boolean isActiveBlockEntity(ResourceContext ctx, int range, float yRatio) {
         for(BlockEntityAPI<?,?> block : getBlockEntitiesAround(getBox(range,yRatio))) {
             ResourceLocationAPI<?> registryName = block.getRegistryName();
-            if(Objects.nonNull(registryName) && ctx.checkMatch(registryName.toString(),null))
+            if(Objects.nonNull(registryName) && ctx.checkMatch(registryName,null))
                 return true;
         }
         return false;
@@ -180,7 +180,7 @@ public class TriggerContextClient extends TriggerContext {
     @Override public boolean isActiveDimension(ResourceContext ctx) {
         if(!hasBoth()) return false;
         DimensionAPI<?> dimension = this.player.getDimension();
-        return ctx.checkMatch(dimension.getRegistryName().toString(),dimension.getName());
+        return ctx.checkMatch(dimension.getRegistryName(),dimension.getName());
     }
 
     @Override public boolean isActiveDrowning(int level) {
@@ -329,7 +329,7 @@ public class TriggerContextClient extends TriggerContext {
     @Override public boolean isActiveRiding(ResourceContext ctx) {
         if(!hasPlayer()) return false;
         EntityAPI<?,?> entity = this.player.getVehicle();
-        return Objects.nonNull(entity) && ctx.checkMatch(entity.getRegistryName().toString(),entity.getName());
+        return Objects.nonNull(entity) && ctx.checkMatch(entity.getRegistryName(),entity.getName());
     }
 
     @Override public boolean isActiveSandstorm(int range) {

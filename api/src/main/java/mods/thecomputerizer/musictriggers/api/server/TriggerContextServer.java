@@ -349,7 +349,7 @@ public class TriggerContextServer extends TriggerContext {
 
     @Override public boolean isActiveStructure(ResourceContext ctx) {
         return Objects.nonNull(this.structure) && ctx.checkMatch(
-                this.structure.getRegistryName(this.world).toString(),this.structure.getName(this.world));
+                this.structure.getRegistryName(this.world),this.structure.getName(this.world));
     }
 
     @Override public boolean isActiveTime(String bundle, float startHour, float endHour, int startDay, int endDay, int moonPhase) {
