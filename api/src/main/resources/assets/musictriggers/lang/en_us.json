@@ -1,5 +1,6 @@
 {
   "block.musictriggers.music_recorder": "Music Recorder",
+
   "commands.mt.debug.success": "Successfully flipped debug parameter `enable_debug_info`",
   "commands.mt.debug.parameter.success": "Successfully flipped debug parameter `%1$s`",
   "commands.mt.query.query_type.unknown": "Unknown query type `%1$s`",

@@ -129,6 +129,7 @@ public class MTCoreEntryPoint extends CoreEntryPoint {
         return false;
     }
     
+    //TODO Add try/catch to avoid generating incorrect crash reports
     public void fixMusicTicker(ClassNode classNode, MethodNode node, String ... names) {
         String className = getClassName(classNode);
         if(this.core.getVersion().isV12()) {

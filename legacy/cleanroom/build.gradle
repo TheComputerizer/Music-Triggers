@@ -1,3 +1,4 @@
+import static org.gradle.api.JavaVersion.VERSION_21
 import static org.gradle.api.logging.LogLevel.INFO
 import static org.gradle.api.logging.LogLevel.QUIET
 
@@ -5,10 +6,12 @@ plugins {
     alias libs.plugins.unimined
 }
 
-apply from: rootProject.file('gradle\\java21-module.gradle')
+apply from: rootProject.file('gradle\\java21.gradle')
+apply from: rootProject.file('gradle\\runtime-module.gradle')
 apply from: rootProject.file('gradle\\til.gradle')
 
 plugins.apply 'xyz.wagyourtail.unimined'
+unimined.useGlobalCache = false
 
 def base = project ':api'
 
@@ -23,17 +26,22 @@ configurations.configureEach {
 //noinspection GroovyAssignabilityCheck
 unimined.minecraft {
     version minecraft_1_12_2
-    def args = [ dev_arg, common_entrypoint_arg, core_entrypoint_arg ]
+    def extra_args = [ dev_arg, common_entrypoint_arg, core_entrypoint_arg ]
     mappings {
         mcp 'stable', legacy_mappings_1_12_2
     }
     cleanroom {
         loader cleanroom_loader_version
-        runs.auth.username = minecraft_username
-        runs.all {
-            systemProperty 'foundation.verbose', 'true'
-            jvmArgs args
-            return
+        runs {
+            auth.username = minecraft_username
+            config('client') {
+                javaVersion = VERSION_21
+                args+=extra_args
+            }
+            config('server') {
+                javaVersion = VERSION_21
+                args+=extra_args
+            }
         }
     }
 }
