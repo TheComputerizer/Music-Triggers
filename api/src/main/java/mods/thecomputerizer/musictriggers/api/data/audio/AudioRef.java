@@ -8,7 +8,6 @@ import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.client.gui.MTScreenInfo;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.DataLink;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.WrapperLink;
-import mods.thecomputerizer.musictriggers.api.data.MTDataRef;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
@@ -27,6 +26,7 @@ import java.util.*;
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Integer.MIN_VALUE;
 import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.AUDIO;
+import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.INTERRUPT_HANDLER;
 import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.LOOP;
 
 @Getter
@@ -220,7 +220,7 @@ public class AudioRef extends ChannelElement implements ChannelSyncable, Weighte
         }
         
         @Override public TableRef getReferenceData() {
-            return MTDataRef.INTERRUPT_HANDLER;
+            return INTERRUPT_HANDLER;
         }
         
         @Override public Class<? extends ChannelElement> getTypeClass() {
