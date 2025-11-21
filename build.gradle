@@ -13,12 +13,14 @@ buildscript {
         }
     }
     dependencies {
+        classpath "$curseforge_plugin:$curseforge_version"
         classpath "$modrinth_plugin:$modrinth_version"
         classpath "$wiki_plugin:$wiki_version"
     }
 }
 
 apply from: rootProject.file('gradle\\java24.gradle')
+plugins.apply 'net.darkhax.curseforgegradle'
 plugins.apply 'com.modrinth.minotaur'
 plugins.apply 'org.moddedmc.wiki.toolkit'
 
