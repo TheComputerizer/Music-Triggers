@@ -1,0 +1,41 @@
+---
+title: GUI Overview
+hide_meta: true
+---
+
+Press `R` to open the GUI by default.
+
+# Quickstart
+
+Here is a quick rundown on how to use the GUI until more in-depth is added
+```
+- The keybind for opening the GUI can be changed
+- Open the Log Visualizer to view important config loading & status information
+- Turn on the debug info by going to |Debug -> Enable Debug Info|, ensuring the box is checked, & clicking Apply Changes
+- Go to |Edit -> Main| to start adding triggers and songs
+- Add triggers before adding songs
+- Add songs and then add the triggers you defined to your songs
+```
+
+# Trigger & Song Specifics
+
+Some triggers have required parameters. These parameters must be changed before a trigger is able to be parsed
+correctly. For example, the identifier parameter needs to changed from `not_set` for any trigger that has it.
+
+See the individual trigger pages in the Triggers section for the required & accepted parameters of each trigger.
+
+See the issues page if your triggers or songs are disappearing from the GUI.
+
+## Trigger References
+
+Anything that has a `triggers` parameter (like songs) needs to properly reference its trigger.
+
+For Basic Triggers and Simple Triggers (triggers that do not have an identifier), you can simply use the name of the
+trigger. The name of the trigger is case-insensitive. For example, `raining`, `Raining`, `RAIning, `RAINING`, or any
+variation of that is acceptible for referencing the `raining` trigger.
+
+For Holder Triggers (triggers that *do* have an identifier), you must reference the trigger as `name-identifier`,
+where `name` is the name of the trigger and `identifier` is the identifier parameter that you set for the trigger. The
+name of the trigger is still case-insensitive, but the *identifier* is case-*sensitive* and must match exactly. For
+example, the only valid ways to reference a mob trigger with the identifier `Fighting` would be `mob-Fighting`,
+`Mob-Fighting`, `mOb-Fighting`, `moB-Fighting, `MOb-Fighting`, `MoB-Fighting`, and `MOB-Fighting`

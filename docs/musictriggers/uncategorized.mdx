@@ -1,0 +1,258 @@
+---
+title: Uncategorized
+hide_meta: true
+---
+
+Mostly uncategorized tips and stuff from the Discord that I haven't had time to sort into dedicated pages yet.
+
+# Supported Versions
+
+The following versions are currently supported by V7 (Up to date for 7.0.4)
+```
+------------|-----------------------------|
+  version   |   modloaders                |
+------------|-----------------------------|
+  1.12.2    |   Cleanroom, Forge          |
+  1.16.5    |   Fabric, Forge             |
+  1.18.2    |   Fabric, Forge             |
+  1.19.2    |   Fabric, Forge             |
+  1.19.4    |   Fabric, Forge             |
+  1.20.1    |   Fabric, Forge, Neoforge   |
+  1.20.4    |   Fabric, Forge, Neoforge   |
+  1.20.6    |   Fabric, Forge, Neoforge   |
+  1.21.1    |   Fabric, Forge, Neoforge   |
+------------|-----------------------------|
+```
+Note that Quilt probably also works in all the versions Fabric works in but I have not specifically tested for that.
+
+# Triggers
+
+## Order of Operations
+
+Order of the timing parameters in relation to trigger activation & song playing:
+```
+1 - The parameters are met
+2 - The ticks_before_active timer starts counting down if the parameter is set
+3 - The trigger becomes playable and potentially active if it's the highest priority or in a combination with the highest priority trigger
+4 - The ticks_before_audio timer starts counting down if the parameter is set
+5 - The first song starts playing
+6 - The song finishes and the ticks_between_audio timer starts counting down if the parameter is set
+7 - The next song starts playing
+8 - Once the other parameters are no longer met, the persistence timer starts counting down if the parameter is set
+9 - The active_cooldown timer starts counting down if the parameter is set and blocks the parameters from being met
+```
+
+## Serverside Triggers
+
+These trigger require Music Triggers and The Impossible Library to be present on both the client and server. They will
+not be able to activate if Music Triggers is only on the client side.
+```
+- command
+- home
+- mob
+- pvp
+- raid
+- snowing
+- structure
+- victory
+```
+
+## Audio
+
+## Supported External Redirects
+
+The following link types are supported for external redirects:
+```
+- YouTube
+- SoundCloud
+- Bandcamp
+- Vimeo
+- Twitch streams
+- Yandex Music
+- HTTP URLs
+```
+
+Note that YouTube support can be unstable at times due to rather frequent API changes. The builtin YouTube source
+might be out of date if Music Triggers has not been updated in a while.
+
+## Supported Audio File Formats
+
+The following audio file formats are supported by Music Triggers:
+```
+- MP3
+- FLAC
+- WAV
+- Matroska/WebM (AAC, Opus or Vorbis codecs)
+- MP4/M4A (AAC codec)
+- OGG streams (Opus, Vorbis and FLAC codecs)
+- AAC streams
+- Stream playlists (M3U and PLS)
+```
+
+# Other
+
+## Render Cards
+
+A lot of things changed for image & title cards in V7. This is just so they aren't completed undocumented
+
+### Common Render Card Parameters
+
+Parameters present on both image & title cards in V7:
+```
+- fade_in (int)
+- fade_out (int)
+- horizontal_alignment (string)
+- opacity (float)
+- play_once (boolean)
+- scale_x (float)
+- scale_y (float)
+- time (int)
+- triggers (list)
+- vertical_alignment (string)
+- x (int)
+- y (int)
+```
+
+### Image Card Parameters
+
+Parameters specific to V7 image cards:
+```
+- animated (boolean)
+- fps (int)
+- name (string)
+```
+
+### Title Card Parameters
+
+Parameters specific to V7 title cards:
+```
+- subtitle_color (string)
+- subtitle_scale (float)
+- subtitles (list)
+- title_color (string)
+- titles (list)
+```
+
+*Both*
+- `fade_in` (int)
+- `fade_out` (int)
+- `horizontal_alignment` (string)
+- `opacity` (float)
+- `play_once` (boolean)
+- `scale_x` (float)
+- `scale_y` (float)
+- `time` (int)
+- `triggers` (list)
+- `vertical_alignment` (string)
+- `x` (int)
+- `y` (int)
+
+## Toggles
+
+Toggles go in the `toggles.toml` file unless you changed the `toggles_path` in the global config
+
+### Format
+
+Here are all of the toggle parameters with their default values and brief descriptions
+
+```t
+[toggle]
+  play_once = false # NYI
+  [toggle.from] # at least 1 required (should be [[toggle.from]] if multiple)
+    channel = "not_set" # required
+    triggers = [] # at least 1 required
+    [toggle.from.event] # idk if tick events work yet
+      end = 2147483647 # stop the interval after x ticks if this is a tick event
+      interval = 0 # activate every x ticks if this is a tick event
+      name = "activate" # accepts activate, deactivate, play, playable, playing, queue, stop, stopped, tick_active, tick_playable, unplayable
+      song = "_" # the song with this name needs to be playing (or _ for any song)
+      start = 0 # start the interval after x ticks if this is a tick event
+  [toggle.to] # at least 1 required (should be [[toggle.to]] if multiple)
+    channel = "not_set" # required
+    condition = "switch" # accepts switch, true, or false
+    triggers = [] # if empty the entire channel is toggled
+```
+
+See the Channel Events section below for some more specific event information stuff.
+
+### Examples
+
+If you have a channel `channel_1` with a `raining` trigger and you want to turn another channel `channel_2` off when
+`raining` activates it would look like:
+```t
+[toggle]
+  [toggle.from]
+    channel = "channel_1"
+    triggers = [ "raining" ]
+  [toggle.to]
+    channel = "channel_2"
+    condition = "false"
+```
+
+Or if you want to switch the activation status of the channel when a `raining` song `song_1` stops playing you can
+do that like:
+```t
+[toggle]
+  [toggle.from]
+    channel = "channel_1"
+    triggers = [ "raining" ]
+    [toggle.from.event]
+      name = "stopped"
+      song = "song_1"
+  [toggle.to]
+    channel = "channel_2"
+```
+
+## Channel Events
+
+Channel events drive when elements such as toggles and commands get run.
+
+### Event List
+
+The valid events are as follows:
+```
+----------------|-----------|----------------------------------------------------------------------------|
+  name          |  types    |  description                                                               |
+----------------|-----------|----------------------------------------------------------------------------|
+  activate      |  instant  |  the trigges becomes active                                                |
+  deactivate    |  instant  |  the triggers stops being active (and its songs have finished fading out)  |
+  play          |  instant  |  a song started playing                                                    |
+  playable      |  instant  |  the trigger parameters are met                                            |
+  playing       |  tick     |  there is a song playing                                                   |
+  queue         |  instant  |  a song is queued                                                          |
+  stop          |  instant  |  the current song is stopping (starting to fade out)                       |
+  stopped       |  instant  |  the current song has stopped                                              |
+  tick_active   |  tick     |  the trigger is in an active state                                         |
+  tick_playable |  tick     |  the trigger is in a playable state                                        |
+  unplayable    |  instant  |  the trigger is deactivated and its parameters are no longer met           |
+----------------|-----------|----------------------------------------------------------------------------|
+```
+Instant event will only fire once whereas tick events will fire on specified intervals. The default and minimum
+interval is on every "slow" tick. A "slow" tick is defined by the `slow_tick_factor` debug parameter. For example, the
+default value of 5 means that a tick event will be fired once every 5 game ticks. If the interval is set it will be
+checked every 5 ticks in that case.
+
+Note that `tick` events may not be working at the moment
+
+### Event Parameters
+
+Accepts `end`, `interval`, `name`, `song`, and `start`
+```
+end <default: 2147483647>
+    The number of ticks after which the interval will no longer be valid
+
+interval <default: 0>
+    The number of ticks between each time the event is fired
+
+name <default: activate>
+    The name of the event to listen to. Accepts activate, deactivate,
+    play, playable, playing, queue, stop,  stopped, tick_active,
+    tick_playable, and unplayable
+
+song <default: _>
+    The name of the song that must be playing in the channel this is
+    registered under. The default value of _ will ignore the song
+
+start <default: 0>
+    The number of ticks that need to pass before the interval will be valid
+```

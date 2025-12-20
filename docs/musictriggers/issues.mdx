@@ -3,6 +3,60 @@ title: Issues & Support
 hide_meta: true
 ---
 
+# GUI
+
+Known issues & quirks specific to the GUI
+
+## Triggers/songs are disappearing from the GUI after reloading
+
+If something fails to parse from the config file the GUI won't be able to display it. Usually it's just a required
+parameter that's missing or an improper trigger reference but the log should mention what the specific issue is.
+
+Note that this doesn't affect the config file unless you save over it (apply changes) with the GUI. The GUI will only
+save what it knows about and it doesn't know about things that failed to parse.
+
+## Multiple Channels
+
+The GUI does not yet have support for multiple channels. If you need to add, delete, or modify extra channel data,
+this can currently only be done from the config files.
+
+# Songs
+
+Known song-specific issues & quirks
+
+## Song Names
+
+Due to an issue with the parser, song names with spaces or special characters are not able to be read in properly at
+the moment. Ensure the only characters in your song names are `a-z`, `A-Z`, `0-9`, `-`, or `_`.
+
+## Audio Output Device
+
+The Music Triggers sound engine is separate from the vanilla Minecraft sound engine. Currently the audio is only able
+to output to the default sound device.
+
+# NYI & WIP
+
+Stuff that isn't actually fully imlplemeneted yet. Note that the stuff listed here might be out of date. Refer to
+[the associated issue](https://github.com/TheComputerizer/Music-Triggers/issues/225) for a potentially more up-to-date
+list of WIP features.
+
+## V6
+
+Features that were specifically present in V6 which aren't fully implementd yet:
+```
+- The CREDITS special case for the gui trigger
+- The BOSS special case for the mob trigger
+- The mob_nbt parameter for the mob trigger
+- The pvp trigger
+- The victory trigger
+- Persistent data (data saved across restarts for specific play_once`values, toggles, etc)
+- Interrupted sound categories/music blocking
+- The GUI search bar
+- GUI sorting
+```
+
+# Support
+
 If you have an issue or are confused about something, don't hesitate to let me know! You can do so by
 [submitting an issue](https://github.com/TheComputerizer/Music-Triggers/issues) if you notice something not working
 correctly, or joining the [Discord server](https://discord.gg/FZHXFYp8fc) as I am very active there. Even if I am not
