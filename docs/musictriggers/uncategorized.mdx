@@ -5,7 +5,7 @@ hide_meta: true
 
 Mostly uncategorized tips and stuff from the Discord that I haven't had time to sort into dedicated pages yet.
 
-# Supported Versions
+## Supported Versions
 
 The following versions are currently supported by V7 (Up to date for 7.0.4)
 ```
@@ -25,9 +25,9 @@ The following versions are currently supported by V7 (Up to date for 7.0.4)
 ```
 Note that Quilt probably also works in all the versions Fabric works in but I have not specifically tested for that.
 
-# Triggers
+## Triggers
 
-## Order of Operations
+### Order of Operations
 
 Order of the timing parameters in relation to trigger activation & song playing:
 ```
@@ -42,7 +42,7 @@ Order of the timing parameters in relation to trigger activation & song playing:
 9 - The active_cooldown timer starts counting down if the parameter is set and blocks the parameters from being met
 ```
 
-## Serverside Triggers
+### Serverside Triggers
 
 These trigger require Music Triggers and The Impossible Library to be present on both the client and server. They will
 not be able to activate if Music Triggers is only on the client side.
@@ -59,7 +59,7 @@ not be able to activate if Music Triggers is only on the client side.
 
 ## Audio
 
-## Supported External Redirects
+### Supported External Redirects
 
 The following link types are supported for external redirects:
 ```
@@ -75,7 +75,7 @@ The following link types are supported for external redirects:
 Note that YouTube support can be unstable at times due to rather frequent API changes. The builtin YouTube source
 might be out of date if Music Triggers has not been updated in a while.
 
-## Supported Audio File Formats
+### Supported Audio File Formats
 
 The following audio file formats are supported by Music Triggers:
 ```
@@ -89,13 +89,13 @@ The following audio file formats are supported by Music Triggers:
 - Stream playlists (M3U and PLS)
 ```
 
-# Other
+## Other
 
-## Render Cards
+### Render Cards
 
 A lot of things changed for image & title cards in V7. This is just so they aren't completed undocumented
 
-### Common Render Card Parameters
+#### Common Render Card Parameters
 
 Parameters present on both image & title cards in V7:
 ```
@@ -113,7 +113,7 @@ Parameters present on both image & title cards in V7:
 - y (int)
 ```
 
-### Image Card Parameters
+#### Image Card Parameters
 
 Parameters specific to V7 image cards:
 ```
@@ -122,7 +122,7 @@ Parameters specific to V7 image cards:
 - name (string)
 ```
 
-### Title Card Parameters
+#### Title Card Parameters
 
 Parameters specific to V7 title cards:
 ```
@@ -147,11 +147,11 @@ Parameters specific to V7 title cards:
 - `x` (int)
 - `y` (int)
 
-## Toggles
+### Toggles
 
 Toggles go in the `toggles.toml` file unless you changed the `toggles_path` in the global config
 
-### Format
+#### Format
 
 Here are all of the toggle parameters with their default values and brief descriptions
 
@@ -175,7 +175,7 @@ Here are all of the toggle parameters with their default values and brief descri
 
 See the Channel Events section below for some more specific event information stuff.
 
-### Examples
+#### Examples
 
 If you have a channel `channel_1` with a `raining` trigger and you want to turn another channel `channel_2` off when
 `raining` activates it would look like:
@@ -203,11 +203,11 @@ do that like:
     channel = "channel_2"
 ```
 
-## Channel Events
+### Channel Events
 
 Channel events drive when elements such as toggles and commands get run.
 
-### Event List
+#### Event List
 
 The valid events are as follows:
 ```
