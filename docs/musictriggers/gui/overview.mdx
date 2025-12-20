@@ -31,11 +31,11 @@ See the issues page if your triggers or songs are disappearing from the GUI.
 Anything that has a `triggers` parameter (like songs) needs to properly reference its trigger.
 
 For Basic Triggers and Simple Triggers (triggers that do not have an identifier), you can simply use the name of the
-trigger. The name of the trigger is case-insensitive. For example, `raining`, `Raining`, `RAIning, `RAINING`, or any
+trigger. The name of the trigger is case-insensitive. For example, `raining`, `Raining`, `RAIning`, `RAINING`, or any
 variation of that is acceptible for referencing the `raining` trigger.
 
 For Holder Triggers (triggers that *do* have an identifier), you must reference the trigger as `name-identifier`,
 where `name` is the name of the trigger and `identifier` is the identifier parameter that you set for the trigger. The
 name of the trigger is still case-insensitive, but the *identifier* is case-*sensitive* and must match exactly. For
 example, the only valid ways to reference a mob trigger with the identifier `Fighting` would be `mob-Fighting`,
-`Mob-Fighting`, `mOb-Fighting`, `moB-Fighting, `MOb-Fighting`, `MoB-Fighting`, and `MOB-Fighting`
+`Mob-Fighting`, `mOb-Fighting`, `moB-Fighting`, `MOb-Fighting`, `MoB-Fighting`, and `MOB-Fighting`
