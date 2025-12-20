@@ -1,9 +1,11 @@
 {
   "introduction.mdx": "Introduction",
+  "uncategorized.mdx": "Uncategorized",
   "important_concepts": "Important Concepts",
   "file_structure": "File Structure",
   "gui": "GUI",
   "triggers": "Triggers",
+  "songs": "Songs",
   "misc": "Miscellaneous Features",
   "issues.mdx": "Issues & Support"
 }
