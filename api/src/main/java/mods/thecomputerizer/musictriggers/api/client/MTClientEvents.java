@@ -93,7 +93,8 @@ public class MTClientEvents {
     }
     
     public static void onKeyPress(InputKeyEventWrapper<?> wrapper) {
-        if(GUI_KEY.isDown()) MTGUIScreen.open();
+        if(GUI_KEY.isDown() && !MTGUIScreen.open())
+            ClientHelper.sendMessage(MTClient.getTranslated("message","screen.error"),true);
     }
     
     //TODO The library needs more interaction with SoundAPI instances for this to work
@@ -127,7 +128,7 @@ public class MTClientEvents {
 
     public static void queueReload(@Nullable MinecraftAPI<?> mc, int ticks) {
         ScreenHelper.open((ScreenAPI)null);
-        if(ChannelHelper.getLoader().isLoading()) {
+        if(ChannelHelper.getLoader().isLoading() || Objects.isNull(ChannelHelper.getClientHelper())) {
             ChannelHelper.logGlobalWarn("Tried to reload channels while they were already being reloaded");
             return;
         }

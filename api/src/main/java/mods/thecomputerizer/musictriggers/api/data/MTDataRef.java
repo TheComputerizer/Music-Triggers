@@ -4,11 +4,11 @@ import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.global.Debug;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
-import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
-import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterHelper;
-import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterList;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.ArrayHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.io.FileHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.parameter.Parameter;
+import mods.thecomputerizer.theimpossiblelibrary.api.parameter.ParameterHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.parameter.ParameterList;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.TomlWritingException;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.GenericUtils;
@@ -91,6 +91,10 @@ public final class MTDataRef {
     public static final TableRef INTERRUPT_HANDLER = new TableRef("interrupt_handler",Arrays.asList(
             buildParameter("priority",MAX_VALUE),
             buildParameter("trigger_whitelist",new ArrayList<>())));
+    public static final TableRef INTERRUPTING_TRIGGER = new TableRef("interrupting_trigger",Arrays.asList(
+            buildBoolean("blacklist",false),
+            buildParameter("triggers",new ArrayList<>()),
+            buildBoolean("whitelist",false)));
     public static final TableRef LINK = new TableRef("link",Arrays.asList(
             buildParameter("inherit_time",true),
             buildParameter("linked_triggers",new ArrayList<>()),
@@ -641,8 +645,8 @@ public final class MTDataRef {
         @SuppressWarnings("unchecked")
         public Parameter<?> toParameter() {
             if(this.defaultValue instanceof List<?>)
-                return new ParameterList<>(String.class,new ArrayList<>((List<String>)this.defaultValue)); //TODO Should this really be restricted to lists of strings?
-            return ParameterHelper.parameterize((Class<? super T>)this.defaultValue.getClass(),this.defaultValue);
+                return new ParameterList<>(String.class, new ArrayList<>((List<String>)this.defaultValue)); //TODO Should this really be restricted to lists of strings?
+            return ParameterHelper.parameterize(this.defaultValue.getClass(),this.defaultValue);
         }
     }
 }

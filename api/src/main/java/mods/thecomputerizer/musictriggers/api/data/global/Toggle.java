@@ -8,9 +8,9 @@ import mods.thecomputerizer.musictriggers.api.client.gui.parameters.WrapperLink;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
-import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.parameter.Parameter;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import java.util.*;
@@ -159,7 +159,7 @@ public class Toggle extends GlobalElement {
             return false;
         }
         
-        @Override     public boolean parse(Toml table) {
+        @Override public boolean parse(Toml table) {
             return super.parse(table) && parseTriggers(this.channel,this.triggers);
         }
         
@@ -167,7 +167,7 @@ public class Toggle extends GlobalElement {
             this.parent.run();
         }
         
-        @Override     public boolean verifyRequiredParameters() {
+        @Override public boolean verifyRequiredParameters() {
             this.channel = this.parent.helper.findChannel(this,getParameterAsString("channel"));
             return Objects.nonNull(this.channel);
         }
@@ -214,7 +214,7 @@ public class Toggle extends GlobalElement {
             return "Toggle";
         }
 
-        @Override     public boolean parse(Toml table) {
+        @Override public boolean parse(Toml table) {
             return super.parse(table) && parseTriggers(false,this.channel,this.triggers);
         }
         
@@ -230,7 +230,7 @@ public class Toggle extends GlobalElement {
             }
         }
 
-        @Override     public boolean verifyRequiredParameters() {
+        @Override public boolean verifyRequiredParameters() {
             this.channel = this.parent.helper.findChannel(this,getParameterAsString("channel"));
             if(Objects.isNull(this.channel)) return false;
             String condition = getParameterAsString("condition");

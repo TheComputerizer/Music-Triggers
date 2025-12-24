@@ -1,6 +1,7 @@
 package mods.thecomputerizer.musictriggers.api.client.gui;
 
 import lombok.Getter;
+import mods.thecomputerizer.musictriggers.api.MTRef;
 import mods.thecomputerizer.musictriggers.api.client.MTClient;
 import mods.thecomputerizer.musictriggers.api.client.MTClientEvents;
 import mods.thecomputerizer.musictriggers.api.client.gui.parameters.DataLink;
@@ -176,9 +177,17 @@ public class MTGUIScreen extends ScreenAPI implements LoggableAPI {
         return String.format("gui.%1$s.%2$s",MODID,key);
     }
     
-    public static void open() {
-        fuzzy = ChannelHelper.getDebugBool("gui_fuzz");
-        openRadial(null,MTScreenInfo.get("home"));
+    public static boolean open() {
+        try {
+            fuzzy = ChannelHelper.getDebugBool("gui_fuzz");
+            openRadial(null,MTScreenInfo.get("home"));
+            return true;
+        } catch(Throwable t) {
+            MTRef.logError("Failed to open screen",t);
+            ScreenHelper.open((ScreenAPI)null);
+            isActive = false;
+        }
+        return false;
     }
     
     public static void open(MTGUIScreen screen) {

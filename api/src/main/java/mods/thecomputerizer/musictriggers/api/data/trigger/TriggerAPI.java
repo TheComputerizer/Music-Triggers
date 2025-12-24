@@ -15,10 +15,10 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelElement;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelEventHandler;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelSyncable;
 import mods.thecomputerizer.musictriggers.api.data.nbt.NBTLoadable;
-import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.ParameterWrapper;
 import mods.thecomputerizer.musictriggers.api.data.trigger.holder.HolderTrigger;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.parameter.Parameter;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.Misc;
@@ -298,14 +298,22 @@ public abstract class TriggerAPI extends ChannelElement implements ChannelSyncab
     @Override public void playable() {
         setTimer("ticks_before_active",PLAYABLE);
     }
-
+    
     /**
      * Queries the active state of the trigger & wraps isActive with additional checks
      */
     public boolean query(TriggerContext context) {
+        return query(context,false);
+    }
+
+    /**
+     * Queries the active state of the trigger & wraps isActive with additional checks.
+     * Skip the not parameter if this being called from a combination
+     */
+    protected boolean query(TriggerContext context, boolean skipNot) {
         if(isDisabled()) return false;
         boolean playableCtx = checkSidedContext(context);
-        boolean not = getParameterAsBoolean("not");
+        boolean not = !skipNot && getParameterAsBoolean("not");
         if((playableCtx && !not) || (!playableCtx && not)) {
             setTimer("persistence",ACTIVE);
             return true;

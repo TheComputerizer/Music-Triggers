@@ -2,9 +2,9 @@ package mods.thecomputerizer.musictriggers.api.data.trigger;
 
 import io.netty.buffer.ByteBuf;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
-import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.UniversalParameters;
 import mods.thecomputerizer.theimpossiblelibrary.api.network.NetworkHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.parameter.Parameter;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.CompoundTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.ListTagAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.tag.TagHelper;
@@ -58,8 +58,11 @@ public class TriggerCombination extends TriggerAPI {
     }
     
     @Override public boolean checkSidedContext(TriggerContext context) {
-        for(TriggerAPI trigger : this.triggers)
-            if(!trigger.isPlayableContext(context)) return false;
+        for(TriggerAPI trigger : this.triggers) {
+            boolean playableCtx = trigger.isPlayableContext(context);
+            boolean not = !(trigger instanceof TriggerCombination) && trigger.getParameterAsBoolean("not");
+            return (playableCtx && !not) || (!playableCtx && not);
+        }
         return true;
     }
 
@@ -113,7 +116,7 @@ public class TriggerCombination extends TriggerAPI {
     }
     
     @Override public boolean query(TriggerContext context) {
-        return !this.triggers.isEmpty() && super.query(context);
+        return !this.triggers.isEmpty() && super.query(context,true);
     }
     
     protected void recalculateParameters() {

@@ -150,26 +150,39 @@ public class ChannelData extends ChannelElement {
     }
 
     @Override public void close() {
-        closeHandlers(this.audio);
-        closeHandlers(this.cards);
-        closeHandlers(this.commands);
-        closeHandlers(this.records);
-        closeHandlers(this.redirects);
-        closeHandlers(this.triggers);
-        for(Entry<TriggerAPI,Collection<ChannelEventHandler>> entry : this.triggerEventMap.entrySet()) {
-            entry.getKey().close();
-            closeHandlers(entry.getValue());
-        }
-        this.triggerEventMap.clear();
+        closeHandlers(this.audio,this.cards,this.commands,this.records,this.records,this.triggers,this.triggerEventMap);
         this.universalMap.clear();
         this.genericTrigger = null;
         this.loadingTrigger = null;
         this.menuTrigger = null;
     }
+    
+    private void closeHandlers(Object ... handlers) {
+        for(Object handler : handlers) closeHandler(handler,true);
+    }
+    
+    private void closeHandler(Object handler) {
+        closeHandler(handler,false);
+    }
 
-    private void closeHandlers(Collection<? extends ChannelEventHandler> handlers) {
-        for(ChannelEventHandler handler : handlers) handler.close();
-        handlers.clear();
+    private void closeHandler(Object handler, boolean clear) {
+        if(handler instanceof ChannelEventHandler) ((ChannelEventHandler)handler).close();
+        else if(handler instanceof Collection<?>) {
+            Collection<?> handlers = (Collection<?>)handler;
+            for(Object element: handlers) closeHandler(element);
+            if(clear) handlers.clear();
+        }
+        else if(handler instanceof Map<?,?>) {
+            Map<?,?> handlerMap = (Map<?,?>)handler;
+            closeHandler(handlerMap.entrySet());
+            if(clear) handlerMap.clear();
+        }
+        else if(handler instanceof Entry<?,?>) {
+            Entry<?,?> entry = (Entry<?,?>)handler;
+            closeHandler(entry.getKey());
+            closeHandler(entry.getValue());
+        }
+        else logWarn("Unable to close unknown handler type {}",handler);
     }
     
     public void collectSpecialHandlers(Collection<ChannelEventHandler> handlers) {

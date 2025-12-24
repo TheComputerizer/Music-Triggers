@@ -134,6 +134,7 @@ key.musictriggers.gui=Open Music Triggers GUI
 message.musictriggers.reload.error=Caught an unknown error in channel %1$s
 message.musictriggers.reload.finished=Finished reloading Music Triggers!
 message.musictriggers.reload.queue=Reloading Music Triggers in %1$s tick(s)...
+message.musictriggers.screen.error=Unable to open Music Triggers GUI! If Music Triggers is reloading, wait until the reload is finished.
 
 parameter.musictriggers.active_cooldown.desc=Determines the number of ticks that the trigger will not be able to activate for after being active and deactivating.\n\n<default: 0>
 parameter.musictriggers.active_cooldown.name=Active Cooldown

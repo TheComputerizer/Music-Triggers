@@ -2,8 +2,8 @@ package mods.thecomputerizer.musictriggers.api.data.trigger;
 
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
-import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.parameter.UniversalParameters;
+import mods.thecomputerizer.theimpossiblelibrary.api.parameter.Parameter;
 
 import java.util.Objects;
 

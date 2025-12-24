@@ -6,6 +6,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.common.block.BlockStateAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.blockentity.BlockEntityAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.common.entity.PlayerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.registry.RegistryHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.resource.ResourceLocationAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.MinecraftServerAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.server.ServerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.shapes.vectors.Vector3;
@@ -55,11 +56,15 @@ public class MTBlockEntityRegistry {
     
     public static @Nullable PlayerAPI<?,?> findClosestPlayerInWorld(
             WorldAPI<?> world, BlockPosAPI<?> pos, Collection<? extends PlayerAPI<?,?>> players) {
-        String dimName = String.valueOf(world.getDimension().getRegistryName().getWrapped());
+        ResourceLocationAPI<?> dimRegistryName = world.getDimension().getRegistryName();
+        if(Objects.isNull(dimRegistryName)) return null;
+        String dimName = String.valueOf(dimRegistryName.getWrapped());
         PlayerAPI<?,?> closest = null;
         double minDist = Double.MAX_VALUE;
         for(PlayerAPI<?,?> player : players) {
-            if(dimName.equals(String.valueOf(player.getDimension().getRegistryName().getWrapped()))) {
+            ResourceLocationAPI<?> playerDimRegistryName = world.getDimension().getRegistryName();
+            if(Objects.isNull(playerDimRegistryName)) continue;
+            if(dimName.equals(String.valueOf(playerDimRegistryName.getWrapped()))) {
                 double distance = pos.distanceTo(player.getPosRounded());
                 if(distance<minDist) {
                     closest = player;

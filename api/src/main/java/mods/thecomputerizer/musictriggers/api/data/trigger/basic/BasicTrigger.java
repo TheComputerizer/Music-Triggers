@@ -1,8 +1,8 @@
 package mods.thecomputerizer.musictriggers.api.data.trigger.basic;
 
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
-import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
+import mods.thecomputerizer.theimpossiblelibrary.api.parameter.Parameter;
 
 import javax.annotation.Nullable;
 

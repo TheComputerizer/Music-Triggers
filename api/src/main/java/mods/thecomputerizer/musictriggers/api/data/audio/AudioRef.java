@@ -26,6 +26,7 @@ import java.util.*;
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Integer.MIN_VALUE;
 import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.AUDIO;
+import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.INTERRUPTING_TRIGGER;
 import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.INTERRUPT_HANDLER;
 import static mods.thecomputerizer.musictriggers.api.data.MTDataRef.LOOP;
 
@@ -205,10 +206,9 @@ public class AudioRef extends ChannelElement implements ChannelSyncable, Weighte
 
         public boolean isInterrputedBy(@Nullable TriggerAPI trigger) {
             if(Objects.isNull(trigger)) return false;
-            if(this.triggers.isEmpty()) return true;
             int priority = trigger.getParameterAsInt("priority");
-            return this.triggers.isEmpty() || (ChannelHelper.getDebugBool("reverse_priority") ?
-                    priority<=this.priority : priority>=this.priority) || trigger.isContained(this.triggers);
+            return trigger.isContained(this.triggers) || (ChannelHelper.getDebugBool("reverse_priority") ?
+                    priority<=this.priority : priority>=this.priority);
         }
 
         @Override public boolean isResource() {
@@ -224,11 +224,38 @@ public class AudioRef extends ChannelElement implements ChannelSyncable, Weighte
         }
         
         @Override public Class<? extends ChannelElement> getTypeClass() {
-            return AudioRef.class;
+            return InterruptHandler.class;
         }
         
         @Override protected String getSubTypeName() {
             return "Interrupt_Handler";
+        }
+    }
+    
+    public static class InterruptingTrigger extends ChannelElement {
+        
+        protected InterruptingTrigger(ChannelAPI channel, Toml table) {
+            super(channel,"interrupting_trigger");
+        }
+        
+        @Override public void close() {
+        
+        }
+        
+        @Override protected String getSubTypeName() {
+            return "Interrupting_Trigger";
+        }
+        
+        @Override public boolean isResource() {
+            return false;
+        }
+        
+        @Override public TableRef getReferenceData() {
+            return INTERRUPTING_TRIGGER;
+        }
+        
+        @Override public Class<? extends ParameterWrapper> getTypeClass() {
+            return InterruptingTrigger.class;
         }
     }
     

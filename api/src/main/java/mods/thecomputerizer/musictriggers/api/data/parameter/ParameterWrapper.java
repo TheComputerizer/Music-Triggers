@@ -11,12 +11,15 @@ import mods.thecomputerizer.musictriggers.api.data.channel.ChannelAPI;
 import mods.thecomputerizer.musictriggers.api.data.channel.ChannelHelper;
 import mods.thecomputerizer.musictriggers.api.data.log.LoggableAPI;
 import mods.thecomputerizer.musictriggers.api.data.log.MTLogger;
-import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBool;
-import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterNumber;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerAPI;
 import mods.thecomputerizer.musictriggers.api.data.trigger.TriggerHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.ArrayHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.iterator.IterableHelper;
+import mods.thecomputerizer.theimpossiblelibrary.api.parameter.Parameter;
+import mods.thecomputerizer.theimpossiblelibrary.api.parameter.ParameterList;
+import mods.thecomputerizer.theimpossiblelibrary.api.parameter.ParameterString;
+import mods.thecomputerizer.theimpossiblelibrary.api.parameter.primitive.ParameterBool;
+import mods.thecomputerizer.theimpossiblelibrary.api.parameter.primitive.ParameterNumber;
 import mods.thecomputerizer.theimpossiblelibrary.api.text.TextHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 import mods.thecomputerizer.theimpossiblelibrary.api.util.GenericUtils;
@@ -48,11 +51,8 @@ public abstract class ParameterWrapper implements LoggableAPI {
         if(Objects.nonNull(parameter)) map.put(name,parameter);
     }
 
-    protected Map<String,Object> asValueMap() {
-        Map<String,Object> map = new HashMap<>();
-        for(Map.Entry<String,Parameter<?>> entry : this.parameters.entrySet())
-            map.put(entry.getKey(),entry.getValue().getValue());
-        return map;
+    protected Map<String,Parameter<?>> asValueMap() {
+        return this.parameters;
     }
     
     public List<String> getBooleanParameterNames() {

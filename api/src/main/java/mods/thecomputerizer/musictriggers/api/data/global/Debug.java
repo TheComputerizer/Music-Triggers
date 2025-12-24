@@ -2,8 +2,8 @@ package mods.thecomputerizer.musictriggers.api.data.global;
 
 import lombok.Getter;
 import mods.thecomputerizer.musictriggers.api.data.MTDataRef.TableRef;
-import mods.thecomputerizer.musictriggers.api.data.parameter.Parameter;
-import mods.thecomputerizer.musictriggers.api.data.parameter.primitive.ParameterBool;
+import mods.thecomputerizer.theimpossiblelibrary.api.parameter.Parameter;
+import mods.thecomputerizer.theimpossiblelibrary.api.parameter.primitive.ParameterBool;
 import mods.thecomputerizer.theimpossiblelibrary.api.toml.Toml;
 
 import java.util.ArrayList;

@@ -12,6 +12,7 @@ import mods.thecomputerizer.theimpossiblelibrary.api.common.DelegatingCommonEntr
 import mods.thecomputerizer.theimpossiblelibrary.api.core.ClassHelper;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.CoreAPI;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.CoreAPI.GameVersion;
+import mods.thecomputerizer.theimpossiblelibrary.api.core.CoreAPI.ModLoader;
 import mods.thecomputerizer.theimpossiblelibrary.api.core.annotation.MultiVersionMod;
 
 import javax.annotation.Nullable;
@@ -23,7 +24,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import static mods.thecomputerizer.musictriggers.api.MTRef.*;
-import static mods.thecomputerizer.theimpossiblelibrary.api.core.CoreAPI.ModLoader.LEGACY;
 import static mods.thecomputerizer.theimpossiblelibrary.api.core.TILDev.DEV;
 import static org.burningwave.core.assembler.StaticComponentContainer.ClassLoaders;
 import static org.burningwave.core.assembler.StaticComponentContainer.Methods;
@@ -37,7 +37,7 @@ public class MTCommonEntryPoint extends DelegatingCommonEntryPoint {
     
     private String getLoader(CoreAPI instance) {
         String loaderName = instance.getModLoader().toString();
-        return LEGACY.toString().equals(loaderName) ? loaderName.toLowerCase() : "shared";
+        return ModLoader.LEGACY.toString().equals(loaderName) ? loaderName.toLowerCase() : "shared";
     }
     
     private Class<?> findVersionEntryClass(CoreAPI instance) {
